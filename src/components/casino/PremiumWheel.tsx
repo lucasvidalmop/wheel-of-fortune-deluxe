@@ -171,11 +171,12 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
           const angle = (i * 360 / numLeds - 90) * (Math.PI / 180);
           const lx = cx + (outerR + 15) * Math.cos(angle);
           const ly = cy + (outerR + 15) * Math.sin(angle);
-          const isLit = isSpinning ? (i + ledPhase) % 3 === 0 : true;
+          const isLit = (i + ledPhase) % 3 !== 0;
+          const ls = config.ledSize ?? 5;
           return (
             <g key={`led-${i}`}>
-              <circle cx={lx} cy={ly} r={5} fill={isLit ? config.ledColor : '#333'} filter={isLit ? 'url(#ledGlow)' : undefined} opacity={isLit ? 1 : 0.3} />
-              {isLit && <circle cx={lx} cy={ly} r={3} fill="white" opacity="0.6" />}
+              <circle cx={lx} cy={ly} r={ls} fill={isLit ? config.ledColor : '#333'} filter={isLit ? 'url(#ledGlow)' : undefined} opacity={isLit ? 1 : 0.3} />
+              {isLit && <circle cx={lx} cy={ly} r={ls * 0.6} fill="white" opacity="0.6" />}
             </g>
           );
         })}
