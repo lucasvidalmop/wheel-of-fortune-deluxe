@@ -167,7 +167,26 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
 
       {/* Segments */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Segmentos</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Segmentos</h3>
+          <button
+            onClick={() => {
+              const newSeg = {
+                id: Date.now().toString(),
+                title: `NOVO`,
+                reward: '0',
+                color: '#1a1a3e',
+                gradientOverlay: 'rgba(255,255,255,0.1)',
+                textColor: '#FFFFFF',
+                percentage: 10,
+              };
+              onChange({ ...config, segments: [...config.segments, newSeg] });
+            }}
+            className="text-xs px-2.5 py-1 rounded border border-border bg-secondary text-foreground hover:bg-accent transition-colors"
+          >
+            + Adicionar
+          </button>
+        </div>
         {config.segments.map((seg, i) => (
           <details key={seg.id} className="group border border-border rounded-lg overflow-hidden">
             <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer bg-secondary/50 hover:bg-secondary text-xs font-bold">
@@ -212,6 +231,17 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                 value={seg.imageUrl}
                 onChange={v => updateSegment(i, 'imageUrl', v)}
               />
+              {config.segments.length > 2 && (
+                <button
+                  onClick={() => {
+                    const segs = config.segments.filter((_, idx) => idx !== i);
+                    onChange({ ...config, segments: segs });
+                  }}
+                  className="w-full text-xs py-1.5 rounded border border-destructive text-destructive hover:bg-destructive/10 transition-colors mt-2"
+                >
+                  Remover segmento
+                </button>
+              )}
             </div>
           </details>
         ))}
