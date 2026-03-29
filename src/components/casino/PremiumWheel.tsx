@@ -244,15 +244,17 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             const tx = cx + textR * Math.cos(rad);
             const ty = cy + textR * Math.sin(rad);
             const s = config.fontSizeScale ?? 1;
+            const vSize = (config.valueFontSize ?? 22) * s;
+            const tSize = (config.titleFontSize ?? 10) * s;
             return (
               <g key={`text-${i}`} transform={`rotate(${midAngle + 90}, ${tx}, ${ty})`}>
                 <text
                   x={tx}
-                  y={ty - 10 * s}
+                  y={ty - tSize * 0.8}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill={seg.textColor}
-                  fontSize={22 * s}
+                  fontSize={vSize}
                   fontWeight="900"
                   fontFamily="'Orbitron', sans-serif"
                   style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9))' }}
@@ -261,17 +263,17 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
                 </text>
                 <text
                   x={tx}
-                  y={ty + 14 * s}
+                  y={ty + vSize * 0.6}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill={seg.textColor}
-                  fontSize={10 * s}
+                  fontSize={tSize}
                   fontWeight="700"
                   fontFamily="'Orbitron', sans-serif"
                   opacity="0.9"
                   style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
                 >
-                  {seg.title.replace(/\d+\s*/, '')}
+                  {seg.title}
                 </text>
               </g>
             );
