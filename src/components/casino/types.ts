@@ -51,4 +51,5 @@ export const defaultConfig: WheelConfig = {
   resultTextColor: '#FFD700',
   pageTitle: 'ROLETA',
   pageSubtitle: 'Nível Quartzo',
+  fontSizeScale: 1,
 };
