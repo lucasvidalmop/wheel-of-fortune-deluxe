@@ -53,4 +53,5 @@ export const defaultConfig: WheelConfig = {
   pageTitle: 'ROLETA',
   pageSubtitle: 'Nível Quartzo',
   fontSizeScale: 1,
+  hideSegmentText: false,
 };
