@@ -22,6 +22,7 @@ export interface WheelConfig {
   buttonTextColor: string;
   resultBoxColor: string;
   resultTextColor: string;
+  resultBorderColor: string;
   pageTitle: string;
   pageSubtitle: string;
   backgroundImageUrl?: string;
@@ -54,6 +55,7 @@ export const defaultConfig: WheelConfig = {
   buttonTextColor: '#000000',
   resultBoxColor: '#000000',
   resultTextColor: '#FFD700',
+  resultBorderColor: '#FFD700',
   pageTitle: 'ROLETA',
   pageSubtitle: 'Nível Quartzo',
   fontSizeScale: 1,

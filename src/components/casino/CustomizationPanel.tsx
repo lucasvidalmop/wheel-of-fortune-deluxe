@@ -216,7 +216,8 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Botão & Resultado</h3>
         <ColorInput label="Cor do botão" value={config.buttonColor} onChange={v => updateGlobal('buttonColor', v)} />
         <ColorInput label="Texto do botão" value={config.buttonTextColor} onChange={v => updateGlobal('buttonTextColor', v)} />
-        <ColorInput label="Caixa do prêmio" value={config.resultBoxColor} onChange={v => updateGlobal('resultBoxColor', v)} />
+        <ColorInput label="Fundo do prêmio" value={config.resultBoxColor} onChange={v => updateGlobal('resultBoxColor', v)} />
+        <ColorInput label="Borda do prêmio" value={config.resultBorderColor} onChange={v => updateGlobal('resultBorderColor', v)} />
         <ColorInput label="Texto do prêmio" value={config.resultTextColor} onChange={v => updateGlobal('resultTextColor', v)} />
       </div>
 
