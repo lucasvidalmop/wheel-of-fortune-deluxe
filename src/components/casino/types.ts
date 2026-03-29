@@ -25,6 +25,11 @@ export interface WheelConfig {
   resultBorderColor: string;
   pageTitle: string;
   pageSubtitle: string;
+  headerMode: 'text' | 'image';
+  headerImageUrl?: string;
+  headerTitleSize: number;
+  headerSubtitleSize: number;
+  headerImageSize: number;
   backgroundImageUrl?: string;
   fontSizeScale: number;
   hideSegmentText: boolean;
@@ -58,6 +63,10 @@ export const defaultConfig: WheelConfig = {
   resultBorderColor: '#FFD700',
   pageTitle: 'ROLETA',
   pageSubtitle: 'Nível Quartzo',
+  headerMode: 'text',
+  headerTitleSize: 36,
+  headerSubtitleSize: 12,
+  headerImageSize: 120,
   fontSizeScale: 1,
   hideSegmentText: false,
   dividerWidth: 3,
