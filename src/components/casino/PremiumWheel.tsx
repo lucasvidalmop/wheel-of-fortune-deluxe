@@ -236,7 +236,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             const rad = midAngle * (Math.PI / 180);
             const tx = cx + textR * Math.cos(rad);
             const ty = cy + textR * Math.sin(rad);
-            const s = config.fontSizeScale;
+            const s = config.fontSizeScale ?? 1;
             return (
               <g key={`text-${i}`} transform={`rotate(${midAngle + 90}, ${tx}, ${ty})`}>
                 <text
