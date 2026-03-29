@@ -13,6 +13,12 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
   const [ledPhase, setLedPhase] = useState(0);
   const ledInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Always blink LEDs
+  useEffect(() => {
+    const interval = setInterval(() => setLedPhase(p => p + 1), 150);
+    return () => clearInterval(interval);
+  }, []);
+
   const numSegments = config.segments.length;
   const segmentAngle = 360 / numSegments;
   const cx = 300, cy = 300, outerR = 250, innerR = 40;
