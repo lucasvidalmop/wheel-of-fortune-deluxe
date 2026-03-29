@@ -123,11 +123,11 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
             min={0.5}
             max={2}
             step={0.1}
-            value={config.fontSizeScale}
+            value={fontSizeScale}
             onChange={e => onChange({ ...config, fontSizeScale: parseFloat(e.target.value) })}
             className="flex-1 accent-primary"
           />
-          <span className="text-xs font-mono text-muted-foreground w-10 text-right">{config.fontSizeScale.toFixed(1)}x</span>
+          <span className="text-xs font-mono text-muted-foreground w-10 text-right">{fontSizeScale.toFixed(1)}x</span>
         </div>
       </div>
 
