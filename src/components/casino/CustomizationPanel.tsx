@@ -165,6 +165,37 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
       </div>
 
+      {/* Title & Value font sizes */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Tamanho Título / Valor</h3>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground w-12">Valor</span>
+          <input
+            type="range"
+            min={8}
+            max={40}
+            step={1}
+            value={config.valueFontSize ?? 22}
+            onChange={e => onChange({ ...config, valueFontSize: parseInt(e.target.value) })}
+            className="flex-1 accent-primary"
+          />
+          <span className="text-xs font-mono text-muted-foreground w-8 text-right">{config.valueFontSize ?? 22}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground w-12">Título</span>
+          <input
+            type="range"
+            min={6}
+            max={30}
+            step={1}
+            value={config.titleFontSize ?? 10}
+            onChange={e => onChange({ ...config, titleFontSize: parseInt(e.target.value) })}
+            className="flex-1 accent-primary"
+          />
+          <span className="text-xs font-mono text-muted-foreground w-8 text-right">{config.titleFontSize ?? 10}</span>
+        </div>
+      </div>
+
       {/* Hide text toggle */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">Ocultar texto na roleta</span>
