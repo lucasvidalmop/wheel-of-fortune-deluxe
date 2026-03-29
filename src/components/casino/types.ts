@@ -26,6 +26,7 @@ export interface WheelConfig {
   pageSubtitle: string;
   backgroundImageUrl?: string;
   fontSizeScale: number;
+  hideSegmentText: boolean;
 }
 
 export const defaultSegments: WheelSegment[] = [
