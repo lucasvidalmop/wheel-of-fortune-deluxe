@@ -230,7 +230,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
           })}
 
           {/* Segment text */}
-          {config.segments.map((seg, i) => {
+          {!config.hideSegmentText && config.segments.map((seg, i) => {
             const midAngle = (i + 0.5) * segmentAngle - 90;
             const textR = outerR * 0.62;
             const rad = midAngle * (Math.PI / 180);

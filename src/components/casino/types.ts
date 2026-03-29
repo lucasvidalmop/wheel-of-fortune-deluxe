@@ -26,6 +26,7 @@ export interface WheelConfig {
   pageSubtitle: string;
   backgroundImageUrl?: string;
   fontSizeScale: number;
+  hideSegmentText: boolean;
 }
 
 export const defaultSegments: WheelSegment[] = [
@@ -52,4 +53,5 @@ export const defaultConfig: WheelConfig = {
   pageTitle: 'ROLETA',
   pageSubtitle: 'Nível Quartzo',
   fontSizeScale: 1,
+  hideSegmentText: false,
 };
