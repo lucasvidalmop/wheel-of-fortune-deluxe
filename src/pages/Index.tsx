@@ -1,16 +1,50 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import PremiumWheel from '@/components/casino/PremiumWheel';
+import CustomizationPanel from '@/components/casino/CustomizationPanel';
+import { WheelConfig, defaultConfig } from '@/components/casino/types';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [config, setConfig] = useState<WheelConfig>(defaultConfig);
+  const [showPanel, setShowPanel] = useState(false);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-secondary/20" />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[120px] opacity-15"
+        style={{ background: `radial-gradient(circle, ${config.glowColor}, transparent)` }}
+      />
+
+      {/* Title */}
+      <h1 className="relative z-10 font-display text-3xl md:text-4xl font-black tracking-[0.3em] uppercase mb-2 text-primary" style={{ textShadow: `0 0 30px ${config.glowColor}55` }}>
+        ROLETA
+      </h1>
+      <p className="relative z-10 font-display text-xs tracking-[0.5em] text-muted-foreground uppercase mb-10">
+        Nível Quartzo
+      </p>
+
+      {/* Wheel */}
+      <div className="relative z-10 mb-16">
+        <PremiumWheel config={config} />
+      </div>
+
+      {/* Toggle panel button */}
+      <button
+        onClick={() => setShowPanel(!showPanel)}
+        className="fixed top-4 right-4 z-50 font-display text-xs tracking-wider px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary transition-colors"
+      >
+        {showPanel ? '✕ FECHAR' : '⚙ ADMIN'}
+      </button>
+
+      {/* Customization panel */}
+      {showPanel && (
+        <div className="fixed top-16 right-4 z-40">
+          <CustomizationPanel config={config} onChange={setConfig} />
+        </div>
+      )}
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
