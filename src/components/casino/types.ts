@@ -29,6 +29,8 @@ export interface WheelConfig {
   hideSegmentText: boolean;
   dividerWidth: number;
   ledSize: number;
+  titleFontSize: number;
+  valueFontSize: number;
 }
 
 export const defaultSegments: WheelSegment[] = [
