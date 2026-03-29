@@ -18,6 +18,9 @@ export interface WheelConfig {
   dividerColor: string;
   glowColor: string;
   pointerColor: string;
+  pageTitle: string;
+  pageSubtitle: string;
+  backgroundImageUrl?: string;
 }
 
 export const defaultSegments: WheelSegment[] = [
