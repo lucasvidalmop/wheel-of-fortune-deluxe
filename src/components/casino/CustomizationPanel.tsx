@@ -359,10 +359,10 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                 <label className="text-xs text-muted-foreground">Porcentagem (%)</label>
                 <input
                   type="number"
-                  min={1}
+                  min={0}
                   max={100}
                   value={seg.percentage}
-                  onChange={e => updateSegment(i, 'percentage', Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={e => updateSegment(i, 'percentage', Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground"
                 />
               </div>
