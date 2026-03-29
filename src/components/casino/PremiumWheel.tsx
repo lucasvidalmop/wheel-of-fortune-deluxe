@@ -46,7 +46,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
     setRotation(baseRotation + totalRotation);
 
     if (ledInterval.current) clearInterval(ledInterval.current);
-    ledInterval.current = setInterval(() => setLedPhase(p => p + 1), 100);
+    ledInterval.current = setInterval(() => setLedPhase(p => p + 1), 80);
 
     setTimeout(() => {
       setIsSpinning(false);
