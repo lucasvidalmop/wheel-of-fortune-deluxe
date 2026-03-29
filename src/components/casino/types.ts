@@ -18,6 +18,9 @@ export interface WheelConfig {
   dividerColor: string;
   glowColor: string;
   pointerColor: string;
+  pageTitle: string;
+  pageSubtitle: string;
+  backgroundImageUrl?: string;
 }
 
 export const defaultSegments: WheelSegment[] = [
@@ -37,4 +40,6 @@ export const defaultConfig: WheelConfig = {
   dividerColor: '#C0C0C0',
   glowColor: '#FFD700',
   pointerColor: '#E0E0E0',
+  pageTitle: 'ROLETA',
+  pageSubtitle: 'Nível Quartzo',
 };
