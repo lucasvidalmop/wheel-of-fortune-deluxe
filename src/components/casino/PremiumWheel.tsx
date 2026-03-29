@@ -223,8 +223,8 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             const y2 = cy + (outerR - 18) * Math.sin(angle);
             return (
               <g key={`div-${i}`}>
-                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={config.dividerColor} strokeWidth="3" opacity="0.7" />
-                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeWidth="1" opacity="0.3" />
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={config.dividerColor} strokeWidth={config.dividerWidth ?? 3} opacity="0.7" />
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeWidth={Math.max(1, (config.dividerWidth ?? 3) * 0.33)} opacity="0.3" />
               </g>
             );
           })}
