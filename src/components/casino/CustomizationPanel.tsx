@@ -114,6 +114,23 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <ColorInput label="Ponteiro" value={config.pointerColor} onChange={v => updateGlobal('pointerColor', v)} />
       </div>
 
+      {/* Divider width */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Espessura dos Divisores</h3>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={0}
+            max={8}
+            step={0.5}
+            value={config.dividerWidth ?? 3}
+            onChange={e => onChange({ ...config, dividerWidth: parseFloat(e.target.value) })}
+            className="flex-1 accent-primary"
+          />
+          <span className="text-xs font-mono text-muted-foreground w-10 text-right">{(config.dividerWidth ?? 3).toFixed(1)}</span>
+        </div>
+      </div>
+
       {/* Font size */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Tamanho da Fonte</h3>
