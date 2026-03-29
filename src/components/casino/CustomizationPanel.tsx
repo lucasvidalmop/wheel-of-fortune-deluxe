@@ -64,6 +64,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
     segs[index] = { ...segs[index], [key]: value };
     onChange({ ...config, segments: segs });
   };
+  const fontSizeScale = config.fontSizeScale ?? 1;
 
   return (
     <div className="w-80 max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-4 space-y-5">
