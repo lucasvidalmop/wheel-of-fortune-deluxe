@@ -17,15 +17,39 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
   const segmentAngle = 360 / numSegments;
   const cx = 300, cy = 300, outerR = 250, innerR = 40;
 
+  // Weighted random selection based on percentages
+  const pickWeightedSegment = useCallback(() => {
+    const totalWeight = config.segments.reduce((sum, s) => sum + s.percentage, 0);
+    let rand = Math.random() * totalWeight;
+    for (let i = 0; i < config.segments.length; i++) {
+      rand -= config.segments[i].percentage;
+      if (rand <= 0) return i;
+    }
+    return config.segments.length - 1;
+  }, [config.segments]);
+
   const spin = useCallback(() => {
     if (isSpinning) return;
     setIsSpinning(true);
     setWinnerIndex(null);
 
-    const extraSpins = 5 + Math.random() * 5;
-    const winAngle = Math.random() * 360;
-    const totalRotation = rotation + extraSpins * 360 + winAngle;
-    setRotation(totalRotation);
+    const winnerIdx = pickWeightedSegment();
+
+    // Calculate target angle so the winner segment CENTER aligns with the pointer (top, -90°)
+    // Pointer is at top (270° in SVG coords = -90°). Segments start at -90°.
+    // Segment i center is at (i + 0.5) * segmentAngle degrees from the start.
+    // We need to rotate the wheel so that the center of winnerIdx is at 0° (top).
+    // The wheel's segment i center is at (i+0.5)*segmentAngle. To bring it to top (0° visual = -90° SVG),
+    // we rotate by -(winnerIdx+0.5)*segmentAngle, but since segments are drawn starting at -90°,
+    // the center of segment i in wheel-space is at (i+0.5)*segmentAngle.
+    // To align it with top pointer: targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle
+    const targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle;
+    const extraSpins = 5 + Math.floor(Math.random() * 5);
+    const totalRotation = extraSpins * 360 + targetOffset;
+
+    // Add to current rotation (use absolute for clean calc)
+    const baseRotation = Math.ceil(rotation / 360) * 360;
+    setRotation(baseRotation + totalRotation);
 
     // LED animation
     if (ledInterval.current) clearInterval(ledInterval.current);
@@ -34,13 +58,10 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
     setTimeout(() => {
       setIsSpinning(false);
       if (ledInterval.current) clearInterval(ledInterval.current);
-      // Calculate winner: pointer is at right (0°), wheel rotated by totalRotation
-      const normalizedAngle = (360 - (totalRotation % 360)) % 360;
-      const idx = Math.floor(normalizedAngle / segmentAngle) % numSegments;
-      setWinnerIndex(idx);
-      onSpinEnd?.(idx);
+      setWinnerIndex(winnerIdx);
+      onSpinEnd?.(winnerIdx);
     }, 5000);
-  }, [isSpinning, rotation, segmentAngle, numSegments, onSpinEnd]);
+  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd]);
 
   const getSegmentPath = (index: number, r: number, ir: number) => {
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
@@ -64,21 +85,17 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
       {/* Background glow */}
       <div
         className="absolute inset-0 rounded-full blur-3xl opacity-40"
-        style={{
-          background: `radial-gradient(circle, ${config.glowColor}44 0%, transparent 70%)`,
-        }}
+        style={{ background: `radial-gradient(circle, ${config.glowColor}44 0%, transparent 70%)` }}
       />
 
       <svg viewBox="0 0 600 600" width={620} height={620} className="relative z-10">
         <defs>
-          {/* Glossy overlay gradient */}
           <radialGradient id="glossOverlay" cx="40%" cy="35%" r="60%">
             <stop offset="0%" stopColor="white" stopOpacity="0.18" />
             <stop offset="60%" stopColor="white" stopOpacity="0.04" />
             <stop offset="100%" stopColor="black" stopOpacity="0.15" />
           </radialGradient>
 
-          {/* Metallic ring gradient */}
           <linearGradient id="ringGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={config.outerRingColor} stopOpacity="1" />
             <stop offset="30%" stopColor="#ffffff" stopOpacity="0.6" />
@@ -87,14 +104,12 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             <stop offset="100%" stopColor={config.outerRingColor} stopOpacity="1" />
           </linearGradient>
 
-          {/* Center cap gradient */}
           <radialGradient id="capGrad" cx="45%" cy="40%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
             <stop offset="40%" stopColor={config.centerCapColor} />
             <stop offset="100%" stopColor="#000000" stopOpacity="0.6" />
           </radialGradient>
 
-          {/* LED glow filter */}
           <filter id="ledGlow" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
@@ -103,19 +118,21 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             </feMerge>
           </filter>
 
-          {/* Drop shadow for depth */}
           <filter id="wheelShadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="8" stdDeviation="15" floodColor="#000000" floodOpacity="0.6" />
           </filter>
 
-          {/* Bevel for frame */}
           <filter id="frameBevel">
             <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
             <feOffset dx="1" dy="1" result="offsetBlur" />
             <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
           </filter>
 
-          {/* Segment clip paths */}
+          {/* Center image clip */}
+          <clipPath id="center-clip">
+            <circle cx={cx} cy={cy} r={innerR - 3} />
+          </clipPath>
+
           {config.segments.map((_, i) => (
             <clipPath key={i} id={`seg-clip-${i}`}>
               <path d={getSegmentPath(i, outerR - 18, innerR)} />
@@ -123,13 +140,12 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
           ))}
         </defs>
 
-        {/* === LAYER 1: Outer shadow ring === */}
+        {/* === LAYER 1: Outer shadow === */}
         <circle cx={cx} cy={cy} r={outerR + 28} fill="none" stroke="#000" strokeWidth="4" opacity="0.3" filter="url(#wheelShadow)" />
 
-        {/* === LAYER 2: Outer metallic/glass frame === */}
+        {/* === LAYER 2: Metallic frame === */}
         <circle cx={cx} cy={cy} r={outerR + 20} fill="url(#ringGrad)" stroke="#555" strokeWidth="1.5" filter="url(#frameBevel)" />
         <circle cx={cx} cy={cy} r={outerR + 10} fill="none" stroke={config.outerRingColor} strokeWidth="2" opacity="0.5" />
-        {/* Inner ring highlight */}
         <circle cx={cx} cy={cy} r={outerR + 16} fill="none" stroke="white" strokeWidth="0.5" opacity="0.3" />
 
         {/* === LAYER 3: LED ring === */}
@@ -154,19 +170,17 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             transition: isSpinning ? 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
           }}
         >
-          {/* Segment base ring background */}
           <circle cx={cx} cy={cy} r={outerR - 2} fill="#111" />
 
-          {/* === LAYER 4a: Segment fills === */}
+          {/* Segment fills */}
           {config.segments.map((seg, i) => (
             <g key={`seg-${i}`}>
               <path d={getSegmentPath(i, outerR - 18, innerR)} fill={seg.color} />
-              {/* Gradient overlay */}
               <path d={getSegmentPath(i, outerR - 18, innerR)} fill={seg.gradientOverlay} />
             </g>
           ))}
 
-          {/* === LAYER 4b: Segment images (if any) === */}
+          {/* Segment images */}
           {config.segments.map((seg, i) => {
             if (!seg.imageUrl) return null;
             const midAngle = ((i + 0.5) * segmentAngle - 90) * (Math.PI / 180);
@@ -186,10 +200,10 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             );
           })}
 
-          {/* === LAYER 4c: Glossy/reflection overlay === */}
+          {/* Gloss overlay */}
           <circle cx={cx} cy={cy} r={outerR - 18} fill="url(#glossOverlay)" />
 
-          {/* === LAYER 4d: Dividers === */}
+          {/* Dividers */}
           {config.segments.map((_, i) => {
             const angle = (i * segmentAngle - 90) * (Math.PI / 180);
             const x1 = cx + innerR * Math.cos(angle);
@@ -204,7 +218,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             );
           })}
 
-          {/* === LAYER 4e: Segment text === */}
+          {/* Segment text */}
           {config.segments.map((seg, i) => {
             const midAngle = (i + 0.5) * segmentAngle - 90;
             const textR = outerR * 0.62;
@@ -223,10 +237,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
                 fontSize="14"
                 fontWeight="800"
                 fontFamily="'Orbitron', sans-serif"
-                style={{
-                  textShadow: '0 0 8px rgba(0,0,0,0.8)',
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-                }}
+                style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }}
               >
                 <tspan x={tx} dy="-8" fontSize="20" fontWeight="900">{seg.reward}</tspan>
                 <tspan x={tx} dy="20" fontSize="11" fontWeight="700">{seg.title.replace(/\d+\s*/, '')}</tspan>
@@ -234,26 +245,39 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             );
           })}
 
-          {/* === LAYER 5: Center cap === */}
+          {/* Center cap */}
           <circle cx={cx} cy={cy} r={innerR + 8} fill="url(#capGrad)" stroke={config.dividerColor} strokeWidth="2" />
           <circle cx={cx} cy={cy} r={innerR - 2} fill={config.centerCapColor} stroke="#555" strokeWidth="1" />
-          {/* Cap highlight */}
-          <circle cx={cx - 5} cy={cy - 8} r={12} fill="white" opacity="0.12" />
-          {/* Cap icon: lightning bolt */}
-          <text x={cx} y={cy + 5} textAnchor="middle" fontSize="24" fill={config.ledColor} fontFamily="'Orbitron', sans-serif" fontWeight="900" style={{ filter: `drop-shadow(0 0 6px ${config.ledColor})` }}>⚡</text>
+          
+          {/* Center image or default icon */}
+          {config.centerImageUrl ? (
+            <image
+              href={config.centerImageUrl}
+              x={cx - innerR + 3}
+              y={cy - innerR + 3}
+              width={(innerR - 3) * 2}
+              height={(innerR - 3) * 2}
+              clipPath="url(#center-clip)"
+              preserveAspectRatio="xMidYMid slice"
+            />
+          ) : (
+            <>
+              <circle cx={cx - 5} cy={cy - 8} r={12} fill="white" opacity="0.12" />
+              <text x={cx} y={cy + 5} textAnchor="middle" fontSize="24" fill={config.ledColor} fontFamily="'Orbitron', sans-serif" fontWeight="900" style={{ filter: `drop-shadow(0 0 6px ${config.ledColor})` }}>⚡</text>
+            </>
+          )}
         </g>
 
-        {/* === LAYER 6: Side pointer === */}
-        <g transform={`translate(${cx + outerR + 24}, ${cy})`}>
+        {/* === LAYER 6: Top pointer (centered) === */}
+        <g transform={`translate(${cx}, ${cy - outerR - 24})`}>
           <polygon
-            points="-25,-14 5,0 -25,14"
+            points="-14,25 0,-5 14,25"
             fill={config.pointerColor}
             stroke="#888"
             strokeWidth="1.5"
-            style={{ filter: 'drop-shadow(-3px 0 6px rgba(0,0,0,0.5))' }}
+            style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.5))' }}
           />
-          {/* Pointer highlight */}
-          <polygon points="-22,-8 0,0 -22,8" fill="white" opacity="0.25" />
+          <polygon points="-8,22 0,0 8,22" fill="white" opacity="0.25" />
         </g>
 
         {/* Winner highlight */}
