@@ -113,6 +113,15 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <ColorInput label="Ponteiro" value={config.pointerColor} onChange={v => updateGlobal('pointerColor', v)} />
       </div>
 
+      {/* Button & result box */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Botão & Resultado</h3>
+        <ColorInput label="Cor do botão" value={config.buttonColor} onChange={v => updateGlobal('buttonColor', v)} />
+        <ColorInput label="Texto do botão" value={config.buttonTextColor} onChange={v => updateGlobal('buttonTextColor', v)} />
+        <ColorInput label="Caixa do prêmio" value={config.resultBoxColor} onChange={v => updateGlobal('resultBoxColor', v)} />
+        <ColorInput label="Texto do prêmio" value={config.resultTextColor} onChange={v => updateGlobal('resultTextColor', v)} />
+      </div>
+
       {/* Center image */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Imagem Central</h3>
