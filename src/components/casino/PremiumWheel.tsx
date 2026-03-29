@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { WheelConfig } from './types';
 
 interface PremiumWheelProps {
@@ -12,6 +12,12 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
   const [ledPhase, setLedPhase] = useState(0);
   const ledInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Always blink LEDs
+  useEffect(() => {
+    const interval = setInterval(() => setLedPhase(p => p + 1), 150);
+    return () => clearInterval(interval);
+  }, []);
 
   const numSegments = config.segments.length;
   const segmentAngle = 360 / numSegments;
@@ -40,7 +46,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
     setRotation(baseRotation + totalRotation);
 
     if (ledInterval.current) clearInterval(ledInterval.current);
-    ledInterval.current = setInterval(() => setLedPhase(p => p + 1), 100);
+    ledInterval.current = setInterval(() => setLedPhase(p => p + 1), 80);
 
     setTimeout(() => {
       setIsSpinning(false);
@@ -165,11 +171,12 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
           const angle = (i * 360 / numLeds - 90) * (Math.PI / 180);
           const lx = cx + (outerR + 15) * Math.cos(angle);
           const ly = cy + (outerR + 15) * Math.sin(angle);
-          const isLit = isSpinning ? (i + ledPhase) % 3 === 0 : true;
+          const isLit = (i + ledPhase) % 3 !== 0;
+          const ls = config.ledSize ?? 5;
           return (
             <g key={`led-${i}`}>
-              <circle cx={lx} cy={ly} r={5} fill={isLit ? config.ledColor : '#333'} filter={isLit ? 'url(#ledGlow)' : undefined} opacity={isLit ? 1 : 0.3} />
-              {isLit && <circle cx={lx} cy={ly} r={3} fill="white" opacity="0.6" />}
+              <circle cx={lx} cy={ly} r={ls} fill={isLit ? config.ledColor : '#333'} filter={isLit ? 'url(#ledGlow)' : undefined} opacity={isLit ? 1 : 0.3} />
+              {isLit && <circle cx={lx} cy={ly} r={ls * 0.6} fill="white" opacity="0.6" />}
             </g>
           );
         })}

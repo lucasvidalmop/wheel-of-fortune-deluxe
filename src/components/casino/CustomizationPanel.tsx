@@ -131,6 +131,23 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
       </div>
 
+      {/* LED size */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Tamanho dos LEDs</h3>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={2}
+            max={12}
+            step={0.5}
+            value={config.ledSize ?? 5}
+            onChange={e => onChange({ ...config, ledSize: parseFloat(e.target.value) })}
+            className="flex-1 accent-primary"
+          />
+          <span className="text-xs font-mono text-muted-foreground w-10 text-right">{(config.ledSize ?? 5).toFixed(1)}</span>
+        </div>
+      </div>
+
       {/* Font size */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Tamanho da Fonte</h3>
