@@ -18,6 +18,10 @@ export interface WheelConfig {
   dividerColor: string;
   glowColor: string;
   pointerColor: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  resultBoxColor: string;
+  resultTextColor: string;
   pageTitle: string;
   pageSubtitle: string;
   backgroundImageUrl?: string;
