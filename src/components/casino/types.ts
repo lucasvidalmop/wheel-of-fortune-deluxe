@@ -22,6 +22,7 @@ export interface WheelConfig {
   buttonTextColor: string;
   resultBoxColor: string;
   resultTextColor: string;
+  resultBorderColor: string;
   pageTitle: string;
   pageSubtitle: string;
   backgroundImageUrl?: string;
