@@ -40,4 +40,6 @@ export const defaultConfig: WheelConfig = {
   dividerColor: '#C0C0C0',
   glowColor: '#FFD700',
   pointerColor: '#E0E0E0',
+  pageTitle: 'ROLETA',
+  pageSubtitle: 'Nível Quartzo',
 };
