@@ -268,29 +268,28 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
               </g>
             );
           })}
-
-          {/* Center cap */}
-          <circle cx={cx} cy={cy} r={innerR + 8} fill="url(#capGrad)" stroke={config.dividerColor} strokeWidth="2" />
-          <circle cx={cx} cy={cy} r={innerR - 2} fill={config.centerCapColor} stroke="#555" strokeWidth="1" />
-
-          {/* Center image or default icon */}
-          {config.centerImageUrl ? (
-            <image
-              href={config.centerImageUrl}
-              x={cx - innerR + 3}
-              y={cy - innerR + 3}
-              width={(innerR - 3) * 2}
-              height={(innerR - 3) * 2}
-              clipPath="url(#center-clip)"
-              preserveAspectRatio="xMidYMid slice"
-            />
-          ) : (
-            <>
-              <circle cx={cx - 5} cy={cy - 8} r={12} fill="white" opacity="0.12" />
-              <text x={cx} y={cy + 5} textAnchor="middle" fontSize="24" fill={config.ledColor} fontFamily="'Orbitron', sans-serif" fontWeight="900" style={{ filter: `drop-shadow(0 0 6px ${config.ledColor})` }}>⚡</text>
-            </>
-          )}
         </g>
+
+        {/* === CENTER CAP (static, does not spin) === */}
+        <circle cx={cx} cy={cy} r={innerR + 8} fill="url(#capGrad)" stroke={config.dividerColor} strokeWidth="2" />
+        <circle cx={cx} cy={cy} r={innerR - 2} fill={config.centerCapColor} stroke="#555" strokeWidth="1" />
+
+        {config.centerImageUrl ? (
+          <image
+            href={config.centerImageUrl}
+            x={cx - innerR + 3}
+            y={cy - innerR + 3}
+            width={(innerR - 3) * 2}
+            height={(innerR - 3) * 2}
+            clipPath="url(#center-clip)"
+            preserveAspectRatio="xMidYMid slice"
+          />
+        ) : (
+          <>
+            <circle cx={cx - 5} cy={cy - 8} r={12} fill="white" opacity="0.12" />
+            <text x={cx} y={cy + 5} textAnchor="middle" fontSize="24" fill={config.ledColor} fontFamily="'Orbitron', sans-serif" fontWeight="900" style={{ filter: `drop-shadow(0 0 6px ${config.ledColor})` }}>⚡</text>
+          </>
+        )}
 
         {/* === LAYER 6: Top pointer pointing DOWN === */}
         <g transform={`translate(${cx}, ${cy - outerR - 8})`}>
@@ -302,7 +301,6 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
             style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.6))' }}
           />
           <polygon points="-10,-15 10,-15 0,6" fill="white" opacity="0.2" />
-          {/* Small circle at top of pointer */}
           <circle cx={0} cy={-20} r={6} fill={config.pointerColor} stroke="#888" strokeWidth="1" />
           <circle cx={0} cy={-20} r={3} fill="white" opacity="0.3" />
         </g>
@@ -313,31 +311,31 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
         )}
       </svg>
 
-      {/* Spin button - lowered */}
+      {/* Spin button */}
       <button
         onClick={spin}
         disabled={isSpinning}
         className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-lg tracking-widest px-10 py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
           bottom: '-40px',
-          background: `linear-gradient(135deg, ${config.glowColor}, ${config.ledColor})`,
-          borderColor: config.glowColor,
-          color: '#000',
-          boxShadow: `0 0 20px ${config.glowColor}66, 0 4px 15px rgba(0,0,0,0.4)`,
+          background: config.buttonColor,
+          borderColor: config.buttonColor,
+          color: config.buttonTextColor,
+          boxShadow: `0 0 20px ${config.buttonColor}66, 0 4px 15px rgba(0,0,0,0.4)`,
         }}
       >
         {isSpinning ? 'GIRANDO...' : 'GIRAR'}
       </button>
 
-      {/* Winner announcement - below the wheel */}
+      {/* Winner announcement */}
       {winnerIndex !== null && !isSpinning && (
         <div
           className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-center px-8 py-3 rounded-xl"
           style={{
             bottom: '-100px',
-            background: 'rgba(0,0,0,0.9)',
+            background: config.resultBoxColor,
             border: `2px solid ${config.glowColor}`,
-            color: config.segments[winnerIndex].textColor,
+            color: config.resultTextColor,
             boxShadow: `0 0 30px ${config.glowColor}44`,
           }}
         >
