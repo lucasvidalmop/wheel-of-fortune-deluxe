@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['Orbitron', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +50,17 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        casino: {
+          gold: "hsl(var(--casino-gold))",
+          "gold-light": "hsl(var(--casino-gold-light))",
+          "gold-dark": "hsl(var(--casino-gold-dark))",
+          chrome: "hsl(var(--casino-chrome))",
+          "chrome-light": "hsl(var(--casino-chrome-light))",
+          "chrome-dark": "hsl(var(--casino-chrome-dark))",
+          glow: "hsl(var(--casino-glow))",
+          led: "hsl(var(--casino-led))",
+          "bg-deep": "hsl(var(--casino-bg-deep))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
