@@ -131,6 +131,21 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
       </div>
 
+      {/* Hide text toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">Ocultar texto na roleta</span>
+        <button
+          onClick={() => onChange({ ...config, hideSegmentText: !config.hideSegmentText })}
+          className="w-10 h-5 rounded-full relative transition-colors"
+          style={{ background: config.hideSegmentText ? 'hsl(var(--primary))' : 'hsl(var(--muted))' }}
+        >
+          <div
+            className="w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all"
+            style={{ left: config.hideSegmentText ? '22px' : '2px' }}
+          />
+        </button>
+      </div>
+
       {/* Button & result box */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Botão & Resultado</h3>
