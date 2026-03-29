@@ -25,6 +25,11 @@ export interface WheelConfig {
   resultBorderColor: string;
   pageTitle: string;
   pageSubtitle: string;
+  headerMode: 'text' | 'image';
+  headerImageUrl?: string;
+  headerTitleSize: number;
+  headerSubtitleSize: number;
+  headerImageSize: number;
   backgroundImageUrl?: string;
   fontSizeScale: number;
   hideSegmentText: boolean;
