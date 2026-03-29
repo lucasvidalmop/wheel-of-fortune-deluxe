@@ -60,4 +60,6 @@ export const defaultConfig: WheelConfig = {
   hideSegmentText: false,
   dividerWidth: 3,
   ledSize: 5,
+  titleFontSize: 10,
+  valueFontSize: 22,
 };
