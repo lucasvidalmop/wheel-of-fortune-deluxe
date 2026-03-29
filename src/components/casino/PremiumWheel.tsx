@@ -337,19 +337,37 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
         {isSpinning ? 'GIRANDO...' : 'GIRAR'}
       </button>
 
-      {/* Winner announcement */}
+      {/* Winner announcement dialog */}
       {winnerIndex !== null && !isSpinning && config.segments[winnerIndex] && (
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-center px-8 py-3 rounded-xl"
-          style={{
-            bottom: '-100px',
-            background: config.resultBoxColor,
-            border: `2px solid ${config.glowColor}`,
-            color: config.resultTextColor,
-            boxShadow: `0 0 30px ${config.glowColor}44`,
-          }}
-        >
-          🎉 {config.segments[winnerIndex].title}!
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div
+            className="relative rounded-2xl px-10 py-8 text-center max-w-sm w-full mx-4"
+            style={{
+              background: config.resultBoxColor,
+              border: `3px solid ${config.resultBorderColor}`,
+              boxShadow: `0 0 40px ${config.resultBorderColor}44, 0 8px 32px rgba(0,0,0,0.6)`,
+            }}
+          >
+            <button
+              onClick={() => setWinnerIndex(null)}
+              className="absolute top-3 right-3 text-lg opacity-60 hover:opacity-100 transition-opacity"
+              style={{ color: config.resultTextColor }}
+            >
+              ✕
+            </button>
+            <h3
+              className="text-xl font-bold font-display mb-3"
+              style={{ color: config.resultTextColor }}
+            >
+              {config.segments[winnerIndex].title}
+            </h3>
+            <p
+              className="text-sm mb-1"
+              style={{ color: config.resultTextColor, opacity: 0.85 }}
+            >
+              Parabéns! Você ganhou {config.segments[winnerIndex].title}!
+            </p>
+          </div>
         </div>
       )}
 

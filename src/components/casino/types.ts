@@ -55,6 +55,7 @@ export const defaultConfig: WheelConfig = {
   buttonTextColor: '#000000',
   resultBoxColor: '#000000',
   resultTextColor: '#FFD700',
+  resultBorderColor: '#FFD700',
   pageTitle: 'ROLETA',
   pageSubtitle: 'Nível Quartzo',
   fontSizeScale: 1,
