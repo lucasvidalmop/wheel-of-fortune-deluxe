@@ -128,6 +128,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
           />
           <span className="text-xs font-mono text-muted-foreground w-10 text-right">{config.fontSizeScale.toFixed(1)}x</span>
         </div>
+      </div>
 
       {/* Button & result box */}
       <div className="space-y-2">
