@@ -329,7 +329,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
       </button>
 
       {/* Winner announcement */}
-      {winnerIndex !== null && !isSpinning && (
+      {winnerIndex !== null && !isSpinning && config.segments[winnerIndex] && (
         <div
           className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-center px-8 py-3 rounded-xl"
           style={{
