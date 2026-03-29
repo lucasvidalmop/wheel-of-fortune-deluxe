@@ -57,4 +57,5 @@ export const defaultConfig: WheelConfig = {
   fontSizeScale: 1,
   hideSegmentText: false,
   dividerWidth: 3,
+  ledSize: 5,
 };
