@@ -55,4 +55,5 @@ export const defaultConfig: WheelConfig = {
   pageSubtitle: 'Nível Quartzo',
   fontSizeScale: 1,
   hideSegmentText: false,
+  dividerWidth: 3,
 };
