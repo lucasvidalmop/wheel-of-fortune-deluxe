@@ -24,16 +24,34 @@ const Index = () => {
         style={{ background: `radial-gradient(circle, ${config.glowColor}, transparent)` }}
       />
 
-      {/* Title */}
-      <h1
-        className="relative z-10 font-display text-3xl md:text-4xl font-black tracking-[0.3em] uppercase mb-2"
-        style={{ color: config.glowColor, textShadow: `0 0 30px ${config.glowColor}55` }}
-      >
-        {config.pageTitle}
-      </h1>
-      <p className="relative z-10 font-display text-xs tracking-[0.5em] text-muted-foreground uppercase mb-10">
-        {config.pageSubtitle}
-      </p>
+      {/* Header: text or image */}
+      {config.headerMode === 'image' && config.headerImageUrl ? (
+        <img
+          src={config.headerImageUrl}
+          alt="Header"
+          className="relative z-10 mb-10 object-contain"
+          style={{ height: config.headerImageSize, maxWidth: '90vw' }}
+        />
+      ) : (
+        <>
+          <h1
+            className="relative z-10 font-display font-black tracking-[0.3em] uppercase mb-2"
+            style={{
+              fontSize: config.headerTitleSize,
+              color: config.glowColor,
+              textShadow: `0 0 30px ${config.glowColor}55`,
+            }}
+          >
+            {config.pageTitle}
+          </h1>
+          <p
+            className="relative z-10 font-display tracking-[0.5em] text-muted-foreground uppercase mb-10"
+            style={{ fontSize: config.headerSubtitleSize }}
+          >
+            {config.pageSubtitle}
+          </p>
+        </>
+      )}
 
       {/* Wheel */}
       <div className="relative z-10 mb-32">

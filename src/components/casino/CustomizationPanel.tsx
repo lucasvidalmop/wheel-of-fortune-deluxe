@@ -70,27 +70,103 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
     <div className="w-80 max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-4 space-y-5">
       <h2 className="font-display text-sm font-bold tracking-wider text-primary uppercase">Personalização</h2>
 
-      {/* Page texts */}
+      {/* Header mode toggle */}
       <div className="space-y-2">
-        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Textos da Página</h3>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Título</label>
-          <input
-            type="text"
-            value={config.pageTitle}
-            onChange={e => updateGlobal('pageTitle', e.target.value)}
-            className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground"
-          />
+        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Cabeçalho</h3>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onChange({ ...config, headerMode: 'text' })}
+            className="flex-1 text-xs py-1.5 rounded border transition-colors"
+            style={{
+              borderColor: config.headerMode === 'text' ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+              background: config.headerMode === 'text' ? 'hsl(var(--primary) / 0.15)' : 'transparent',
+              color: 'hsl(var(--foreground))',
+            }}
+          >
+            Título + Subtítulo
+          </button>
+          <button
+            onClick={() => onChange({ ...config, headerMode: 'image' })}
+            className="flex-1 text-xs py-1.5 rounded border transition-colors"
+            style={{
+              borderColor: config.headerMode === 'image' ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+              background: config.headerMode === 'image' ? 'hsl(var(--primary) / 0.15)' : 'transparent',
+              color: 'hsl(var(--foreground))',
+            }}
+          >
+            Imagem
+          </button>
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Subtítulo</label>
-          <input
-            type="text"
-            value={config.pageSubtitle}
-            onChange={e => updateGlobal('pageSubtitle', e.target.value)}
-            className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground"
-          />
-        </div>
+
+        {config.headerMode === 'text' ? (
+          <div className="space-y-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Título</label>
+              <input
+                type="text"
+                value={config.pageTitle}
+                onChange={e => updateGlobal('pageTitle', e.target.value)}
+                className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Subtítulo</label>
+              <input
+                type="text"
+                value={config.pageSubtitle}
+                onChange={e => updateGlobal('pageSubtitle', e.target.value)}
+                className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-16">Título</span>
+              <input
+                type="range"
+                min={16}
+                max={72}
+                step={1}
+                value={config.headerTitleSize ?? 36}
+                onChange={e => onChange({ ...config, headerTitleSize: parseInt(e.target.value) })}
+                className="flex-1 accent-primary"
+              />
+              <span className="text-xs font-mono text-muted-foreground w-8 text-right">{config.headerTitleSize ?? 36}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-16">Subtítulo</span>
+              <input
+                type="range"
+                min={8}
+                max={36}
+                step={1}
+                value={config.headerSubtitleSize ?? 12}
+                onChange={e => onChange({ ...config, headerSubtitleSize: parseInt(e.target.value) })}
+                className="flex-1 accent-primary"
+              />
+              <span className="text-xs font-mono text-muted-foreground w-8 text-right">{config.headerSubtitleSize ?? 12}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <ImageUpload
+              label="Imagem do cabeçalho"
+              value={config.headerImageUrl}
+              onChange={v => updateGlobal('headerImageUrl', v)}
+            />
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-16">Tamanho</span>
+              <input
+                type="range"
+                min={40}
+                max={300}
+                step={5}
+                value={config.headerImageSize ?? 120}
+                onChange={e => onChange({ ...config, headerImageSize: parseInt(e.target.value) })}
+                className="flex-1 accent-primary"
+              />
+              <span className="text-xs font-mono text-muted-foreground w-8 text-right">{config.headerImageSize ?? 120}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Background image */}
