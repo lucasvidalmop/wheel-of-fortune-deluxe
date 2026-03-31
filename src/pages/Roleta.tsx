@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PremiumWheel from '@/components/casino/PremiumWheel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { checkSpins, recordSpinResult, getApiBaseUrl } from '@/services/api';
+import { checkSpins, recordSpinResult, getApiBaseUrl, fetchUserInfo } from '@/services/api';
 
 const Roleta = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,16 +20,24 @@ const Roleta = () => {
   const [canSpin, setCanSpin] = useState(true);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   const hasApi = !!getApiBaseUrl();
 
   useEffect(() => {
     if (!hasApi || !accountId || !identified) return;
     setLoading(true);
-    checkSpins(accountId).then(res => {
-      setCanSpin(res.allowed);
-      setSpinsRemaining(res.spins_remaining);
-      if (!res.allowed) setMessage(res.message || 'Sem giros disponíveis');
+
+    // Fetch user info and spins in parallel
+    const email = searchParams.get('email') || emailValue;
+    Promise.all([
+      checkSpins(accountId),
+      fetchUserInfo(accountId, email),
+    ]).then(([spinRes, userInfo]) => {
+      setCanSpin(spinRes.allowed);
+      setSpinsRemaining(spinRes.spins_remaining);
+      if (!spinRes.allowed) setMessage(spinRes.message || 'Sem giros disponíveis');
+      if (userInfo?.name) setUserName(userInfo.name);
       setLoading(false);
     });
   }, [accountId, hasApi, identified]);
@@ -207,11 +215,16 @@ const Roleta = () => {
       />
 
       {/* Logged-in user badge */}
-      <div className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(20,20,30,0.8)', border: `1px solid ${config.glowColor}33` }}>
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">ID:</span>
-        <span className="text-xs font-bold font-display" style={{ color: config.glowColor }}>{accountId}</span>
+      <div className="fixed top-4 left-4 z-50 flex items-center gap-3 px-4 py-2 rounded-lg" style={{ background: 'rgba(20,20,30,0.85)', border: `1px solid ${config.glowColor}33` }}>
+        {userName && (
+          <span className="text-sm font-bold font-display" style={{ color: config.glowColor }}>{userName}</span>
+        )}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">ID:</span>
+          <span className="text-xs font-mono text-muted-foreground">{accountId}</span>
+        </div>
         <button
-          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setSearchParams({}); }}
+          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setUserName(null); setSearchParams({}); }}
           className="text-xs text-muted-foreground hover:text-foreground ml-1 transition-colors"
         >
           ✕
