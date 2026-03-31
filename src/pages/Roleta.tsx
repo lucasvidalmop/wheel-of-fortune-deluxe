@@ -211,7 +211,7 @@ const Roleta = () => {
         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">ID:</span>
         <span className="text-xs font-bold font-display" style={{ color: config.glowColor }}>{accountId}</span>
         <button
-          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setSearchParams({}); }}
+          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setSearchParams({}); }}
           className="text-xs text-muted-foreground hover:text-foreground ml-1 transition-colors"
         >
           ✕
