@@ -395,6 +395,36 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                 value={seg.imageUrl}
                 onChange={v => updateSegment(i, 'imageUrl', v)}
               />
+              {seg.imageUrl && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground w-8">X</span>
+                    <input
+                      type="range"
+                      min={-100}
+                      max={100}
+                      step={1}
+                      value={seg.imageOffsetX ?? 0}
+                      onChange={e => updateSegment(i, 'imageOffsetX', parseInt(e.target.value))}
+                      className="flex-1 accent-primary"
+                    />
+                    <span className="text-xs font-mono text-muted-foreground w-8 text-right">{seg.imageOffsetX ?? 0}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground w-8">Y</span>
+                    <input
+                      type="range"
+                      min={-100}
+                      max={100}
+                      step={1}
+                      value={seg.imageOffsetY ?? 0}
+                      onChange={e => updateSegment(i, 'imageOffsetY', parseInt(e.target.value))}
+                      className="flex-1 accent-primary"
+                    />
+                    <span className="text-xs font-mono text-muted-foreground w-8 text-right">{seg.imageOffsetY ?? 0}</span>
+                  </div>
+                </div>
+              )}
               {config.segments.length > 2 && (
                 <button
                   onClick={() => {

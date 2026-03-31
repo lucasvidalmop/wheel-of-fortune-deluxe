@@ -6,6 +6,8 @@ export interface WheelSegment {
   gradientOverlay: string;
   textColor: string;
   imageUrl?: string;
+  imageOffsetX?: number;
+  imageOffsetY?: number;
   percentage: number;
 }
 
