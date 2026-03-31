@@ -67,9 +67,30 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
   };
   const fontSizeScale = config.fontSizeScale ?? 1;
 
+  const [apiUrl, setApiUrlState] = useState(getApiBaseUrl());
+
   return (
     <div className="w-80 max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-4 space-y-5">
       <h2 className="font-display text-sm font-bold tracking-wider text-primary uppercase">Personalização</h2>
+
+      {/* API Backend URL */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">API Backend</h3>
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">URL base da API (Laravel)</label>
+          <input
+            type="text"
+            value={apiUrl}
+            placeholder="https://seusite.com"
+            onChange={e => {
+              setApiUrlState(e.target.value);
+              setApiBaseUrl(e.target.value);
+            }}
+            className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground"
+          />
+          <p className="text-[10px] text-muted-foreground">Rota pública: /roleta?account_id=xxx</p>
+        </div>
+      </div>
 
       {/* Header mode toggle */}
       <div className="space-y-2">
