@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { WheelConfig } from './types';
+import { getApiBaseUrl, setApiBaseUrl } from '@/services/api';
 
 interface CustomizationPanelProps {
   config: WheelConfig;
