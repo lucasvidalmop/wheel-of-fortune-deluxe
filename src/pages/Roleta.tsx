@@ -9,6 +9,7 @@ const Roleta = () => {
   const [accountId, setAccountId] = useState(searchParams.get('account_id') || '');
   const [identified, setIdentified] = useState(!!searchParams.get('account_id'));
   const [inputValue, setInputValue] = useState('');
+  const [emailValue, setEmailValue] = useState('');
 
   const [config] = useState<WheelConfig>(() => {
     const saved = localStorage.getItem('wheel_config');
