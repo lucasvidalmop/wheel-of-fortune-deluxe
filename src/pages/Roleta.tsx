@@ -127,8 +127,30 @@ const Roleta = () => {
               Identificação
             </h2>
             <p className="text-xs text-muted-foreground tracking-wide">
-              Informe seu ID de conta para acessar a roleta
+              Informe seu e-mail e ID de conta para acessar a roleta
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground font-display tracking-wider uppercase">
+              E-mail
+            </label>
+            <input
+              type="email"
+              value={emailValue}
+              onChange={e => setEmailValue(e.target.value)}
+              placeholder="seuemail@exemplo.com"
+              maxLength={255}
+              required
+              className="w-full px-4 py-3 rounded-lg text-sm font-display tracking-wide outline-none transition-all duration-300"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: `1.5px solid ${config.glowColor}33`,
+                color: '#fff',
+              }}
+              onFocus={e => (e.target.style.borderColor = `${config.glowColor}88`)}
+              onBlur={e => (e.target.style.borderColor = `${config.glowColor}33`)}
+            />
           </div>
 
           <div className="space-y-2">
