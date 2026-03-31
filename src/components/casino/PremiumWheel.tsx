@@ -4,6 +4,7 @@ import { WheelConfig } from './types';
 interface PremiumWheelProps {
   config: WheelConfig;
   onSpinEnd?: (segmentIndex: number) => void;
+  disabled?: boolean;
 }
 
 const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
