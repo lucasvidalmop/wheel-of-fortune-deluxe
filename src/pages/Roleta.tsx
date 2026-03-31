@@ -9,6 +9,7 @@ const Roleta = () => {
   const [accountId, setAccountId] = useState(searchParams.get('account_id') || '');
   const [identified, setIdentified] = useState(!!searchParams.get('account_id'));
   const [inputValue, setInputValue] = useState('');
+  const [emailValue, setEmailValue] = useState('');
 
   const [config] = useState<WheelConfig>(() => {
     const saved = localStorage.getItem('wheel_config');
@@ -35,11 +36,12 @@ const Roleta = () => {
 
   const handleIdentify = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = inputValue.trim();
-    if (!trimmed) return;
-    setAccountId(trimmed);
+    const trimmedId = inputValue.trim();
+    const trimmedEmail = emailValue.trim();
+    if (!trimmedId || !trimmedEmail) return;
+    setAccountId(trimmedId);
     setIdentified(true);
-    setSearchParams({ account_id: trimmed });
+    setSearchParams({ account_id: trimmedId, email: trimmedEmail });
   };
 
   const handleSpinEnd = async (segmentIndex: number) => {
@@ -125,8 +127,30 @@ const Roleta = () => {
               Identificação
             </h2>
             <p className="text-xs text-muted-foreground tracking-wide">
-              Informe seu ID de conta para acessar a roleta
+              Informe seu e-mail e ID de conta para acessar a roleta
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground font-display tracking-wider uppercase">
+              E-mail
+            </label>
+            <input
+              type="email"
+              value={emailValue}
+              onChange={e => setEmailValue(e.target.value)}
+              placeholder="seuemail@exemplo.com"
+              maxLength={255}
+              required
+              className="w-full px-4 py-3 rounded-lg text-sm font-display tracking-wide outline-none transition-all duration-300"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: `1.5px solid ${config.glowColor}33`,
+                color: '#fff',
+              }}
+              onFocus={e => (e.target.style.borderColor = `${config.glowColor}88`)}
+              onBlur={e => (e.target.style.borderColor = `${config.glowColor}33`)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -187,7 +211,7 @@ const Roleta = () => {
         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">ID:</span>
         <span className="text-xs font-bold font-display" style={{ color: config.glowColor }}>{accountId}</span>
         <button
-          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setSearchParams({}); }}
+          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setSearchParams({}); }}
           className="text-xs text-muted-foreground hover:text-foreground ml-1 transition-colors"
         >
           ✕
