@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PremiumWheel from '@/components/casino/PremiumWheel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { checkSpins, recordSpinResult, getApiBaseUrl } from '@/services/api';
+import { checkSpins, recordSpinResult, getApiBaseUrl, fetchUserInfo } from '@/services/api';
 
 const Roleta = () => {
   const [searchParams, setSearchParams] = useSearchParams();
