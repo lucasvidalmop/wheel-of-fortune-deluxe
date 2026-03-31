@@ -35,7 +35,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
   }, [config.segments]);
 
   const spin = useCallback(() => {
-    if (isSpinning) return;
+    if (isSpinning || disabled) return;
     setIsSpinning(true);
     setWinnerIndex(null);
 
