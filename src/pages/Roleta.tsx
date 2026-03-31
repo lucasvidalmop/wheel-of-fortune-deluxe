@@ -20,16 +20,24 @@ const Roleta = () => {
   const [canSpin, setCanSpin] = useState(true);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   const hasApi = !!getApiBaseUrl();
 
   useEffect(() => {
     if (!hasApi || !accountId || !identified) return;
     setLoading(true);
-    checkSpins(accountId).then(res => {
-      setCanSpin(res.allowed);
-      setSpinsRemaining(res.spins_remaining);
-      if (!res.allowed) setMessage(res.message || 'Sem giros disponíveis');
+
+    // Fetch user info and spins in parallel
+    const email = searchParams.get('email') || emailValue;
+    Promise.all([
+      checkSpins(accountId),
+      fetchUserInfo(accountId, email),
+    ]).then(([spinRes, userInfo]) => {
+      setCanSpin(spinRes.allowed);
+      setSpinsRemaining(spinRes.spins_remaining);
+      if (!spinRes.allowed) setMessage(spinRes.message || 'Sem giros disponíveis');
+      if (userInfo?.name) setUserName(userInfo.name);
       setLoading(false);
     });
   }, [accountId, hasApi, identified]);
