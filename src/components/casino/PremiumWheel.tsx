@@ -4,9 +4,10 @@ import { WheelConfig } from './types';
 interface PremiumWheelProps {
   config: WheelConfig;
   onSpinEnd?: (segmentIndex: number) => void;
+  disabled?: boolean;
 }
 
-const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
+const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false }) => {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
@@ -34,7 +35,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
   }, [config.segments]);
 
   const spin = useCallback(() => {
-    if (isSpinning) return;
+    if (isSpinning || disabled) return;
     setIsSpinning(true);
     setWinnerIndex(null);
 
@@ -324,7 +325,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd }) => {
       {/* Spin button */}
       <button
         onClick={spin}
-        disabled={isSpinning}
+        disabled={isSpinning || disabled}
         className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-lg tracking-widest px-10 py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
           bottom: '-40px',
