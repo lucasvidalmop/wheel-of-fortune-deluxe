@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PremiumWheel from '@/components/casino/PremiumWheel';
 import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
