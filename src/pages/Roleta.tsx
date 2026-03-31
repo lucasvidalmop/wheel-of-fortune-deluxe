@@ -215,11 +215,16 @@ const Roleta = () => {
       />
 
       {/* Logged-in user badge */}
-      <div className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(20,20,30,0.8)', border: `1px solid ${config.glowColor}33` }}>
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">ID:</span>
-        <span className="text-xs font-bold font-display" style={{ color: config.glowColor }}>{accountId}</span>
+      <div className="fixed top-4 left-4 z-50 flex items-center gap-3 px-4 py-2 rounded-lg" style={{ background: 'rgba(20,20,30,0.85)', border: `1px solid ${config.glowColor}33` }}>
+        {userName && (
+          <span className="text-sm font-bold font-display" style={{ color: config.glowColor }}>{userName}</span>
+        )}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">ID:</span>
+          <span className="text-xs font-mono text-muted-foreground">{accountId}</span>
+        </div>
         <button
-          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setSearchParams({}); }}
+          onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setUserName(null); setSearchParams({}); }}
           className="text-xs text-muted-foreground hover:text-foreground ml-1 transition-colors"
         >
           ✕
