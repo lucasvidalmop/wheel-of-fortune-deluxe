@@ -4,8 +4,16 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 
 const Index = () => {
-  const [config, setConfig] = useState<WheelConfig>(defaultConfig);
+  const [config, setConfig] = useState<WheelConfig>(() => {
+    const saved = localStorage.getItem('wheel_config');
+    return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
+  });
   const [showPanel, setShowPanel] = useState(false);
+
+  // Persist config
+  useEffect(() => {
+    localStorage.setItem('wheel_config', JSON.stringify(config));
+  }, [config]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: '#0a0a0f' }}>
