@@ -36,11 +36,12 @@ const Roleta = () => {
 
   const handleIdentify = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = inputValue.trim();
-    if (!trimmed) return;
-    setAccountId(trimmed);
+    const trimmedId = inputValue.trim();
+    const trimmedEmail = emailValue.trim();
+    if (!trimmedId || !trimmedEmail) return;
+    setAccountId(trimmedId);
     setIdentified(true);
-    setSearchParams({ account_id: trimmed });
+    setSearchParams({ account_id: trimmedId, email: trimmedEmail });
   };
 
   const handleSpinEnd = async (segmentIndex: number) => {
