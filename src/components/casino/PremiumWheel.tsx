@@ -325,7 +325,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       {/* Spin button */}
       <button
         onClick={spin}
-        disabled={isSpinning}
+        disabled={isSpinning || disabled}
         className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-lg tracking-widest px-10 py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
           bottom: '-40px',
