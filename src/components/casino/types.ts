@@ -8,6 +8,7 @@ export interface WheelSegment {
   imageUrl?: string;
   imageOffsetX?: number;
   imageOffsetY?: number;
+  imageScale?: number;
   percentage: number;
 }
 
