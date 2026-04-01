@@ -187,7 +187,7 @@ const Admin = () => {
 
   const openNew = () => {
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', spins_available: 0 });
+    setForm({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
     setShowForm(true);
   };
 
