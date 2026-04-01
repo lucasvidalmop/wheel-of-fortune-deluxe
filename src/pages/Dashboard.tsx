@@ -692,10 +692,12 @@ const Dashboard = () => {
                 if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
                 setEmailSending(true);
                 const roletaLink = `${baseUrl}/roleta/${slug}`;
+                const accessToken = session?.access_token;
                 let sent = 0, errors = 0;
                 for (const email of recipients) {
                   const user = users.find(u => u.email === email);
                   const { error } = await supabase.functions.invoke('send-transactional-email', {
+                    headers: { Authorization: `Bearer ${accessToken}` },
                     body: {
                       templateName: 'wheel-invite',
                       recipientEmail: email,
