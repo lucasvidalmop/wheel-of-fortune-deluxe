@@ -52,7 +52,7 @@ const Roleta = () => {
     setLoading(true);
     let query = (supabase as any)
       .from('wheel_users')
-      .select('name, spins_available')
+      .select('name, spins_available, owner_id')
       .eq('account_id', accountId);
     if (ownerId) query = query.eq('owner_id', ownerId);
     query.maybeSingle()
@@ -61,11 +61,12 @@ const Roleta = () => {
           setUserName(data.name);
           setSpinsRemaining(data.spins_available);
           setCanSpin(data.spins_available >= 1);
+          if (!ownerId && data.owner_id) setOwnerId(data.owner_id);
           if (data.spins_available < 1) setMessage('Sem giros disponíveis');
         }
         setLoading(false);
       });
-  }, [accountId, identified]);
+  }, [accountId, identified, ownerId]);
 
   const handleIdentify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +77,7 @@ const Roleta = () => {
 
     let authQuery = (supabase as any)
       .from('wheel_users')
-      .select('id, name, spins_available, account_id')
+      .select('id, name, spins_available, account_id, owner_id')
       .eq('email', trimmedEmail)
       .eq('account_id', trimmedId);
     if (ownerId) authQuery = authQuery.eq('owner_id', ownerId);
@@ -92,6 +93,7 @@ const Roleta = () => {
     setUserName(data.name);
     setSpinsRemaining(data.spins_available);
     setCanSpin(data.spins_available >= 1);
+    if (data.owner_id) setOwnerId(data.owner_id);
     if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
     setSearchParams({ account_id: trimmedId, email: trimmedEmail });
@@ -103,7 +105,6 @@ const Roleta = () => {
     if (!seg) return;
 
     if (accountId) {
-      // Save spin result
       await (supabase as any)
         .from('spin_results')
         .insert({
@@ -114,7 +115,6 @@ const Roleta = () => {
           owner_id: ownerId || null,
         });
 
-      // Decrement spin in database
       let updateQuery = (supabase as any)
         .from('wheel_users')
         .update({ spins_available: Math.max(0, (spinsRemaining ?? 1) - 1) })
@@ -122,14 +122,16 @@ const Roleta = () => {
       if (ownerId) updateQuery = updateQuery.eq('owner_id', ownerId);
       await updateQuery;
 
-      const { data } = await (supabase as any)
+      let refreshQuery = (supabase as any)
         .from('wheel_users')
-        .select('spins_available')
-        .eq('account_id', accountId)
-        .maybeSingle();
+        .select('spins_available, owner_id')
+        .eq('account_id', accountId);
+      if (ownerId) refreshQuery = refreshQuery.eq('owner_id', ownerId);
+      const { data } = await refreshQuery.maybeSingle();
       if (data) {
         setSpinsRemaining(data.spins_available);
         setCanSpin(data.spins_available >= 1);
+        if (!ownerId && data.owner_id) setOwnerId(data.owner_id);
         if (data.spins_available < 1) setMessage('Sem giros disponíveis');
       }
     }
