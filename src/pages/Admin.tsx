@@ -219,11 +219,11 @@ const Admin = () => {
       let imported = 0, errors = 0;
       for (const line of dataLines) {
         const cols = line.match(/(".*?"|[^,]+)/g)?.map(c => c.replace(/^"|"$/g, '').trim()) || [];
-        if (cols.length < 3) { errors++; continue; }
-        const [name, email, account_id, spins] = cols;
+        if (cols.length < 4) { errors++; continue; }
+        const [name, email, phone, account_id] = cols;
         if (!name || !email || !account_id) { errors++; continue; }
         const { error } = await (supabase as any).from('wheel_users').insert({
-          name, email, account_id, spins_available: parseInt(spins) || 0,
+          name, email, phone: phone || '', account_id,
         });
         if (error) errors++; else imported++;
       }
