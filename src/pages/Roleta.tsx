@@ -196,8 +196,8 @@ const Roleta = () => {
                 </>
               )}
               {ac.authHeaderMode === 'logo' && !ac.authLogoUrl && (
-                <h2 className="font-bold tracking-wide" style={{ color: ac.authLabelColor ?? '#fff', fontSize: ac.authTitleSize ?? 18 }}>
-                  {ac.authTitle ?? 'Identificação'}
+                 <h2 className="font-bold tracking-wide" style={{ color: ac.authLabelColor ?? '#fff', fontSize: ac.authTitleSize ?? 18 }}>
+                   {ac.authTitle ?? 'LIBERAR GIRO'}
                 </h2>
               )}
             </div>
