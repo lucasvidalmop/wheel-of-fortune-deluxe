@@ -144,6 +144,30 @@ const Admin = () => {
     fetchUsers();
   };
 
+  const handleToggleAllSpins = async (grant: boolean) => {
+    const label = grant ? 'liberar giros para todos' : 'remover giros de todos';
+    if (!confirm(`Tem certeza que deseja ${label}?`)) return;
+    const { error } = await (supabase as any)
+      .from('wheel_users')
+      .update({ spins_available: grant ? 1 : 0 })
+      .gte('id', '00000000-0000-0000-0000-000000000000');
+    if (error) { toast.error('Erro ao atualizar'); return; }
+    toast.success(grant ? 'Giros liberados para todos!' : 'Giros removidos de todos!');
+    fetchUsers();
+  };
+
+  const handleDeleteAll = async () => {
+    if (!confirm('Tem certeza que deseja EXCLUIR TODOS os cadastros? Esta ação não pode ser desfeita.')) return;
+    if (!confirm('CONFIRMAR: Todos os usuários serão excluídos permanentemente.')) return;
+    const { error } = await (supabase as any)
+      .from('wheel_users')
+      .delete()
+      .gte('id', '00000000-0000-0000-0000-000000000000');
+    if (error) { toast.error('Erro ao excluir'); return; }
+    toast.success('Todos os cadastros foram excluídos!');
+    fetchUsers();
+  };
+
   const handleDeleteUser = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
     const { error } = await (supabase as any).from('wheel_users').delete().eq('id', id);
@@ -333,6 +357,17 @@ const Admin = () => {
                   + Novo Usuário
                 </button>
               </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => handleToggleAllSpins(true)} className="px-4 py-2 rounded-lg bg-primary/20 text-primary font-bold text-xs hover:bg-primary/30 transition">
+                🎰 Liberar giros para todos
+              </button>
+              <button onClick={() => handleToggleAllSpins(false)} className="px-4 py-2 rounded-lg bg-muted text-muted-foreground font-bold text-xs hover:bg-muted/80 transition">
+                ⛔ Remover giros de todos
+              </button>
+              <button onClick={handleDeleteAll} className="px-4 py-2 rounded-lg bg-destructive/10 text-destructive font-bold text-xs hover:bg-destructive/20 transition">
+                🗑️ Excluir todos os cadastros
+              </button>
             </div>
 
             {showForm && (
