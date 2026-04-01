@@ -59,12 +59,21 @@ const Dashboard = () => {
 
   const loadData = async (userId: string) => {
     setLoading(true);
-    // Load config
-    const { data: cfg } = await (supabase as any)
+    let { data: cfg } = await (supabase as any)
       .from('wheel_configs')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
+
+    if (!cfg) {
+      const generatedSlug = `roleta-${userId.slice(0, 8)}`;
+      const { data: created } = await (supabase as any)
+        .from('wheel_configs')
+        .insert({ user_id: userId, slug: generatedSlug, config: {} })
+        .select('*')
+        .maybeSingle();
+      cfg = created || null;
+    }
 
     if (cfg) {
       setSlug(cfg.slug);
