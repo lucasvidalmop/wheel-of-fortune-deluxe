@@ -94,6 +94,8 @@ export type Database = {
           account_id: string
           created_at: string | null
           email: string
+          fixed_prize_enabled: boolean
+          fixed_prize_segment: number | null
           id: string
           name: string
           owner_id: string | null
@@ -105,6 +107,8 @@ export type Database = {
           account_id: string
           created_at?: string | null
           email: string
+          fixed_prize_enabled?: boolean
+          fixed_prize_segment?: number | null
           id?: string
           name: string
           owner_id?: string | null
@@ -116,6 +120,8 @@ export type Database = {
           account_id?: string
           created_at?: string | null
           email?: string
+          fixed_prize_enabled?: boolean
+          fixed_prize_segment?: number | null
           id?: string
           name?: string
           owner_id?: string | null
