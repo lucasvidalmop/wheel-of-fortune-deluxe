@@ -275,6 +275,20 @@ const Dashboard = () => {
     e.target.value = '';
   };
 
+  const handleViewUserData = async (accountId: string) => {
+    setViewingUserLoading(true);
+    setViewingUserData(null);
+    const uid = session?.user?.id;
+    const { data } = await (supabase as any)
+      .from('wheel_users')
+      .select('*')
+      .eq('owner_id', uid)
+      .eq('account_id', accountId)
+      .maybeSingle();
+    setViewingUserData(data || null);
+    setViewingUserLoading(false);
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
