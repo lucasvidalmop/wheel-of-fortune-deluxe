@@ -611,6 +611,7 @@ const Admin = () => {
                   <thead>
                     <tr className="bg-muted/50">
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium w-10">#</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Operador</th>
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">Nome</th>
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">Email</th>
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">Account ID</th>
@@ -622,6 +623,7 @@ const Admin = () => {
                     {spinResults.map((r: any, i: number) => (
                       <tr key={r.id} className="border-t border-border hover:bg-muted/30 transition">
                         <td className="px-3 py-3 text-muted-foreground text-xs">{i + 1}</td>
+                        <td className="px-3 py-3 text-accent-foreground font-medium">🎰 {r.owner_slug}</td>
                         <td className="px-3 py-3 text-foreground font-medium">{r.user_name}</td>
                         <td className="px-3 py-3 text-muted-foreground">{r.user_email}</td>
                         <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{r.account_id}</td>
