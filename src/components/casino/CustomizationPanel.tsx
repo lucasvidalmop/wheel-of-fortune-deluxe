@@ -51,6 +51,17 @@ const RangeInput: React.FC<{ label: string; value: number; min: number; max: num
   </div>
 );
 
+const ImagePositionControls: React.FC<{
+  offsetX: number; offsetY: number; scale: number;
+  onChangeX: (v: number) => void; onChangeY: (v: number) => void; onChangeScale: (v: number) => void;
+}> = ({ offsetX, offsetY, scale, onChangeX, onChangeY, onChangeScale }) => (
+  <div className="space-y-1 pl-2 border-l-2 border-border ml-1">
+    <RangeInput label="Mover X" value={offsetX} min={-200} max={200} onChange={onChangeX} />
+    <RangeInput label="Mover Y" value={offsetY} min={-200} max={200} onChange={onChangeY} />
+    <RangeInput label="Zoom" value={scale} min={0.1} max={5} step={0.1} onChange={onChangeScale} />
+  </div>
+);
+
 const Section: React.FC<{ title: string; emoji?: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, emoji, children, defaultOpen = false }) => (
   <details open={defaultOpen} className="group border border-border rounded-lg overflow-hidden">
     <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer bg-secondary/30 hover:bg-secondary/60 transition-colors text-xs font-bold text-foreground uppercase tracking-wide">
