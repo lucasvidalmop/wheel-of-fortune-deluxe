@@ -247,6 +247,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_wheel_user: {
+        Args: { p_account_id: string; p_email: string; p_owner_id?: string }
+        Returns: {
+          account_id: string
+          fixed_prize_enabled: boolean
+          fixed_prize_segment: number
+          id: string
+          name: string
+          owner_id: string
+          spins_available: number
+        }[]
+      }
+      decrement_wheel_user_spins: {
+        Args: { p_account_id: string; p_owner_id?: string }
+        Returns: {
+          owner_id: string
+          spins_available: number
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -254,6 +273,16 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_wheel_user_spins: {
+        Args: { p_account_id: string; p_owner_id?: string }
+        Returns: {
+          fixed_prize_enabled: boolean
+          fixed_prize_segment: number
+          name: string
+          owner_id: string
+          spins_available: number
+        }[]
       }
       has_role: {
         Args: {
