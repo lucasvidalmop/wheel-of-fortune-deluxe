@@ -203,7 +203,7 @@ const Dashboard = () => {
 
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
-    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '' });
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null });
     setShowForm(true);
   };
 
