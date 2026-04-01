@@ -1,5 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { WheelConfig } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AuthConfigPanelProps {
   config: WheelConfig;
@@ -16,22 +18,51 @@ const ColorInput: React.FC<{ label: string; value: string; onChange: (v: string)
   </div>
 );
 
-const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => {
+const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: string) => void; folder?: string }> = ({ label, value, onChange, folder = 'auth' }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onChange(reader.result as string);
-    reader.readAsDataURL(file);
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('app-assets')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('app-assets')
+        .getPublicUrl(fileName);
+
+      onChange(publicUrl);
+      toast.success('Imagem enviada com sucesso!');
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      toast.error('Erro ao enviar imagem: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
   };
+
   return (
     <div className="space-y-1">
       <label className="text-xs text-muted-foreground">{label}</label>
       <div className="flex gap-2 items-center">
         {value && <img src={value} alt="" className="w-8 h-8 rounded object-cover border border-border" />}
-        <button onClick={() => inputRef.current?.click()} className="text-xs px-3 py-1.5 rounded border border-border bg-secondary text-foreground hover:bg-accent transition-colors">
-          {value ? 'Trocar' : 'Upload'}
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="text-xs px-3 py-1.5 rounded border border-border bg-secondary text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+        >
+          {uploading ? 'Enviando...' : value ? 'Trocar' : 'Upload'}
         </button>
         {value && (
           <button onClick={() => onChange('')} className="text-xs px-2 py-1.5 rounded border border-border text-destructive hover:bg-destructive/10 transition-colors">✕</button>
