@@ -179,6 +179,7 @@ const Admin = () => {
       account_id: user.account_id,
       email: user.email,
       name: user.name,
+      phone: user.phone || '',
       spins_available: user.spins_available,
     });
     setShowForm(true);
