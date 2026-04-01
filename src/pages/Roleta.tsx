@@ -50,11 +50,12 @@ const Roleta = () => {
   useEffect(() => {
     if (!accountId || !identified) return;
     setLoading(true);
-    (supabase as any)
+    let query = (supabase as any)
       .from('wheel_users')
       .select('name, spins_available')
-      .eq('account_id', accountId)
-      .maybeSingle()
+      .eq('account_id', accountId);
+    if (ownerId) query = query.eq('owner_id', ownerId);
+    query.maybeSingle()
       .then(({ data }: any) => {
         if (data) {
           setUserName(data.name);
@@ -73,12 +74,13 @@ const Roleta = () => {
     if (!trimmedId || !trimmedEmail) return;
     setAuthLoading(true);
 
-    const { data, error } = await (supabase as any)
+    let authQuery = (supabase as any)
       .from('wheel_users')
       .select('id, name, spins_available, account_id')
       .eq('email', trimmedEmail)
-      .eq('account_id', trimmedId)
-      .maybeSingle();
+      .eq('account_id', trimmedId);
+    if (ownerId) authQuery = authQuery.eq('owner_id', ownerId);
+    const { data, error } = await authQuery.maybeSingle();
 
     if (error || !data) {
       toast.error('Dados inválidos. Verifique seu email e ID da conta.');
@@ -113,10 +115,12 @@ const Roleta = () => {
         });
 
       // Decrement spin in database
-      await (supabase as any)
+      let updateQuery = (supabase as any)
         .from('wheel_users')
         .update({ spins_available: Math.max(0, (spinsRemaining ?? 1) - 1) })
         .eq('account_id', accountId);
+      if (ownerId) updateQuery = updateQuery.eq('owner_id', ownerId);
+      await updateQuery;
 
       const { data } = await (supabase as any)
         .from('wheel_users')
