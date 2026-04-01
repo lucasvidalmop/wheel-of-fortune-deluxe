@@ -56,7 +56,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       setWinnerIndex(winnerIdx);
       onSpinEnd?.(winnerIdx);
     }, 5000);
-  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd]);
+  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments]);
 
   const getSegmentPath = (index: number, r: number, ir: number) => {
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
