@@ -351,10 +351,6 @@ const Admin = () => {
                     <label className="text-xs text-muted-foreground">Account ID</label>
                     <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Giros Disponíveis</label>
-                    <input type="number" min={0} required value={form.spins_available} onChange={e => setForm({ ...form, spins_available: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-                  </div>
                   <div className="flex gap-3 pt-2">
                     <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
                     <button type="submit" className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm">{editingUser ? 'Salvar' : 'Criar'}</button>
