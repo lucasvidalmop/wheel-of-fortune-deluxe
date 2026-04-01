@@ -188,7 +188,7 @@ const Roleta = () => {
               {(ac.authHeaderMode === 'text' || ac.authHeaderMode === 'logo_text') && (
                 <>
                   <h2 className="font-bold tracking-wide" style={{ color: ac.authLabelColor ?? '#fff', fontSize: ac.authTitleSize ?? 18 }}>
-                    {ac.authTitle ?? 'Atualizar Chave PIX'}
+                    {ac.authTitle ?? 'LIBERAR GIRO'}
                   </h2>
                   <p className="mt-1" style={{ color: ac.authTextColor ?? 'rgba(255,255,255,0.5)', fontSize: ac.authSubtitleSize ?? 12 }}>
                     {ac.authSubtitle ?? 'Informe o e-mail e o ID da sua conta para verificarmos seu cadastro.'}
