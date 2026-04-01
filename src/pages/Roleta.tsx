@@ -222,7 +222,10 @@ const Roleta = () => {
       {config.backgroundImageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-          style={{ backgroundImage: `url(${config.backgroundImageUrl})` }}
+          style={{
+            backgroundImage: `url(${config.backgroundImageUrl})`,
+            transform: `translate(${config.backgroundImageOffsetX ?? 0}px, ${config.backgroundImageOffsetY ?? 0}px) scale(${config.backgroundImageScale ?? 1})`,
+          }}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" />
