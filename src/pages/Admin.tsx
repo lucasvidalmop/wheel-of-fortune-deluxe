@@ -150,7 +150,27 @@ const Admin = () => {
     fetchUsers();
   };
 
-  const openEdit = (user: WheelUser) => {
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminCreating(true);
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('create-admin-user', {
+        body: { email: adminForm.email, password: adminForm.password, name: adminForm.name },
+      });
+      if (res.error || res.data?.error) {
+        toast.error(res.data?.error || res.error?.message || 'Erro ao criar admin');
+      } else {
+        toast.success(`Admin ${adminForm.email} criado com sucesso!`);
+        setAdminForm({ email: '', password: '', name: '' });
+        setShowAdminForm(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao criar admin');
+    }
+    setAdminCreating(false);
+  };
+
     setEditingUser(user);
     setForm({
       account_id: user.account_id,
