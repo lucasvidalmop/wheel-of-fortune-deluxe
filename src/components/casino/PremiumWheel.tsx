@@ -5,6 +5,7 @@ interface PremiumWheelProps {
   config: WheelConfig;
   onSpinEnd?: (segmentIndex: number) => void;
   disabled?: boolean;
+  forcedSegment?: number | null;
 }
 
 const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false }) => {
