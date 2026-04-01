@@ -373,7 +373,8 @@ const Admin = () => {
                       <th className="text-left px-4 py-3 text-muted-foreground font-medium">Nome</th>
                       <th className="text-left px-4 py-3 text-muted-foreground font-medium">Email</th>
                       <th className="text-left px-4 py-3 text-muted-foreground font-medium">Account ID</th>
-                      <th className="text-center px-4 py-3 text-muted-foreground font-medium">Giros</th>
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Celular</th>
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Account ID</th>
                       <th className="text-center px-4 py-3 text-muted-foreground font-medium">Ações</th>
                     </tr>
                   </thead>
@@ -382,15 +383,15 @@ const Admin = () => {
                       <tr key={user.id} className="border-t border-border hover:bg-muted/30 transition">
                         <td className="px-4 py-3 text-foreground font-medium">{user.name}</td>
                         <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{user.phone}</td>
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{user.account_id}</td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${user.spins_available > 0 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                            {user.spins_available}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => handleGrantSpin(user)} className="px-3 py-1.5 rounded-md bg-primary/20 text-primary text-xs hover:bg-primary/30 transition font-bold">+1 Giro</button>
+                            {user.spins_available > 0 ? (
+                              <span className="px-3 py-1.5 rounded-md bg-primary/20 text-primary text-xs font-bold">1 giro ✓</span>
+                            ) : (
+                              <button onClick={() => handleGrantSpin(user)} className="px-3 py-1.5 rounded-md bg-green-600/20 text-green-500 text-xs hover:bg-green-600/30 transition font-bold">Liberar 1 giro</button>
+                            )}
                             <button onClick={() => openEdit(user)} className="px-3 py-1.5 rounded-md bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
                             <button onClick={() => handleDeleteUser(user.id)} className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
