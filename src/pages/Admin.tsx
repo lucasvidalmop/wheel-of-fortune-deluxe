@@ -359,6 +359,12 @@ const Admin = () => {
           >
             👤 Criar Usuários
           </button>
+          <button
+            onClick={() => { setActiveTab('history'); fetchHistory(); }}
+            className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          >
+            🏆 Histórico
+          </button>
         </div>
 
         {/* Users tab */}
