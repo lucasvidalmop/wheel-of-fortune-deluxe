@@ -423,6 +423,19 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                     />
                     <span className="text-xs font-mono text-muted-foreground w-8 text-right">{seg.imageOffsetY ?? 0}</span>
                   </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground w-8">🔍</span>
+                    <input
+                      type="range"
+                      min={0.2}
+                      max={3}
+                      step={0.1}
+                      value={seg.imageScale ?? 1}
+                      onChange={e => updateSegment(i, 'imageScale', parseFloat(e.target.value))}
+                      className="flex-1 accent-primary"
+                    />
+                    <span className="text-xs font-mono text-muted-foreground w-8 text-right">{(seg.imageScale ?? 1).toFixed(1)}</span>
+                  </div>
                 </div>
               )}
               {config.segments.length > 2 && (
