@@ -204,16 +204,19 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
           {config.segments.map((seg, i) => {
             if (!seg.imageUrl) return null;
             const bounds = getSegmentBounds(i);
-            const ox = seg.imageOffsetX ?? 0;
-            const oy = seg.imageOffsetY ?? 0;
+            const scale = seg.imageScale ?? 1;
+            const scaledW = bounds.width * scale;
+            const scaledH = bounds.height * scale;
+            const ox = (seg.imageOffsetX ?? 0) - (scaledW - bounds.width) / 2;
+            const oy = (seg.imageOffsetY ?? 0) - (scaledH - bounds.height) / 2;
             return (
               <image
                 key={`img-${i}`}
                 href={seg.imageUrl}
                 x={bounds.x + ox}
                 y={bounds.y + oy}
-                width={bounds.width}
-                height={bounds.height}
+                width={scaledW}
+                height={scaledH}
                 clipPath={`url(#seg-clip-${i})`}
                 preserveAspectRatio="xMidYMid slice"
                 opacity="0.85"
