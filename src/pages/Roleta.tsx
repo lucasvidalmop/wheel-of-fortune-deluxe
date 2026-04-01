@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import PremiumWheel from '@/components/casino/PremiumWheel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const Roleta = () => {
+  const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [accountId, setAccountId] = useState('');
   const [identified, setIdentified] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [emailValue, setEmailValue] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [configLoading, setConfigLoading] = useState(!!slug);
 
-  const [config] = useState<WheelConfig>(() => {
+  const [config, setConfig] = useState<WheelConfig>(() => {
+    if (slug) return defaultConfig; // will load from DB
     const saved = localStorage.getItem('wheel_config');
     return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
   });
@@ -23,6 +27,25 @@ const Roleta = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+
+  // Load config from DB when slug is provided
+  useEffect(() => {
+    if (!slug) { setConfigLoading(false); return; }
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('wheel_configs')
+        .select('user_id, config')
+        .eq('slug', slug)
+        .maybeSingle();
+      if (data) {
+        setOwnerId(data.user_id);
+        if (data.config && Object.keys(data.config).length > 0) {
+          setConfig({ ...defaultConfig, ...data.config });
+        }
+      }
+      setConfigLoading(false);
+    })();
+  }, [slug]);
 
   useEffect(() => {
     if (!accountId || !identified) return;
@@ -86,6 +109,7 @@ const Roleta = () => {
           user_email: emailValue,
           account_id: accountId,
           prize: seg.title || `Segmento ${segmentIndex + 1}`,
+          owner_id: ownerId || null,
         });
 
       // Decrement spin in database
@@ -106,6 +130,14 @@ const Roleta = () => {
       }
     }
   };
+
+  if (configLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Carregando roleta...</div>
+      </div>
+    );
+  }
 
   // Login / identification screen
   if (!identified) {

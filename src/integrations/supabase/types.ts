@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           account_id: string
           id: string
+          owner_id: string | null
           prize: string
           spun_at: string
           user_email: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           account_id: string
           id?: string
+          owner_id?: string | null
           prize: string
           spun_at?: string
           user_email: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           account_id?: string
           id?: string
+          owner_id?: string | null
           prize?: string
           spun_at?: string
           user_email?: string
@@ -59,6 +62,33 @@ export type Database = {
         }
         Relationships: []
       }
+      wheel_configs: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wheel_users: {
         Row: {
           account_id: string
@@ -66,6 +96,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          owner_id: string | null
           phone: string
           spins_available: number
           updated_at: string | null
@@ -76,6 +107,7 @@ export type Database = {
           email: string
           id?: string
           name: string
+          owner_id?: string | null
           phone?: string
           spins_available?: number
           updated_at?: string | null
@@ -86,6 +118,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          owner_id?: string | null
           phone?: string
           spins_available?: number
           updated_at?: string | null
