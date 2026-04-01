@@ -345,7 +345,7 @@ const Admin = () => {
             onClick={() => setActiveTab('users')}
             className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'users' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
-            👥 Usuários
+            👥 Inscritos
           </button>
           <button
             onClick={() => setActiveTab('wheel')}
