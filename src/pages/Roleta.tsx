@@ -100,6 +100,8 @@ const Roleta = () => {
     setUserName(data.name);
     setSpinsRemaining(data.spins_available);
     setCanSpin(data.spins_available >= 1);
+    setFixedPrizeEnabled(data.fixed_prize_enabled ?? false);
+    setFixedPrizeSegment(data.fixed_prize_segment ?? null);
     if (data.owner_id) setOwnerId(data.owner_id);
     if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
