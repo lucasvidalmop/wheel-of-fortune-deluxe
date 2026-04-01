@@ -290,7 +290,7 @@ const Roleta = () => {
         <PremiumWheel
           config={config}
           onSpinEnd={handleSpinEnd}
-          disabled={hasApi && accountId ? !canSpin : false}
+          disabled={accountId ? !canSpin : false}
         />
       </div>
     </div>
