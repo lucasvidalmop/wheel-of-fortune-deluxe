@@ -362,6 +362,41 @@ const Admin = () => {
             <CustomizationPanel config={wheelConfig} onChange={setWheelConfig} />
           </div>
         )}
+
+        {/* Admins tab */}
+        {activeTab === 'admins' && (
+          <div className="max-w-md space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Criar Novo Admin</h2>
+            </div>
+
+            {!showAdminForm ? (
+              <button onClick={() => setShowAdminForm(true)} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
+                + Novo Administrador
+              </button>
+            ) : (
+              <form onSubmit={handleCreateAdmin} className="p-6 rounded-2xl border border-border bg-card space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Nome</label>
+                  <input type="text" value={adminForm.name} onChange={e => setAdminForm({ ...adminForm, name: e.target.value })} placeholder="Nome do admin" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Email</label>
+                  <input type="email" required value={adminForm.email} onChange={e => setAdminForm({ ...adminForm, email: e.target.value })} placeholder="admin@email.com" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Senha</label>
+                  <input type="password" required minLength={6} value={adminForm.password} onChange={e => setAdminForm({ ...adminForm, password: e.target.value })} placeholder="Mínimo 6 caracteres" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowAdminForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
+                  <button type="submit" disabled={adminCreating} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
+                    {adminCreating ? 'Criando...' : 'Criar Admin'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
       </div>
     </div>
   );
