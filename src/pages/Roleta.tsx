@@ -24,6 +24,8 @@ const Roleta = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const [fixedPrizeEnabled, setFixedPrizeEnabled] = useState(false);
+  const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
 
   // Redirect if no slug — only /roleta/:slug is allowed
   useEffect(() => {
@@ -55,7 +57,7 @@ const Roleta = () => {
     setLoading(true);
     let query = (supabase as any)
       .from('wheel_users')
-      .select('name, spins_available, owner_id')
+      .select('name, spins_available, owner_id, fixed_prize_enabled, fixed_prize_segment')
       .eq('account_id', accountId);
     if (ownerId) query = query.eq('owner_id', ownerId);
     query.maybeSingle()
@@ -64,6 +66,8 @@ const Roleta = () => {
           setUserName(data.name);
           setSpinsRemaining(data.spins_available);
           setCanSpin(data.spins_available >= 1);
+          setFixedPrizeEnabled(data.fixed_prize_enabled ?? false);
+          setFixedPrizeSegment(data.fixed_prize_segment ?? null);
           if (!ownerId && data.owner_id) setOwnerId(data.owner_id);
           if (data.spins_available < 1) setMessage('Sem giros disponíveis');
         }
@@ -80,7 +84,7 @@ const Roleta = () => {
 
     let authQuery = (supabase as any)
       .from('wheel_users')
-      .select('id, name, spins_available, account_id, owner_id')
+      .select('id, name, spins_available, account_id, owner_id, fixed_prize_enabled, fixed_prize_segment')
       .eq('email', trimmedEmail)
       .eq('account_id', trimmedId);
     if (ownerId) authQuery = authQuery.eq('owner_id', ownerId);
@@ -96,6 +100,8 @@ const Roleta = () => {
     setUserName(data.name);
     setSpinsRemaining(data.spins_available);
     setCanSpin(data.spins_available >= 1);
+    setFixedPrizeEnabled(data.fixed_prize_enabled ?? false);
+    setFixedPrizeSegment(data.fixed_prize_segment ?? null);
     if (data.owner_id) setOwnerId(data.owner_id);
     if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
@@ -357,6 +363,7 @@ const Roleta = () => {
           config={config}
           onSpinEnd={handleSpinEnd}
           disabled={accountId ? !canSpin : false}
+          forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
         />
       </div>
     </div>

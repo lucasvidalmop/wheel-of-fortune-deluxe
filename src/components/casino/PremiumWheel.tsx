@@ -5,9 +5,10 @@ interface PremiumWheelProps {
   config: WheelConfig;
   onSpinEnd?: (segmentIndex: number) => void;
   disabled?: boolean;
+  forcedSegment?: number | null;
 }
 
-const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false }) => {
+const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment }) => {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
@@ -39,7 +40,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
     setIsSpinning(true);
     setWinnerIndex(null);
 
-    const winnerIdx = pickWeightedSegment();
+    const winnerIdx = (forcedSegment != null && forcedSegment >= 0 && forcedSegment < numSegments) ? forcedSegment : pickWeightedSegment();
     const targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle;
     const extraSpins = 5 + Math.floor(Math.random() * 5);
     const totalRotation = extraSpins * 360 + targetOffset;
@@ -55,7 +56,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       setWinnerIndex(winnerIdx);
       onSpinEnd?.(winnerIdx);
     }, 5000);
-  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd]);
+  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments]);
 
   const getSegmentPath = (index: number, r: number, ir: number) => {
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
