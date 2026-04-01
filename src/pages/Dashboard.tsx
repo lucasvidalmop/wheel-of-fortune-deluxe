@@ -26,6 +26,9 @@ const Dashboard = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
+  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '' });
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -154,6 +157,40 @@ const Dashboard = () => {
     if (error) toast.error('Erro ao salvar: ' + error.message);
     else toast.success('Configuração salva!');
     setSavingConfig(false);
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) {
+      const { error } = await (supabase as any)
+        .from('wheel_users')
+        .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone })
+        .eq('id', editingUser.id);
+      if (error) { toast.error('Erro: ' + error.message); return; }
+      toast.success('Atualizado!');
+    } else {
+      const { error } = await (supabase as any)
+        .from('wheel_users')
+        .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id });
+      if (error) { toast.error('Erro: ' + error.message); return; }
+      toast.success('Inscrito criado!');
+    }
+    setShowForm(false);
+    setEditingUser(null);
+    setForm({ account_id: '', email: '', name: '', phone: '' });
+    fetchUsers();
+  };
+
+  const openEdit = (user: WheelUser) => {
+    setEditingUser(user);
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '' });
+    setShowForm(true);
+  };
+
+  const openNew = () => {
+    setEditingUser(null);
+    setForm({ account_id: '', email: '', name: '', phone: '' });
+    setShowForm(true);
   };
 
   const handleGrantSpin = async (user: WheelUser) => {
@@ -311,8 +348,40 @@ const Dashboard = () => {
                   <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
                 </label>
                 <button onClick={handleExportCSV} className="px-5 py-2.5 rounded-lg bg-muted text-foreground font-bold text-sm hover:bg-muted/80 transition whitespace-nowrap">📥 Exportar CSV</button>
+                <button onClick={openNew} className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition whitespace-nowrap">+ Novo Inscrito</button>
               </div>
             </div>
+
+            {showForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <form onSubmit={handleSaveUser} className="w-full max-w-md mx-4 p-6 rounded-2xl border border-border bg-card shadow-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-foreground">{editingUser ? 'Editar Inscrito' : 'Novo Inscrito'}</h2>
+                    <button type="button" onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground">✕</button>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Nome</label>
+                    <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Email</label>
+                    <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Celular</label>
+                    <input type="text" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Account ID</label>
+                    <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
+                    <button type="submit" className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm">{editingUser ? 'Salvar' : 'Criar'}</button>
+                  </div>
+                </form>
+              </div>
+            )}
 
             {usersLoading ? (
               <div className="text-center py-12 text-muted-foreground animate-pulse">Carregando...</div>
@@ -347,6 +416,7 @@ const Dashboard = () => {
                             >
                               {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar'}
                             </button>
+                            <button onClick={() => openEdit(user)} className="px-2.5 py-1 rounded bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
                             <button onClick={() => handleDeleteUser(user.id)} className="px-2.5 py-1 rounded bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
                         </td>
