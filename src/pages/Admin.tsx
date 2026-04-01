@@ -159,9 +159,9 @@ const Admin = () => {
         body: { email: adminForm.email, password: adminForm.password, name: adminForm.name },
       });
       if (res.error || res.data?.error) {
-        toast.error(res.data?.error || res.error?.message || 'Erro ao criar admin');
+        toast.error(res.data?.error || res.error?.message || 'Erro ao criar usuário');
       } else {
-        toast.success(`Admin ${adminForm.email} criado com sucesso!`);
+        toast.success(`Usuário ${adminForm.email} criado com sucesso!`);
         setAdminForm({ email: '', password: '', name: '' });
         setShowAdminForm(false);
       }
