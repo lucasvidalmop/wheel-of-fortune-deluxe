@@ -388,7 +388,7 @@ const Dashboard = () => {
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">{searchTerm ? 'Nenhum resultado' : 'Nenhum inscrito'}</div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border">
+              <div className="overflow-hidden rounded-xl border border-border">
                 <table className="w-full text-sm table-fixed">
                   <thead>
                     <tr className="bg-muted/50">
@@ -456,7 +456,7 @@ const Dashboard = () => {
             ) : spinResults.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">Nenhum resultado registrado</div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border">
+              <div className="overflow-hidden rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/50">
