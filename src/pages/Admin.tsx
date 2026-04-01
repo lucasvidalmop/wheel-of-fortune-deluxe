@@ -166,7 +166,7 @@ const Admin = () => {
         setShowAdminForm(false);
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao criar admin');
+      toast.error(err.message || 'Erro ao criar usuário');
     }
     setAdminCreating(false);
   };
