@@ -55,10 +55,16 @@ export interface WheelConfig {
   authSubtitle: string;
   authLogoUrl?: string;
   authLogoSize: number;
+  authLogoOffsetX?: number;
+  authLogoOffsetY?: number;
+  authLogoScale?: number;
   authTitleSize: number;
   authSubtitleSize: number;
   authBgColor: string;
   authBgImageUrl?: string;
+  authBgImageOffsetX?: number;
+  authBgImageOffsetY?: number;
+  authBgImageScale?: number;
   authCardBgColor: string;
   authCardBorderColor: string;
   authInputBorderColor: string;
