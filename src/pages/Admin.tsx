@@ -26,7 +26,7 @@ const Admin = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ account_id: '', email: '', name: '', spins_available: 0 });
+  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins'>('users');
 
