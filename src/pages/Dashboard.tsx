@@ -34,6 +34,8 @@ const Dashboard = () => {
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null });
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [viewingUserData, setViewingUserData] = useState<WheelUser | null>(null);
+  const [viewingUserLoading, setViewingUserLoading] = useState(false);
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
