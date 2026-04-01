@@ -97,12 +97,39 @@ const Dashboard = () => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
     setHistoryLoading(true);
-    const { data } = await (supabase as any)
+
+    // Fetch results directly owned by this operator
+    const { data: ownedResults } = await (supabase as any)
       .from('spin_results')
       .select('*')
       .eq('owner_id', uid)
       .order('spun_at', { ascending: false });
-    setSpinResults(data || []);
+
+    // Also fetch results from this operator's subscribers (for older records without owner_id)
+    const { data: myUsers } = await (supabase as any)
+      .from('wheel_users')
+      .select('account_id')
+      .eq('owner_id', uid);
+    
+    let allResults = ownedResults || [];
+    if (myUsers && myUsers.length > 0) {
+      const accountIds = myUsers.map((u: any) => u.account_id);
+      const { data: subscriberResults } = await (supabase as any)
+        .from('spin_results')
+        .select('*')
+        .in('account_id', accountIds)
+        .is('owner_id', null)
+        .order('spun_at', { ascending: false });
+      if (subscriberResults) {
+        const existingIds = new Set(allResults.map((r: any) => r.id));
+        const newResults = subscriberResults.filter((r: any) => !existingIds.has(r.id));
+        allResults = [...allResults, ...newResults].sort((a: any, b: any) => 
+          new Date(b.spun_at).getTime() - new Date(a.spun_at).getTime()
+        );
+      }
+    }
+
+    setSpinResults(allResults);
     setHistoryLoading(false);
   };
 
