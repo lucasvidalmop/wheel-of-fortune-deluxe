@@ -115,11 +115,19 @@ const Admin = () => {
 
   const fetchHistory = async () => {
     setHistoryLoading(true);
-    const { data, error } = await (supabase as any)
-      .from('spin_results')
-      .select('*')
-      .order('spun_at', { ascending: false });
-    if (!error) setSpinResults(data || []);
+    // Fetch spin results and wheel_configs to map owner info
+    const [resultsRes, configsRes] = await Promise.all([
+      (supabase as any).from('spin_results').select('*').order('spun_at', { ascending: false }),
+      (supabase as any).from('wheel_configs').select('user_id, slug'),
+    ]);
+    const configs = configsRes.data || [];
+    const configMap: Record<string, string> = {};
+    configs.forEach((c: any) => { configMap[c.user_id] = c.slug; });
+    const results = (resultsRes.data || []).map((r: any) => ({
+      ...r,
+      owner_slug: r.owner_id ? configMap[r.owner_id] || 'N/A' : 'N/A',
+    }));
+    if (!resultsRes.error) setSpinResults(results);
     setHistoryLoading(false);
   };
 
