@@ -59,12 +59,21 @@ const Dashboard = () => {
 
   const loadData = async (userId: string) => {
     setLoading(true);
-    // Load config
-    const { data: cfg } = await (supabase as any)
+    let { data: cfg } = await (supabase as any)
       .from('wheel_configs')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
+
+    if (!cfg) {
+      const generatedSlug = `roleta-${userId.slice(0, 8)}`;
+      const { data: created } = await (supabase as any)
+        .from('wheel_configs')
+        .insert({ user_id: userId, slug: generatedSlug, config: {} })
+        .select('*')
+        .maybeSingle();
+      cfg = created || null;
+    }
 
     if (cfg) {
       setSlug(cfg.slug);
@@ -98,38 +107,18 @@ const Dashboard = () => {
     if (!uid) return;
     setHistoryLoading(true);
 
-    // Fetch results directly owned by this operator
-    const { data: ownedResults } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from('spin_results')
       .select('*')
       .eq('owner_id', uid)
       .order('spun_at', { ascending: false });
 
-    // Also fetch results from this operator's subscribers (for older records without owner_id)
-    const { data: myUsers } = await (supabase as any)
-      .from('wheel_users')
-      .select('account_id')
-      .eq('owner_id', uid);
-    
-    let allResults = ownedResults || [];
-    if (myUsers && myUsers.length > 0) {
-      const accountIds = myUsers.map((u: any) => u.account_id);
-      const { data: subscriberResults } = await (supabase as any)
-        .from('spin_results')
-        .select('*')
-        .in('account_id', accountIds)
-        .is('owner_id', null)
-        .order('spun_at', { ascending: false });
-      if (subscriberResults) {
-        const existingIds = new Set(allResults.map((r: any) => r.id));
-        const newResults = subscriberResults.filter((r: any) => !existingIds.has(r.id));
-        allResults = [...allResults, ...newResults].sort((a: any, b: any) => 
-          new Date(b.spun_at).getTime() - new Date(a.spun_at).getTime()
-        );
-      }
+    if (error) {
+      toast.error('Erro ao carregar histórico');
+      setSpinResults([]);
+    } else {
+      setSpinResults(data || []);
     }
-
-    setSpinResults(allResults);
     setHistoryLoading(false);
   };
 
