@@ -36,6 +36,8 @@ const Admin = () => {
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [adminForm, setAdminForm] = useState({ email: '', password: '', name: '' });
   const [adminCreating, setAdminCreating] = useState(false);
+  const [systemUsers, setSystemUsers] = useState<any[]>([]);
+  const [systemUsersLoading, setSystemUsersLoading] = useState(false);
 
   // Wheel config state
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
@@ -222,6 +224,15 @@ const Admin = () => {
       toast.error(err.message || 'Erro ao criar usuário');
     }
     setAdminCreating(false);
+  };
+
+  const fetchSystemUsers = async () => {
+    setSystemUsersLoading(true);
+    try {
+      const res = await supabase.functions.invoke('list-system-users');
+      if (res.data?.users) setSystemUsers(res.data.users);
+    } catch {}
+    setSystemUsersLoading(false);
   };
 
   const openEdit = (user: WheelUser) => {
@@ -496,40 +507,82 @@ const Admin = () => {
 
         {/* Create users tab */}
         {activeTab === 'admins' && (
-          <div className="max-w-md space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">Criar Novo Usuário</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Usuários podem personalizar sua própria roleta e ver as inscrições.
-            </p>
+          <div className="space-y-6">
+            <div className="max-w-md space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-foreground">Criar Novo Usuário</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Usuários podem personalizar sua própria roleta e ver as inscrições.
+              </p>
 
-            {!showAdminForm ? (
-              <button onClick={() => setShowAdminForm(true)} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
-                + Novo Usuário
-              </button>
-            ) : (
-              <form onSubmit={handleCreateAdmin} className="p-6 rounded-2xl border border-border bg-card space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Nome</label>
-                  <input type="text" value={adminForm.name} onChange={e => setAdminForm({ ...adminForm, name: e.target.value })} placeholder="Nome do usuário" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+              {!showAdminForm ? (
+                <button onClick={() => setShowAdminForm(true)} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
+                  + Novo Usuário
+                </button>
+              ) : (
+                <form onSubmit={handleCreateAdmin} className="p-6 rounded-2xl border border-border bg-card space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Nome</label>
+                    <input type="text" value={adminForm.name} onChange={e => setAdminForm({ ...adminForm, name: e.target.value })} placeholder="Nome do usuário" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Email</label>
+                    <input type="email" required value={adminForm.email} onChange={e => setAdminForm({ ...adminForm, email: e.target.value })} placeholder="usuario@email.com" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Senha</label>
+                    <input type="password" required minLength={6} value={adminForm.password} onChange={e => setAdminForm({ ...adminForm, password: e.target.value })} placeholder="Mínimo 6 caracteres" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setShowAdminForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
+                    <button type="submit" disabled={adminCreating} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
+                      {adminCreating ? 'Criando...' : 'Criar Usuário'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            {/* System users list */}
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground">Usuários do Sistema</h2>
+                <button onClick={fetchSystemUsers} className="px-4 py-2 rounded-lg bg-muted text-foreground text-sm hover:bg-muted/80 transition">🔄 Atualizar</button>
+              </div>
+              {systemUsersLoading ? (
+                <div className="text-center py-8 text-muted-foreground animate-pulse">Carregando...</div>
+              ) : systemUsers.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-3">Clique para carregar a lista de usuários</p>
+                  <button onClick={fetchSystemUsers} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm">Carregar lista</button>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Email</label>
-                  <input type="email" required value={adminForm.email} onChange={e => setAdminForm({ ...adminForm, email: e.target.value })} placeholder="usuario@email.com" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left px-3 py-3 text-muted-foreground font-medium w-10">#</th>
+                        <th className="text-left px-3 py-3 text-muted-foreground font-medium">Nome</th>
+                        <th className="text-left px-3 py-3 text-muted-foreground font-medium">Email</th>
+                        <th className="text-left px-3 py-3 text-muted-foreground font-medium">Criado em</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {systemUsers.map((u: any, i: number) => (
+                        <tr key={u.id} className="border-t border-border hover:bg-muted/30 transition">
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{i + 1}</td>
+                          <td className="px-3 py-3 text-foreground font-medium">{u.name}</td>
+                          <td className="px-3 py-3 text-muted-foreground">{u.email}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{u.created_at ? new Date(u.created_at).toLocaleString('pt-BR') : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Senha</label>
-                  <input type="password" required minLength={6} value={adminForm.password} onChange={e => setAdminForm({ ...adminForm, password: e.target.value })} placeholder="Mínimo 6 caracteres" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowAdminForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
-                  <button type="submit" disabled={adminCreating} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
-                    {adminCreating ? 'Criando...' : 'Criar Usuário'}
-                  </button>
-                </div>
-              </form>
-            )}
+              )}
+              <div className="mt-3 text-xs text-muted-foreground">{systemUsers.length} usuário(s) do sistema</div>
+            </div>
           </div>
         )}
 
