@@ -40,6 +40,23 @@ export interface WheelConfig {
   ledSize: number;
   titleFontSize: number;
   valueFontSize: number;
+  // Auth page customization
+  authHeaderMode: 'text' | 'logo' | 'logo_text';
+  authTitle: string;
+  authSubtitle: string;
+  authLogoUrl?: string;
+  authLogoSize: number;
+  authTitleSize: number;
+  authSubtitleSize: number;
+  authBgColor: string;
+  authBgImageUrl?: string;
+  authCardBgColor: string;
+  authCardBorderColor: string;
+  authInputBorderColor: string;
+  authButtonBgColor: string;
+  authButtonTextColor: string;
+  authLabelColor: string;
+  authTextColor: string;
 }
 
 export const defaultSegments: WheelSegment[] = [
@@ -76,4 +93,19 @@ export const defaultConfig: WheelConfig = {
   ledSize: 5,
   titleFontSize: 10,
   valueFontSize: 22,
+  // Auth defaults
+  authHeaderMode: 'text',
+  authTitle: 'Atualizar Chave PIX',
+  authSubtitle: 'Informe o e-mail e o ID da sua conta para verificarmos seu cadastro.',
+  authLogoSize: 80,
+  authTitleSize: 18,
+  authSubtitleSize: 12,
+  authBgColor: '#1a0a2e',
+  authCardBgColor: '#140c28',
+  authCardBorderColor: '#ffffff14',
+  authInputBorderColor: '#D4A017',
+  authButtonBgColor: '#0ABACC',
+  authButtonTextColor: '#000000',
+  authLabelColor: '#ffffff',
+  authTextColor: '#ffffff80',
 };
