@@ -1,0 +1,1 @@
+ALTER TABLE public.wheel_users DROP CONSTRAINT IF EXISTS wheel_users_account_id_key;
