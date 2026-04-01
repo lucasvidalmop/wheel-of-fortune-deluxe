@@ -84,7 +84,7 @@ const Roleta = () => {
 
     let authQuery = (supabase as any)
       .from('wheel_users')
-      .select('id, name, spins_available, account_id, owner_id')
+      .select('id, name, spins_available, account_id, owner_id, fixed_prize_enabled, fixed_prize_segment')
       .eq('email', trimmedEmail)
       .eq('account_id', trimmedId);
     if (ownerId) authQuery = authQuery.eq('owner_id', ownerId);
