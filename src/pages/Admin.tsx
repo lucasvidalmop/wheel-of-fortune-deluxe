@@ -188,6 +188,21 @@ const Admin = () => {
     setShowForm(true);
   };
 
+  const handleExportCSV = () => {
+    const header = 'Nome,Email,Account ID,Giros Disponíveis,Criado em\n';
+    const rows = filteredUsers.map(u =>
+      `"${u.name}","${u.email}","${u.account_id}",${u.spins_available},"${u.created_at || ''}"`
+    ).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usuarios_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado!');
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
