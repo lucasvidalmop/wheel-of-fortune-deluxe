@@ -127,7 +127,11 @@ const Roleta = () => {
                   src={ac.authLogoUrl}
                   alt="Logo"
                   className="object-contain mb-3"
-                  style={{ height: ac.authLogoSize ?? 80, maxWidth: '100%' }}
+                  style={{
+                    height: ac.authLogoSize ?? 80,
+                    maxWidth: '100%',
+                    transform: `translate(${ac.authLogoOffsetX ?? 0}px, ${ac.authLogoOffsetY ?? 0}px) scale(${ac.authLogoScale ?? 1})`,
+                  }}
                 />
               )}
               {(ac.authHeaderMode === 'text' || ac.authHeaderMode === 'logo_text') && (
