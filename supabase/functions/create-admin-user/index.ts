@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: userError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Assign user role (not admin)
+    // Assign user role
     const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
       user_id: userData.user.id,
       role: "user",
@@ -68,7 +68,19 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: roleError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    return new Response(JSON.stringify({ success: true, user_id: userData.user.id }), {
+    // Create default wheel config with slug
+    const slug = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-") + "-" + Date.now().toString(36);
+    const { error: configError } = await supabaseAdmin.from("wheel_configs").insert({
+      user_id: userData.user.id,
+      slug,
+      config: {},
+    });
+
+    if (configError) {
+      console.error("Config error:", configError.message);
+    }
+
+    return new Response(JSON.stringify({ success: true, user_id: userData.user.id, slug }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
