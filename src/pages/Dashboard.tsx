@@ -34,6 +34,8 @@ const Dashboard = () => {
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null });
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [viewingUserData, setViewingUserData] = useState<WheelUser | null>(null);
+  const [viewingUserLoading, setViewingUserLoading] = useState(false);
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
@@ -271,6 +273,20 @@ const Dashboard = () => {
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handleViewUserData = async (accountId: string) => {
+    setViewingUserLoading(true);
+    setViewingUserData(null);
+    const uid = session?.user?.id;
+    const { data } = await (supabase as any)
+      .from('wheel_users')
+      .select('*')
+      .eq('owner_id', uid)
+      .eq('account_id', accountId)
+      .maybeSingle();
+    setViewingUserData(data || null);
+    setViewingUserLoading(false);
   };
 
   const filteredUsers = users.filter(u =>
@@ -532,6 +548,7 @@ const Dashboard = () => {
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">Account ID</th>
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">🏆 Prêmio</th>
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">Data/Hora</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -543,6 +560,14 @@ const Dashboard = () => {
                         <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{r.account_id}</td>
                         <td className="px-3 py-3 text-primary font-bold">{r.prize}</td>
                         <td className="px-3 py-3 text-muted-foreground text-xs">{new Date(r.spun_at).toLocaleString('pt-BR')}</td>
+                        <td className="px-3 py-3">
+                          <button
+                            onClick={() => handleViewUserData(r.account_id)}
+                            className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition"
+                          >
+                            👤 Ver Dados
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -550,6 +575,33 @@ const Dashboard = () => {
               </div>
             )}
             <div className="mt-4 text-xs text-muted-foreground">{spinResults.length} resultado(s)</div>
+
+            {/* User data modal */}
+            {(viewingUserData !== null || viewingUserLoading) && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="w-full max-w-md mx-4 p-6 rounded-2xl border border-border bg-card shadow-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-foreground">Dados do Usuário</h2>
+                    <button onClick={() => { setViewingUserData(null); setViewingUserLoading(false); }} className="text-muted-foreground hover:text-foreground">✕</button>
+                  </div>
+                  {viewingUserLoading ? (
+                    <div className="text-center py-8 text-muted-foreground animate-pulse">Carregando...</div>
+                  ) : viewingUserData ? (
+                    <div className="space-y-3">
+                      <div><span className="text-xs text-muted-foreground">Nome</span><p className="text-foreground font-medium">{viewingUserData.name}</p></div>
+                      <div><span className="text-xs text-muted-foreground">Email</span><p className="text-foreground">{viewingUserData.email}</p></div>
+                      <div><span className="text-xs text-muted-foreground">Celular</span><p className="text-foreground">{viewingUserData.phone || '—'}</p></div>
+                      <div><span className="text-xs text-muted-foreground">ID da Conta</span><p className="text-foreground font-mono text-sm">{viewingUserData.account_id}</p></div>
+                      <div><span className="text-xs text-muted-foreground">Giros Disponíveis</span><p className="text-foreground font-bold">{viewingUserData.spins_available}</p></div>
+                      <div><span className="text-xs text-muted-foreground">Prêmio Fixo</span><p className="text-foreground">{viewingUserData.fixed_prize_enabled ? `Ativado (Segmento ${viewingUserData.fixed_prize_segment})` : 'Desativado'}</p></div>
+                      <div><span className="text-xs text-muted-foreground">Cadastrado em</span><p className="text-foreground text-sm">{new Date(viewingUserData.created_at).toLocaleString('pt-BR')}</p></div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">Usuário não encontrado na base de inscritos</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
