@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      spin_results: {
+        Row: {
+          account_id: string
+          id: string
+          prize: string
+          spun_at: string
+          user_email: string
+          user_name: string
+        }
+        Insert: {
+          account_id: string
+          id?: string
+          prize: string
+          spun_at?: string
+          user_email: string
+          user_name: string
+        }
+        Update: {
+          account_id?: string
+          id?: string
+          prize?: string
+          spun_at?: string
+          user_email?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
