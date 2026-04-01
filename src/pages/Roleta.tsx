@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 const Roleta = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [accountId, setAccountId] = useState('');
   const [identified, setIdentified] = useState(false);
@@ -14,13 +15,9 @@ const Roleta = () => {
   const [emailValue, setEmailValue] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
-  const [configLoading, setConfigLoading] = useState(!!slug);
+  const [configLoading, setConfigLoading] = useState(true);
 
-  const [config, setConfig] = useState<WheelConfig>(() => {
-    if (slug) return defaultConfig; // will load from DB
-    const saved = localStorage.getItem('wheel_config');
-    return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
-  });
+  const [config, setConfig] = useState<WheelConfig>(defaultConfig);
 
   const [spinsRemaining, setSpinsRemaining] = useState<number | null>(null);
   const [canSpin, setCanSpin] = useState(false);
