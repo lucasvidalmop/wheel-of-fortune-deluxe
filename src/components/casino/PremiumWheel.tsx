@@ -109,7 +109,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
         style={{ background: `radial-gradient(circle, ${config.glowColor}44 0%, transparent 70%)` }}
       />
 
-      <svg viewBox="0 0 600 600" width={620} height={620} className="relative z-10">
+      <svg viewBox="0 0 600 600" width="100%" height="100%" className="relative z-10">
         <defs>
           <radialGradient id="glossOverlay" cx="40%" cy="35%" r="60%">
             <stop offset="0%" stopColor="white" stopOpacity="0.18" />
