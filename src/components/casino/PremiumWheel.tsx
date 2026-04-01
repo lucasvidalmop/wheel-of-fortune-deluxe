@@ -332,9 +332,9 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       <button
         onClick={spin}
         disabled={isSpinning || disabled}
-        className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-lg tracking-widest px-10 py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-sm md:text-lg tracking-widest px-6 md:px-10 py-2 md:py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
-          bottom: '-40px',
+          bottom: '-30px',
           background: config.buttonColor,
           borderColor: config.buttonColor,
           color: config.buttonTextColor,

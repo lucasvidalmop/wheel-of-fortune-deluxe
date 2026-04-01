@@ -345,13 +345,15 @@ const Roleta = () => {
       )}
 
       {/* Wheel */}
-      <div className="relative z-10 mb-32">
-        <PremiumWheel
-          config={config}
-          onSpinEnd={handleSpinEnd}
-          disabled={accountId ? !canSpin : false}
-          forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
-        />
+      <div className="relative z-10 mb-16 md:mb-32 w-full flex justify-center">
+        <div style={{ width: 'clamp(280px, 80vw, 620px)', height: 'clamp(280px, 80vw, 620px)' }}>
+          <PremiumWheel
+            config={config}
+            onSpinEnd={handleSpinEnd}
+            disabled={accountId ? !canSpin : false}
+            forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
+          />
+        </div>
       </div>
     </div>
   );
