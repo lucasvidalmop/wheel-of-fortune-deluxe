@@ -102,14 +102,14 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
   const numLeds = 24;
 
   return (
-    <div className="relative inline-block select-none" style={{ width: 620, height: 620 }}>
+    <div className="relative inline-block select-none w-full h-full">
       {/* Background glow */}
       <div
         className="absolute inset-0 rounded-full blur-3xl opacity-40"
         style={{ background: `radial-gradient(circle, ${config.glowColor}44 0%, transparent 70%)` }}
       />
 
-      <svg viewBox="0 0 600 600" width={620} height={620} className="relative z-10">
+      <svg viewBox="0 0 600 600" width="100%" height="100%" className="relative z-10">
         <defs>
           <radialGradient id="glossOverlay" cx="40%" cy="35%" r="60%">
             <stop offset="0%" stopColor="white" stopOpacity="0.18" />
@@ -332,9 +332,9 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       <button
         onClick={spin}
         disabled={isSpinning || disabled}
-        className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-lg tracking-widest px-10 py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-sm md:text-lg tracking-widest px-6 md:px-10 py-2 md:py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
-          bottom: '-40px',
+          bottom: '-30px',
           background: config.buttonColor,
           borderColor: config.buttonColor,
           color: config.buttonTextColor,

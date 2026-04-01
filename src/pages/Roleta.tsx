@@ -262,7 +262,7 @@ const Roleta = () => {
 
   // Wheel screen
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-dvh flex flex-col items-center justify-start relative overflow-hidden px-4 pt-4 pb-6" style={{ background: '#0a0a0f' }}>
       {config.backgroundImageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
@@ -300,7 +300,7 @@ const Roleta = () => {
         <img
           src={config.headerImageUrl}
           alt="Header"
-          className="relative z-10 mb-10 object-contain"
+          className="relative z-10 mb-4 md:mb-10 object-contain max-h-16 md:max-h-none"
           style={{
             height: config.headerImageSize,
             maxWidth: '90vw',
@@ -310,9 +310,9 @@ const Roleta = () => {
       ) : (
         <>
           <h1
-            className="relative z-10 font-display font-black tracking-[0.3em] uppercase mb-2"
+            className="relative z-10 font-display font-black tracking-[0.3em] uppercase mb-1 md:mb-2 text-center"
             style={{
-              fontSize: config.headerTitleSize,
+              fontSize: `clamp(14px, 4vw, ${config.headerTitleSize}px)`,
               color: config.glowColor,
               textShadow: `0 0 30px ${config.glowColor}55`,
             }}
@@ -320,8 +320,8 @@ const Roleta = () => {
             {config.pageTitle}
           </h1>
           <p
-            className="relative z-10 font-display tracking-[0.5em] text-muted-foreground uppercase mb-10"
-            style={{ fontSize: config.headerSubtitleSize }}
+            className="relative z-10 font-display tracking-[0.5em] text-muted-foreground uppercase mb-4 md:mb-10 text-center"
+            style={{ fontSize: `clamp(8px, 2.5vw, ${config.headerSubtitleSize}px)` }}
           >
             {config.pageSubtitle}
           </p>
@@ -345,13 +345,15 @@ const Roleta = () => {
       )}
 
       {/* Wheel */}
-      <div className="relative z-10 mb-32">
-        <PremiumWheel
-          config={config}
-          onSpinEnd={handleSpinEnd}
-          disabled={accountId ? !canSpin : false}
-          forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
-        />
+      <div className="relative z-10 mb-16 md:mb-32 w-full flex justify-center">
+        <div style={{ width: 'clamp(280px, 80vw, 620px)', height: 'clamp(280px, 80vw, 620px)' }}>
+          <PremiumWheel
+            config={config}
+            onSpinEnd={handleSpinEnd}
+            disabled={accountId ? !canSpin : false}
+            forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
+          />
+        </div>
       </div>
     </div>
   );
