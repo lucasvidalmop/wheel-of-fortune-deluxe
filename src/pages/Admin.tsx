@@ -111,6 +111,16 @@ const Admin = () => {
     setUsersLoading(false);
   };
 
+  const fetchHistory = async () => {
+    setHistoryLoading(true);
+    const { data, error } = await (supabase as any)
+      .from('spin_results')
+      .select('*')
+      .order('spun_at', { ascending: false });
+    if (!error) setSpinResults(data || []);
+    setHistoryLoading(false);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginLoading(true);
