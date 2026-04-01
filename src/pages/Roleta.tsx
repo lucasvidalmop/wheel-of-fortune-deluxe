@@ -262,7 +262,7 @@ const Roleta = () => {
 
   // Wheel screen
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-dvh flex flex-col items-center justify-start relative overflow-hidden px-4 pt-4 pb-6" style={{ background: '#0a0a0f' }}>
       {config.backgroundImageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
