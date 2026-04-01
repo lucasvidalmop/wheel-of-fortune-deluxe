@@ -213,6 +213,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
           <div className="space-y-2">
             <ImageUpload label="Imagem do cabeçalho" value={config.headerImageUrl} onChange={v => updateGlobal('headerImageUrl', v)} />
             <RangeInput label="Tamanho" value={config.headerImageSize ?? 120} min={40} max={300} step={5} onChange={v => updateGlobal('headerImageSize', v)} />
+            {config.headerImageUrl && (
+              <ImagePositionControls
+                offsetX={config.headerImageOffsetX ?? 0} offsetY={config.headerImageOffsetY ?? 0} scale={config.headerImageScale ?? 1}
+                onChangeX={v => updateGlobal('headerImageOffsetX', v)} onChangeY={v => updateGlobal('headerImageOffsetY', v)} onChangeScale={v => updateGlobal('headerImageScale', v)}
+              />
+            )}
           </div>
         )}
       </Section>
