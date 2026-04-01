@@ -51,6 +51,17 @@ const RangeInput: React.FC<{ label: string; value: number; min: number; max: num
   </div>
 );
 
+const ImagePositionControls: React.FC<{
+  offsetX: number; offsetY: number; scale: number;
+  onChangeX: (v: number) => void; onChangeY: (v: number) => void; onChangeScale: (v: number) => void;
+}> = ({ offsetX, offsetY, scale, onChangeX, onChangeY, onChangeScale }) => (
+  <div className="space-y-1 pl-2 border-l-2 border-border ml-1">
+    <RangeInput label="Mover X" value={offsetX} min={-200} max={200} onChange={onChangeX} />
+    <RangeInput label="Mover Y" value={offsetY} min={-200} max={200} onChange={onChangeY} />
+    <RangeInput label="Zoom" value={scale} min={0.1} max={5} step={0.1} onChange={onChangeScale} />
+  </div>
+);
+
 const Section: React.FC<{ title: string; emoji?: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, emoji, children, defaultOpen = false }) => (
   <details open={defaultOpen} className="group border border-border rounded-lg overflow-hidden">
     <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer bg-secondary/30 hover:bg-secondary/60 transition-colors text-xs font-bold text-foreground uppercase tracking-wide">
@@ -109,6 +120,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
           <>
             <ImageUpload label="Logo" value={config.authLogoUrl} onChange={v => updateGlobal('authLogoUrl', v)} />
             <RangeInput label="Tam. logo" value={config.authLogoSize ?? 80} min={30} max={200} step={5} onChange={v => updateGlobal('authLogoSize', v)} />
+            {config.authLogoUrl && (
+              <ImagePositionControls
+                offsetX={config.authLogoOffsetX ?? 0} offsetY={config.authLogoOffsetY ?? 0} scale={config.authLogoScale ?? 1}
+                onChangeX={v => updateGlobal('authLogoOffsetX', v)} onChangeY={v => updateGlobal('authLogoOffsetY', v)} onChangeScale={v => updateGlobal('authLogoScale', v)}
+              />
+            )}
           </>
         )}
 
@@ -144,6 +161,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         {/* Background image */}
         <div className="pt-2 border-t border-border">
           <ImageUpload label="Background da autenticação" value={config.authBgImageUrl} onChange={v => updateGlobal('authBgImageUrl', v)} />
+          {config.authBgImageUrl && (
+            <ImagePositionControls
+              offsetX={config.authBgImageOffsetX ?? 0} offsetY={config.authBgImageOffsetY ?? 0} scale={config.authBgImageScale ?? 1}
+              onChangeX={v => updateGlobal('authBgImageOffsetX', v)} onChangeY={v => updateGlobal('authBgImageOffsetY', v)} onChangeScale={v => updateGlobal('authBgImageScale', v)}
+            />
+          )}
         </div>
       </Section>
 
@@ -190,6 +213,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
           <div className="space-y-2">
             <ImageUpload label="Imagem do cabeçalho" value={config.headerImageUrl} onChange={v => updateGlobal('headerImageUrl', v)} />
             <RangeInput label="Tamanho" value={config.headerImageSize ?? 120} min={40} max={300} step={5} onChange={v => updateGlobal('headerImageSize', v)} />
+            {config.headerImageUrl && (
+              <ImagePositionControls
+                offsetX={config.headerImageOffsetX ?? 0} offsetY={config.headerImageOffsetY ?? 0} scale={config.headerImageScale ?? 1}
+                onChangeX={v => updateGlobal('headerImageOffsetX', v)} onChangeY={v => updateGlobal('headerImageOffsetY', v)} onChangeScale={v => updateGlobal('headerImageScale', v)}
+              />
+            )}
           </div>
         )}
       </Section>
@@ -197,6 +226,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
       {/* ===== FUNDO DA PÁGINA ===== */}
       <Section title="Fundo da Roleta" emoji="🖼">
         <ImageUpload label="Imagem de fundo" value={config.backgroundImageUrl} onChange={v => updateGlobal('backgroundImageUrl', v)} />
+        {config.backgroundImageUrl && (
+          <ImagePositionControls
+            offsetX={config.backgroundImageOffsetX ?? 0} offsetY={config.backgroundImageOffsetY ?? 0} scale={config.backgroundImageScale ?? 1}
+            onChangeX={v => updateGlobal('backgroundImageOffsetX', v)} onChangeY={v => updateGlobal('backgroundImageOffsetY', v)} onChangeScale={v => updateGlobal('backgroundImageScale', v)}
+          />
+        )}
       </Section>
 
       {/* ===== CORES DA ROLETA ===== */}
@@ -240,6 +275,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
       {/* ===== IMAGEM CENTRAL ===== */}
       <Section title="Imagem Central" emoji="⚡">
         <ImageUpload label="Logo / ícone do centro" value={config.centerImageUrl} onChange={v => updateGlobal('centerImageUrl', v)} />
+        {config.centerImageUrl && (
+          <ImagePositionControls
+            offsetX={config.centerImageOffsetX ?? 0} offsetY={config.centerImageOffsetY ?? 0} scale={config.centerImageScale ?? 1}
+            onChangeX={v => updateGlobal('centerImageOffsetX', v)} onChangeY={v => updateGlobal('centerImageOffsetY', v)} onChangeScale={v => updateGlobal('centerImageScale', v)}
+          />
+        )}
       </Section>
 
       {/* ===== SEGMENTOS ===== */}

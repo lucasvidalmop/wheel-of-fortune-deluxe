@@ -293,10 +293,10 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
         {config.centerImageUrl ? (
           <image
             href={config.centerImageUrl}
-            x={cx - innerR + 3}
-            y={cy - innerR + 3}
-            width={(innerR - 3) * 2}
-            height={(innerR - 3) * 2}
+            x={cx - innerR + 3 + (config.centerImageOffsetX ?? 0)}
+            y={cy - innerR + 3 + (config.centerImageOffsetY ?? 0)}
+            width={(innerR - 3) * 2 * (config.centerImageScale ?? 1)}
+            height={(innerR - 3) * 2 * (config.centerImageScale ?? 1)}
             clipPath="url(#center-clip)"
             preserveAspectRatio="xMidYMid slice"
           />

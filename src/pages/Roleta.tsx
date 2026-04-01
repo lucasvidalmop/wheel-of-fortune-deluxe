@@ -103,7 +103,10 @@ const Roleta = () => {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: ac.authBgColor ?? '#1a0a2e' }}>
         {ac.authBgImageUrl && (
-          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${ac.authBgImageUrl})` }} />
+          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" style={{
+            backgroundImage: `url(${ac.authBgImageUrl})`,
+            transform: `translate(${ac.authBgImageOffsetX ?? 0}px, ${ac.authBgImageOffsetY ?? 0}px) scale(${ac.authBgImageScale ?? 1})`,
+          }} />
         )}
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
 
@@ -124,7 +127,11 @@ const Roleta = () => {
                   src={ac.authLogoUrl}
                   alt="Logo"
                   className="object-contain mb-3"
-                  style={{ height: ac.authLogoSize ?? 80, maxWidth: '100%' }}
+                  style={{
+                    height: ac.authLogoSize ?? 80,
+                    maxWidth: '100%',
+                    transform: `translate(${ac.authLogoOffsetX ?? 0}px, ${ac.authLogoOffsetY ?? 0}px) scale(${ac.authLogoScale ?? 1})`,
+                  }}
                 />
               )}
               {(ac.authHeaderMode === 'text' || ac.authHeaderMode === 'logo_text') && (
@@ -215,7 +222,10 @@ const Roleta = () => {
       {config.backgroundImageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-          style={{ backgroundImage: `url(${config.backgroundImageUrl})` }}
+          style={{
+            backgroundImage: `url(${config.backgroundImageUrl})`,
+            transform: `translate(${config.backgroundImageOffsetX ?? 0}px, ${config.backgroundImageOffsetY ?? 0}px) scale(${config.backgroundImageScale ?? 1})`,
+          }}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" />
@@ -247,7 +257,11 @@ const Roleta = () => {
           src={config.headerImageUrl}
           alt="Header"
           className="relative z-10 mb-10 object-contain"
-          style={{ height: config.headerImageSize, maxWidth: '90vw' }}
+          style={{
+            height: config.headerImageSize,
+            maxWidth: '90vw',
+            transform: `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
+          }}
         />
       ) : (
         <>
