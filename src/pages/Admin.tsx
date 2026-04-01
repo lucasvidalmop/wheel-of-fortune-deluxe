@@ -8,6 +8,7 @@ interface WheelUser {
   id: string;
   account_id: string;
   email: string;
+  phone: string;
   name: string;
   spins_available: number;
   created_at: string;
