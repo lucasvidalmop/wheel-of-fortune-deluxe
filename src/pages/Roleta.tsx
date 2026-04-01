@@ -103,7 +103,10 @@ const Roleta = () => {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: ac.authBgColor ?? '#1a0a2e' }}>
         {ac.authBgImageUrl && (
-          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${ac.authBgImageUrl})` }} />
+          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" style={{
+            backgroundImage: `url(${ac.authBgImageUrl})`,
+            transform: `translate(${ac.authBgImageOffsetX ?? 0}px, ${ac.authBgImageOffsetY ?? 0}px) scale(${ac.authBgImageScale ?? 1})`,
+          }} />
         )}
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
 
