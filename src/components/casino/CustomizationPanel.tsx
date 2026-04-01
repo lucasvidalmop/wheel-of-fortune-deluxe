@@ -120,6 +120,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
           <>
             <ImageUpload label="Logo" value={config.authLogoUrl} onChange={v => updateGlobal('authLogoUrl', v)} />
             <RangeInput label="Tam. logo" value={config.authLogoSize ?? 80} min={30} max={200} step={5} onChange={v => updateGlobal('authLogoSize', v)} />
+            {config.authLogoUrl && (
+              <ImagePositionControls
+                offsetX={config.authLogoOffsetX ?? 0} offsetY={config.authLogoOffsetY ?? 0} scale={config.authLogoScale ?? 1}
+                onChangeX={v => updateGlobal('authLogoOffsetX', v)} onChangeY={v => updateGlobal('authLogoOffsetY', v)} onChangeScale={v => updateGlobal('authLogoScale', v)}
+              />
+            )}
           </>
         )}
 
