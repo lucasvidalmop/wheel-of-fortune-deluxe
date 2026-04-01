@@ -57,7 +57,7 @@ const Roleta = () => {
     setLoading(true);
     let query = (supabase as any)
       .from('wheel_users')
-      .select('name, spins_available, owner_id')
+      .select('name, spins_available, owner_id, fixed_prize_enabled, fixed_prize_segment')
       .eq('account_id', accountId);
     if (ownerId) query = query.eq('owner_id', ownerId);
     query.maybeSingle()
