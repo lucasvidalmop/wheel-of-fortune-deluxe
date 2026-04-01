@@ -1,0 +1,1 @@
+ALTER TABLE public.wheel_users ADD COLUMN phone text DEFAULT '' NOT NULL;

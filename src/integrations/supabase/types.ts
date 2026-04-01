@@ -39,6 +39,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          phone: string
           spins_available: number
           updated_at: string | null
         }
@@ -48,6 +49,7 @@ export type Database = {
           email: string
           id?: string
           name: string
+          phone?: string
           spins_available?: number
           updated_at?: string | null
         }
@@ -57,6 +59,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          phone?: string
           spins_available?: number
           updated_at?: string | null
         }

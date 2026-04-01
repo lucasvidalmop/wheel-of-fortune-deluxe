@@ -8,6 +8,7 @@ interface WheelUser {
   id: string;
   account_id: string;
   email: string;
+  phone: string;
   name: string;
   spins_available: number;
   created_at: string;
@@ -25,7 +26,7 @@ const Admin = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ account_id: '', email: '', name: '', spins_available: 0 });
+  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins'>('users');
 
@@ -115,30 +116,31 @@ const Admin = () => {
     if (editingUser) {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .update({ account_id: form.account_id, email: form.email, name: form.name })
+        .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone })
         .eq('id', editingUser.id);
       if (error) { toast.error('Erro ao atualizar: ' + error.message); return; }
       toast.success('Usuário atualizado!');
     } else {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .insert({ account_id: form.account_id, email: form.email, name: form.name });
+        .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone });
       if (error) { toast.error('Erro ao criar: ' + error.message); return; }
       toast.success('Usuário criado!');
     }
     setShowForm(false);
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', spins_available: 0 });
+    setForm({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
     fetchUsers();
   };
 
   const handleGrantSpin = async (user: WheelUser) => {
+    if (user.spins_available > 0) { toast.error('Usuário já possui 1 giro disponível'); return; }
     const { error } = await (supabase as any)
       .from('wheel_users')
-      .update({ spins_available: user.spins_available + 1 })
+      .update({ spins_available: 1 })
       .eq('id', user.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
-    toast.success(`+1 giro para ${user.name}!`);
+    toast.success(`1 giro liberado para ${user.name}!`);
     fetchUsers();
   };
 
@@ -177,6 +179,7 @@ const Admin = () => {
       account_id: user.account_id,
       email: user.email,
       name: user.name,
+      phone: user.phone || '',
       spins_available: user.spins_available,
     });
     setShowForm(true);
@@ -184,14 +187,14 @@ const Admin = () => {
 
   const openNew = () => {
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', spins_available: 0 });
+    setForm({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
     setShowForm(true);
   };
 
   const handleExportCSV = () => {
-    const header = 'Nome,Email,Account ID,Giros Disponíveis,Criado em\n';
+    const header = 'Nome,E-mail,Celular,ID da Conta,Data\n';
     const rows = filteredUsers.map(u =>
-      `"${u.name}","${u.email}","${u.account_id}",${u.spins_available},"${u.created_at || ''}"`
+      `"${u.name}","${u.email}","${u.phone || ''}","${u.account_id}","${u.created_at || ''}"`
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -217,11 +220,11 @@ const Admin = () => {
       let imported = 0, errors = 0;
       for (const line of dataLines) {
         const cols = line.match(/(".*?"|[^,]+)/g)?.map(c => c.replace(/^"|"$/g, '').trim()) || [];
-        if (cols.length < 3) { errors++; continue; }
-        const [name, email, account_id, spins] = cols;
+        if (cols.length < 4) { errors++; continue; }
+        const [name, email, phone, account_id] = cols;
         if (!name || !email || !account_id) { errors++; continue; }
         const { error } = await (supabase as any).from('wheel_users').insert({
-          name, email, account_id, spins_available: parseInt(spins) || 0,
+          name, email, phone: phone || '', account_id,
         });
         if (error) errors++; else imported++;
       }
@@ -348,6 +351,10 @@ const Admin = () => {
                     <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
                   <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Celular</label>
+                    <input type="text" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Account ID</label>
                     <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
@@ -371,7 +378,8 @@ const Admin = () => {
                       <th className="text-left px-4 py-3 text-muted-foreground font-medium">Nome</th>
                       <th className="text-left px-4 py-3 text-muted-foreground font-medium">Email</th>
                       <th className="text-left px-4 py-3 text-muted-foreground font-medium">Account ID</th>
-                      <th className="text-center px-4 py-3 text-muted-foreground font-medium">Giros</th>
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Celular</th>
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Account ID</th>
                       <th className="text-center px-4 py-3 text-muted-foreground font-medium">Ações</th>
                     </tr>
                   </thead>
@@ -380,15 +388,15 @@ const Admin = () => {
                       <tr key={user.id} className="border-t border-border hover:bg-muted/30 transition">
                         <td className="px-4 py-3 text-foreground font-medium">{user.name}</td>
                         <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{user.phone}</td>
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{user.account_id}</td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${user.spins_available > 0 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                            {user.spins_available}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => handleGrantSpin(user)} className="px-3 py-1.5 rounded-md bg-primary/20 text-primary text-xs hover:bg-primary/30 transition font-bold">+1 Giro</button>
+                            {user.spins_available > 0 ? (
+                              <span className="px-3 py-1.5 rounded-md bg-primary/20 text-primary text-xs font-bold">1 giro ✓</span>
+                            ) : (
+                              <button onClick={() => handleGrantSpin(user)} className="px-3 py-1.5 rounded-md bg-green-600/20 text-green-500 text-xs hover:bg-green-600/30 transition font-bold">Liberar 1 giro</button>
+                            )}
                             <button onClick={() => openEdit(user)} className="px-3 py-1.5 rounded-md bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
                             <button onClick={() => handleDeleteUser(user.id)} className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
