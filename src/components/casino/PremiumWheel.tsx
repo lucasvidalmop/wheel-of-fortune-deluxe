@@ -102,7 +102,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
   const numLeds = 24;
 
   return (
-    <div className="relative inline-block select-none" style={{ width: 620, height: 620 }}>
+    <div className="relative inline-block select-none w-full h-full">
       {/* Background glow */}
       <div
         className="absolute inset-0 rounded-full blur-3xl opacity-40"
