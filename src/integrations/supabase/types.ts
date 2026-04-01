@@ -308,6 +308,16 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_spin_result: {
+        Args: {
+          p_account_id: string
+          p_owner_id?: string
+          p_prize: string
+          p_user_email: string
+          p_user_name: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "user"
