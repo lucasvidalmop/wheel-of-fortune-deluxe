@@ -123,7 +123,7 @@ const Admin = () => {
     } else {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .insert({ account_id: form.account_id, email: form.email, name: form.name });
+        .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone });
       if (error) { toast.error('Erro ao criar: ' + error.message); return; }
       toast.success('Usuário criado!');
     }
