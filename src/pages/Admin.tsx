@@ -392,11 +392,13 @@ const Admin = () => {
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{user.account_id}</td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            {user.spins_available > 0 ? (
-                              <span className="px-3 py-1.5 rounded-md bg-primary/20 text-primary text-xs font-bold">1 giro ✓</span>
-                            ) : (
-                              <button onClick={() => handleGrantSpin(user)} className="px-3 py-1.5 rounded-md bg-green-600/20 text-green-500 text-xs hover:bg-green-600/30 transition font-bold">Liberar 1 giro</button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleGrantSpin(user)}
+                              className={`px-3 py-1.5 rounded-md text-xs font-bold transition ${user.spins_available >= 1 ? 'bg-primary/20 text-primary hover:bg-destructive/20 hover:text-destructive' : 'bg-accent text-accent-foreground hover:opacity-80'}`}
+                            >
+                              {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar 1 giro'}
+                            </button>
                             <button onClick={() => openEdit(user)} className="px-3 py-1.5 rounded-md bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
                             <button onClick={() => handleDeleteUser(user.id)} className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
