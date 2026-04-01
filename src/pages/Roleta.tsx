@@ -260,7 +260,7 @@ const Roleta = () => {
               boxShadow: `0 4px 20px ${ac.authButtonBgColor ?? '#0ABACC'}55`,
             }}
           >
-            {authLoading ? 'VERIFICANDO...' : 'VERIFICAR CADASTRO'}
+            {authLoading ? 'VERIFICANDO...' : 'GIRAR AGORA'}
           </button>
         </form>
       </div>
