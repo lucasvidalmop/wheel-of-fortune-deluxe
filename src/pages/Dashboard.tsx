@@ -548,6 +548,7 @@ const Dashboard = () => {
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">Account ID</th>
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">🏆 Prêmio</th>
                       <th className="text-left px-3 py-3 text-muted-foreground font-medium">Data/Hora</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
