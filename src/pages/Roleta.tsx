@@ -363,6 +363,7 @@ const Roleta = () => {
           config={config}
           onSpinEnd={handleSpinEnd}
           disabled={accountId ? !canSpin : false}
+          forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
         />
       </div>
     </div>
