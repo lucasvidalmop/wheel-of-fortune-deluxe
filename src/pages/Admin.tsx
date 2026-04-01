@@ -95,7 +95,7 @@ const Admin = () => {
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUser) {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('wheel_users')
         .update({
           account_id: form.account_id,
@@ -107,7 +107,7 @@ const Admin = () => {
       if (error) { toast.error('Erro ao atualizar: ' + error.message); return; }
       toast.success('Usuário atualizado!');
     } else {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('wheel_users')
         .insert({
           account_id: form.account_id,
