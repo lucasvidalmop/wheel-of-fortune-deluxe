@@ -25,24 +25,30 @@ const Roleta = () => {
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
 
-  // Load config from DB when slug is provided
+  // Redirect if no slug — only /roleta/:slug is allowed
   useEffect(() => {
-    if (!slug) { setConfigLoading(false); return; }
+    if (!slug) {
+      navigate('/', { replace: true });
+      return;
+    }
     (async () => {
       const { data } = await (supabase as any)
         .from('wheel_configs')
         .select('user_id, config')
         .eq('slug', slug)
         .maybeSingle();
-      if (data) {
-        setOwnerId(data.user_id);
-        if (data.config && Object.keys(data.config).length > 0) {
-          setConfig({ ...defaultConfig, ...data.config });
-        }
+      if (!data) {
+        toast.error('Roleta não encontrada');
+        navigate('/', { replace: true });
+        return;
+      }
+      setOwnerId(data.user_id);
+      if (data.config && Object.keys(data.config).length > 0) {
+        setConfig({ ...defaultConfig, ...data.config });
       }
       setConfigLoading(false);
     })();
-  }, [slug]);
+  }, [slug, navigate]);
 
   useEffect(() => {
     if (!accountId || !identified) return;
