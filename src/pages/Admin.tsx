@@ -134,13 +134,13 @@ const Admin = () => {
   };
 
   const handleGrantSpin = async (user: WheelUser) => {
-    const newSpins = user.spins_available >= 1 ? 0 : 1;
+    if (user.spins_available >= 1) { toast.error('Usuário já possui 1 giro disponível'); return; }
     const { error } = await (supabase as any)
       .from('wheel_users')
-      .update({ spins_available: newSpins })
+      .update({ spins_available: 1 })
       .eq('id', user.id);
-    if (error) { toast.error('Erro ao atualizar giro'); return; }
-    toast.success(newSpins === 1 ? `1 giro liberado para ${user.name}!` : `Giro removido de ${user.name}`);
+    if (error) { toast.error('Erro ao liberar giro'); return; }
+    toast.success(`1 giro liberado para ${user.name}!`);
     fetchUsers();
   };
 
