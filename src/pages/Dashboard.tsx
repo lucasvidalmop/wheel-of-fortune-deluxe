@@ -24,7 +24,7 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email'>('inscritos');
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +36,12 @@ const Dashboard = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [viewingUserData, setViewingUserData] = useState<WheelUser | null>(null);
   const [viewingUserLoading, setViewingUserLoading] = useState(false);
+
+  const [emailSubject, setEmailSubject] = useState('🎰 Você tem um giro disponível!');
+  const [emailBody, setEmailBody] = useState('Olá! Você foi convidado para girar a roleta e concorrer a prêmios incríveis. Acesse o link abaixo e boa sorte!');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<'all' | 'selected'>('all');
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
@@ -369,6 +375,9 @@ const Dashboard = () => {
           <button onClick={() => { setActiveTab('history'); fetchHistory(); }} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             🏆 Histórico
           </button>
+          <button onClick={() => setActiveTab('email')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'email' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            ✉️ Disparo de Email
+          </button>
         </div>
 
         {/* Inscritos tab */}
@@ -602,6 +611,114 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Email tab */}
+        {activeTab === 'email' && (
+          <div className="max-w-2xl space-y-6">
+            <h2 className="text-lg font-bold text-foreground">Disparo de Email</h2>
+
+            {/* Target selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Destinatários</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setEmailTarget('all'); setSelectedEmails([]); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${emailTarget === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  Todos os inscritos ({users.length})
+                </button>
+                <button
+                  onClick={() => setEmailTarget('selected')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${emailTarget === 'selected' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  Selecionar inscritos
+                </button>
+              </div>
+            </div>
+
+            {/* User selection */}
+            {emailTarget === 'selected' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Selecione os inscritos ({selectedEmails.length} selecionado{selectedEmails.length !== 1 ? 's' : ''})</label>
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-background p-2 space-y-1">
+                  {users.map(u => (
+                    <label key={u.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedEmails.includes(u.email)}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedEmails([...selectedEmails, u.email]);
+                          else setSelectedEmails(selectedEmails.filter(em => em !== u.email));
+                        }}
+                        className="rounded border-border"
+                      />
+                      <span className="text-sm text-foreground">{u.name}</span>
+                      <span className="text-xs text-muted-foreground">({u.email})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Subject */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">Assunto</label>
+              <input
+                value={emailSubject}
+                onChange={e => setEmailSubject(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm"
+              />
+            </div>
+
+            {/* Body */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">Mensagem</label>
+              <textarea
+                value={emailBody}
+                onChange={e => setEmailBody(e.target.value)}
+                rows={5}
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm resize-y"
+              />
+              <p className="text-xs text-muted-foreground">O link da roleta será incluído automaticamente no email.</p>
+            </div>
+
+            {/* Send button */}
+            <button
+              onClick={async () => {
+                const recipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
+                if (recipients.length === 0) { toast.error('Nenhum destinatário selecionado'); return; }
+                if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
+                setEmailSending(true);
+                const roletaLink = `${baseUrl}/roleta/${slug}`;
+                let sent = 0, errors = 0;
+                for (const email of recipients) {
+                  const user = users.find(u => u.email === email);
+                  const { error } = await supabase.functions.invoke('send-transactional-email', {
+                    body: {
+                      templateName: 'wheel-invite',
+                      recipientEmail: email,
+                      idempotencyKey: `wheel-invite-${email}-${Date.now()}`,
+                      templateData: {
+                        name: user?.name || '',
+                        subject: emailSubject,
+                        body: emailBody,
+                        roletaLink,
+                      },
+                    },
+                  });
+                  if (error) errors++; else sent++;
+                }
+                setEmailSending(false);
+                if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
+                else toast.success(`${sent} email(s) enviado(s) com sucesso!`);
+              }}
+              disabled={emailSending}
+              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"
+            >
+              {emailSending ? 'Enviando...' : `✉️ Enviar Email${emailTarget === 'all' ? ` para ${users.length} inscrito(s)` : selectedEmails.length > 0 ? ` para ${selectedEmails.length} inscrito(s)` : ''}`}
+            </button>
           </div>
         )}
       </div>
