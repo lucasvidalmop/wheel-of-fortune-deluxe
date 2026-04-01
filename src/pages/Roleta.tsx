@@ -131,6 +131,14 @@ const Roleta = () => {
     }
   };
 
+  if (configLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Carregando roleta...</div>
+      </div>
+    );
+  }
+
   // Login / identification screen
   if (!identified) {
     const ac = config;
