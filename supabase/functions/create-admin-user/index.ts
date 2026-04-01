@@ -29,7 +29,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Não autenticado" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Check admin role
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -59,10 +58,10 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: userError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Assign admin role
+    // Assign user role (not admin)
     const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
       user_id: userData.user.id,
-      role: "admin",
+      role: "user",
     });
 
     if (roleError) {
