@@ -194,14 +194,15 @@ const Roleta = () => {
           {/* Submit */}
           <button
             type="submit"
-            className="w-full py-3.5 rounded-lg font-bold text-sm tracking-[0.2em] uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98]"
+            disabled={authLoading}
+            className="w-full py-3.5 rounded-lg font-bold text-sm tracking-[0.2em] uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
             style={{
               background: ac.authButtonBgColor ?? '#0ABACC',
               color: ac.authButtonTextColor ?? '#000000',
               boxShadow: `0 4px 20px ${ac.authButtonBgColor ?? '#0ABACC'}55`,
             }}
           >
-            VERIFICAR CADASTRO
+            {authLoading ? 'VERIFICANDO...' : 'VERIFICAR CADASTRO'}
           </button>
         </form>
       </div>
