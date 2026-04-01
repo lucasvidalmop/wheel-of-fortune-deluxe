@@ -409,35 +409,36 @@ const Admin = () => {
               <div className="text-center py-12 text-muted-foreground">{searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}</div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-border">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm table-fixed">
                   <thead>
                     <tr className="bg-muted/50">
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Nome</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Email</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Account ID</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Celular</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Account ID</th>
-                      <th className="text-center px-4 py-3 text-muted-foreground font-medium">Ações</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium w-10">#</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Nome</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Email</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium w-28">Celular</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium w-36">Account ID</th>
+                      <th className="text-center px-3 py-3 text-muted-foreground font-medium w-52">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map(user => (
+                    {filteredUsers.map((user, index) => (
                       <tr key={user.id} className="border-t border-border hover:bg-muted/30 transition">
-                        <td className="px-4 py-3 text-foreground font-medium">{user.name}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{user.phone}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{user.account_id}</td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-3 py-3 text-muted-foreground text-xs">{index + 1}</td>
+                        <td className="px-3 py-3 text-foreground font-medium truncate">{user.name}</td>
+                        <td className="px-3 py-3 text-muted-foreground truncate">{user.email}</td>
+                        <td className="px-3 py-3 text-muted-foreground text-xs">{user.phone}</td>
+                        <td className="px-3 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
+                        <td className="px-3 py-3">
+                          <div className="flex items-center justify-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => handleGrantSpin(user)}
-                              className={`px-3 py-1.5 rounded-md text-xs font-bold transition ${user.spins_available >= 1 ? 'bg-primary/20 text-primary hover:bg-destructive/20 hover:text-destructive' : 'bg-accent text-accent-foreground hover:opacity-80'}`}
+                              className={`px-2.5 py-1 rounded text-xs font-semibold transition whitespace-nowrap ${user.spins_available >= 1 ? 'bg-primary/15 text-primary hover:bg-destructive/15 hover:text-destructive' : 'bg-accent text-accent-foreground hover:opacity-80'}`}
                             >
-                              {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar 1 giro'}
+                              {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar'}
                             </button>
-                            <button onClick={() => openEdit(user)} className="px-3 py-1.5 rounded-md bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
-                            <button onClick={() => handleDeleteUser(user.id)} className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
+                            <button onClick={() => openEdit(user)} className="px-2.5 py-1 rounded bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
+                            <button onClick={() => handleDeleteUser(user.id)} className="px-2.5 py-1 rounded bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
                         </td>
                       </tr>
