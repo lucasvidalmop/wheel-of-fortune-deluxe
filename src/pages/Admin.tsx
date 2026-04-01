@@ -351,6 +351,10 @@ const Admin = () => {
                     <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
                   <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Celular</label>
+                    <input type="text" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Account ID</label>
                     <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
