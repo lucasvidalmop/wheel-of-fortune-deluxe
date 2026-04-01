@@ -161,6 +161,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         {/* Background image */}
         <div className="pt-2 border-t border-border">
           <ImageUpload label="Background da autenticação" value={config.authBgImageUrl} onChange={v => updateGlobal('authBgImageUrl', v)} />
+          {config.authBgImageUrl && (
+            <ImagePositionControls
+              offsetX={config.authBgImageOffsetX ?? 0} offsetY={config.authBgImageOffsetY ?? 0} scale={config.authBgImageScale ?? 1}
+              onChangeX={v => updateGlobal('authBgImageOffsetX', v)} onChangeY={v => updateGlobal('authBgImageOffsetY', v)} onChangeScale={v => updateGlobal('authBgImageScale', v)}
+            />
+          )}
         </div>
       </Section>
 
