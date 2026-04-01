@@ -28,7 +28,25 @@ const Roleta = () => {
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
 
+  // Load config from DB when slug is provided
   useEffect(() => {
+    if (!slug) { setConfigLoading(false); return; }
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('wheel_configs')
+        .select('user_id, config')
+        .eq('slug', slug)
+        .maybeSingle();
+      if (data) {
+        setOwnerId(data.user_id);
+        if (data.config && Object.keys(data.config).length > 0) {
+          setConfig({ ...defaultConfig, ...data.config });
+        }
+      }
+      setConfigLoading(false);
+    })();
+  }, [slug]);
+
     if (!accountId || !identified) return;
     setLoading(true);
     (supabase as any)
