@@ -28,7 +28,9 @@ const Admin = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins' | 'history'>('users');
+  const [spinResults, setSpinResults] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Admin user creation
   const [showAdminForm, setShowAdminForm] = useState(false);
@@ -92,7 +94,7 @@ const Admin = () => {
       .maybeSingle();
     setIsAdmin(!!data);
     setLoading(false);
-    if (data) fetchUsers();
+    if (data) { fetchUsers(); fetchHistory(); }
   };
 
   const fetchUsers = async () => {
@@ -107,6 +109,16 @@ const Admin = () => {
       setUsers(data || []);
     }
     setUsersLoading(false);
+  };
+
+  const fetchHistory = async () => {
+    setHistoryLoading(true);
+    const { data, error } = await (supabase as any)
+      .from('spin_results')
+      .select('*')
+      .order('spun_at', { ascending: false });
+    if (!error) setSpinResults(data || []);
+    setHistoryLoading(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -347,6 +359,12 @@ const Admin = () => {
           >
             👤 Criar Usuários
           </button>
+          <button
+            onClick={() => { setActiveTab('history'); fetchHistory(); }}
+            className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          >
+            🏆 Histórico
+          </button>
         </div>
 
         {/* Users tab */}
@@ -512,6 +530,49 @@ const Admin = () => {
                 </div>
               </form>
             )}
+          </div>
+        )}
+
+        {/* History tab */}
+        {activeTab === 'history' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-foreground">Histórico de Prêmios</h2>
+              <button onClick={fetchHistory} className="px-4 py-2 rounded-lg bg-muted text-foreground text-sm hover:bg-muted/80 transition">🔄 Atualizar</button>
+            </div>
+            {historyLoading ? (
+              <div className="text-center py-12 text-muted-foreground animate-pulse">Carregando histórico...</div>
+            ) : spinResults.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">Nenhum resultado registrado ainda</div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium w-10">#</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Nome</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Email</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Account ID</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">🏆 Prêmio</th>
+                      <th className="text-left px-3 py-3 text-muted-foreground font-medium">Data/Hora</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {spinResults.map((r: any, i: number) => (
+                      <tr key={r.id} className="border-t border-border hover:bg-muted/30 transition">
+                        <td className="px-3 py-3 text-muted-foreground text-xs">{i + 1}</td>
+                        <td className="px-3 py-3 text-foreground font-medium">{r.user_name}</td>
+                        <td className="px-3 py-3 text-muted-foreground">{r.user_email}</td>
+                        <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{r.account_id}</td>
+                        <td className="px-3 py-3 text-primary font-bold">{r.prize}</td>
+                        <td className="px-3 py-3 text-muted-foreground text-xs">{new Date(r.spun_at).toLocaleString('pt-BR')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="mt-4 text-xs text-muted-foreground">{spinResults.length} resultado(s)</div>
           </div>
         )}
       </div>

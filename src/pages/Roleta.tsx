@@ -78,6 +78,16 @@ const Roleta = () => {
     if (!seg) return;
 
     if (accountId) {
+      // Save spin result
+      await (supabase as any)
+        .from('spin_results')
+        .insert({
+          user_name: userName || '',
+          user_email: emailValue,
+          account_id: accountId,
+          prize: seg.title || `Segmento ${segmentIndex + 1}`,
+        });
+
       // Decrement spin in database
       await (supabase as any)
         .from('wheel_users')
