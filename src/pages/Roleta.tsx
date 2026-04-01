@@ -73,47 +73,55 @@ const Roleta = () => {
 
   // Login / identification screen
   if (!identified) {
+    const ac = config;
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#1a0a2e' }}>
-        {config.backgroundImageUrl && (
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
-            style={{ backgroundImage: `url(${config.backgroundImageUrl})` }}
-          />
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: ac.authBgColor ?? '#1a0a2e' }}>
+        {ac.authBgImageUrl && (
+          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${ac.authBgImageUrl})` }} />
         )}
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
 
-        {/* Login card */}
         <form
           onSubmit={handleIdentify}
           className="relative z-10 w-full max-w-sm mx-4 rounded-xl p-6 space-y-5"
           style={{
-            background: 'rgba(20, 12, 40, 0.95)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: ac.authCardBgColor ? `${ac.authCardBgColor}f2` : 'rgba(20, 12, 40, 0.95)',
+            border: `1px solid ${ac.authCardBorderColor ?? 'rgba(255,255,255,0.08)'}`,
             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           }}
         >
-          {/* Header with close button */}
+          {/* Header: logo, text, or logo+text */}
           <div className="flex items-start justify-between">
-            <div>
-              <h2
-                className="font-bold text-lg tracking-wide"
-                style={{ color: '#ffffff' }}
-              >
-                Atualizar Chave PIX
-              </h2>
-              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                Informe o e-mail e o ID da sua conta para verificarmos seu cadastro.
-              </p>
+            <div className="flex-1">
+              {(ac.authHeaderMode === 'logo' || ac.authHeaderMode === 'logo_text') && ac.authLogoUrl && (
+                <img
+                  src={ac.authLogoUrl}
+                  alt="Logo"
+                  className="object-contain mb-3"
+                  style={{ height: ac.authLogoSize ?? 80, maxWidth: '100%' }}
+                />
+              )}
+              {(ac.authHeaderMode === 'text' || ac.authHeaderMode === 'logo_text') && (
+                <>
+                  <h2 className="font-bold tracking-wide" style={{ color: ac.authLabelColor ?? '#fff', fontSize: ac.authTitleSize ?? 18 }}>
+                    {ac.authTitle ?? 'Atualizar Chave PIX'}
+                  </h2>
+                  <p className="mt-1" style={{ color: ac.authTextColor ?? 'rgba(255,255,255,0.5)', fontSize: ac.authSubtitleSize ?? 12 }}>
+                    {ac.authSubtitle ?? 'Informe o e-mail e o ID da sua conta para verificarmos seu cadastro.'}
+                  </p>
+                </>
+              )}
+              {ac.authHeaderMode === 'logo' && !ac.authLogoUrl && (
+                <h2 className="font-bold tracking-wide" style={{ color: ac.authLabelColor ?? '#fff', fontSize: ac.authTitleSize ?? 18 }}>
+                  {ac.authTitle ?? 'Identificação'}
+                </h2>
+              )}
             </div>
-            <button type="button" className="text-lg" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              ✕
-            </button>
           </div>
 
-          {/* Email field */}
+          {/* Email */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold tracking-wider uppercase" style={{ color: '#ffffff' }}>
+            <label className="text-xs font-bold tracking-wider uppercase" style={{ color: ac.authLabelColor ?? '#ffffff' }}>
               E-MAIL
             </label>
             <input
@@ -126,17 +134,17 @@ const Roleta = () => {
               className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all duration-300"
               style={{
                 background: 'rgba(255,255,255,0.04)',
-                border: '2px solid #D4A017',
+                border: `2px solid ${ac.authInputBorderColor ?? '#D4A017'}`,
                 color: '#fff',
               }}
-              onFocus={e => (e.target.style.borderColor = '#FFD700')}
-              onBlur={e => (e.target.style.borderColor = '#D4A017')}
+              onFocus={e => (e.target.style.borderColor = ac.authInputBorderColor ? `${ac.authInputBorderColor}` : '#FFD700')}
+              onBlur={e => (e.target.style.borderColor = ac.authInputBorderColor ?? '#D4A017')}
             />
           </div>
 
-          {/* Account ID field */}
+          {/* Account ID */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold tracking-wider uppercase" style={{ color: '#ffffff' }}>
+            <label className="text-xs font-bold tracking-wider uppercase" style={{ color: ac.authLabelColor ?? '#ffffff' }}>
               ID DA CONTA
             </label>
             <input
@@ -149,22 +157,22 @@ const Roleta = () => {
               className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all duration-300"
               style={{
                 background: 'rgba(255,255,255,0.04)',
-                border: '2px solid #D4A017',
+                border: `2px solid ${ac.authInputBorderColor ?? '#D4A017'}`,
                 color: '#fff',
               }}
-              onFocus={e => (e.target.style.borderColor = '#FFD700')}
-              onBlur={e => (e.target.style.borderColor = '#D4A017')}
+              onFocus={e => (e.target.style.borderColor = ac.authInputBorderColor ? `${ac.authInputBorderColor}` : '#FFD700')}
+              onBlur={e => (e.target.style.borderColor = ac.authInputBorderColor ?? '#D4A017')}
             />
           </div>
 
-          {/* Submit button */}
+          {/* Submit */}
           <button
             type="submit"
             className="w-full py-3.5 rounded-lg font-bold text-sm tracking-[0.2em] uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98]"
             style={{
-              background: 'linear-gradient(180deg, #4DD8E0 0%, #0ABACC 50%, #0898A8 100%)',
-              color: '#000000',
-              boxShadow: '0 4px 20px rgba(13,186,204,0.35)',
+              background: ac.authButtonBgColor ?? '#0ABACC',
+              color: ac.authButtonTextColor ?? '#000000',
+              boxShadow: `0 4px 20px ${ac.authButtonBgColor ?? '#0ABACC'}55`,
             }}
           >
             VERIFICAR CADASTRO
