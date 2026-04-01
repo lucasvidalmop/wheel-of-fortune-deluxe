@@ -42,7 +42,22 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('wheel_config', JSON.stringify(wheelConfig));
+    try {
+      const { segments, ...rest } = wheelConfig;
+      const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
+        ...s,
+        imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
+      }));
+      const clean = {
+        ...rest,
+        segments: cleanSegments,
+        authLogoUrl: typeof rest.authLogoUrl === 'string' && rest.authLogoUrl.startsWith('data:') ? '' : rest.authLogoUrl,
+        authBgImageUrl: typeof rest.authBgImageUrl === 'string' && rest.authBgImageUrl.startsWith('data:') ? '' : rest.authBgImageUrl,
+      };
+      localStorage.setItem('wheel_config', JSON.stringify(clean));
+    } catch {
+      localStorage.removeItem('wheel_config');
+    }
   }, [wheelConfig]);
 
   useEffect(() => {
