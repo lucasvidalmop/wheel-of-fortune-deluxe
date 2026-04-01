@@ -26,7 +26,9 @@ const Dashboard = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [spinResults, setSpinResults] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
+  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '' });
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [slug, setSlug] = useState('');
