@@ -171,6 +171,7 @@ const Admin = () => {
     setAdminCreating(false);
   };
 
+  const openEdit = (user: WheelUser) => {
     setEditingUser(user);
     setForm({
       account_id: user.account_id,
