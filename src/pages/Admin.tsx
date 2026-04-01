@@ -356,6 +356,7 @@ const Admin = () => {
                 <button onClick={openNew} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition whitespace-nowrap">
                   + Novo Usuário
                 </button>
+              </div>
             </div>
             <div className="flex gap-2 mt-3">
               <button onClick={() => handleToggleAllSpins(true)} className="px-4 py-2 rounded-lg bg-primary/20 text-primary font-bold text-xs hover:bg-primary/30 transition">
