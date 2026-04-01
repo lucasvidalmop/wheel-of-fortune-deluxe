@@ -274,9 +274,14 @@ const Admin = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm"
               />
-              <button onClick={openNew} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition whitespace-nowrap">
-                + Novo Usuário
-              </button>
+              <div className="flex gap-2">
+                <button onClick={handleExportCSV} className="px-6 py-2.5 rounded-lg bg-muted text-foreground font-bold text-sm hover:bg-muted/80 transition whitespace-nowrap">
+                  📥 Exportar CSV
+                </button>
+                <button onClick={openNew} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition whitespace-nowrap">
+                  + Novo Usuário
+                </button>
+              </div>
             </div>
 
             {showForm && (
