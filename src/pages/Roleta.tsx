@@ -77,18 +77,23 @@ const Roleta = () => {
     const seg = config.segments[segmentIndex];
     if (!seg) return;
 
-    if (hasApi && accountId) {
-      await recordSpinResult({
-        account_id: accountId,
-        segment_title: seg.title,
-        segment_reward: seg.reward,
-        segment_index: segmentIndex,
-      });
+    if (accountId) {
+      // Decrement spin in database
+      await (supabase as any)
+        .from('wheel_users')
+        .update({ spins_available: Math.max(0, (spinsRemaining ?? 1) - 1) })
+        .eq('account_id', accountId);
 
-      const res = await checkSpins(accountId);
-      setCanSpin(res.allowed);
-      setSpinsRemaining(res.spins_remaining);
-      if (!res.allowed) setMessage(res.message || 'Sem giros disponíveis');
+      const { data } = await (supabase as any)
+        .from('wheel_users')
+        .select('spins_available')
+        .eq('account_id', accountId)
+        .maybeSingle();
+      if (data) {
+        setSpinsRemaining(data.spins_available);
+        setCanSpin(data.spins_available >= 1);
+        if (data.spins_available < 1) setMessage('Sem giros disponíveis');
+      }
     }
   };
 
