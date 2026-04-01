@@ -30,7 +30,9 @@ const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: strin
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
-      const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
+      const fileName = `${userId}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('app-assets')

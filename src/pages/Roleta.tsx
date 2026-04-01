@@ -55,21 +55,19 @@ const Roleta = () => {
   useEffect(() => {
     if (!accountId || !identified) return;
     setLoading(true);
-    let query = (supabase as any)
-      .from('wheel_users')
-      .select('name, spins_available, owner_id, fixed_prize_enabled, fixed_prize_segment')
-      .eq('account_id', accountId);
-    if (ownerId) query = query.eq('owner_id', ownerId);
-    query.maybeSingle()
-      .then(({ data }: any) => {
-        if (data) {
-          setUserName(data.name);
-          setSpinsRemaining(data.spins_available);
-          setCanSpin(data.spins_available >= 1);
-          setFixedPrizeEnabled(data.fixed_prize_enabled ?? false);
-          setFixedPrizeSegment(data.fixed_prize_segment ?? null);
-          if (!ownerId && data.owner_id) setOwnerId(data.owner_id);
-          if (data.spins_available < 1) setMessage('Sem giros disponíveis');
+    (supabase as any).rpc('get_wheel_user_spins', {
+      p_account_id: accountId,
+      p_owner_id: ownerId || null,
+    }).then(({ data }: any) => {
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row) {
+          setUserName(row.name);
+          setSpinsRemaining(row.spins_available);
+          setCanSpin(row.spins_available >= 1);
+          setFixedPrizeEnabled(row.fixed_prize_enabled ?? false);
+          setFixedPrizeSegment(row.fixed_prize_segment ?? null);
+          if (!ownerId && row.owner_id) setOwnerId(row.owner_id);
+          if (row.spins_available < 1) setMessage('Sem giros disponíveis');
         }
         setLoading(false);
       });
@@ -82,13 +80,12 @@ const Roleta = () => {
     if (!trimmedId || !trimmedEmail) return;
     setAuthLoading(true);
 
-    let authQuery = (supabase as any)
-      .from('wheel_users')
-      .select('id, name, spins_available, account_id, owner_id, fixed_prize_enabled, fixed_prize_segment')
-      .eq('email', trimmedEmail)
-      .eq('account_id', trimmedId);
-    if (ownerId) authQuery = authQuery.eq('owner_id', ownerId);
-    const { data, error } = await authQuery.maybeSingle();
+    const { data: rpcData, error } = await (supabase as any).rpc('authenticate_wheel_user', {
+      p_email: trimmedEmail,
+      p_account_id: trimmedId,
+      p_owner_id: ownerId || null,
+    });
+    const data = Array.isArray(rpcData) ? rpcData[0] : rpcData;
 
     if (error || !data) {
       toast.error('Dados inválidos. Verifique seu email e ID da conta.');
@@ -124,24 +121,16 @@ const Roleta = () => {
           owner_id: ownerId || null,
         });
 
-      let updateQuery = (supabase as any)
-        .from('wheel_users')
-        .update({ spins_available: Math.max(0, (spinsRemaining ?? 1) - 1) })
-        .eq('account_id', accountId);
-      if (ownerId) updateQuery = updateQuery.eq('owner_id', ownerId);
-      await updateQuery;
-
-      let refreshQuery = (supabase as any)
-        .from('wheel_users')
-        .select('spins_available, owner_id')
-        .eq('account_id', accountId);
-      if (ownerId) refreshQuery = refreshQuery.eq('owner_id', ownerId);
-      const { data } = await refreshQuery.maybeSingle();
-      if (data) {
-        setSpinsRemaining(data.spins_available);
-        setCanSpin(data.spins_available >= 1);
-        if (!ownerId && data.owner_id) setOwnerId(data.owner_id);
-        if (data.spins_available < 1) setMessage('Sem giros disponíveis');
+      const { data: decrementData } = await (supabase as any).rpc('decrement_wheel_user_spins', {
+        p_account_id: accountId,
+        p_owner_id: ownerId || null,
+      });
+      const row = Array.isArray(decrementData) ? decrementData[0] : decrementData;
+      if (row) {
+        setSpinsRemaining(row.spins_available);
+        setCanSpin(row.spins_available >= 1);
+        if (!ownerId && row.owner_id) setOwnerId(row.owner_id);
+        if (row.spins_available < 1) setMessage('Sem giros disponíveis');
       }
     }
   };
