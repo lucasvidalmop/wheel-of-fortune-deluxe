@@ -692,7 +692,9 @@ const Dashboard = () => {
                 if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
                 setEmailSending(true);
                 const roletaLink = `${baseUrl}/roleta/${slug}`;
-                const accessToken = session?.access_token;
+                const { data: { session: freshSession } } = await supabase.auth.getSession();
+                if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
+                const accessToken = freshSession.access_token;
                 let sent = 0, errors = 0;
                 for (const email of recipients) {
                   const user = users.find(u => u.email === email);
