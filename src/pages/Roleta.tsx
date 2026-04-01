@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import PremiumWheel from '@/components/casino/PremiumWheel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const Roleta = () => {
+  const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [accountId, setAccountId] = useState('');
   const [identified, setIdentified] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [emailValue, setEmailValue] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [configLoading, setConfigLoading] = useState(!!slug);
 
-  const [config] = useState<WheelConfig>(() => {
+  const [config, setConfig] = useState<WheelConfig>(() => {
+    if (slug) return defaultConfig; // will load from DB
     const saved = localStorage.getItem('wheel_config');
     return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
   });
