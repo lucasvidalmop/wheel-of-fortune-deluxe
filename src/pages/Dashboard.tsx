@@ -338,7 +338,7 @@ const Dashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto">
+        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
           <button onClick={() => setActiveTab('inscritos')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'inscritos' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             👥 Inscritos
           </button>
