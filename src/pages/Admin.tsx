@@ -126,7 +126,7 @@ const Admin = () => {
 
   const handleDeleteUser = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-    const { error } = await supabase.from('wheel_users').delete().eq('id', id);
+    const { error } = await (supabase as any).from('wheel_users').delete().eq('id', id);
     if (error) { toast.error('Erro ao excluir'); return; }
     toast.success('Usuário excluído!');
     fetchUsers();
