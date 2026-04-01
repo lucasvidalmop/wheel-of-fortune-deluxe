@@ -397,7 +397,9 @@ const Admin = () => {
               </form>
             )}
           </div>
+        )}
       </div>
+    </div>
     </div>
   );
 };
