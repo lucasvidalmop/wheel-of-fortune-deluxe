@@ -270,7 +270,7 @@ const Roleta = () => {
       )}
 
       {/* Spins info */}
-      {hasApi && accountId && (
+      {accountId && (
         <div className="relative z-10 mb-4 text-center">
           {loading ? (
             <p className="text-sm text-muted-foreground animate-pulse">Verificando giros...</p>
