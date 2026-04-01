@@ -203,6 +203,35 @@ const Admin = () => {
     toast.success('CSV exportado!');
   };
 
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const text = ev.target?.result as string;
+      const lines = text.split('\n').filter(l => l.trim());
+      if (lines.length < 2) { toast.error('CSV vazio ou inválido'); return; }
+      const header = lines[0].toLowerCase();
+      const hasHeader = header.includes('nome') || header.includes('email') || header.includes('name');
+      const dataLines = hasHeader ? lines.slice(1) : lines;
+      let imported = 0, errors = 0;
+      for (const line of dataLines) {
+        const cols = line.match(/(".*?"|[^,]+)/g)?.map(c => c.replace(/^"|"$/g, '').trim()) || [];
+        if (cols.length < 3) { errors++; continue; }
+        const [name, email, account_id, spins] = cols;
+        if (!name || !email || !account_id) { errors++; continue; }
+        const { error } = await (supabase as any).from('wheel_users').insert({
+          name, email, account_id, spins_available: parseInt(spins) || 0,
+        });
+        if (error) errors++; else imported++;
+      }
+      toast.success(`${imported} usuário(s) importado(s)${errors > 0 ? `, ${errors} erro(s)` : ''}`);
+      fetchUsers();
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
