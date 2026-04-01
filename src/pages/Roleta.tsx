@@ -257,7 +257,11 @@ const Roleta = () => {
           src={config.headerImageUrl}
           alt="Header"
           className="relative z-10 mb-10 object-contain"
-          style={{ height: config.headerImageSize, maxWidth: '90vw' }}
+          style={{
+            height: config.headerImageSize,
+            maxWidth: '90vw',
+            transform: `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
+          }}
         />
       ) : (
         <>
