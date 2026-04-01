@@ -27,7 +27,12 @@ const Admin = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'users' | 'wheel'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins'>('users');
+
+  // Admin user creation
+  const [showAdminForm, setShowAdminForm] = useState(false);
+  const [adminForm, setAdminForm] = useState({ email: '', password: '', name: '' });
+  const [adminCreating, setAdminCreating] = useState(false);
 
   // Wheel config state
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
@@ -145,6 +150,27 @@ const Admin = () => {
     fetchUsers();
   };
 
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminCreating(true);
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('create-admin-user', {
+        body: { email: adminForm.email, password: adminForm.password, name: adminForm.name },
+      });
+      if (res.error || res.data?.error) {
+        toast.error(res.data?.error || res.error?.message || 'Erro ao criar admin');
+      } else {
+        toast.success(`Admin ${adminForm.email} criado com sucesso!`);
+        setAdminForm({ email: '', password: '', name: '' });
+        setShowAdminForm(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao criar admin');
+    }
+    setAdminCreating(false);
+  };
+
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
     setForm({
@@ -228,6 +254,12 @@ const Admin = () => {
             className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'wheel' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
             🎡 Configurar Roleta
+          </button>
+          <button
+            onClick={() => setActiveTab('admins')}
+            className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'admins' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          >
+            🔐 Administradores
           </button>
         </div>
 
@@ -328,6 +360,42 @@ const Admin = () => {
         {activeTab === 'wheel' && (
           <div className="max-w-lg">
             <CustomizationPanel config={wheelConfig} onChange={setWheelConfig} />
+          </div>
+        )}
+
+        {/* Admins tab */}
+        {activeTab === 'admins' && (
+          <div className="max-w-md space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Criar Novo Admin</h2>
+            </div>
+
+            {!showAdminForm ? (
+              <button onClick={() => setShowAdminForm(true)} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
+                + Novo Administrador
+              </button>
+            ) : (
+              <form onSubmit={handleCreateAdmin} className="p-6 rounded-2xl border border-border bg-card space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Nome</label>
+                  <input type="text" value={adminForm.name} onChange={e => setAdminForm({ ...adminForm, name: e.target.value })} placeholder="Nome do admin" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Email</label>
+                  <input type="email" required value={adminForm.email} onChange={e => setAdminForm({ ...adminForm, email: e.target.value })} placeholder="admin@email.com" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Senha</label>
+                  <input type="password" required minLength={6} value={adminForm.password} onChange={e => setAdminForm({ ...adminForm, password: e.target.value })} placeholder="Mínimo 6 caracteres" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowAdminForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
+                  <button type="submit" disabled={adminCreating} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
+                    {adminCreating ? 'Criando...' : 'Criar Admin'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
       </div>
