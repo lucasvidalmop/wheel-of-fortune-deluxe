@@ -13,6 +13,9 @@ interface WheelUser {
   name: string;
   spins_available: number;
   created_at: string;
+  fixed_prize_enabled: boolean;
+  fixed_prize_segment: number | null;
+}
 }
 
 const Dashboard = () => {
