@@ -115,10 +115,12 @@ const Roleta = () => {
         });
 
       // Decrement spin in database
-      await (supabase as any)
+      let updateQuery = (supabase as any)
         .from('wheel_users')
         .update({ spins_available: Math.max(0, (spinsRemaining ?? 1) - 1) })
         .eq('account_id', accountId);
+      if (ownerId) updateQuery = updateQuery.eq('owner_id', ownerId);
+      await updateQuery;
 
       const { data } = await (supabase as any)
         .from('wheel_users')
