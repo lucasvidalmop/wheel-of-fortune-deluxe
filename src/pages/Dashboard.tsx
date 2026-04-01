@@ -209,7 +209,7 @@ const Dashboard = () => {
 
   const openNew = () => {
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', phone: '' });
+    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null });
     setShowForm(true);
   };
 
