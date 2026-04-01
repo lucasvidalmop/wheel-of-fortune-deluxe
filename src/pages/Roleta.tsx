@@ -47,6 +47,7 @@ const Roleta = () => {
     })();
   }, [slug]);
 
+  useEffect(() => {
     if (!accountId || !identified) return;
     setLoading(true);
     (supabase as any)
