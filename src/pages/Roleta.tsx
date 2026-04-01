@@ -300,7 +300,7 @@ const Roleta = () => {
         <img
           src={config.headerImageUrl}
           alt="Header"
-          className="relative z-10 mb-10 object-contain"
+          className="relative z-10 mb-4 md:mb-10 object-contain max-h-16 md:max-h-none"
           style={{
             height: config.headerImageSize,
             maxWidth: '90vw',
@@ -310,9 +310,9 @@ const Roleta = () => {
       ) : (
         <>
           <h1
-            className="relative z-10 font-display font-black tracking-[0.3em] uppercase mb-2"
+            className="relative z-10 font-display font-black tracking-[0.3em] uppercase mb-1 md:mb-2 text-center"
             style={{
-              fontSize: config.headerTitleSize,
+              fontSize: `clamp(14px, 4vw, ${config.headerTitleSize}px)`,
               color: config.glowColor,
               textShadow: `0 0 30px ${config.glowColor}55`,
             }}
@@ -320,8 +320,8 @@ const Roleta = () => {
             {config.pageTitle}
           </h1>
           <p
-            className="relative z-10 font-display tracking-[0.5em] text-muted-foreground uppercase mb-10"
-            style={{ fontSize: config.headerSubtitleSize }}
+            className="relative z-10 font-display tracking-[0.5em] text-muted-foreground uppercase mb-4 md:mb-10 text-center"
+            style={{ fontSize: `clamp(8px, 2.5vw, ${config.headerSubtitleSize}px)` }}
           >
             {config.pageSubtitle}
           </p>
