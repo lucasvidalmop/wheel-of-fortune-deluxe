@@ -159,14 +159,14 @@ const Admin = () => {
         body: { email: adminForm.email, password: adminForm.password, name: adminForm.name },
       });
       if (res.error || res.data?.error) {
-        toast.error(res.data?.error || res.error?.message || 'Erro ao criar admin');
+        toast.error(res.data?.error || res.error?.message || 'Erro ao criar usuário');
       } else {
-        toast.success(`Admin ${adminForm.email} criado com sucesso!`);
+        toast.success(`Usuário ${adminForm.email} criado com sucesso!`);
         setAdminForm({ email: '', password: '', name: '' });
         setShowAdminForm(false);
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao criar admin');
+      toast.error(err.message || 'Erro ao criar usuário');
     }
     setAdminCreating(false);
   };
@@ -259,7 +259,7 @@ const Admin = () => {
             onClick={() => setActiveTab('admins')}
             className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'admins' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
-            🔐 Administradores
+            👤 Criar Usuários
           </button>
         </div>
 
@@ -363,26 +363,29 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Admins tab */}
+        {/* Create users tab */}
         {activeTab === 'admins' && (
           <div className="max-w-md space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">Criar Novo Admin</h2>
+              <h2 className="text-lg font-bold text-foreground">Criar Novo Usuário</h2>
             </div>
+            <p className="text-sm text-muted-foreground">
+              Usuários podem personalizar sua própria roleta e ver as inscrições.
+            </p>
 
             {!showAdminForm ? (
               <button onClick={() => setShowAdminForm(true)} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
-                + Novo Administrador
+                + Novo Usuário
               </button>
             ) : (
               <form onSubmit={handleCreateAdmin} className="p-6 rounded-2xl border border-border bg-card space-y-4">
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Nome</label>
-                  <input type="text" value={adminForm.name} onChange={e => setAdminForm({ ...adminForm, name: e.target.value })} placeholder="Nome do admin" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  <input type="text" value={adminForm.name} onChange={e => setAdminForm({ ...adminForm, name: e.target.value })} placeholder="Nome do usuário" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Email</label>
-                  <input type="email" required value={adminForm.email} onChange={e => setAdminForm({ ...adminForm, email: e.target.value })} placeholder="admin@email.com" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                  <input type="email" required value={adminForm.email} onChange={e => setAdminForm({ ...adminForm, email: e.target.value })} placeholder="usuario@email.com" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Senha</label>
@@ -391,7 +394,7 @@ const Admin = () => {
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowAdminForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
                   <button type="submit" disabled={adminCreating} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
-                    {adminCreating ? 'Criando...' : 'Criar Admin'}
+                    {adminCreating ? 'Criando...' : 'Criar Usuário'}
                   </button>
                 </div>
               </form>
