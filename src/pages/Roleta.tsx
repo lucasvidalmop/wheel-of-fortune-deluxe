@@ -24,6 +24,8 @@ const Roleta = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const [fixedPrizeEnabled, setFixedPrizeEnabled] = useState(false);
+  const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
 
   // Redirect if no slug — only /roleta/:slug is allowed
   useEffect(() => {
