@@ -110,7 +110,7 @@ export const defaultConfig: WheelConfig = {
   valueFontSize: 22,
   // Auth defaults
   authHeaderMode: 'text',
-  authTitle: 'Atualizar Chave PIX',
+  authTitle: 'LIBERAR GIRO',
   authSubtitle: 'Informe o e-mail e o ID da sua conta para verificarmos seu cadastro.',
   authLogoSize: 80,
   authTitleSize: 18,
