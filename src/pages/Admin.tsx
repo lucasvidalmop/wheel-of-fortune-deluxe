@@ -36,6 +36,8 @@ const Admin = () => {
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [adminForm, setAdminForm] = useState({ email: '', password: '', name: '' });
   const [adminCreating, setAdminCreating] = useState(false);
+  const [systemUsers, setSystemUsers] = useState<any[]>([]);
+  const [systemUsersLoading, setSystemUsersLoading] = useState(false);
 
   // Wheel config state
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
