@@ -116,7 +116,7 @@ const Admin = () => {
     if (editingUser) {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .update({ account_id: form.account_id, email: form.email, name: form.name })
+        .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone })
         .eq('id', editingUser.id);
       if (error) { toast.error('Erro ao atualizar: ' + error.message); return; }
       toast.success('Usuário atualizado!');
