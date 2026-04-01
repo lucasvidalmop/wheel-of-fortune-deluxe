@@ -226,6 +226,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
       {/* ===== FUNDO DA PÁGINA ===== */}
       <Section title="Fundo da Roleta" emoji="🖼">
         <ImageUpload label="Imagem de fundo" value={config.backgroundImageUrl} onChange={v => updateGlobal('backgroundImageUrl', v)} />
+        {config.backgroundImageUrl && (
+          <ImagePositionControls
+            offsetX={config.backgroundImageOffsetX ?? 0} offsetY={config.backgroundImageOffsetY ?? 0} scale={config.backgroundImageScale ?? 1}
+            onChangeX={v => updateGlobal('backgroundImageOffsetX', v)} onChangeY={v => updateGlobal('backgroundImageOffsetY', v)} onChangeScale={v => updateGlobal('backgroundImageScale', v)}
+          />
+        )}
       </Section>
 
       {/* ===== CORES DA ROLETA ===== */}
