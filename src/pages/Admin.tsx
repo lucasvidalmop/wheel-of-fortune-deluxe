@@ -358,15 +358,17 @@ const Admin = () => {
                 </button>
               </div>
             </div>
-            <div className="flex gap-2 mt-3">
-              <button onClick={() => handleToggleAllSpins(true)} className="px-4 py-2 rounded-lg bg-primary/20 text-primary font-bold text-xs hover:bg-primary/30 transition">
+            <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-xl border border-border bg-card">
+              <span className="text-xs text-muted-foreground font-medium mr-1">Ações em massa:</span>
+              <button onClick={() => handleToggleAllSpins(true)} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-xs hover:opacity-90 transition">
                 🎰 Liberar giros para todos
               </button>
-              <button onClick={() => handleToggleAllSpins(false)} className="px-4 py-2 rounded-lg bg-muted text-muted-foreground font-bold text-xs hover:bg-muted/80 transition">
+              <button onClick={() => handleToggleAllSpins(false)} className="px-4 py-2 rounded-lg border border-border bg-background text-foreground font-medium text-xs hover:bg-muted transition">
                 ⛔ Remover giros de todos
               </button>
-              <button onClick={handleDeleteAll} className="px-4 py-2 rounded-lg bg-destructive/10 text-destructive font-bold text-xs hover:bg-destructive/20 transition">
-                🗑️ Excluir todos os cadastros
+              <div className="flex-1" />
+              <button onClick={handleDeleteAll} className="px-4 py-2 rounded-lg border border-destructive/30 text-destructive font-medium text-xs hover:bg-destructive/10 transition">
+                🗑️ Excluir todos
               </button>
             </div>
 
