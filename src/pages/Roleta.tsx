@@ -111,15 +111,13 @@ const Roleta = () => {
     if (!seg) return;
 
     if (accountId) {
-      await (supabase as any)
-        .from('spin_results')
-        .insert({
-          user_name: userName || '',
-          user_email: emailValue,
-          account_id: accountId,
-          prize: seg.title || `Segmento ${segmentIndex + 1}`,
-          owner_id: ownerId || null,
-        });
+      await (supabase as any).rpc('record_spin_result', {
+        p_account_id: accountId,
+        p_user_name: userName || '',
+        p_user_email: emailValue,
+        p_prize: seg.title || `Segmento ${segmentIndex + 1}`,
+        p_owner_id: ownerId || null,
+      });
 
       const { data: decrementData } = await (supabase as any).rpc('decrement_wheel_user_spins', {
         p_account_id: accountId,
