@@ -226,6 +226,15 @@ const Admin = () => {
     setAdminCreating(false);
   };
 
+  const fetchSystemUsers = async () => {
+    setSystemUsersLoading(true);
+    try {
+      const res = await supabase.functions.invoke('list-system-users');
+      if (res.data?.users) setSystemUsers(res.data.users);
+    } catch {}
+    setSystemUsersLoading(false);
+  };
+
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
     setForm({
