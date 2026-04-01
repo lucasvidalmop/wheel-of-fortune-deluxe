@@ -63,7 +63,7 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     setUsersLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wheel_users')
       .select('*')
       .order('created_at', { ascending: false });
