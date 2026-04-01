@@ -28,7 +28,9 @@ const Admin = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins' | 'history'>('users');
+  const [spinResults, setSpinResults] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Admin user creation
   const [showAdminForm, setShowAdminForm] = useState(false);
