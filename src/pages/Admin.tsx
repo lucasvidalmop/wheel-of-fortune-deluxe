@@ -574,6 +574,7 @@ const Admin = () => {
             )}
             <div className="mt-4 text-xs text-muted-foreground">{spinResults.length} resultado(s)</div>
           </div>
+        )}
       </div>
     </div>
   );
