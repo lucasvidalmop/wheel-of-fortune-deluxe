@@ -319,6 +319,10 @@ const Admin = () => {
                 className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm"
               />
               <div className="flex gap-2">
+                <label className="px-6 py-2.5 rounded-lg bg-muted text-foreground font-bold text-sm hover:bg-muted/80 transition whitespace-nowrap cursor-pointer">
+                  📤 Importar CSV
+                  <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
+                </label>
                 <button onClick={handleExportCSV} className="px-6 py-2.5 rounded-lg bg-muted text-foreground font-bold text-sm hover:bg-muted/80 transition whitespace-nowrap">
                   📥 Exportar CSV
                 </button>
