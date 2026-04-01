@@ -109,6 +109,7 @@ const Roleta = () => {
           user_email: emailValue,
           account_id: accountId,
           prize: seg.title || `Segmento ${segmentIndex + 1}`,
+          owner_id: ownerId || null,
         });
 
       // Decrement spin in database
