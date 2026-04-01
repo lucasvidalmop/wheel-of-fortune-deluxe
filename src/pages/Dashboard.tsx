@@ -398,6 +398,36 @@ const Dashboard = () => {
                     <label className="text-xs text-muted-foreground">Account ID</label>
                     <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
+
+                  {/* Fixed prize toggle */}
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-muted-foreground font-medium">🎯 Prêmio pré-definido</label>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, fixed_prize_enabled: !form.fixed_prize_enabled, fixed_prize_segment: !form.fixed_prize_enabled ? (form.fixed_prize_segment ?? 0) : form.fixed_prize_segment })}
+                        className="w-10 h-5 rounded-full relative transition-colors"
+                        style={{ background: form.fixed_prize_enabled ? 'hsl(var(--primary))' : 'hsl(var(--muted))' }}
+                      >
+                        <div className="w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all" style={{ left: form.fixed_prize_enabled ? '22px' : '2px' }} />
+                      </button>
+                    </div>
+                    {form.fixed_prize_enabled && (
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Selecione o prêmio</label>
+                        <select
+                          value={form.fixed_prize_segment ?? 0}
+                          onChange={e => setForm({ ...form, fixed_prize_segment: parseInt(e.target.value) })}
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                        >
+                          {wheelConfig.segments.map((seg, i) => (
+                            <option key={seg.id} value={i}>{seg.title} — {seg.reward}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex gap-3 pt-2">
                     <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
                     <button type="submit" className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm">{editingUser ? 'Salvar' : 'Criar'}</button>
