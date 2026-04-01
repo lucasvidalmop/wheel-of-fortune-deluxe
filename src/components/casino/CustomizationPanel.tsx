@@ -275,6 +275,12 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
       {/* ===== IMAGEM CENTRAL ===== */}
       <Section title="Imagem Central" emoji="⚡">
         <ImageUpload label="Logo / ícone do centro" value={config.centerImageUrl} onChange={v => updateGlobal('centerImageUrl', v)} />
+        {config.centerImageUrl && (
+          <ImagePositionControls
+            offsetX={config.centerImageOffsetX ?? 0} offsetY={config.centerImageOffsetY ?? 0} scale={config.centerImageScale ?? 1}
+            onChangeX={v => updateGlobal('centerImageOffsetX', v)} onChangeY={v => updateGlobal('centerImageOffsetY', v)} onChangeScale={v => updateGlobal('centerImageScale', v)}
+          />
+        )}
       </Section>
 
       {/* ===== SEGMENTOS ===== */}
