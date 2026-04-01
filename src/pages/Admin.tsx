@@ -94,7 +94,7 @@ const Admin = () => {
       .maybeSingle();
     setIsAdmin(!!data);
     setLoading(false);
-    if (data) fetchUsers();
+    if (data) { fetchUsers(); fetchHistory(); }
   };
 
   const fetchUsers = async () => {
