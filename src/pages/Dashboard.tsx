@@ -191,6 +191,9 @@ const Dashboard = () => {
     setEditingUser(null);
     setForm({ account_id: '', email: '', name: '', phone: '' });
     setShowForm(true);
+  };
+
+  const handleGrantSpin = async (user: WheelUser) => {
     const newSpins = user.spins_available >= 1 ? 0 : 1;
     const { error } = await (supabase as any)
       .from('wheel_users')
