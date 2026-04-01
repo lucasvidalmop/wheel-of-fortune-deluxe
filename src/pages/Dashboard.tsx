@@ -416,6 +416,7 @@ const Dashboard = () => {
                             >
                               {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar'}
                             </button>
+                            <button onClick={() => openEdit(user)} className="px-2.5 py-1 rounded bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
                             <button onClick={() => handleDeleteUser(user.id)} className="px-2.5 py-1 rounded bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
                         </td>
