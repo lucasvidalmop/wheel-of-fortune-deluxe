@@ -159,7 +159,38 @@ const Dashboard = () => {
     setSavingConfig(false);
   };
 
-  const handleGrantSpin = async (user: WheelUser) => {
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) {
+      const { error } = await (supabase as any)
+        .from('wheel_users')
+        .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone })
+        .eq('id', editingUser.id);
+      if (error) { toast.error('Erro: ' + error.message); return; }
+      toast.success('Atualizado!');
+    } else {
+      const { error } = await (supabase as any)
+        .from('wheel_users')
+        .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id });
+      if (error) { toast.error('Erro: ' + error.message); return; }
+      toast.success('Inscrito criado!');
+    }
+    setShowForm(false);
+    setEditingUser(null);
+    setForm({ account_id: '', email: '', name: '', phone: '' });
+    fetchUsers();
+  };
+
+  const openEdit = (user: WheelUser) => {
+    setEditingUser(user);
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '' });
+    setShowForm(true);
+  };
+
+  const openNew = () => {
+    setEditingUser(null);
+    setForm({ account_id: '', email: '', name: '', phone: '' });
+    setShowForm(true);
     const newSpins = user.spins_available >= 1 ? 0 : 1;
     const { error } = await (supabase as any)
       .from('wheel_users')
