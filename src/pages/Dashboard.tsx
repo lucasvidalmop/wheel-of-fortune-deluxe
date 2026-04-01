@@ -464,6 +464,20 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Auth config */}
+        {activeTab === 'auth' && (
+          <div className="max-w-lg space-y-4">
+            <AuthConfigPanel config={wheelConfig} onChange={setWheelConfig} />
+            <button
+              onClick={handleSaveConfig}
+              disabled={savingConfig}
+              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"
+            >
+              {savingConfig ? 'Salvando...' : '💾 Salvar Configuração'}
+            </button>
+          </div>
+        )}
+
         {/* History */}
         {activeTab === 'history' && (
           <div>
