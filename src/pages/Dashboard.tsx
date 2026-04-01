@@ -16,7 +16,6 @@ interface WheelUser {
   fixed_prize_enabled: boolean;
   fixed_prize_segment: number | null;
 }
-}
 
 const Dashboard = () => {
   const [session, setSession] = useState<any>(null);
