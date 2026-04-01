@@ -375,6 +375,9 @@ const Dashboard = () => {
           <button onClick={() => { setActiveTab('history'); fetchHistory(); }} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             🏆 Histórico
           </button>
+          <button onClick={() => setActiveTab('email')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'email' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            ✉️ Disparo de Email
+          </button>
         </div>
 
         {/* Inscritos tab */}
