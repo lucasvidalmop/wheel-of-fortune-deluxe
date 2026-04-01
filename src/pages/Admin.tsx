@@ -356,7 +356,17 @@ const Admin = () => {
                 <button onClick={openNew} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition whitespace-nowrap">
                   + Novo Usuário
                 </button>
-              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => handleToggleAllSpins(true)} className="px-4 py-2 rounded-lg bg-primary/20 text-primary font-bold text-xs hover:bg-primary/30 transition">
+                🎰 Liberar giros para todos
+              </button>
+              <button onClick={() => handleToggleAllSpins(false)} className="px-4 py-2 rounded-lg bg-muted text-muted-foreground font-bold text-xs hover:bg-muted/80 transition">
+                ⛔ Remover giros de todos
+              </button>
+              <button onClick={handleDeleteAll} className="px-4 py-2 rounded-lg bg-destructive/10 text-destructive font-bold text-xs hover:bg-destructive/20 transition">
+                🗑️ Excluir todos os cadastros
+              </button>
             </div>
 
             {showForm && (
