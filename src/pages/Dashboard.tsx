@@ -560,6 +560,14 @@ const Dashboard = () => {
                         <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{r.account_id}</td>
                         <td className="px-3 py-3 text-primary font-bold">{r.prize}</td>
                         <td className="px-3 py-3 text-muted-foreground text-xs">{new Date(r.spun_at).toLocaleString('pt-BR')}</td>
+                        <td className="px-3 py-3">
+                          <button
+                            onClick={() => handleViewUserData(r.account_id)}
+                            className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition"
+                          >
+                            👤 Ver Dados
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
