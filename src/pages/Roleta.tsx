@@ -74,12 +74,13 @@ const Roleta = () => {
     if (!trimmedId || !trimmedEmail) return;
     setAuthLoading(true);
 
-    const { data, error } = await (supabase as any)
+    let authQuery = (supabase as any)
       .from('wheel_users')
       .select('id, name, spins_available, account_id')
       .eq('email', trimmedEmail)
-      .eq('account_id', trimmedId)
-      .maybeSingle();
+      .eq('account_id', trimmedId);
+    if (ownerId) authQuery = authQuery.eq('owner_id', ownerId);
+    const { data, error } = await authQuery.maybeSingle();
 
     if (error || !data) {
       toast.error('Dados inválidos. Verifique seu email e ID da conta.');
