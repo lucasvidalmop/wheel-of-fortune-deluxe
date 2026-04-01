@@ -338,14 +338,17 @@ const Dashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-border">
-          <button onClick={() => setActiveTab('inscritos')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'inscritos' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto">
+          <button onClick={() => setActiveTab('inscritos')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'inscritos' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             👥 Inscritos
           </button>
-          <button onClick={() => setActiveTab('wheel')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'wheel' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+          <button onClick={() => setActiveTab('wheel')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'wheel' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             🎡 Configurar Roleta
           </button>
-          <button onClick={() => { setActiveTab('history'); fetchHistory(); }} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+          <button onClick={() => setActiveTab('auth')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'auth' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            🔐 Página de Login
+          </button>
+          <button onClick={() => { setActiveTab('history'); fetchHistory(); }} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             🏆 Histórico
           </button>
         </div>
