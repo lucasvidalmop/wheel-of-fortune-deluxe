@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PremiumWheel from '@/components/casino/PremiumWheel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { checkSpins, recordSpinResult, getApiBaseUrl, fetchUserInfo } from '@/services/api';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Roleta = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [accountId, setAccountId] = useState(searchParams.get('account_id') || '');
-  const [identified, setIdentified] = useState(!!searchParams.get('account_id'));
+  const [accountId, setAccountId] = useState('');
+  const [identified, setIdentified] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [emailValue, setEmailValue] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   const [config] = useState<WheelConfig>(() => {
     const saved = localStorage.getItem('wheel_config');
@@ -17,39 +19,58 @@ const Roleta = () => {
   });
 
   const [spinsRemaining, setSpinsRemaining] = useState<number | null>(null);
-  const [canSpin, setCanSpin] = useState(true);
+  const [canSpin, setCanSpin] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
 
-  const hasApi = !!getApiBaseUrl();
-
   useEffect(() => {
-    if (!hasApi || !accountId || !identified) return;
+    if (!accountId || !identified) return;
     setLoading(true);
+    (supabase as any)
+      .from('wheel_users')
+      .select('name, spins_available')
+      .eq('account_id', accountId)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data) {
+          setUserName(data.name);
+          setSpinsRemaining(data.spins_available);
+          setCanSpin(data.spins_available >= 1);
+          if (data.spins_available < 1) setMessage('Sem giros disponíveis');
+        }
+        setLoading(false);
+      });
+  }, [accountId, identified]);
 
-    // Fetch user info and spins in parallel
-    const email = searchParams.get('email') || emailValue;
-    Promise.all([
-      checkSpins(accountId),
-      fetchUserInfo(accountId, email),
-    ]).then(([spinRes, userInfo]) => {
-      setCanSpin(spinRes.allowed);
-      setSpinsRemaining(spinRes.spins_remaining);
-      if (!spinRes.allowed) setMessage(spinRes.message || 'Sem giros disponíveis');
-      if (userInfo?.name) setUserName(userInfo.name);
-      setLoading(false);
-    });
-  }, [accountId, hasApi, identified]);
-
-  const handleIdentify = (e: React.FormEvent) => {
+  const handleIdentify = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedId = inputValue.trim();
     const trimmedEmail = emailValue.trim();
     if (!trimmedId || !trimmedEmail) return;
-    setAccountId(trimmedId);
+    setAuthLoading(true);
+
+    const { data, error } = await (supabase as any)
+      .from('wheel_users')
+      .select('id, name, spins_available, account_id')
+      .eq('email', trimmedEmail)
+      .eq('account_id', trimmedId)
+      .maybeSingle();
+
+    if (error || !data) {
+      toast.error('Dados inválidos. Verifique seu email e ID da conta.');
+      setAuthLoading(false);
+      return;
+    }
+
+    setAccountId(data.account_id);
+    setUserName(data.name);
+    setSpinsRemaining(data.spins_available);
+    setCanSpin(data.spins_available >= 1);
+    if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
     setSearchParams({ account_id: trimmedId, email: trimmedEmail });
+    setAuthLoading(false);
   };
 
   const handleSpinEnd = async (segmentIndex: number) => {
