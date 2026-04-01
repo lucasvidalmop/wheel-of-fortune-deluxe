@@ -188,6 +188,21 @@ const Admin = () => {
     setShowForm(true);
   };
 
+  const handleExportCSV = () => {
+    const header = 'Nome,Email,Account ID,Giros Disponíveis,Criado em\n';
+    const rows = filteredUsers.map(u =>
+      `"${u.name}","${u.email}","${u.account_id}",${u.spins_available},"${u.created_at || ''}"`
+    ).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usuarios_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado!');
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -274,9 +289,14 @@ const Admin = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm"
               />
-              <button onClick={openNew} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition whitespace-nowrap">
-                + Novo Usuário
-              </button>
+              <div className="flex gap-2">
+                <button onClick={handleExportCSV} className="px-6 py-2.5 rounded-lg bg-muted text-foreground font-bold text-sm hover:bg-muted/80 transition whitespace-nowrap">
+                  📥 Exportar CSV
+                </button>
+                <button onClick={openNew} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition whitespace-nowrap">
+                  + Novo Usuário
+                </button>
+              </div>
             </div>
 
             {showForm && (
