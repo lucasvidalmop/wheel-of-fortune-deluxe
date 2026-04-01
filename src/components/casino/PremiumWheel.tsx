@@ -40,7 +40,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
     setIsSpinning(true);
     setWinnerIndex(null);
 
-    const winnerIdx = pickWeightedSegment();
+    const winnerIdx = (forcedSegment != null && forcedSegment >= 0 && forcedSegment < numSegments) ? forcedSegment : pickWeightedSegment();
     const targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle;
     const extraSpins = 5 + Math.floor(Math.random() * 5);
     const totalRotation = extraSpins * 360 + targetOffset;
