@@ -259,7 +259,7 @@ const Admin = () => {
             onClick={() => setActiveTab('admins')}
             className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === 'admins' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
-            🔐 Administradores
+            👤 Criar Usuários
           </button>
         </div>
 
