@@ -50,11 +50,12 @@ const Roleta = () => {
   useEffect(() => {
     if (!accountId || !identified) return;
     setLoading(true);
-    (supabase as any)
+    let query = (supabase as any)
       .from('wheel_users')
       .select('name, spins_available')
-      .eq('account_id', accountId)
-      .maybeSingle()
+      .eq('account_id', accountId);
+    if (ownerId) query = query.eq('owner_id', ownerId);
+    query.maybeSingle()
       .then(({ data }: any) => {
         if (data) {
           setUserName(data.name);
