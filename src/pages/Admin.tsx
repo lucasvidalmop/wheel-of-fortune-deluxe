@@ -115,30 +115,30 @@ const Admin = () => {
     if (editingUser) {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .update({
-          account_id: form.account_id,
-          email: form.email,
-          name: form.name,
-          spins_available: form.spins_available,
-        })
+        .update({ account_id: form.account_id, email: form.email, name: form.name })
         .eq('id', editingUser.id);
       if (error) { toast.error('Erro ao atualizar: ' + error.message); return; }
       toast.success('Usuário atualizado!');
     } else {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .insert({
-          account_id: form.account_id,
-          email: form.email,
-          name: form.name,
-          spins_available: form.spins_available,
-        });
+        .insert({ account_id: form.account_id, email: form.email, name: form.name });
       if (error) { toast.error('Erro ao criar: ' + error.message); return; }
       toast.success('Usuário criado!');
     }
     setShowForm(false);
     setEditingUser(null);
     setForm({ account_id: '', email: '', name: '', spins_available: 0 });
+    fetchUsers();
+  };
+
+  const handleGrantSpin = async (user: WheelUser) => {
+    const { error } = await (supabase as any)
+      .from('wheel_users')
+      .update({ spins_available: user.spins_available + 1 })
+      .eq('id', user.id);
+    if (error) { toast.error('Erro ao liberar giro'); return; }
+    toast.success(`+1 giro para ${user.name}!`);
     fetchUsers();
   };
 
