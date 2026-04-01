@@ -191,9 +191,9 @@ const Admin = () => {
   };
 
   const handleExportCSV = () => {
-    const header = 'Nome,Email,Account ID,Giros Disponíveis,Criado em\n';
+    const header = 'Nome,E-mail,Celular,ID da Conta,Data\n';
     const rows = filteredUsers.map(u =>
-      `"${u.name}","${u.email}","${u.account_id}",${u.spins_available},"${u.created_at || ''}"`
+      `"${u.name}","${u.email}","${u.phone || ''}","${u.account_id}","${u.created_at || ''}"`
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
