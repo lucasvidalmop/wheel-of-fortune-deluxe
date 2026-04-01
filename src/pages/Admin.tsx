@@ -27,7 +27,12 @@ const Admin = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'users' | 'wheel'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins'>('users');
+
+  // Admin user creation
+  const [showAdminForm, setShowAdminForm] = useState(false);
+  const [adminForm, setAdminForm] = useState({ email: '', password: '', name: '' });
+  const [adminCreating, setAdminCreating] = useState(false);
 
   // Wheel config state
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
