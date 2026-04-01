@@ -115,30 +115,30 @@ const Admin = () => {
     if (editingUser) {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .update({
-          account_id: form.account_id,
-          email: form.email,
-          name: form.name,
-          spins_available: form.spins_available,
-        })
+        .update({ account_id: form.account_id, email: form.email, name: form.name })
         .eq('id', editingUser.id);
       if (error) { toast.error('Erro ao atualizar: ' + error.message); return; }
       toast.success('Usuário atualizado!');
     } else {
       const { error } = await (supabase as any)
         .from('wheel_users')
-        .insert({
-          account_id: form.account_id,
-          email: form.email,
-          name: form.name,
-          spins_available: form.spins_available,
-        });
+        .insert({ account_id: form.account_id, email: form.email, name: form.name });
       if (error) { toast.error('Erro ao criar: ' + error.message); return; }
       toast.success('Usuário criado!');
     }
     setShowForm(false);
     setEditingUser(null);
     setForm({ account_id: '', email: '', name: '', spins_available: 0 });
+    fetchUsers();
+  };
+
+  const handleGrantSpin = async (user: WheelUser) => {
+    const { error } = await (supabase as any)
+      .from('wheel_users')
+      .update({ spins_available: user.spins_available + 1 })
+      .eq('id', user.id);
+    if (error) { toast.error('Erro ao liberar giro'); return; }
+    toast.success(`+1 giro para ${user.name}!`);
     fetchUsers();
   };
 
@@ -351,10 +351,6 @@ const Admin = () => {
                     <label className="text-xs text-muted-foreground">Account ID</label>
                     <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Giros Disponíveis</label>
-                    <input type="number" min={0} required value={form.spins_available} onChange={e => setForm({ ...form, spins_available: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-                  </div>
                   <div className="flex gap-3 pt-2">
                     <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-lg bg-muted text-foreground text-sm">Cancelar</button>
                     <button type="submit" className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm">{editingUser ? 'Salvar' : 'Criar'}</button>
@@ -392,6 +388,7 @@ const Admin = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
+                            <button onClick={() => handleGrantSpin(user)} className="px-3 py-1.5 rounded-md bg-primary/20 text-primary text-xs hover:bg-primary/30 transition font-bold">+1 Giro</button>
                             <button onClick={() => openEdit(user)} className="px-3 py-1.5 rounded-md bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
                             <button onClick={() => handleDeleteUser(user.id)} className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
