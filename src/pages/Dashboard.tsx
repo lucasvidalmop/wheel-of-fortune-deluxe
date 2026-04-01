@@ -37,6 +37,12 @@ const Dashboard = () => {
   const [viewingUserData, setViewingUserData] = useState<WheelUser | null>(null);
   const [viewingUserLoading, setViewingUserLoading] = useState(false);
 
+  const [emailSubject, setEmailSubject] = useState('🎰 Você tem um giro disponível!');
+  const [emailBody, setEmailBody] = useState('Olá! Você foi convidado para girar a roleta e concorrer a prêmios incríveis. Acesse o link abaixo e boa sorte!');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<'all' | 'selected'>('all');
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
   const [newSlug, setNewSlug] = useState('');
