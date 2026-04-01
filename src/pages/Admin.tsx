@@ -388,6 +388,7 @@ const Admin = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
+                            <button onClick={() => handleGrantSpin(user)} className="px-3 py-1.5 rounded-md bg-primary/20 text-primary text-xs hover:bg-primary/30 transition font-bold">+1 Giro</button>
                             <button onClick={() => openEdit(user)} className="px-3 py-1.5 rounded-md bg-muted text-foreground text-xs hover:bg-muted/80 transition">Editar</button>
                             <button onClick={() => handleDeleteUser(user.id)} className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs hover:bg-destructive/20 transition">Excluir</button>
                           </div>
