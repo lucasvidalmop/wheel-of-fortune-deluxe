@@ -738,10 +738,11 @@ const Dashboard = () => {
                 let sent = 0, errors = 0;
                 for (const email of recipients) {
                   const user = users.find(u => u.email === email);
+                  const templateName = emailTemplate === 'custom' ? 'wheel-invite-custom' : 'wheel-invite';
                   const { error } = await supabase.functions.invoke('send-transactional-email', {
                     headers: { Authorization: `Bearer ${accessToken}` },
                     body: {
-                      templateName: 'wheel-invite',
+                      templateName,
                       recipientEmail: email,
                       idempotencyKey: `wheel-invite-${email}-${Date.now()}`,
                       templateData: {
@@ -749,6 +750,7 @@ const Dashboard = () => {
                         subject: emailSubject,
                         body: emailBody,
                         roletaLink,
+                        ...(emailTemplate === 'custom' && emailBannerUrl ? { bannerImageUrl: emailBannerUrl } : {}),
                       },
                     },
                   });
