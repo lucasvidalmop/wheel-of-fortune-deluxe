@@ -341,9 +341,12 @@ const Roleta = () => {
         </div>
       </div>
 
-      {/* User badge below wheel */}
+      {/* Spacer to push badge to bottom */}
+      <div className="flex-1" />
+
+      {/* User badge at footer */}
       {accountId && (
-        <div className="relative z-10 flex items-center gap-3 px-4 py-2 rounded-lg" style={{ background: 'rgba(20,20,30,0.85)', border: `1px solid ${config.glowColor}33` }}>
+        <div className="relative z-10 mb-2 flex items-center gap-3 px-4 py-2 rounded-lg" style={{ background: 'rgba(20,20,30,0.85)', border: `1px solid ${config.glowColor}33` }}>
           {userName && (
             <span className="text-sm font-bold font-display" style={{ color: config.glowColor }}>{userName}</span>
           )}
