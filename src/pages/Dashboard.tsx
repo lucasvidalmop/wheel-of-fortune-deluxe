@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom'>('original');
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
+  const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
@@ -737,6 +738,18 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* Sender Name */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">Nome do Remetente</label>
+              <input
+                value={emailSenderName}
+                onChange={e => setEmailSenderName(e.target.value)}
+                placeholder="Ex: Minha Marca"
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm"
+              />
+              <p className="text-xs text-muted-foreground">Nome que aparecerá como remetente do email.</p>
+            </div>
+
             {/* Subject */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground">Assunto</label>
@@ -783,6 +796,7 @@ const Dashboard = () => {
                         subject: emailSubject,
                         body: emailBody,
                         roletaLink,
+                        senderName: emailSenderName || undefined,
                         ...(emailTemplate === 'custom' && emailBannerUrl ? { bannerImageUrl: emailBannerUrl } : {}),
                       },
                     },
