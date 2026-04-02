@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom'>('original');
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
+  const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
