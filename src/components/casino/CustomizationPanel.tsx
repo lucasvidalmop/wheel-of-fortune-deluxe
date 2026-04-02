@@ -306,6 +306,37 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <RangeInput label="Botão Girar Y" value={config.mobileButtonOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileButtonOffsetY', v)} />
       </Section>
 
+      {/* ===== PÁGINA (SEO / FAVICON) ===== */}
+      <Section title="Página (Título / Favicon)" emoji="🌐">
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">Nome da página (título da aba)</label>
+          <input
+            type="text"
+            value={config.seoTitle ?? ''}
+            placeholder="Roleta de Prêmios"
+            onChange={e => updateGlobal('seoTitle', e.target.value)}
+            className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">Descrição da página</label>
+          <textarea
+            value={config.seoDescription ?? ''}
+            placeholder="Gire a roleta e ganhe prêmios incríveis!"
+            onChange={e => updateGlobal('seoDescription', e.target.value)}
+            className="w-full text-xs px-2 py-1.5 rounded border border-border bg-input text-foreground resize-none"
+            rows={2}
+          />
+        </div>
+        <ImageUpload label="Favicon" value={config.faviconUrl} onChange={v => updateGlobal('faviconUrl', v)} folder="favicon" />
+        {config.faviconUrl && (
+          <div className="flex items-center gap-2">
+            <img src={config.faviconUrl} alt="favicon" className="w-5 h-5 rounded" />
+            <span className="text-[10px] text-muted-foreground">Preview do favicon</span>
+          </div>
+        )}
+      </Section>
+
       {/* ===== API BACKEND ===== */}
       <Section title="API Backend" emoji="🔗">
         <div className="space-y-1">
