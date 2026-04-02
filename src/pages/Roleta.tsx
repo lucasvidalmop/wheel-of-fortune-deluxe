@@ -54,6 +54,21 @@ const Roleta = () => {
     })();
   }, [slug, navigate]);
 
+  // Apply SEO title, description, and favicon from config
+  useEffect(() => {
+    if (config.seoTitle) document.title = config.seoTitle;
+    if (config.seoDescription) {
+      let meta = document.querySelector('meta[name="description"]');
+      if (!meta) { meta = document.createElement('meta'); (meta as HTMLMetaElement).name = 'description'; document.head.appendChild(meta); }
+      (meta as HTMLMetaElement).content = config.seoDescription;
+    }
+    if (config.faviconUrl) {
+      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+      link.href = config.faviconUrl;
+    }
+  }, [config.seoTitle, config.seoDescription, config.faviconUrl]);
+
   useEffect(() => {
     if (!accountId || !identified) return;
     setLoading(true);

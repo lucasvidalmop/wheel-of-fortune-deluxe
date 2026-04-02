@@ -80,6 +80,10 @@ export interface WheelConfig {
   mobileSpinsOffsetY?: number;
   mobileButtonOffsetX?: number;
   mobileButtonOffsetY?: number;
+  // Page SEO / Favicon
+  seoTitle?: string;
+  seoDescription?: string;
+  faviconUrl?: string;
 }
 
 export const defaultSegments: WheelSegment[] = [
