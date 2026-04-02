@@ -44,6 +44,7 @@ const Dashboard = () => {
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom'>('original');
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
+  const [emailBannerUploading, setEmailBannerUploading] = useState(false);
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
