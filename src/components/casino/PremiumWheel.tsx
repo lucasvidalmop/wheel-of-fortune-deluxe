@@ -6,9 +6,10 @@ interface PremiumWheelProps {
   onSpinEnd?: (segmentIndex: number) => void;
   disabled?: boolean;
   forcedSegment?: number | null;
+  isMobile?: boolean;
 }
 
-const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment }) => {
+const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment, isMobile = false }) => {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
