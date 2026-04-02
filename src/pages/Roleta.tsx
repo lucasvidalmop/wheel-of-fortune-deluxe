@@ -345,8 +345,8 @@ const Roleta = () => {
       )}
 
       {/* Wheel */}
-      <div className="relative z-10 mb-16 md:mb-32 w-full flex justify-center">
-        <div style={{ width: 'clamp(280px, 80vw, 620px)', height: 'clamp(280px, 80vw, 620px)' }}>
+      <div className="relative z-10 mb-8 md:mb-16 w-full flex justify-center">
+        <div className="aspect-square w-[min(75vw,320px)] sm:w-[min(70vw,420px)] md:w-[min(60vw,520px)] lg:w-[min(55vw,620px)] xl:w-[min(50vw,700px)]">
           <PremiumWheel
             config={config}
             onSpinEnd={handleSpinEnd}
