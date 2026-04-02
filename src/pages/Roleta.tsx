@@ -335,7 +335,10 @@ const Roleta = () => {
       )}
 
       {/* Wheel */}
-      <div className="relative z-10 mb-8 md:mb-16 w-full flex items-center justify-center">
+      <div
+        className="relative z-10 mb-8 md:mb-16 w-full flex items-center justify-center"
+        style={isMobile ? { transform: `translate(${config.mobileWheelOffsetX ?? 0}px, ${config.mobileWheelOffsetY ?? 0}px) scale(${config.mobileWheelScale ?? 1})` } : undefined}
+      >
         <div className="aspect-square w-[min(75vw,320px)] sm:w-[min(70vw,420px)] md:w-[min(60vw,520px)] lg:w-[min(55vw,620px)] xl:w-[min(50vw,700px)] mx-auto">
           <PremiumWheel
             config={config}
