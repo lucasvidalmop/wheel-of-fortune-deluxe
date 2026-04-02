@@ -796,6 +796,7 @@ const Dashboard = () => {
                         subject: emailSubject,
                         body: emailBody,
                         roletaLink,
+                        senderName: emailSenderName || undefined,
                         ...(emailTemplate === 'custom' && emailBannerUrl ? { bannerImageUrl: emailBannerUrl } : {}),
                       },
                     },
