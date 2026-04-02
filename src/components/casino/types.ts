@@ -78,6 +78,8 @@ export interface WheelConfig {
   mobileWheelScale?: number;
   mobileSpinsOffsetX?: number;
   mobileSpinsOffsetY?: number;
+  mobileButtonOffsetX?: number;
+  mobileButtonOffsetY?: number;
 }
 
 export const defaultSegments: WheelSegment[] = [

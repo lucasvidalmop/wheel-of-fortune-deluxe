@@ -391,6 +391,21 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
           0%, 100% { opacity: 0.6; }
           50% { opacity: 0.2; }
         }
+        @keyframes btn-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .spin-btn-float {
+          animation: btn-float 2s ease-in-out infinite;
+        }
+        .spin-btn-float:hover, .spin-btn-float:active {
+          animation: none;
+          transform: scale(1.05);
+          box-shadow: 0 0 30px var(--btn-glow-color, #FFD700), 0 0 60px var(--btn-glow-color, #FFD700)66, 0 4px 20px rgba(0,0,0,0.5) !important;
+        }
+        .spin-btn-float:disabled {
+          animation: none;
+        }
       `}</style>
     </div>
   );
