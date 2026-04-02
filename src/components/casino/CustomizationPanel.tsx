@@ -294,6 +294,16 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         ))}
       </Section>
 
+      {/* ===== MOBILE LAYOUT ===== */}
+      <Section title="Layout Mobile" emoji="📱">
+        <p className="text-[10px] text-muted-foreground mb-2">Ajuste a posição da roleta e dos giros apenas em telas de celular.</p>
+        <RangeInput label="Roleta X" value={config.mobileWheelOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileWheelOffsetX', v)} />
+        <RangeInput label="Roleta Y" value={config.mobileWheelOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileWheelOffsetY', v)} />
+        <RangeInput label="Roleta Zoom" value={config.mobileWheelScale ?? 1} min={0.5} max={2} step={0.05} onChange={v => updateGlobal('mobileWheelScale', v)} suffix="x" />
+        <RangeInput label="Giros X" value={config.mobileSpinsOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileSpinsOffsetX', v)} />
+        <RangeInput label="Giros Y" value={config.mobileSpinsOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileSpinsOffsetY', v)} />
+      </Section>
+
       {/* ===== API BACKEND ===== */}
       <Section title="API Backend" emoji="🔗">
         <div className="space-y-1">

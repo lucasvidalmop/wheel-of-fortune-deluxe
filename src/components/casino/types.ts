@@ -72,6 +72,12 @@ export interface WheelConfig {
   authButtonTextColor: string;
   authLabelColor: string;
   authTextColor: string;
+  // Mobile layout adjustments
+  mobileWheelOffsetX?: number;
+  mobileWheelOffsetY?: number;
+  mobileWheelScale?: number;
+  mobileSpinsOffsetX?: number;
+  mobileSpinsOffsetY?: number;
 }
 
 export const defaultSegments: WheelSegment[] = [
