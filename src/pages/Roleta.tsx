@@ -317,7 +317,10 @@ const Roleta = () => {
 
       {/* Spins info */}
       {accountId && (
-        <div className="relative z-10 mb-4 text-center">
+        <div
+          className="relative z-10 mb-4 text-center"
+          style={isMobile ? { transform: `translate(${config.mobileSpinsOffsetX ?? 0}px, ${config.mobileSpinsOffsetY ?? 0}px)` } : undefined}
+        >
           {loading ? (
             <p className="text-sm text-muted-foreground animate-pulse">Verificando giros...</p>
           ) : spinsRemaining !== null && spinsRemaining >= 0 ? (
