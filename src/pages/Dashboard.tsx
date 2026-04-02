@@ -769,13 +769,11 @@ const Dashboard = () => {
                 const roletaLink = `${baseUrl}/roleta/${slug}`;
                 const { data: { session: freshSession } } = await supabase.auth.getSession();
                 if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
-                const accessToken = freshSession.access_token;
                 let sent = 0, errors = 0;
                 for (const email of recipients) {
                   const user = users.find(u => u.email === email);
                   const templateName = emailTemplate === 'custom' ? 'wheel-invite-custom' : 'wheel-invite';
                   const { error } = await supabase.functions.invoke('send-transactional-email', {
-                    headers: { Authorization: `Bearer ${accessToken}` },
                     body: {
                       templateName,
                       recipientEmail: email,
