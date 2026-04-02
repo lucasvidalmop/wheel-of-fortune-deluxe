@@ -329,20 +329,28 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       </svg>
 
       {/* Spin button */}
-      <button
-        onClick={spin}
-        disabled={isSpinning || disabled}
-        className="absolute left-1/2 -translate-x-1/2 z-20 font-display font-bold text-sm md:text-lg tracking-widest px-6 md:px-10 py-2 md:py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+      <div
+        className="absolute left-1/2 -translate-x-1/2 z-20"
         style={{
           bottom: '-30px',
-          background: config.buttonColor,
-          borderColor: config.buttonColor,
-          color: config.buttonTextColor,
-          boxShadow: `0 0 20px ${config.buttonColor}66, 0 4px 15px rgba(0,0,0,0.4)`,
+          transform: `translateX(-50%) translate(${config.mobileButtonOffsetX ?? 0}px, ${config.mobileButtonOffsetY ?? 0}px)`,
         }}
       >
-        {isSpinning ? 'GIRANDO...' : 'GIRAR'}
-      </button>
+        <button
+          onClick={spin}
+          disabled={isSpinning || disabled}
+          className="spin-btn-float font-display font-bold text-sm md:text-lg tracking-widest px-6 md:px-10 py-2 md:py-3 rounded-full border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: config.buttonColor,
+            borderColor: config.buttonColor,
+            color: config.buttonTextColor,
+            boxShadow: `0 0 20px ${config.buttonColor}66, 0 4px 15px rgba(0,0,0,0.4)`,
+            '--btn-glow-color': config.buttonColor,
+          } as React.CSSProperties}
+        >
+          {isSpinning ? 'GIRANDO...' : 'GIRAR'}
+        </button>
+      </div>
 
       {/* Winner announcement dialog */}
       {winnerIndex !== null && !isSpinning && config.segments[winnerIndex] && (
