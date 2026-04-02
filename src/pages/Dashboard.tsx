@@ -42,6 +42,8 @@ const Dashboard = () => {
   const [emailSending, setEmailSending] = useState(false);
   const [emailTarget, setEmailTarget] = useState<'all' | 'selected'>('all');
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom'>('original');
+  const [emailBannerUrl, setEmailBannerUrl] = useState('');
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
