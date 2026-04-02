@@ -262,7 +262,7 @@ const Roleta = () => {
 
   // Wheel screen
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-start relative overflow-hidden px-4 pt-4 pb-6" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-dvh flex flex-col items-center justify-start relative overflow-hidden px-4 pt-4 pb-6 text-center" style={{ background: '#0a0a0f' }}>
       {config.backgroundImageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
@@ -330,8 +330,8 @@ const Roleta = () => {
       )}
 
       {/* Wheel */}
-      <div className="relative z-10 mb-8 md:mb-16 w-full flex justify-center">
-        <div className="aspect-square w-[min(75vw,320px)] sm:w-[min(70vw,420px)] md:w-[min(60vw,520px)] lg:w-[min(55vw,620px)] xl:w-[min(50vw,700px)]">
+      <div className="relative z-10 mb-8 md:mb-16 w-full flex items-center justify-center">
+        <div className="aspect-square w-[min(75vw,320px)] sm:w-[min(70vw,420px)] md:w-[min(60vw,520px)] lg:w-[min(55vw,620px)] xl:w-[min(50vw,700px)] mx-auto">
           <PremiumWheel
             config={config}
             onSpinEnd={handleSpinEnd}
