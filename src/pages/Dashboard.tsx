@@ -44,6 +44,7 @@ const Dashboard = () => {
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom'>('original');
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
+  const [emailBannerUploading, setEmailBannerUploading] = useState(false);
 
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
@@ -683,22 +684,56 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Banner image URL (only for custom) */}
+            {/* Banner image (only for custom) */}
             {emailTemplate === 'custom' && (
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">URL da Imagem (Banner)</label>
-                <input
-                  value={emailBannerUrl}
-                  onChange={e => setEmailBannerUrl(e.target.value)}
-                  placeholder="https://exemplo.com/imagem.png"
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm"
-                />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Imagem do Banner</label>
+                <div className="flex gap-2">
+                  <label className="flex-1 cursor-pointer">
+                    <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-dashed border-border bg-background text-foreground text-sm hover:bg-muted/50 transition">
+                      {emailBannerUploading ? '⏳ Enviando...' : '📤 Fazer upload de imagem'}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={emailBannerUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) { toast.error('Imagem deve ter no máximo 5MB'); return; }
+                        setEmailBannerUploading(true);
+                        const ext = file.name.split('.').pop() || 'png';
+                        const path = `email-banners/${Date.now()}.${ext}`;
+                        const { error } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+                        if (error) { toast.error('Erro ao enviar imagem'); setEmailBannerUploading(false); return; }
+                        const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+                        setEmailBannerUrl(urlData.publicUrl);
+                        setEmailBannerUploading(false);
+                        toast.success('Imagem enviada!');
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs text-muted-foreground">ou cole a URL:</span>
+                  <input
+                    value={emailBannerUrl}
+                    onChange={e => setEmailBannerUrl(e.target.value)}
+                    placeholder="https://exemplo.com/imagem.png"
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-background text-foreground text-xs"
+                  />
+                </div>
                 {emailBannerUrl && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-border">
+                  <div className="relative mt-2 rounded-lg overflow-hidden border border-border">
                     <img src={emailBannerUrl} alt="Preview" className="w-full max-h-40 object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                    <button
+                      onClick={() => setEmailBannerUrl('')}
+                      className="absolute top-2 right-2 bg-background/80 text-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-destructive hover:text-destructive-foreground transition"
+                    >✕</button>
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">Imagem exibida no topo do email. Recomendado: 600x200px.</p>
+                <p className="text-xs text-muted-foreground">Recomendado: 600x200px. Máximo 5MB.</p>
               </div>
             )}
 
