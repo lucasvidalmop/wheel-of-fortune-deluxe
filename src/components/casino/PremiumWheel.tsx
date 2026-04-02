@@ -334,7 +334,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
         className="absolute left-1/2 -translate-x-1/2 z-20"
         style={{
           bottom: '-30px',
-          transform: `translateX(-50%) translate(${config.mobileButtonOffsetX ?? 0}px, ${config.mobileButtonOffsetY ?? 0}px)`,
+          transform: isMobile ? `translateX(-50%) translate(${config.mobileButtonOffsetX ?? 0}px, ${config.mobileButtonOffsetY ?? 0}px)` : `translateX(-50%)`,
         }}
       >
         <button
