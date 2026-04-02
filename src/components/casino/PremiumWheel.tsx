@@ -399,13 +399,13 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
         .spin-btn-float {
           animation: btn-float 2s ease-in-out infinite;
         }
-        .spin-btn-float:hover, .spin-btn-float:active {
-          animation: none;
-          transform: scale(1.05);
+        .spin-btn-float:hover:not(:disabled), .spin-btn-float:active:not(:disabled) {
+          animation: btn-float 2s ease-in-out infinite, btn-glow-pulse 1.5s ease-in-out infinite;
           box-shadow: 0 0 30px var(--btn-glow-color, #FFD700), 0 0 60px var(--btn-glow-color, #FFD700)66, 0 4px 20px rgba(0,0,0,0.5) !important;
         }
-        .spin-btn-float:disabled {
-          animation: none;
+        @keyframes btn-glow-pulse {
+          0%, 100% { filter: brightness(1); }
+          50% { filter: brightness(1.3); }
         }
       `}</style>
     </div>
