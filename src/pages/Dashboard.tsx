@@ -664,6 +664,44 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* Template choice */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">Template</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setEmailTemplate('original')}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition ${emailTemplate === 'original' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  🎰 Original
+                </button>
+                <button
+                  onClick={() => setEmailTemplate('custom')}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition ${emailTemplate === 'custom' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  🖼️ Personalizado
+                </button>
+              </div>
+            </div>
+
+            {/* Banner image URL (only for custom) */}
+            {emailTemplate === 'custom' && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">URL da Imagem (Banner)</label>
+                <input
+                  value={emailBannerUrl}
+                  onChange={e => setEmailBannerUrl(e.target.value)}
+                  placeholder="https://exemplo.com/imagem.png"
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm"
+                />
+                {emailBannerUrl && (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-border">
+                    <img src={emailBannerUrl} alt="Preview" className="w-full max-h-40 object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Imagem exibida no topo do email. Recomendado: 600x200px.</p>
+              </div>
+            )}
+
             {/* Subject */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground">Assunto</label>
