@@ -6,9 +6,10 @@ interface PremiumWheelProps {
   onSpinEnd?: (segmentIndex: number) => void;
   disabled?: boolean;
   forcedSegment?: number | null;
+  isMobile?: boolean;
 }
 
-const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment }) => {
+const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment, isMobile = false }) => {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
@@ -333,7 +334,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
         className="absolute left-1/2 -translate-x-1/2 z-20"
         style={{
           bottom: '-30px',
-          transform: `translateX(-50%) translate(${config.mobileButtonOffsetX ?? 0}px, ${config.mobileButtonOffsetY ?? 0}px)`,
+          transform: isMobile ? `translateX(-50%) translate(${config.mobileButtonOffsetX ?? 0}px, ${config.mobileButtonOffsetY ?? 0}px)` : `translateX(-50%)`,
         }}
       >
         <button
