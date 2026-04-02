@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 const Roleta = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [accountId, setAccountId] = useState('');
   const [identified, setIdentified] = useState(false);
