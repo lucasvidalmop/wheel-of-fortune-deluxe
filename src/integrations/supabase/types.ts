@@ -101,6 +101,63 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          duration_seconds: number | null
+          id: string
+          ip_address: string | null
+          os: string | null
+          owner_id: string | null
+          page_url: string | null
+          referrer: string | null
+          region: string | null
+          session_id: string
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          id?: string
+          ip_address?: string | null
+          os?: string | null
+          owner_id?: string | null
+          page_url?: string | null
+          referrer?: string | null
+          region?: string | null
+          session_id: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          id?: string
+          ip_address?: string | null
+          os?: string | null
+          owner_id?: string | null
+          page_url?: string | null
+          referrer?: string | null
+          region?: string | null
+          session_id?: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       spin_results: {
         Row: {
           account_id: string
