@@ -160,6 +160,25 @@ const Dashboard = () => {
     setHistoryLoading(false);
   };
 
+  const fetchAnalytics = async (userId?: string) => {
+    const uid = userId || session?.user?.id;
+    if (!uid) return;
+    setAnalyticsLoading(true);
+    const { data, error } = await (supabase as any)
+      .from('page_views')
+      .select('*')
+      .eq('owner_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (error) {
+      toast.error('Erro ao carregar analytics');
+      setPageViews([]);
+    } else {
+      setPageViews(data || []);
+    }
+    setAnalyticsLoading(false);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginLoading(true);
