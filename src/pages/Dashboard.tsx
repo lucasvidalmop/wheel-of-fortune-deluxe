@@ -949,7 +949,8 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {/* ══════ EMAIL TAB ══════ */}
           {activeTab === 'email' && (
