@@ -324,6 +324,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background flex relative overflow-hidden">
+      <ThemeSettingsPanel storageKey="admin_theme" />
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-destructive/[0.03] blur-[150px]" />

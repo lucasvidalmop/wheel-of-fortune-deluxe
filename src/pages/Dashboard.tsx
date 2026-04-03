@@ -409,6 +409,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex relative overflow-hidden">
+      <ThemeSettingsPanel storageKey="dashboard_theme" />
       {/* Background ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[150px]" />
