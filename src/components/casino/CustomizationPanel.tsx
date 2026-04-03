@@ -3,11 +3,14 @@ import { WheelConfig } from './types';
 import { getApiBaseUrl, setApiBaseUrl } from '@/services/api';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Settings, X, ChevronDown, Upload, Trash2, Plus } from 'lucide-react';
 
 interface CustomizationPanelProps {
   config: WheelConfig;
   onChange: (config: WheelConfig) => void;
 }
+
+/* ── Shared sub-components ── */
 
 const ColorInput: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
   <div className="flex items-center justify-between gap-2 py-1.5">
@@ -15,14 +18,14 @@ const ColorInput: React.FC<{ label: string; value: string; onChange: (v: string)
     <div className="flex items-center gap-2">
       <div className="relative">
         <input type="color" value={value} onChange={e => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-        <div className="w-8 h-8 rounded-lg border-2 border-border shadow-sm cursor-pointer hover:scale-105 transition-transform" style={{ background: value }} />
+        <div className="w-7 h-7 rounded-lg border border-border shadow-sm cursor-pointer hover:scale-110 transition-transform" style={{ background: value }} />
       </div>
-      <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-2 py-1 rounded">{value}</span>
+      <span className="text-[10px] font-mono text-muted-foreground">{value}</span>
     </div>
   </div>
 );
 
-const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: string) => void; folder?: string }> = ({ label, value, onChange, folder = 'wheel' }) => {
+const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: string) => void; folder?: string; compact?: boolean }> = ({ label, value, onChange, folder = 'wheel', compact }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -48,22 +51,29 @@ const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: strin
     }
   };
 
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3">
+        {value && <img src={value} alt="" className="w-10 h-10 rounded-lg object-cover border border-border" />}
+        <button onClick={() => inputRef.current?.click()} disabled={uploading} className="text-xs px-3 py-1.5 rounded-lg bg-muted/80 text-foreground hover:bg-muted transition-all disabled:opacity-50">
+          {uploading ? '⏳' : value ? '🔄' : '📤'} {label}
+        </button>
+        {value && <button onClick={() => onChange('')} className="text-xs text-destructive hover:text-destructive/80"><Trash2 size={14} /></button>}
+        <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
       <label className="text-sm text-muted-foreground">{label}</label>
       <div className="flex gap-3 items-center">
         {value && <img src={value} alt="" className="w-12 h-12 rounded-xl object-cover border-2 border-border shadow-sm" />}
         <div className="flex gap-2">
-          <button
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className="text-xs px-4 py-2 rounded-lg border border-border bg-muted/50 text-foreground hover:bg-muted transition-all disabled:opacity-50 font-medium"
-          >
+          <button onClick={() => inputRef.current?.click()} disabled={uploading} className="text-xs px-4 py-2 rounded-lg border border-border bg-muted/50 text-foreground hover:bg-muted transition-all disabled:opacity-50 font-medium">
             {uploading ? '⏳ Enviando...' : value ? '🔄 Trocar' : '📤 Upload'}
           </button>
-          {value && (
-            <button onClick={() => onChange('')} className="text-xs px-3 py-2 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all">✕</button>
-          )}
+          {value && <button onClick={() => onChange('')} className="text-xs px-3 py-2 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all"><Trash2 size={14} /></button>}
         </div>
       </div>
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
@@ -72,12 +82,12 @@ const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: strin
 };
 
 const RangeInput: React.FC<{ label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void; suffix?: string }> = ({ label, value, min, max, step = 1, onChange, suffix = '' }) => (
-  <div className="space-y-1.5">
+  <div className="space-y-1">
     <div className="flex items-center justify-between">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-xs font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded">{step < 1 ? value.toFixed(1) : value}{suffix}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-[10px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">{step < 1 ? value.toFixed(1) : value}{suffix}</span>
     </div>
-    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="w-full accent-primary h-1.5 rounded-full" />
+    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="w-full accent-primary h-1 rounded-full" />
   </div>
 );
 
@@ -85,7 +95,7 @@ const ImagePositionControls: React.FC<{
   offsetX: number; offsetY: number; scale: number;
   onChangeX: (v: number) => void; onChangeY: (v: number) => void; onChangeScale: (v: number) => void;
 }> = ({ offsetX, offsetY, scale, onChangeX, onChangeY, onChangeScale }) => (
-  <div className="space-y-2 p-3 rounded-lg bg-muted/30 border border-border/50">
+  <div className="space-y-1 p-2 rounded-lg bg-muted/20 border border-border/30">
     <RangeInput label="Posição X" value={offsetX} min={-200} max={200} onChange={onChangeX} />
     <RangeInput label="Posição Y" value={offsetY} min={-200} max={200} onChange={onChangeY} />
     <RangeInput label="Zoom" value={scale} min={0.1} max={5} step={0.1} onChange={onChangeScale} />
@@ -97,24 +107,22 @@ const ToggleSwitch: React.FC<{ label: string; checked: boolean; onChange: (v: bo
     <span className="text-sm text-muted-foreground">{label}</span>
     <button
       onClick={() => onChange(!checked)}
-      className={`w-11 h-6 rounded-full relative transition-all duration-300 ${checked ? 'bg-primary shadow-md shadow-primary/30' : 'bg-muted'}`}
+      className={`w-10 h-5 rounded-full relative transition-all duration-300 ${checked ? 'bg-primary' : 'bg-muted'}`}
     >
-      <div className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-0.5 transition-all duration-300 ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      <div className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-0.5 transition-all duration-300 ${checked ? 'left-[22px]' : 'left-0.5'}`} />
     </button>
   </div>
 );
 
-const Section: React.FC<{ title: string; emoji?: string; children: React.ReactNode; defaultOpen?: boolean; description?: string }> = ({ title, emoji, children, defaultOpen = false, description }) => (
-  <details open={defaultOpen} className="group rounded-2xl border border-border bg-card/50 hover:bg-card transition-all duration-300 overflow-hidden open:border-primary/30 open:shadow-lg open:shadow-primary/5 open:bg-card">
-    <summary className="flex items-center gap-3 px-5 py-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-      {emoji && <span className="text-xl">{emoji}</span>}
-      <div className="flex-1 min-w-0">
-        <span className="text-sm font-semibold text-foreground">{title}</span>
-        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
-      </div>
-      <span className="text-muted-foreground transition-transform duration-300 text-xs group-open:rotate-180">▼</span>
+/* ── Collapsible Card ── */
+const Card: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, icon, children, defaultOpen = false }) => (
+  <details open={defaultOpen} className="group rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm overflow-hidden transition-all">
+    <summary className="flex items-center gap-2.5 px-4 py-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none hover:bg-muted/30 transition-colors">
+      {icon}
+      <span className="text-sm font-semibold text-foreground flex-1">{title}</span>
+      <ChevronDown size={14} className="text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
     </summary>
-    <div className="px-5 pb-5 space-y-3 border-t border-border/50 pt-4">
+    <div className="px-4 pb-4 pt-2 space-y-3 border-t border-border/30">
       {children}
     </div>
   </details>
@@ -123,15 +131,83 @@ const Section: React.FC<{ title: string; emoji?: string; children: React.ReactNo
 const TabButton: React.FC<{ active: boolean; label: string; onClick: () => void }> = ({ active, label, onClick }) => (
   <button
     onClick={onClick}
-    className={`flex-1 text-xs py-2.5 rounded-xl font-medium transition-all duration-200 ${
-      active ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+    className={`flex-1 text-xs py-2 rounded-lg font-medium transition-all ${
+      active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'
     }`}
   >
     {label}
   </button>
 );
 
+/* ── Color Settings Drawer ── */
+const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config: WheelConfig; updateGlobal: (key: keyof Omit<WheelConfig, 'segments'>, value: any) => void }> = ({ open, onClose, config, updateGlobal }) => {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-card border-l border-border shadow-2xl h-full overflow-y-auto animate-in slide-in-from-right duration-300">
+        <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border z-10 px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Settings size={18} className="text-primary" />
+            <h2 className="text-base font-bold text-foreground">Cores & Ajustes</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-all">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-6">
+          {/* Wheel colors */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Roleta</h3>
+            <ColorInput label="Anel externo" value={config.outerRingColor} onChange={v => updateGlobal('outerRingColor', v)} />
+            <ColorInput label="LEDs" value={config.ledColor} onChange={v => updateGlobal('ledColor', v)} />
+            <ColorInput label="Centro" value={config.centerCapColor} onChange={v => updateGlobal('centerCapColor', v)} />
+            <ColorInput label="Divisores" value={config.dividerColor} onChange={v => updateGlobal('dividerColor', v)} />
+            <ColorInput label="Brilho" value={config.glowColor} onChange={v => updateGlobal('glowColor', v)} />
+            <ColorInput label="Ponteiro" value={config.pointerColor} onChange={v => updateGlobal('pointerColor', v)} />
+          </div>
+
+          <div className="border-t border-border/30" />
+
+          {/* Button & result colors */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Botão & Resultado</h3>
+            <ColorInput label="Cor do botão" value={config.buttonColor} onChange={v => updateGlobal('buttonColor', v)} />
+            <ColorInput label="Texto do botão" value={config.buttonTextColor} onChange={v => updateGlobal('buttonTextColor', v)} />
+            <ColorInput label="Fundo do prêmio" value={config.resultBoxColor} onChange={v => updateGlobal('resultBoxColor', v)} />
+            <ColorInput label="Borda do prêmio" value={config.resultBorderColor} onChange={v => updateGlobal('resultBorderColor', v)} />
+            <ColorInput label="Texto do prêmio" value={config.resultTextColor} onChange={v => updateGlobal('resultTextColor', v)} />
+          </div>
+
+          <div className="border-t border-border/30" />
+
+          {/* Adjustments */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ajustes</h3>
+            <RangeInput label="Espessura dos divisores" value={config.dividerWidth ?? 3} min={0} max={8} step={0.5} onChange={v => updateGlobal('dividerWidth', v)} />
+            <RangeInput label="Tamanho dos LEDs" value={config.ledSize ?? 5} min={2} max={12} step={0.5} onChange={v => updateGlobal('ledSize', v)} />
+            <RangeInput label="Escala da fonte" value={config.fontSizeScale ?? 1} min={0.5} max={2} step={0.1} onChange={v => updateGlobal('fontSizeScale', v)} suffix="x" />
+            <RangeInput label="Tamanho do valor" value={config.valueFontSize ?? 22} min={8} max={40} onChange={v => updateGlobal('valueFontSize', v)} />
+            <RangeInput label="Tamanho do título" value={config.titleFontSize ?? 10} min={6} max={30} onChange={v => updateGlobal('titleFontSize', v)} />
+            <ToggleSwitch label="Ocultar texto dos segmentos" checked={!!config.hideSegmentText} onChange={v => updateGlobal('hideSegmentText', v)} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════════
+   MAIN PANEL
+   ══════════════════════════════════════════════ */
+
 const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChange }) => {
+  const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
+  const [openSegments, setOpenSegments] = useState<Record<string, boolean>>({});
+  const [apiUrl, setApiUrlState] = useState(getApiBaseUrl());
+
   const updateGlobal = (key: keyof Omit<WheelConfig, 'segments'>, value: any) => {
     onChange({ ...config, [key]: value });
   };
@@ -142,32 +218,38 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
     onChange({ ...config, segments: segs });
   };
 
-  const [apiUrl, setApiUrlState] = useState(getApiBaseUrl());
-  const [openSegments, setOpenSegments] = useState<Record<string, boolean>>({});
-
   return (
-    <div className="w-full max-w-2xl space-y-4">
-      {/* ===== CABEÇALHO DA ROLETA ===== */}
-      <Section title="Cabeçalho da Roleta" emoji="📝" description="Título, subtítulo ou imagem">
-        <div className="flex gap-2 p-1 rounded-xl bg-muted/50">
-          <TabButton active={config.headerMode === 'text'} label="Título + Subtítulo" onClick={() => updateGlobal('headerMode', 'text')} />
+    <div className="w-full space-y-3 relative">
+      {/* ── Top bar with gear ── */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-foreground">🎡 Configuração da Roleta</h2>
+        <button
+          onClick={() => setColorDrawerOpen(true)}
+          className="p-2.5 rounded-xl bg-muted/60 hover:bg-primary/10 border border-border hover:border-primary/40 text-muted-foreground hover:text-primary transition-all duration-200 group"
+          title="Cores & Ajustes"
+        >
+          <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500" />
+        </button>
+      </div>
+
+      {/* Color drawer */}
+      <ColorSettingsDrawer open={colorDrawerOpen} onClose={() => setColorDrawerOpen(false)} config={config} updateGlobal={updateGlobal} />
+
+      {/* ── Cabeçalho ── */}
+      <Card title="Cabeçalho" icon={<span className="text-base">📝</span>}>
+        <div className="flex gap-1.5 p-1 rounded-lg bg-muted/40">
+          <TabButton active={config.headerMode === 'text'} label="Texto" onClick={() => updateGlobal('headerMode', 'text')} />
           <TabButton active={config.headerMode === 'image'} label="Imagem" onClick={() => updateGlobal('headerMode', 'image')} />
         </div>
         {config.headerMode === 'text' ? (
-          <div className="space-y-3 pt-1">
-            <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground font-medium">Título</label>
-              <input type="text" value={config.pageTitle} onChange={e => updateGlobal('pageTitle', e.target.value)} className="w-full text-sm px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground font-medium">Subtítulo</label>
-              <input type="text" value={config.pageSubtitle} onChange={e => updateGlobal('pageSubtitle', e.target.value)} className="w-full text-sm px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-            </div>
-            <RangeInput label="Tamanho do título" value={config.headerTitleSize ?? 36} min={16} max={72} onChange={v => updateGlobal('headerTitleSize', v)} />
-            <RangeInput label="Tamanho do subtítulo" value={config.headerSubtitleSize ?? 12} min={8} max={36} onChange={v => updateGlobal('headerSubtitleSize', v)} />
+          <div className="space-y-2">
+            <input type="text" value={config.pageTitle} onChange={e => updateGlobal('pageTitle', e.target.value)} placeholder="Título" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
+            <input type="text" value={config.pageSubtitle} onChange={e => updateGlobal('pageSubtitle', e.target.value)} placeholder="Subtítulo" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
+            <RangeInput label="Título" value={config.headerTitleSize ?? 36} min={16} max={72} onChange={v => updateGlobal('headerTitleSize', v)} />
+            <RangeInput label="Subtítulo" value={config.headerSubtitleSize ?? 12} min={8} max={36} onChange={v => updateGlobal('headerSubtitleSize', v)} />
           </div>
         ) : (
-          <div className="space-y-3 pt-1">
+          <div className="space-y-2">
             <ImageUpload label="Imagem do cabeçalho" value={config.headerImageUrl} onChange={v => updateGlobal('headerImageUrl', v)} />
             <RangeInput label="Tamanho" value={config.headerImageSize ?? 120} min={40} max={300} step={5} onChange={v => updateGlobal('headerImageSize', v)} />
             {config.headerImageUrl && (
@@ -178,10 +260,10 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
             )}
           </div>
         )}
-      </Section>
+      </Card>
 
-      {/* ===== FUNDO DA PÁGINA ===== */}
-      <Section title="Fundo da Roleta" emoji="🖼" description="Imagem de fundo da página">
+      {/* ── Background ── */}
+      <Card title="Fundo da Página" icon={<span className="text-base">🖼</span>}>
         <ImageUpload label="Imagem de fundo" value={config.backgroundImageUrl} onChange={v => updateGlobal('backgroundImageUrl', v)} />
         {config.backgroundImageUrl && (
           <ImagePositionControls
@@ -189,45 +271,10 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
             onChangeX={v => updateGlobal('backgroundImageOffsetX', v)} onChangeY={v => updateGlobal('backgroundImageOffsetY', v)} onChangeScale={v => updateGlobal('backgroundImageScale', v)}
           />
         )}
-      </Section>
+      </Card>
 
-      {/* ===== CORES DA ROLETA ===== */}
-      <Section title="Cores da Roleta" emoji="🎨" description="Personalizar as cores do anel, LEDs e centro">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-          <ColorInput label="Anel externo" value={config.outerRingColor} onChange={v => updateGlobal('outerRingColor', v)} />
-          <ColorInput label="LEDs" value={config.ledColor} onChange={v => updateGlobal('ledColor', v)} />
-          <ColorInput label="Centro" value={config.centerCapColor} onChange={v => updateGlobal('centerCapColor', v)} />
-          <ColorInput label="Divisores" value={config.dividerColor} onChange={v => updateGlobal('dividerColor', v)} />
-          <ColorInput label="Brilho" value={config.glowColor} onChange={v => updateGlobal('glowColor', v)} />
-          <ColorInput label="Ponteiro" value={config.pointerColor} onChange={v => updateGlobal('pointerColor', v)} />
-        </div>
-      </Section>
-
-      {/* ===== AJUSTES DA ROLETA ===== */}
-      <Section title="Ajustes da Roleta" emoji="🔧" description="Divisores, LEDs, fontes e mais">
-        <div className="space-y-3">
-          <RangeInput label="Espessura dos divisores" value={config.dividerWidth ?? 3} min={0} max={8} step={0.5} onChange={v => updateGlobal('dividerWidth', v)} />
-          <RangeInput label="Tamanho dos LEDs" value={config.ledSize ?? 5} min={2} max={12} step={0.5} onChange={v => updateGlobal('ledSize', v)} />
-          <RangeInput label="Escala da fonte" value={config.fontSizeScale ?? 1} min={0.5} max={2} step={0.1} onChange={v => updateGlobal('fontSizeScale', v)} suffix="x" />
-          <RangeInput label="Tamanho do valor" value={config.valueFontSize ?? 22} min={8} max={40} onChange={v => updateGlobal('valueFontSize', v)} />
-          <RangeInput label="Tamanho do título" value={config.titleFontSize ?? 10} min={6} max={30} onChange={v => updateGlobal('titleFontSize', v)} />
-          <ToggleSwitch label="Ocultar texto dos segmentos" checked={!!config.hideSegmentText} onChange={v => updateGlobal('hideSegmentText', v)} />
-        </div>
-      </Section>
-
-      {/* ===== BOTÃO & RESULTADO ===== */}
-      <Section title="Botão & Resultado" emoji="🏆" description="Cores do botão girar e do prêmio">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-          <ColorInput label="Cor do botão" value={config.buttonColor} onChange={v => updateGlobal('buttonColor', v)} />
-          <ColorInput label="Texto do botão" value={config.buttonTextColor} onChange={v => updateGlobal('buttonTextColor', v)} />
-          <ColorInput label="Fundo do prêmio" value={config.resultBoxColor} onChange={v => updateGlobal('resultBoxColor', v)} />
-          <ColorInput label="Borda do prêmio" value={config.resultBorderColor} onChange={v => updateGlobal('resultBorderColor', v)} />
-          <ColorInput label="Texto do prêmio" value={config.resultTextColor} onChange={v => updateGlobal('resultTextColor', v)} />
-        </div>
-      </Section>
-
-      {/* ===== IMAGEM CENTRAL ===== */}
-      <Section title="Imagem Central" emoji="⚡" description="Logo ou ícone no centro da roleta">
+      {/* ── Imagem Central ── */}
+      <Card title="Imagem Central" icon={<span className="text-base">⚡</span>}>
         <ImageUpload label="Logo / ícone do centro" value={config.centerImageUrl} onChange={v => updateGlobal('centerImageUrl', v)} />
         {config.centerImageUrl && (
           <ImagePositionControls
@@ -235,70 +282,70 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
             onChangeX={v => updateGlobal('centerImageOffsetX', v)} onChangeY={v => updateGlobal('centerImageOffsetY', v)} onChangeScale={v => updateGlobal('centerImageScale', v)}
           />
         )}
-      </Section>
+      </Card>
 
-      {/* ===== SEGMENTOS ===== */}
-      <Section title="Segmentos" emoji="🍕" description="Adicionar, editar ou remover fatias" defaultOpen>
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">{config.segments.length} segmento(s)</span>
+      {/* ── Segmentos ── */}
+      <Card title="Segmentos" icon={<span className="text-base">🍕</span>} defaultOpen>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">{config.segments.length} fatia(s)</span>
           <button
             onClick={() => {
               const newSeg = { id: Date.now().toString(), title: 'NOVO', reward: '0', color: '#1a1a3e', gradientOverlay: 'rgba(255,255,255,0.1)', textColor: '#FFFFFF', percentage: 10 };
               onChange({ ...config, segments: [...config.segments, newSeg] });
             }}
-            className="text-xs px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium hover:opacity-90 transition-all shadow-sm"
+            className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-all"
           >
-            + Adicionar
+            <Plus size={12} /> Adicionar
           </button>
         </div>
-        <div className="space-y-2">
+
+        <div className="space-y-1.5">
           {config.segments.map((seg, i) => {
             const segOpen = openSegments[seg.id] ?? false;
             return (
-              <div key={seg.id} className={`rounded-xl border transition-all duration-200 overflow-hidden ${segOpen ? 'border-primary/30 shadow-md bg-card' : 'border-border bg-muted/20 hover:bg-muted/40'}`}>
+              <div key={seg.id} className={`rounded-lg border overflow-hidden transition-all ${segOpen ? 'border-primary/30 bg-card shadow-sm' : 'border-border/40 hover:border-border'}`}>
                 <button
                   onClick={() => setOpenSegments(prev => ({ ...prev, [seg.id]: !prev[seg.id] }))}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left"
                 >
-                  <div className="w-5 h-5 rounded-lg shadow-sm border border-border/50" style={{ background: seg.color }} />
-                  <span className="text-sm font-medium text-foreground flex-1">{seg.title || `Segmento ${i + 1}`}</span>
-                  <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{seg.percentage}%</span>
-                  <span className={`text-muted-foreground transition-transform duration-200 text-xs ${segOpen ? 'rotate-180' : ''}`}>▼</span>
+                  <div className="w-4 h-4 rounded-md border border-border/50" style={{ background: seg.color }} />
+                  <span className="text-sm font-medium text-foreground flex-1 truncate">{seg.title || `Seg ${i + 1}`}</span>
+                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{seg.percentage}%</span>
+                  <ChevronDown size={12} className={`text-muted-foreground transition-transform duration-200 ${segOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {segOpen && (
-                  <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className="text-sm text-muted-foreground font-medium">Título</label>
-                        <input type="text" value={seg.title} onChange={e => updateSegment(i, 'title', e.target.value)} className="w-full text-sm px-3 py-2 rounded-xl border border-border bg-background text-foreground" />
+                  <div className="px-3 pb-3 space-y-2.5 border-t border-border/30 pt-2.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground font-medium">Título</label>
+                        <input type="text" value={seg.title} onChange={e => updateSegment(i, 'title', e.target.value)} className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground" />
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-sm text-muted-foreground font-medium">Valor</label>
-                        <input type="text" value={seg.reward} onChange={e => updateSegment(i, 'reward', e.target.value)} className="w-full text-sm px-3 py-2 rounded-xl border border-border bg-background text-foreground" />
+                      <div>
+                        <label className="text-[10px] text-muted-foreground font-medium">Valor</label>
+                        <input type="text" value={seg.reward} onChange={e => updateSegment(i, 'reward', e.target.value)} className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground" />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm text-muted-foreground font-medium">Porcentagem (%)</label>
-                      <input type="number" min={0} max={100} value={seg.percentage} onChange={e => updateSegment(i, 'percentage', Math.max(0, parseInt(e.target.value) || 0))} className="w-full text-sm px-3 py-2 rounded-xl border border-border bg-background text-foreground" />
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium">Porcentagem (%)</label>
+                      <input type="number" min={0} max={100} value={seg.percentage} onChange={e => updateSegment(i, 'percentage', Math.max(0, parseInt(e.target.value) || 0))} className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground" />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+                    <div className="grid grid-cols-2 gap-x-4">
                       <ColorInput label="Fundo" value={seg.color} onChange={v => updateSegment(i, 'color', v)} />
                       <ColorInput label="Texto" value={seg.textColor} onChange={v => updateSegment(i, 'textColor', v)} />
                     </div>
-                    <ImageUpload label="Imagem do segmento" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} />
+                    <ImageUpload label="Imagem" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
                     {seg.imageUrl && (
-                      <div className="space-y-2 p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <RangeInput label="X" value={seg.imageOffsetX ?? 0} min={-100} max={100} onChange={v => updateSegment(i, 'imageOffsetX', v)} />
-                        <RangeInput label="Y" value={seg.imageOffsetY ?? 0} min={-100} max={100} onChange={v => updateSegment(i, 'imageOffsetY', v)} />
-                        <RangeInput label="Escala" value={seg.imageScale ?? 1} min={0.2} max={3} step={0.1} onChange={v => updateSegment(i, 'imageScale', v)} />
-                      </div>
+                      <ImagePositionControls
+                        offsetX={seg.imageOffsetX ?? 0} offsetY={seg.imageOffsetY ?? 0} scale={seg.imageScale ?? 1}
+                        onChangeX={v => updateSegment(i, 'imageOffsetX', v)} onChangeY={v => updateSegment(i, 'imageOffsetY', v)} onChangeScale={v => updateSegment(i, 'imageScale', v)}
+                      />
                     )}
                     {config.segments.length > 2 && (
                       <button
                         onClick={() => onChange({ ...config, segments: config.segments.filter((_, idx) => idx !== i) })}
-                        className="w-full text-sm py-2.5 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all mt-1 font-medium"
+                        className="w-full flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg border border-destructive/20 text-destructive hover:bg-destructive/10 transition-all font-medium"
                       >
-                        🗑 Remover segmento
+                        <Trash2 size={12} /> Remover
                       </button>
                     )}
                   </div>
@@ -307,69 +354,49 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
             );
           })}
         </div>
-      </Section>
+      </Card>
 
-      {/* ===== MOBILE LAYOUT ===== */}
-      <Section title="Layout Mobile" emoji="📱" description="Posição da roleta, giros e botão no celular">
-        <div className="space-y-3">
-          <p className="text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg">Esses ajustes afetam apenas a visualização em dispositivos móveis.</p>
-          <RangeInput label="Roleta X" value={config.mobileWheelOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileWheelOffsetX', v)} />
-          <RangeInput label="Roleta Y" value={config.mobileWheelOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileWheelOffsetY', v)} />
-          <RangeInput label="Roleta Zoom" value={config.mobileWheelScale ?? 1} min={0.5} max={2} step={0.05} onChange={v => updateGlobal('mobileWheelScale', v)} suffix="x" />
-          <RangeInput label="Giros X" value={config.mobileSpinsOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileSpinsOffsetX', v)} />
-          <RangeInput label="Giros Y" value={config.mobileSpinsOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileSpinsOffsetY', v)} />
-          <RangeInput label="Botão Girar X" value={config.mobileButtonOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileButtonOffsetX', v)} />
-          <RangeInput label="Botão Girar Y" value={config.mobileButtonOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileButtonOffsetY', v)} />
-        </div>
-      </Section>
+      {/* ── Layout Mobile ── */}
+      <Card title="Layout Mobile" icon={<span className="text-base">📱</span>}>
+        <p className="text-[10px] text-muted-foreground bg-muted/30 px-2.5 py-1.5 rounded-lg">Ajustes apenas para dispositivos móveis.</p>
+        <RangeInput label="Roleta X" value={config.mobileWheelOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileWheelOffsetX', v)} />
+        <RangeInput label="Roleta Y" value={config.mobileWheelOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileWheelOffsetY', v)} />
+        <RangeInput label="Roleta Zoom" value={config.mobileWheelScale ?? 1} min={0.5} max={2} step={0.05} onChange={v => updateGlobal('mobileWheelScale', v)} suffix="x" />
+        <RangeInput label="Giros X" value={config.mobileSpinsOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileSpinsOffsetX', v)} />
+        <RangeInput label="Giros Y" value={config.mobileSpinsOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileSpinsOffsetY', v)} />
+        <RangeInput label="Botão Girar X" value={config.mobileButtonOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileButtonOffsetX', v)} />
+        <RangeInput label="Botão Girar Y" value={config.mobileButtonOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileButtonOffsetY', v)} />
+      </Card>
 
-      {/* ===== PÁGINA (SEO / FAVICON) ===== */}
-      <Section title="Página (Título / Favicon)" emoji="🌐" description="SEO, título da aba e favicon">
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <label className="text-sm text-muted-foreground font-medium">Nome da página (título da aba)</label>
-            <input
-              type="text"
-              value={config.seoTitle ?? ''}
-              placeholder="Roleta de Prêmios"
-              onChange={e => updateGlobal('seoTitle', e.target.value)}
-              className="w-full text-sm px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
+      {/* ── SEO / Favicon ── */}
+      <Card title="Página (Título / Favicon)" icon={<span className="text-base">🌐</span>}>
+        <div className="space-y-2">
+          <div>
+            <label className="text-[10px] text-muted-foreground font-medium">Nome da página</label>
+            <input type="text" value={config.seoTitle ?? ''} placeholder="Roleta de Prêmios" onChange={e => updateGlobal('seoTitle', e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm text-muted-foreground font-medium">Descrição da página</label>
-            <textarea
-              value={config.seoDescription ?? ''}
-              placeholder="Gire a roleta e ganhe prêmios incríveis!"
-              onChange={e => updateGlobal('seoDescription', e.target.value)}
-              className="w-full text-sm px-4 py-2.5 rounded-xl border border-border bg-background text-foreground resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              rows={2}
-            />
+          <div>
+            <label className="text-[10px] text-muted-foreground font-medium">Descrição</label>
+            <textarea value={config.seoDescription ?? ''} placeholder="Gire a roleta e ganhe prêmios!" onChange={e => updateGlobal('seoDescription', e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground resize-none" rows={2} />
           </div>
-          <ImageUpload label="Favicon" value={config.faviconUrl} onChange={v => updateGlobal('faviconUrl', v)} folder="favicon" />
+          <ImageUpload label="Favicon" value={config.faviconUrl} onChange={v => updateGlobal('faviconUrl', v)} folder="favicon" compact />
           {config.faviconUrl && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
-              <img src={config.faviconUrl} alt="favicon" className="w-6 h-6 rounded" />
-              <span className="text-xs text-muted-foreground">Preview do favicon</span>
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
+              <img src={config.faviconUrl} alt="favicon" className="w-5 h-5 rounded" />
+              <span className="text-[10px] text-muted-foreground">Preview</span>
             </div>
           )}
         </div>
-      </Section>
+      </Card>
 
-      {/* ===== API BACKEND ===== */}
-      <Section title="API Backend" emoji="🔗" description="Conexão com Laravel">
-        <div className="space-y-1.5">
-          <label className="text-sm text-muted-foreground font-medium">URL base da API (Laravel)</label>
-          <input
-            type="text"
-            value={apiUrl}
-            placeholder="https://seusite.com"
-            onChange={e => { setApiUrlState(e.target.value); setApiBaseUrl(e.target.value); }}
-            className="w-full text-sm px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          />
-          <p className="text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg mt-2">Rota pública: /roleta?account_id=xxx</p>
+      {/* ── API Backend ── */}
+      <Card title="API Backend" icon={<span className="text-base">🔗</span>}>
+        <div>
+          <label className="text-[10px] text-muted-foreground font-medium">URL base (Laravel)</label>
+          <input type="text" value={apiUrl} placeholder="https://seusite.com" onChange={e => { setApiUrlState(e.target.value); setApiBaseUrl(e.target.value); }} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
+          <p className="text-[10px] text-muted-foreground mt-1.5">Rota pública: /roleta?account_id=xxx</p>
         </div>
-      </Section>
+      </Card>
     </div>
   );
 };
