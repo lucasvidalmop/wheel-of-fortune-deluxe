@@ -44,6 +44,14 @@ const Admin = () => {
   const [adminCreating, setAdminCreating] = useState(false);
   const [systemUsers, setSystemUsers] = useState<any[]>([]);
   const [systemUsersLoading, setSystemUsersLoading] = useState(false);
+  const [editingSystemUser, setEditingSystemUser] = useState<any>(null);
+  const [editSystemForm, setEditSystemForm] = useState({ email: '', password: '', name: '' });
+  const [editSystemSaving, setEditSystemSaving] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
+  const [editingAdminUser, setEditingAdminUser] = useState<any>(null);
+  const [editAdminForm, setEditAdminForm] = useState({ email: '', password: '', name: '' });
+  const [editAdminSaving, setEditAdminSaving] = useState(false);
 
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
     const saved = localStorage.getItem('wheel_config');
