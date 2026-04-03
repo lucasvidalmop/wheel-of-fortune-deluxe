@@ -16,6 +16,10 @@ interface WheelUser {
   created_at: string;
 }
 
+const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>{children}</div>
+);
+
 const Admin = () => {
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
