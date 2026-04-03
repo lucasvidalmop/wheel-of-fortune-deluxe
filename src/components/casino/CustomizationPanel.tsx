@@ -263,11 +263,11 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
         <div className="space-y-2">
           {config.segments.map((seg, i) => {
-            const [segOpen, setSegOpen] = useState(false);
+            const segOpen = openSegments[seg.id] ?? false;
             return (
               <div key={seg.id} className={`rounded-xl border transition-all duration-200 overflow-hidden ${segOpen ? 'border-primary/30 shadow-md bg-card' : 'border-border bg-muted/20 hover:bg-muted/40'}`}>
                 <button
-                  onClick={() => setSegOpen(!segOpen)}
+                  onClick={() => setOpenSegments(prev => ({ ...prev, [seg.id]: !prev[seg.id] }))}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left"
                 >
                   <div className="w-5 h-5 rounded-lg shadow-sm border border-border/50" style={{ background: seg.color }} />
