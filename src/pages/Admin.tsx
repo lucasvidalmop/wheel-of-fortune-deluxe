@@ -202,6 +202,58 @@ const Admin = () => {
     setSystemUsersLoading(false);
   };
 
+  const fetchAdminUsers = async () => {
+    setAdminUsersLoading(true);
+    try { const res = await supabase.functions.invoke('update-system-user', { body: { action: 'list_admins' } }); if (res.data?.users) setAdminUsers(res.data.users); } catch {}
+    setAdminUsersLoading(false);
+  };
+
+  const handleUpdateSystemUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSystemUser) return;
+    setEditSystemSaving(true);
+    try {
+      const body: any = { action: 'update', user_id: editingSystemUser.id };
+      if (editSystemForm.email && editSystemForm.email !== editingSystemUser.email) body.email = editSystemForm.email;
+      if (editSystemForm.name && editSystemForm.name !== editingSystemUser.name) body.name = editSystemForm.name;
+      if (editSystemForm.password) body.password = editSystemForm.password;
+      const res = await supabase.functions.invoke('update-system-user', { body });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Operador atualizado!'); setEditingSystemUser(null); fetchSystemUsers(); }
+    } catch (err: any) { toast.error(err.message); }
+    setEditSystemSaving(false);
+  };
+
+  const handleDeleteSystemUser = async (userId: string) => {
+    if (!confirm('Excluir este operador? Todos os dados serão removidos.')) return;
+    try {
+      const res = await supabase.functions.invoke('update-system-user', { body: { action: 'delete', user_id: userId } });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Operador excluído!'); fetchSystemUsers(); }
+    } catch (err: any) { toast.error(err.message); }
+  };
+
+  const handleUpdateAdminUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAdminUser) return;
+    setEditAdminSaving(true);
+    try {
+      const body: any = { action: 'update', user_id: editingAdminUser.id };
+      if (editAdminForm.email && editAdminForm.email !== editingAdminUser.email) body.email = editAdminForm.email;
+      if (editAdminForm.name && editAdminForm.name !== editingAdminUser.name) body.name = editAdminForm.name;
+      if (editAdminForm.password) body.password = editAdminForm.password;
+      const res = await supabase.functions.invoke('update-system-user', { body });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Admin atualizado!'); setEditingAdminUser(null); fetchAdminUsers(); }
+    } catch (err: any) { toast.error(err.message); }
+    setEditAdminSaving(false);
+  };
+
+  const handleDeleteAdminUser = async (userId: string) => {
+    if (!confirm('Excluir este admin? Todos os dados serão removidos.')) return;
+    try {
+      const res = await supabase.functions.invoke('update-system-user', { body: { action: 'delete', user_id: userId } });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Admin excluído!'); fetchAdminUsers(); }
+    } catch (err: any) { toast.error(err.message); }
+  };
+
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
     setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', spins_available: user.spins_available });
