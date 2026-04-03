@@ -592,7 +592,7 @@ const Dashboard = () => {
 
         {/* Wheel config */}
         {activeTab === 'wheel' && (
-          <div className="max-w-lg space-y-4">
+          <div className="max-w-2xl space-y-4">
             <CustomizationPanel config={wheelConfig} onChange={setWheelConfig} />
             <button
               onClick={handleSaveConfig}
