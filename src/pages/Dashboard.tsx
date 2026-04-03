@@ -744,8 +744,118 @@ const Dashboard = () => {
           )}
 
           {/* ══════ HISTORY ══════ */}
-          {activeTab === 'history' && (
+          {activeTab === 'history' && (() => {
+            const totalSpins = spinResults.length;
+            const uniqueUsers = new Set(spinResults.map((r: any) => r.account_id)).size;
+            const uniqueEmails = new Set(spinResults.map((r: any) => r.user_email)).size;
+
+            // Prize distribution
+            const prizeCounts: Record<string, number> = {};
+            spinResults.forEach((r: any) => { prizeCounts[r.prize] = (prizeCounts[r.prize] || 0) + 1; });
+            const topPrizes = Object.entries(prizeCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            // Spins per day (last 7 days)
+            const now = new Date();
+            const last7 = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(now);
+              d.setDate(d.getDate() - (6 - i));
+              return d.toISOString().split('T')[0];
+            });
+            const spinsPerDay: Record<string, number> = {};
+            last7.forEach(d => { spinsPerDay[d] = 0; });
+            spinResults.forEach((r: any) => {
+              const day = new Date(r.spun_at).toISOString().split('T')[0];
+              if (spinsPerDay[day] !== undefined) spinsPerDay[day]++;
+            });
+            const maxDaySpins = Math.max(...Object.values(spinsPerDay), 1);
+
+            // Today vs yesterday
+            const todayStr = now.toISOString().split('T')[0];
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const todayCount = spinResults.filter((r: any) => new Date(r.spun_at).toISOString().split('T')[0] === todayStr).length;
+            const yesterdayCount = spinResults.filter((r: any) => new Date(r.spun_at).toISOString().split('T')[0] === yesterdayStr).length;
+            const trend = yesterdayCount === 0 ? (todayCount > 0 ? 100 : 0) : Math.round(((todayCount - yesterdayCount) / yesterdayCount) * 100);
+
+            return (
             <div className="space-y-4">
+              {/* Analytics Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total de Giros', value: totalSpins, icon: <Target size={18} />, color: 'text-primary', bg: 'bg-primary/10' },
+                  { label: 'Usuários Únicos', value: uniqueUsers, icon: <Users size={18} />, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                  { label: 'Emails Únicos', value: uniqueEmails, icon: <Mail size={18} />, color: 'text-sky-400', bg: 'bg-sky-400/10' },
+                  { label: 'Hoje', value: todayCount, icon: <Trophy size={18} />, color: 'text-amber-400', bg: 'bg-amber-400/10', trend },
+                ].map((card) => (
+                  <GlassCard key={card.label} className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className={`p-2 rounded-xl ${card.bg}`}>
+                        <span className={card.color}>{card.icon}</span>
+                      </div>
+                      {'trend' in card && card.trend !== undefined && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${card.trend >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'}`}>
+                          {card.trend >= 0 ? '↑' : '↓'} {Math.abs(card.trend)}%
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{card.label}</p>
+                  </GlassCard>
+                ))}
+              </div>
+
+              {/* Charts row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {/* Spins per day mini chart */}
+                <GlassCard className="p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Giros por Dia (7 dias)</h4>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {last7.map(day => {
+                      const count = spinsPerDay[day];
+                      const height = Math.max((count / maxDaySpins) * 100, 4);
+                      const isToday = day === todayStr;
+                      return (
+                        <div key={day} className="flex-1 flex flex-col items-center gap-1">
+                          <span className="text-[9px] text-muted-foreground font-medium">{count}</span>
+                          <div
+                            className={`w-full rounded-md transition-all ${isToday ? 'bg-primary shadow-lg shadow-primary/30' : 'bg-white/[0.1]'}`}
+                            style={{ height: `${height}%`, minHeight: '3px' }}
+                          />
+                          <span className="text-[8px] text-muted-foreground">{day.slice(8)}/{day.slice(5, 7)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </GlassCard>
+
+                {/* Prize distribution */}
+                <GlassCard className="p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Top Prêmios</h4>
+                  {topPrizes.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Sem dados</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {topPrizes.map(([prize, count], i) => {
+                        const pct = Math.round((count / totalSpins) * 100);
+                        const colors = ['bg-primary', 'bg-emerald-400', 'bg-sky-400', 'bg-amber-400', 'bg-purple-400'];
+                        return (
+                          <div key={prize} className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-foreground font-medium truncate max-w-[60%]">{prize}</span>
+                              <span className="text-[10px] text-muted-foreground">{count}x ({pct}%)</span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                              <div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </GlassCard>
+              </div>
+
               <div className="flex items-center justify-end">
                 <button onClick={() => fetchHistory()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
                   <RotateCcw size={14} /> Atualizar
@@ -839,7 +949,8 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {/* ══════ EMAIL TAB ══════ */}
           {activeTab === 'email' && (
