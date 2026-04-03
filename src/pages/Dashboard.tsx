@@ -47,6 +47,16 @@ const Dashboard = () => {
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
   const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
 
+  // SMS state
+  const [smsMessage, setSmsMessage] = useState('');
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsTarget, setSmsTarget] = useState<'all' | 'selected'>('all');
+  const [selectedPhones, setSelectedPhones] = useState<string[]>([]);
+  const [showSmsConfig, setShowSmsConfig] = useState(false);
+  const [twilioAccountSid, setTwilioAccountSid] = useState(() => localStorage.getItem('twilio_account_sid') || '');
+  const [twilioAuthToken, setTwilioAuthToken] = useState(() => localStorage.getItem('twilio_auth_token') || '');
+  const [twilioPhoneNumber, setTwilioPhoneNumber] = useState(() => localStorage.getItem('twilio_phone_number') || '');
+
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
   const [newSlug, setNewSlug] = useState('');
