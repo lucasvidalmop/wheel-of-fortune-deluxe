@@ -6,6 +6,7 @@ import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin } from 'lucide-react';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 interface WheelUser {
   id: string;
