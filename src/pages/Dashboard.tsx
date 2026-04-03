@@ -57,6 +57,16 @@ const Dashboard = () => {
   const [twilioAuthToken, setTwilioAuthToken] = useState(() => localStorage.getItem('twilio_auth_token') || '');
   const [twilioPhoneNumber, setTwilioPhoneNumber] = useState(() => localStorage.getItem('twilio_phone_number') || '');
 
+  // WhatsApp state
+  const [whatsappMessage, setWhatsappMessage] = useState('');
+  const [whatsappSending, setWhatsappSending] = useState(false);
+  const [whatsappTarget, setWhatsappTarget] = useState<'all' | 'selected'>('all');
+  const [selectedWhatsappPhones, setSelectedWhatsappPhones] = useState<string[]>([]);
+  const [showWhatsappConfig, setShowWhatsappConfig] = useState(false);
+  const [evolutionApiUrl, setEvolutionApiUrl] = useState(() => localStorage.getItem('evolution_api_url') || '');
+  const [evolutionApiKey, setEvolutionApiKey] = useState(() => localStorage.getItem('evolution_api_key') || '');
+  const [evolutionInstance, setEvolutionInstance] = useState(() => localStorage.getItem('evolution_instance') || '');
+
   const [slug, setSlug] = useState('');
   const [editingSlug, setEditingSlug] = useState(false);
   const [newSlug, setNewSlug] = useState('');
