@@ -835,6 +835,154 @@ const Dashboard = () => {
             </button>
           </div>
         )}
+
+        {/* SMS tab */}
+        {activeTab === 'sms' && (
+          <div className="max-w-2xl space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Disparo de SMS</h2>
+              <button
+                onClick={() => setShowSmsConfig(!showSmsConfig)}
+                className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition"
+                title="Configurações do Twilio"
+              >
+                ⚙️
+              </button>
+            </div>
+
+            {/* Twilio config panel */}
+            {showSmsConfig && (
+              <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-3">
+                <h3 className="text-sm font-bold text-foreground">🔑 Configuração do Twilio</h3>
+                <p className="text-xs text-muted-foreground">Crie uma conta em <a href="https://www.twilio.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">twilio.com</a> e obtenha suas credenciais no console.</p>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Account SID</label>
+                  <input
+                    type="text"
+                    value={twilioAccountSid}
+                    onChange={e => { setTwilioAccountSid(e.target.value); localStorage.setItem('twilio_account_sid', e.target.value); }}
+                    placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Auth Token</label>
+                  <input
+                    type="password"
+                    value={twilioAuthToken}
+                    onChange={e => { setTwilioAuthToken(e.target.value); localStorage.setItem('twilio_auth_token', e.target.value); }}
+                    placeholder="••••••••••••••••"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Número do Twilio (remetente)</label>
+                  <input
+                    type="text"
+                    value={twilioPhoneNumber}
+                    onChange={e => { setTwilioPhoneNumber(e.target.value); localStorage.setItem('twilio_phone_number', e.target.value); }}
+                    placeholder="+5511999999999"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm font-mono"
+                  />
+                </div>
+                <div className={`text-xs font-medium ${twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? 'text-green-500' : 'text-yellow-500'}`}>
+                  {twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? '✅ Credenciais configuradas' : '⚠️ Preencha todas as credenciais para enviar SMS'}
+                </div>
+              </div>
+            )}
+
+            {/* Recipients */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Destinatários</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setSmsTarget('all'); setSelectedPhones([]); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${smsTarget === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  Todos com celular ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length})
+                </button>
+                <button
+                  onClick={() => setSmsTarget('selected')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${smsTarget === 'selected' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  Selecionar
+                </button>
+              </div>
+            </div>
+
+            {smsTarget === 'selected' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Selecione os inscritos ({selectedPhones.length} selecionado{selectedPhones.length !== 1 ? 's' : ''})</label>
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-background p-2 space-y-1">
+                  {users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).map(u => (
+                    <label key={u.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedPhones.includes(u.phone)}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedPhones([...selectedPhones, u.phone]);
+                          else setSelectedPhones(selectedPhones.filter(p => p !== u.phone));
+                        }}
+                        className="rounded border-border"
+                      />
+                      <span className="text-sm text-foreground">{u.name}</span>
+                      <span className="text-xs text-muted-foreground">({u.phone})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Message */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">Mensagem</label>
+              <textarea
+                value={smsMessage}
+                onChange={e => setSmsMessage(e.target.value)}
+                rows={4}
+                placeholder="Digite a mensagem do SMS..."
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm resize-y"
+              />
+              <p className="text-xs text-muted-foreground">{smsMessage.length}/160 caracteres</p>
+            </div>
+
+            {/* Send */}
+            <button
+              onClick={async () => {
+                if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
+                  toast.error('Configure as credenciais do Twilio primeiro (clique na ⚙️)');
+                  setShowSmsConfig(true);
+                  return;
+                }
+                const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                const phones = smsTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedPhones;
+                if (phones.length === 0) { toast.error('Nenhum destinatário com celular válido'); return; }
+                if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                setSmsSending(true);
+                let sent = 0, errors = 0;
+                for (const phone of phones) {
+                  const { error } = await supabase.functions.invoke('send-sms', {
+                    body: {
+                      recipientPhone: phone,
+                      message: smsMessage,
+                      twilioAccountSid,
+                      twilioAuthToken,
+                      twilioPhoneNumber,
+                    },
+                  });
+                  if (error) errors++; else sent++;
+                }
+                setSmsSending(false);
+                if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
+                else toast.success(`${sent} SMS enviado(s) com sucesso!`);
+              }}
+              disabled={smsSending}
+              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"
+            >
+              {smsSending ? 'Enviando...' : `📱 Enviar SMS${smsTarget === 'all' ? ` para ${users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length} inscrito(s)` : selectedPhones.length > 0 ? ` para ${selectedPhones.length} inscrito(s)` : ''}`}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
