@@ -429,7 +429,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 lg:ml-64 pt-24 lg:pt-0 p-4 md:p-8">
+      <div className={`flex-1 pt-24 lg:pt-0 p-4 md:p-8 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         <div className="max-w-6xl mx-auto">
 
         {/* Slug / link */}
