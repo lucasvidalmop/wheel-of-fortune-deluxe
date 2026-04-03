@@ -420,7 +420,15 @@ const Dashboard = () => {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Celular</label>
-                    <input type="text" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+                    <input type="text" value={form.phone} placeholder="(00) 90000-0000" onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let masked = '';
+                      if (digits.length > 0) masked += '(' + digits.slice(0, 2);
+                      if (digits.length >= 2) masked += ') ';
+                      if (digits.length > 2) masked += digits.slice(2, 7);
+                      if (digits.length > 7) masked += '-' + digits.slice(7, 11);
+                      setForm({ ...form, phone: masked });
+                    }} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Account ID</label>
