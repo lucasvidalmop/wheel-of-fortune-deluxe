@@ -350,17 +350,74 @@ const Dashboard = () => {
 
   const baseUrl = window.location.origin;
 
+  const menuItems: { key: typeof activeTab; icon: string; label: string }[] = [
+    { key: 'inscritos', icon: '👥', label: 'Inscritos' },
+    { key: 'wheel', icon: '🎡', label: 'Roleta' },
+    { key: 'auth', icon: '🔐', label: 'Login' },
+    { key: 'history', icon: '🏆', label: 'Histórico' },
+    { key: 'email', icon: '✉️', label: 'Email' },
+    { key: 'sms', icon: '📱', label: 'SMS' },
+    { key: 'whatsapp', icon: '💬', label: 'WhatsApp' },
+  ];
+
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Meu Painel</h1>
-            <p className="text-sm text-muted-foreground">{session.user.email}</p>
-          </div>
-          <button onClick={handleLogout} className="px-4 py-2 rounded-lg bg-muted text-foreground text-sm hover:bg-muted/80 transition">Sair</button>
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex fixed top-0 left-0 h-full w-64 bg-card border-r border-border flex-col z-30">
+        <div className="p-6 border-b border-border">
+          <h1 className="text-xl font-bold text-foreground">🎰 Painel</h1>
+          <p className="text-xs text-muted-foreground mt-1 truncate">{session.user.email}</p>
         </div>
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {menuItems.map(item => (
+            <button
+              key={item.key}
+              onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                activeTab === item.key
+                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                  : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+              }`}
+            >
+              <span className="text-lg">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-border">
+          <button onClick={handleLogout} className="w-full px-4 py-2.5 rounded-xl bg-muted text-foreground text-sm hover:bg-destructive/10 hover:text-destructive transition-all duration-200 font-medium">
+            🚪 Sair
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-md border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h1 className="text-lg font-bold text-foreground">🎰 Painel</h1>
+          <button onClick={handleLogout} className="px-3 py-1.5 rounded-lg bg-muted text-foreground text-xs hover:bg-muted/80 transition">Sair</button>
+        </div>
+        <div className="flex gap-1 px-3 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {menuItems.map(item => (
+            <button
+              key={item.key}
+              onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); }}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                activeTab === item.key
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted/60'
+              }`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 lg:ml-64 pt-24 lg:pt-0 p-4 md:p-8">
+        <div className="max-w-6xl mx-auto">
 
         {/* Slug / link */}
         <div className="mb-6 p-4 rounded-xl border border-border bg-card">
@@ -383,31 +440,6 @@ const Dashboard = () => {
               <button onClick={() => { navigator.clipboard.writeText(`${baseUrl}/roleta/${slug}`); toast.success('Link copiado!'); }} className="px-3 py-1.5 rounded-lg bg-muted text-foreground text-xs hover:bg-muted/80 transition">📋 Copiar</button>
             </div>
           )}
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
-          <button onClick={() => setActiveTab('inscritos')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'inscritos' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            👥 Inscritos
-          </button>
-          <button onClick={() => setActiveTab('wheel')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'wheel' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            🎡 Configurar Roleta
-          </button>
-          <button onClick={() => setActiveTab('auth')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'auth' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            🔐 Página de Login
-          </button>
-          <button onClick={() => { setActiveTab('history'); fetchHistory(); }} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            🏆 Histórico
-          </button>
-          <button onClick={() => setActiveTab('email')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'email' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            ✉️ Disparo de Email
-          </button>
-          <button onClick={() => setActiveTab('sms')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'sms' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            📱 Disparo de SMS
-          </button>
-          <button onClick={() => setActiveTab('whatsapp')} className={`px-6 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === 'whatsapp' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            💬 Disparo de WhatsApp
-          </button>
         </div>
 
         {/* Inscritos tab */}
@@ -1143,6 +1175,7 @@ const Dashboard = () => {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
