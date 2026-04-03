@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle } from 'lucide-react';
+import { Users, Target, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound } from 'lucide-react';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 
 interface WheelUser {
@@ -44,6 +44,14 @@ const Admin = () => {
   const [adminCreating, setAdminCreating] = useState(false);
   const [systemUsers, setSystemUsers] = useState<any[]>([]);
   const [systemUsersLoading, setSystemUsersLoading] = useState(false);
+  const [editingSystemUser, setEditingSystemUser] = useState<any>(null);
+  const [editSystemForm, setEditSystemForm] = useState({ email: '', password: '', name: '' });
+  const [editSystemSaving, setEditSystemSaving] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
+  const [editingAdminUser, setEditingAdminUser] = useState<any>(null);
+  const [editAdminForm, setEditAdminForm] = useState({ email: '', password: '', name: '' });
+  const [editAdminSaving, setEditAdminSaving] = useState(false);
 
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
     const saved = localStorage.getItem('wheel_config');
@@ -192,6 +200,58 @@ const Admin = () => {
     setSystemUsersLoading(true);
     try { const res = await supabase.functions.invoke('list-system-users'); if (res.data?.users) setSystemUsers(res.data.users); } catch {}
     setSystemUsersLoading(false);
+  };
+
+  const fetchAdminUsers = async () => {
+    setAdminUsersLoading(true);
+    try { const res = await supabase.functions.invoke('update-system-user', { body: { action: 'list_admins' } }); if (res.data?.users) setAdminUsers(res.data.users); } catch {}
+    setAdminUsersLoading(false);
+  };
+
+  const handleUpdateSystemUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSystemUser) return;
+    setEditSystemSaving(true);
+    try {
+      const body: any = { action: 'update', user_id: editingSystemUser.id };
+      if (editSystemForm.email && editSystemForm.email !== editingSystemUser.email) body.email = editSystemForm.email;
+      if (editSystemForm.name && editSystemForm.name !== editingSystemUser.name) body.name = editSystemForm.name;
+      if (editSystemForm.password) body.password = editSystemForm.password;
+      const res = await supabase.functions.invoke('update-system-user', { body });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Operador atualizado!'); setEditingSystemUser(null); fetchSystemUsers(); }
+    } catch (err: any) { toast.error(err.message); }
+    setEditSystemSaving(false);
+  };
+
+  const handleDeleteSystemUser = async (userId: string) => {
+    if (!confirm('Excluir este operador? Todos os dados serão removidos.')) return;
+    try {
+      const res = await supabase.functions.invoke('update-system-user', { body: { action: 'delete', user_id: userId } });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Operador excluído!'); fetchSystemUsers(); }
+    } catch (err: any) { toast.error(err.message); }
+  };
+
+  const handleUpdateAdminUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAdminUser) return;
+    setEditAdminSaving(true);
+    try {
+      const body: any = { action: 'update', user_id: editingAdminUser.id };
+      if (editAdminForm.email && editAdminForm.email !== editingAdminUser.email) body.email = editAdminForm.email;
+      if (editAdminForm.name && editAdminForm.name !== editingAdminUser.name) body.name = editAdminForm.name;
+      if (editAdminForm.password) body.password = editAdminForm.password;
+      const res = await supabase.functions.invoke('update-system-user', { body });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Admin atualizado!'); setEditingAdminUser(null); fetchAdminUsers(); }
+    } catch (err: any) { toast.error(err.message); }
+    setEditAdminSaving(false);
+  };
+
+  const handleDeleteAdminUser = async (userId: string) => {
+    if (!confirm('Excluir este admin? Todos os dados serão removidos.')) return;
+    try {
+      const res = await supabase.functions.invoke('update-system-user', { body: { action: 'delete', user_id: userId } });
+      if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Admin excluído!'); fetchAdminUsers(); }
+    } catch (err: any) { toast.error(err.message); }
   };
 
   const openEdit = (user: WheelUser) => {
@@ -561,14 +621,14 @@ const Admin = () => {
                     <UserPlus className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">Criar Novo Usuário</h3>
+                    <h3 className="text-sm font-bold text-foreground">Criar Novo Operador</h3>
                     <p className="text-[10px] text-muted-foreground">Operadores podem personalizar sua roleta</p>
                   </div>
                 </div>
 
                 {!showAdminForm ? (
                   <button onClick={() => setShowAdminForm(true)} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-                    <Plus size={16} /> Novo Usuário
+                    <Plus size={16} /> Novo Operador
                   </button>
                 ) : (
                   <form onSubmit={handleCreateAdmin} className="space-y-3 pt-2 border-t border-white/[0.06]">
@@ -592,10 +652,76 @@ const Admin = () => {
                 )}
               </GlassCard>
 
-              {/* System users */}
+              {/* ══ Edit System User Modal ══ */}
+              {editingSystemUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><KeyRound size={18} /> Editar Operador</h2>
+                      <button onClick={() => setEditingSystemUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Editando: {editingSystemUser.email}</p>
+                    <form onSubmit={handleUpdateSystemUser} className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Nome</label>
+                        <input type="text" value={editSystemForm.name} onChange={e => setEditSystemForm({ ...editSystemForm, name: e.target.value })} placeholder={editingSystemUser.name} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Email</label>
+                        <input type="email" value={editSystemForm.email} onChange={e => setEditSystemForm({ ...editSystemForm, email: e.target.value })} placeholder={editingSystemUser.email} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Nova Senha</label>
+                        <input type="password" value={editSystemForm.password} onChange={e => setEditSystemForm({ ...editSystemForm, password: e.target.value })} placeholder="Deixe vazio para manter" minLength={6} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => setEditingSystemUser(null)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
+                        <button type="submit" disabled={editSystemSaving} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition shadow-lg shadow-primary/20">
+                          {editSystemSaving ? 'Salvando...' : 'Salvar'}
+                        </button>
+                      </div>
+                    </form>
+                  </GlassCard>
+                </div>
+              )}
+
+              {/* ══ Edit Admin User Modal ══ */}
+              {editingAdminUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><KeyRound size={18} /> Editar Admin</h2>
+                      <button onClick={() => setEditingAdminUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Editando: {editingAdminUser.email}</p>
+                    <form onSubmit={handleUpdateAdminUser} className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Nome</label>
+                        <input type="text" value={editAdminForm.name} onChange={e => setEditAdminForm({ ...editAdminForm, name: e.target.value })} placeholder={editingAdminUser.name} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Email</label>
+                        <input type="email" value={editAdminForm.email} onChange={e => setEditAdminForm({ ...editAdminForm, email: e.target.value })} placeholder={editingAdminUser.email} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Nova Senha</label>
+                        <input type="password" value={editAdminForm.password} onChange={e => setEditAdminForm({ ...editAdminForm, password: e.target.value })} placeholder="Deixe vazio para manter" minLength={6} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => setEditingAdminUser(null)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
+                        <button type="submit" disabled={editAdminSaving} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition shadow-lg shadow-primary/20">
+                          {editAdminSaving ? 'Salvando...' : 'Salvar'}
+                        </button>
+                      </div>
+                    </form>
+                  </GlassCard>
+                </div>
+              )}
+
+              {/* ══ Operators List ══ */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-foreground">Usuários do Sistema</h3>
+                  <h3 className="text-sm font-bold text-foreground">Operadores</h3>
                   <button onClick={fetchSystemUsers} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
                     <RotateCcw size={14} /> Carregar
                   </button>
@@ -605,7 +731,7 @@ const Admin = () => {
                 ) : systemUsers.length === 0 ? (
                   <GlassCard className="text-center py-12">
                     <UserPlus size={36} className="text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">Clique em "Carregar" para ver os usuários</p>
+                    <p className="text-muted-foreground text-sm">Clique em "Carregar" para ver os operadores</p>
                   </GlassCard>
                 ) : (
                   <GlassCard className="overflow-hidden">
@@ -616,6 +742,7 @@ const Admin = () => {
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Criado em</th>
+                          <th className="text-center px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-32">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -625,13 +752,68 @@ const Admin = () => {
                             <td className="px-4 py-3 text-foreground font-medium">{u.name}</td>
                             <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                             <td className="px-4 py-3 text-muted-foreground text-xs">{u.created_at ? new Date(u.created_at).toLocaleString('pt-BR') : '—'}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button onClick={() => { setEditingSystemUser(u); setEditSystemForm({ email: u.email, name: u.name, password: '' }); }} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar"><Pencil size={13} /></button>
+                                <button onClick={() => handleDeleteSystemUser(u.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir"><Trash2 size={13} /></button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </GlassCard>
                 )}
-                <p className="text-xs text-muted-foreground">{systemUsers.length} usuário(s)</p>
+                <p className="text-xs text-muted-foreground">{systemUsers.length} operador(es)</p>
+              </div>
+
+              {/* ══ Admins List ══ */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Shield size={16} className="text-destructive" /> Administradores</h3>
+                  <button onClick={fetchAdminUsers} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                    <RotateCcw size={14} /> Carregar
+                  </button>
+                </div>
+                {adminUsersLoading ? (
+                  <div className="text-center py-8"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : adminUsers.length === 0 ? (
+                  <GlassCard className="text-center py-12">
+                    <Shield size={36} className="text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">Clique em "Carregar" para ver os admins</p>
+                  </GlassCard>
+                ) : (
+                  <GlassCard className="overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Criado em</th>
+                          <th className="text-center px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-32">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {adminUsers.map((u: any, i: number) => (
+                          <tr key={u.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors">
+                            <td className="px-4 py-3 text-muted-foreground text-xs">{i + 1}</td>
+                            <td className="px-4 py-3 text-foreground font-medium">{u.name}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                            <td className="px-4 py-3 text-muted-foreground text-xs">{u.created_at ? new Date(u.created_at).toLocaleString('pt-BR') : '—'}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button onClick={() => { setEditingAdminUser(u); setEditAdminForm({ email: u.email, name: u.name, password: '' }); }} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar"><Pencil size={13} /></button>
+                                <button onClick={() => handleDeleteAdminUser(u.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir"><Trash2 size={13} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </GlassCard>
+                )}
+                <p className="text-xs text-muted-foreground">{adminUsers.length} admin(s)</p>
               </div>
             </div>
           )}
