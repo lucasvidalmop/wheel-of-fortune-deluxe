@@ -975,6 +975,237 @@ const Dashboard = () => {
             );
           })()}
 
+          {/* ══════ ANALYTICS TAB ══════ */}
+          {activeTab === 'analytics' && (() => {
+            const total = pageViews.length;
+            const uniqueIPs = new Set(pageViews.map((v: any) => v.ip_address)).size;
+            const avgDuration = total > 0 ? Math.round(pageViews.reduce((s: number, v: any) => s + (v.duration_seconds || 0), 0) / total) : 0;
+            const formatDuration = (s: number) => s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
+
+            // Device breakdown
+            const devices: Record<string, number> = {};
+            pageViews.forEach((v: any) => { devices[v.device_type || 'Desconhecido'] = (devices[v.device_type || 'Desconhecido'] || 0) + 1; });
+            const deviceEntries = Object.entries(devices).sort((a, b) => b[1] - a[1]);
+
+            // Browser breakdown
+            const browsers: Record<string, number> = {};
+            pageViews.forEach((v: any) => { browsers[v.browser || 'Desconhecido'] = (browsers[v.browser || 'Desconhecido'] || 0) + 1; });
+            const browserEntries = Object.entries(browsers).sort((a, b) => b[1] - a[1]);
+
+            // OS breakdown
+            const osStat: Record<string, number> = {};
+            pageViews.forEach((v: any) => { osStat[v.os || 'Desconhecido'] = (osStat[v.os || 'Desconhecido'] || 0) + 1; });
+            const osEntries = Object.entries(osStat).sort((a, b) => b[1] - a[1]);
+
+            // Country/City breakdown
+            const locations: Record<string, number> = {};
+            pageViews.forEach((v: any) => {
+              const loc = [v.city, v.country].filter(Boolean).join(', ') || 'Desconhecido';
+              locations[loc] = (locations[loc] || 0) + 1;
+            });
+            const locationEntries = Object.entries(locations).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            // Visits per day (last 7)
+            const now = new Date();
+            const last7 = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(now); d.setDate(d.getDate() - (6 - i));
+              return d.toISOString().split('T')[0];
+            });
+            const visitsPerDay: Record<string, number> = {};
+            last7.forEach(d => { visitsPerDay[d] = 0; });
+            pageViews.forEach((v: any) => {
+              const day = new Date(v.created_at).toISOString().split('T')[0];
+              if (visitsPerDay[day] !== undefined) visitsPerDay[day]++;
+            });
+            const maxDayVisits = Math.max(...Object.values(visitsPerDay), 1);
+
+            const todayStr = now.toISOString().split('T')[0];
+
+            const deviceIcons: Record<string, React.ReactNode> = {
+              'Desktop': <Monitor size={14} />,
+              'Mobile': <Smartphone size={14} />,
+              'Tablet': <Smartphone size={12} />,
+            };
+            const deviceColors = ['text-primary', 'text-emerald-400', 'text-amber-400', 'text-sky-400'];
+            const barColors = ['bg-primary', 'bg-emerald-400', 'bg-sky-400', 'bg-amber-400', 'bg-purple-400'];
+
+            return (
+            <div className="space-y-4">
+              {/* Top stats */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total de Acessos', value: total, icon: <Globe size={18} />, color: 'text-primary', bg: 'bg-primary/10' },
+                  { label: 'IPs Únicos', value: uniqueIPs, icon: <MapPin size={18} />, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                  { label: 'Tempo Médio', value: formatDuration(avgDuration), icon: <Clock size={18} />, color: 'text-sky-400', bg: 'bg-sky-400/10' },
+                  { label: 'Hoje', value: pageViews.filter((v: any) => new Date(v.created_at).toISOString().split('T')[0] === todayStr).length, icon: <BarChart3 size={18} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+                ].map(card => (
+                  <GlassCard key={card.label} className="p-4 space-y-2">
+                    <div className={`p-2 rounded-xl ${card.bg} w-fit`}>
+                      <span className={card.color}>{card.icon}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{card.label}</p>
+                  </GlassCard>
+                ))}
+              </div>
+
+              {/* Charts row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {/* Visits per day */}
+                <GlassCard className="p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Acessos por Dia (7 dias)</h4>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {last7.map(day => {
+                      const count = visitsPerDay[day];
+                      const height = Math.max((count / maxDayVisits) * 100, 4);
+                      const isToday = day === todayStr;
+                      return (
+                        <div key={day} className="flex-1 flex flex-col items-center gap-1">
+                          <span className="text-[9px] text-muted-foreground font-medium">{count}</span>
+                          <div className={`w-full rounded-md transition-all ${isToday ? 'bg-primary shadow-lg shadow-primary/30' : 'bg-white/[0.1]'}`} style={{ height: `${height}%`, minHeight: '3px' }} />
+                          <span className="text-[8px] text-muted-foreground">{day.slice(8)}/{day.slice(5, 7)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </GlassCard>
+
+                {/* Device breakdown */}
+                <GlassCard className="p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dispositivos</h4>
+                  <div className="space-y-2">
+                    {deviceEntries.map(([device, count], i) => {
+                      const pct = Math.round((count / total) * 100) || 0;
+                      return (
+                        <div key={device} className="flex items-center gap-3">
+                          <span className={`${deviceColors[i % deviceColors.length]}`}>{deviceIcons[device] || <Monitor size={14} />}</span>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex justify-between">
+                              <span className="text-xs text-foreground font-medium">{device}</span>
+                              <span className="text-[10px] text-muted-foreground">{count} ({pct}%)</span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                              <div className={`h-full rounded-full ${barColors[i % barColors.length]}`} style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {deviceEntries.length === 0 && <p className="text-xs text-muted-foreground">Sem dados</p>}
+                  </div>
+                </GlassCard>
+              </div>
+
+              {/* Browser + OS + Locations */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <GlassCard className="p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Globe size={13} /> Navegadores</h4>
+                  <div className="space-y-2">
+                    {browserEntries.slice(0, 5).map(([b, count], i) => {
+                      const pct = Math.round((count / total) * 100) || 0;
+                      return (
+                        <div key={b} className="space-y-1">
+                          <div className="flex justify-between"><span className="text-xs text-foreground">{b}</span><span className="text-[10px] text-muted-foreground">{count} ({pct}%)</span></div>
+                          <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden"><div className={`h-full rounded-full ${barColors[i % barColors.length]}`} style={{ width: `${pct}%` }} /></div>
+                        </div>
+                      );
+                    })}
+                    {browserEntries.length === 0 && <p className="text-xs text-muted-foreground">Sem dados</p>}
+                  </div>
+                </GlassCard>
+
+                <GlassCard className="p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Monitor size={13} /> Sistemas</h4>
+                  <div className="space-y-2">
+                    {osEntries.slice(0, 5).map(([o, count], i) => {
+                      const pct = Math.round((count / total) * 100) || 0;
+                      return (
+                        <div key={o} className="space-y-1">
+                          <div className="flex justify-between"><span className="text-xs text-foreground">{o}</span><span className="text-[10px] text-muted-foreground">{count} ({pct}%)</span></div>
+                          <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden"><div className={`h-full rounded-full ${barColors[i % barColors.length]}`} style={{ width: `${pct}%` }} /></div>
+                        </div>
+                      );
+                    })}
+                    {osEntries.length === 0 && <p className="text-xs text-muted-foreground">Sem dados</p>}
+                  </div>
+                </GlassCard>
+
+                <GlassCard className="p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><MapPin size={13} /> Localizações</h4>
+                  <div className="space-y-2">
+                    {locationEntries.map(([loc, count], i) => {
+                      const pct = Math.round((count / total) * 100) || 0;
+                      return (
+                        <div key={loc} className="space-y-1">
+                          <div className="flex justify-between"><span className="text-xs text-foreground truncate max-w-[65%]">{loc}</span><span className="text-[10px] text-muted-foreground">{count} ({pct}%)</span></div>
+                          <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden"><div className={`h-full rounded-full ${barColors[i % barColors.length]}`} style={{ width: `${pct}%` }} /></div>
+                        </div>
+                      );
+                    })}
+                    {locationEntries.length === 0 && <p className="text-xs text-muted-foreground">Sem dados</p>}
+                  </div>
+                </GlassCard>
+              </div>
+
+              {/* Refresh + Access log table */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">{total} acesso(s) rastreados</p>
+                <button onClick={() => fetchAnalytics()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                  <RotateCcw size={14} /> Atualizar
+                </button>
+              </div>
+
+              {analyticsLoading ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  Carregando...
+                </div>
+              ) : pageViews.length === 0 ? (
+                <GlassCard className="text-center py-16">
+                  <BarChart3 size={40} className="text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground">Nenhum acesso registrado ainda</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">Os acessos à sua roleta aparecerão aqui</p>
+                </GlassCard>
+              ) : (
+                <GlassCard className="overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">IP</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Localização</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Dispositivo</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">OS</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Navegador</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Tempo</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Data</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pageViews.slice(0, 50).map((v: any) => (
+                          <tr key={v.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors">
+                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{v.ip_address || '—'}</td>
+                            <td className="px-4 py-3 text-xs text-foreground">{[v.city, v.country].filter(Boolean).join(', ') || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium border ${v.device_type === 'Mobile' ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20' : v.device_type === 'Tablet' ? 'bg-amber-400/10 text-amber-400 border-amber-400/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
+                                {deviceIcons[v.device_type] || <Monitor size={12} />} {v.device_type || '—'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{v.os || '—'}</td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{v.browser || '—'}</td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{formatDuration(v.duration_seconds || 0)}</td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(v.created_at).toLocaleString('pt-BR')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </GlassCard>
+              )}
+            </div>
+            );
+          })()}
+
           {/* ══════ EMAIL TAB ══════ */}
           {activeTab === 'email' && (
             <div className="max-w-2xl space-y-5">
