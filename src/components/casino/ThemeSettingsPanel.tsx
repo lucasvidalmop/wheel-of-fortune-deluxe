@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Settings, X, Upload, RotateCcw, Palette, Image, Monitor } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 export interface ThemeSettings {
   primaryColor: string;
@@ -28,7 +28,7 @@ export const defaultTheme: ThemeSettings = {
 };
 
 interface Props {
-  storageKey: string; // e.g. 'dashboard_theme' or 'admin_theme'
+  storageKey: string;
 }
 
 const ThemeSettingsPanel = ({ storageKey }: Props) => {
@@ -47,7 +47,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
 
   const applyTheme = (t: ThemeSettings) => {
     const root = document.documentElement;
-    // Convert hex to HSL for CSS vars
     const toHSL = (hex: string) => {
       const r = parseInt(hex.slice(1, 3), 16) / 255;
       const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -72,8 +71,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
     root.style.setProperty('--ring', toHSL(t.primaryColor));
     root.style.setProperty('--sidebar-primary', toHSL(t.primaryColor));
     root.style.setProperty('--foreground', toHSL(t.textColor));
-
-    // Custom properties for the panels
     root.style.setProperty('--theme-glow-color', t.glowColor);
     root.style.setProperty('--theme-glow-opacity', String(t.glowOpacity));
     root.style.setProperty('--theme-border-opacity', String(t.borderOpacity));
@@ -83,7 +80,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
   const handleReset = () => {
     localStorage.removeItem(storageKey);
     save(defaultTheme);
-    // Reset CSS vars to original
     const root = document.documentElement;
     root.style.removeProperty('--primary');
     root.style.removeProperty('--accent');
@@ -100,19 +96,19 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `theme-bg/${storageKey}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
-    if (error) {
-      toast.error('Erro no upload: ' + error.message);
+
+    try {
+      const { publicUrl } = await uploadAppAsset(file, `theme-bg/${storageKey}`);
+      save({ ...theme, bgImage: publicUrl });
+      toast.success('Background atualizado!');
+    } catch (error: any) {
+      toast.error('Erro no upload: ' + (error.message || 'Tente novamente'));
+    } finally {
       setUploading(false);
-      return;
+      e.target.value = '';
     }
-    const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
-    save({ ...theme, bgImage: urlData.publicUrl });
-    toast.success('Background atualizado!');
-    setUploading(false);
   };
 
   const removeBg = () => {
@@ -120,7 +116,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
     toast.success('Background removido!');
   };
 
-  // Apply on mount
   useState(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) applyTheme({ ...defaultTheme, ...JSON.parse(saved) });

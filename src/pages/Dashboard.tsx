@@ -6,6 +6,7 @@ import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin } from 'lucide-react';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 interface WheelUser {
   id: string;
@@ -1257,14 +1258,16 @@ const Dashboard = () => {
                           if (!file) return;
                           if (file.size > 5 * 1024 * 1024) { toast.error('Imagem deve ter no máximo 5MB'); return; }
                           setEmailBannerUploading(true);
-                          const ext = file.name.split('.').pop() || 'png';
-                          const path = `email-banners/${Date.now()}.${ext}`;
-                          const { error } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
-                          if (error) { toast.error('Erro ao enviar imagem'); setEmailBannerUploading(false); return; }
-                          const { data: { publicUrl } } = supabase.storage.from('app-assets').getPublicUrl(path);
-                          setEmailBannerUrl(publicUrl);
-                          setEmailBannerUploading(false);
-                          toast.success('Banner enviado!');
+                          try {
+                            const { publicUrl } = await uploadAppAsset(file, 'email-banners');
+                            setEmailBannerUrl(publicUrl);
+                            toast.success('Banner enviado!');
+                          } catch (error: any) {
+                            toast.error('Erro ao enviar imagem: ' + (error.message || 'Tente novamente'));
+                          } finally {
+                            setEmailBannerUploading(false);
+                            e.target.value = '';
+                          }
                         }} />
                       </label>
                     </div>
