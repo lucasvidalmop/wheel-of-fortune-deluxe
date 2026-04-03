@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { Users, Target, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle } from 'lucide-react';
+import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 
 interface WheelUser {
   id: string;
@@ -323,6 +324,8 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background flex relative overflow-hidden">
+      <ThemeSettingsPanel storageKey="admin_theme" />
+      <div id="theme-bg-layer" className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15" style={{ backgroundImage: 'var(--theme-bg-image, none)' }} />
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-destructive/[0.03] blur-[150px]" />
