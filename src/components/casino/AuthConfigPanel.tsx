@@ -1,48 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { WheelConfig } from './types';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface AuthConfigPanelProps {
-  config: WheelConfig;
-  onChange: (config: WheelConfig) => void;
-}
-
-const ColorInput: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between gap-2">
-    <span className="text-xs text-muted-foreground">{label}</span>
-    <div className="flex items-center gap-1.5">
-      <input type="color" value={value} onChange={e => onChange(e.target.value)} className="w-7 h-7 rounded cursor-pointer border border-border bg-transparent" />
-      <span className="text-xs font-mono text-muted-foreground w-16">{value}</span>
-    </div>
-  </div>
-);
-
-const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: string) => void; folder?: string }> = ({ label, value, onChange, folder = 'auth' }) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
+...
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || 'anonymous';
-      const fileName = `${userId}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('app-assets')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('app-assets')
-        .getPublicUrl(fileName);
-
+      const { publicUrl } = await uploadAppAsset(file, folder);
       onChange(publicUrl);
       toast.success('Imagem enviada com sucesso!');
     } catch (err: any) {
