@@ -996,6 +996,153 @@ const Dashboard = () => {
             </button>
           </div>
         )}
+
+        {/* WhatsApp tab */}
+        {activeTab === 'whatsapp' && (
+          <div className="max-w-2xl space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Disparo de WhatsApp</h2>
+              <button
+                onClick={() => setShowWhatsappConfig(!showWhatsappConfig)}
+                className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition"
+                title="Configurações da Evolution API"
+              >
+                ⚙️
+              </button>
+            </div>
+
+            {/* Evolution API config panel */}
+            {showWhatsappConfig && (
+              <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-3">
+                <h3 className="text-sm font-bold text-foreground">🔑 Configuração da Evolution API</h3>
+                <p className="text-xs text-muted-foreground">Configure sua instância da <a href="https://doc.evolution-api.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Evolution API</a> para enviar mensagens via WhatsApp.</p>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">URL da API</label>
+                  <input
+                    type="text"
+                    value={evolutionApiUrl}
+                    onChange={e => { setEvolutionApiUrl(e.target.value); localStorage.setItem('evolution_api_url', e.target.value); }}
+                    placeholder="https://sua-evolution-api.com"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">API Key (Global ou Instance)</label>
+                  <input
+                    type="password"
+                    value={evolutionApiKey}
+                    onChange={e => { setEvolutionApiKey(e.target.value); localStorage.setItem('evolution_api_key', e.target.value); }}
+                    placeholder="••••••••••••••••"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Nome da Instância</label>
+                  <input
+                    type="text"
+                    value={evolutionInstance}
+                    onChange={e => { setEvolutionInstance(e.target.value); localStorage.setItem('evolution_instance', e.target.value); }}
+                    placeholder="minha-instancia"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm font-mono"
+                  />
+                </div>
+                <div className={`text-xs font-medium ${evolutionApiUrl && evolutionApiKey && evolutionInstance ? 'text-green-500' : 'text-yellow-500'}`}>
+                  {evolutionApiUrl && evolutionApiKey && evolutionInstance ? '✅ Credenciais configuradas' : '⚠️ Preencha todas as credenciais para enviar WhatsApp'}
+                </div>
+              </div>
+            )}
+
+            {/* Recipients */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Destinatários</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setWhatsappTarget('all'); setSelectedWhatsappPhones([]); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${whatsappTarget === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  Todos com celular ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length})
+                </button>
+                <button
+                  onClick={() => setWhatsappTarget('selected')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${whatsappTarget === 'selected' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  Selecionar
+                </button>
+              </div>
+            </div>
+
+            {whatsappTarget === 'selected' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Selecione os inscritos ({selectedWhatsappPhones.length} selecionado{selectedWhatsappPhones.length !== 1 ? 's' : ''})</label>
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-background p-2 space-y-1">
+                  {users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).map(u => (
+                    <label key={u.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedWhatsappPhones.includes(u.phone)}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]);
+                          else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone));
+                        }}
+                        className="rounded border-border"
+                      />
+                      <span className="text-sm text-foreground">{u.name}</span>
+                      <span className="text-xs text-muted-foreground">({u.phone})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Message */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">Mensagem</label>
+              <textarea
+                value={whatsappMessage}
+                onChange={e => setWhatsappMessage(e.target.value)}
+                rows={4}
+                placeholder="Digite a mensagem do WhatsApp..."
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm resize-y"
+              />
+            </div>
+
+            {/* Send */}
+            <button
+              onClick={async () => {
+                if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) {
+                  toast.error('Configure as credenciais da Evolution API primeiro (clique na ⚙️)');
+                  setShowWhatsappConfig(true);
+                  return;
+                }
+                const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                const phones = whatsappTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedWhatsappPhones;
+                if (phones.length === 0) { toast.error('Nenhum destinatário com celular válido'); return; }
+                if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                setWhatsappSending(true);
+                let sent = 0, errors = 0;
+                for (const phone of phones) {
+                  const { error } = await supabase.functions.invoke('send-whatsapp', {
+                    body: {
+                      recipientPhone: phone,
+                      message: whatsappMessage,
+                      evolutionApiUrl,
+                      evolutionApiKey,
+                      evolutionInstance,
+                    },
+                  });
+                  if (error) errors++; else sent++;
+                }
+                setWhatsappSending(false);
+                if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
+                else toast.success(`${sent} mensagem(ns) WhatsApp enviada(s) com sucesso!`);
+              }}
+              disabled={whatsappSending}
+              className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm disabled:opacity-50 transition"
+            >
+              {whatsappSending ? 'Enviando...' : `💬 Enviar WhatsApp${whatsappTarget === 'all' ? ` para ${users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length} inscrito(s)` : selectedWhatsappPhones.length > 0 ? ` para ${selectedWhatsappPhones.length} inscrito(s)` : ''}`}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
