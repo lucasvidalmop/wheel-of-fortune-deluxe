@@ -4,10 +4,33 @@ import { getApiBaseUrl, setApiBaseUrl } from '@/services/api';
 import { toast } from 'sonner';
 import { Settings, X, ChevronDown, Upload, Trash2, Plus } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
-...
+
+interface CustomizationPanelProps {
+  config: WheelConfig;
+  onChange: (config: WheelConfig) => void;
+}
+
+const ColorInput: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
+  <div className="flex items-center justify-between gap-2 py-1.5">
+    <span className="text-sm text-muted-foreground">{label}</span>
+    <div className="flex items-center gap-2">
+      <div className="relative">
+        <input type="color" value={value} onChange={e => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+        <div className="w-7 h-7 rounded-lg border border-border shadow-sm cursor-pointer hover:scale-110 transition-transform" style={{ background: value }} />
+      </div>
+      <span className="text-[10px] font-mono text-muted-foreground">{value}</span>
+    </div>
+  </div>
+);
+
+const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: string) => void; folder?: string; compact?: boolean }> = ({ label, value, onChange, folder = 'wheel', compact }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setUploading(true);
     try {
       const { publicUrl } = await uploadAppAsset(file, folder);
