@@ -68,6 +68,7 @@ const Dashboard = () => {
   const [evolutionInstance, setEvolutionInstance] = useState(() => localStorage.getItem('evolution_instance') || '');
 
   const [slug, setSlug] = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [editingSlug, setEditingSlug] = useState(false);
   const [newSlug, setNewSlug] = useState('');
 
