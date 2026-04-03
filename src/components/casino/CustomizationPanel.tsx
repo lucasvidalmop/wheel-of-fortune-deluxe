@@ -104,31 +104,21 @@ const ToggleSwitch: React.FC<{ label: string; checked: boolean; onChange: (v: bo
   </div>
 );
 
-const Section: React.FC<{ title: string; emoji?: string; children: React.ReactNode; defaultOpen?: boolean; description?: string }> = ({ title, emoji, children, defaultOpen = false, description }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${open ? 'border-primary/30 shadow-lg shadow-primary/5 bg-card' : 'border-border bg-card/50 hover:bg-card hover:border-border'}`}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-5 py-4 text-left transition-all"
-      >
-        {emoji && <span className="text-xl">{emoji}</span>}
-        <div className="flex-1 min-w-0">
-          <span className="text-sm font-semibold text-foreground">{title}</span>
-          {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
-        </div>
-        <span className={`text-muted-foreground transition-transform duration-300 text-xs ${open ? 'rotate-180' : ''}`}>
-          ▼
-        </span>
-      </button>
-      <div className={`transition-all duration-300 ${open ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <div className="px-5 pb-5 space-y-3 border-t border-border/50 pt-4">
-          {children}
-        </div>
+const Section: React.FC<{ title: string; emoji?: string; children: React.ReactNode; defaultOpen?: boolean; description?: string }> = ({ title, emoji, children, defaultOpen = false, description }) => (
+  <details open={defaultOpen} className="group rounded-2xl border border-border bg-card/50 hover:bg-card transition-all duration-300 overflow-hidden open:border-primary/30 open:shadow-lg open:shadow-primary/5 open:bg-card">
+    <summary className="flex items-center gap-3 px-5 py-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+      {emoji && <span className="text-xl">{emoji}</span>}
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-semibold text-foreground">{title}</span>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
+      <span className="text-muted-foreground transition-transform duration-300 text-xs group-open:rotate-180">▼</span>
+    </summary>
+    <div className="px-5 pb-5 space-y-3 border-t border-border/50 pt-4">
+      {children}
     </div>
-  );
-};
+  </details>
+);
 
 const TabButton: React.FC<{ active: boolean; label: string; onClick: () => void }> = ({ active, label, onClick }) => (
   <button
