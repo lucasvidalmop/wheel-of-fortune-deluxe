@@ -153,6 +153,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
   };
 
   const [apiUrl, setApiUrlState] = useState(getApiBaseUrl());
+  const [openSegments, setOpenSegments] = useState<Record<string, boolean>>({});
 
   return (
     <div className="w-full max-w-2xl space-y-4">
