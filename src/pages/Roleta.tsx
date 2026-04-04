@@ -402,12 +402,20 @@ const Roleta = () => {
           {loading ? (
             <p className="text-sm text-muted-foreground animate-pulse">Verificando giros...</p>
           ) : spinsRemaining !== null && spinsRemaining >= 0 ? (
-            <p className="text-sm font-bold" style={{ color: config.glowColor }}>
+            <p className="font-bold" style={{
+              color: config.spinsTextColor ?? config.glowColor,
+              fontSize: config.spinsTextSize ?? 14,
+              fontFamily: config.spinsTextFont || undefined,
+            }}>
               Giros restantes: {spinsRemaining}
             </p>
           ) : null}
           {!canSpin && message && (
-            <p className="text-sm text-destructive mt-1">{message}</p>
+            <p className="mt-1" style={{
+              color: config.noSpinsTextColor ?? '#ef4444',
+              fontSize: config.noSpinsTextSize ?? 14,
+              fontFamily: config.noSpinsTextFont || undefined,
+            }}>{message}</p>
           )}
         </div>
       )}
