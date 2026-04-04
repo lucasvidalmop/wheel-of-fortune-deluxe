@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       }
 
       // Don't allow deleting yourself
-      if (user_id === caller.id) {
+      if (user_id === callerId) {
         return new Response(JSON.stringify({ error: "Você não pode excluir sua própria conta" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
