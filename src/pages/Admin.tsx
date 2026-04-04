@@ -428,7 +428,6 @@ const Admin = () => {
   const tabTitles: Record<string, string> = {
     site: 'Configurações do Site',
     users: 'Todos os Inscritos',
-    wheel: 'Configurar Roleta',
     admins: 'Gerenciar Usuários',
     history: 'Histórico Global',
   };
