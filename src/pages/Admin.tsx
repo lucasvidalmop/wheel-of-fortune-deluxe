@@ -421,7 +421,6 @@ const Admin = () => {
   const menuItems: { key: typeof activeTab; icon: React.ReactNode; label: string }[] = [
     { key: 'site', icon: <Globe size={20} />, label: 'Site' },
     { key: 'users', icon: <Users size={20} />, label: 'Inscritos' },
-    { key: 'wheel', icon: <Target size={20} />, label: 'Roleta' },
     { key: 'admins', icon: <UserPlus size={20} />, label: 'Usuários' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico' },
   ];
