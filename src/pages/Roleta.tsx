@@ -29,6 +29,54 @@ const Roleta = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [fixedPrizeEnabled, setFixedPrizeEnabled] = useState(false);
   const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  const maskId = (id: string) => {
+    if (id.length <= 3) return '***';
+    return id.substring(0, 2) + '*'.repeat(Math.max(3, id.length - 4)) + id.substring(id.length - 2);
+  };
+
+  const handleShare = useCallback(async (prizeName: string) => {
+    if (!pageRef.current) return;
+    try {
+      // Temporarily mask the ID in the badge
+      const idEl = pageRef.current.querySelector('[data-share-id]') as HTMLElement | null;
+      const originalId = idEl?.textContent || '';
+      if (idEl) idEl.textContent = maskId(accountId);
+
+      await new Promise(r => requestAnimationFrame(r));
+
+      const canvas = await html2canvas(pageRef.current, {
+        backgroundColor: '#0a0a0f',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      });
+
+      if (idEl) idEl.textContent = originalId;
+
+      const blob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob(b => resolve(b!), 'image/png')
+      );
+
+      const file = new File([blob], 'meu-premio.png', { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Ganhei: ${prizeName}!`, text: `🎉 Eu ganhei ${prizeName}!` });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'meu-premio.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error('Share failed', e);
+      toast.error('Erro ao compartilhar');
+    }
+  }, [accountId]);
 
   // Load config from slug
   useEffect(() => {
