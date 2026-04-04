@@ -59,6 +59,8 @@ const Admin = () => {
   const [editAdminForm, setEditAdminForm] = useState({ email: '', password: '', name: '' });
   const [editAdminSaving, setEditAdminSaving] = useState(false);
 
+  useSiteSettings();
+
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
     const saved = localStorage.getItem('wheel_config');
     return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
