@@ -56,9 +56,9 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
           <span className="text-xs text-muted-foreground">{config.postLoginDialogEnabled ? 'Ativa' : 'Inativa'}</span>
           <button
             onClick={() => set('postLoginDialogEnabled', !config.postLoginDialogEnabled)}
-            className={`w-10 h-5 rounded-full transition-colors relative ${config.postLoginDialogEnabled ? 'bg-primary' : 'bg-white/10'}`}
+            className={`relative w-11 h-6 rounded-full transition-colors ${config.postLoginDialogEnabled ? 'bg-primary' : 'bg-white/10'}`}
           >
-            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${config.postLoginDialogEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${config.postLoginDialogEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
           </button>
         </label>
       </div>
