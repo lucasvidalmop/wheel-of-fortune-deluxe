@@ -778,7 +778,7 @@ const Dashboard = () => {
 
                       <div className="flex gap-3 pt-2">
                         <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
-                        <button type="submit" className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition shadow-lg shadow-primary/20">{editingUser ? 'Salvar' : 'Criar'}</button>
+                        <button type="submit" disabled={savingUser} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">{savingUser ? 'Salvando...' : editingUser ? 'Salvar' : 'Criar'}</button>
                       </div>
                     </form>
                   </GlassCard>
