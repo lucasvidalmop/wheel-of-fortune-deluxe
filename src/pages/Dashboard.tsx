@@ -1573,6 +1573,77 @@ const Dashboard = () => {
 
         </div>
       </div>
+
+      {/* Grant Spin Modal */}
+      {grantSpinUser && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setGrantSpinUser(null)}>
+          <div className="w-full max-w-md mx-4 rounded-2xl border border-white/[0.08] bg-[#1a1a2e] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-foreground">Liberar Giro — {grantSpinUser.name}</h3>
+              <button onClick={() => setGrantSpinUser(null)} className="p-1 rounded-lg hover:bg-white/10 text-muted-foreground"><X size={18} /></button>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-4">Escolha como o prêmio será definido para este giro:</p>
+
+            {/* Mode selection */}
+            <div className="flex gap-2 mb-5">
+              <button
+                onClick={() => setGrantSpinMode('random')}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all border ${grantSpinMode === 'random' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/[0.04] text-muted-foreground border-white/[0.08] hover:bg-white/[0.08]'}`}
+              >
+                🎲 Aleatório (%)
+              </button>
+              <button
+                onClick={() => setGrantSpinMode('fixed')}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all border ${grantSpinMode === 'fixed' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/[0.04] text-muted-foreground border-white/[0.08] hover:bg-white/[0.08]'}`}
+              >
+                🎯 Pré-definir
+              </button>
+            </div>
+
+            {grantSpinMode === 'random' ? (
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 mb-5">
+                <p className="text-xs text-muted-foreground mb-3">O prêmio será sorteado automaticamente baseado nas probabilidades dos segmentos:</p>
+                <div className="space-y-1.5">
+                  {wheelConfig.segments.map((seg, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: seg.color }} />
+                      <span className="text-foreground flex-1">{seg.title}</span>
+                      <span className="text-muted-foreground font-mono">{seg.percentage}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-5">
+                <label className="text-xs text-muted-foreground mb-2 block">Selecione o prêmio garantido:</label>
+                <div className="space-y-1.5">
+                  {wheelConfig.segments.map((seg, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setGrantSpinSegment(i)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border ${grantSpinSegment === i ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-white/[0.02] border-white/[0.06] text-foreground hover:bg-white/[0.06]'}`}
+                    >
+                      <div className="w-4 h-4 rounded-sm flex-shrink-0" style={{ background: seg.color }} />
+                      <span className="flex-1 text-left font-medium">{seg.title}</span>
+                      <span className="text-xs text-muted-foreground">{seg.percentage}%</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setGrantSpinUser(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] transition-all border border-white/[0.08]">
+                Cancelar
+              </button>
+              <button onClick={confirmGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
+                Liberar Giro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
