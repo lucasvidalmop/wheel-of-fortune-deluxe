@@ -1291,11 +1291,16 @@ const Dashboard = () => {
               </div>
 
               {/* Refresh + Access log table */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">{total} acesso(s) rastreados</p>
-                <button onClick={() => fetchAnalytics()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
-                  <RotateCcw size={14} /> Atualizar
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={handleClearAnalytics} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-destructive/20 text-destructive text-sm hover:bg-destructive/10 transition">
+                    <Trash2 size={14} /> Limpar Analytics
+                  </button>
+                  <button onClick={() => fetchAnalytics()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                    <RotateCcw size={14} /> Atualizar
+                  </button>
+                </div>
               </div>
 
               {analyticsLoading ? (
