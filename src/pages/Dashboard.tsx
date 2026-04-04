@@ -86,6 +86,7 @@ const Dashboard = () => {
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(defaultConfig);
   const [configId, setConfigId] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
