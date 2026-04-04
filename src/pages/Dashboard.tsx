@@ -101,6 +101,7 @@ const Dashboard = () => {
   const [showBatchGrantModal, setShowBatchGrantModal] = useState(false);
   const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
   const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
+  const [savingUser, setSavingUser] = useState(false);
 
   useEffect(() => {
     let dataLoaded = false;
