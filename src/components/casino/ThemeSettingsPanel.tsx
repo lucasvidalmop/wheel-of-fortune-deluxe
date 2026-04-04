@@ -13,6 +13,10 @@ export interface ThemeSettings {
   glowColor: string;
   glowOpacity: number;
   borderOpacity: number;
+  selectBgColor: string;
+  selectTextColor: string;
+  inputBgColor: string;
+  inputTextColor: string;
 }
 
 export const defaultTheme: ThemeSettings = {
