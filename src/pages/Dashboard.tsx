@@ -86,6 +86,11 @@ const Dashboard = () => {
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(defaultConfig);
   const [configId, setConfigId] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+
+  // Grant spin modal
+  const [grantSpinUser, setGrantSpinUser] = useState<WheelUser | null>(null);
+  const [grantSpinMode, setGrantSpinMode] = useState<'random' | 'fixed'>('random');
+  const [grantSpinSegment, setGrantSpinSegment] = useState<number>(0);
   const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
   useEffect(() => {
