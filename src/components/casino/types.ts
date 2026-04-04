@@ -107,6 +107,12 @@ export interface WheelConfig {
   shareBtnBorderColor?: string;
   shareBtnBorderRadius?: number;
   shareBtnFontSize?: number;
+  shareBtnPaddingX?: number;
+  shareBtnPaddingY?: number;
+  // Share button mobile overrides
+  shareBtnMobileFontSize?: number;
+  shareBtnMobilePaddingX?: number;
+  shareBtnMobilePaddingY?: number;
 }
 
 export const defaultSegments: WheelSegment[] = [

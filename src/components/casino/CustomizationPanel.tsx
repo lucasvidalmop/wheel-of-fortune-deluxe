@@ -405,7 +405,69 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <ColorInput label="Cor do texto" value={config.shareBtnTextColor ?? config.resultBoxColor ?? '#1a0a2e'} onChange={v => updateGlobal('shareBtnTextColor', v)} />
         <ColorInput label="Cor da borda" value={config.shareBtnBorderColor ?? 'transparent'} onChange={v => updateGlobal('shareBtnBorderColor', v)} />
         <RangeInput label="Arredondamento" value={config.shareBtnBorderRadius ?? 999} min={0} max={999} onChange={v => updateGlobal('shareBtnBorderRadius', v)} suffix="px" />
-        <RangeInput label="Tamanho da fonte" value={config.shareBtnFontSize ?? 14} min={8} max={24} onChange={v => updateGlobal('shareBtnFontSize', v)} suffix="px" />
+
+        <div className="border-t border-border/30 my-2" />
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">🖥️ Desktop</h4>
+        <RangeInput label="Tamanho da fonte" value={config.shareBtnFontSize ?? 14} min={8} max={32} onChange={v => updateGlobal('shareBtnFontSize', v)} suffix="px" />
+        <RangeInput label="Padding horizontal" value={config.shareBtnPaddingX ?? 24} min={4} max={60} onChange={v => updateGlobal('shareBtnPaddingX', v)} suffix="px" />
+        <RangeInput label="Padding vertical" value={config.shareBtnPaddingY ?? 10} min={2} max={30} onChange={v => updateGlobal('shareBtnPaddingY', v)} suffix="px" />
+
+        {/* Desktop preview */}
+        <div className="p-3 rounded-lg bg-muted/20 border border-border/30 flex items-center justify-center">
+          <div className="text-[10px] text-muted-foreground absolute top-1 left-2">Desktop</div>
+          <button
+            className="font-bold tracking-wider cursor-default"
+            style={{
+              background: config.shareBtnBgColor || config.glowColor || '#FFD700',
+              color: config.shareBtnTextColor || config.resultBoxColor || '#1a0a2e',
+              border: config.shareBtnBorderColor ? `2px solid ${config.shareBtnBorderColor}` : 'none',
+              borderRadius: config.shareBtnBorderRadius ?? 999,
+              fontSize: config.shareBtnFontSize ?? 14,
+              paddingLeft: config.shareBtnPaddingX ?? 24,
+              paddingRight: config.shareBtnPaddingX ?? 24,
+              paddingTop: config.shareBtnPaddingY ?? 10,
+              paddingBottom: config.shareBtnPaddingY ?? 10,
+              boxShadow: `0 4px 20px ${config.shareBtnBgColor || config.glowColor || '#FFD700'}55`,
+            }}
+          >
+            📤 {config.shareBtnText || 'COMPARTILHAR PRÊMIO'}
+          </button>
+        </div>
+
+        <div className="border-t border-border/30 my-2" />
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">📱 Mobile</h4>
+        <RangeInput label="Tamanho da fonte" value={config.shareBtnMobileFontSize ?? config.shareBtnFontSize ?? 14} min={6} max={24} onChange={v => updateGlobal('shareBtnMobileFontSize', v)} suffix="px" />
+        <RangeInput label="Padding horizontal" value={config.shareBtnMobilePaddingX ?? config.shareBtnPaddingX ?? 24} min={4} max={40} onChange={v => updateGlobal('shareBtnMobilePaddingX', v)} suffix="px" />
+        <RangeInput label="Padding vertical" value={config.shareBtnMobilePaddingY ?? config.shareBtnPaddingY ?? 10} min={2} max={20} onChange={v => updateGlobal('shareBtnMobilePaddingY', v)} suffix="px" />
+
+        {/* Mobile preview */}
+        <div className="p-3 rounded-lg bg-muted/20 border border-border/30 flex items-center justify-center relative">
+          <div className="border border-border/40 rounded-lg px-3 py-4 flex items-center justify-center" style={{ width: 180, background: 'rgba(0,0,0,0.3)' }}>
+            <button
+              className="font-bold tracking-wider cursor-default"
+              style={{
+                background: config.shareBtnBgColor || config.glowColor || '#FFD700',
+                color: config.shareBtnTextColor || config.resultBoxColor || '#1a0a2e',
+                border: config.shareBtnBorderColor ? `2px solid ${config.shareBtnBorderColor}` : 'none',
+                borderRadius: config.shareBtnBorderRadius ?? 999,
+                fontSize: config.shareBtnMobileFontSize ?? config.shareBtnFontSize ?? 14,
+                paddingLeft: config.shareBtnMobilePaddingX ?? config.shareBtnPaddingX ?? 24,
+                paddingRight: config.shareBtnMobilePaddingX ?? config.shareBtnPaddingX ?? 24,
+                paddingTop: config.shareBtnMobilePaddingY ?? config.shareBtnPaddingY ?? 10,
+                paddingBottom: config.shareBtnMobilePaddingY ?? config.shareBtnPaddingY ?? 10,
+                boxShadow: `0 4px 20px ${config.shareBtnBgColor || config.glowColor || '#FFD700'}55`,
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              📤 {config.shareBtnText || 'COMPARTILHAR PRÊMIO'}
+            </button>
+          </div>
+          <span className="absolute top-1 left-2 text-[10px] text-muted-foreground">📱 Mobile</span>
+        </div>
+
         <p className="text-[10px] text-muted-foreground bg-muted/30 px-2.5 py-1.5 rounded-lg mt-2">O compartilhamento captura a tela inteira com o ID mascarado para segurança.</p>
       </Card>
 
