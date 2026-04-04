@@ -262,7 +262,7 @@ const Dashboard = () => {
     setSavingConfig(false);
   };
 
-  const [savingUser, setSavingUser] = useState(false);
+  
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (savingUser) return;
