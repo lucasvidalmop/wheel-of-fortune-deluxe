@@ -121,7 +121,7 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
     if (saved) applyTheme({ ...defaultTheme, ...JSON.parse(saved) });
   });
 
-  // ColorInput moved outside component — see bottom of file
+  
 
   return (
     <>
