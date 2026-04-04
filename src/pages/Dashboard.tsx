@@ -96,6 +96,12 @@ const Dashboard = () => {
   const [grantSpinSegment, setGrantSpinSegment] = useState<number>(0);
   const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
+  // Multi-select for batch grant
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [showBatchGrantModal, setShowBatchGrantModal] = useState(false);
+  const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
+  const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
+
   useEffect(() => {
     let dataLoaded = false;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
