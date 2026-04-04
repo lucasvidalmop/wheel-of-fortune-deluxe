@@ -29,6 +29,10 @@ export const defaultTheme: ThemeSettings = {
   glowColor: '#e6a817',
   glowOpacity: 3,
   borderOpacity: 8,
+  selectBgColor: '#1a1a2e',
+  selectTextColor: '#ffffff',
+  inputBgColor: '#0f0f1e',
+  inputTextColor: '#ffffff',
 };
 
 interface Props {
