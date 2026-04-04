@@ -83,17 +83,20 @@ const Admin = () => {
   }, [wheelConfig]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) checkAdminRole(session.user.id);
-      else { setIsAdmin(false); setLoading(false); }
-    });
+    let isMounted = true;
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
       setSession(session);
       if (session?.user) checkAdminRole(session.user.id);
       else setLoading(false);
     });
-    return () => subscription.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      setSession(session);
+      if (session?.user) checkAdminRole(session.user.id);
+      else { setIsAdmin(false); setLoading(false); }
+    });
+    return () => { isMounted = false; subscription.unsubscribe(); };
   }, []);
 
   const checkAdminRole = async (userId: string) => {
