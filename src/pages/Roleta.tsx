@@ -55,7 +55,7 @@ const Roleta = () => {
       canvas.height = H;
       const ctx = canvas.getContext('2d')!;
 
-      // 1. Background: solid color
+      // 1. Background: solid color from operator config
       ctx.fillStyle = '#0a0a0f';
       ctx.fillRect(0, 0, W, H);
 
@@ -73,7 +73,7 @@ const Roleta = () => {
         } catch {}
       }
 
-      // 3. Gradient overlay matching page
+      // 3. Gradient overlay
       const grad = ctx.createLinearGradient(0, 0, 0, H);
       grad.addColorStop(0, 'rgba(0,0,0,0)');
       grad.addColorStop(0.5, 'rgba(0,0,0,0.4)');
@@ -82,38 +82,143 @@ const Roleta = () => {
       ctx.fillRect(0, 0, W, H);
 
       // 4. Glow effect using operator's glowColor
+      const glowColor = config.glowColor || '#FFD700';
       const glow = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, 450);
-      glow.addColorStop(0, `${config.glowColor || '#FFD700'}55`);
+      glow.addColorStop(0, `${glowColor}55`);
       glow.addColorStop(1, 'transparent');
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, W, H);
 
-      // 5. Draw the wheel SVG
-      const wheelSvg = pageRef.current.querySelector('svg');
-      if (wheelSvg) {
-        try {
-          const svgClone = wheelSvg.cloneNode(true) as SVGSVGElement;
-          svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-          svgClone.setAttribute('width', '800');
-          svgClone.setAttribute('height', '800');
-          svgClone.setAttribute('viewBox', '0 0 600 600');
-          const svgString = new XMLSerializer().serializeToString(svgClone);
-          const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
-          const wheelImg = await loadImage(svgUrl);
+      // 5. Draw wheel manually using operator's config colors
+      const cx = W / 2;
+      const cy = H / 2;
+      const wheelR = 360;
+      const innerR = 70;
+      const segments = config.segments;
+      const segAngle = (2 * Math.PI) / segments.length;
+
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, wheelR + 30, 0, Math.PI * 2);
+      ctx.fillStyle = config.outerRingColor || '#8B8B8B';
+      ctx.fill();
+
+      // Inner wheel background
+      ctx.beginPath();
+      ctx.arc(cx, cy, wheelR, 0, Math.PI * 2);
+      ctx.fillStyle = '#111';
+      ctx.fill();
+
+      // Draw segments with operator colors
+      segments.forEach((seg, i) => {
+        const startAngle = i * segAngle - Math.PI / 2;
+        const endAngle = startAngle + segAngle;
+
+        // Segment fill with operator color
+        ctx.beginPath();
+        ctx.moveTo(cx + innerR * Math.cos(startAngle), cy + innerR * Math.sin(startAngle));
+        ctx.arc(cx, cy, wheelR - 18, startAngle, endAngle);
+        ctx.lineTo(cx + innerR * Math.cos(endAngle), cy + innerR * Math.sin(endAngle));
+        ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+
+        // Gradient overlay
+        ctx.beginPath();
+        ctx.moveTo(cx + innerR * Math.cos(startAngle), cy + innerR * Math.sin(startAngle));
+        ctx.arc(cx, cy, wheelR - 18, startAngle, endAngle);
+        ctx.lineTo(cx + innerR * Math.cos(endAngle), cy + innerR * Math.sin(endAngle));
+        ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = seg.gradientOverlay;
+        ctx.fill();
+
+        // Divider line
+        ctx.beginPath();
+        ctx.moveTo(cx + innerR * Math.cos(startAngle), cy + innerR * Math.sin(startAngle));
+        ctx.lineTo(cx + (wheelR - 18) * Math.cos(startAngle), cy + (wheelR - 18) * Math.sin(startAngle));
+        ctx.strokeStyle = config.dividerColor || '#C0C0C0';
+        ctx.lineWidth = config.dividerWidth ?? 3;
+        ctx.globalAlpha = 0.7;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // Segment text with operator colors
+        if (!config.hideSegmentText) {
+          const midAngle = startAngle + segAngle / 2;
+          const textR = wheelR * 0.62;
+          const tx = cx + textR * Math.cos(midAngle);
+          const ty = cy + textR * Math.sin(midAngle);
+          const s = config.fontSizeScale ?? 1;
+          const vSize = (config.valueFontSize ?? 22) * s * 1.5;
+          const tSize = (config.titleFontSize ?? 10) * s * 1.5;
+
           ctx.save();
-          ctx.shadowColor = `${config.glowColor || '#FFD700'}88`;
-          ctx.shadowBlur = 80;
-          ctx.drawImage(wheelImg, (W - 800) / 2, (H - 800) / 2, 800, 800);
+          ctx.translate(tx, ty);
+          ctx.rotate(midAngle + Math.PI / 2);
+          ctx.textAlign = 'center';
+
+          // Value (reward number)
+          ctx.fillStyle = seg.textColor;
+          ctx.font = `900 ${vSize}px 'Orbitron', Arial, sans-serif`;
+          ctx.shadowColor = 'rgba(0,0,0,0.9)';
+          ctx.shadowBlur = 4;
+          ctx.fillText(seg.reward, 0, -tSize * 0.5);
+
+          // Title
+          ctx.font = `700 ${tSize}px 'Orbitron', Arial, sans-serif`;
+          ctx.fillText(seg.title, 0, vSize * 0.5);
+
+          ctx.restore();
+        }
+      });
+
+      // LEDs on outer ring
+      const numLeds = 36;
+      const ledSize = config.ledSize ?? 5;
+      for (let i = 0; i < numLeds; i++) {
+        const angle = (i * 2 * Math.PI / numLeds) - Math.PI / 2;
+        const lx = cx + (wheelR + 15) * Math.cos(angle);
+        const ly = cy + (wheelR + 15) * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(lx, ly, ledSize * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = i % 3 !== 0 ? (config.ledColor || '#FFE033') : '#333';
+        ctx.fill();
+      }
+
+      // Center cap
+      ctx.beginPath();
+      ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+      const capGrad = ctx.createRadialGradient(cx - 10, cy - 10, 0, cx, cy, innerR);
+      capGrad.addColorStop(0, 'rgba(255,255,255,0.4)');
+      capGrad.addColorStop(0.4, config.centerCapColor || '#2a2a2a');
+      capGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+      ctx.fillStyle = capGrad;
+      ctx.fill();
+
+      // Center image if exists
+      if (config.centerImageUrl) {
+        try {
+          const centerImg = await loadImage(config.centerImageUrl);
+          const cSize = innerR * 1.4;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, innerR - 3, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(centerImg, cx - cSize / 2, cy - cSize / 2, cSize, cSize);
           ctx.restore();
         } catch {}
       }
 
-      // 6. Prize text at bottom
+      // 6. Prize text at bottom with operator's glow color
       ctx.textAlign = 'center';
-      ctx.fillStyle = config.glowColor || '#FFD700';
+      ctx.fillStyle = glowColor;
       ctx.font = '900 42px Arial, sans-serif';
+      ctx.shadowColor = `${glowColor}88`;
+      ctx.shadowBlur = 20;
       ctx.fillText(`🎉 ${prizeName}`, W / 2, H - 60);
+      ctx.shadowBlur = 0;
 
       // Export
       const blob = await new Promise<Blob>((resolve, reject) => {
