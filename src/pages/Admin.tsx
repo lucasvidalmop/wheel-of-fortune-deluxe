@@ -83,17 +83,20 @@ const Admin = () => {
   }, [wheelConfig]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) checkAdminRole(session.user.id);
-      else { setIsAdmin(false); setLoading(false); }
-    });
+    let isMounted = true;
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
       setSession(session);
       if (session?.user) checkAdminRole(session.user.id);
       else setLoading(false);
     });
-    return () => subscription.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      setSession(session);
+      if (session?.user) checkAdminRole(session.user.id);
+      else { setIsAdmin(false); setLoading(false); }
+    });
+    return () => { isMounted = false; subscription.unsubscribe(); };
   }, []);
 
   const checkAdminRole = async (userId: string) => {
@@ -466,7 +469,7 @@ const Admin = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'admins') { fetchSystemUsers(); fetchAdminUsers(); } }}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
                   activeTab === item.key
@@ -511,7 +514,7 @@ const Admin = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'admins') { fetchSystemUsers(); fetchAdminUsers(); } }}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                   activeTab === item.key
                     ? 'bg-primary/15 text-primary border border-primary/20'
