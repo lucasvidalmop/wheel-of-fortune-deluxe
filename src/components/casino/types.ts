@@ -84,6 +84,19 @@ export interface WheelConfig {
   seoTitle?: string;
   seoDescription?: string;
   faviconUrl?: string;
+  // Spins info text customization
+  spinsTextColor?: string;
+  spinsTextSize?: number;
+  spinsTextFont?: string;
+  noSpinsTextColor?: string;
+  noSpinsTextSize?: number;
+  noSpinsTextFont?: string;
+  // User badge customization
+  badgeBgColor?: string;
+  badgeBorderColor?: string;
+  badgeNameColor?: string;
+  badgeLabelColor?: string;
+  badgeIdColor?: string;
 }
 
 export const defaultSegments: WheelSegment[] = [

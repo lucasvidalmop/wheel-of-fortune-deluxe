@@ -349,6 +349,50 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
       </Card>
 
+      {/* ── Spins & Badge ── */}
+      <Card title="Textos de Giros & Identificação" icon={<span className="text-base">🏷️</span>}>
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Giros Restantes</h4>
+        <ColorInput label="Cor do texto" value={config.spinsTextColor ?? config.glowColor} onChange={v => updateGlobal('spinsTextColor', v)} />
+        <RangeInput label="Tamanho" value={config.spinsTextSize ?? 14} min={10} max={32} onChange={v => updateGlobal('spinsTextSize', v)} />
+        <div>
+          <label className="text-[10px] text-muted-foreground font-medium">Fonte</label>
+          <select value={config.spinsTextFont ?? ''} onChange={e => updateGlobal('spinsTextFont', e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground">
+            <option value="">Padrão</option>
+            <option value="'Inter', sans-serif">Inter</option>
+            <option value="'Arial', sans-serif">Arial</option>
+            <option value="'Georgia', serif">Georgia</option>
+            <option value="'Courier New', monospace">Courier New</option>
+            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+            <option value="'Verdana', sans-serif">Verdana</option>
+          </select>
+        </div>
+
+        <div className="border-t border-border/30 my-2" />
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sem Giros Disponíveis</h4>
+        <ColorInput label="Cor do texto" value={config.noSpinsTextColor ?? '#ef4444'} onChange={v => updateGlobal('noSpinsTextColor', v)} />
+        <RangeInput label="Tamanho" value={config.noSpinsTextSize ?? 14} min={10} max={32} onChange={v => updateGlobal('noSpinsTextSize', v)} />
+        <div>
+          <label className="text-[10px] text-muted-foreground font-medium">Fonte</label>
+          <select value={config.noSpinsTextFont ?? ''} onChange={e => updateGlobal('noSpinsTextFont', e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground">
+            <option value="">Padrão</option>
+            <option value="'Inter', sans-serif">Inter</option>
+            <option value="'Arial', sans-serif">Arial</option>
+            <option value="'Georgia', serif">Georgia</option>
+            <option value="'Courier New', monospace">Courier New</option>
+            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+            <option value="'Verdana', sans-serif">Verdana</option>
+          </select>
+        </div>
+
+        <div className="border-t border-border/30 my-2" />
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Badge do Usuário</h4>
+        <ColorInput label="Fundo" value={config.badgeBgColor ?? 'rgba(20,20,30,0.85)'} onChange={v => updateGlobal('badgeBgColor', v)} />
+        <ColorInput label="Borda" value={config.badgeBorderColor ?? config.glowColor} onChange={v => updateGlobal('badgeBorderColor', v)} />
+        <ColorInput label="Cor do nome" value={config.badgeNameColor ?? config.glowColor} onChange={v => updateGlobal('badgeNameColor', v)} />
+        <ColorInput label="Cor do label ID" value={config.badgeLabelColor ?? '#a1a1aa'} onChange={v => updateGlobal('badgeLabelColor', v)} />
+        <ColorInput label="Cor do ID" value={config.badgeIdColor ?? '#a1a1aa'} onChange={v => updateGlobal('badgeIdColor', v)} />
+      </Card>
+
       {/* ── Layout Mobile ── */}
       <Card title="Layout Mobile" icon={<span className="text-base">📱</span>}>
         <p className="text-[10px] text-muted-foreground bg-muted/30 px-2.5 py-1.5 rounded-lg">Ajustes apenas para dispositivos móveis.</p>
