@@ -158,6 +158,36 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          bg_image_url: string | null
+          created_at: string
+          favicon_url: string | null
+          id: number
+          site_description: string | null
+          site_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          bg_image_url?: string | null
+          created_at?: string
+          favicon_url?: string | null
+          id?: number
+          site_description?: string | null
+          site_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bg_image_url?: string | null
+          created_at?: string
+          favicon_url?: string | null
+          id?: number
+          site_description?: string | null
+          site_title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       spin_results: {
         Row: {
           account_id: string
