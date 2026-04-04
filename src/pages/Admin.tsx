@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import CustomizationPanel from '@/components/casino/CustomizationPanel';
-import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload } from 'lucide-react';
+import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
