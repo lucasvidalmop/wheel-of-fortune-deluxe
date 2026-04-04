@@ -36,6 +36,7 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'admins' | 'history' | 'site'>('users');
   const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '' });
+  const [apiBackendUrl, setApiBackendUrl] = useState(() => localStorage.getItem('wheel_api_url') || '');
   const [siteSaving, setSiteSaving] = useState(false);
   const [siteUploading, setSiteUploading] = useState(false);
   const [siteFaviconUploading, setSiteFaviconUploading] = useState(false);
