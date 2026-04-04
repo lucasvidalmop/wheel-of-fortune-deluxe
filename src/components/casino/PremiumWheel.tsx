@@ -388,6 +388,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
               Parabéns! Você ganhou {config.segments[winnerIndex].title}!
             </p>
             <button
+              data-share-btn
               onClick={() => onShare?.(config.segments[winnerIndex!].title)}
               className="font-bold tracking-wider transition-all duration-300 hover:brightness-110 active:scale-95"
               style={{
