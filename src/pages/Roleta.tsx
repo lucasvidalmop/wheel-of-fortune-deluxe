@@ -95,19 +95,35 @@ const Roleta = () => {
     })();
   }, [slug, navigate]);
 
-  // Apply SEO title, description, and favicon from config
+  // Apply SEO: use operator config, fallback to global site_settings
   useEffect(() => {
-    if (config.seoTitle) document.title = config.seoTitle;
-    if (config.seoDescription) {
-      let meta = document.querySelector('meta[name="description"]');
-      if (!meta) { meta = document.createElement('meta'); (meta as HTMLMetaElement).name = 'description'; document.head.appendChild(meta); }
-      (meta as HTMLMetaElement).content = config.seoDescription;
-    }
-    if (config.faviconUrl) {
-      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = config.faviconUrl;
-    }
+    const applyGlobalFallback = async () => {
+      let title = config.seoTitle;
+      let desc = config.seoDescription;
+      let favicon = config.faviconUrl;
+
+      if (!title || !desc || !favicon) {
+        const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
+        if (data) {
+          if (!title) title = data.site_title || '';
+          if (!desc) desc = data.site_description || '';
+          if (!favicon) favicon = data.favicon_url || '';
+        }
+      }
+
+      if (title) document.title = title;
+      if (desc) {
+        let meta = document.querySelector('meta[name="description"]');
+        if (!meta) { meta = document.createElement('meta'); (meta as HTMLMetaElement).name = 'description'; document.head.appendChild(meta); }
+        (meta as HTMLMetaElement).content = desc;
+      }
+      if (favicon) {
+        let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+        if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+        link.href = favicon;
+      }
+    };
+    applyGlobalFallback();
   }, [config.seoTitle, config.seoDescription, config.faviconUrl]);
 
   useEffect(() => {
