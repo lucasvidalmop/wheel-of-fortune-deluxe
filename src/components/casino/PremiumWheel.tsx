@@ -455,11 +455,26 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
               {config.segments[winnerIndex].title}
             </h3>
             <p
-              className="text-sm mb-1"
+              className="text-sm mb-4"
               style={{ color: config.resultTextColor, opacity: 0.85 }}
             >
               Parabéns! Você ganhou {config.segments[winnerIndex].title}!
             </p>
+            <button
+              onClick={() => sharePrizeImage(
+                config.segments[winnerIndex!].title,
+                config,
+                config.segments[winnerIndex!].color
+              )}
+              className="px-6 py-2.5 rounded-full font-bold text-sm tracking-wider transition-all duration-300 hover:brightness-110 active:scale-95"
+              style={{
+                background: config.glowColor || '#FFD700',
+                color: config.resultBoxColor || '#1a0a2e',
+                boxShadow: `0 4px 20px ${config.glowColor || '#FFD700'}55`,
+              }}
+            >
+              📤 COMPARTILHAR PRÊMIO
+            </button>
           </div>
         </div>
       )}
