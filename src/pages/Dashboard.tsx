@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CustomizationPanel from '@/components/casino/CustomizationPanel';
+import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin } from 'lucide-react';
@@ -791,6 +792,7 @@ const Dashboard = () => {
           {activeTab === 'wheel' && (
             <div className="max-w-2xl space-y-4">
               <CustomizationPanel config={wheelConfig} onChange={setWheelConfig} />
+              <DialogConfigPanel config={wheelConfig} onChange={setWheelConfig} />
               <button
                 onClick={handleSaveConfig}
                 disabled={savingConfig}

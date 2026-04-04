@@ -29,6 +29,7 @@ const Roleta = () => {
   const [fixedPrizeEnabled, setFixedPrizeEnabled] = useState(false);
   const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [showPostLoginDialog, setShowPostLoginDialog] = useState(false);
 
   const maskId = (id: string) => {
     if (id.length <= 3) return '***';
@@ -389,6 +390,7 @@ const Roleta = () => {
     if (data.owner_id) setOwnerId(data.owner_id);
     if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
+    if (config.postLoginDialogEnabled) setShowPostLoginDialog(true);
     setSearchParams({ account_id: trimmedId, email: trimmedEmail });
     setAuthLoading(false);
   };
@@ -675,6 +677,77 @@ const Roleta = () => {
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* Post-login dialog overlay */}
+      {showPostLoginDialog && config.postLoginDialogEnabled && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70" onClick={() => setShowPostLoginDialog(false)}>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: isMobile
+                ? (config.postLoginDialogMobileWidth ?? config.postLoginDialogWidth ?? 400)
+                : (config.postLoginDialogWidth ?? 400),
+              maxWidth: '90vw',
+              background: config.postLoginDialogBgColor ?? '#140c28',
+              border: `1px solid ${config.postLoginDialogBorderColor ?? '#ffffff14'}`,
+              borderRadius: 12,
+              padding: isMobile ? 20 : 24,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+            }}
+          >
+            <div className="flex justify-end mb-1">
+              <button onClick={() => setShowPostLoginDialog(false)} className="text-white/40 hover:text-white/70 transition text-lg leading-none">✕</button>
+            </div>
+            <h3 style={{
+              color: config.postLoginDialogTitleColor ?? '#ffffff',
+              fontSize: isMobile
+                ? (config.postLoginDialogMobileTitleSize ?? config.postLoginDialogTitleSize ?? 20)
+                : (config.postLoginDialogTitleSize ?? 20),
+              fontWeight: 700,
+              marginBottom: 10,
+            }}>
+              {config.postLoginDialogTitle || ''}
+            </h3>
+            <p style={{
+              color: config.postLoginDialogTextColor ?? '#ffffffcc',
+              fontSize: isMobile
+                ? (config.postLoginDialogMobileBodySize ?? config.postLoginDialogBodySize ?? 14)
+                : (config.postLoginDialogBodySize ?? 14),
+              lineHeight: 1.6,
+              marginBottom: (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) ? 16 : 0,
+              whiteSpace: 'pre-wrap',
+            }}>
+              {config.postLoginDialogBody || ''}
+            </p>
+            {(config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
+              <a
+                href={config.postLoginDialogBtnUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowPostLoginDialog(false)}
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  background: config.postLoginDialogBtnBgColor ?? '#0ABACC',
+                  color: config.postLoginDialogBtnTextColor ?? '#000000',
+                  fontSize: isMobile
+                    ? (config.postLoginDialogMobileBtnFontSize ?? config.postLoginDialogBtnFontSize ?? 14)
+                    : (config.postLoginDialogBtnFontSize ?? 14),
+                  fontWeight: 700,
+                  borderRadius: config.postLoginDialogBtnBorderRadius ?? 8,
+                  padding: '10px 24px',
+                  textDecoration: 'none',
+                  transition: 'filter 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
+                onMouseLeave={e => (e.currentTarget.style.filter = 'none')}
+              >
+                {config.postLoginDialogBtnText || 'Acessar'}
+              </a>
+            )}
+          </div>
         </div>
       )}
     </div>
