@@ -727,12 +727,6 @@ const Admin = () => {
             </>
           )}
 
-          {/* ══════ WHEEL ══════ */}
-          {activeTab === 'wheel' && (
-            <div className="max-w-2xl">
-              <CustomizationPanel config={wheelConfig} onChange={setWheelConfig} />
-            </div>
-          )}
 
           {/* ══════ ADMINS / CREATE USERS ══════ */}
           {activeTab === 'admins' && (
