@@ -13,6 +13,10 @@ export interface ThemeSettings {
   glowColor: string;
   glowOpacity: number;
   borderOpacity: number;
+  selectBgColor: string;
+  selectTextColor: string;
+  inputBgColor: string;
+  inputTextColor: string;
 }
 
 export const defaultTheme: ThemeSettings = {
@@ -25,6 +29,10 @@ export const defaultTheme: ThemeSettings = {
   glowColor: '#e6a817',
   glowOpacity: 3,
   borderOpacity: 8,
+  selectBgColor: '#1a1a2e',
+  selectTextColor: '#ffffff',
+  inputBgColor: '#0f0f1e',
+  inputTextColor: '#ffffff',
 };
 
 interface Props {
@@ -65,11 +73,15 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
   root.style.setProperty('--theme-glow-opacity', String(t.glowOpacity));
   root.style.setProperty('--theme-border-opacity', String(t.borderOpacity));
   root.style.setProperty('--theme-bg-image', t.bgImage ? `url(${t.bgImage})` : 'none');
+  root.style.setProperty('--theme-select-bg', t.selectBgColor || '#1a1a2e');
+  root.style.setProperty('--theme-select-text', t.selectTextColor || '#ffffff');
+  root.style.setProperty('--theme-input-bg', t.inputBgColor || '#0f0f1e');
+  root.style.setProperty('--theme-input-text', t.inputTextColor || '#ffffff');
 };
 
 const clearThemeFromDOM = () => {
   const root = document.documentElement;
-  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image'].forEach(p => root.style.removeProperty(p));
+  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text'].forEach(p => root.style.removeProperty(p));
 };
 
 const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) => {
@@ -178,6 +190,16 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
               </div>
 
               <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <Palette size={14} className="text-primary" />
+                  Caixas de Seleção / Inputs
+                </div>
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                  <ColorInput label="Fundo do seletor" value={theme.selectBgColor} onChange={v => save({ ...theme, selectBgColor: v })} />
+                  <ColorInput label="Texto do seletor" value={theme.selectTextColor} onChange={v => save({ ...theme, selectTextColor: v })} />
+                  <ColorInput label="Fundo dos inputs" value={theme.inputBgColor} onChange={v => save({ ...theme, inputBgColor: v })} />
+                  <ColorInput label="Texto dos inputs" value={theme.inputTextColor} onChange={v => save({ ...theme, inputTextColor: v })} />
+                </div>
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
                   <Monitor size={14} className="text-primary" />
                   Efeitos Glass
