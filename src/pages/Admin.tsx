@@ -125,7 +125,43 @@ const Admin = () => {
     setHistoryLoading(false);
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const fetchSiteSettings = async () => {
+    const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
+    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '' });
+  };
+
+  const handleSaveSiteSettings = async () => {
+    setSiteSaving(true);
+    const { error } = await (supabase as any).from('site_settings').update(siteSettings).eq('id', 1);
+    if (error) toast.error('Erro ao salvar: ' + error.message);
+    else toast.success('Configurações salvas!');
+    setSiteSaving(false);
+  };
+
+  const handleSiteBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setSiteUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'site-bg');
+      setSiteSettings(s => ({ ...s, bg_image_url: publicUrl }));
+      toast.success('Background enviado!');
+    } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+    setSiteUploading(false);
+    e.target.value = '';
+  };
+
+  const handleSiteFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setSiteFaviconUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'site-favicon');
+      setSiteSettings(s => ({ ...s, favicon_url: publicUrl }));
+      toast.success('Favicon enviado!');
+    } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+    setSiteFaviconUploading(false);
+    e.target.value = '';
+  };
+
     e.preventDefault();
     setLoginLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
