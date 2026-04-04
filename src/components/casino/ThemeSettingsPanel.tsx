@@ -81,7 +81,7 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
 
 const clearThemeFromDOM = () => {
   const root = document.documentElement;
-  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image'].forEach(p => root.style.removeProperty(p));
+  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text'].forEach(p => root.style.removeProperty(p));
 };
 
 const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) => {
