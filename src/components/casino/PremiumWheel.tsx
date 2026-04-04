@@ -1,6 +1,83 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { WheelConfig } from './types';
 
+const generatePrizeImage = async (prizeName: string, config: WheelConfig, segColor: string): Promise<Blob> => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 400;
+  const ctx = canvas.getContext('2d')!;
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, 600, 400);
+  grad.addColorStop(0, config.resultBoxColor || '#1a0a2e');
+  grad.addColorStop(1, '#0a0a1a');
+  ctx.fillStyle = grad;
+  ctx.roundRect(0, 0, 600, 400, 20);
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = config.resultBorderColor || config.glowColor;
+  ctx.lineWidth = 4;
+  ctx.roundRect(0, 0, 600, 400, 20);
+  ctx.stroke();
+
+  // Accent line
+  ctx.fillStyle = segColor;
+  ctx.fillRect(40, 80, 520, 3);
+
+  // Trophy emoji
+  ctx.font = '48px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏆', 300, 60);
+
+  // "Eu ganhei!" text
+  ctx.font = 'bold 22px "Orbitron", Arial, sans-serif';
+  ctx.fillStyle = config.resultTextColor || '#fff';
+  ctx.fillText('🎉 EU GANHEI! 🎉', 300, 130);
+
+  // Prize name
+  ctx.font = 'bold 36px "Orbitron", Arial, sans-serif';
+  ctx.fillStyle = config.glowColor || '#FFD700';
+  ctx.fillText(prizeName, 300, 200, 520);
+
+  // Decorative line
+  ctx.fillStyle = segColor;
+  ctx.fillRect(40, 230, 520, 3);
+
+  // Footer
+  ctx.font = '14px Arial, sans-serif';
+  ctx.fillStyle = (config.resultTextColor || '#ffffff') + 'aa';
+  ctx.fillText(config.pageTitle || 'Roleta da Sorte', 300, 290);
+
+  // Watermark
+  ctx.font = '11px Arial, sans-serif';
+  ctx.fillStyle = '#ffffff44';
+  ctx.fillText('Gire você também!', 300, 370);
+
+  return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/png'));
+};
+
+const sharePrizeImage = async (prizeName: string, config: WheelConfig, segColor: string) => {
+  try {
+    const blob = await generatePrizeImage(prizeName, config, segColor);
+    const file = new File([blob], 'meu-premio.png', { type: 'image/png' });
+
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: `Ganhei: ${prizeName}!`, text: `🎉 Eu ganhei ${prizeName}!` });
+    } else {
+      // Fallback: download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'meu-premio.png';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  } catch (e) {
+    console.error('Share failed', e);
+  }
+};
+
 interface PremiumWheelProps {
   config: WheelConfig;
   onSpinEnd?: (segmentIndex: number) => void;
@@ -378,11 +455,26 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
               {config.segments[winnerIndex].title}
             </h3>
             <p
-              className="text-sm mb-1"
+              className="text-sm mb-4"
               style={{ color: config.resultTextColor, opacity: 0.85 }}
             >
               Parabéns! Você ganhou {config.segments[winnerIndex].title}!
             </p>
+            <button
+              onClick={() => sharePrizeImage(
+                config.segments[winnerIndex!].title,
+                config,
+                config.segments[winnerIndex!].color
+              )}
+              className="px-6 py-2.5 rounded-full font-bold text-sm tracking-wider transition-all duration-300 hover:brightness-110 active:scale-95"
+              style={{
+                background: config.glowColor || '#FFD700',
+                color: config.resultBoxColor || '#1a0a2e',
+                boxShadow: `0 4px 20px ${config.glowColor || '#FFD700'}55`,
+              }}
+            >
+              📤 COMPARTILHAR PRÊMIO
+            </button>
           </div>
         </div>
       )}
