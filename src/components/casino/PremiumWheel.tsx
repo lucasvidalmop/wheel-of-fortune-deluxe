@@ -389,13 +389,27 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             </p>
             <button
               onClick={() => onShare?.(config.segments[winnerIndex!].title)}
-              className="px-6 py-2.5 font-bold text-sm tracking-wider transition-all duration-300 hover:brightness-110 active:scale-95"
+              className="font-bold tracking-wider transition-all duration-300 hover:brightness-110 active:scale-95"
               style={{
                 background: config.shareBtnBgColor || config.glowColor || '#FFD700',
                 color: config.shareBtnTextColor || config.resultBoxColor || '#1a0a2e',
                 border: config.shareBtnBorderColor ? `2px solid ${config.shareBtnBorderColor}` : 'none',
                 borderRadius: config.shareBtnBorderRadius ?? 999,
-                fontSize: config.shareBtnFontSize ?? 14,
+                fontSize: isMobile
+                  ? (config.shareBtnMobileFontSize ?? config.shareBtnFontSize ?? 14)
+                  : (config.shareBtnFontSize ?? 14),
+                paddingLeft: isMobile
+                  ? (config.shareBtnMobilePaddingX ?? config.shareBtnPaddingX ?? 24)
+                  : (config.shareBtnPaddingX ?? 24),
+                paddingRight: isMobile
+                  ? (config.shareBtnMobilePaddingX ?? config.shareBtnPaddingX ?? 24)
+                  : (config.shareBtnPaddingX ?? 24),
+                paddingTop: isMobile
+                  ? (config.shareBtnMobilePaddingY ?? config.shareBtnPaddingY ?? 10)
+                  : (config.shareBtnPaddingY ?? 10),
+                paddingBottom: isMobile
+                  ? (config.shareBtnMobilePaddingY ?? config.shareBtnPaddingY ?? 10)
+                  : (config.shareBtnPaddingY ?? 10),
                 boxShadow: `0 4px 20px ${config.shareBtnBgColor || config.glowColor || '#FFD700'}55`,
               }}
             >
