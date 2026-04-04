@@ -47,194 +47,35 @@ const Roleta = () => {
   const handleShare = useCallback(async (prizeName: string) => {
     if (!pageRef.current) return;
 
-    const drawRoundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-    };
-
-    const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number) => {
-      const words = text.split(' ');
-      const lines: string[] = [];
-      let current = '';
-
-      for (const word of words) {
-        const test = current ? `${current} ${word}` : word;
-        if (ctx.measureText(test).width <= maxWidth) {
-          current = test;
-        } else {
-          if (current) lines.push(current);
-          current = word;
-        }
-      }
-
-      if (current) lines.push(current);
-      return lines;
-    };
-
     try {
-      const wheelSvg = pageRef.current.querySelector('svg');
-      if (!wheelSvg) {
-        toast.error('Roleta não encontrada para compartilhar');
-        return;
-      }
+      // Temporarily mask the ID for the screenshot
+      const idEl = pageRef.current.querySelector('[data-share-id]');
+      const originalId = idEl?.textContent || '';
+      if (idEl) idEl.textContent = maskId(accountId);
 
-      let wheelImage: HTMLImageElement;
+      // Hide the close button and share button during capture
+      const closeBtn = pageRef.current.querySelector('[data-close-btn]') as HTMLElement | null;
+      const shareBtn = pageRef.current.querySelector('[data-share-btn]') as HTMLElement | null;
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (shareBtn) shareBtn.style.display = 'none';
 
-      try {
-        const svgClone = wheelSvg.cloneNode(true) as SVGSVGElement;
-        svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-        svgClone.setAttribute('width', '600');
-        svgClone.setAttribute('height', '600');
-        svgClone.setAttribute('viewBox', '0 0 600 600');
-
-        const svgString = new XMLSerializer().serializeToString(svgClone);
-        const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
-        wheelImage = await loadImage(svgUrl);
-      } catch {
-        const wheelElement = wheelSvg.parentElement?.parentElement as HTMLElement | null;
-        const fallbackCanvas = await html2canvas(wheelElement || (wheelSvg as unknown as HTMLElement), {
-          backgroundColor: null,
-          scale: 2,
-          useCORS: true,
-          logging: false,
-        });
-        wheelImage = await loadImage(fallbackCanvas.toDataURL('image/png'));
-      }
-
-      const backgroundImage = config.backgroundImageUrl
-        ? await loadImage(config.backgroundImageUrl).catch(() => null)
-        : null;
-      const headerImage = config.headerMode === 'image' && config.headerImageUrl
-        ? await loadImage(config.headerImageUrl).catch(() => null)
-        : null;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = 1920;
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) {
-        toast.error('Erro ao preparar imagem');
-        return;
-      }
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      bgGradient.addColorStop(0, config.resultBoxColor || '#12081f');
-      bgGradient.addColorStop(0.55, '#09060f');
-      bgGradient.addColorStop(1, '#040306');
-      ctx.fillStyle = bgGradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      if (backgroundImage) {
-        const scale = Math.max(canvas.width / backgroundImage.width, canvas.height / backgroundImage.height);
-        const drawWidth = backgroundImage.width * scale;
-        const drawHeight = backgroundImage.height * scale;
-        ctx.save();
-        ctx.globalAlpha = 0.22;
-        ctx.drawImage(backgroundImage, (canvas.width - drawWidth) / 2, (canvas.height - drawHeight) / 2, drawWidth, drawHeight);
-        ctx.restore();
-      }
-
-      const glow = ctx.createRadialGradient(canvas.width / 2, 760, 60, canvas.width / 2, 760, 520);
-      glow.addColorStop(0, `${config.glowColor || '#FFD700'}66`);
-      glow.addColorStop(1, 'transparent');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      if (headerImage) {
-        const maxWidth = 560;
-        const maxHeight = 220;
-        const scale = Math.min(maxWidth / headerImage.width, maxHeight / headerImage.height);
-        const drawWidth = headerImage.width * scale;
-        const drawHeight = headerImage.height * scale;
-        ctx.drawImage(headerImage, (canvas.width - drawWidth) / 2, 100, drawWidth, drawHeight);
-      } else {
-        ctx.textAlign = 'center';
-        ctx.fillStyle = config.glowColor || '#FFD700';
-        ctx.font = `900 ${Math.max(36, (config.headerTitleSize ?? 36) * 2)}px Orbitron, Arial, sans-serif`;
-        ctx.fillText(config.pageTitle || 'ROLETA', canvas.width / 2, 155);
-        ctx.fillStyle = `${config.resultTextColor || '#ffffff'}cc`;
-        ctx.font = `600 ${Math.max(20, (config.headerSubtitleSize ?? 12) * 2)}px Arial, sans-serif`;
-        ctx.fillText(config.pageSubtitle || '', canvas.width / 2, 210);
-      }
-
-      drawRoundedRect(ctx, 270, 260, 540, 64, 32);
-      ctx.fillStyle = 'rgba(8, 8, 14, 0.58)';
-      ctx.fill();
-      ctx.strokeStyle = `${config.resultBorderColor || config.glowColor || '#FFD700'}99`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = config.spinsTextColor || config.glowColor || '#FFD700';
-      ctx.font = `700 ${Math.max(24, (config.spinsTextSize ?? 14) * 2)}px Arial, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(
-        canSpin ? `Giros restantes: ${spinsRemaining ?? 0}` : (message || 'Sem giros disponíveis'),
-        canvas.width / 2,
-        302
-      );
-
-      ctx.save();
-      ctx.shadowColor = `${config.glowColor || '#FFD700'}aa`;
-      ctx.shadowBlur = 90;
-      ctx.drawImage(wheelImage, 190, 400, 700, 700);
-      ctx.restore();
-
-      drawRoundedRect(ctx, 120, 1140, 840, 290, 42);
-      ctx.fillStyle = `${config.resultBoxColor || '#130b20'}ee`;
-      ctx.fill();
-      ctx.strokeStyle = config.resultBorderColor || config.glowColor || '#FFD700';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      ctx.fillStyle = `${config.resultTextColor || '#ffffff'}cc`;
-      ctx.font = '700 28px Arial, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('PRÊMIO LIBERADO', canvas.width / 2, 1215);
-
-      ctx.fillStyle = config.glowColor || '#FFD700';
-      ctx.font = '900 68px Orbitron, Arial, sans-serif';
-      const prizeLines = wrapText(ctx, prizeName, 700);
-      prizeLines.slice(0, 2).forEach((line, index) => {
-        ctx.fillText(line, canvas.width / 2, 1300 + index * 82);
+      // Use html2canvas on the actual visible page
+      const canvas = await html2canvas(pageRef.current, {
+        backgroundColor: '#0a0a0f',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        width: pageRef.current.scrollWidth,
+        height: pageRef.current.scrollHeight,
+        windowWidth: pageRef.current.scrollWidth,
+        windowHeight: pageRef.current.scrollHeight,
       });
 
-      drawRoundedRect(ctx, 160, 1490, 760, 116, 28);
-      ctx.fillStyle = 'rgba(12, 12, 18, 0.72)';
-      ctx.fill();
-      ctx.strokeStyle = `${config.badgeBorderColor || config.glowColor || '#FFD700'}88`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.textAlign = 'left';
-      ctx.fillStyle = config.badgeNameColor || config.glowColor || '#FFD700';
-      ctx.font = '800 34px Arial, sans-serif';
-      ctx.fillText(userName || 'Usuário', 205, 1540);
-
-      ctx.fillStyle = config.badgeLabelColor || '#a1a1aa';
-      ctx.font = '700 20px Arial, sans-serif';
-      ctx.fillText('ID PROTEGIDO', 205, 1578);
-
-      ctx.fillStyle = config.badgeIdColor || '#d4d4d8';
-      ctx.font = '700 28px monospace';
-      ctx.fillText(maskId(accountId), 390, 1578);
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = `${config.resultTextColor || '#ffffff'}99`;
-      ctx.font = '500 22px Arial, sans-serif';
-      ctx.fillText('Compartilhe sua vitória com segurança', canvas.width / 2, 1730);
+      // Restore original elements
+      if (idEl) idEl.textContent = originalId;
+      if (closeBtn) closeBtn.style.display = '';
+      if (shareBtn) shareBtn.style.display = '';
 
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => {
@@ -263,7 +104,7 @@ const Roleta = () => {
       console.error('Share failed', e);
       toast.error('Erro ao gerar compartilhamento');
     }
-  }, [accountId, canSpin, config, message, spinsRemaining, userName]);
+  }, [accountId]);
 
   // Load config from slug
   useEffect(() => {
