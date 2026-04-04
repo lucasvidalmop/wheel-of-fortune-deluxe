@@ -533,6 +533,7 @@ const Roleta = () => {
             <span data-share-id className="text-xs font-mono" style={{ color: config.badgeIdColor ?? '#a1a1aa' }}>{accountId}</span>
           </div>
           <button
+            data-close-btn
             onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setUserName(null); setSearchParams({}); }}
             className="text-xs text-muted-foreground hover:text-foreground ml-1 transition-colors"
           >
