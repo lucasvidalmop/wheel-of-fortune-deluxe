@@ -1312,7 +1312,7 @@ const Dashboard = () => {
                   if (recipients.length === 0) { toast.error('Nenhum destinatário selecionado'); return; }
                   if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
                   setEmailSending(true);
-                  const roletaLink = `${baseUrl}/roleta/${slug}`;
+                  const roletaLink = `${baseUrl}/${slug}`;
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
                   if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
                   let sent = 0, errors = 0;
