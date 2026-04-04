@@ -439,13 +439,15 @@ const Roleta = () => {
   // Login / identification screen
   if (!identified) {
     const ac = config;
+    const isMobileView = window.innerWidth < 768;
+    const bgImage = isMobileView && ac.authBgImageMobileUrl ? ac.authBgImageMobileUrl : ac.authBgImageUrl;
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{
-        background: ac.authBgImageUrl
-          ? `url(${ac.authBgImageUrl}) center/cover no-repeat`
+        background: bgImage
+          ? `url(${bgImage}) center/cover no-repeat`
           : ac.authBgColor ?? '#1a0a2e',
       }}>
-        {!ac.authBgImageUrl && (
+        {!bgImage && (
           <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
         )}
 

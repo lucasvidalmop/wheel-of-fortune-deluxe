@@ -165,13 +165,26 @@ const AuthConfigPanel: React.FC<AuthConfigPanelProps> = ({ config, onChange }) =
         <ColorInput label="Texto descritivo" value={config.authTextColor ?? '#ffffff80'} onChange={v => updateGlobal('authTextColor', v)} />
       </Section>
 
-      {/* Background */}
-      <Section title="Background" emoji="🖼" defaultOpen>
-        <ImageUpload label="Imagem de fundo" value={config.authBgImageUrl} onChange={v => updateGlobal('authBgImageUrl', v)} />
+      {/* Background Desktop */}
+      <Section title="Background Desktop" emoji="🖥" defaultOpen>
+        <p className="text-[10px] text-muted-foreground/70 italic">📐 Tamanho recomendado: 1920×1080px (16:9)</p>
+        <ImageUpload label="Imagem de fundo (Desktop)" value={config.authBgImageUrl} onChange={v => updateGlobal('authBgImageUrl', v)} />
         {config.authBgImageUrl && (
           <ImagePositionControls
             offsetX={config.authBgImageOffsetX ?? 0} offsetY={config.authBgImageOffsetY ?? 0} scale={config.authBgImageScale ?? 1}
             onChangeX={v => updateGlobal('authBgImageOffsetX', v)} onChangeY={v => updateGlobal('authBgImageOffsetY', v)} onChangeScale={v => updateGlobal('authBgImageScale', v)}
+          />
+        )}
+      </Section>
+
+      {/* Background Mobile */}
+      <Section title="Background Mobile" emoji="📱" defaultOpen>
+        <p className="text-[10px] text-muted-foreground/70 italic">📐 Tamanho recomendado: 1080×1920px (9:16)</p>
+        <ImageUpload label="Imagem de fundo (Mobile)" value={config.authBgImageMobileUrl} onChange={v => updateGlobal('authBgImageMobileUrl', v)} folder="auth-mobile" />
+        {config.authBgImageMobileUrl && (
+          <ImagePositionControls
+            offsetX={config.authBgImageMobileOffsetX ?? 0} offsetY={config.authBgImageMobileOffsetY ?? 0} scale={config.authBgImageMobileScale ?? 1}
+            onChangeX={v => updateGlobal('authBgImageMobileOffsetX', v)} onChangeY={v => updateGlobal('authBgImageMobileOffsetY', v)} onChangeScale={v => updateGlobal('authBgImageMobileScale', v)}
           />
         )}
       </Section>
