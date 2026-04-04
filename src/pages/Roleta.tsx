@@ -369,7 +369,9 @@ const Roleta = () => {
           style={{
             height: config.headerImageSize,
             maxWidth: '90vw',
-            transform: `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
+            transform: isMobile
+              ? `translate(${config.mobileLogoOffsetX ?? config.headerImageOffsetX ?? 0}px, ${config.mobileLogoOffsetY ?? config.headerImageOffsetY ?? 0}px) scale(${config.mobileLogoScale ?? config.headerImageScale ?? 1})`
+              : `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
           }}
         />
       ) : (
