@@ -5,7 +5,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin } from 'lucide-react';
-import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
+import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 interface WheelUser {
@@ -86,6 +86,7 @@ const Dashboard = () => {
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(defaultConfig);
   const [configId, setConfigId] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
@@ -128,6 +129,9 @@ const Dashboard = () => {
       setConfigId(cfg.id);
       if (cfg.config && Object.keys(cfg.config).length > 0) {
         setWheelConfig({ ...defaultConfig, ...cfg.config });
+        if (cfg.config.dashboardTheme) {
+          setDashboardTheme({ ...defaultTheme, ...cfg.config.dashboardTheme });
+        }
       }
     }
 
@@ -352,6 +356,23 @@ const Dashboard = () => {
     u.account_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleThemeChange = async (newTheme: ThemeSettings) => {
+    setDashboardTheme(newTheme);
+    if (!session?.user?.id) return;
+    try {
+      const { data: cfg } = await (supabase as any)
+        .from('wheel_configs')
+        .select('config')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      const currentConfig = cfg?.config || {};
+      await (supabase as any)
+        .from('wheel_configs')
+        .update({ config: { ...currentConfig, dashboardTheme: newTheme }, updated_at: new Date().toISOString() })
+        .eq('user_id', session.user.id);
+    } catch {}
+  };
+
 
   /* ═══════════════════════════════════════════
      LOADING
@@ -431,7 +452,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex relative overflow-hidden">
-      <ThemeSettingsPanel storageKey="dashboard_theme" />
+      <ThemeSettingsPanel storageKey="dashboard_theme" initialTheme={dashboardTheme} onThemeChange={handleThemeChange} />
       <div id="theme-bg-layer" className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15" style={{ backgroundImage: 'var(--theme-bg-image, none)' }} />
       {/* Background ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">

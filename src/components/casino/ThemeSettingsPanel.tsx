@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Settings, X, Upload, RotateCcw, Palette, Image, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
@@ -29,76 +29,94 @@ export const defaultTheme: ThemeSettings = {
 
 interface Props {
   storageKey: string;
+  /** If provided, theme is loaded from this instead of localStorage */
+  initialTheme?: ThemeSettings;
+  /** Called when theme changes, so parent can persist to DB */
+  onThemeChange?: (theme: ThemeSettings) => void;
 }
 
-const ThemeSettingsPanel = ({ storageKey }: Props) => {
+export const applyThemeToDOM = (t: ThemeSettings) => {
+  const root = document.documentElement;
+  const toHSL = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
+
+  root.style.setProperty('--primary', toHSL(t.primaryColor));
+  root.style.setProperty('--accent', toHSL(t.accentColor));
+  root.style.setProperty('--ring', toHSL(t.primaryColor));
+  root.style.setProperty('--sidebar-primary', toHSL(t.primaryColor));
+  root.style.setProperty('--foreground', toHSL(t.textColor));
+  root.style.setProperty('--theme-glow-color', t.glowColor);
+  root.style.setProperty('--theme-glow-opacity', String(t.glowOpacity));
+  root.style.setProperty('--theme-border-opacity', String(t.borderOpacity));
+  root.style.setProperty('--theme-bg-image', t.bgImage ? `url(${t.bgImage})` : 'none');
+};
+
+const clearThemeFromDOM = () => {
+  const root = document.documentElement;
+  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image'].forEach(p => root.style.removeProperty(p));
+};
+
+const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) => {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeSettings>(() => {
+    if (initialTheme) return { ...defaultTheme, ...initialTheme };
     const saved = localStorage.getItem(storageKey);
     return saved ? { ...defaultTheme, ...JSON.parse(saved) } : defaultTheme;
   });
   const [uploading, setUploading] = useState(false);
 
-  const save = (t: ThemeSettings) => {
+  // Sync with initialTheme when it changes (e.g. loaded from DB)
+  useEffect(() => {
+    if (initialTheme) {
+      const merged = { ...defaultTheme, ...initialTheme };
+      setTheme(merged);
+      applyThemeToDOM(merged);
+    }
+  }, [initialTheme]);
+
+  // Apply on mount from localStorage if no initialTheme
+  useEffect(() => {
+    if (!initialTheme) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) applyThemeToDOM({ ...defaultTheme, ...JSON.parse(saved) });
+    }
+  }, [storageKey, initialTheme]);
+
+  const save = useCallback((t: ThemeSettings) => {
     setTheme(t);
     localStorage.setItem(storageKey, JSON.stringify(t));
-    applyTheme(t);
-  };
-
-  const applyTheme = (t: ThemeSettings) => {
-    const root = document.documentElement;
-    const toHSL = (hex: string) => {
-      const r = parseInt(hex.slice(1, 3), 16) / 255;
-      const g = parseInt(hex.slice(3, 5), 16) / 255;
-      const b = parseInt(hex.slice(5, 7), 16) / 255;
-      const max = Math.max(r, g, b), min = Math.min(r, g, b);
-      let h = 0, s = 0;
-      const l = (max + min) / 2;
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-          case g: h = ((b - r) / d + 2) / 6; break;
-          case b: h = ((r - g) / d + 4) / 6; break;
-        }
-      }
-      return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-    };
-
-    root.style.setProperty('--primary', toHSL(t.primaryColor));
-    root.style.setProperty('--accent', toHSL(t.accentColor));
-    root.style.setProperty('--ring', toHSL(t.primaryColor));
-    root.style.setProperty('--sidebar-primary', toHSL(t.primaryColor));
-    root.style.setProperty('--foreground', toHSL(t.textColor));
-    root.style.setProperty('--theme-glow-color', t.glowColor);
-    root.style.setProperty('--theme-glow-opacity', String(t.glowOpacity));
-    root.style.setProperty('--theme-border-opacity', String(t.borderOpacity));
-    root.style.setProperty('--theme-bg-image', t.bgImage ? `url(${t.bgImage})` : 'none');
-  };
+    applyThemeToDOM(t);
+    onThemeChange?.(t);
+  }, [storageKey, onThemeChange]);
 
   const handleReset = () => {
     localStorage.removeItem(storageKey);
-    save(defaultTheme);
-    const root = document.documentElement;
-    root.style.removeProperty('--primary');
-    root.style.removeProperty('--accent');
-    root.style.removeProperty('--ring');
-    root.style.removeProperty('--sidebar-primary');
-    root.style.removeProperty('--foreground');
-    root.style.removeProperty('--theme-glow-color');
-    root.style.removeProperty('--theme-glow-opacity');
-    root.style.removeProperty('--theme-border-opacity');
-    root.style.removeProperty('--theme-bg-image');
+    setTheme(defaultTheme);
+    clearThemeFromDOM();
+    onThemeChange?.(defaultTheme);
     toast.success('Tema resetado!');
   };
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
-
     try {
       const { publicUrl } = await uploadAppAsset(file, `theme-bg/${storageKey}`);
       save({ ...theme, bgImage: publicUrl });
@@ -116,16 +134,8 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
     toast.success('Background removido!');
   };
 
-  useState(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) applyTheme({ ...defaultTheme, ...JSON.parse(saved) });
-  });
-
-  
-
   return (
     <>
-      {/* Gear button */}
       <button
         onClick={() => setOpen(true)}
         className="fixed top-4 right-4 z-50 p-2.5 rounded-xl border border-white/[0.1] bg-white/[0.06] backdrop-blur-xl text-muted-foreground hover:text-primary hover:border-primary/30 hover:bg-primary/10 transition-all duration-300 shadow-lg group"
@@ -134,12 +144,10 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
         <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500" />
       </button>
 
-      {/* Panel overlay */}
       {open && (
         <div className="fixed inset-0 z-[60] flex justify-end">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="relative w-full max-w-sm bg-background border-l border-white/[0.08] shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
-            {/* Header */}
             <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-white/[0.06] p-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
@@ -156,7 +164,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
             </div>
 
             <div className="p-5 space-y-6">
-              {/* Colors */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
                   <Palette size={14} className="text-primary" />
@@ -170,7 +177,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
                 </div>
               </div>
 
-              {/* Glass effects */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
                   <Monitor size={14} className="text-primary" />
@@ -202,7 +208,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
                 </div>
               </div>
 
-              {/* Background image */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
                   <Image size={14} className="text-primary" />
@@ -238,7 +243,6 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
                 </div>
               </div>
 
-              {/* Reset */}
               <button
                 onClick={handleReset}
                 className="w-full py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2"
