@@ -502,7 +502,7 @@ const Roleta = () => {
           )}
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-wider" style={{ color: config.badgeLabelColor ?? '#a1a1aa' }}>ID:</span>
-            <span className="text-xs font-mono" style={{ color: config.badgeIdColor ?? '#a1a1aa' }}>{accountId}</span>
+            <span data-share-id className="text-xs font-mono" style={{ color: config.badgeIdColor ?? '#a1a1aa' }}>{accountId}</span>
           </div>
           <button
             onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setUserName(null); setSearchParams({}); }}
