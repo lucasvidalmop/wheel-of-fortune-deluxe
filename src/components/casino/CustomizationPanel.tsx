@@ -393,6 +393,22 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <ColorInput label="Cor do ID" value={config.badgeIdColor ?? '#a1a1aa'} onChange={v => updateGlobal('badgeIdColor', v)} />
       </Card>
 
+      {/* ── Botão Compartilhar ── */}
+      <Card title="Botão Compartilhar" icon={<span className="text-base">📤</span>}>
+        <div className="space-y-2">
+          <div>
+            <label className="text-[10px] text-muted-foreground font-medium">Texto do botão</label>
+            <input type="text" value={config.shareBtnText ?? 'COMPARTILHAR PRÊMIO'} onChange={e => updateGlobal('shareBtnText', e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
+          </div>
+        </div>
+        <ColorInput label="Cor de fundo" value={config.shareBtnBgColor ?? config.glowColor ?? '#FFD700'} onChange={v => updateGlobal('shareBtnBgColor', v)} />
+        <ColorInput label="Cor do texto" value={config.shareBtnTextColor ?? config.resultBoxColor ?? '#1a0a2e'} onChange={v => updateGlobal('shareBtnTextColor', v)} />
+        <ColorInput label="Cor da borda" value={config.shareBtnBorderColor ?? 'transparent'} onChange={v => updateGlobal('shareBtnBorderColor', v)} />
+        <RangeInput label="Arredondamento" value={config.shareBtnBorderRadius ?? 999} min={0} max={999} onChange={v => updateGlobal('shareBtnBorderRadius', v)} suffix="px" />
+        <RangeInput label="Tamanho da fonte" value={config.shareBtnFontSize ?? 14} min={8} max={24} onChange={v => updateGlobal('shareBtnFontSize', v)} suffix="px" />
+        <p className="text-[10px] text-muted-foreground bg-muted/30 px-2.5 py-1.5 rounded-lg mt-2">O compartilhamento captura a tela inteira com o ID mascarado para segurança.</p>
+      </Card>
+
       {/* ── Layout Mobile ── */}
       <Card title="Layout Mobile" icon={<span className="text-base">📱</span>}>
         <p className="text-[10px] text-muted-foreground bg-muted/30 px-2.5 py-1.5 rounded-lg">Ajustes apenas para dispositivos móveis.</p>
