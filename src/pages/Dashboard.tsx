@@ -101,6 +101,7 @@ const Dashboard = () => {
   const [showBatchGrantModal, setShowBatchGrantModal] = useState(false);
   const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
   const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
+  const [savingUser, setSavingUser] = useState(false);
 
   useEffect(() => {
     let dataLoaded = false;
@@ -262,26 +263,33 @@ const Dashboard = () => {
     setSavingConfig(false);
   };
 
+  
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingUser) {
-      const { error } = await (supabase as any)
-        .from('wheel_users')
-        .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null })
-        .eq('id', editingUser.id);
-      if (error) { toast.error('Erro: ' + error.message); return; }
-      toast.success('Atualizado!');
-    } else {
-      const { error } = await (supabase as any)
-        .from('wheel_users')
-        .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id });
-      if (error) { toast.error('Erro: ' + error.message); return; }
-      toast.success('Inscrito criado!');
+    if (savingUser) return;
+    setSavingUser(true);
+    try {
+      if (editingUser) {
+        const { error } = await (supabase as any)
+          .from('wheel_users')
+          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null })
+          .eq('id', editingUser.id);
+        if (error) { toast.error('Erro: ' + error.message); return; }
+        toast.success('Atualizado!');
+      } else {
+        const { error } = await (supabase as any)
+          .from('wheel_users')
+          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id });
+        if (error) { toast.error('Erro: ' + error.message); return; }
+        toast.success('Inscrito criado!');
+      }
+      setShowForm(false);
+      setEditingUser(null);
+      setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null });
+      fetchUsers();
+    } finally {
+      setSavingUser(false);
     }
-    setShowForm(false);
-    setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null });
-    fetchUsers();
   };
 
   const openEdit = (user: WheelUser) => {
@@ -771,7 +779,7 @@ const Dashboard = () => {
 
                       <div className="flex gap-3 pt-2">
                         <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
-                        <button type="submit" className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition shadow-lg shadow-primary/20">{editingUser ? 'Salvar' : 'Criar'}</button>
+                        <button type="submit" disabled={savingUser} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">{savingUser ? 'Salvando...' : editingUser ? 'Salvar' : 'Criar'}</button>
                       </div>
                     </form>
                   </GlassCard>
