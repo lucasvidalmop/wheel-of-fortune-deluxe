@@ -65,6 +65,10 @@ export interface WheelConfig {
   authBgImageOffsetX?: number;
   authBgImageOffsetY?: number;
   authBgImageScale?: number;
+  authBgImageMobileUrl?: string;
+  authBgImageMobileOffsetX?: number;
+  authBgImageMobileOffsetY?: number;
+  authBgImageMobileScale?: number;
   authCardBgColor: string;
   authCardBorderColor: string;
   authInputBorderColor: string;
