@@ -390,6 +390,7 @@ const Roleta = () => {
     if (data.owner_id) setOwnerId(data.owner_id);
     if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
+    if (config.postLoginDialogEnabled) setShowPostLoginDialog(true);
     setSearchParams({ account_id: trimmedId, email: trimmedEmail });
     setAuthLoading(false);
   };
