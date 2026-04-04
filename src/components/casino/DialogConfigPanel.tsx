@@ -211,11 +211,29 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 <div className="flex justify-end mb-1">
                   <span className="text-white/40 text-xs cursor-default">✕</span>
                 </div>
-                <h3 style={{ color: config.postLoginDialogTitleColor ?? '#ffffff', fontSize: titleSize * 0.85, fontWeight: 700, marginBottom: 8 }}>
+                <h3 style={{
+                  color: config.postLoginDialogTitleColor ?? '#ffffff',
+                  fontSize: titleSize * 0.85,
+                  fontWeight: config.postLoginDialogTitleBold !== false ? 700 : 400,
+                  fontStyle: config.postLoginDialogTitleItalic ? 'italic' : 'normal',
+                  fontFamily: config.postLoginDialogTitleFont ?? 'Inter',
+                  textAlign: config.postLoginDialogTextAlign ?? 'left',
+                  marginBottom: 8,
+                }}>
                   {config.postLoginDialogTitle || 'Título do Diálogo'}
                 </h3>
-                <p style={{ color: config.postLoginDialogTextColor ?? '#ffffffcc', fontSize: bodySize * 0.85, lineHeight: 1.5, marginBottom: 14 }}>
-                  {config.postLoginDialogBody || 'Mensagem de exemplo para o usuário...'}
+                <p style={{
+                  color: config.postLoginDialogTextColor ?? '#ffffffcc',
+                  fontSize: bodySize * 0.85,
+                  lineHeight: 1.6,
+                  fontWeight: config.postLoginDialogBodyBold ? 700 : 400,
+                  fontStyle: config.postLoginDialogBodyItalic ? 'italic' : 'normal',
+                  fontFamily: config.postLoginDialogBodyFont ?? 'Inter',
+                  textAlign: config.postLoginDialogTextAlign ?? 'left',
+                  whiteSpace: 'pre-wrap',
+                  marginBottom: 14,
+                }}>
+                  {config.postLoginDialogBody || 'Mensagem de exemplo\npara o usuário...'}
                 </p>
                 {config.postLoginDialogBtnEnabled !== false && (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
                   <button

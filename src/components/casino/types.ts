@@ -135,6 +135,14 @@ export interface WheelConfig {
   postLoginDialogMobileTitleSize?: number;
   postLoginDialogMobileBodySize?: number;
   postLoginDialogMobileBtnFontSize?: number;
+  // Dialog text formatting
+  postLoginDialogTitleFont?: string;
+  postLoginDialogBodyFont?: string;
+  postLoginDialogTitleBold?: boolean;
+  postLoginDialogTitleItalic?: boolean;
+  postLoginDialogBodyBold?: boolean;
+  postLoginDialogBodyItalic?: boolean;
+  postLoginDialogTextAlign?: 'left' | 'center' | 'right';
 }
 
 export const defaultSegments: WheelSegment[] = [
