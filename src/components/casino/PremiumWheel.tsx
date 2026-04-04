@@ -84,6 +84,7 @@ interface PremiumWheelProps {
   disabled?: boolean;
   forcedSegment?: number | null;
   isMobile?: boolean;
+  onShare?: (prizeName: string) => void;
 }
 
 const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment, isMobile = false }) => {
