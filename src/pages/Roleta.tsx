@@ -36,13 +36,6 @@ const Roleta = () => {
     return id.substring(0, 2) + '*'.repeat(Math.max(3, id.length - 4)) + id.substring(id.length - 2);
   };
 
-  const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Falha ao carregar imagem: ${src}`));
-    img.src = src;
-  });
 
   const handleShare = useCallback(async (prizeName: string) => {
     if (!pageRef.current) return;
