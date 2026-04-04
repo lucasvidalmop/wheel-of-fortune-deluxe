@@ -287,13 +287,31 @@ const Dashboard = () => {
   };
 
   const handleGrantSpin = async (user: WheelUser) => {
-    const newSpins = user.spins_available >= 1 ? 0 : 1;
-    const { error } = await (supabase as any)
-      .from('wheel_users')
-      .update({ spins_available: newSpins })
-      .eq('id', user.id);
-    if (error) { toast.error('Erro ao atualizar giro'); return; }
-    toast.success(newSpins === 1 ? `1 giro liberado para ${user.name}!` : `Giro removido de ${user.name}`);
+    if (user.spins_available >= 1) {
+      // Remove spin
+      const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).eq('id', user.id);
+      if (error) { toast.error('Erro ao remover giro'); return; }
+      toast.success(`Giro removido de ${user.name}`);
+      fetchUsers();
+      return;
+    }
+    // Open modal to choose prize
+    setGrantSpinUser(user);
+    setGrantSpinMode('random');
+    setGrantSpinSegment(0);
+  };
+
+  const confirmGrantSpin = async () => {
+    if (!grantSpinUser) return;
+    const isFixed = grantSpinMode === 'fixed';
+    const { error } = await (supabase as any).from('wheel_users').update({
+      spins_available: 1,
+      fixed_prize_enabled: isFixed,
+      fixed_prize_segment: isFixed ? grantSpinSegment : null,
+    }).eq('id', grantSpinUser.id);
+    if (error) { toast.error('Erro ao liberar giro'); return; }
+    toast.success(`1 giro liberado para ${grantSpinUser.name}!`);
+    setGrantSpinUser(null);
     fetchUsers();
   };
 
