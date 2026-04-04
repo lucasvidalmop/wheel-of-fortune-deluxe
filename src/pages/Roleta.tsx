@@ -29,7 +29,7 @@ const Roleta = () => {
   const [fixedPrizeEnabled, setFixedPrizeEnabled] = useState(false);
   const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
 
-  // Redirect if no slug — only /roleta/:slug is allowed
+  // Load config from slug
   useEffect(() => {
     if (!slug) {
       navigate('/', { replace: true });
