@@ -569,7 +569,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <code className="text-sm text-primary font-mono bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg">{baseUrl}/roleta/{slug}</code>
+                <code className="text-sm text-primary font-mono bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg">{baseUrl}/{slug}</code>
                 <button onClick={() => setEditingSlug(true)} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Editar">
                   <Pencil size={14} />
                 </button>
