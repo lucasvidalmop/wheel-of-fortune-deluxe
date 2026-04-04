@@ -486,6 +486,7 @@ const Roleta = () => {
             disabled={accountId ? !canSpin : false}
             forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
             isMobile={isMobile}
+            onShare={handleShare}
           />
         </div>
       </div>
