@@ -121,15 +121,7 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
     if (saved) applyTheme({ ...defaultTheme, ...JSON.parse(saved) });
   });
 
-  const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-2">
-        <input type="color" value={value} onChange={e => onChange(e.target.value)} className="w-8 h-8 rounded-lg border border-white/[0.1] cursor-pointer bg-transparent" />
-        <span className="text-[10px] text-muted-foreground font-mono uppercase">{value}</span>
-      </div>
-    </div>
-  );
+  
 
   return (
     <>
@@ -261,5 +253,15 @@ const ThemeSettingsPanel = ({ storageKey }: Props) => {
     </>
   );
 };
+
+const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+  <div className="flex items-center justify-between gap-3">
+    <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex items-center gap-2">
+      <input type="color" value={value} onInput={e => onChange((e.target as HTMLInputElement).value)} className="w-8 h-8 rounded-lg border border-white/[0.1] cursor-pointer bg-transparent" />
+      <span className="text-[10px] text-muted-foreground font-mono uppercase">{value}</span>
+    </div>
+  </div>
+);
 
 export default ThemeSettingsPanel;
