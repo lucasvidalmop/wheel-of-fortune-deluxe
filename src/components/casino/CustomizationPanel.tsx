@@ -507,14 +507,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
       </Card>
 
-      {/* ── API Backend ── */}
-      <Card title="API Backend" icon={<span className="text-base">🔗</span>}>
-        <div>
-          <label className="text-[10px] text-muted-foreground font-medium">URL base (Laravel)</label>
-          <input type="text" value={apiUrl} placeholder="https://seusite.com" onChange={e => { setApiUrlState(e.target.value); setApiBaseUrl(e.target.value); }} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
-          <p className="text-[10px] text-muted-foreground mt-1.5">Rota pública: /roleta?account_id=xxx</p>
-        </div>
-      </Card>
+
     </div>
   );
 };

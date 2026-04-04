@@ -581,6 +581,13 @@ const Admin = () => {
                 )}
               </div>
 
+              {/* API Backend */}
+              <div className="space-y-1.5 pt-2 border-t border-white/[0.06]">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">🔗 API Backend (Laravel)</label>
+                <input type="text" value={apiBackendUrl} onChange={e => { setApiBackendUrl(e.target.value); localStorage.setItem('wheel_api_url', e.target.value); }} placeholder="https://seusite.com" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+                <p className="text-[10px] text-muted-foreground">URL base da API Laravel. Aplicada globalmente para todos os operadores.</p>
+              </div>
+
               <button onClick={handleSaveSiteSettings} disabled={siteSaving} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20">
                 {siteSaving ? 'Salvando...' : 'Salvar Configurações'}
               </button>
