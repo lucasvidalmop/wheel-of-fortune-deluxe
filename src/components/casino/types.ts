@@ -117,6 +117,7 @@ export interface WheelConfig {
   postLoginDialogEnabled?: boolean;
   postLoginDialogTitle?: string;
   postLoginDialogBody?: string;
+  postLoginDialogBtnEnabled?: boolean;
   postLoginDialogBtnText?: string;
   postLoginDialogBtnUrl?: string;
   postLoginDialogBtnBgColor?: string;
