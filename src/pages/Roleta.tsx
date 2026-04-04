@@ -705,7 +705,10 @@ const Roleta = () => {
               fontSize: isMobile
                 ? (config.postLoginDialogMobileTitleSize ?? config.postLoginDialogTitleSize ?? 20)
                 : (config.postLoginDialogTitleSize ?? 20),
-              fontWeight: 700,
+              fontWeight: config.postLoginDialogTitleBold !== false ? 700 : 400,
+              fontStyle: config.postLoginDialogTitleItalic ? 'italic' : 'normal',
+              fontFamily: config.postLoginDialogTitleFont ?? 'Inter',
+              textAlign: config.postLoginDialogTextAlign ?? 'left',
               marginBottom: 10,
             }}>
               {config.postLoginDialogTitle || ''}
@@ -716,8 +719,12 @@ const Roleta = () => {
                 ? (config.postLoginDialogMobileBodySize ?? config.postLoginDialogBodySize ?? 14)
                 : (config.postLoginDialogBodySize ?? 14),
               lineHeight: 1.6,
-              marginBottom: (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) ? 16 : 0,
+              fontWeight: config.postLoginDialogBodyBold ? 700 : 400,
+              fontStyle: config.postLoginDialogBodyItalic ? 'italic' : 'normal',
+              fontFamily: config.postLoginDialogBodyFont ?? 'Inter',
+              textAlign: config.postLoginDialogTextAlign ?? 'left',
               whiteSpace: 'pre-wrap',
+              marginBottom: (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) ? 16 : 0,
             }}>
               {config.postLoginDialogBody || ''}
             </p>
