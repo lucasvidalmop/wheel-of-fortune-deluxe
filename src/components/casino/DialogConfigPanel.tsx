@@ -100,8 +100,8 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm resize-y"
               />
               <div className="flex items-center gap-1 mt-1">
-                <select value={config.postLoginDialogBodyFont ?? 'Inter'} onChange={e => set('postLoginDialogBodyFont', e.target.value)} className="flex-1 px-2 py-1 rounded bg-white/[0.06] border border-white/[0.08] text-foreground text-xs" style={{ colorScheme: 'dark' }}>
-                  {FONT_OPTIONS.map(f => <option key={f} value={f} style={{ fontFamily: f, background: '#1a1a2e', color: '#fff' }}>{f}</option>)}
+                <select value={config.postLoginDialogBodyFont ?? 'Inter'} onChange={e => set('postLoginDialogBodyFont', e.target.value)} className="flex-1 px-2 py-1 rounded border border-white/[0.08] text-xs" style={{ colorScheme: 'dark' }}>
+                  {FONT_OPTIONS.map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
                 </select>
                 <button onClick={() => set('postLoginDialogBodyBold', !config.postLoginDialogBodyBold)} className={`p-1.5 rounded ${config.postLoginDialogBodyBold ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Bold size={13} /></button>
                 <button onClick={() => set('postLoginDialogBodyItalic', !config.postLoginDialogBodyItalic)} className={`p-1.5 rounded ${config.postLoginDialogBodyItalic ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Italic size={13} /></button>
