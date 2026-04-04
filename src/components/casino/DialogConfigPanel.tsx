@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { WheelConfig } from './types';
-import { Monitor, Smartphone, Eye } from 'lucide-react';
+import { Monitor, Smartphone, Eye, Bold, Italic, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+
+const FONT_OPTIONS = [
+  'Inter', 'Arial', 'Georgia', 'Verdana', 'Trebuchet MS', 'Courier New',
+  'Palatino', 'Garamond', 'Comic Sans MS', 'Impact', 'Lucida Console',
+];
 
 interface Props {
   config: WheelConfig;
