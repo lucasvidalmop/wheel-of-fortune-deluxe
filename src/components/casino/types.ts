@@ -100,6 +100,13 @@ export interface WheelConfig {
   badgeNameColor?: string;
   badgeLabelColor?: string;
   badgeIdColor?: string;
+  // Share button customization
+  shareBtnBgColor?: string;
+  shareBtnTextColor?: string;
+  shareBtnText?: string;
+  shareBtnBorderColor?: string;
+  shareBtnBorderRadius?: number;
+  shareBtnFontSize?: number;
 }
 
 export const defaultSegments: WheelSegment[] = [
