@@ -388,19 +388,18 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
               Parabéns! Você ganhou {config.segments[winnerIndex].title}!
             </p>
             <button
-              onClick={() => sharePrizeImage(
-                config.segments[winnerIndex!].title,
-                config,
-                config.segments[winnerIndex!].color
-              )}
-              className="px-6 py-2.5 rounded-full font-bold text-sm tracking-wider transition-all duration-300 hover:brightness-110 active:scale-95"
+              onClick={() => onShare?.(config.segments[winnerIndex!].title)}
+              className="px-6 py-2.5 font-bold text-sm tracking-wider transition-all duration-300 hover:brightness-110 active:scale-95"
               style={{
-                background: config.glowColor || '#FFD700',
-                color: config.resultBoxColor || '#1a0a2e',
-                boxShadow: `0 4px 20px ${config.glowColor || '#FFD700'}55`,
+                background: config.shareBtnBgColor || config.glowColor || '#FFD700',
+                color: config.shareBtnTextColor || config.resultBoxColor || '#1a0a2e',
+                border: config.shareBtnBorderColor ? `2px solid ${config.shareBtnBorderColor}` : 'none',
+                borderRadius: config.shareBtnBorderRadius ?? 999,
+                fontSize: config.shareBtnFontSize ?? 14,
+                boxShadow: `0 4px 20px ${config.shareBtnBgColor || config.glowColor || '#FFD700'}55`,
               }}
             >
-              📤 COMPARTILHAR PRÊMIO
+              📤 {config.shareBtnText || 'COMPARTILHAR PRÊMIO'}
             </button>
           </div>
         </div>
