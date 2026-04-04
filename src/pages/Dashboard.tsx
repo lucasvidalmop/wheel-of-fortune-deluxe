@@ -452,7 +452,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex relative overflow-hidden">
-      <ThemeSettingsPanel storageKey="dashboard_theme" />
+      <ThemeSettingsPanel storageKey="dashboard_theme" initialTheme={dashboardTheme} onThemeChange={handleThemeChange} />
       <div id="theme-bg-layer" className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15" style={{ backgroundImage: 'var(--theme-bg-image, none)' }} />
       {/* Background ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
