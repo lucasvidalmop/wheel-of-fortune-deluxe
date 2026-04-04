@@ -177,13 +177,8 @@ const Roleta = () => {
         p_owner_id: ownerId || null,
       });
 
-      // Desativar prêmio pré-definido após o giro
+      // Prêmio pré-definido é desativado automaticamente pelo decrement_wheel_user_spins
       if (fixedPrizeEnabled) {
-        await (supabase as any)
-          .from('wheel_users')
-          .update({ fixed_prize_enabled: false, fixed_prize_segment: null })
-          .eq('account_id', accountId)
-          .eq(ownerId ? 'owner_id' : 'account_id', ownerId || accountId);
         setFixedPrizeEnabled(false);
         setFixedPrizeSegment(null);
       }
