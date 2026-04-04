@@ -29,6 +29,7 @@ const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<
 );
 
 const Dashboard = () => {
+  useSiteSettings();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
