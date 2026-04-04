@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound } from 'lucide-react';
+import { Users, Target, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload } from 'lucide-react';
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 
 interface WheelUser {
@@ -34,7 +35,11 @@ const Admin = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins' | 'history'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins' | 'history' | 'site'>('users');
+  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '' });
+  const [siteSaving, setSiteSaving] = useState(false);
+  const [siteUploading, setSiteUploading] = useState(false);
+  const [siteFaviconUploading, setSiteFaviconUploading] = useState(false);
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -95,7 +100,7 @@ const Admin = () => {
     const { data } = await (supabase as any).from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle();
     setIsAdmin(!!data);
     setLoading(false);
-    if (data) { fetchUsers(); fetchHistory(); }
+    if (data) { fetchUsers(); fetchHistory(); fetchSiteSettings(); }
   };
 
   const fetchUsers = async () => {
@@ -118,6 +123,43 @@ const Admin = () => {
     const results = (resultsRes.data || []).map((r: any) => ({ ...r, owner_slug: r.owner_id ? configMap[r.owner_id] || 'N/A' : 'N/A' }));
     if (!resultsRes.error) setSpinResults(results);
     setHistoryLoading(false);
+  };
+
+  const fetchSiteSettings = async () => {
+    const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
+    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '' });
+  };
+
+  const handleSaveSiteSettings = async () => {
+    setSiteSaving(true);
+    const { error } = await (supabase as any).from('site_settings').update(siteSettings).eq('id', 1);
+    if (error) toast.error('Erro ao salvar: ' + error.message);
+    else toast.success('Configurações salvas!');
+    setSiteSaving(false);
+  };
+
+  const handleSiteBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setSiteUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'site-bg');
+      setSiteSettings(s => ({ ...s, bg_image_url: publicUrl }));
+      toast.success('Background enviado!');
+    } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+    setSiteUploading(false);
+    e.target.value = '';
+  };
+
+  const handleSiteFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setSiteFaviconUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'site-favicon');
+      setSiteSettings(s => ({ ...s, favicon_url: publicUrl }));
+      toast.success('Favicon enviado!');
+    } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+    setSiteFaviconUploading(false);
+    e.target.value = '';
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -371,6 +413,7 @@ const Admin = () => {
   }
 
   const menuItems: { key: typeof activeTab; icon: React.ReactNode; label: string }[] = [
+    { key: 'site', icon: <Globe size={20} />, label: 'Site' },
     { key: 'users', icon: <Users size={20} />, label: 'Inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta' },
     { key: 'admins', icon: <UserPlus size={20} />, label: 'Usuários' },
@@ -378,6 +421,7 @@ const Admin = () => {
   ];
 
   const tabTitles: Record<string, string> = {
+    site: 'Configurações do Site',
     users: 'Todos os Inscritos',
     wheel: 'Configurar Roleta',
     admins: 'Gerenciar Usuários',
@@ -490,6 +534,80 @@ const Admin = () => {
             <h2 className="text-xl font-bold text-foreground">{tabTitles[activeTab]}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">{users.length} inscritos globais • {spinResults.length} giros totais</p>
           </div>
+
+          {/* ══════ SITE TAB ══════ */}
+          {activeTab === 'site' && (
+            <GlassCard className="p-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2"><Globe size={16} className="text-primary" /> Configurações Globais</h3>
+                <p className="text-xs text-muted-foreground">Estas configurações são aplicadas na página principal e como padrão para operadores que não definiram configurações próprias.</p>
+              </div>
+
+              {/* Title */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Título do Site</label>
+                <input type="text" value={siteSettings.site_title} onChange={e => setSiteSettings(s => ({ ...s, site_title: e.target.value }))} placeholder="Wheel of Fortune" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrição</label>
+                <textarea value={siteSettings.site_description} onChange={e => setSiteSettings(s => ({ ...s, site_description: e.target.value }))} placeholder="Descrição do site..." rows={3} className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all resize-none" />
+              </div>
+
+              {/* Favicon */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Favicon</label>
+                <div className="flex items-center gap-4">
+                  {siteSettings.favicon_url && (
+                    <div className="w-12 h-12 rounded-xl border border-white/[0.08] bg-white/[0.04] flex items-center justify-center overflow-hidden">
+                      <img src={siteSettings.favicon_url} alt="Favicon" className="w-8 h-8 object-contain" />
+                    </div>
+                  )}
+                  <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm cursor-pointer hover:bg-white/[0.08] transition">
+                    <Upload size={15} />
+                    {siteFaviconUploading ? 'Enviando...' : siteSettings.favicon_url ? 'Trocar' : 'Enviar Favicon'}
+                    <input type="file" accept="image/*" onChange={handleSiteFaviconUpload} className="hidden" disabled={siteFaviconUploading} />
+                  </label>
+                  {siteSettings.favicon_url && (
+                    <button onClick={() => setSiteSettings(s => ({ ...s, favicon_url: '' }))} className="px-3 py-2 rounded-xl border border-destructive/20 text-destructive text-xs hover:bg-destructive/10 transition">Remover</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Background */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Background da Página Principal</label>
+                {siteSettings.bg_image_url ? (
+                  <div className="space-y-3">
+                    <div className="relative rounded-xl overflow-hidden border border-white/[0.08]">
+                      <img src={siteSettings.bg_image_url} alt="Background" className="w-full h-40 object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    </div>
+                    <div className="flex gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm cursor-pointer hover:bg-white/[0.08] transition">
+                        <Upload size={14} /> Trocar
+                        <input type="file" accept="image/*" onChange={handleSiteBgUpload} className="hidden" />
+                      </label>
+                      <button onClick={() => setSiteSettings(s => ({ ...s, bg_image_url: '' }))} className="flex-1 py-2.5 rounded-xl border border-destructive/20 text-destructive text-sm hover:bg-destructive/10 transition">Remover</button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center gap-2 py-10 rounded-xl border-2 border-dashed border-white/[0.1] hover:border-primary/30 cursor-pointer transition group">
+                    <Upload size={28} className="text-muted-foreground group-hover:text-primary transition" />
+                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition">
+                      {siteUploading ? 'Enviando...' : 'Clique para enviar imagem de fundo'}
+                    </span>
+                    <input type="file" accept="image/*" onChange={handleSiteBgUpload} className="hidden" disabled={siteUploading} />
+                  </label>
+                )}
+              </div>
+
+              <button onClick={handleSaveSiteSettings} disabled={siteSaving} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20">
+                {siteSaving ? 'Salvando...' : 'Salvar Configurações'}
+              </button>
+            </GlassCard>
+          )}
 
           {/* ══════ USERS TAB ══════ */}
           {activeTab === 'users' && (
