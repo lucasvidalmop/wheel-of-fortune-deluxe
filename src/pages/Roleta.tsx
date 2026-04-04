@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import PremiumWheel from '@/components/casino/PremiumWheel';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
 
 const Roleta = () => {
   const { slug } = useParams();
