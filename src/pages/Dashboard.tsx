@@ -324,6 +324,45 @@ const Dashboard = () => {
     fetchUsers();
   };
 
+  const confirmBatchGrantSpin = async () => {
+    if (selectedUserIds.size === 0) return;
+    const isFixed = batchGrantMode === 'fixed';
+    const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
+    let success = 0;
+    for (const user of selectedUsers) {
+      const { error } = await (supabase as any).from('wheel_users').update({
+        spins_available: 1,
+        fixed_prize_enabled: isFixed,
+        fixed_prize_segment: isFixed ? batchGrantSegment : null,
+      }).eq('id', user.id);
+      if (!error) success++;
+    }
+    toast.success(`${success} giro(s) liberado(s)!`);
+    setShowBatchGrantModal(false);
+    setSelectedUserIds(new Set());
+    fetchUsers();
+  };
+
+  const handleClearHistory = async () => {
+    if (!confirm('Tem certeza que deseja limpar todo o histórico de sorteio?')) return;
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const { error } = await (supabase as any).from('spin_results').delete().eq('owner_id', uid);
+    if (error) { toast.error('Erro ao limpar histórico'); return; }
+    toast.success('Histórico limpo!');
+    setSpinResults([]);
+  };
+
+  const handleClearAnalytics = async () => {
+    if (!confirm('Tem certeza que deseja limpar todo o histórico de analytics?')) return;
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const { error } = await (supabase as any).from('page_views').delete().eq('owner_id', uid);
+    if (error) { toast.error('Erro ao limpar analytics'); return; }
+    toast.success('Analytics limpo!');
+    setPageViews([]);
+  };
+
   const handleDeleteUser = async (id: string) => {
     if (!confirm('Excluir este usuário?')) return;
     await (supabase as any).from('wheel_users').delete().eq('id', id);
