@@ -790,10 +790,41 @@ const Dashboard = () => {
                 </GlassCard>
               ) : (
                 <GlassCard className="overflow-hidden">
+                  {/* Batch action bar */}
+                  {selectedUserIds.size > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-primary/20 bg-primary/[0.05]">
+                      <span className="text-xs text-primary font-semibold">{selectedUserIds.size} selecionado(s)</span>
+                      <button
+                        onClick={() => { setBatchGrantMode('random'); setBatchGrantSegment(0); setShowBatchGrantModal(true); }}
+                        className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary border border-primary/30 text-xs font-semibold hover:bg-primary/30 transition"
+                      >
+                        🎰 Liberar Giros
+                      </button>
+                      <button
+                        onClick={() => setSelectedUserIds(new Set())}
+                        className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground text-xs hover:bg-white/[0.08] transition"
+                      >
+                        Limpar seleção
+                      </button>
+                    </div>
+                  )}
                   <table className="w-full text-sm table-fixed">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
+                        <th className="px-3 py-3.5 w-10">
+                          <input
+                            type="checkbox"
+                            checked={filteredUsers.length > 0 && filteredUsers.every(u => selectedUserIds.has(u.id))}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+                              } else {
+                                setSelectedUserIds(new Set());
+                              }
+                            }}
+                            className="rounded border-white/20 bg-white/[0.05]"
+                          />
+                        </th>
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Celular</th>
@@ -803,8 +834,19 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {filteredUsers.map((user, index) => (
-                        <tr key={user.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group">
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{index + 1}</td>
+                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''}`}>
+                          <td className="px-3 py-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedUserIds.has(user.id)}
+                              onChange={e => {
+                                const next = new Set(selectedUserIds);
+                                if (e.target.checked) next.add(user.id); else next.delete(user.id);
+                                setSelectedUserIds(next);
+                              }}
+                              className="rounded border-white/20 bg-white/[0.05]"
+                            />
+                          </td>
                           <td className="px-4 py-3 text-foreground font-medium truncate">{user.name}</td>
                           <td className="px-4 py-3 text-muted-foreground truncate">{user.email}</td>
                           <td className="px-4 py-3 text-muted-foreground text-xs">{user.phone}</td>
