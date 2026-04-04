@@ -356,6 +356,23 @@ const Dashboard = () => {
     u.account_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleThemeChange = async (newTheme: ThemeSettings) => {
+    setDashboardTheme(newTheme);
+    if (!session?.user?.id) return;
+    try {
+      const { data: cfg } = await (supabase as any)
+        .from('wheel_configs')
+        .select('config')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      const currentConfig = cfg?.config || {};
+      await (supabase as any)
+        .from('wheel_configs')
+        .update({ config: { ...currentConfig, dashboardTheme: newTheme }, updated_at: new Date().toISOString() })
+        .eq('user_id', session.user.id);
+    } catch {}
+  };
+
 
   /* ═══════════════════════════════════════════
      LOADING
