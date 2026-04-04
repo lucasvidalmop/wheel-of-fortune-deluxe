@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { WheelConfig } from './types';
-import { getApiBaseUrl, setApiBaseUrl } from '@/services/api';
+
 import { toast } from 'sonner';
 import { Settings, X, ChevronDown, Upload, Trash2, Plus } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
