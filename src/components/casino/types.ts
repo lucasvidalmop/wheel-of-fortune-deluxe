@@ -80,6 +80,9 @@ export interface WheelConfig {
   mobileSpinsOffsetY?: number;
   mobileButtonOffsetX?: number;
   mobileButtonOffsetY?: number;
+  mobileLogoOffsetX?: number;
+  mobileLogoOffsetY?: number;
+  mobileLogoScale?: number;
   // Page SEO / Favicon
   seoTitle?: string;
   seoDescription?: string;

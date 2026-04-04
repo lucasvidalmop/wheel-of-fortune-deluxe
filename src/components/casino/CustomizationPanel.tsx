@@ -403,6 +403,9 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <RangeInput label="Giros Y" value={config.mobileSpinsOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileSpinsOffsetY', v)} />
         <RangeInput label="Botão Girar X" value={config.mobileButtonOffsetX ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileButtonOffsetX', v)} />
         <RangeInput label="Botão Girar Y" value={config.mobileButtonOffsetY ?? 0} min={-100} max={100} onChange={v => updateGlobal('mobileButtonOffsetY', v)} />
+        <RangeInput label="Logo X" value={config.mobileLogoOffsetX ?? 0} min={-150} max={150} onChange={v => updateGlobal('mobileLogoOffsetX', v)} />
+        <RangeInput label="Logo Y" value={config.mobileLogoOffsetY ?? 0} min={-150} max={150} onChange={v => updateGlobal('mobileLogoOffsetY', v)} />
+        <RangeInput label="Logo Zoom" value={config.mobileLogoScale ?? 1} min={0.3} max={3} step={0.05} onChange={v => updateGlobal('mobileLogoScale', v)} suffix="x" />
       </Card>
 
       {/* ── SEO / Favicon ── */}
