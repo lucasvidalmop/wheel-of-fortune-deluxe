@@ -251,6 +251,7 @@ const Dashboard = () => {
       segments: cleanSegments,
       authLogoUrl: typeof rest.authLogoUrl === 'string' && rest.authLogoUrl.startsWith('data:') ? '' : rest.authLogoUrl,
       authBgImageUrl: typeof rest.authBgImageUrl === 'string' && rest.authBgImageUrl.startsWith('data:') ? '' : rest.authBgImageUrl,
+      authBgImageMobileUrl: typeof rest.authBgImageMobileUrl === 'string' && rest.authBgImageMobileUrl.startsWith('data:') ? '' : rest.authBgImageMobileUrl,
     };
     const { error } = await (supabase as any)
       .from('wheel_configs')
