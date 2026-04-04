@@ -113,6 +113,27 @@ export interface WheelConfig {
   shareBtnMobileFontSize?: number;
   shareBtnMobilePaddingX?: number;
   shareBtnMobilePaddingY?: number;
+  // Post-login dialog
+  postLoginDialogEnabled?: boolean;
+  postLoginDialogTitle?: string;
+  postLoginDialogBody?: string;
+  postLoginDialogBtnText?: string;
+  postLoginDialogBtnUrl?: string;
+  postLoginDialogBtnBgColor?: string;
+  postLoginDialogBtnTextColor?: string;
+  postLoginDialogBgColor?: string;
+  postLoginDialogTextColor?: string;
+  postLoginDialogTitleColor?: string;
+  postLoginDialogBorderColor?: string;
+  postLoginDialogTitleSize?: number;
+  postLoginDialogBodySize?: number;
+  postLoginDialogBtnFontSize?: number;
+  postLoginDialogBtnBorderRadius?: number;
+  postLoginDialogWidth?: number;
+  postLoginDialogMobileWidth?: number;
+  postLoginDialogMobileTitleSize?: number;
+  postLoginDialogMobileBodySize?: number;
+  postLoginDialogMobileBtnFontSize?: number;
 }
 
 export const defaultSegments: WheelSegment[] = [
