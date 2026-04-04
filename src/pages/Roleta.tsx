@@ -5,7 +5,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import html2canvas from 'html2canvas';
 
 const Roleta = () => {
   const { slug } = useParams();
@@ -37,54 +36,93 @@ const Roleta = () => {
   };
 
 
+  const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = src;
+  });
+
   const handleShare = useCallback(async (prizeName: string) => {
     if (!pageRef.current) return;
 
     try {
-      // Temporarily mask the ID for the screenshot
-      const idEl = pageRef.current.querySelector('[data-share-id]');
-      const originalId = idEl?.textContent || '';
-      if (idEl) idEl.textContent = maskId(accountId);
+      const W = 1080;
+      const H = 1080;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d')!;
 
-      // Hide the close button and share button during capture
-      const closeBtn = pageRef.current.querySelector('[data-close-btn]') as HTMLElement | null;
-      const shareBtn = pageRef.current.querySelector('[data-share-btn]') as HTMLElement | null;
-      if (closeBtn) closeBtn.style.display = 'none';
-      if (shareBtn) shareBtn.style.display = 'none';
+      // 1. Background: solid color
+      ctx.fillStyle = '#0a0a0f';
+      ctx.fillRect(0, 0, W, H);
 
-      // Use html2canvas on the actual visible page
-      const canvas = await html2canvas(pageRef.current, {
-        backgroundColor: '#0a0a0f',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: pageRef.current.scrollWidth,
-        height: pageRef.current.scrollHeight,
-        windowWidth: pageRef.current.scrollWidth,
-        windowHeight: pageRef.current.scrollHeight,
-      });
+      // 2. Background image from operator config
+      if (config.backgroundImageUrl) {
+        try {
+          const bgImg = await loadImage(config.backgroundImageUrl);
+          const scale = Math.max(W / bgImg.width, H / bgImg.height);
+          const dw = bgImg.width * scale;
+          const dh = bgImg.height * scale;
+          ctx.save();
+          ctx.globalAlpha = 0.3;
+          ctx.drawImage(bgImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+          ctx.restore();
+        } catch {}
+      }
 
-      // Restore original elements
-      if (idEl) idEl.textContent = originalId;
-      if (closeBtn) closeBtn.style.display = '';
-      if (shareBtn) shareBtn.style.display = '';
+      // 3. Gradient overlay matching page
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(0.5, 'rgba(0,0,0,0.4)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.7)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
 
+      // 4. Glow effect using operator's glowColor
+      const glow = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, 450);
+      glow.addColorStop(0, `${config.glowColor || '#FFD700'}55`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+
+      // 5. Draw the wheel SVG
+      const wheelSvg = pageRef.current.querySelector('svg');
+      if (wheelSvg) {
+        try {
+          const svgClone = wheelSvg.cloneNode(true) as SVGSVGElement;
+          svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+          svgClone.setAttribute('width', '800');
+          svgClone.setAttribute('height', '800');
+          svgClone.setAttribute('viewBox', '0 0 600 600');
+          const svgString = new XMLSerializer().serializeToString(svgClone);
+          const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+          const wheelImg = await loadImage(svgUrl);
+          ctx.save();
+          ctx.shadowColor = `${config.glowColor || '#FFD700'}88`;
+          ctx.shadowBlur = 80;
+          ctx.drawImage(wheelImg, (W - 800) / 2, (H - 800) / 2, 800, 800);
+          ctx.restore();
+        } catch {}
+      }
+
+      // 6. Prize text at bottom
+      ctx.textAlign = 'center';
+      ctx.fillStyle = config.glowColor || '#FFD700';
+      ctx.font = '900 42px Arial, sans-serif';
+      ctx.fillText(`🎉 ${prizeName}`, W / 2, H - 60);
+
+      // Export
       const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((b) => {
-          if (b) resolve(b);
-          else reject(new Error('Falha ao gerar imagem'));
-        }, 'image/png');
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('Falha')), 'image/png');
       });
-
       const file = new File([blob], 'meu-premio.png', { type: 'image/png' });
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `Ganhei: ${prizeName}!`,
-          text: `🎉 Eu ganhei ${prizeName}!`,
-        });
+        await navigator.share({ files: [file], title: `Ganhei: ${prizeName}!`, text: `🎉 Eu ganhei ${prizeName}!` });
       } else {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -97,7 +135,7 @@ const Roleta = () => {
       console.error('Share failed', e);
       toast.error('Erro ao gerar compartilhamento');
     }
-  }, [accountId]);
+  }, [config]);
 
   // Load config from slug
   useEffect(() => {
