@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { WheelConfig } from './types';
-import { Monitor, Smartphone, Eye } from 'lucide-react';
+import { Monitor, Smartphone, Eye, Bold, Italic, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+
+const FONT_OPTIONS = [
+  'Inter', 'Arial', 'Georgia', 'Verdana', 'Trebuchet MS', 'Courier New',
+  'Palatino', 'Garamond', 'Comic Sans MS', 'Impact', 'Lucida Console',
+];
 
 interface Props {
   config: WheelConfig;
@@ -77,16 +82,41 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 placeholder="Bem-vindo!"
                 className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm"
               />
+              <div className="flex items-center gap-1 mt-1">
+                <select value={config.postLoginDialogTitleFont ?? 'Inter'} onChange={e => set('postLoginDialogTitleFont', e.target.value)} className="flex-1 px-2 py-1 rounded bg-white/[0.06] border border-white/[0.08] text-foreground text-xs">
+                  {FONT_OPTIONS.map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                </select>
+                <button onClick={() => set('postLoginDialogTitleBold', !config.postLoginDialogTitleBold)} className={`p-1.5 rounded ${config.postLoginDialogTitleBold ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Bold size={13} /></button>
+                <button onClick={() => set('postLoginDialogTitleItalic', !config.postLoginDialogTitleItalic)} className={`p-1.5 rounded ${config.postLoginDialogTitleItalic ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Italic size={13} /></button>
+              </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Mensagem</label>
+              <label className="text-xs text-muted-foreground">Mensagem (use Enter para quebrar linhas)</label>
               <textarea
                 value={config.postLoginDialogBody ?? ''}
                 onChange={e => set('postLoginDialogBody', e.target.value)}
-                placeholder="Sua mensagem aqui..."
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm resize-none"
+                placeholder="Linha 1&#10;Linha 2&#10;Linha 3"
+                rows={5}
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm resize-y"
               />
+              <div className="flex items-center gap-1 mt-1">
+                <select value={config.postLoginDialogBodyFont ?? 'Inter'} onChange={e => set('postLoginDialogBodyFont', e.target.value)} className="flex-1 px-2 py-1 rounded bg-white/[0.06] border border-white/[0.08] text-foreground text-xs">
+                  {FONT_OPTIONS.map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                </select>
+                <button onClick={() => set('postLoginDialogBodyBold', !config.postLoginDialogBodyBold)} className={`p-1.5 rounded ${config.postLoginDialogBodyBold ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Bold size={13} /></button>
+                <button onClick={() => set('postLoginDialogBodyItalic', !config.postLoginDialogBodyItalic)} className={`p-1.5 rounded ${config.postLoginDialogBodyItalic ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Italic size={13} /></button>
+              </div>
+            </div>
+            {/* Text alignment */}
+            <div className="flex items-center justify-between py-1">
+              <span className="text-xs text-muted-foreground">Alinhamento</span>
+              <div className="flex gap-1">
+                {(['left', 'center', 'right'] as const).map(a => (
+                  <button key={a} onClick={() => set('postLoginDialogTextAlign', a)} className={`p-1.5 rounded ${(config.postLoginDialogTextAlign ?? 'left') === a ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                    {a === 'left' ? <AlignLeft size={13} /> : a === 'center' ? <AlignCenter size={13} /> : <AlignRight size={13} />}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -181,11 +211,29 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 <div className="flex justify-end mb-1">
                   <span className="text-white/40 text-xs cursor-default">✕</span>
                 </div>
-                <h3 style={{ color: config.postLoginDialogTitleColor ?? '#ffffff', fontSize: titleSize * 0.85, fontWeight: 700, marginBottom: 8 }}>
+                <h3 style={{
+                  color: config.postLoginDialogTitleColor ?? '#ffffff',
+                  fontSize: titleSize * 0.85,
+                  fontWeight: config.postLoginDialogTitleBold !== false ? 700 : 400,
+                  fontStyle: config.postLoginDialogTitleItalic ? 'italic' : 'normal',
+                  fontFamily: config.postLoginDialogTitleFont ?? 'Inter',
+                  textAlign: config.postLoginDialogTextAlign ?? 'left',
+                  marginBottom: 8,
+                }}>
                   {config.postLoginDialogTitle || 'Título do Diálogo'}
                 </h3>
-                <p style={{ color: config.postLoginDialogTextColor ?? '#ffffffcc', fontSize: bodySize * 0.85, lineHeight: 1.5, marginBottom: 14 }}>
-                  {config.postLoginDialogBody || 'Mensagem de exemplo para o usuário...'}
+                <p style={{
+                  color: config.postLoginDialogTextColor ?? '#ffffffcc',
+                  fontSize: bodySize * 0.85,
+                  lineHeight: 1.6,
+                  fontWeight: config.postLoginDialogBodyBold ? 700 : 400,
+                  fontStyle: config.postLoginDialogBodyItalic ? 'italic' : 'normal',
+                  fontFamily: config.postLoginDialogBodyFont ?? 'Inter',
+                  textAlign: config.postLoginDialogTextAlign ?? 'left',
+                  whiteSpace: 'pre-wrap',
+                  marginBottom: 14,
+                }}>
+                  {config.postLoginDialogBody || 'Mensagem de exemplo\npara o usuário...'}
                 </p>
                 {config.postLoginDialogBtnEnabled !== false && (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
                   <button
