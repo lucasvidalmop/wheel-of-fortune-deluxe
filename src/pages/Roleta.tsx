@@ -721,7 +721,7 @@ const Roleta = () => {
             }}>
               {config.postLoginDialogBody || ''}
             </p>
-            {(config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
+            {config.postLoginDialogBtnEnabled !== false && (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
               <a
                 href={config.postLoginDialogBtnUrl || '#'}
                 target="_blank"

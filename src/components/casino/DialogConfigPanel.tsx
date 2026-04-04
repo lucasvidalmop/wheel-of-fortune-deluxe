@@ -92,31 +92,46 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
 
           {/* Link Button */}
           <div className="space-y-3 border border-white/[0.06] rounded-xl p-3 bg-white/[0.02]">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Botão de Link</h4>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Texto do Botão</label>
-              <input
-                type="text"
-                value={config.postLoginDialogBtnText ?? ''}
-                onChange={e => set('postLoginDialogBtnText', e.target.value)}
-                placeholder="Acessar"
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm"
-              />
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Botão de Link</h4>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs text-muted-foreground">{config.postLoginDialogBtnEnabled !== false ? 'Ativo' : 'Inativo'}</span>
+                <button
+                  onClick={() => set('postLoginDialogBtnEnabled', !(config.postLoginDialogBtnEnabled !== false))}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${config.postLoginDialogBtnEnabled !== false ? 'bg-primary' : 'bg-white/10'}`}
+                >
+                  <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${config.postLoginDialogBtnEnabled !== false ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </label>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">URL do Link</label>
-              <input
-                type="url"
-                value={config.postLoginDialogBtnUrl ?? ''}
-                onChange={e => set('postLoginDialogBtnUrl', e.target.value)}
-                placeholder="https://exemplo.com"
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm"
-              />
-            </div>
-            <ColorInput label="Cor do Botão" value={config.postLoginDialogBtnBgColor ?? '#0ABACC'} onChange={v => set('postLoginDialogBtnBgColor', v)} />
-            <ColorInput label="Cor do Texto do Botão" value={config.postLoginDialogBtnTextColor ?? '#000000'} onChange={v => set('postLoginDialogBtnTextColor', v)} />
-            <SliderInput label="Tamanho da Fonte do Botão" value={config.postLoginDialogBtnFontSize ?? 14} min={10} max={24} onChange={v => set('postLoginDialogBtnFontSize', v)} />
-            <SliderInput label="Borda do Botão" value={config.postLoginDialogBtnBorderRadius ?? 8} min={0} max={30} onChange={v => set('postLoginDialogBtnBorderRadius', v)} />
+            {config.postLoginDialogBtnEnabled !== false && (
+              <>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Texto do Botão</label>
+                  <input
+                    type="text"
+                    value={config.postLoginDialogBtnText ?? ''}
+                    onChange={e => set('postLoginDialogBtnText', e.target.value)}
+                    placeholder="Acessar"
+                    className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">URL do Link</label>
+                  <input
+                    type="url"
+                    value={config.postLoginDialogBtnUrl ?? ''}
+                    onChange={e => set('postLoginDialogBtnUrl', e.target.value)}
+                    placeholder="https://exemplo.com"
+                    className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm"
+                  />
+                </div>
+                <ColorInput label="Cor do Botão" value={config.postLoginDialogBtnBgColor ?? '#0ABACC'} onChange={v => set('postLoginDialogBtnBgColor', v)} />
+                <ColorInput label="Cor do Texto do Botão" value={config.postLoginDialogBtnTextColor ?? '#000000'} onChange={v => set('postLoginDialogBtnTextColor', v)} />
+                <SliderInput label="Tamanho da Fonte do Botão" value={config.postLoginDialogBtnFontSize ?? 14} min={10} max={24} onChange={v => set('postLoginDialogBtnFontSize', v)} />
+                <SliderInput label="Borda do Botão" value={config.postLoginDialogBtnBorderRadius ?? 8} min={0} max={30} onChange={v => set('postLoginDialogBtnBorderRadius', v)} />
+              </>
+            )}
           </div>
 
           {/* Visual Desktop */}
@@ -172,7 +187,7 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 <p style={{ color: config.postLoginDialogTextColor ?? '#ffffffcc', fontSize: bodySize * 0.85, lineHeight: 1.5, marginBottom: 14 }}>
                   {config.postLoginDialogBody || 'Mensagem de exemplo para o usuário...'}
                 </p>
-                {(config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
+                {config.postLoginDialogBtnEnabled !== false && (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
                   <button
                     style={{
                       background: config.postLoginDialogBtnBgColor ?? '#0ABACC',
