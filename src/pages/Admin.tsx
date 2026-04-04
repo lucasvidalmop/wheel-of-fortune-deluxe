@@ -100,7 +100,7 @@ const Admin = () => {
     const { data } = await (supabase as any).from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle();
     setIsAdmin(!!data);
     setLoading(false);
-    if (data) { fetchUsers(); fetchHistory(); }
+    if (data) { fetchUsers(); fetchHistory(); fetchSiteSettings(); }
   };
 
   const fetchUsers = async () => {
