@@ -89,18 +89,24 @@ const Dashboard = () => {
   const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
   useEffect(() => {
+    let dataLoaded = false;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
-      if (s?.user) {
+      if (s?.user && !dataLoaded) {
+        dataLoaded = true;
         loadData(s.user.id);
-      } else {
+      } else if (!s) {
         setLoading(false);
       }
     });
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
-      if (s?.user) loadData(s.user.id);
-      else setLoading(false);
+      if (s?.user && !dataLoaded) {
+        dataLoaded = true;
+        loadData(s.user.id);
+      } else if (!s) {
+        setLoading(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
