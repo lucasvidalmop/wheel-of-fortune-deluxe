@@ -82,16 +82,41 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 placeholder="Bem-vindo!"
                 className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm"
               />
+              <div className="flex items-center gap-1 mt-1">
+                <select value={config.postLoginDialogTitleFont ?? 'Inter'} onChange={e => set('postLoginDialogTitleFont', e.target.value)} className="flex-1 px-2 py-1 rounded bg-white/[0.06] border border-white/[0.08] text-foreground text-xs">
+                  {FONT_OPTIONS.map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                </select>
+                <button onClick={() => set('postLoginDialogTitleBold', !config.postLoginDialogTitleBold)} className={`p-1.5 rounded ${config.postLoginDialogTitleBold ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Bold size={13} /></button>
+                <button onClick={() => set('postLoginDialogTitleItalic', !config.postLoginDialogTitleItalic)} className={`p-1.5 rounded ${config.postLoginDialogTitleItalic ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Italic size={13} /></button>
+              </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Mensagem</label>
+              <label className="text-xs text-muted-foreground">Mensagem (use Enter para quebrar linhas)</label>
               <textarea
                 value={config.postLoginDialogBody ?? ''}
                 onChange={e => set('postLoginDialogBody', e.target.value)}
-                placeholder="Sua mensagem aqui..."
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm resize-none"
+                placeholder="Linha 1&#10;Linha 2&#10;Linha 3"
+                rows={5}
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm resize-y"
               />
+              <div className="flex items-center gap-1 mt-1">
+                <select value={config.postLoginDialogBodyFont ?? 'Inter'} onChange={e => set('postLoginDialogBodyFont', e.target.value)} className="flex-1 px-2 py-1 rounded bg-white/[0.06] border border-white/[0.08] text-foreground text-xs">
+                  {FONT_OPTIONS.map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                </select>
+                <button onClick={() => set('postLoginDialogBodyBold', !config.postLoginDialogBodyBold)} className={`p-1.5 rounded ${config.postLoginDialogBodyBold ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Bold size={13} /></button>
+                <button onClick={() => set('postLoginDialogBodyItalic', !config.postLoginDialogBodyItalic)} className={`p-1.5 rounded ${config.postLoginDialogBodyItalic ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Italic size={13} /></button>
+              </div>
+            </div>
+            {/* Text alignment */}
+            <div className="flex items-center justify-between py-1">
+              <span className="text-xs text-muted-foreground">Alinhamento</span>
+              <div className="flex gap-1">
+                {(['left', 'center', 'right'] as const).map(a => (
+                  <button key={a} onClick={() => set('postLoginDialogTextAlign', a)} className={`p-1.5 rounded ${(config.postLoginDialogTextAlign ?? 'left') === a ? 'bg-primary/30 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                    {a === 'left' ? <AlignLeft size={13} /> : a === 'center' ? <AlignCenter size={13} /> : <AlignRight size={13} />}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
