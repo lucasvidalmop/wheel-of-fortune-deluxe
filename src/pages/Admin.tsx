@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import CustomizationPanel from '@/components/casino/CustomizationPanel';
-import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload } from 'lucide-react';
+import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -36,7 +34,7 @@ const Admin = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'users' | 'wheel' | 'admins' | 'history' | 'site'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'admins' | 'history' | 'site'>('users');
   const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '' });
   const [siteSaving, setSiteSaving] = useState(false);
   const [siteUploading, setSiteUploading] = useState(false);
@@ -60,30 +58,6 @@ const Admin = () => {
   const [editAdminSaving, setEditAdminSaving] = useState(false);
 
   useSiteSettings();
-
-  const [wheelConfig, setWheelConfig] = useState<WheelConfig>(() => {
-    const saved = localStorage.getItem('wheel_config');
-    return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
-  });
-
-  useEffect(() => {
-    try {
-      const { segments, ...rest } = wheelConfig;
-      const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
-        ...s,
-        imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
-      }));
-      const clean = {
-        ...rest,
-        segments: cleanSegments,
-        authLogoUrl: typeof rest.authLogoUrl === 'string' && rest.authLogoUrl.startsWith('data:') ? '' : rest.authLogoUrl,
-        authBgImageUrl: typeof rest.authBgImageUrl === 'string' && rest.authBgImageUrl.startsWith('data:') ? '' : rest.authBgImageUrl,
-      };
-      localStorage.setItem('wheel_config', JSON.stringify(clean));
-    } catch {
-      localStorage.removeItem('wheel_config');
-    }
-  }, [wheelConfig]);
 
   useEffect(() => {
     let isMounted = true;
@@ -421,7 +395,6 @@ const Admin = () => {
   const menuItems: { key: typeof activeTab; icon: React.ReactNode; label: string }[] = [
     { key: 'site', icon: <Globe size={20} />, label: 'Site' },
     { key: 'users', icon: <Users size={20} />, label: 'Inscritos' },
-    { key: 'wheel', icon: <Target size={20} />, label: 'Roleta' },
     { key: 'admins', icon: <UserPlus size={20} />, label: 'Usuários' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico' },
   ];
@@ -429,7 +402,6 @@ const Admin = () => {
   const tabTitles: Record<string, string> = {
     site: 'Configurações do Site',
     users: 'Todos os Inscritos',
-    wheel: 'Configurar Roleta',
     admins: 'Gerenciar Usuários',
     history: 'Histórico Global',
   };
@@ -729,12 +701,6 @@ const Admin = () => {
             </>
           )}
 
-          {/* ══════ WHEEL ══════ */}
-          {activeTab === 'wheel' && (
-            <div className="max-w-2xl">
-              <CustomizationPanel config={wheelConfig} onChange={setWheelConfig} />
-            </div>
-          )}
 
           {/* ══════ ADMINS / CREATE USERS ══════ */}
           {activeTab === 'admins' && (
