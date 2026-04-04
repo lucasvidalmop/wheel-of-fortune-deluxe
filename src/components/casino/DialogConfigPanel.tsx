@@ -187,7 +187,7 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 <p style={{ color: config.postLoginDialogTextColor ?? '#ffffffcc', fontSize: bodySize * 0.85, lineHeight: 1.5, marginBottom: 14 }}>
                   {config.postLoginDialogBody || 'Mensagem de exemplo para o usuário...'}
                 </p>
-                {(config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
+                {config.postLoginDialogBtnEnabled !== false && (config.postLoginDialogBtnText || config.postLoginDialogBtnUrl) && (
                   <button
                     style={{
                       background: config.postLoginDialogBtnBgColor ?? '#0ABACC',
