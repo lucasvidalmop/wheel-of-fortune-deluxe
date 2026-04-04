@@ -73,6 +73,10 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
   root.style.setProperty('--theme-glow-opacity', String(t.glowOpacity));
   root.style.setProperty('--theme-border-opacity', String(t.borderOpacity));
   root.style.setProperty('--theme-bg-image', t.bgImage ? `url(${t.bgImage})` : 'none');
+  root.style.setProperty('--theme-select-bg', t.selectBgColor || '#1a1a2e');
+  root.style.setProperty('--theme-select-text', t.selectTextColor || '#ffffff');
+  root.style.setProperty('--theme-input-bg', t.inputBgColor || '#0f0f1e');
+  root.style.setProperty('--theme-input-text', t.inputTextColor || '#ffffff');
 };
 
 const clearThemeFromDOM = () => {
