@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { WheelConfig } from './types';
-import { getApiBaseUrl, setApiBaseUrl } from '@/services/api';
+
 import { toast } from 'sonner';
 import { Settings, X, ChevronDown, Upload, Trash2, Plus } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
@@ -199,7 +199,7 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChange }) => {
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const [openSegments, setOpenSegments] = useState<Record<string, boolean>>({});
-  const [apiUrl, setApiUrlState] = useState(getApiBaseUrl());
+  
 
   const updateGlobal = (key: keyof Omit<WheelConfig, 'segments'>, value: any) => {
     onChange({ ...config, [key]: value });
@@ -507,14 +507,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
       </Card>
 
-      {/* ── API Backend ── */}
-      <Card title="API Backend" icon={<span className="text-base">🔗</span>}>
-        <div>
-          <label className="text-[10px] text-muted-foreground font-medium">URL base (Laravel)</label>
-          <input type="text" value={apiUrl} placeholder="https://seusite.com" onChange={e => { setApiUrlState(e.target.value); setApiBaseUrl(e.target.value); }} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
-          <p className="text-[10px] text-muted-foreground mt-1.5">Rota pública: /roleta?account_id=xxx</p>
-        </div>
-      </Card>
+
     </div>
   );
 };
