@@ -191,6 +191,16 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <Palette size={14} className="text-primary" />
+                  Caixas de Seleção / Inputs
+                </div>
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                  <ColorInput label="Fundo do seletor" value={theme.selectBgColor} onChange={v => save({ ...theme, selectBgColor: v })} />
+                  <ColorInput label="Texto do seletor" value={theme.selectTextColor} onChange={v => save({ ...theme, selectTextColor: v })} />
+                  <ColorInput label="Fundo dos inputs" value={theme.inputBgColor} onChange={v => save({ ...theme, inputBgColor: v })} />
+                  <ColorInput label="Texto dos inputs" value={theme.inputTextColor} onChange={v => save({ ...theme, inputTextColor: v })} />
+                </div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
                   <Monitor size={14} className="text-primary" />
                   Efeitos Glass
                 </div>
