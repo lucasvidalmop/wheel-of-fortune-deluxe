@@ -96,6 +96,12 @@ const Dashboard = () => {
   const [grantSpinSegment, setGrantSpinSegment] = useState<number>(0);
   const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
+  // Multi-select for batch grant
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [showBatchGrantModal, setShowBatchGrantModal] = useState(false);
+  const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
+  const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
+
   useEffect(() => {
     let dataLoaded = false;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
@@ -316,6 +322,45 @@ const Dashboard = () => {
     toast.success(`1 giro liberado para ${grantSpinUser.name}!`);
     setGrantSpinUser(null);
     fetchUsers();
+  };
+
+  const confirmBatchGrantSpin = async () => {
+    if (selectedUserIds.size === 0) return;
+    const isFixed = batchGrantMode === 'fixed';
+    const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
+    let success = 0;
+    for (const user of selectedUsers) {
+      const { error } = await (supabase as any).from('wheel_users').update({
+        spins_available: 1,
+        fixed_prize_enabled: isFixed,
+        fixed_prize_segment: isFixed ? batchGrantSegment : null,
+      }).eq('id', user.id);
+      if (!error) success++;
+    }
+    toast.success(`${success} giro(s) liberado(s)!`);
+    setShowBatchGrantModal(false);
+    setSelectedUserIds(new Set());
+    fetchUsers();
+  };
+
+  const handleClearHistory = async () => {
+    if (!confirm('Tem certeza que deseja limpar todo o histórico de sorteio?')) return;
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const { error } = await (supabase as any).from('spin_results').delete().eq('owner_id', uid);
+    if (error) { toast.error('Erro ao limpar histórico'); return; }
+    toast.success('Histórico limpo!');
+    setSpinResults([]);
+  };
+
+  const handleClearAnalytics = async () => {
+    if (!confirm('Tem certeza que deseja limpar todo o histórico de analytics?')) return;
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const { error } = await (supabase as any).from('page_views').delete().eq('owner_id', uid);
+    if (error) { toast.error('Erro ao limpar analytics'); return; }
+    toast.success('Analytics limpo!');
+    setPageViews([]);
   };
 
   const handleDeleteUser = async (id: string) => {
@@ -745,10 +790,41 @@ const Dashboard = () => {
                 </GlassCard>
               ) : (
                 <GlassCard className="overflow-hidden">
+                  {/* Batch action bar */}
+                  {selectedUserIds.size > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-primary/20 bg-primary/[0.05]">
+                      <span className="text-xs text-primary font-semibold">{selectedUserIds.size} selecionado(s)</span>
+                      <button
+                        onClick={() => { setBatchGrantMode('random'); setBatchGrantSegment(0); setShowBatchGrantModal(true); }}
+                        className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary border border-primary/30 text-xs font-semibold hover:bg-primary/30 transition"
+                      >
+                        🎰 Liberar Giros
+                      </button>
+                      <button
+                        onClick={() => setSelectedUserIds(new Set())}
+                        className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground text-xs hover:bg-white/[0.08] transition"
+                      >
+                        Limpar seleção
+                      </button>
+                    </div>
+                  )}
                   <table className="w-full text-sm table-fixed">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
+                        <th className="px-3 py-3.5 w-10">
+                          <input
+                            type="checkbox"
+                            checked={filteredUsers.length > 0 && filteredUsers.every(u => selectedUserIds.has(u.id))}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+                              } else {
+                                setSelectedUserIds(new Set());
+                              }
+                            }}
+                            className="rounded border-white/20 bg-white/[0.05]"
+                          />
+                        </th>
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Celular</th>
@@ -758,8 +834,19 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {filteredUsers.map((user, index) => (
-                        <tr key={user.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group">
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{index + 1}</td>
+                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''}`}>
+                          <td className="px-3 py-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedUserIds.has(user.id)}
+                              onChange={e => {
+                                const next = new Set(selectedUserIds);
+                                if (e.target.checked) next.add(user.id); else next.delete(user.id);
+                                setSelectedUserIds(next);
+                              }}
+                              className="rounded border-white/20 bg-white/[0.05]"
+                            />
+                          </td>
                           <td className="px-4 py-3 text-foreground font-medium truncate">{user.name}</td>
                           <td className="px-4 py-3 text-muted-foreground truncate">{user.email}</td>
                           <td className="px-4 py-3 text-muted-foreground text-xs">{user.phone}</td>
@@ -932,7 +1019,10 @@ const Dashboard = () => {
                 </GlassCard>
               </div>
 
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-end gap-2">
+                <button onClick={handleClearHistory} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-destructive/20 text-destructive text-sm hover:bg-destructive/10 transition">
+                  <Trash2 size={14} /> Limpar Histórico
+                </button>
                 <button onClick={() => fetchHistory()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
                   <RotateCcw size={14} /> Atualizar
                 </button>
@@ -1201,11 +1291,16 @@ const Dashboard = () => {
               </div>
 
               {/* Refresh + Access log table */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">{total} acesso(s) rastreados</p>
-                <button onClick={() => fetchAnalytics()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
-                  <RotateCcw size={14} /> Atualizar
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={handleClearAnalytics} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-destructive/20 text-destructive text-sm hover:bg-destructive/10 transition">
+                    <Trash2 size={14} /> Limpar Analytics
+                  </button>
+                  <button onClick={() => fetchAnalytics()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                    <RotateCcw size={14} /> Atualizar
+                  </button>
+                </div>
               </div>
 
               {analyticsLoading ? (
@@ -1643,6 +1738,76 @@ const Dashboard = () => {
               </button>
               <button onClick={confirmGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
                 Liberar Giro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Grant Spin Modal */}
+      {showBatchGrantModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowBatchGrantModal(false)}>
+          <div className="w-full max-w-md mx-4 rounded-2xl border border-white/[0.08] bg-[#1a1a2e] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-foreground">Liberar Giros em Lote — {selectedUserIds.size} inscrito(s)</h3>
+              <button onClick={() => setShowBatchGrantModal(false)} className="p-1 rounded-lg hover:bg-white/10 text-muted-foreground"><X size={18} /></button>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-4">Escolha como o prêmio será definido para todos os selecionados:</p>
+
+            <div className="flex gap-2 mb-5">
+              <button
+                onClick={() => setBatchGrantMode('random')}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all border ${batchGrantMode === 'random' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/[0.04] text-muted-foreground border-white/[0.08] hover:bg-white/[0.08]'}`}
+              >
+                🎲 Aleatório (%)
+              </button>
+              <button
+                onClick={() => setBatchGrantMode('fixed')}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all border ${batchGrantMode === 'fixed' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/[0.04] text-muted-foreground border-white/[0.08] hover:bg-white/[0.08]'}`}
+              >
+                🎯 Pré-definir
+              </button>
+            </div>
+
+            {batchGrantMode === 'random' ? (
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 mb-5">
+                <p className="text-xs text-muted-foreground mb-3">O prêmio será sorteado automaticamente baseado nas probabilidades:</p>
+                <div className="space-y-1.5">
+                  {wheelConfig.segments.map((seg, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: seg.color }} />
+                      <span className="text-foreground flex-1">{seg.title}</span>
+                      <span className="text-muted-foreground font-mono">{seg.percentage}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-5">
+                <label className="text-xs text-muted-foreground mb-2 block">Selecione o prêmio garantido para todos:</label>
+                <div className="space-y-1.5">
+                  {wheelConfig.segments.map((seg, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setBatchGrantSegment(i)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border ${batchGrantSegment === i ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-white/[0.02] border-white/[0.06] text-foreground hover:bg-white/[0.06]'}`}
+                    >
+                      <div className="w-4 h-4 rounded-sm flex-shrink-0" style={{ background: seg.color }} />
+                      <span className="flex-1 text-left font-medium">{seg.title}</span>
+                      <span className="text-xs text-muted-foreground">{seg.percentage}%</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setShowBatchGrantModal(false)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] transition-all border border-white/[0.08]">
+                Cancelar
+              </button>
+              <button onClick={confirmBatchGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
+                Liberar {selectedUserIds.size} Giro(s)
               </button>
             </div>
           </div>
