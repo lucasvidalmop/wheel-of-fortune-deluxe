@@ -82,6 +82,43 @@ textarea {
   color: var(--theme-input-text, #ffffff);
 }
 
+/* Custom checkbox styling */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+input[type="checkbox"]:hover {
+  border-color: hsl(var(--primary) / 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+input[type="checkbox"]:checked {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid hsl(var(--primary-foreground));
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 @layer utilities {
   .font-display {
     font-family: 'Orbitron', sans-serif;
