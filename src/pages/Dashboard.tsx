@@ -558,7 +558,7 @@ const Dashboard = () => {
             </div>
             {editingSlug ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{baseUrl}/roleta/</span>
+                <span className="text-sm text-muted-foreground">{baseUrl}/</span>
                 <input
                   value={newSlug}
                   onChange={e => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
