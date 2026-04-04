@@ -199,7 +199,7 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChange }) => {
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const [openSegments, setOpenSegments] = useState<Record<string, boolean>>({});
-  const [apiUrl, setApiUrlState] = useState(getApiBaseUrl());
+  
 
   const updateGlobal = (key: keyof Omit<WheelConfig, 'segments'>, value: any) => {
     onChange({ ...config, [key]: value });
