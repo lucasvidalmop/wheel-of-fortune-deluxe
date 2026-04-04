@@ -129,6 +129,9 @@ const Dashboard = () => {
       setConfigId(cfg.id);
       if (cfg.config && Object.keys(cfg.config).length > 0) {
         setWheelConfig({ ...defaultConfig, ...cfg.config });
+        if (cfg.config.dashboardTheme) {
+          setDashboardTheme({ ...defaultTheme, ...cfg.config.dashboardTheme });
+        }
       }
     }
 
