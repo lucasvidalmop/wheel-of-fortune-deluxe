@@ -558,7 +558,7 @@ const Dashboard = () => {
             </div>
             {editingSlug ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{baseUrl}/roleta/</span>
+                <span className="text-sm text-muted-foreground">{baseUrl}/</span>
                 <input
                   value={newSlug}
                   onChange={e => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
@@ -569,11 +569,11 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <code className="text-sm text-primary font-mono bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg">{baseUrl}/roleta/{slug}</code>
+                <code className="text-sm text-primary font-mono bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg">{baseUrl}/{slug}</code>
                 <button onClick={() => setEditingSlug(true)} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Editar">
                   <Pencil size={14} />
                 </button>
-                <button onClick={() => { navigator.clipboard.writeText(`${baseUrl}/roleta/${slug}`); toast.success('Link copiado!'); }} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Copiar">
+                <button onClick={() => { navigator.clipboard.writeText(`${baseUrl}/${slug}`); toast.success('Link copiado!'); }} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Copiar">
                   <Copy size={14} />
                 </button>
               </div>
@@ -1312,7 +1312,7 @@ const Dashboard = () => {
                   if (recipients.length === 0) { toast.error('Nenhum destinatário selecionado'); return; }
                   if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
                   setEmailSending(true);
-                  const roletaLink = `${baseUrl}/roleta/${slug}`;
+                  const roletaLink = `${baseUrl}/${slug}`;
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
                   if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
                   let sent = 0, errors = 0;
