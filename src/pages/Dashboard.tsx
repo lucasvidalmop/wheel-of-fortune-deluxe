@@ -771,6 +771,32 @@ const Dashboard = () => {
                         <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Account ID</label>
                         <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
                       </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tipo Chave PIX</label>
+                          <select value={form.pix_key_type} onChange={e => setForm({ ...form, pix_key_type: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40">
+                            <option value="">Selecione</option>
+                            <option value="CPF">CPF</option>
+                            <option value="Email">Email</option>
+                            <option value="Telefone">Telefone</option>
+                            <option value="Aleatória">Aleatória</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Chave PIX</label>
+                          <input type="text" value={form.pix_key} onChange={e => setForm({ ...form, pix_key: e.target.value })} placeholder="Chave PIX" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tipo</label>
+                          <input type="text" value={form.user_type} onChange={e => setForm({ ...form, user_type: e.target.value })} placeholder="Ex: VIP, Comum" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Responsável</label>
+                          <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        </div>
+                      </div>
 
                       {/* Fixed prize */}
                       <div className="space-y-2 pt-2 border-t border-white/[0.06]">
