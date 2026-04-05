@@ -337,9 +337,9 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       <textarea
                         value={seg.postSpinMessage ?? ''}
                         onChange={e => updateSegment(i, 'postSpinMessage', e.target.value)}
-                        placeholder={`Parabéns! Você ganhou ${seg.reward} — ${seg.title}!`}
+                        placeholder={`Parabéns! Você ganhou ${seg.reward}!`}
                         rows={2}
-                        className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground resize-y"
+                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground"
                       />
                       <span className="text-[9px] text-muted-foreground">Deixe vazio para usar o padrão. Use {'{premio}'} e {'{titulo}'} como variáveis.</span>
                     </div>
@@ -347,13 +347,13 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5">
                         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Pré-visualização</span>
                         <div
-                          className="mt-1 text-sm rounded-lg p-3 text-center"
+                          className="mt-1.5 rounded-lg p-3 text-center"
                           style={{ background: config.resultBoxColor, color: config.resultTextColor, border: `1px solid ${config.resultBorderColor}` }}
                         >
                           <p className="font-bold text-base mb-1">{seg.postSpinEmoji ?? '🎉'} {seg.reward}</p>
-                          <p className="font-bold mb-1">{seg.title}</p>
+                          {seg.postSpinMessage && <p className="font-bold mb-1">{seg.title}</p>}
                           <p className="text-xs opacity-85" style={{ whiteSpace: 'pre-line' }}>
-                            {(seg.postSpinMessage || `Parabéns! Você ganhou ${seg.reward} — ${seg.title}!`).replace(/\{premio\}/g, seg.reward).replace(/\{titulo\}/g, seg.title)}
+                            {(seg.postSpinMessage || `Parabéns! Você ganhou ${seg.reward}!`).replace(/\{premio\}/g, seg.reward).replace(/\{titulo\}/g, seg.title)}
                           </p>
                         </div>
                       </div>

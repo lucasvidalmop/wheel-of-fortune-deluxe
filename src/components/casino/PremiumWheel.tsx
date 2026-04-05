@@ -381,21 +381,23 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             >
               {config.segments[winnerIndex].postSpinEmoji ?? '🎉'} {config.segments[winnerIndex].reward}
             </h3>
+            {config.segments[winnerIndex].postSpinMessage && (
+              <p
+                className="font-bold mb-1"
+                style={{ color: config.resultTextColor }}
+              >
+                {config.segments[winnerIndex].title}
+              </p>
+            )}
             <p
-              className="text-lg font-bold mb-1"
-              style={{ color: config.resultTextColor }}
-            >
-              {config.segments[winnerIndex].title}
-            </p>
-            <p
-              className="text-sm mb-4"
+              className="text-sm"
               style={{ color: config.resultTextColor, opacity: 0.85, whiteSpace: 'pre-line' }}
             >
               {config.segments[winnerIndex].postSpinMessage
                 ? config.segments[winnerIndex].postSpinMessage
                     .replace(/\{premio\}/g, config.segments[winnerIndex].reward)
                     .replace(/\{titulo\}/g, config.segments[winnerIndex].title)
-                : `Parabéns! Você ganhou ${config.segments[winnerIndex].reward} — ${config.segments[winnerIndex].title}!`}
+                : `Parabéns! Você ganhou ${config.segments[winnerIndex].reward}!`}
             </p>
             <button
               data-share-btn
