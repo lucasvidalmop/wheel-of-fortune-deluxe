@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { WheelConfig } from './types';
-
+import { playSpinSound } from '@/lib/spinSound';
 
 
 
