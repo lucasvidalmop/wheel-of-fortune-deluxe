@@ -11,20 +11,35 @@ interface CustomizationPanelProps {
   onChange: (config: WheelConfig) => void;
 }
 
-const ColorInput: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between gap-2 py-1.5">
+type ColorInputProps = {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+};
+
+const ColorInput = React.forwardRef<HTMLDivElement, ColorInputProps>(({ label, value, onChange }, ref) => (
+  <div ref={ref} className="flex items-center justify-between gap-2 py-1.5">
     <span className="text-sm text-muted-foreground">{label}</span>
     <div className="flex items-center gap-2">
       <div className="relative">
-        <input type="color" value={value} onChange={e => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-        <div className="w-7 h-7 rounded-lg border border-border shadow-sm cursor-pointer hover:scale-110 transition-transform" style={{ background: value }} />
+        <input type="color" value={value} onChange={e => onChange(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+        <div className="h-7 w-7 cursor-pointer rounded-lg border border-border shadow-sm transition-transform hover:scale-110" style={{ background: value }} />
       </div>
       <span className="text-[10px] font-mono text-muted-foreground">{value}</span>
     </div>
   </div>
-);
+));
+ColorInput.displayName = 'ColorInput';
 
-const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: string) => void; folder?: string; compact?: boolean }> = ({ label, value, onChange, folder = 'wheel', compact }) => {
+type ImageUploadProps = {
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+  folder?: string;
+  compact?: boolean;
+};
+
+const ImageUpload = React.forwardRef<HTMLDivElement, ImageUploadProps>(({ label, value, onChange, folder = 'wheel', compact }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -47,76 +62,95 @@ const ImageUpload: React.FC<{ label: string; value?: string; onChange: (v: strin
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3">
-        {value && <img src={value} alt="" className="w-10 h-10 rounded-lg object-cover border border-border" />}
-        <button onClick={() => inputRef.current?.click()} disabled={uploading} className="text-xs px-3 py-1.5 rounded-lg bg-muted/80 text-foreground hover:bg-muted transition-all disabled:opacity-50">
+      <div ref={ref} className="flex items-center gap-3">
+        {value && <img src={value} alt="" className="h-10 w-10 rounded-lg border border-border object-cover" />}
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="rounded-lg bg-muted/80 px-3 py-1.5 text-xs text-foreground transition-all hover:bg-muted disabled:opacity-50">
           {uploading ? '⏳' : value ? '🔄' : '📤'} {label}
         </button>
-        {value && <button onClick={() => onChange('')} className="text-xs text-destructive hover:text-destructive/80"><Trash2 size={14} /></button>}
+        {value && <button type="button" onClick={() => onChange('')} className="text-xs text-destructive hover:text-destructive/80"><Trash2 size={14} /></button>}
         <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div ref={ref} className="space-y-2">
       <label className="text-sm text-muted-foreground">{label}</label>
-      <div className="flex gap-3 items-center">
-        {value && <img src={value} alt="" className="w-12 h-12 rounded-xl object-cover border-2 border-border shadow-sm" />}
+      <div className="flex items-center gap-3">
+        {value && <img src={value} alt="" className="h-12 w-12 rounded-xl border-2 border-border object-cover shadow-sm" />}
         <div className="flex gap-2">
-          <button onClick={() => inputRef.current?.click()} disabled={uploading} className="text-xs px-4 py-2 rounded-lg border border-border bg-muted/50 text-foreground hover:bg-muted transition-all disabled:opacity-50 font-medium">
+          <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="rounded-lg border border-border bg-muted/50 px-4 py-2 text-xs font-medium text-foreground transition-all hover:bg-muted disabled:opacity-50">
             {uploading ? '⏳ Enviando...' : value ? '🔄 Trocar' : '📤 Upload'}
           </button>
-          {value && <button onClick={() => onChange('')} className="text-xs px-3 py-2 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all"><Trash2 size={14} /></button>}
+          {value && <button type="button" onClick={() => onChange('')} className="rounded-lg border border-destructive/30 px-3 py-2 text-xs text-destructive transition-all hover:bg-destructive/10"><Trash2 size={14} /></button>}
         </div>
       </div>
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
     </div>
   );
+});
+ImageUpload.displayName = 'ImageUpload';
+
+type RangeInputProps = {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (v: number) => void;
+  suffix?: string;
 };
 
-const RangeInput: React.FC<{ label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void; suffix?: string }> = ({ label, value, min, max, step = 1, onChange, suffix = '' }) => (
+const RangeInput: React.FC<RangeInputProps> = ({ label, value, min, max, step = 1, onChange, suffix = '' }) => (
   <div className="space-y-1">
     <div className="flex items-center justify-between">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-[10px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">{step < 1 ? value.toFixed(1) : value}{suffix}</span>
+      <span className="rounded bg-muted/50 px-1.5 py-0.5 text-[10px] font-mono text-foreground">{step < 1 ? value.toFixed(1) : value}{suffix}</span>
     </div>
-    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="w-full accent-primary h-1 rounded-full" />
+    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="h-1 w-full rounded-full accent-primary" />
   </div>
 );
 
-const ImagePositionControls: React.FC<{
-  offsetX: number; offsetY: number; scale: number;
-  onChangeX: (v: number) => void; onChangeY: (v: number) => void; onChangeScale: (v: number) => void;
-}> = ({ offsetX, offsetY, scale, onChangeX, onChangeY, onChangeScale }) => (
-  <div className="space-y-1 p-2 rounded-lg bg-muted/20 border border-border/30">
+type ImagePositionControlsProps = {
+  offsetX: number;
+  offsetY: number;
+  scale: number;
+  onChangeX: (v: number) => void;
+  onChangeY: (v: number) => void;
+  onChangeScale: (v: number) => void;
+};
+
+const ImagePositionControls = React.forwardRef<HTMLDivElement, ImagePositionControlsProps>(({ offsetX, offsetY, scale, onChangeX, onChangeY, onChangeScale }, ref) => (
+  <div ref={ref} className="space-y-1 rounded-lg border border-border/30 bg-muted/20 p-2">
     <RangeInput label="Posição X" value={offsetX} min={-200} max={200} onChange={onChangeX} />
     <RangeInput label="Posição Y" value={offsetY} min={-200} max={200} onChange={onChangeY} />
     <RangeInput label="Zoom" value={scale} min={0.1} max={5} step={0.1} onChange={onChangeScale} />
   </div>
-);
+));
+ImagePositionControls.displayName = 'ImagePositionControls';
 
 const ToggleSwitch: React.FC<{ label: string; checked: boolean; onChange: (v: boolean) => void }> = ({ label, checked, onChange }) => (
   <div className="flex items-center justify-between py-1">
     <span className="text-sm text-muted-foreground">{label}</span>
     <button
+      type="button"
       onClick={() => onChange(!checked)}
-      className={`w-10 h-5 rounded-full relative transition-all duration-300 ${checked ? 'bg-primary' : 'bg-muted'}`}
+      className={`relative h-5 w-10 rounded-full transition-all duration-300 ${checked ? 'bg-primary' : 'bg-muted'}`}
     >
-      <div className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-0.5 transition-all duration-300 ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all duration-300 ${checked ? 'left-[22px]' : 'left-0.5'}`} />
     </button>
   </div>
 );
 
 /* ── Collapsible Card ── */
 const Card: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, icon, children, defaultOpen = false }) => (
-  <details open={defaultOpen} className="group rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm overflow-hidden transition-all">
-    <summary className="flex items-center gap-2.5 px-4 py-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none hover:bg-muted/30 transition-colors">
+  <details open={defaultOpen} className="group overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm transition-all">
+    <summary className="flex cursor-pointer list-none select-none items-center gap-2.5 px-4 py-3 transition-colors hover:bg-muted/30 [&::-webkit-details-marker]:hidden">
       {icon}
-      <span className="text-sm font-semibold text-foreground flex-1">{title}</span>
+      <span className="flex-1 text-sm font-semibold text-foreground">{title}</span>
       <ChevronDown size={14} className="text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
     </summary>
-    <div className="px-4 pb-4 pt-2 space-y-3 border-t border-border/30">
+    <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-2">
       {children}
     </div>
   </details>
@@ -124,8 +158,9 @@ const Card: React.FC<{ title: string; icon?: React.ReactNode; children: React.Re
 
 const TabButton: React.FC<{ active: boolean; label: string; onClick: () => void }> = ({ active, label, onClick }) => (
   <button
+    type="button"
     onClick={onClick}
-    className={`flex-1 text-xs py-2 rounded-lg font-medium transition-all ${
+    className={`flex-1 rounded-lg py-2 text-xs font-medium transition-all ${
       active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'
     }`}
   >
@@ -140,21 +175,20 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-card border-l border-border shadow-2xl h-full overflow-y-auto animate-in slide-in-from-right duration-300" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
-        <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border z-10 px-5 py-4 flex items-center justify-between">
+      <div className="relative h-full w-full max-w-sm animate-in overflow-y-auto border-l border-border bg-card shadow-2xl slide-in-from-right duration-300" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-5 py-4 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <Settings size={18} className="text-primary" />
             <h2 className="text-base font-bold text-foreground">Cores & Ajustes</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-all">
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground transition-all hover:bg-muted/60 hover:text-foreground">
             <X size={18} />
           </button>
         </div>
 
-        <div className="p-5 space-y-6">
-          {/* Wheel colors */}
+        <div className="space-y-6 p-5">
           <div className="space-y-2">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Roleta</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Roleta</h3>
             <ColorInput label="Anel externo" value={config.outerRingColor} onChange={v => updateGlobal('outerRingColor', v)} />
             <ColorInput label="LEDs" value={config.ledColor} onChange={v => updateGlobal('ledColor', v)} />
             <ColorInput label="Centro" value={config.centerCapColor} onChange={v => updateGlobal('centerCapColor', v)} />
@@ -165,9 +199,8 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 
           <div className="border-t border-border/30" />
 
-          {/* Button & result colors */}
           <div className="space-y-2">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Botão & Resultado</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Botão & Resultado</h3>
             <ColorInput label="Cor do botão" value={config.buttonColor} onChange={v => updateGlobal('buttonColor', v)} />
             <ColorInput label="Texto do botão" value={config.buttonTextColor} onChange={v => updateGlobal('buttonTextColor', v)} />
             <ColorInput label="Fundo do prêmio" value={config.resultBoxColor} onChange={v => updateGlobal('resultBoxColor', v)} />
@@ -177,9 +210,8 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 
           <div className="border-t border-border/30" />
 
-          {/* Adjustments */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ajustes</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Ajustes</h3>
             <RangeInput label="Espessura dos divisores" value={config.dividerWidth ?? 3} min={0} max={8} step={0.5} onChange={v => updateGlobal('dividerWidth', v)} />
             <RangeInput label="Tamanho dos LEDs" value={config.ledSize ?? 5} min={2} max={12} step={0.5} onChange={v => updateGlobal('ledSize', v)} />
             <RangeInput label="Escala da fonte" value={config.fontSizeScale ?? 1} min={0.5} max={2} step={0.1} onChange={v => updateGlobal('fontSizeScale', v)} suffix="x" />
@@ -198,13 +230,14 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const segments = config.segments;
-  const numSegs = segments.length;
+  const numSegs = Math.max(segments.length, 1);
   const segAngle = 360 / numSegs;
-
-  const size = previewMode === 'mobile' ? 160 : 220;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size / 2 - 8;
+  const wheelSize = previewMode === 'mobile' ? 124 : 168;
+  const frameWidth = previewMode === 'mobile' ? 190 : 360;
+  const frameHeight = previewMode === 'mobile' ? 320 : 236;
+  const cx = wheelSize / 2;
+  const cy = wheelSize / 2;
+  const r = wheelSize / 2 - 8;
 
   const polarToCart = (angleDeg: number, radius: number) => ({
     x: cx + radius * Math.cos((angleDeg - 90) * Math.PI / 180),
@@ -212,116 +245,126 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
   });
 
   return (
-    <div className="rounded-xl border border-border/40 bg-muted/20 p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pré-visualização</span>
-        <div className="flex gap-1 p-0.5 rounded-lg bg-muted/40">
-          <button
-            onClick={() => setPreviewMode('desktop')}
-            className={`text-[10px] px-2 py-1 rounded-md font-medium transition-all ${previewMode === 'desktop' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}
-          >
-            🖥️ Desktop
-          </button>
-          <button
-            onClick={() => setPreviewMode('mobile')}
-            className={`text-[10px] px-2 py-1 rounded-md font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}
-          >
-            📱 Mobile
-          </button>
+    <div className="space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pré-visualização dos segmentos</span>
+        <div className="flex gap-1 rounded-lg bg-muted/40 p-0.5">
+          <button type="button" onClick={() => setPreviewMode('desktop')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'desktop' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>🖥️ Desktop</button>
+          <button type="button" onClick={() => setPreviewMode('mobile')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>📱 Mobile</button>
         </div>
       </div>
 
       <div className="flex justify-center">
-        <div
-          className="rounded-xl border border-border/30 flex items-center justify-center overflow-hidden relative"
-          style={{
-            width: previewMode === 'mobile' ? 200 : '100%',
-            height: previewMode === 'mobile' ? 280 : 260,
-            backgroundColor: 'rgba(10,5,25,0.95)',
-          }}
-        >
+        <div className="relative overflow-hidden rounded-[24px] border border-border/40 bg-background shadow-[0_20px_60px_rgba(0,0,0,0.35)]" style={{ width: frameWidth, height: frameHeight }}>
           {config.backgroundImageUrl ? (
             <img
+              key={config.backgroundImageUrl}
               src={config.backgroundImageUrl}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover"
+              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
               style={{
+                opacity: 0.82,
                 transform: `translate(${config.backgroundImageOffsetX ?? 0}px, ${config.backgroundImageOffsetY ?? 0}px) scale(${config.backgroundImageScale ?? 1})`,
+                transformOrigin: 'center',
               }}
             />
           ) : (
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(30,10,60,0.9), rgba(10,5,25,0.95))' }} />
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(30,10,60,0.9), rgba(10,5,25,0.98))' }} />
           )}
-          <div className="relative z-10">
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-            {/* Outer ring */}
-            <circle cx={cx} cy={cy} r={r + 4} fill="none" stroke={config.outerRingColor} strokeWidth={3} />
 
-            {/* Segments */}
-            {segments.map((seg, i) => {
-              const startAngle = i * segAngle;
-              const endAngle = (i + 1) * segAngle;
-              const start = polarToCart(startAngle, r);
-              const end = polarToCart(endAngle, r);
-              const largeArc = segAngle > 180 ? 1 : 0;
-              const path = `M${cx},${cy} L${start.x},${start.y} A${r},${r} 0 ${largeArc} 1 ${end.x},${end.y} Z`;
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/60" />
+          <div
+            className="absolute left-1/2 top-1/2 h-[220px] w-[220px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-[70px]"
+            style={{ background: `radial-gradient(circle, ${config.glowColor}, transparent)` }}
+          />
 
-              const midAngle = startAngle + segAngle / 2;
-              const textR = r * 0.65;
-              const textPos = polarToCart(midAngle, textR);
-              const fontSize = previewMode === 'mobile' ? 7 : 9;
+          <div className="relative z-10 flex h-full flex-col items-center justify-between px-3 py-4 text-center">
+            <div className="space-y-1">
+              {config.headerMode === 'image' && config.headerImageUrl ? (
+                <img
+                  src={config.headerImageUrl}
+                  alt=""
+                  className="mx-auto object-contain"
+                  style={{
+                    height: previewMode === 'mobile' ? Math.min(config.headerImageSize ?? 120, 48) : Math.min(config.headerImageSize ?? 120, 64),
+                    maxWidth: previewMode === 'mobile' ? 140 : 220,
+                    transform: previewMode === 'mobile'
+                      ? `translate(${config.mobileLogoOffsetX ?? config.headerImageOffsetX ?? 0}px, ${config.mobileLogoOffsetY ?? config.headerImageOffsetY ?? 0}px) scale(${config.mobileLogoScale ?? config.headerImageScale ?? 1})`
+                      : `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
+                  }}
+                />
+              ) : (
+                <>
+                  <h3
+                    className="font-black uppercase tracking-[0.18em]"
+                    style={{
+                      fontSize: previewMode === 'mobile' ? Math.min(config.headerTitleSize ?? 36, 20) : Math.min(config.headerTitleSize ?? 36, 24),
+                      color: config.glowColor,
+                      textShadow: `0 0 30px ${config.glowColor}55`,
+                    }}
+                  >
+                    {config.pageTitle}
+                  </h3>
+                  <p className="uppercase tracking-[0.3em] text-muted-foreground" style={{ fontSize: previewMode === 'mobile' ? 7 : 8 }}>
+                    {config.pageSubtitle}
+                  </p>
+                </>
+              )}
+            </div>
 
-              return (
-                <g key={seg.id}>
-                  <path d={path} fill={seg.color} stroke={config.dividerColor} strokeWidth={config.dividerWidth ?? 2} />
-                  {!config.hideSegmentText && (
-                    <text
-                      x={textPos.x}
-                      y={textPos.y}
-                      fill={seg.textColor}
-                      fontSize={fontSize}
-                      fontWeight="bold"
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
-                    >
-                      {seg.reward || seg.title}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
+            <div
+              className="relative flex items-center justify-center"
+              style={previewMode === 'mobile' ? { transform: `translate(${config.mobileWheelOffsetX ?? 0}px, ${config.mobileWheelOffsetY ?? 0}px) scale(${config.mobileWheelScale ?? 1})` } : undefined}
+            >
+              <svg width={wheelSize} height={wheelSize} viewBox={`0 0 ${wheelSize} ${wheelSize}`}>
+                <circle cx={cx} cy={cy} r={r + 4} fill="none" stroke={config.outerRingColor} strokeWidth={3} />
+                {segments.map((seg, i) => {
+                  const startAngle = i * segAngle;
+                  const endAngle = (i + 1) * segAngle;
+                  const start = polarToCart(startAngle, r);
+                  const end = polarToCart(endAngle, r);
+                  const largeArc = segAngle > 180 ? 1 : 0;
+                  const path = `M${cx},${cy} L${start.x},${start.y} A${r},${r} 0 ${largeArc} 1 ${end.x},${end.y} Z`;
+                  const midAngle = startAngle + segAngle / 2;
+                  const textPos = polarToCart(midAngle, r * 0.66);
+                  const fontSize = previewMode === 'mobile' ? 7 : 9;
 
-            {/* Center cap */}
-            <circle cx={cx} cy={cy} r={r * 0.15} fill={config.centerCapColor} stroke={config.dividerColor} strokeWidth={1} />
+                  return (
+                    <g key={seg.id}>
+                      <path d={path} fill={seg.color} stroke={config.dividerColor} strokeWidth={config.dividerWidth ?? 2} />
+                      {!config.hideSegmentText && (
+                        <text
+                          x={textPos.x}
+                          y={textPos.y}
+                          fill={seg.textColor}
+                          fontSize={fontSize}
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
+                        >
+                          {(seg.reward || seg.title).slice(0, previewMode === 'mobile' ? 6 : 8)}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+                <circle cx={cx} cy={cy} r={r * 0.15} fill={config.centerCapColor} stroke={config.dividerColor} strokeWidth={1} />
+                <polygon points={`${cx},${cy - r - 8} ${cx - 6},${cy - r + 4} ${cx + 6},${cy - r + 4}`} fill={config.pointerColor} stroke={config.dividerColor} strokeWidth={0.5} />
+              </svg>
+            </div>
 
-            {/* Center image */}
-            {config.centerImageUrl && (
-              <image
-                href={config.centerImageUrl}
-                x={cx - r * 0.12}
-                y={cy - r * 0.12}
-                width={r * 0.24}
-                height={r * 0.24}
-                clipPath={`circle(${r * 0.12}px at ${r * 0.12}px ${r * 0.12}px)`}
-              />
-            )}
-
-            {/* Pointer */}
-            <polygon
-              points={`${cx},${cy - r - 8} ${cx - 6},${cy - r + 4} ${cx + 6},${cy - r + 4}`}
-              fill={config.pointerColor}
-              stroke={config.dividerColor}
-              strokeWidth={0.5}
-            />
-
-            {/* LEDs */}
-            {Array.from({ length: Math.min(numSegs * 3, 24) }).map((_, i) => {
-              const angle = (i / Math.min(numSegs * 3, 24)) * 360;
-              const pos = polarToCart(angle, r + 2);
-              return <circle key={i} cx={pos.x} cy={pos.y} r={1.5} fill={config.ledColor} opacity={0.8} />;
-            })}
-          </svg>
+            <div
+              className="rounded-full px-4 py-2 font-bold uppercase tracking-[0.18em]"
+              style={{
+                background: config.buttonColor,
+                color: config.buttonTextColor,
+                fontSize: previewMode === 'mobile' ? 10 : 11,
+                transform: previewMode === 'mobile' ? `translate(${config.mobileButtonOffsetX ?? 0}px, ${config.mobileButtonOffsetY ?? 0}px)` : undefined,
+              }}
+            >
+              Girar
+            </div>
           </div>
         </div>
       </div>
