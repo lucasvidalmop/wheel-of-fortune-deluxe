@@ -32,6 +32,15 @@ const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<
   </div>
 );
 
+const WHATSAPP_SPIN_TEMPLATES = [
+  { id: 'welcome', label: '🎉 Boas-vindas', message: 'Olá {nome}! Você recebeu {giros} giro(s) na nossa roleta! Acesse agora: {link}' },
+  { id: 'vip', label: '⭐ VIP', message: '🌟 Parabéns {nome}! Como cliente VIP, você ganhou {giros} giro(s) exclusivo(s)! Jogue agora: {link}' },
+  { id: 'promo', label: '🔥 Promoção', message: '🔥 {nome}, aproveite! Você acaba de receber {giros} giro(s) especiais na nossa roleta de prêmios! Gire já: {link}' },
+  { id: 'birthday', label: '🎂 Aniversário', message: '🎂 Feliz aniversário, {nome}! Presente especial: {giros} giro(s) grátis na roleta! Aproveite: {link}' },
+  { id: 'loyalty', label: '💎 Fidelidade', message: '💎 Obrigado pela fidelidade, {nome}! Você ganhou {giros} giro(s) como recompensa. Jogue aqui: {link}' },
+  { id: 'custom', label: '✏️ Personalizado', message: '' },
+];
+
 const Dashboard = () => {
   useSiteSettings();
   const [session, setSession] = useState<any>(null);
@@ -111,6 +120,12 @@ const Dashboard = () => {
   const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
   const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
   const [batchGrantSpinCount, setBatchGrantSpinCount] = useState<number>(1);
+  const [spinWhatsappEnabled, setSpinWhatsappEnabled] = useState(false);
+  const [spinWhatsappTemplate, setSpinWhatsappTemplate] = useState('welcome');
+  const [spinWhatsappCustomMsg, setSpinWhatsappCustomMsg] = useState('');
+  const [batchWhatsappEnabled, setBatchWhatsappEnabled] = useState(false);
+  const [batchWhatsappTemplate, setBatchWhatsappTemplate] = useState('welcome');
+  const [batchWhatsappCustomMsg, setBatchWhatsappCustomMsg] = useState('');
   const [savingUser, setSavingUser] = useState(false);
 
   useEffect(() => {
@@ -273,7 +288,7 @@ const Dashboard = () => {
     setSavingConfig(false);
   };
 
-  
+
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (savingUser) return;
@@ -330,6 +345,25 @@ const Dashboard = () => {
     setGrantSpinCount(1);
   };
 
+  const sendSpinWhatsapp = async (user: WheelUser, count: number, templateId: string, customMsg: string) => {
+    if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) return;
+    if (!user.phone || user.phone.replace(/\D/g, '').length < 10) return;
+    const tpl = WHATSAPP_SPIN_TEMPLATES.find(t => t.id === templateId);
+    if (!tpl) return;
+    const baseMsg = templateId === 'custom' ? customMsg : tpl.message;
+    if (!baseMsg.trim()) return;
+    const wheelLink = `${window.location.origin}/${slug}`;
+    const finalMsg = baseMsg
+      .replace(/\{nome\}/g, user.name)
+      .replace(/\{giros\}/g, String(count))
+      .replace(/\{link\}/g, wheelLink);
+    try {
+      await supabase.functions.invoke('send-whatsapp', {
+        body: { recipientPhone: user.phone, message: finalMsg, evolutionApiUrl, evolutionApiKey, evolutionInstance }
+      });
+    } catch (e) { console.error('WhatsApp send error:', e); }
+  };
+
   const confirmGrantSpin = async () => {
     if (!grantSpinUser) return;
     const count = Math.max(1, grantSpinCount);
@@ -341,6 +375,10 @@ const Dashboard = () => {
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
     toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
+    if (spinWhatsappEnabled) {
+      sendSpinWhatsapp(grantSpinUser, count, spinWhatsappTemplate, spinWhatsappCustomMsg);
+      toast.info(`📱 WhatsApp enviado para ${grantSpinUser.name}`);
+    }
     setGrantSpinUser(null);
     fetchUsers();
   };
@@ -357,9 +395,15 @@ const Dashboard = () => {
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
       }).eq('id', user.id);
-      if (!error) success++;
+      if (!error) {
+        success++;
+        if (batchWhatsappEnabled) {
+          await sendSpinWhatsapp(user, count, batchWhatsappTemplate, batchWhatsappCustomMsg);
+        }
+      }
     }
     toast.success(`${success} inscrito(s) receberam ${count} giro(s)!`);
+    if (batchWhatsappEnabled) toast.info(`📱 WhatsApp enviado para ${success} inscrito(s)`);
     setShowBatchGrantModal(false);
     setSelectedUserIds(new Set());
     fetchUsers();
@@ -2228,12 +2272,47 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* WhatsApp notification */}
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 mb-5">
+              <label className="flex items-center gap-2.5 cursor-pointer mb-3">
+                <input type="checkbox" checked={spinWhatsappEnabled} onChange={e => setSpinWhatsappEnabled(e.target.checked)} className="rounded border-white/20" />
+                <MessageCircle size={16} className="text-green-400" />
+                <span className="text-sm font-medium text-foreground">Enviar WhatsApp ao liberar giro</span>
+              </label>
+              {spinWhatsappEnabled && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {WHATSAPP_SPIN_TEMPLATES.map(tpl => (
+                      <button key={tpl.id} onClick={() => setSpinWhatsappTemplate(tpl.id)}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${spinWhatsappTemplate === tpl.id ? 'bg-green-500/15 text-green-400 border-green-500/30' : 'bg-white/[0.02] text-muted-foreground border-white/[0.06] hover:bg-white/[0.06]'}`}>
+                        {tpl.label}
+                      </button>
+                    ))}
+                  </div>
+                  {spinWhatsappTemplate === 'custom' ? (
+                    <textarea value={spinWhatsappCustomMsg} onChange={e => setSpinWhatsappCustomMsg(e.target.value)} rows={3} placeholder="Use {nome}, {giros}, {link} como variáveis..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs resize-y focus:outline-none focus:ring-1 focus:ring-green-500/40 placeholder:text-muted-foreground" />
+                  ) : (
+                    <div className="rounded-lg bg-white/[0.04] p-3 border border-white/[0.06]">
+                      <p className="text-[11px] text-muted-foreground mb-1">Pré-visualização:</p>
+                      <p className="text-xs text-foreground">
+                        {(WHATSAPP_SPIN_TEMPLATES.find(t => t.id === spinWhatsappTemplate)?.message || '')
+                          .replace(/\{nome\}/g, grantSpinUser?.name || 'Nome')
+                          .replace(/\{giros\}/g, String(grantSpinCount))
+                          .replace(/\{link\}/g, `${window.location.origin}/${slug}`)}
+                      </p>
+                    </div>
+                  )}
+                  {!evolutionApiUrl && <p className="text-[10px] text-amber-400">⚠️ Configure a Evolution API na aba WhatsApp primeiro</p>}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button onClick={() => setGrantSpinUser(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] transition-all border border-white/[0.08]">
                 Cancelar
               </button>
               <button onClick={confirmGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                Liberar Giro
+                {spinWhatsappEnabled ? '📱 Liberar + WhatsApp' : 'Liberar Giro'}
               </button>
             </div>
           </div>
@@ -2311,12 +2390,47 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* WhatsApp notification */}
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 mb-5">
+              <label className="flex items-center gap-2.5 cursor-pointer mb-3">
+                <input type="checkbox" checked={batchWhatsappEnabled} onChange={e => setBatchWhatsappEnabled(e.target.checked)} className="rounded border-white/20" />
+                <MessageCircle size={16} className="text-green-400" />
+                <span className="text-sm font-medium text-foreground">Enviar WhatsApp ao liberar giros</span>
+              </label>
+              {batchWhatsappEnabled && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {WHATSAPP_SPIN_TEMPLATES.map(tpl => (
+                      <button key={tpl.id} onClick={() => setBatchWhatsappTemplate(tpl.id)}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${batchWhatsappTemplate === tpl.id ? 'bg-green-500/15 text-green-400 border-green-500/30' : 'bg-white/[0.02] text-muted-foreground border-white/[0.06] hover:bg-white/[0.06]'}`}>
+                        {tpl.label}
+                      </button>
+                    ))}
+                  </div>
+                  {batchWhatsappTemplate === 'custom' ? (
+                    <textarea value={batchWhatsappCustomMsg} onChange={e => setBatchWhatsappCustomMsg(e.target.value)} rows={3} placeholder="Use {nome}, {giros}, {link} como variáveis..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs resize-y focus:outline-none focus:ring-1 focus:ring-green-500/40 placeholder:text-muted-foreground" />
+                  ) : (
+                    <div className="rounded-lg bg-white/[0.04] p-3 border border-white/[0.06]">
+                      <p className="text-[11px] text-muted-foreground mb-1">Pré-visualização:</p>
+                      <p className="text-xs text-foreground">
+                        {(WHATSAPP_SPIN_TEMPLATES.find(t => t.id === batchWhatsappTemplate)?.message || '')
+                          .replace(/\{nome\}/g, 'Nome')
+                          .replace(/\{giros\}/g, String(batchGrantSpinCount))
+                          .replace(/\{link\}/g, `${window.location.origin}/${slug}`)}
+                      </p>
+                    </div>
+                  )}
+                  {!evolutionApiUrl && <p className="text-[10px] text-amber-400">⚠️ Configure a Evolution API na aba WhatsApp primeiro</p>}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button onClick={() => setShowBatchGrantModal(false)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] transition-all border border-white/[0.08]">
                 Cancelar
               </button>
               <button onClick={confirmBatchGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                Liberar {batchGrantSpinCount} Giro(s) para {selectedUserIds.size} inscrito(s)
+                {batchWhatsappEnabled ? `📱 Liberar + WhatsApp (${selectedUserIds.size})` : `Liberar ${batchGrantSpinCount} Giro(s) para ${selectedUserIds.size} inscrito(s)`}
               </button>
             </div>
           </div>
