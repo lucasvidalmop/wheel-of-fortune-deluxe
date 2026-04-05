@@ -1968,7 +1968,8 @@ const Dashboard = () => {
                               body: { action: 'status', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
                             if (error) { toast.error('Erro ao verificar'); setInstanceStatus('error'); return; }
-                            const state = data?.instance?.state || data?.state || 'unknown';
+                            const d = data?.data;
+                            const state = d?.instance?.state || d?.state || 'unknown';
                             setInstanceStatus(state === 'open' ? 'open' : 'close');
                             toast.info(`Status: ${state === 'open' ? '🟢 Conectado' : '🔴 Desconectado'}`);
                           } catch (err: any) { toast.error(err.message || 'Erro'); setInstanceStatus('error'); }
