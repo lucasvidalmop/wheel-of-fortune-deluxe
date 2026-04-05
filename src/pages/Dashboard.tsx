@@ -285,7 +285,7 @@ const Dashboard = () => {
       } else {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id });
+          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible });
         if (error) { toast.error('Erro: ' + error.message); return; }
         toast.success('Inscrito criado!');
       }
