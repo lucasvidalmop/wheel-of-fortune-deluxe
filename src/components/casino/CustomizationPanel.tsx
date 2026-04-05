@@ -398,12 +398,15 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
     return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
   };
 
+  const handleCollapse = () => {
+    setCollapsed(true);
+    setPanelPos(null);
+    setPanelSize({ w: 320, h: 0 });
+  };
+
   if (floating && collapsed) {
     return (
-      <div
-        className="fixed bottom-4 right-4 z-50"
-        style={panelPos ? { left: panelPos.x, top: panelPos.y, bottom: 'auto', right: 'auto' } : undefined}
-      >
+      <div className="fixed bottom-4 right-4 z-50">
         <button
           type="button"
           onClick={() => setCollapsed(false)}
