@@ -351,7 +351,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                           style={{ background: config.resultBoxColor, color: config.resultTextColor, border: `1px solid ${config.resultBorderColor}` }}
                         >
                           <p className="font-bold text-base mb-1">{seg.postSpinEmoji ?? '🎉'} {seg.reward}</p>
-                          {seg.postSpinMessage && <p className="font-bold mb-1">{seg.title}</p>}
+                          
                           <p className="text-xs opacity-85" style={{ whiteSpace: 'pre-line' }}>
                             {(seg.postSpinMessage || `Parabéns! Você ganhou ${seg.reward}!`).replace(/\{premio\}/g, seg.reward).replace(/\{titulo\}/g, seg.title)}
                           </p>
