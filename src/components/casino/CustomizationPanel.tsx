@@ -382,18 +382,36 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
                     <g key={seg.id}>
                       <path d={path} fill={seg.color} stroke={config.dividerColor} strokeWidth={config.dividerWidth ?? 2} />
                       {!config.hideSegmentText && (
-                        <text
-                          x={textPos.x}
-                          y={textPos.y}
-                          fill={seg.textColor}
-                          fontSize={fontSize}
-                          fontWeight="bold"
-                          textAnchor="middle"
-                          dominantBaseline="central"
-                          transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
-                        >
-                          {(seg.reward || seg.title).slice(0, previewMode === 'mobile' ? 6 : 8)}
-                        </text>
+                        <>
+                          {!config.hideSegmentValue && (
+                            <text
+                              x={textPos.x}
+                              y={config.hideSegmentTitle ? textPos.y : textPos.y - fontSize * 0.5}
+                              fill={seg.textColor}
+                              fontSize={fontSize}
+                              fontWeight="bold"
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
+                            >
+                              {seg.reward.slice(0, previewMode === 'mobile' ? 6 : 8)}
+                            </text>
+                          )}
+                          {!config.hideSegmentTitle && (
+                            <text
+                              x={textPos.x}
+                              y={config.hideSegmentValue ? textPos.y : textPos.y + fontSize * 0.7}
+                              fill={seg.textColor}
+                              fontSize={fontSize * 0.7}
+                              fontWeight="bold"
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
+                            >
+                              {seg.title.slice(0, previewMode === 'mobile' ? 6 : 8)}
+                            </text>
+                          )}
+                        </>
                       )}
                     </g>
                   );
