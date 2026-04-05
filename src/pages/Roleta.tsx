@@ -447,6 +447,14 @@ const Roleta = () => {
         if (row.spins_available < 1) setMessage('Sem giros disponíveis');
       }
     }
+
+    // Auto-redirect invisível após ver o prêmio
+    if (config.autoRedirectEnabled && config.autoRedirectUrl) {
+      const delaySec = config.autoRedirectDelaySec ?? 3;
+      setTimeout(() => {
+        window.open(config.autoRedirectUrl, '_blank', 'noopener,noreferrer');
+      }, delaySec * 1000);
+    }
   };
 
   if (configLoading) {
