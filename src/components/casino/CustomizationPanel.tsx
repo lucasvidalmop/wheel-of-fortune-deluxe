@@ -446,18 +446,18 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
                   const imgCy = bounds.y + oy + scaledH / 2;
 
                   return (
-                    <image
-                      key={`seg-image-${seg.id}`}
-                      href={seg.imageUrl}
-                      x={bounds.x + ox}
-                      y={bounds.y + oy}
-                      width={scaledW}
-                      height={scaledH}
-                      clipPath={`url(#seg-preview-clip-${previewMode}-${i})`}
-                      preserveAspectRatio="xMidYMid slice"
-                      opacity="0.92"
-                      transform={rot ? `rotate(${rot}, ${imgCx}, ${imgCy})` : undefined}
-                    />
+                    <g key={`seg-image-${seg.id}`} clipPath={`url(#seg-preview-clip-${previewMode}-${i})`}>
+                      <image
+                        href={seg.imageUrl}
+                        x={bounds.x + ox}
+                        y={bounds.y + oy}
+                        width={scaledW}
+                        height={scaledH}
+                        preserveAspectRatio="xMidYMid slice"
+                        opacity="0.92"
+                        transform={rot ? `rotate(${rot}, ${imgCx}, ${imgCy})` : undefined}
+                      />
+                    </g>
                   );
                 })}
 
