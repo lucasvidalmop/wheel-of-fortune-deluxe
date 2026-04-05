@@ -339,18 +339,19 @@ const Dashboard = () => {
 
   const confirmBatchGrantSpin = async () => {
     if (selectedUserIds.size === 0) return;
+    const count = Math.max(1, batchGrantSpinCount);
     const isFixed = batchGrantMode === 'fixed';
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let success = 0;
     for (const user of selectedUsers) {
       const { error } = await (supabase as any).from('wheel_users').update({
-        spins_available: 1,
+        spins_available: count,
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
       }).eq('id', user.id);
       if (!error) success++;
     }
-    toast.success(`${success} giro(s) liberado(s)!`);
+    toast.success(`${success} inscrito(s) receberam ${count} giro(s)!`);
     setShowBatchGrantModal(false);
     setSelectedUserIds(new Set());
     fetchUsers();
