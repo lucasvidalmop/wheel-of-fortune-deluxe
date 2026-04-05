@@ -339,9 +339,16 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
   const segments = config.segments;
   const numSegs = Math.max(segments.length, 1);
   const segAngle = 360 / numSegs;
-  const wheelSize = previewMode === 'mobile' ? 124 : 168;
-  const frameWidth = previewMode === 'mobile' ? 190 : 360;
-  const frameHeight = previewMode === 'mobile' ? 320 : 236;
+
+  // Scale preview to fit panel width
+  const baseWheelSize = previewMode === 'mobile' ? 124 : 168;
+  const baseFrameWidth = previewMode === 'mobile' ? 190 : 360;
+  const baseFrameHeight = previewMode === 'mobile' ? 320 : 236;
+  const availableWidth = panelSize.w - 24; // padding
+  const scaleFactor = floating && availableWidth > baseFrameWidth ? availableWidth / baseFrameWidth : 1;
+  const wheelSize = Math.round(baseWheelSize * scaleFactor);
+  const frameWidth = Math.round(baseFrameWidth * scaleFactor);
+  const frameHeight = Math.round(baseFrameHeight * scaleFactor);
   const cx = wheelSize / 2;
   const cy = wheelSize / 2;
   const r = wheelSize / 2 - 8;
