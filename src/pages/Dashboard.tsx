@@ -826,6 +826,12 @@ const Dashboard = () => {
                         🎰 Liberar Giros
                       </button>
                       <button
+                        onClick={handleDeleteSelectedUsers}
+                        className="px-3 py-1.5 rounded-lg bg-destructive/20 text-destructive border border-destructive/30 text-xs font-semibold hover:bg-destructive/30 transition"
+                      >
+                        🗑️ Excluir Selecionados
+                      </button>
+                      <button
                         onClick={() => setSelectedUserIds(new Set())}
                         className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground text-xs hover:bg-white/[0.08] transition"
                       >
