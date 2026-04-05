@@ -240,18 +240,18 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             const imgCx = bounds.x + ox + scaledW / 2;
             const imgCy = bounds.y + oy + scaledH / 2;
             return (
-              <image
-                key={`img-${i}`}
-                href={seg.imageUrl}
-                x={bounds.x + ox}
-                y={bounds.y + oy}
-                width={scaledW}
-                height={scaledH}
-                clipPath={`url(#seg-clip-${i})`}
-                preserveAspectRatio="xMidYMid slice"
-                opacity="0.85"
-                transform={rot ? `rotate(${rot}, ${imgCx}, ${imgCy})` : undefined}
-              />
+              <g key={`img-${i}`} clipPath={`url(#seg-clip-${i})`}>
+                <image
+                  href={seg.imageUrl}
+                  x={bounds.x + ox}
+                  y={bounds.y + oy}
+                  width={scaledW}
+                  height={scaledH}
+                  preserveAspectRatio="xMidYMid slice"
+                  opacity="0.85"
+                  transform={rot ? `rotate(${rot}, ${imgCx}, ${imgCy})` : undefined}
+                />
+              </g>
             );
           })}
 
