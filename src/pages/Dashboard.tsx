@@ -1918,14 +1918,11 @@ const Dashboard = () => {
                         onClick={async () => {
                           setCreatingInstance(true);
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/create`, {
-                              method: 'POST',
-                              headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ instanceName: evolutionInstance, integration: 'WHATSAPP-BAILEYS', qrcode: true }),
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'create', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            const data = await res.json();
-                            if (!res.ok) { toast.error(data?.message || data?.error || 'Erro ao criar instância'); return; }
+                            if (error) { toast.error('Erro ao criar instância'); return; }
+                            if (data?.error) { toast.error(data.error); return; }
                             toast.success('Instância criada com sucesso!');
                             if (data?.qrcode?.base64) { setInstanceQrCode(data.qrcode.base64); setInstanceStatus('connecting'); }
                             else { setInstanceStatus('close'); }
