@@ -869,7 +869,8 @@ const Dashboard = () => {
                       </button>
                     </div>
                   )}
-                  <table className="w-full text-sm table-fixed">
+                  <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[900px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="px-3 py-3.5 w-10">
@@ -886,11 +887,17 @@ const Dashboard = () => {
                             className="rounded border-white/20 bg-white/[0.05]"
                           />
                         </th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Celular</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-32">Account ID</th>
-                        <th className="text-center px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-48">Ações</th>
+                        <th className="text-left px-2 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-8">#</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Celular</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Account ID</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-20">PIX Tipo</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Chave PIX</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Inscrição</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-16">Tipo</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Responsável</th>
+                        <th className="text-center px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-40">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -908,10 +915,16 @@ const Dashboard = () => {
                               className="rounded border-white/20 bg-white/[0.05]"
                             />
                           </td>
-                          <td className="px-4 py-3 text-foreground font-medium truncate">{user.name}</td>
-                          <td className="px-4 py-3 text-muted-foreground truncate">{user.email}</td>
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{user.phone}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
+                          <td className="px-2 py-3 text-muted-foreground text-xs">{index + 1}</td>
+                          <td className="px-3 py-3 text-foreground font-medium truncate">{user.name}</td>
+                          <td className="px-3 py-3 text-muted-foreground truncate">{user.email}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.phone}</td>
+                          <td className="px-3 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.pix_key_type || '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs truncate">{user.pix_key || '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.user_type || '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs truncate">{user.responsible || '—'}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-center gap-1.5">
                               <button
