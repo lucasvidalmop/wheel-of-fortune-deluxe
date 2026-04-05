@@ -11,6 +11,7 @@ export interface WheelSegment {
   imageScale?: number;
   percentage: number;
   postSpinMessage?: string;
+  postSpinEmoji?: string;
 }
 
 export interface WheelConfig {
