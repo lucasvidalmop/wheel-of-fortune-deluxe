@@ -138,7 +138,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ label, value, onChange }) => 
   );
 };
 
-
+type RangeInputProps = {
   label: string;
   value: number;
   min: number;
