@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { WheelConfig } from './types';
 
 import { toast } from 'sonner';
@@ -136,10 +137,10 @@ const TabButton: React.FC<{ active: boolean; label: string; onClick: () => void 
 const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config: WheelConfig; updateGlobal: (key: keyof Omit<WheelConfig, 'segments'>, value: any) => void }> = ({ open, onClose, config, updateGlobal }) => {
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[70] flex justify-end">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-card border-l border-border shadow-2xl h-full overflow-y-auto animate-in slide-in-from-right duration-300">
+      <div className="relative w-full max-w-sm bg-card border-l border-border shadow-2xl h-full overflow-y-auto animate-in slide-in-from-right duration-300" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
         <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border z-10 px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Settings size={18} className="text-primary" />
@@ -188,7 +189,8 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
