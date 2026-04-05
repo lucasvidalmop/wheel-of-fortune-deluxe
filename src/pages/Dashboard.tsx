@@ -1847,7 +1847,7 @@ const Dashboard = () => {
                 Cancelar
               </button>
               <button onClick={confirmBatchGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                Liberar {selectedUserIds.size} Giro(s)
+                Liberar {batchGrantSpinCount} Giro(s) para {selectedUserIds.size} inscrito(s)
               </button>
             </div>
           </div>
