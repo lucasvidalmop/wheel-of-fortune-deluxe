@@ -876,6 +876,10 @@ const Dashboard = () => {
                     <span className="hidden sm:inline">Importar</span>
                     <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
                   </label>
+                  <button onClick={async () => { await fetchUsers(); toast.success('Inscritos atualizados!'); }} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                    <RotateCcw size={15} />
+                    <span className="hidden sm:inline">Atualizar</span>
+                  </button>
                   <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
                     <FileDown size={15} />
                     <span className="hidden sm:inline">Exportar</span>
