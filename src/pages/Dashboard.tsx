@@ -1921,14 +1921,26 @@ const Dashboard = () => {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
                               body: { action: 'create', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            if (error) { toast.error('Erro ao criar instância'); return; }
-                            if (!data?.ok) { const msg = data?.data?.response?.message || data?.data?.message || 'Erro ao criar instância'; toast.error(Array.isArray(msg) ? msg.join(', ') : msg); return; }
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao criar instância';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus('error');
+                              return;
+                            }
                             const d = data.data;
                             toast.success('Instância criada com sucesso!');
-                            if (d?.qrcode?.base64) { setInstanceQrCode(d.qrcode.base64); setInstanceStatus('connecting'); }
-                            else { setInstanceStatus('close'); }
-                          } catch (err: any) { toast.error(err.message || 'Erro de conexão'); }
-                          finally { setCreatingInstance(false); }
+                            if (d?.qrcode?.base64) {
+                              setInstanceQrCode(d.qrcode.base64);
+                              setInstanceStatus('connecting');
+                            } else {
+                              setInstanceStatus('close');
+                            }
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro de conexão');
+                            setInstanceStatus('error');
+                          } finally {
+                            setCreatingInstance(false);
+                          }
                         }}
                         className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-white/[0.08] bg-white/[0.04] text-foreground hover:bg-white/[0.08] disabled:opacity-40 transition flex items-center justify-center gap-1.5"
                       >
@@ -1945,13 +1957,28 @@ const Dashboard = () => {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
                               body: { action: 'connect', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            if (error) { toast.error('Erro ao conectar'); setInstanceStatus('error'); return; }
-                            if (!data?.ok) { const msg = data?.data?.response?.message || data?.data?.message || 'Erro ao conectar'; toast.error(Array.isArray(msg) ? msg.join(', ') : msg); setInstanceStatus('error'); return; }
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao conectar';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus('error');
+                              return;
+                            }
                             const d = data.data;
-                            if (d?.base64) { setInstanceQrCode(d.base64); setInstanceStatus('connecting'); toast.info('Escaneie o QR Code no WhatsApp'); }
-                            else if (d?.instance?.state === 'open') { setInstanceStatus('open'); toast.success('WhatsApp já está conectado!'); }
-                            else { setInstanceStatus('close'); toast.info('Instância desconectada. Tente novamente.'); }
-                          } catch (err: any) { toast.error(err.message || 'Erro de conexão'); setInstanceStatus('error'); }
+                            if (d?.base64) {
+                              setInstanceQrCode(d.base64);
+                              setInstanceStatus('connecting');
+                              toast.info('Escaneie o QR Code no WhatsApp');
+                            } else if (d?.instance?.state === 'open') {
+                              setInstanceStatus('open');
+                              toast.success('WhatsApp já está conectado!');
+                            } else {
+                              setInstanceStatus('close');
+                              toast.info('Instância desconectada. Tente novamente.');
+                            }
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro de conexão');
+                            setInstanceStatus('error');
+                          }
                         }}
                         className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
                       >
@@ -1967,12 +1994,28 @@ const Dashboard = () => {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
                               body: { action: 'status', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            if (error) { toast.error('Erro ao verificar'); setInstanceStatus('error'); return; }
-                            const d = data?.data;
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao verificar';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus('error');
+                              return;
+                            }
+                            const d = data.data;
                             const state = d?.instance?.state || d?.state || 'unknown';
-                            setInstanceStatus(state === 'open' ? 'open' : 'close');
-                            toast.info(`Status: ${state === 'open' ? '🟢 Conectado' : '🔴 Desconectado'}`);
-                          } catch (err: any) { toast.error(err.message || 'Erro'); setInstanceStatus('error'); }
+                            if (state === 'open') {
+                              setInstanceStatus('open');
+                              toast.success('Status: 🟢 Conectado');
+                            } else if (state === 'connecting') {
+                              setInstanceStatus('connecting');
+                              toast.info('Status: 🟡 Aguardando leitura do QR Code');
+                            } else {
+                              setInstanceStatus('close');
+                              toast.info('Status: 🔴 Desconectado');
+                            }
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro');
+                            setInstanceStatus('error');
+                          }
                         }}
                         className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] disabled:opacity-40 transition flex items-center justify-center gap-1.5"
                       >
@@ -1987,9 +2030,19 @@ const Dashboard = () => {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
                               body: { action: 'logout', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            if (error) { toast.error('Erro ao desconectar'); return; }
-                            toast.success('WhatsApp desconectado'); setInstanceStatus('close'); setInstanceQrCode(null);
-                          } catch (err: any) { toast.error(err.message || 'Erro'); }
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao desconectar';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus('error');
+                              return;
+                            }
+                            toast.success('WhatsApp desconectado');
+                            setInstanceStatus('close');
+                            setInstanceQrCode(null);
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro');
+                            setInstanceStatus('error');
+                          }
                         }}
                         className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
                       >
