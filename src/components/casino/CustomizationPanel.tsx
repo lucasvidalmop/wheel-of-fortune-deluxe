@@ -543,6 +543,24 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         </div>
       </Card>
 
+      {/* ── OG Image (Link Preview) ── */}
+      <Card title="Imagem de Pré-visualização de Link" icon={<span className="text-base">🔗</span>}>
+        <p className="text-[10px] text-muted-foreground mb-2">Imagem exibida ao compartilhar o link no WhatsApp, Facebook, etc. Tamanho recomendado: 1200×630px</p>
+        <ImageUpload label="Imagem OG" value={config.ogImageUrl} onChange={v => updateGlobal('ogImageUrl', v)} folder="og" />
+        {config.ogImageUrl && (
+          <div className="mt-2 space-y-2">
+            <div className="rounded-lg border border-border overflow-hidden bg-muted/20">
+              <img src={config.ogImageUrl} alt="OG Preview" className="w-full h-auto object-cover" style={{ maxHeight: 180 }} />
+              <div className="p-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{window.location.host}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{config.seoTitle || config.pageTitle || 'Roleta de Prêmios'}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{config.seoDescription || 'Gire a roleta e ganhe prêmios!'}</p>
+              </div>
+            </div>
+            <p className="text-[9px] text-muted-foreground italic">↑ Simulação de como ficará no WhatsApp</p>
+          </div>
+        )}
+
 
     </div>
   );
