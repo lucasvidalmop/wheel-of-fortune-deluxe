@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { WheelConfig } from './types';
 
@@ -281,12 +281,125 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
   const [collapsed, setCollapsed] = useState(false);
   const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
   const [panelSize, setPanelSize] = useState<{ w: number; h: number }>({ w: 320, h: 0 });
+  const [detachedReady, setDetachedReady] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; origW: number; origH: number } | null>(null);
   const panelElRef = useRef<HTMLDivElement>(null);
+  const detachedWindowRef = useRef<Window | null>(null);
+  const detachedContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Drag handlers
+  const resetFloatingPanel = () => {
+    setPanelPos(null);
+    setPanelSize({ w: 320, h: 0 });
+    setCollapsed(false);
+  };
+
+  const resetDetachedState = () => {
+    detachedWindowRef.current = null;
+    detachedContainerRef.current = null;
+    setDetachedReady(false);
+    resetFloatingPanel();
+  };
+
+  const closeDetachedWindow = () => {
+    const popup = detachedWindowRef.current;
+    resetDetachedState();
+    if (popup && !popup.closed) popup.close();
+  };
+
+  const isDetached = Boolean(
+    floating && detachedReady && detachedWindowRef.current && detachedContainerRef.current && !detachedWindowRef.current.closed,
+  );
+
+  useEffect(() => {
+    return () => {
+      const popup = detachedWindowRef.current;
+      if (popup && !popup.closed) popup.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isDetached) return;
+    const popup = detachedWindowRef.current;
+    if (!popup) return;
+
+    const syncDetachedSize = () => {
+      setPanelSize(prev => ({ ...prev, w: Math.max(320, popup.innerWidth - 32), h: 0 }));
+    };
+
+    syncDetachedSize();
+    popup.addEventListener('resize', syncDetachedSize);
+
+    const poll = window.setInterval(() => {
+      if (popup.closed) {
+        detachedWindowRef.current = null;
+        detachedContainerRef.current = null;
+        setDetachedReady(false);
+        resetFloatingPanel();
+        window.clearInterval(poll);
+      }
+    }, 500);
+
+    return () => {
+      popup.removeEventListener('resize', syncDetachedSize);
+      window.clearInterval(poll);
+    };
+  }, [isDetached]);
+
+  const openDetachedWindow = () => {
+    if (typeof window === 'undefined') return;
+
+    if (detachedWindowRef.current && !detachedWindowRef.current.closed) {
+      detachedWindowRef.current.focus();
+      return;
+    }
+
+    const popup = window.open('', 'segment-preview-window', 'popup=yes,width=460,height=720,left=120,top=120,resizable=yes,scrollbars=yes');
+    if (!popup) {
+      toast.error('Permita pop-ups para abrir a pré-visualização em uma janela separada.');
+      return;
+    }
+
+    popup.document.open();
+    popup.document.write('<!doctype html><html><head><title>Pré-visualização dos segmentos</title></head><body></body></html>');
+    popup.document.close();
+
+    Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).forEach(node => {
+      popup.document.head.appendChild(node.cloneNode(true));
+    });
+
+    popup.document.body.className = document.body.className;
+    popup.document.body.style.margin = '0';
+    popup.document.body.style.padding = '16px';
+    popup.document.body.style.background = 'hsl(var(--background))';
+
+    const container = popup.document.createElement('div');
+    container.style.minHeight = 'calc(100vh - 32px)';
+    popup.document.body.appendChild(container);
+
+    detachedWindowRef.current = popup;
+    detachedContainerRef.current = container;
+    setCollapsed(false);
+    setPanelPos(null);
+    setPanelSize({ w: Math.max(320, popup.innerWidth - 32), h: 0 });
+    setDetachedReady(true);
+
+    popup.addEventListener(
+      'beforeunload',
+      () => {
+        detachedWindowRef.current = null;
+        detachedContainerRef.current = null;
+        setDetachedReady(false);
+        resetFloatingPanel();
+      },
+      { once: true },
+    );
+
+    popup.focus();
+  };
+
   const onDragStart = (e: React.MouseEvent) => {
+    if (isDetached) return;
     e.preventDefault();
     const rect = panelElRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -299,22 +412,23 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
       const dy = ev.clientY - dragRef.current.startY;
       const newX = dragRef.current.origX + dx;
       const newY = dragRef.current.origY + dy;
-      // Keep at least 60px visible on screen
       const clampedX = Math.max(-panelSize.w + 60, Math.min(window.innerWidth - 60, newX));
       const clampedY = Math.max(-40, Math.min(window.innerHeight - 40, newY));
       setPanelPos({ x: clampedX, y: clampedY });
     };
+
     const onUp = () => {
       dragRef.current = null;
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
+
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
 
-  // Resize handlers
   const onResizeStart = (e: React.MouseEvent) => {
+    if (isDetached) return;
     e.preventDefault();
     e.stopPropagation();
     const el = panelElRef.current;
@@ -332,11 +446,13 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
         h: Math.max(0, resizeRef.current.origH + dh),
       });
     };
+
     const onUp = () => {
       resizeRef.current = null;
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
+
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
@@ -344,13 +460,11 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
   const segments = config.segments;
   const numSegs = Math.max(segments.length, 1);
   const segAngle = 360 / numSegs;
-
-  // Scale preview to fit panel width
   const baseWheelSize = previewMode === 'mobile' ? 124 : 168;
   const baseFrameWidth = previewMode === 'mobile' ? 190 : 360;
   const baseFrameHeight = previewMode === 'mobile' ? 320 : 236;
-  const availableWidth = panelSize.w - 24; // padding
-  const scaleFactor = floating && availableWidth > baseFrameWidth ? availableWidth / baseFrameWidth : 1;
+  const availableWidth = panelSize.w - 24;
+  const scaleFactor = floating && !isDetached && availableWidth > baseFrameWidth ? availableWidth / baseFrameWidth : 1;
   const wheelSize = Math.round(baseWheelSize * scaleFactor);
   const frameWidth = Math.round(baseFrameWidth * scaleFactor);
   const frameHeight = Math.round(baseFrameHeight * scaleFactor);
@@ -389,24 +503,30 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
       { x: cx + outerR * Math.cos(startAngle), y: cy + outerR * Math.sin(startAngle) },
       { x: cx + outerR * Math.cos(endAngle), y: cy + outerR * Math.sin(endAngle) },
     ];
+
     const steps = 10;
     for (let s = 0; s <= steps; s++) {
       const a = startAngle + (endAngle - startAngle) * (s / steps);
       points.push({ x: cx + outerR * Math.cos(a), y: cy + outerR * Math.sin(a) });
     }
+
     const xs = points.map(p => p.x);
     const ys = points.map(p => p.y);
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
     const minY = Math.min(...ys);
     const maxY = Math.max(...ys);
+
     return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
   };
 
   const handleCollapse = () => {
+    if (isDetached) {
+      closeDetachedWindow();
+      return;
+    }
     setCollapsed(true);
-    setPanelPos(null);
-    setPanelSize({ w: 320, h: 0 });
+    resetFloatingPanel();
   };
 
   if (floating && collapsed) {
@@ -423,25 +543,26 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
     );
   }
 
-  const floatingStyle: React.CSSProperties = floating ? {
-    position: 'fixed',
-    zIndex: 99999,
-    width: panelSize.w,
-    ...(panelSize.h > 0 ? { height: panelSize.h, overflow: 'auto' } : {}),
-    ...(panelPos ? { left: panelPos.x, top: panelPos.y } : { bottom: 16, right: 16 }),
-  } : {};
+  const floatingStyle: React.CSSProperties = floating && !isDetached
+    ? {
+        position: 'fixed',
+        zIndex: 99999,
+        width: panelSize.w,
+        ...(panelSize.h > 0 ? { height: panelSize.h, overflow: 'auto' } : {}),
+        ...(panelPos ? { left: panelPos.x, top: panelPos.y } : { bottom: 16, right: 16 }),
+      }
+    : {
+        width: '100%',
+        minHeight: isDetached ? 'calc(100vh - 32px)' : undefined,
+      };
 
-  return (
+  const previewCard = (
     <div
       ref={panelElRef}
-      className={floating
-        ? 'relative rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-shadow'
-        : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3'
-      }
+      className={floating ? 'relative rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-shadow' : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3'}
       style={floatingStyle}
     >
-      {/* Drag handle */}
-      {floating && (
+      {floating && !isDetached && (
         <div
           onMouseDown={onDragStart}
           className="flex items-center justify-center cursor-grab active:cursor-grabbing rounded-md bg-muted/40 py-1 mb-1 select-none"
@@ -450,6 +571,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
           <span className="text-muted-foreground text-[10px] tracking-widest">⠿⠿⠿</span>
         </div>
       )}
+
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pré-visualização dos segmentos</span>
         <div className="flex items-center gap-1">
@@ -457,7 +579,10 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
             <button type="button" onClick={() => setPreviewMode('desktop')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'desktop' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>🖥️ Desktop</button>
             <button type="button" onClick={() => setPreviewMode('mobile')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>📱 Mobile</button>
           </div>
-          {floating && (
+          {floating && !isDetached && (
+            <button type="button" onClick={openDetachedWindow} className="rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors" title="Abrir em janela separada">↗ Janela</button>
+          )}
+          {floating && !isDetached && (
             <button type="button" onClick={handleCollapse} className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors" title="Minimizar">✕</button>
           )}
         </div>
@@ -552,7 +677,6 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
                   const scaledH = bounds.height * scale;
                   const ox = (seg.imageOffsetX ?? 0) - (scaledW - bounds.width) / 2;
                   const oy = (seg.imageOffsetY ?? 0) - (scaledH - bounds.height) / 2;
-
                   const rot = seg.imageRotation ?? 0;
                   const imgCx = bounds.x + ox + scaledW / 2;
                   const imgCy = bounds.y + oy + scaledH / 2;
@@ -655,8 +779,8 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
           </div>
         </div>
       </div>
-      {/* Resize handle */}
-      {floating && (
+
+      {floating && !isDetached && (
         <div
           onMouseDown={onResizeStart}
           className="absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize flex items-end justify-end pr-1 pb-1"
@@ -669,6 +793,24 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
       )}
     </div>
   );
+
+  if (isDetached && detachedContainerRef.current) {
+    return (
+      <>
+        <div className="fixed bottom-4 right-4 z-[99999] flex items-center gap-2 rounded-xl border border-border/60 bg-background/95 px-3 py-2 shadow-2xl backdrop-blur-md">
+          <button type="button" onClick={() => detachedWindowRef.current?.focus()} className="text-xs font-bold text-foreground">
+            🎡 Janela aberta
+          </button>
+          <button type="button" onClick={closeDetachedWindow} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            Restaurar
+          </button>
+        </div>
+        {createPortal(previewCard, detachedContainerRef.current)}
+      </>
+    );
+  }
+
+  return previewCard;
 };
 
 /* ══════════════════════════════════════════════
