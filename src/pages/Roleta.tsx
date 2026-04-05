@@ -250,19 +250,17 @@ const Roleta = () => {
       return;
     }
     (async () => {
-      const { data } = await (supabase as any)
-        .from('wheel_configs')
-        .select('user_id, config')
-        .eq('slug', slug)
-        .maybeSingle();
-      if (!data) {
+      const { data, error } = await (supabase as any)
+        .rpc('get_wheel_config_by_slug', { p_slug: slug });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row || error) {
         toast.error('Roleta não encontrada');
         navigate('/', { replace: true });
         return;
       }
-      setOwnerId(data.user_id);
-      if (data.config && Object.keys(data.config).length > 0) {
-        setConfig({ ...defaultConfig, ...data.config });
+      setOwnerId(row.user_id);
+      if (row.config && Object.keys(row.config).length > 0) {
+        setConfig({ ...defaultConfig, ...row.config });
       }
       setConfigLoading(false);
 
