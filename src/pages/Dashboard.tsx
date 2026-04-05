@@ -427,14 +427,25 @@ const Dashboard = () => {
     toast.success('CSV exportado!');
   };
 
-  const parseCsvLine = (line: string) => {
-    const values: string[] = [];
+  const parseCsvText = (text: string) => {
+    const rows: string[][] = [];
+    let row: string[] = [];
     let current = '';
     let inQuotes = false;
 
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      const nextChar = line[i + 1];
+    const pushField = () => {
+      row.push(current.trim());
+      current = '';
+    };
+
+    const pushRow = () => {
+      if (row.some(value => value !== '')) rows.push(row);
+      row = [];
+    };
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const nextChar = text[i + 1];
 
       if (char === '"') {
         if (inQuotes && nextChar === '"') {
@@ -443,21 +454,35 @@ const Dashboard = () => {
         } else {
           inQuotes = !inQuotes;
         }
-      } else if (char === ',' && !inQuotes) {
-        values.push(current.trim());
-        current = '';
-      } else {
-        current += char;
+        continue;
       }
+
+      if (char === ',' && !inQuotes) {
+        pushField();
+        continue;
+      }
+
+      if ((char === '\n' || char === '\r') && !inQuotes) {
+        if (char === '\r' && nextChar === '\n') i++;
+        pushField();
+        pushRow();
+        continue;
+      }
+
+      current += char;
     }
 
-    values.push(current.trim());
-    return values;
+    if (current.length > 0 || row.length > 0) {
+      pushField();
+      pushRow();
+    }
+
+    return rows;
   };
 
   const normalizeCsvHeader = (value: string) =>
     value
-      .replace(/^#$/g, 'numero')
+      .replace(/^#(?:\(.+\))?$/i, 'numero')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9]+/g, '_')
@@ -471,50 +496,73 @@ const Dashboard = () => {
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const text = String(ev.target?.result || '').replace(/^\uFEFF/, '');
-      const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-      if (lines.length < 2) {
+      const records = parseCsvText(text);
+
+      if (records.length < 2) {
         toast.error('CSV vazio');
         return;
       }
 
-      const headerColumns = parseCsvLine(lines[0]).map(normalizeCsvHeader);
+      const headerColumns = records[0].map(normalizeCsvHeader);
       const headerMap = new Map(headerColumns.map((column, index) => [column, index]));
-      const requiredHeaders = ['nome', 'e_mail', 'id_da_conta'];
-      const hasExpectedHeader = requiredHeaders.every(header => headerMap.has(header));
-      const dataLines = hasExpectedHeader ? lines.slice(1) : lines;
+      const getColumnIndex = (...keys: string[]) => {
+        for (const key of keys) {
+          const index = headerMap.get(key);
+          if (typeof index === 'number') return index;
+        }
+        return -1;
+      };
 
-      const rowsToInsert = dataLines
-        .map((line) => parseCsvLine(line))
+      const columnIndex = {
+        name: getColumnIndex('nome'),
+        email: getColumnIndex('e_mail', 'email'),
+        phone: getColumnIndex('celular'),
+        accountId: getColumnIndex('id_da_conta'),
+        pixKeyType: getColumnIndex('tipo_chave_pix'),
+        pixKey: getColumnIndex('chave_pix'),
+        createdAt: getColumnIndex('data_de_inscricao'),
+        userType: getColumnIndex('tipo'),
+        responsible: getColumnIndex('responsavel'),
+      };
+
+      const hasExpectedHeader = [columnIndex.name, columnIndex.email, columnIndex.accountId].every(index => index >= 0);
+      const dataRows = hasExpectedHeader ? records.slice(1) : records;
+      const getValue = (cols: string[], index: number, fallbackIndex: number) => {
+        const finalIndex = index >= 0 ? index : fallbackIndex;
+        return finalIndex >= 0 ? String(cols[finalIndex] ?? '').trim() : '';
+      };
+
+      const rowsToInsert = dataRows
         .filter((cols) => cols.some(col => col !== ''))
         .map((cols) => {
-          const getValue = (...keys: string[]) => {
-            for (const key of keys) {
-              const index = headerMap.get(key);
-              if (index !== undefined) return (cols[index] || '').trim();
-            }
-            return '';
-          };
-
-          return {
-            name: getValue('nome'),
-            email: getValue('e_mail', 'email'),
-            phone: getValue('celular'),
-            account_id: getValue('id_da_conta'),
-            pix_key_type: getValue('tipo_chave_pix'),
-            pix_key: getValue('chave_pix'),
-            user_type: getValue('tipo'),
-            responsible: getValue('responsavel'),
+          const row: Record<string, string> = {
+            name: getValue(cols, columnIndex.name, 1),
+            email: getValue(cols, columnIndex.email, 2),
+            phone: getValue(cols, columnIndex.phone, 3),
+            account_id: getValue(cols, columnIndex.accountId, 4),
+            pix_key_type: getValue(cols, columnIndex.pixKeyType, 5),
+            pix_key: getValue(cols, columnIndex.pixKey, 6),
+            user_type: getValue(cols, columnIndex.userType, 8),
+            responsible: getValue(cols, columnIndex.responsible, 9),
             owner_id: session.user.id,
           };
+
+          const createdAt = getValue(cols, columnIndex.createdAt, 7);
+          if (createdAt) {
+            const parsedDate = new Date(createdAt);
+            if (!Number.isNaN(parsedDate.getTime())) row.created_at = parsedDate.toISOString();
+          }
+
+          return row;
         })
-        .filter((row) => row.name && row.email && row.account_id);
+        .filter((row) => row.name && row.email && row.account_id && row.name.toLowerCase() !== 'nome');
 
       if (rowsToInsert.length === 0) {
         toast.error('Nenhuma linha válida encontrada no CSV');
         return;
       }
 
-      const chunkSize = 200;
+      const chunkSize = 100;
       let imported = 0;
       let errors = 0;
 
@@ -525,10 +573,15 @@ const Dashboard = () => {
           .insert(chunk)
           .select('id');
 
-        if (error) {
-          errors += chunk.length;
-        } else {
+        if (!error) {
           imported += data?.length || chunk.length;
+          continue;
+        }
+
+        for (const row of chunk) {
+          const { error: rowError } = await (supabase as any).from('wheel_users').insert(row);
+          if (rowError) errors++;
+          else imported++;
         }
       }
 
@@ -823,6 +876,10 @@ const Dashboard = () => {
                     <span className="hidden sm:inline">Importar</span>
                     <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
                   </label>
+                  <button onClick={async () => { await fetchUsers(); toast.success('Inscritos atualizados!'); }} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                    <RotateCcw size={15} />
+                    <span className="hidden sm:inline">Atualizar</span>
+                  </button>
                   <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
                     <FileDown size={15} />
                     <span className="hidden sm:inline">Exportar</span>
