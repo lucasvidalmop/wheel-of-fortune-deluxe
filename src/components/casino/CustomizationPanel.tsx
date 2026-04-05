@@ -453,7 +453,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
             <button type="button" onClick={() => setPreviewMode('mobile')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>📱 Mobile</button>
           </div>
           {floating && (
-            <button type="button" onClick={() => setCollapsed(true)} className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors" title="Minimizar">✕</button>
+            <button type="button" onClick={handleCollapse} className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors" title="Minimizar">✕</button>
           )}
         </div>
       </div>
