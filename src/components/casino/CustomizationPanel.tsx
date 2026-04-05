@@ -441,6 +441,10 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
                   const ox = (seg.imageOffsetX ?? 0) - (scaledW - bounds.width) / 2;
                   const oy = (seg.imageOffsetY ?? 0) - (scaledH - bounds.height) / 2;
 
+                  const rot = seg.imageRotation ?? 0;
+                  const imgCx = bounds.x + ox + scaledW / 2;
+                  const imgCy = bounds.y + oy + scaledH / 2;
+
                   return (
                     <image
                       key={`seg-image-${seg.id}`}
@@ -452,6 +456,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
                       clipPath={`url(#seg-preview-clip-${previewMode}-${i})`}
                       preserveAspectRatio="xMidYMid slice"
                       opacity="0.92"
+                      transform={rot ? `rotate(${rot}, ${imgCx}, ${imgCy})` : undefined}
                     />
                   );
                 })}
@@ -786,10 +791,13 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                     <p className="text-[10px] text-muted-foreground/70 italic">📐 Recomendado: imagem quadrada 1000×1000px com o elemento principal centralizado.</p>
                     <ImageUpload label="Imagem de fundo do segmento" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
                     {seg.imageUrl && (
-                      <ImagePositionControls
-                        offsetX={seg.imageOffsetX ?? 0} offsetY={seg.imageOffsetY ?? 0} scale={seg.imageScale ?? 1}
-                        onChangeX={v => updateSegment(i, 'imageOffsetX', v)} onChangeY={v => updateSegment(i, 'imageOffsetY', v)} onChangeScale={v => updateSegment(i, 'imageScale', v)}
-                      />
+                      <>
+                        <ImagePositionControls
+                          offsetX={seg.imageOffsetX ?? 0} offsetY={seg.imageOffsetY ?? 0} scale={seg.imageScale ?? 1}
+                          onChangeX={v => updateSegment(i, 'imageOffsetX', v)} onChangeY={v => updateSegment(i, 'imageOffsetY', v)} onChangeScale={v => updateSegment(i, 'imageScale', v)}
+                        />
+                        <RangeInput label="Rotação da imagem" value={seg.imageRotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'imageRotation', v)} suffix="°" />
+                      </>
                     )}
                     {config.segments.length > 2 && (
                       <button
