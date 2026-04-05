@@ -809,7 +809,7 @@ const Dashboard = () => {
                     <div className="flex items-center gap-3 px-4 py-3 border-b border-primary/20 bg-primary/[0.05]">
                       <span className="text-xs text-primary font-semibold">{selectedUserIds.size} selecionado(s)</span>
                       <button
-                        onClick={() => { setBatchGrantMode('random'); setBatchGrantSegment(0); setShowBatchGrantModal(true); }}
+                        onClick={() => { setBatchGrantMode('random'); setBatchGrantSegment(0); setBatchGrantSpinCount(1); setShowBatchGrantModal(true); }}
                         className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary border border-primary/30 text-xs font-semibold hover:bg-primary/30 transition"
                       >
                         🎰 Liberar Giros
