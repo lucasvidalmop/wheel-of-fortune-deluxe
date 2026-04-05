@@ -80,6 +80,7 @@ const Dashboard = () => {
   const [whatsappSending, setWhatsappSending] = useState(false);
   const [whatsappTarget, setWhatsappTarget] = useState<'all' | 'selected'>('all');
   const [selectedWhatsappPhones, setSelectedWhatsappPhones] = useState<string[]>([]);
+  const [whatsappSearch, setWhatsappSearch] = useState('');
   const [showWhatsappConfig, setShowWhatsappConfig] = useState(false);
   const [evolutionApiUrl, setEvolutionApiUrl] = useState(() => localStorage.getItem('evolution_api_url') || '');
   const [evolutionApiKey, setEvolutionApiKey] = useState(() => localStorage.getItem('evolution_api_key') || '');
@@ -2094,14 +2095,30 @@ const Dashboard = () => {
                   </button>
                 </div>
                 {whatsappTarget === 'selected' && (
-                  <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
-                    {users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).map(u => (
-                      <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                        <input type="checkbox" checked={selectedWhatsappPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]); else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
-                        <span className="text-sm text-foreground">{u.name}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
-                      </label>
-                    ))}
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={whatsappSearch}
+                        onChange={e => setWhatsappSearch(e.target.value)}
+                        placeholder="Buscar por nome ou telefone..."
+                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 placeholder:text-muted-foreground"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
+                      {users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).filter(u => {
+                        if (!whatsappSearch.trim()) return true;
+                        const q = whatsappSearch.toLowerCase();
+                        return u.name.toLowerCase().includes(q) || u.phone.includes(q);
+                      }).map(u => (
+                        <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                          <input type="checkbox" checked={selectedWhatsappPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]); else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                          <span className="text-sm text-foreground">{u.name}</span>
+                          <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
               </GlassCard>
