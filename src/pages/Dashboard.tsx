@@ -1698,6 +1698,19 @@ const Dashboard = () => {
 
             <p className="text-sm text-muted-foreground mb-4">Escolha como o prêmio será definido para este giro:</p>
 
+            {/* Spin count */}
+            <div className="mb-4">
+              <label className="text-xs text-muted-foreground mb-1.5 block">Quantidade de giros</label>
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={grantSpinCount}
+                onChange={e => setGrantSpinCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 transition"
+              />
+            </div>
+
             {/* Mode selection */}
             <div className="flex gap-2 mb-5">
               <button
