@@ -1024,11 +1024,11 @@ const Dashboard = () => {
                       </button>
                     </div>
                   )}
-                  <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[900px]">
+                  <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm table-fixed">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
-                        <th className="px-3 py-3.5 w-10">
+                        <th className="px-2 py-3 w-8">
                           <input
                             type="checkbox"
                             checked={filteredUsers.length > 0 && filteredUsers.every(u => selectedUserIds.has(u.id))}
@@ -1042,23 +1042,23 @@ const Dashboard = () => {
                             className="rounded border-white/20 bg-white/[0.05]"
                           />
                         </th>
-                        <th className="text-left px-2 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-8">#</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Celular</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Account ID</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-20">PIX Tipo</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Chave PIX</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Inscrição</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-16">Tipo</th>
-                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Responsável</th>
-                        <th className="text-center px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-40">Ações</th>
+                        <th className="text-left px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-6">#</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[90px]">Celular</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[80px]">Acc ID</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[60px]">PIX</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[90px]">Chave</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[70px]">Data</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[50px]">Tipo</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[70px]">Resp.</th>
+                        <th className="text-center px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[120px]">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredUsers.map((user, index) => (
                         <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''}`}>
-                          <td className="px-3 py-3">
+                          <td className="px-2 py-2">
                             <input
                               type="checkbox"
                               checked={selectedUserIds.has(user.id)}
@@ -1070,29 +1070,29 @@ const Dashboard = () => {
                               className="rounded border-white/20 bg-white/[0.05]"
                             />
                           </td>
-                          <td className="px-2 py-3 text-muted-foreground text-xs">{index + 1}</td>
-                          <td className="px-3 py-3 text-foreground font-medium truncate">{user.name}</td>
-                          <td className="px-3 py-3 text-muted-foreground truncate">{user.email}</td>
-                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.phone}</td>
-                          <td className="px-3 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
-                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.pix_key_type || '—'}</td>
-                          <td className="px-3 py-3 text-muted-foreground text-xs truncate">{user.pix_key || '—'}</td>
-                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
-                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.user_type || '—'}</td>
-                          <td className="px-3 py-3 text-muted-foreground text-xs truncate">{user.responsible || '—'}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-1.5">
+                          <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
+                          <td className="px-2 py-2 text-foreground font-medium text-xs truncate max-w-0">{user.name}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-xs truncate max-w-0">{user.email}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.phone}</td>
+                          <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground truncate">{user.account_id?.slice(0, 8)}...</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.pix_key_type || '—'}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.pix_key || '—'}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px]">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.user_type || '—'}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.responsible || '—'}</td>
+                          <td className="px-1 py-2">
+                            <div className="flex items-center justify-center gap-1">
                               <button
                                 onClick={() => handleGrantSpin(user)}
-                                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
+                                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
                               >
-                                {user.spins_available >= 1 ? `${user.spins_available} giro(s) ✓` : 'Liberar'}
+                                {user.spins_available >= 1 ? `${user.spins_available}✓` : 'Giro'}
                               </button>
-                              <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
-                                <Pencil size={13} />
+                              <button onClick={() => openEdit(user)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
+                                <Pencil size={12} />
                               </button>
-                              <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir">
-                                <Trash2 size={13} />
+                              <button onClick={() => handleDeleteUser(user.id)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir">
+                                <Trash2 size={12} />
                               </button>
                             </div>
                           </td>
@@ -1100,6 +1100,69 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </table>
+                  </div>
+
+                  {/* Mobile/tablet card layout */}
+                  <div className="lg:hidden space-y-2">
+                    <div className="flex items-center gap-2 px-1 pb-2">
+                      <input
+                        type="checkbox"
+                        checked={filteredUsers.length > 0 && filteredUsers.every(u => selectedUserIds.has(u.id))}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+                          } else {
+                            setSelectedUserIds(new Set());
+                          }
+                        }}
+                        className="rounded border-white/20 bg-white/[0.05]"
+                      />
+                      <span className="text-xs text-muted-foreground">Selecionar todos</span>
+                    </div>
+                    {filteredUsers.map((user, index) => (
+                      <div key={user.id} className={`p-3 rounded-xl border transition-colors ${selectedUserIds.has(user.id) ? 'bg-primary/[0.06] border-primary/20' : 'bg-white/[0.02] border-white/[0.06]'}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedUserIds.has(user.id)}
+                              onChange={e => {
+                                const next = new Set(selectedUserIds);
+                                if (e.target.checked) next.add(user.id); else next.delete(user.id);
+                                setSelectedUserIds(next);
+                              }}
+                              className="rounded border-white/20 bg-white/[0.05] shrink-0 mt-0.5"
+                            />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">#{index + 1} {user.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => handleGrantSpin(user)}
+                              className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
+                            >
+                              {user.spins_available >= 1 ? `${user.spins_available}✓` : 'Giro'}
+                            </button>
+                            <button onClick={() => openEdit(user)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
+                              <Pencil size={12} />
+                            </button>
+                            <button onClick={() => handleDeleteUser(user.id)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive transition border border-white/[0.06]">
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-[11px]">
+                          <div><span className="text-muted-foreground">Cel:</span> <span className="text-foreground">{user.phone || '—'}</span></div>
+                          <div><span className="text-muted-foreground">Acc:</span> <span className="text-foreground font-mono">{user.account_id?.slice(0, 10)}...</span></div>
+                          <div><span className="text-muted-foreground">PIX:</span> <span className="text-foreground">{user.pix_key_type || '—'} {user.pix_key ? `/ ${user.pix_key}` : ''}</span></div>
+                          <div><span className="text-muted-foreground">Data:</span> <span className="text-foreground">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</span></div>
+                          <div><span className="text-muted-foreground">Tipo:</span> <span className="text-foreground">{user.user_type || '—'}</span></div>
+                          <div><span className="text-muted-foreground">Resp:</span> <span className="text-foreground">{user.responsible || '—'}</span></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </GlassCard>
               )}
