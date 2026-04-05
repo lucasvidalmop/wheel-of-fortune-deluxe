@@ -281,33 +281,37 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             const tSize = (config.titleFontSize ?? 10) * s;
             return (
               <g key={`text-${i}`} transform={`rotate(${midAngle + 90}, ${tx}, ${ty})`}>
-                <text
-                  x={tx}
-                  y={ty - tSize * 0.8}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill={seg.textColor}
-                  fontSize={vSize}
-                  fontWeight="900"
-                  fontFamily="'Orbitron', sans-serif"
-                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9))' }}
-                >
-                  {seg.reward}
-                </text>
-                <text
-                  x={tx}
-                  y={ty + vSize * 0.6}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill={seg.textColor}
-                  fontSize={tSize}
-                  fontWeight="700"
-                  fontFamily="'Orbitron', sans-serif"
-                  opacity="0.9"
-                  style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
-                >
-                  {seg.title}
-                </text>
+                {!config.hideSegmentValue && (
+                  <text
+                    x={tx}
+                    y={config.hideSegmentTitle ? ty : ty - tSize * 0.8}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill={seg.textColor}
+                    fontSize={vSize}
+                    fontWeight="900"
+                    fontFamily="'Orbitron', sans-serif"
+                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9))' }}
+                  >
+                    {seg.reward}
+                  </text>
+                )}
+                {!config.hideSegmentTitle && (
+                  <text
+                    x={tx}
+                    y={config.hideSegmentValue ? ty : ty + vSize * 0.6}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill={seg.textColor}
+                    fontSize={tSize}
+                    fontWeight="700"
+                    fontFamily="'Orbitron', sans-serif"
+                    opacity="0.9"
+                    style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
+                  >
+                    {seg.title}
+                  </text>
+                )}
               </g>
             );
           })}
