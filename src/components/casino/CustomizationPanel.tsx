@@ -336,8 +336,105 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
     window.addEventListener('mouseup', onUp);
   };
 
+  const segments = config.segments;
+  const numSegs = Math.max(segments.length, 1);
+  const segAngle = 360 / numSegs;
+  const wheelSize = previewMode === 'mobile' ? 124 : 168;
+  const frameWidth = previewMode === 'mobile' ? 190 : 360;
+  const frameHeight = previewMode === 'mobile' ? 320 : 236;
+  const cx = wheelSize / 2;
+  const cy = wheelSize / 2;
+  const r = wheelSize / 2 - 8;
+  const outerR = r - 6;
+  const innerPreviewR = Math.max(14, wheelSize * 0.14);
+
+  const polarToCart = (angleDeg: number, radius: number) => ({
+    x: cx + radius * Math.cos((angleDeg - 90) * Math.PI / 180),
+    y: cy + radius * Math.sin((angleDeg - 90) * Math.PI / 180),
+  });
+
+  const getSegmentPath = (index: number, outerRadius: number, innerRadius: number) => {
+    const startAngle = (index * segAngle - 90) * (Math.PI / 180);
+    const endAngle = ((index + 1) * segAngle - 90) * (Math.PI / 180);
+    const x1 = cx + outerRadius * Math.cos(startAngle);
+    const y1 = cy + outerRadius * Math.sin(startAngle);
+    const x2 = cx + outerRadius * Math.cos(endAngle);
+    const y2 = cy + outerRadius * Math.sin(endAngle);
+    const ix1 = cx + innerRadius * Math.cos(startAngle);
+    const iy1 = cy + innerRadius * Math.sin(startAngle);
+    const ix2 = cx + innerRadius * Math.cos(endAngle);
+    const iy2 = cy + innerRadius * Math.sin(endAngle);
+    const largeArc = segAngle > 180 ? 1 : 0;
+    return `M ${ix1} ${iy1} L ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
+  };
+
+  const getSegmentBounds = (index: number) => {
+    const startAngle = (index * segAngle - 90) * (Math.PI / 180);
+    const endAngle = ((index + 1) * segAngle - 90) * (Math.PI / 180);
+    const points = [
+      { x: cx + innerPreviewR * Math.cos(startAngle), y: cy + innerPreviewR * Math.sin(startAngle) },
+      { x: cx + innerPreviewR * Math.cos(endAngle), y: cy + innerPreviewR * Math.sin(endAngle) },
+      { x: cx + outerR * Math.cos(startAngle), y: cy + outerR * Math.sin(startAngle) },
+      { x: cx + outerR * Math.cos(endAngle), y: cy + outerR * Math.sin(endAngle) },
+    ];
+    const steps = 10;
+    for (let s = 0; s <= steps; s++) {
+      const a = startAngle + (endAngle - startAngle) * (s / steps);
+      points.push({ x: cx + outerR * Math.cos(a), y: cy + outerR * Math.sin(a) });
+    }
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
+  };
+
+  if (floating && collapsed) {
+    return (
+      <div
+        className="fixed bottom-4 right-4 z-50"
+        style={panelPos ? { left: panelPos.x, top: panelPos.y, bottom: 'auto', right: 'auto' } : undefined}
+      >
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/95 backdrop-blur-md px-4 py-2 shadow-2xl text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          🎡 Pré-visualização
+        </button>
+      </div>
+    );
+  }
+
+  const floatingStyle: React.CSSProperties = floating ? {
+    position: 'fixed',
+    zIndex: 50,
+    width: panelSize.w,
+    ...(panelSize.h > 0 ? { height: panelSize.h, overflow: 'auto' } : {}),
+    ...(panelPos ? { left: panelPos.x, top: panelPos.y } : { bottom: 16, right: 16 }),
+  } : {};
+
   return (
-    <div className={wrapperClass}>
+    <div
+      ref={panelElRef}
+      className={floating
+        ? 'rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-shadow'
+        : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3'
+      }
+      style={floatingStyle}
+    >
+      {/* Drag handle */}
+      {floating && (
+        <div
+          onMouseDown={onDragStart}
+          className="flex items-center justify-center cursor-grab active:cursor-grabbing rounded-md bg-muted/40 py-1 mb-1 select-none"
+          title="Arrastar para mover"
+        >
+          <span className="text-muted-foreground text-[10px] tracking-widest">⠿⠿⠿</span>
+        </div>
+      )}
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pré-visualização dos segmentos</span>
         <div className="flex items-center gap-1">
