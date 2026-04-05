@@ -276,8 +276,9 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 };
 
 /* ── Segment Preview (mini wheel) ── */
-const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
+const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({ config, floating }) => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [collapsed, setCollapsed] = useState(false);
   const segments = config.segments;
   const numSegs = Math.max(segments.length, 1);
   const segAngle = 360 / numSegs;
