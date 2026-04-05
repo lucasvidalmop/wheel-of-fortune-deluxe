@@ -155,6 +155,10 @@ export interface WheelConfig {
   spinSoundMode?: 'default' | 'custom';
   customSpinSoundUrl?: string;
   centerButtonSpinEnabled?: boolean;
+  // Auto-redirect after prize
+  autoRedirectEnabled?: boolean;
+  autoRedirectUrl?: string;
+  autoRedirectDelaySec?: number;
 }
 
 export const defaultSegments: WheelSegment[] = [
