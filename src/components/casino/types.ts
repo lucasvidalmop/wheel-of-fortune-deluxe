@@ -10,6 +10,7 @@ export interface WheelSegment {
   imageOffsetY?: number;
   imageScale?: number;
   percentage: number;
+  postSpinMessage?: string;
 }
 
 export interface WheelConfig {
