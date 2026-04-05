@@ -448,7 +448,63 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
       {/* ── Som & Botão Central ── */}
       <Card title="Som & Interação" icon={<span className="text-base">🔊</span>}>
         <ToggleSwitch label="Som ao girar" checked={config.spinSoundEnabled !== false} onChange={v => updateGlobal('spinSoundEnabled', v)} />
-        <p className="text-[9px] text-muted-foreground">Efeito sonoro de roleta girando (tick-tick-tick que desacelera).</p>
+        <p className="text-[9px] text-muted-foreground">Efeito sonoro de roleta girando.</p>
+
+        {config.spinSoundEnabled !== false && (
+          <>
+            <div className="border-t border-border/30 my-2" />
+            <label className="text-xs text-muted-foreground">Tipo de som</label>
+            <div className="flex gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => updateGlobal('spinSoundMode', 'default')}
+                className={`flex-1 rounded-lg px-3 py-1.5 text-xs border transition-all ${
+                  (config.spinSoundMode || 'default') === 'default'
+                    ? 'bg-primary/20 border-primary text-primary'
+                    : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted/60'
+                }`}
+              >
+                🎵 Padrão
+              </button>
+              <button
+                type="button"
+                onClick={() => updateGlobal('spinSoundMode', 'custom')}
+                className={`flex-1 rounded-lg px-3 py-1.5 text-xs border transition-all ${
+                  config.spinSoundMode === 'custom'
+                    ? 'bg-primary/20 border-primary text-primary'
+                    : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted/60'
+                }`}
+              >
+                🎶 Personalizado
+              </button>
+            </div>
+
+            {config.spinSoundMode === 'custom' && (
+              <div className="mt-2 space-y-2">
+                <AudioUpload
+                  label="Áudio personalizado"
+                  value={config.customSpinSoundUrl}
+                  onChange={v => updateGlobal('customSpinSoundUrl', v)}
+                />
+              </div>
+            )}
+
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const customUrl = config.spinSoundMode === 'custom' && config.customSpinSoundUrl
+                    ? config.customSpinSoundUrl : undefined;
+                  playSpinSound(3000, customUrl);
+                }}
+                className="w-full rounded-lg bg-muted/60 px-3 py-1.5 text-xs text-foreground hover:bg-muted/80 transition-all"
+              >
+                ▶️ Testar som
+              </button>
+            </div>
+          </>
+        )}
+
         <div className="border-t border-border/30 my-2" />
         <ToggleSwitch label="Botão central gira" checked={!!config.centerButtonSpinEnabled} onChange={v => updateGlobal('centerButtonSpinEnabled', v)} />
         <p className="text-[9px] text-muted-foreground">Permite girar clicando no centro da roleta.</p>
