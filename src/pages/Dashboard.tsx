@@ -1981,13 +1981,11 @@ const Dashboard = () => {
                         disabled={!evolutionApiUrl || !evolutionApiKey || !evolutionInstance}
                         onClick={async () => {
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/logout/${evolutionInstance}`, {
-                              method: 'DELETE',
-                              headers: { 'apikey': evolutionApiKey },
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'logout', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            if (res.ok) { toast.success('WhatsApp desconectado'); setInstanceStatus('close'); setInstanceQrCode(null); }
-                            else { const d = await res.json(); toast.error(d?.message || 'Erro ao desconectar'); }
+                            if (error) { toast.error('Erro ao desconectar'); return; }
+                            toast.success('WhatsApp desconectado'); setInstanceStatus('close'); setInstanceQrCode(null);
                           } catch (err: any) { toast.error(err.message || 'Erro'); }
                         }}
                         className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
