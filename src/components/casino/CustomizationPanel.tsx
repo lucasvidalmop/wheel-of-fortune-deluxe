@@ -92,7 +92,53 @@ const ImageUpload = React.forwardRef<HTMLDivElement, ImageUploadProps>(({ label,
 });
 ImageUpload.displayName = 'ImageUpload';
 
-type RangeInputProps = {
+// Audio upload component
+type AudioUploadProps = { label: string; value?: string; onChange: (v: string) => void };
+const AudioUpload: React.FC<AudioUploadProps> = ({ label, value, onChange }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'audio');
+      onChange(publicUrl);
+      toast.success('Áudio enviado!');
+    } catch (err: any) {
+      toast.error('Erro: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs text-muted-foreground">{label}</label>
+      <div className="flex items-center gap-2">
+        {value && (
+          <div className="flex items-center gap-1 rounded-lg bg-muted/60 px-2 py-1 text-[10px] text-foreground">
+            🎵 Áudio carregado
+          </div>
+        )}
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
+          className="rounded-lg bg-muted/80 px-3 py-1.5 text-xs text-foreground transition-all hover:bg-muted disabled:opacity-50">
+          {uploading ? '⏳ Enviando...' : value ? '🔄 Trocar' : '📤 Enviar MP3'}
+        </button>
+        {value && (
+          <button type="button" onClick={() => onChange('')} className="text-xs text-destructive hover:text-destructive/80">
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+      <input ref={inputRef} type="file" accept="audio/*" onChange={handleFile} className="hidden" />
+    </div>
+  );
+};
+
+
   label: string;
   value: number;
   min: number;
