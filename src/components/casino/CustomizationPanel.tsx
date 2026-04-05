@@ -590,6 +590,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
   };
 
   return (
+    <>
     <div className="w-full space-y-3 relative">
       {/* ── Top bar with gear ── */}
       <div className="flex items-center justify-between">
