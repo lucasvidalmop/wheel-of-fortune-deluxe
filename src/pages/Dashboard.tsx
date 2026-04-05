@@ -80,6 +80,7 @@ const Dashboard = () => {
   const [whatsappSending, setWhatsappSending] = useState(false);
   const [whatsappTarget, setWhatsappTarget] = useState<'all' | 'selected'>('all');
   const [selectedWhatsappPhones, setSelectedWhatsappPhones] = useState<string[]>([]);
+  const [whatsappSearch, setWhatsappSearch] = useState('');
   const [showWhatsappConfig, setShowWhatsappConfig] = useState(false);
   const [evolutionApiUrl, setEvolutionApiUrl] = useState(() => localStorage.getItem('evolution_api_url') || '');
   const [evolutionApiKey, setEvolutionApiKey] = useState(() => localStorage.getItem('evolution_api_key') || '');
