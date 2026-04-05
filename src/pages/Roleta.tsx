@@ -262,7 +262,6 @@ const Roleta = () => {
       if (row.config && Object.keys(row.config).length > 0) {
         setConfig({ ...defaultConfig, ...row.config });
       }
-      }
       setConfigLoading(false);
 
       // ── Track pageview ──
