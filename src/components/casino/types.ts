@@ -10,6 +10,8 @@ export interface WheelSegment {
   imageOffsetY?: number;
   imageScale?: number;
   percentage: number;
+  hideTitle?: boolean;
+  hideValue?: boolean;
   postSpinMessage?: string;
   postSpinEmoji?: string;
 }

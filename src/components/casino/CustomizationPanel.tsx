@@ -672,6 +672,10 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                         </div>
                       </div>
                     )}
+                    <div className="flex gap-4">
+                      <ToggleSwitch label="Ocultar título" checked={!!seg.hideTitle} onChange={v => updateSegment(i, 'hideTitle', v)} />
+                      <ToggleSwitch label="Ocultar valor" checked={!!seg.hideValue} onChange={v => updateSegment(i, 'hideValue', v)} />
+                    </div>
                     <div className="grid grid-cols-2 gap-x-4">
                       <ColorInput label="Fundo" value={seg.color} onChange={v => updateSegment(i, 'color', v)} />
                       <ColorInput label="Texto" value={seg.textColor} onChange={v => updateSegment(i, 'textColor', v)} />
