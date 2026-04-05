@@ -1941,13 +1941,11 @@ const Dashboard = () => {
                           setInstanceStatus('loading');
                           setInstanceQrCode(null);
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/connect/${evolutionInstance}`, {
-                              method: 'GET',
-                              headers: { 'apikey': evolutionApiKey },
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'connect', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            const data = await res.json();
-                            if (!res.ok) { toast.error(data?.message || data?.error || 'Erro ao conectar'); setInstanceStatus('error'); return; }
+                            if (error) { toast.error('Erro ao conectar'); setInstanceStatus('error'); return; }
+                            if (data?.error) { toast.error(data.error); setInstanceStatus('error'); return; }
                             if (data?.base64) { setInstanceQrCode(data.base64); setInstanceStatus('connecting'); toast.info('Escaneie o QR Code no WhatsApp'); }
                             else if (data?.instance?.state === 'open') { setInstanceStatus('open'); toast.success('WhatsApp já está conectado!'); }
                             else { setInstanceStatus('close'); toast.info('Instância desconectada. Tente novamente.'); }
