@@ -1016,6 +1016,8 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
 
 
     </div>
+    <SegmentPreview config={config} floating />
+    </>
   );
 };
 
