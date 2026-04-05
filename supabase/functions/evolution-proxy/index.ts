@@ -16,8 +16,8 @@ serve(async (req) => {
 
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) {
       return new Response(
-        JSON.stringify({ error: "Credenciais da Evolution API não configuradas." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ ok: false, error: "Credenciais da Evolution API não configuradas." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -49,15 +49,37 @@ serve(async (req) => {
         break;
       default:
         return new Response(
-          JSON.stringify({ error: "Ação inválida" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ ok: false, error: "Ação inválida" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
 
     const headers: Record<string, string> = { "apikey": evolutionApiKey };
     if (method === "POST") headers["Content-Type"] = "application/json";
 
-    const response = await fetch(url, { method, headers, body: fetchBody });
+    // Add 15s timeout to avoid edge function hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    let response;
+    try {
+      response = await fetch(url, { method, headers, body: fetchBody, signal: controller.signal });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      const isTimeout = fetchError.name === "AbortError" || 
+                        (fetchError.message && fetchError.message.includes("timed out"));
+      return new Response(
+        JSON.stringify({ 
+          ok: false, 
+          error: isTimeout 
+            ? "Tempo limite excedido. Verifique se o servidor da Evolution API está acessível e se a porta está liberada no firewall."
+            : `Erro de conexão: ${fetchError.message}. Verifique a URL e se o servidor está online.`
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    clearTimeout(timeoutId);
+
     let data;
     try { data = await response.json(); } catch { data = null; }
 
@@ -68,8 +90,8 @@ serve(async (req) => {
   } catch (error) {
     console.error("Evolution proxy error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Erro interno" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ ok: false, error: error.message || "Erro interno" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
