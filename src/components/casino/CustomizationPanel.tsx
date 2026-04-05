@@ -1107,6 +1107,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                           <RangeInput label="Rotação da imagem" value={seg.mobileImageRotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'mobileImageRotation', v)} suffix="°" />
                         </>
                       )}
+                    </div>
                     {config.segments.length > 2 && (
                       <button
                         onClick={() => onChange({ ...config, segments: config.segments.filter((_, idx) => idx !== i) })}
