@@ -783,7 +783,8 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       <ColorInput label="Fundo" value={seg.color} onChange={v => updateSegment(i, 'color', v)} />
                       <ColorInput label="Texto" value={seg.textColor} onChange={v => updateSegment(i, 'textColor', v)} />
                     </div>
-                    <ImageUpload label="Imagem" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
+                    <p className="text-[10px] text-muted-foreground/70 italic">📐 Recomendado: imagem quadrada 1000×1000px com o elemento principal centralizado.</p>
+                    <ImageUpload label="Imagem de fundo do segmento" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
                     {seg.imageUrl && (
                       <ImagePositionControls
                         offsetX={seg.imageOffsetX ?? 0} offsetY={seg.imageOffsetY ?? 0} scale={seg.imageScale ?? 1}
