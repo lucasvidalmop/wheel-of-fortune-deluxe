@@ -323,6 +323,16 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       <input type="number" min={0} max={100} value={seg.percentage} onChange={e => updateSegment(i, 'percentage', Math.max(0, parseInt(e.target.value) || 0))} className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground" />
                     </div>
                     <div>
+                      <label className="text-[10px] text-muted-foreground font-medium">Emoji pós-giro</label>
+                      <input
+                        type="text"
+                        value={seg.postSpinEmoji ?? '🎉'}
+                        onChange={e => updateSegment(i, 'postSpinEmoji', e.target.value)}
+                        maxLength={4}
+                        className="w-16 text-center text-lg px-2 py-1 rounded-lg border border-border bg-background"
+                      />
+                    </div>
+                    <div>
                       <label className="text-[10px] text-muted-foreground font-medium">Mensagem pós-giro</label>
                       <textarea
                         value={seg.postSpinMessage ?? ''}
@@ -333,17 +343,17 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       />
                       <span className="text-[9px] text-muted-foreground">Deixe vazio para usar o padrão. Use {'{premio}'} e {'{titulo}'} como variáveis.</span>
                     </div>
-                    {seg.postSpinMessage && (
+                    {(seg.postSpinMessage || seg.postSpinEmoji) && (
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5">
                         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Pré-visualização</span>
                         <div
                           className="mt-1 text-sm rounded-lg p-3 text-center"
                           style={{ background: config.resultBoxColor, color: config.resultTextColor, border: `1px solid ${config.resultBorderColor}` }}
                         >
-                          <p className="font-bold text-base mb-1">🎉 {seg.reward}</p>
+                          <p className="font-bold text-base mb-1">{seg.postSpinEmoji ?? '🎉'} {seg.reward}</p>
                           <p className="font-bold mb-1">{seg.title}</p>
                           <p className="text-xs opacity-85" style={{ whiteSpace: 'pre-line' }}>
-                            {seg.postSpinMessage.replace(/\{premio\}/g, seg.reward).replace(/\{titulo\}/g, seg.title)}
+                            {(seg.postSpinMessage || `Parabéns! Você ganhou ${seg.reward} — ${seg.title}!`).replace(/\{premio\}/g, seg.reward).replace(/\{titulo\}/g, seg.title)}
                           </p>
                         </div>
                       </div>
