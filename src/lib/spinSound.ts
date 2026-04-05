@@ -11,8 +11,20 @@ function getAudioContext(): AudioContext {
   return audioCtx;
 }
 
+/** Preload a custom audio URL and return its duration in ms. */
+export function getCustomAudioDuration(url: string): Promise<number> {
+  return new Promise((resolve) => {
+    const audio = new Audio(url);
+    audio.addEventListener('loadedmetadata', () => {
+      resolve(Math.round(audio.duration * 1000));
+    });
+    audio.addEventListener('error', () => resolve(5000)); // fallback
+    // timeout fallback
+    setTimeout(() => resolve(5000), 3000);
+  });
+}
+
 export function playSpinSound(durationMs = 5000, customUrl?: string) {
-  // Stop any previous custom audio
   stopSpinSound();
 
   if (customUrl) {
@@ -20,8 +32,6 @@ export function playSpinSound(durationMs = 5000, customUrl?: string) {
       customAudioEl = new Audio(customUrl);
       customAudioEl.currentTime = 0;
       customAudioEl.play().catch(() => {});
-      // Auto-stop after duration
-      setTimeout(() => stopSpinSound(), durationMs + 500);
     } catch {
       // fallback silently
     }
