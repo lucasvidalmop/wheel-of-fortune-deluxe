@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { WheelConfig } from './types';
-import { Monitor, Smartphone, Eye, Bold, Italic, AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronRight } from 'lucide-react';
+import { Monitor, Smartphone, Eye, Bold, Italic, AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 
 const FONT_OPTIONS = [
   'Inter', 'Arial', 'Georgia', 'Verdana', 'Trebuchet MS', 'Courier New',
@@ -227,6 +227,45 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
           </CollapsibleSection>
         </>
       )}
+
+      {/* Auto-redirect section - independent from dialog */}
+      <div className="border-t border-white/[0.06] pt-4 mt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <ExternalLink size={16} /> Redirecionamento Automático
+          </h3>
+          <button
+            onClick={() => set('autoRedirectEnabled', !config.autoRedirectEnabled)}
+            className={`relative w-11 h-6 rounded-full transition-colors ${config.autoRedirectEnabled ? 'bg-primary' : 'bg-white/10'}`}
+          >
+            <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${config.autoRedirectEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-3">Abre um link invisível em nova aba após o usuário ver o prêmio.</p>
+        {config.autoRedirectEnabled && (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">URL do Link</label>
+              <input
+                type="url"
+                value={config.autoRedirectUrl ?? ''}
+                onChange={e => set('autoRedirectUrl', e.target.value)}
+                placeholder="https://exemplo.com"
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm"
+              />
+            </div>
+            <SliderInput
+              label="Atraso para abrir"
+              value={config.autoRedirectDelaySec ?? 3}
+              min={0}
+              max={30}
+              step={1}
+              unit="s"
+              onChange={v => set('autoRedirectDelaySec', v)}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
