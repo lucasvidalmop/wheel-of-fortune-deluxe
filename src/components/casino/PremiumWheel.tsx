@@ -229,20 +229,24 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
 
           {/* Segment images - FULL COVER */}
           {config.segments.map((seg, i) => {
-            if (!seg.imageUrl) return null;
+            const imgUrl = isMobile && seg.mobileImageUrl ? seg.mobileImageUrl : seg.imageUrl;
+            if (!imgUrl) return null;
             const bounds = getSegmentBounds(i);
-            const scale = seg.imageScale ?? 1;
+            const useMobile = isMobile && seg.mobileImageUrl;
+            const scale = useMobile ? (seg.mobileImageScale ?? 1) : (seg.imageScale ?? 1);
             const scaledW = bounds.width * scale;
             const scaledH = bounds.height * scale;
-            const ox = (seg.imageOffsetX ?? 0) - (scaledW - bounds.width) / 2;
-            const oy = (seg.imageOffsetY ?? 0) - (scaledH - bounds.height) / 2;
-            const rot = seg.imageRotation ?? 0;
+            const offX = useMobile ? (seg.mobileImageOffsetX ?? 0) : (seg.imageOffsetX ?? 0);
+            const offY = useMobile ? (seg.mobileImageOffsetY ?? 0) : (seg.imageOffsetY ?? 0);
+            const ox = offX - (scaledW - bounds.width) / 2;
+            const oy = offY - (scaledH - bounds.height) / 2;
+            const rot = useMobile ? (seg.mobileImageRotation ?? 0) : (seg.imageRotation ?? 0);
             const imgCx = bounds.x + ox + scaledW / 2;
             const imgCy = bounds.y + oy + scaledH / 2;
             return (
               <g key={`img-${i}`} clipPath={`url(#seg-clip-${i})`}>
                 <image
-                  href={seg.imageUrl}
+                  href={imgUrl}
                   x={bounds.x + ox}
                   y={bounds.y + oy}
                   width={scaledW}
@@ -281,8 +285,8 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             const tx = cx + textR * Math.cos(rad);
             const ty = cy + textR * Math.sin(rad);
             const s = config.fontSizeScale ?? 1;
-            const vSize = (config.valueFontSize ?? 22) * s;
-            const tSize = (config.titleFontSize ?? 10) * s;
+            const vSize = (seg.valueFontSize ?? config.valueFontSize ?? 22) * s;
+            const tSize = (seg.titleFontSize ?? config.titleFontSize ?? 10) * s;
             return (
               (() => {
                 const showValue = !config.hideSegmentValue && !seg.hideValue;
@@ -291,8 +295,8 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
                   <g key={`text-${i}`} transform={`rotate(${midAngle + 90}, ${tx}, ${ty})`}>
                     {showValue && (
                       <text
-                        x={tx}
-                        y={showTitle ? ty - tSize * 0.8 : ty}
+                        x={tx + (seg.valueOffsetX ?? 0)}
+                        y={(showTitle ? ty - tSize * 0.8 : ty) + (seg.valueOffsetY ?? 0)}
                         textAnchor="middle"
                         dominantBaseline="central"
                         fill={seg.textColor}
@@ -300,14 +304,15 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
                         fontWeight="900"
                         fontFamily="'Orbitron', sans-serif"
                         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9))' }}
+                        transform={seg.valueRotation ? `rotate(${seg.valueRotation}, ${tx + (seg.valueOffsetX ?? 0)}, ${(showTitle ? ty - tSize * 0.8 : ty) + (seg.valueOffsetY ?? 0)})` : undefined}
                       >
                         {seg.reward}
                       </text>
                     )}
                     {showTitle && (
                       <text
-                        x={tx}
-                        y={showValue ? ty + vSize * 0.6 : ty}
+                        x={tx + (seg.titleOffsetX ?? 0)}
+                        y={(showValue ? ty + vSize * 0.6 : ty) + (seg.titleOffsetY ?? 0)}
                         textAnchor="middle"
                         dominantBaseline="central"
                         fill={seg.textColor}
@@ -316,6 +321,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
                         fontFamily="'Orbitron', sans-serif"
                         opacity="0.9"
                         style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
+                        transform={seg.titleRotation ? `rotate(${seg.titleRotation}, ${tx + (seg.titleOffsetX ?? 0)}, ${(showValue ? ty + vSize * 0.6 : ty) + (seg.titleOffsetY ?? 0)})` : undefined}
                       >
                         {seg.title}
                       </text>

@@ -10,6 +10,22 @@ export interface WheelSegment {
   imageOffsetY?: number;
   imageScale?: number;
   imageRotation?: number;
+  // Mobile image (separate from desktop)
+  mobileImageUrl?: string;
+  mobileImageOffsetX?: number;
+  mobileImageOffsetY?: number;
+  mobileImageScale?: number;
+  mobileImageRotation?: number;
+  // Per-segment title customization
+  titleFontSize?: number;
+  titleOffsetX?: number;
+  titleOffsetY?: number;
+  titleRotation?: number;
+  // Per-segment value customization
+  valueFontSize?: number;
+  valueOffsetX?: number;
+  valueOffsetY?: number;
+  valueRotation?: number;
   percentage: number;
   hideTitle?: boolean;
   hideValue?: boolean;

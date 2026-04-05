@@ -1049,21 +1049,65 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       <ToggleSwitch label="Ocultar título" checked={!!seg.hideTitle} onChange={v => updateSegment(i, 'hideTitle', v)} />
                       <ToggleSwitch label="Ocultar valor" checked={!!seg.hideValue} onChange={v => updateSegment(i, 'hideValue', v)} />
                     </div>
+
+                    {/* Per-segment title customization */}
+                    <div className="border-t border-border/20 pt-2 mt-1">
+                      <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">📝 Título do Segmento</h5>
+                      <RangeInput label="Tamanho da fonte" value={seg.titleFontSize ?? config.titleFontSize ?? 10} min={4} max={40} step={1} onChange={v => updateSegment(i, 'titleFontSize', v)} />
+                      <div className="grid grid-cols-2 gap-x-3">
+                        <RangeInput label="Mover X" value={seg.titleOffsetX ?? 0} min={-50} max={50} step={1} onChange={v => updateSegment(i, 'titleOffsetX', v)} />
+                        <RangeInput label="Mover Y" value={seg.titleOffsetY ?? 0} min={-50} max={50} step={1} onChange={v => updateSegment(i, 'titleOffsetY', v)} />
+                      </div>
+                      <RangeInput label="Rotação" value={seg.titleRotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'titleRotation', v)} suffix="°" />
+                    </div>
+
+                    {/* Per-segment value customization */}
+                    <div className="border-t border-border/20 pt-2 mt-1">
+                      <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">💰 Valor do Segmento</h5>
+                      <RangeInput label="Tamanho da fonte" value={seg.valueFontSize ?? config.valueFontSize ?? 22} min={8} max={60} step={1} onChange={v => updateSegment(i, 'valueFontSize', v)} />
+                      <div className="grid grid-cols-2 gap-x-3">
+                        <RangeInput label="Mover X" value={seg.valueOffsetX ?? 0} min={-50} max={50} step={1} onChange={v => updateSegment(i, 'valueOffsetX', v)} />
+                        <RangeInput label="Mover Y" value={seg.valueOffsetY ?? 0} min={-50} max={50} step={1} onChange={v => updateSegment(i, 'valueOffsetY', v)} />
+                      </div>
+                      <RangeInput label="Rotação" value={seg.valueRotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'valueRotation', v)} suffix="°" />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-x-4">
                       <ColorInput label="Fundo" value={seg.color} onChange={v => updateSegment(i, 'color', v)} />
                       <ColorInput label="Texto" value={seg.textColor} onChange={v => updateSegment(i, 'textColor', v)} />
                     </div>
-                    <p className="text-[10px] text-muted-foreground/70 italic">📐 Recomendado: imagem quadrada 1000×1000px com o elemento principal centralizado.</p>
-                    <ImageUpload label="Imagem de fundo do segmento" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
-                    {seg.imageUrl && (
-                      <>
-                        <ImagePositionControls
-                          offsetX={seg.imageOffsetX ?? 0} offsetY={seg.imageOffsetY ?? 0} scale={seg.imageScale ?? 1}
-                          onChangeX={v => updateSegment(i, 'imageOffsetX', v)} onChangeY={v => updateSegment(i, 'imageOffsetY', v)} onChangeScale={v => updateSegment(i, 'imageScale', v)}
-                        />
-                        <RangeInput label="Rotação da imagem" value={seg.imageRotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'imageRotation', v)} suffix="°" />
-                      </>
-                    )}
+
+                    {/* Desktop image */}
+                    <div className="border-t border-border/20 pt-2 mt-1">
+                      <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">🖥️ Imagem Desktop</h5>
+                      <p className="text-[10px] text-muted-foreground/70 italic">📐 Recomendado: imagem quadrada 1000×1000px</p>
+                      <ImageUpload label="Imagem desktop" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
+                      {seg.imageUrl && (
+                        <>
+                          <ImagePositionControls
+                            offsetX={seg.imageOffsetX ?? 0} offsetY={seg.imageOffsetY ?? 0} scale={seg.imageScale ?? 1}
+                            onChangeX={v => updateSegment(i, 'imageOffsetX', v)} onChangeY={v => updateSegment(i, 'imageOffsetY', v)} onChangeScale={v => updateSegment(i, 'imageScale', v)}
+                          />
+                          <RangeInput label="Rotação da imagem" value={seg.imageRotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'imageRotation', v)} suffix="°" />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Mobile image */}
+                    <div className="border-t border-border/20 pt-2 mt-1">
+                      <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">📱 Imagem Mobile</h5>
+                      <p className="text-[10px] text-muted-foreground/70 italic">Opcional: imagem diferente para dispositivos móveis</p>
+                      <ImageUpload label="Imagem mobile" value={seg.mobileImageUrl} onChange={v => updateSegment(i, 'mobileImageUrl', v)} compact />
+                      {seg.mobileImageUrl && (
+                        <>
+                          <ImagePositionControls
+                            offsetX={seg.mobileImageOffsetX ?? 0} offsetY={seg.mobileImageOffsetY ?? 0} scale={seg.mobileImageScale ?? 1}
+                            onChangeX={v => updateSegment(i, 'mobileImageOffsetX', v)} onChangeY={v => updateSegment(i, 'mobileImageOffsetY', v)} onChangeScale={v => updateSegment(i, 'mobileImageScale', v)}
+                          />
+                          <RangeInput label="Rotação da imagem" value={seg.mobileImageRotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'mobileImageRotation', v)} suffix="°" />
+                        </>
+                      )}
+                    </div>
                     {config.segments.length > 2 && (
                       <button
                         onClick={() => onChange({ ...config, segments: config.segments.filter((_, idx) => idx !== i) })}
