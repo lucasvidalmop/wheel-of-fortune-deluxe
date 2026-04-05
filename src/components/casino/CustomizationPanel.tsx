@@ -560,6 +560,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
             <p className="text-[9px] text-muted-foreground italic">↑ Simulação de como ficará no WhatsApp</p>
           </div>
         )}
+      </Card>
 
 
     </div>
