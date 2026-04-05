@@ -339,9 +339,16 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
   const segments = config.segments;
   const numSegs = Math.max(segments.length, 1);
   const segAngle = 360 / numSegs;
-  const wheelSize = previewMode === 'mobile' ? 124 : 168;
-  const frameWidth = previewMode === 'mobile' ? 190 : 360;
-  const frameHeight = previewMode === 'mobile' ? 320 : 236;
+
+  // Scale preview to fit panel width
+  const baseWheelSize = previewMode === 'mobile' ? 124 : 168;
+  const baseFrameWidth = previewMode === 'mobile' ? 190 : 360;
+  const baseFrameHeight = previewMode === 'mobile' ? 320 : 236;
+  const availableWidth = panelSize.w - 24; // padding
+  const scaleFactor = floating && availableWidth > baseFrameWidth ? availableWidth / baseFrameWidth : 1;
+  const wheelSize = Math.round(baseWheelSize * scaleFactor);
+  const frameWidth = Math.round(baseFrameWidth * scaleFactor);
+  const frameHeight = Math.round(baseFrameHeight * scaleFactor);
   const cx = wheelSize / 2;
   const cy = wheelSize / 2;
   const r = wheelSize / 2 - 8;
@@ -391,12 +398,15 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
     return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
   };
 
+  const handleCollapse = () => {
+    setCollapsed(true);
+    setPanelPos(null);
+    setPanelSize({ w: 320, h: 0 });
+  };
+
   if (floating && collapsed) {
     return (
-      <div
-        className="fixed bottom-4 right-4 z-50"
-        style={panelPos ? { left: panelPos.x, top: panelPos.y, bottom: 'auto', right: 'auto' } : undefined}
-      >
+      <div className="fixed bottom-4 right-4 z-50">
         <button
           type="button"
           onClick={() => setCollapsed(false)}
@@ -443,7 +453,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
             <button type="button" onClick={() => setPreviewMode('mobile')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>📱 Mobile</button>
           </div>
           {floating && (
-            <button type="button" onClick={() => setCollapsed(true)} className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors" title="Minimizar">✕</button>
+            <button type="button" onClick={handleCollapse} className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors" title="Minimizar">✕</button>
           )}
         </div>
       </div>
