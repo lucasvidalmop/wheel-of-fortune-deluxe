@@ -945,6 +945,7 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </GlassCard>
               )}
               <p className="text-xs text-muted-foreground">{filteredUsers.length} inscrito(s)</p>
