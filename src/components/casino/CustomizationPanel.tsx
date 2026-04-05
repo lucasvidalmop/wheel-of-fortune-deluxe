@@ -297,7 +297,12 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
       if (!dragRef.current) return;
       const dx = ev.clientX - dragRef.current.startX;
       const dy = ev.clientY - dragRef.current.startY;
-      setPanelPos({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy });
+      const newX = dragRef.current.origX + dx;
+      const newY = dragRef.current.origY + dy;
+      // Keep at least 60px visible on screen
+      const clampedX = Math.max(-panelSize.w + 60, Math.min(window.innerWidth - 60, newX));
+      const clampedY = Math.max(-40, Math.min(window.innerHeight - 40, newY));
+      setPanelPos({ x: clampedX, y: clampedY });
     };
     const onUp = () => {
       dragRef.current = null;
