@@ -384,6 +384,17 @@ const Dashboard = () => {
     fetchUsers();
   };
 
+  const handleDeleteSelectedUsers = async () => {
+    if (selectedUserIds.size === 0) return;
+    if (!confirm(`Excluir ${selectedUserIds.size} inscrito(s) selecionado(s)?`)) return;
+    const ids = Array.from(selectedUserIds);
+    const { error } = await (supabase as any).from('wheel_users').delete().in('id', ids);
+    if (error) { toast.error('Erro ao excluir inscritos'); return; }
+    toast.success(`${ids.length} inscrito(s) excluído(s)!`);
+    setSelectedUserIds(new Set());
+    fetchUsers();
+  };
+
   const handleExportCSV = () => {
     const header = 'Nome,E-mail,Celular,ID da Conta,Data\n';
     const rows = filteredUsers.map(u =>
