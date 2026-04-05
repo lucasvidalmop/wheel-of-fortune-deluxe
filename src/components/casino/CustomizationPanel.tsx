@@ -279,86 +279,62 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({ config, floating }) => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [collapsed, setCollapsed] = useState(false);
-  const segments = config.segments;
-  const numSegs = Math.max(segments.length, 1);
-  const segAngle = 360 / numSegs;
-  const wheelSize = previewMode === 'mobile' ? 124 : 168;
-  const frameWidth = previewMode === 'mobile' ? 190 : 360;
-  const frameHeight = previewMode === 'mobile' ? 320 : 236;
-  const cx = wheelSize / 2;
-  const cy = wheelSize / 2;
-  const r = wheelSize / 2 - 8;
-  const outerR = r - 6;
-  const innerPreviewR = Math.max(14, wheelSize * 0.14);
+  const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
+  const [panelSize, setPanelSize] = useState<{ w: number; h: number }>({ w: 320, h: 0 });
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; origW: number; origH: number } | null>(null);
+  const panelElRef = useRef<HTMLDivElement>(null);
 
-  const polarToCart = (angleDeg: number, radius: number) => ({
-    x: cx + radius * Math.cos((angleDeg - 90) * Math.PI / 180),
-    y: cy + radius * Math.sin((angleDeg - 90) * Math.PI / 180),
-  });
+  // Drag handlers
+  const onDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const rect = panelElRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pos = panelPos ?? { x: rect.left, y: rect.top };
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y };
 
-  const getSegmentPath = (index: number, outerRadius: number, innerRadius: number) => {
-    const startAngle = (index * segAngle - 90) * (Math.PI / 180);
-    const endAngle = ((index + 1) * segAngle - 90) * (Math.PI / 180);
-    const x1 = cx + outerRadius * Math.cos(startAngle);
-    const y1 = cy + outerRadius * Math.sin(startAngle);
-    const x2 = cx + outerRadius * Math.cos(endAngle);
-    const y2 = cy + outerRadius * Math.sin(endAngle);
-    const ix1 = cx + innerRadius * Math.cos(startAngle);
-    const iy1 = cy + innerRadius * Math.sin(startAngle);
-    const ix2 = cx + innerRadius * Math.cos(endAngle);
-    const iy2 = cy + innerRadius * Math.sin(endAngle);
-    const largeArc = segAngle > 180 ? 1 : 0;
-    return `M ${ix1} ${iy1} L ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
-  };
-
-  const getSegmentBounds = (index: number) => {
-    const startAngle = (index * segAngle - 90) * (Math.PI / 180);
-    const endAngle = ((index + 1) * segAngle - 90) * (Math.PI / 180);
-    const points = [
-      { x: cx + innerPreviewR * Math.cos(startAngle), y: cy + innerPreviewR * Math.sin(startAngle) },
-      { x: cx + innerPreviewR * Math.cos(endAngle), y: cy + innerPreviewR * Math.sin(endAngle) },
-      { x: cx + outerR * Math.cos(startAngle), y: cy + outerR * Math.sin(startAngle) },
-      { x: cx + outerR * Math.cos(endAngle), y: cy + outerR * Math.sin(endAngle) },
-    ];
-
-    const steps = 10;
-    for (let s = 0; s <= steps; s++) {
-      const a = startAngle + (endAngle - startAngle) * (s / steps);
-      points.push({ x: cx + outerR * Math.cos(a), y: cy + outerR * Math.sin(a) });
-    }
-
-    const xs = points.map(p => p.x);
-    const ys = points.map(p => p.y);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-
-    return {
-      x: minX,
-      y: minY,
-      width: Math.max(1, maxX - minX),
-      height: Math.max(1, maxY - minY),
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      const dy = ev.clientY - dragRef.current.startY;
+      setPanelPos({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy });
     };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
   };
 
-  const wrapperClass = floating
-    ? 'fixed bottom-4 right-4 z-50 w-[320px] rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-all'
-    : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3';
+  // Resize handlers
+  const onResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = panelElRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (!panelPos) setPanelPos({ x: rect.left, y: rect.top });
+    resizeRef.current = { startX: e.clientX, startY: e.clientY, origW: rect.width, origH: rect.height };
 
-  if (floating && collapsed) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <button
-          type="button"
-          onClick={() => setCollapsed(false)}
-          className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/95 backdrop-blur-md px-4 py-2 shadow-2xl text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
-        >
-          🎡 Pré-visualização
-        </button>
-      </div>
-    );
-  }
+    const onMove = (ev: MouseEvent) => {
+      if (!resizeRef.current) return;
+      const dw = ev.clientX - resizeRef.current.startX;
+      const dh = ev.clientY - resizeRef.current.startY;
+      setPanelSize({
+        w: Math.max(260, resizeRef.current.origW + dw),
+        h: Math.max(0, resizeRef.current.origH + dh),
+      });
+    };
+    const onUp = () => {
+      resizeRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   return (
     <div className={wrapperClass}>
