@@ -94,6 +94,7 @@ const Dashboard = () => {
   const [grantSpinUser, setGrantSpinUser] = useState<WheelUser | null>(null);
   const [grantSpinMode, setGrantSpinMode] = useState<'random' | 'fixed'>('random');
   const [grantSpinSegment, setGrantSpinSegment] = useState<number>(0);
+  const [grantSpinCount, setGrantSpinCount] = useState<number>(1);
   const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
   // Multi-select for batch grant
@@ -101,6 +102,7 @@ const Dashboard = () => {
   const [showBatchGrantModal, setShowBatchGrantModal] = useState(false);
   const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
   const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
+  const [batchGrantSpinCount, setBatchGrantSpinCount] = useState<number>(1);
   const [savingUser, setSavingUser] = useState(false);
 
   useEffect(() => {
