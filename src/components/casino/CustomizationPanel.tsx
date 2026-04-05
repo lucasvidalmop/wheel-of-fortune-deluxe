@@ -451,7 +451,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
     onChange({ ...config, [key]: value });
   };
 
-  const updateSegment = (index: number, key: string, value: string | number) => {
+  const updateSegment = (index: number, key: string, value: string | number | boolean) => {
     const segs = [...config.segments];
     segs[index] = { ...segs[index], [key]: value };
     onChange({ ...config, segments: segs });
