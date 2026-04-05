@@ -334,9 +334,32 @@ const Roleta = () => {
         if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
         link.href = favicon;
       }
+
+      // OG meta tags for link preview
+      const ogImage = config.ogImageUrl;
+      const setOgMeta = (property: string, content: string) => {
+        let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+        if (!el) { el = document.createElement('meta'); (el as HTMLMetaElement).setAttribute('property', property); document.head.appendChild(el); }
+        (el as HTMLMetaElement).setAttribute('content', content);
+      };
+      if (title) {
+        setOgMeta('og:title', title);
+        setOgMeta('twitter:title', title);
+      }
+      if (desc) {
+        setOgMeta('og:description', desc);
+        setOgMeta('twitter:description', desc);
+      }
+      if (ogImage) {
+        setOgMeta('og:image', ogImage);
+        setOgMeta('twitter:image', ogImage);
+      }
+      setOgMeta('og:type', 'website');
+      setOgMeta('og:url', window.location.href);
+      setOgMeta('twitter:card', 'summary_large_image');
     };
     applyGlobalFallback();
-  }, [config.seoTitle, config.seoDescription, config.faviconUrl]);
+  }, [config.seoTitle, config.seoDescription, config.faviconUrl, config.ogImageUrl]);
 
   useEffect(() => {
     if (!accountId || !identified) return;

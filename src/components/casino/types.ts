@@ -93,6 +93,7 @@ export interface WheelConfig {
   seoTitle?: string;
   seoDescription?: string;
   faviconUrl?: string;
+  ogImageUrl?: string;
   // Spins info text customization
   spinsTextColor?: string;
   spinsTextSize?: number;
