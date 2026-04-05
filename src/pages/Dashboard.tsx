@@ -1918,14 +1918,11 @@ const Dashboard = () => {
                         onClick={async () => {
                           setCreatingInstance(true);
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/create`, {
-                              method: 'POST',
-                              headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ instanceName: evolutionInstance, integration: 'WHATSAPP-BAILEYS', qrcode: true }),
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'create', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            const data = await res.json();
-                            if (!res.ok) { toast.error(data?.message || data?.error || 'Erro ao criar instância'); return; }
+                            if (error) { toast.error('Erro ao criar instância'); return; }
+                            if (data?.error) { toast.error(data.error); return; }
                             toast.success('Instância criada com sucesso!');
                             if (data?.qrcode?.base64) { setInstanceQrCode(data.qrcode.base64); setInstanceStatus('connecting'); }
                             else { setInstanceStatus('close'); }
@@ -1944,13 +1941,11 @@ const Dashboard = () => {
                           setInstanceStatus('loading');
                           setInstanceQrCode(null);
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/connect/${evolutionInstance}`, {
-                              method: 'GET',
-                              headers: { 'apikey': evolutionApiKey },
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'connect', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            const data = await res.json();
-                            if (!res.ok) { toast.error(data?.message || data?.error || 'Erro ao conectar'); setInstanceStatus('error'); return; }
+                            if (error) { toast.error('Erro ao conectar'); setInstanceStatus('error'); return; }
+                            if (data?.error) { toast.error(data.error); setInstanceStatus('error'); return; }
                             if (data?.base64) { setInstanceQrCode(data.base64); setInstanceStatus('connecting'); toast.info('Escaneie o QR Code no WhatsApp'); }
                             else if (data?.instance?.state === 'open') { setInstanceStatus('open'); toast.success('WhatsApp já está conectado!'); }
                             else { setInstanceStatus('close'); toast.info('Instância desconectada. Tente novamente.'); }
@@ -1967,13 +1962,10 @@ const Dashboard = () => {
                         onClick={async () => {
                           setInstanceStatus('loading');
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/connectionState/${evolutionInstance}`, {
-                              method: 'GET',
-                              headers: { 'apikey': evolutionApiKey },
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'status', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            const data = await res.json();
-                            if (!res.ok) { toast.error(data?.message || 'Erro ao verificar'); setInstanceStatus('error'); return; }
+                            if (error) { toast.error('Erro ao verificar'); setInstanceStatus('error'); return; }
                             const state = data?.instance?.state || data?.state || 'unknown';
                             setInstanceStatus(state === 'open' ? 'open' : 'close');
                             toast.info(`Status: ${state === 'open' ? '🟢 Conectado' : '🔴 Desconectado'}`);
@@ -1989,13 +1981,11 @@ const Dashboard = () => {
                         disabled={!evolutionApiUrl || !evolutionApiKey || !evolutionInstance}
                         onClick={async () => {
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/logout/${evolutionInstance}`, {
-                              method: 'DELETE',
-                              headers: { 'apikey': evolutionApiKey },
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'logout', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            if (res.ok) { toast.success('WhatsApp desconectado'); setInstanceStatus('close'); setInstanceQrCode(null); }
-                            else { const d = await res.json(); toast.error(d?.message || 'Erro ao desconectar'); }
+                            if (error) { toast.error('Erro ao desconectar'); return; }
+                            toast.success('WhatsApp desconectado'); setInstanceStatus('close'); setInstanceQrCode(null);
                           } catch (err: any) { toast.error(err.message || 'Erro'); }
                         }}
                         className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
