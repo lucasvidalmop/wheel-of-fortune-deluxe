@@ -237,9 +237,13 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
           style={{
             width: previewMode === 'mobile' ? 200 : '100%',
             height: previewMode === 'mobile' ? 280 : 260,
-            background: config.backgroundImageUrl
-              ? `url(${config.backgroundImageUrl}) center/cover`
+            backgroundColor: 'rgba(10,5,25,0.95)',
+            backgroundImage: config.backgroundImageUrl
+              ? `url(${config.backgroundImageUrl})`
               : 'radial-gradient(ellipse at center, rgba(30,10,60,0.9), rgba(10,5,25,0.95))',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
           }}
         >
           <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
