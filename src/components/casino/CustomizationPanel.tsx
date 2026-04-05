@@ -420,7 +420,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
 
   const floatingStyle: React.CSSProperties = floating ? {
     position: 'fixed',
-    zIndex: 50,
+    zIndex: 99999,
     width: panelSize.w,
     ...(panelSize.h > 0 ? { height: panelSize.h, overflow: 'auto' } : {}),
     ...(panelPos ? { left: panelPos.x, top: panelPos.y } : { bottom: 16, right: 16 }),
