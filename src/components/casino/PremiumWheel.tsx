@@ -45,6 +45,11 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
     setIsSpinning(true);
     setWinnerIndex(null);
 
+    // Play sound if enabled
+    if (config.spinSoundEnabled !== false) {
+      playSpinSound(5000);
+    }
+
     const winnerIdx = (forcedSegment != null && forcedSegment >= 0 && forcedSegment < numSegments) ? forcedSegment : pickWeightedSegment();
     const targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle;
     const extraSpins = 5 + Math.floor(Math.random() * 5);
@@ -61,7 +66,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       setWinnerIndex(winnerIdx);
       onSpinEnd?.(winnerIdx);
     }, 5000);
-  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments]);
+  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments, config.spinSoundEnabled]);
 
   const getSegmentPath = (index: number, r: number, ir: number) => {
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
