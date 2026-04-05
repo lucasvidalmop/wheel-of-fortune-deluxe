@@ -287,11 +287,59 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
   const cx = wheelSize / 2;
   const cy = wheelSize / 2;
   const r = wheelSize / 2 - 8;
+  const outerR = r - 6;
+  const innerPreviewR = Math.max(14, wheelSize * 0.14);
 
   const polarToCart = (angleDeg: number, radius: number) => ({
     x: cx + radius * Math.cos((angleDeg - 90) * Math.PI / 180),
     y: cy + radius * Math.sin((angleDeg - 90) * Math.PI / 180),
   });
+
+  const getSegmentPath = (index: number, outerRadius: number, innerRadius: number) => {
+    const startAngle = (index * segAngle - 90) * (Math.PI / 180);
+    const endAngle = ((index + 1) * segAngle - 90) * (Math.PI / 180);
+    const x1 = cx + outerRadius * Math.cos(startAngle);
+    const y1 = cy + outerRadius * Math.sin(startAngle);
+    const x2 = cx + outerRadius * Math.cos(endAngle);
+    const y2 = cy + outerRadius * Math.sin(endAngle);
+    const ix1 = cx + innerRadius * Math.cos(startAngle);
+    const iy1 = cy + innerRadius * Math.sin(startAngle);
+    const ix2 = cx + innerRadius * Math.cos(endAngle);
+    const iy2 = cy + innerRadius * Math.sin(endAngle);
+    const largeArc = segAngle > 180 ? 1 : 0;
+    return `M ${ix1} ${iy1} L ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
+  };
+
+  const getSegmentBounds = (index: number) => {
+    const startAngle = (index * segAngle - 90) * (Math.PI / 180);
+    const endAngle = ((index + 1) * segAngle - 90) * (Math.PI / 180);
+    const points = [
+      { x: cx + innerPreviewR * Math.cos(startAngle), y: cy + innerPreviewR * Math.sin(startAngle) },
+      { x: cx + innerPreviewR * Math.cos(endAngle), y: cy + innerPreviewR * Math.sin(endAngle) },
+      { x: cx + outerR * Math.cos(startAngle), y: cy + outerR * Math.sin(startAngle) },
+      { x: cx + outerR * Math.cos(endAngle), y: cy + outerR * Math.sin(endAngle) },
+    ];
+
+    const steps = 10;
+    for (let s = 0; s <= steps; s++) {
+      const a = startAngle + (endAngle - startAngle) * (s / steps);
+      points.push({ x: cx + outerR * Math.cos(a), y: cy + outerR * Math.sin(a) });
+    }
+
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    return {
+      x: minX,
+      y: minY,
+      width: Math.max(1, maxX - minX),
+      height: Math.max(1, maxY - minY),
+    };
+  };
 
   return (
     <div className="space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3">
@@ -366,58 +414,113 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
               style={previewMode === 'mobile' ? { transform: `translate(${config.mobileWheelOffsetX ?? 0}px, ${config.mobileWheelOffsetY ?? 0}px) scale(${config.mobileWheelScale ?? 1})` } : undefined}
             >
               <svg width={wheelSize} height={wheelSize} viewBox={`0 0 ${wheelSize} ${wheelSize}`}>
-                <circle cx={cx} cy={cy} r={r + 4} fill="none" stroke={config.outerRingColor} strokeWidth={3} />
+                <defs>
+                  {segments.map((seg, i) => (
+                    <clipPath key={`seg-preview-clip-${seg.id}`} id={`seg-preview-clip-${previewMode}-${i}`}>
+                      <path d={getSegmentPath(i, outerR, innerPreviewR)} />
+                    </clipPath>
+                  ))}
+                </defs>
+
+                <circle cx={cx} cy={cy} r={outerR + 4} fill="none" stroke={config.outerRingColor} strokeWidth={3} />
+                <circle cx={cx} cy={cy} r={outerR} fill="#111" opacity={0.45} />
+
+                {segments.map((seg, i) => (
+                  <g key={`seg-fill-${seg.id}`}>
+                    <path d={getSegmentPath(i, outerR, innerPreviewR)} fill={seg.color} />
+                    <path d={getSegmentPath(i, outerR, innerPreviewR)} fill={seg.gradientOverlay} />
+                  </g>
+                ))}
+
                 {segments.map((seg, i) => {
-                  const startAngle = i * segAngle;
-                  const endAngle = (i + 1) * segAngle;
-                  const start = polarToCart(startAngle, r);
-                  const end = polarToCart(endAngle, r);
-                  const largeArc = segAngle > 180 ? 1 : 0;
-                  const path = `M${cx},${cy} L${start.x},${start.y} A${r},${r} 0 ${largeArc} 1 ${end.x},${end.y} Z`;
-                  const midAngle = startAngle + segAngle / 2;
-                  const textPos = polarToCart(midAngle, r * 0.66);
-                  const fontSize = previewMode === 'mobile' ? 7 : 9;
+                  if (!seg.imageUrl) return null;
+                  const bounds = getSegmentBounds(i);
+                  const scale = seg.imageScale ?? 1;
+                  const scaledW = bounds.width * scale;
+                  const scaledH = bounds.height * scale;
+                  const ox = (seg.imageOffsetX ?? 0) - (scaledW - bounds.width) / 2;
+                  const oy = (seg.imageOffsetY ?? 0) - (scaledH - bounds.height) / 2;
 
                   return (
-                    <g key={seg.id}>
-                      <path d={path} fill={seg.color} stroke={config.dividerColor} strokeWidth={config.dividerWidth ?? 2} />
-                      {!config.hideSegmentText && (
-                        <>
-                          {!config.hideSegmentValue && (
-                            <text
-                              x={textPos.x}
-                              y={config.hideSegmentTitle ? textPos.y : textPos.y - fontSize * 0.5}
-                              fill={seg.textColor}
-                              fontSize={fontSize}
-                              fontWeight="bold"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
-                            >
-                              {seg.reward.slice(0, previewMode === 'mobile' ? 6 : 8)}
-                            </text>
-                          )}
-                          {!config.hideSegmentTitle && (
-                            <text
-                              x={textPos.x}
-                              y={config.hideSegmentValue ? textPos.y : textPos.y + fontSize * 0.7}
-                              fill={seg.textColor}
-                              fontSize={fontSize * 0.7}
-                              fontWeight="bold"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
-                            >
-                              {seg.title.slice(0, previewMode === 'mobile' ? 6 : 8)}
-                            </text>
-                          )}
-                        </>
+                    <image
+                      key={`seg-image-${seg.id}`}
+                      href={seg.imageUrl}
+                      x={bounds.x + ox}
+                      y={bounds.y + oy}
+                      width={scaledW}
+                      height={scaledH}
+                      clipPath={`url(#seg-preview-clip-${previewMode}-${i})`}
+                      preserveAspectRatio="xMidYMid slice"
+                      opacity="0.92"
+                    />
+                  );
+                })}
+
+                {segments.map((seg, i) => {
+                  const angle = (i * segAngle - 90) * (Math.PI / 180);
+                  const x1 = cx + innerPreviewR * Math.cos(angle);
+                  const y1 = cy + innerPreviewR * Math.sin(angle);
+                  const x2 = cx + outerR * Math.cos(angle);
+                  const y2 = cy + outerR * Math.sin(angle);
+
+                  return (
+                    <line
+                      key={`seg-divider-${seg.id}`}
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke={config.dividerColor}
+                      strokeWidth={config.dividerWidth ?? 2}
+                      opacity="0.7"
+                    />
+                  );
+                })}
+
+                {!config.hideSegmentText && segments.map((seg, i) => {
+                  const midAngle = i * segAngle + segAngle / 2;
+                  const textPos = polarToCart(midAngle, outerR * 0.66);
+                  const valueFontSize = previewMode === 'mobile' ? 7 : 9;
+                  const titleFontSize = valueFontSize * 0.7;
+                  const showValue = !config.hideSegmentValue && !seg.hideValue;
+                  const showTitle = !config.hideSegmentTitle && !seg.hideTitle;
+
+                  if (!showValue && !showTitle) return null;
+
+                  return (
+                    <g key={`seg-text-${seg.id}`} transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}>
+                      {showValue && (
+                        <text
+                          x={textPos.x}
+                          y={showTitle ? textPos.y - valueFontSize * 0.45 : textPos.y}
+                          fill={seg.textColor}
+                          fontSize={valueFontSize}
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                        >
+                          {seg.reward.slice(0, previewMode === 'mobile' ? 6 : 8)}
+                        </text>
+                      )}
+                      {showTitle && (
+                        <text
+                          x={textPos.x}
+                          y={showValue ? textPos.y + valueFontSize * 0.7 : textPos.y}
+                          fill={seg.textColor}
+                          fontSize={titleFontSize}
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                        >
+                          {seg.title.slice(0, previewMode === 'mobile' ? 6 : 8)}
+                        </text>
                       )}
                     </g>
                   );
                 })}
-                <circle cx={cx} cy={cy} r={r * 0.15} fill={config.centerCapColor} stroke={config.dividerColor} strokeWidth={1} />
-                <polygon points={`${cx},${cy - r - 8} ${cx - 6},${cy - r + 4} ${cx + 6},${cy - r + 4}`} fill={config.pointerColor} stroke={config.dividerColor} strokeWidth={0.5} />
+
+                <circle cx={cx} cy={cy} r={innerPreviewR} fill={config.centerCapColor} stroke={config.dividerColor} strokeWidth={1} />
+                <polygon points={`${cx},${cy - outerR - 8} ${cx - 6},${cy - outerR + 4} ${cx + 6},${cy - outerR + 4}`} fill={config.pointerColor} stroke={config.dividerColor} strokeWidth={0.5} />
               </svg>
             </div>
 
@@ -680,7 +783,8 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       <ColorInput label="Fundo" value={seg.color} onChange={v => updateSegment(i, 'color', v)} />
                       <ColorInput label="Texto" value={seg.textColor} onChange={v => updateSegment(i, 'textColor', v)} />
                     </div>
-                    <ImageUpload label="Imagem" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
+                    <p className="text-[10px] text-muted-foreground/70 italic">📐 Recomendado: imagem quadrada 1000×1000px com o elemento principal centralizado.</p>
+                    <ImageUpload label="Imagem de fundo do segmento" value={seg.imageUrl} onChange={v => updateSegment(i, 'imageUrl', v)} compact />
                     {seg.imageUrl && (
                       <ImagePositionControls
                         offsetX={seg.imageOffsetX ?? 0} offsetY={seg.imageOffsetY ?? 0} scale={seg.imageScale ?? 1}
