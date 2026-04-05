@@ -9,6 +9,7 @@ export interface WheelSegment {
   imageOffsetX?: number;
   imageOffsetY?: number;
   imageScale?: number;
+  imageRotation?: number;
   percentage: number;
   hideTitle?: boolean;
   hideValue?: boolean;
