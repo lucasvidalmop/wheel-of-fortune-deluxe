@@ -324,14 +324,15 @@ const Dashboard = () => {
 
   const confirmGrantSpin = async () => {
     if (!grantSpinUser) return;
+    const count = Math.max(1, grantSpinCount);
     const isFixed = grantSpinMode === 'fixed';
     const { error } = await (supabase as any).from('wheel_users').update({
-      spins_available: 1,
+      spins_available: count,
       fixed_prize_enabled: isFixed,
       fixed_prize_segment: isFixed ? grantSpinSegment : null,
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
-    toast.success(`1 giro liberado para ${grantSpinUser.name}!`);
+    toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
     setGrantSpinUser(null);
     fetchUsers();
   };
