@@ -342,13 +342,36 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
     };
   };
 
+  const wrapperClass = floating
+    ? 'fixed bottom-4 right-4 z-50 w-[320px] rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-all'
+    : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3';
+
+  if (floating && collapsed) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/95 backdrop-blur-md px-4 py-2 shadow-2xl text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          🎡 Pré-visualização
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3">
+    <div className={wrapperClass}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pré-visualização dos segmentos</span>
-        <div className="flex gap-1 rounded-lg bg-muted/40 p-0.5">
-          <button type="button" onClick={() => setPreviewMode('desktop')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'desktop' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>🖥️ Desktop</button>
-          <button type="button" onClick={() => setPreviewMode('mobile')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>📱 Mobile</button>
+        <div className="flex items-center gap-1">
+          <div className="flex gap-1 rounded-lg bg-muted/40 p-0.5">
+            <button type="button" onClick={() => setPreviewMode('desktop')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'desktop' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>🖥️ Desktop</button>
+            <button type="button" onClick={() => setPreviewMode('mobile')} className={`rounded-md px-2 py-1 text-[10px] font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}>📱 Mobile</button>
+          </div>
+          {floating && (
+            <button type="button" onClick={() => setCollapsed(true)} className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors" title="Minimizar">✕</button>
+          )}
         </div>
       </div>
 
