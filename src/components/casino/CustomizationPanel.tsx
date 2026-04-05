@@ -322,6 +322,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
               return <circle key={i} cx={pos.x} cy={pos.y} r={1.5} fill={config.ledColor} opacity={0.8} />;
             })}
           </svg>
+          </div>
         </div>
       </div>
     </div>
