@@ -84,6 +84,9 @@ const Dashboard = () => {
   const [evolutionApiUrl, setEvolutionApiUrl] = useState(() => localStorage.getItem('evolution_api_url') || '');
   const [evolutionApiKey, setEvolutionApiKey] = useState(() => localStorage.getItem('evolution_api_key') || '');
   const [evolutionInstance, setEvolutionInstance] = useState(() => localStorage.getItem('evolution_instance') || '');
+  const [instanceStatus, setInstanceStatus] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
+  const [instanceQrCode, setInstanceQrCode] = useState<string | null>(null);
+  const [creatingInstance, setCreatingInstance] = useState(false);
 
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -1889,7 +1892,7 @@ const Dashboard = () => {
               </div>
 
               {showWhatsappConfig && (
-                <GlassCard className="p-5 space-y-3">
+                <GlassCard className="p-5 space-y-4">
                   <h3 className="text-sm font-bold text-foreground">🔑 Evolution API</h3>
                   <p className="text-[10px] text-muted-foreground">Configure sua instância da <a href="https://doc.evolution-api.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Evolution API</a></p>
                   <div className="space-y-1">
@@ -1901,11 +1904,135 @@ const Dashboard = () => {
                     <input type="password" value={evolutionApiKey} onChange={e => { setEvolutionApiKey(e.target.value); localStorage.setItem('evolution_api_key', e.target.value); }} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Instância</label>
+                    <label className="text-xs text-muted-foreground">Nome da Instância</label>
                     <input type="text" value={evolutionInstance} onChange={e => { setEvolutionInstance(e.target.value); localStorage.setItem('evolution_instance', e.target.value); }} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
-                  <div className={`text-xs font-medium ${evolutionApiUrl && evolutionApiKey && evolutionInstance ? 'text-green-400' : 'text-yellow-400'}`}>
-                    {evolutionApiUrl && evolutionApiKey && evolutionInstance ? '✅ Configurado' : '⚠️ Preencha todas as credenciais'}
+
+                  <div className="border-t border-white/[0.06] pt-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-foreground">📱 Gerenciar Instância</h4>
+
+                    <div className="flex gap-2 flex-wrap">
+                      {/* Criar Instância */}
+                      <button
+                        disabled={!evolutionApiUrl || !evolutionApiKey || !evolutionInstance || creatingInstance}
+                        onClick={async () => {
+                          setCreatingInstance(true);
+                          try {
+                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
+                            const res = await fetch(`${apiUrl}/instance/create`, {
+                              method: 'POST',
+                              headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ instanceName: evolutionInstance, integration: 'WHATSAPP-BAILEYS', qrcode: true }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) { toast.error(data?.message || data?.error || 'Erro ao criar instância'); return; }
+                            toast.success('Instância criada com sucesso!');
+                            if (data?.qrcode?.base64) { setInstanceQrCode(data.qrcode.base64); setInstanceStatus('connecting'); }
+                            else { setInstanceStatus('close'); }
+                          } catch (err: any) { toast.error(err.message || 'Erro de conexão'); }
+                          finally { setCreatingInstance(false); }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-white/[0.08] bg-white/[0.04] text-foreground hover:bg-white/[0.08] disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <Plus size={14} /> {creatingInstance ? 'Criando...' : 'Criar Instância'}
+                      </button>
+
+                      {/* Conectar / QR Code */}
+                      <button
+                        disabled={!evolutionApiUrl || !evolutionApiKey || !evolutionInstance || instanceStatus === 'loading'}
+                        onClick={async () => {
+                          setInstanceStatus('loading');
+                          setInstanceQrCode(null);
+                          try {
+                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
+                            const res = await fetch(`${apiUrl}/instance/connect/${evolutionInstance}`, {
+                              method: 'GET',
+                              headers: { 'apikey': evolutionApiKey },
+                            });
+                            const data = await res.json();
+                            if (!res.ok) { toast.error(data?.message || data?.error || 'Erro ao conectar'); setInstanceStatus('error'); return; }
+                            if (data?.base64) { setInstanceQrCode(data.base64); setInstanceStatus('connecting'); toast.info('Escaneie o QR Code no WhatsApp'); }
+                            else if (data?.instance?.state === 'open') { setInstanceStatus('open'); toast.success('WhatsApp já está conectado!'); }
+                            else { setInstanceStatus('close'); toast.info('Instância desconectada. Tente novamente.'); }
+                          } catch (err: any) { toast.error(err.message || 'Erro de conexão'); setInstanceStatus('error'); }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <Smartphone size={14} /> {instanceStatus === 'loading' ? 'Conectando...' : 'Conectar (QR Code)'}
+                      </button>
+
+                      {/* Verificar Status */}
+                      <button
+                        disabled={!evolutionApiUrl || !evolutionApiKey || !evolutionInstance}
+                        onClick={async () => {
+                          setInstanceStatus('loading');
+                          try {
+                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
+                            const res = await fetch(`${apiUrl}/instance/connectionState/${evolutionInstance}`, {
+                              method: 'GET',
+                              headers: { 'apikey': evolutionApiKey },
+                            });
+                            const data = await res.json();
+                            if (!res.ok) { toast.error(data?.message || 'Erro ao verificar'); setInstanceStatus('error'); return; }
+                            const state = data?.instance?.state || data?.state || 'unknown';
+                            setInstanceStatus(state === 'open' ? 'open' : 'close');
+                            toast.info(`Status: ${state === 'open' ? '🟢 Conectado' : '🔴 Desconectado'}`);
+                          } catch (err: any) { toast.error(err.message || 'Erro'); setInstanceStatus('error'); }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <RotateCcw size={14} /> Verificar Status
+                      </button>
+
+                      {/* Desconectar */}
+                      <button
+                        disabled={!evolutionApiUrl || !evolutionApiKey || !evolutionInstance}
+                        onClick={async () => {
+                          try {
+                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
+                            const res = await fetch(`${apiUrl}/instance/logout/${evolutionInstance}`, {
+                              method: 'DELETE',
+                              headers: { 'apikey': evolutionApiKey },
+                            });
+                            if (res.ok) { toast.success('WhatsApp desconectado'); setInstanceStatus('close'); setInstanceQrCode(null); }
+                            else { const d = await res.json(); toast.error(d?.message || 'Erro ao desconectar'); }
+                          } catch (err: any) { toast.error(err.message || 'Erro'); }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <LogOut size={14} /> Desconectar
+                      </button>
+                    </div>
+
+                    {/* Status badge */}
+                    <div className={`text-xs font-medium flex items-center gap-1.5 ${
+                      instanceStatus === 'open' ? 'text-green-400' :
+                      instanceStatus === 'connecting' ? 'text-yellow-400' :
+                      instanceStatus === 'error' ? 'text-red-400' :
+                      instanceStatus === 'close' ? 'text-orange-400' :
+                      'text-muted-foreground'
+                    }`}>
+                      {instanceStatus === 'open' && '🟢 WhatsApp conectado'}
+                      {instanceStatus === 'connecting' && '🟡 Aguardando leitura do QR Code...'}
+                      {instanceStatus === 'close' && '🔴 Desconectado'}
+                      {instanceStatus === 'error' && '❌ Erro na conexão'}
+                      {instanceStatus === 'loading' && '⏳ Verificando...'}
+                      {instanceStatus === 'unknown' && (evolutionApiUrl && evolutionApiKey && evolutionInstance ? '⚪ Clique em "Verificar Status"' : '⚠️ Preencha todas as credenciais')}
+                    </div>
+
+                    {/* QR Code display */}
+                    {instanceQrCode && (
+                      <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-white/[0.08] bg-white/[0.02]">
+                        <p className="text-xs text-muted-foreground font-medium">Escaneie o QR Code com o WhatsApp</p>
+                        <div className="bg-white p-3 rounded-xl">
+                          <img src={instanceQrCode.startsWith('data:') ? instanceQrCode : `data:image/png;base64,${instanceQrCode}`} alt="QR Code WhatsApp" className="w-56 h-56" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Abra o WhatsApp → Menu (⋮) → Aparelhos conectados → Conectar aparelho</p>
+                        <button onClick={() => { setInstanceQrCode(null); setInstanceStatus('unknown'); }} className="text-xs text-muted-foreground hover:text-foreground transition">
+                          Fechar QR Code
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </GlassCard>
               )}
