@@ -94,6 +94,7 @@ const Dashboard = () => {
   const [grantSpinUser, setGrantSpinUser] = useState<WheelUser | null>(null);
   const [grantSpinMode, setGrantSpinMode] = useState<'random' | 'fixed'>('random');
   const [grantSpinSegment, setGrantSpinSegment] = useState<number>(0);
+  const [grantSpinCount, setGrantSpinCount] = useState<number>(1);
   const [dashboardTheme, setDashboardTheme] = useState<ThemeSettings | undefined>(undefined);
 
   // Multi-select for batch grant
@@ -101,6 +102,7 @@ const Dashboard = () => {
   const [showBatchGrantModal, setShowBatchGrantModal] = useState(false);
   const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
   const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
+  const [batchGrantSpinCount, setBatchGrantSpinCount] = useState<number>(1);
   const [savingUser, setSavingUser] = useState(false);
 
   useEffect(() => {
@@ -317,36 +319,39 @@ const Dashboard = () => {
     setGrantSpinUser(user);
     setGrantSpinMode('random');
     setGrantSpinSegment(0);
+    setGrantSpinCount(1);
   };
 
   const confirmGrantSpin = async () => {
     if (!grantSpinUser) return;
+    const count = Math.max(1, grantSpinCount);
     const isFixed = grantSpinMode === 'fixed';
     const { error } = await (supabase as any).from('wheel_users').update({
-      spins_available: 1,
+      spins_available: count,
       fixed_prize_enabled: isFixed,
       fixed_prize_segment: isFixed ? grantSpinSegment : null,
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
-    toast.success(`1 giro liberado para ${grantSpinUser.name}!`);
+    toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
     setGrantSpinUser(null);
     fetchUsers();
   };
 
   const confirmBatchGrantSpin = async () => {
     if (selectedUserIds.size === 0) return;
+    const count = Math.max(1, batchGrantSpinCount);
     const isFixed = batchGrantMode === 'fixed';
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let success = 0;
     for (const user of selectedUsers) {
       const { error } = await (supabase as any).from('wheel_users').update({
-        spins_available: 1,
+        spins_available: count,
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
       }).eq('id', user.id);
       if (!error) success++;
     }
-    toast.success(`${success} giro(s) liberado(s)!`);
+    toast.success(`${success} inscrito(s) receberam ${count} giro(s)!`);
     setShowBatchGrantModal(false);
     setSelectedUserIds(new Set());
     fetchUsers();
@@ -804,7 +809,7 @@ const Dashboard = () => {
                     <div className="flex items-center gap-3 px-4 py-3 border-b border-primary/20 bg-primary/[0.05]">
                       <span className="text-xs text-primary font-semibold">{selectedUserIds.size} selecionado(s)</span>
                       <button
-                        onClick={() => { setBatchGrantMode('random'); setBatchGrantSegment(0); setShowBatchGrantModal(true); }}
+                        onClick={() => { setBatchGrantMode('random'); setBatchGrantSegment(0); setBatchGrantSpinCount(1); setShowBatchGrantModal(true); }}
                         className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary border border-primary/30 text-xs font-semibold hover:bg-primary/30 transition"
                       >
                         🎰 Liberar Giros
@@ -866,7 +871,7 @@ const Dashboard = () => {
                                 onClick={() => handleGrantSpin(user)}
                                 className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
                               >
-                                {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar'}
+                                {user.spins_available >= 1 ? `${user.spins_available} giro(s) ✓` : 'Liberar'}
                               </button>
                               <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
                                 <Pencil size={13} />
@@ -1693,6 +1698,19 @@ const Dashboard = () => {
 
             <p className="text-sm text-muted-foreground mb-4">Escolha como o prêmio será definido para este giro:</p>
 
+            {/* Spin count */}
+            <div className="mb-4">
+              <label className="text-xs text-muted-foreground mb-1.5 block">Quantidade de giros</label>
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={grantSpinCount}
+                onChange={e => setGrantSpinCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 transition"
+              />
+            </div>
+
             {/* Mode selection */}
             <div className="flex gap-2 mb-5">
               <button
@@ -1764,6 +1782,19 @@ const Dashboard = () => {
 
             <p className="text-sm text-muted-foreground mb-4">Escolha como o prêmio será definido para todos os selecionados:</p>
 
+            {/* Spin count */}
+            <div className="mb-4">
+              <label className="text-xs text-muted-foreground mb-1.5 block">Quantidade de giros por inscrito</label>
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={batchGrantSpinCount}
+                onChange={e => setBatchGrantSpinCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 transition"
+              />
+            </div>
+
             <div className="flex gap-2 mb-5">
               <button
                 onClick={() => setBatchGrantMode('random')}
@@ -1816,7 +1847,7 @@ const Dashboard = () => {
                 Cancelar
               </button>
               <button onClick={confirmBatchGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                Liberar {selectedUserIds.size} Giro(s)
+                Liberar {batchGrantSpinCount} Giro(s) para {selectedUserIds.size} inscrito(s)
               </button>
             </div>
           </div>
