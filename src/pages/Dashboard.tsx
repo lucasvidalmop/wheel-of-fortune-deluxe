@@ -400,9 +400,22 @@ const Dashboard = () => {
   };
 
   const handleExportCSV = () => {
-    const header = '#,Nome,E-mail,Celular,ID da Conta,Tipo Chave PIX,Chave PIX,Data de Inscrição,Tipo,Responsável\n';
+    const escapeCsvValue = (value: string) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const header = '#,"Nome","E-mail","Celular","ID da Conta","Tipo Chave PIX","Chave PIX","Data de Inscrição","Tipo","Responsável",\n';
     const rows = filteredUsers.map((u, i) =>
-      `${i + 1},"${u.name}","${u.email}","${u.phone || ''}","${u.account_id}","${u.pix_key_type || ''}","${u.pix_key || ''}","${u.created_at || ''}","${u.user_type || ''}","${u.responsible || ''}"`
+      [
+        i + 1,
+        escapeCsvValue(u.name),
+        escapeCsvValue(u.email),
+        escapeCsvValue(u.phone || ''),
+        escapeCsvValue(u.account_id),
+        escapeCsvValue(u.pix_key_type || ''),
+        escapeCsvValue(u.pix_key || ''),
+        escapeCsvValue(u.created_at || ''),
+        escapeCsvValue(u.user_type || ''),
+        escapeCsvValue(u.responsible || ''),
+        '',
+      ].join(',')
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -414,30 +427,115 @@ const Dashboard = () => {
     toast.success('CSV exportado!');
   };
 
+  const parseCsvLine = (line: string) => {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    values.push(current.trim());
+    return values;
+  };
+
+  const normalizeCsvHeader = (value: string) =>
+    value
+      .replace(/^#$/g, 'numero')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .toLowerCase();
+
   const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !session?.user?.id) return;
+
     const reader = new FileReader();
     reader.onload = async (ev) => {
-      const text = ev.target?.result as string;
-      const lines = text.split('\n').filter(l => l.trim());
-      if (lines.length < 2) { toast.error('CSV vazio'); return; }
-      const hasHeader = lines[0].toLowerCase().includes('nome') || lines[0].toLowerCase().includes('email');
-      const dataLines = hasHeader ? lines.slice(1) : lines;
-      let imported = 0, errors = 0;
-      for (const line of dataLines) {
-        const cols = line.match(/(".*?"|[^,]+)/g)?.map(c => c.replace(/^"|"$/g, '').trim()) || [];
-        if (cols.length < 4) { errors++; continue; }
-        const [name, email, phone, account_id] = cols;
-        if (!name || !email || !account_id) { errors++; continue; }
-        const { error } = await (supabase as any).from('wheel_users').insert({
-          name, email, phone: phone || '', account_id, owner_id: session.user.id,
-        });
-        if (error) errors++; else imported++;
+      const text = String(ev.target?.result || '').replace(/^\uFEFF/, '');
+      const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        toast.error('CSV vazio');
+        return;
       }
+
+      const headerColumns = parseCsvLine(lines[0]).map(normalizeCsvHeader);
+      const headerMap = new Map(headerColumns.map((column, index) => [column, index]));
+      const requiredHeaders = ['nome', 'e_mail', 'id_da_conta'];
+      const hasExpectedHeader = requiredHeaders.every(header => headerMap.has(header));
+      const dataLines = hasExpectedHeader ? lines.slice(1) : lines;
+
+      const rowsToInsert = dataLines
+        .map((line) => parseCsvLine(line))
+        .filter((cols) => cols.some(col => col !== ''))
+        .map((cols) => {
+          const getValue = (...keys: string[]) => {
+            for (const key of keys) {
+              const index = headerMap.get(key);
+              if (index !== undefined) return (cols[index] || '').trim();
+            }
+            return '';
+          };
+
+          return {
+            name: getValue('nome'),
+            email: getValue('e_mail', 'email'),
+            phone: getValue('celular'),
+            account_id: getValue('id_da_conta'),
+            pix_key_type: getValue('tipo_chave_pix'),
+            pix_key: getValue('chave_pix'),
+            user_type: getValue('tipo'),
+            responsible: getValue('responsavel'),
+            owner_id: session.user.id,
+          };
+        })
+        .filter((row) => row.name && row.email && row.account_id);
+
+      if (rowsToInsert.length === 0) {
+        toast.error('Nenhuma linha válida encontrada no CSV');
+        return;
+      }
+
+      const chunkSize = 200;
+      let imported = 0;
+      let errors = 0;
+
+      for (let i = 0; i < rowsToInsert.length; i += chunkSize) {
+        const chunk = rowsToInsert.slice(i, i + chunkSize);
+        const { error, data } = await (supabase as any)
+          .from('wheel_users')
+          .insert(chunk)
+          .select('id');
+
+        if (error) {
+          errors += chunk.length;
+        } else {
+          imported += data?.length || chunk.length;
+        }
+      }
+
       toast.success(`${imported} importado(s)${errors > 0 ? `, ${errors} erro(s)` : ''}`);
       fetchUsers();
     };
+
     reader.readAsText(file);
     e.target.value = '';
   };
