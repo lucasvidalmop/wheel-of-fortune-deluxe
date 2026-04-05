@@ -279,6 +279,63 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({ config, floating }) => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [collapsed, setCollapsed] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
+  const [panelSize, setPanelSize] = useState<{ w: number; h: number }>({ w: 320, h: 0 });
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; origW: number; origH: number } | null>(null);
+  const panelElRef = useRef<HTMLDivElement>(null);
+
+  // Drag handlers
+  const onDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const rect = panelElRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pos = panelPos ?? { x: rect.left, y: rect.top };
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y };
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      const dy = ev.clientY - dragRef.current.startY;
+      setPanelPos({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy });
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  // Resize handlers
+  const onResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = panelElRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (!panelPos) setPanelPos({ x: rect.left, y: rect.top });
+    resizeRef.current = { startX: e.clientX, startY: e.clientY, origW: rect.width, origH: rect.height };
+
+    const onMove = (ev: MouseEvent) => {
+      if (!resizeRef.current) return;
+      const dw = ev.clientX - resizeRef.current.startX;
+      const dh = ev.clientY - resizeRef.current.startY;
+      setPanelSize({
+        w: Math.max(260, resizeRef.current.origW + dw),
+        h: Math.max(0, resizeRef.current.origH + dh),
+      });
+    };
+    const onUp = () => {
+      resizeRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
   const segments = config.segments;
   const numSegs = Math.max(segments.length, 1);
   const segAngle = 360 / numSegs;
@@ -320,35 +377,26 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
       { x: cx + outerR * Math.cos(startAngle), y: cy + outerR * Math.sin(startAngle) },
       { x: cx + outerR * Math.cos(endAngle), y: cy + outerR * Math.sin(endAngle) },
     ];
-
     const steps = 10;
     for (let s = 0; s <= steps; s++) {
       const a = startAngle + (endAngle - startAngle) * (s / steps);
       points.push({ x: cx + outerR * Math.cos(a), y: cy + outerR * Math.sin(a) });
     }
-
     const xs = points.map(p => p.x);
     const ys = points.map(p => p.y);
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
     const minY = Math.min(...ys);
     const maxY = Math.max(...ys);
-
-    return {
-      x: minX,
-      y: minY,
-      width: Math.max(1, maxX - minX),
-      height: Math.max(1, maxY - minY),
-    };
+    return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
   };
-
-  const wrapperClass = floating
-    ? 'fixed bottom-4 right-4 z-50 w-[320px] rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-all'
-    : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3';
 
   if (floating && collapsed) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div
+        className="fixed bottom-4 right-4 z-50"
+        style={panelPos ? { left: panelPos.x, top: panelPos.y, bottom: 'auto', right: 'auto' } : undefined}
+      >
         <button
           type="button"
           onClick={() => setCollapsed(false)}
@@ -360,8 +408,33 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
     );
   }
 
+  const floatingStyle: React.CSSProperties = floating ? {
+    position: 'fixed',
+    zIndex: 50,
+    width: panelSize.w,
+    ...(panelSize.h > 0 ? { height: panelSize.h, overflow: 'auto' } : {}),
+    ...(panelPos ? { left: panelPos.x, top: panelPos.y } : { bottom: 16, right: 16 }),
+  } : {};
+
   return (
-    <div className={wrapperClass}>
+    <div
+      ref={panelElRef}
+      className={floating
+        ? 'relative rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-shadow'
+        : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3'
+      }
+      style={floatingStyle}
+    >
+      {/* Drag handle */}
+      {floating && (
+        <div
+          onMouseDown={onDragStart}
+          className="flex items-center justify-center cursor-grab active:cursor-grabbing rounded-md bg-muted/40 py-1 mb-1 select-none"
+          title="Arrastar para mover"
+        >
+          <span className="text-muted-foreground text-[10px] tracking-widest">⠿⠿⠿</span>
+        </div>
+      )}
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pré-visualização dos segmentos</span>
         <div className="flex items-center gap-1">
@@ -567,6 +640,18 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
           </div>
         </div>
       </div>
+      {/* Resize handle */}
+      {floating && (
+        <div
+          onMouseDown={onResizeStart}
+          className="absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize flex items-end justify-end pr-1 pb-1"
+          title="Redimensionar"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" className="text-muted-foreground">
+            <path d="M9 1L1 9M9 5L5 9M9 8L8 9" stroke="currentColor" strokeWidth="1.2" fill="none" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 };
