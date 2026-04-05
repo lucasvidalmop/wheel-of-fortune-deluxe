@@ -229,20 +229,24 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
 
           {/* Segment images - FULL COVER */}
           {config.segments.map((seg, i) => {
-            if (!seg.imageUrl) return null;
+            const imgUrl = isMobile && seg.mobileImageUrl ? seg.mobileImageUrl : seg.imageUrl;
+            if (!imgUrl) return null;
             const bounds = getSegmentBounds(i);
-            const scale = seg.imageScale ?? 1;
+            const useMobile = isMobile && seg.mobileImageUrl;
+            const scale = useMobile ? (seg.mobileImageScale ?? 1) : (seg.imageScale ?? 1);
             const scaledW = bounds.width * scale;
             const scaledH = bounds.height * scale;
-            const ox = (seg.imageOffsetX ?? 0) - (scaledW - bounds.width) / 2;
-            const oy = (seg.imageOffsetY ?? 0) - (scaledH - bounds.height) / 2;
-            const rot = seg.imageRotation ?? 0;
+            const offX = useMobile ? (seg.mobileImageOffsetX ?? 0) : (seg.imageOffsetX ?? 0);
+            const offY = useMobile ? (seg.mobileImageOffsetY ?? 0) : (seg.imageOffsetY ?? 0);
+            const ox = offX - (scaledW - bounds.width) / 2;
+            const oy = offY - (scaledH - bounds.height) / 2;
+            const rot = useMobile ? (seg.mobileImageRotation ?? 0) : (seg.imageRotation ?? 0);
             const imgCx = bounds.x + ox + scaledW / 2;
             const imgCy = bounds.y + oy + scaledH / 2;
             return (
               <g key={`img-${i}`} clipPath={`url(#seg-clip-${i})`}>
                 <image
-                  href={seg.imageUrl}
+                  href={imgUrl}
                   x={bounds.x + ox}
                   y={bounds.y + oy}
                   width={scaledW}
