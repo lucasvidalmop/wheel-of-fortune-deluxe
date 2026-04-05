@@ -20,6 +20,10 @@ interface WheelUser {
   created_at: string;
   fixed_prize_enabled: boolean;
   fixed_prize_segment: number | null;
+  pix_key_type: string;
+  pix_key: string;
+  user_type: string;
+  responsible: string;
 }
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
