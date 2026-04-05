@@ -379,15 +379,6 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
 const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChange }) => {
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const [openSegments, setOpenSegments] = useState<Record<string, boolean>>({});
-      {/* ── Som & Botão Central ── */}
-      <Card title="Som & Interação" icon={<span className="text-base">🔊</span>}>
-        <ToggleSwitch label="Som ao girar" checked={config.spinSoundEnabled !== false} onChange={v => updateGlobal('spinSoundEnabled', v)} />
-        <p className="text-[9px] text-muted-foreground">Efeito sonoro de roleta girando (tick-tick-tick).</p>
-        <div className="border-t border-border/30 my-2" />
-        <ToggleSwitch label="Botão central gira" checked={!!config.centerButtonSpinEnabled} onChange={v => updateGlobal('centerButtonSpinEnabled', v)} />
-        <p className="text-[9px] text-muted-foreground">Permite girar clicando no centro da roleta.</p>
-      </Card>
-
 
   const updateGlobal = (key: keyof Omit<WheelConfig, 'segments'>, value: any) => {
     onChange({ ...config, [key]: value });
