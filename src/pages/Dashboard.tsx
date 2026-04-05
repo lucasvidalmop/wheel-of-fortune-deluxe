@@ -345,6 +345,25 @@ const Dashboard = () => {
     setGrantSpinCount(1);
   };
 
+  const sendSpinWhatsapp = async (user: WheelUser, count: number, templateId: string, customMsg: string) => {
+    if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) return;
+    if (!user.phone || user.phone.replace(/\D/g, '').length < 10) return;
+    const tpl = WHATSAPP_SPIN_TEMPLATES.find(t => t.id === templateId);
+    if (!tpl) return;
+    const baseMsg = templateId === 'custom' ? customMsg : tpl.message;
+    if (!baseMsg.trim()) return;
+    const wheelLink = `${window.location.origin}/${slug}`;
+    const finalMsg = baseMsg
+      .replace(/\{nome\}/g, user.name)
+      .replace(/\{giros\}/g, String(count))
+      .replace(/\{link\}/g, wheelLink);
+    try {
+      await supabase.functions.invoke('send-whatsapp', {
+        body: { recipientPhone: user.phone, message: finalMsg, evolutionApiUrl, evolutionApiKey, evolutionInstance }
+      });
+    } catch (e) { console.error('WhatsApp send error:', e); }
+  };
+
   const confirmGrantSpin = async () => {
     if (!grantSpinUser) return;
     const count = Math.max(1, grantSpinCount);
@@ -356,6 +375,10 @@ const Dashboard = () => {
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
     toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
+    if (spinWhatsappEnabled) {
+      sendSpinWhatsapp(grantSpinUser, count, spinWhatsappTemplate, spinWhatsappCustomMsg);
+      toast.info(`📱 WhatsApp enviado para ${grantSpinUser.name}`);
+    }
     setGrantSpinUser(null);
     fetchUsers();
   };
@@ -372,9 +395,15 @@ const Dashboard = () => {
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
       }).eq('id', user.id);
-      if (!error) success++;
+      if (!error) {
+        success++;
+        if (batchWhatsappEnabled) {
+          await sendSpinWhatsapp(user, count, batchWhatsappTemplate, batchWhatsappCustomMsg);
+        }
+      }
     }
     toast.success(`${success} inscrito(s) receberam ${count} giro(s)!`);
+    if (batchWhatsappEnabled) toast.info(`📱 WhatsApp enviado para ${success} inscrito(s)`);
     setShowBatchGrantModal(false);
     setSelectedUserIds(new Set());
     fetchUsers();
