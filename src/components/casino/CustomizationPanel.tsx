@@ -233,19 +233,26 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
 
       <div className="flex justify-center">
         <div
-          className="rounded-xl border border-border/30 flex items-center justify-center"
+          className="rounded-xl border border-border/30 flex items-center justify-center overflow-hidden relative"
           style={{
             width: previewMode === 'mobile' ? 200 : '100%',
             height: previewMode === 'mobile' ? 280 : 260,
             backgroundColor: 'rgba(10,5,25,0.95)',
-            backgroundImage: config.backgroundImageUrl
-              ? `url(${config.backgroundImageUrl})`
-              : 'radial-gradient(ellipse at center, rgba(30,10,60,0.9), rgba(10,5,25,0.95))',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
           }}
         >
+          {config.backgroundImageUrl ? (
+            <img
+              src={config.backgroundImageUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                transform: `translate(${config.backgroundImageOffsetX ?? 0}px, ${config.backgroundImageOffsetY ?? 0}px) scale(${config.backgroundImageScale ?? 1})`,
+              }}
+            />
+          ) : (
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(30,10,60,0.9), rgba(10,5,25,0.95))' }} />
+          )}
+          <div className="relative z-10">
           <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
             {/* Outer ring */}
             <circle cx={cx} cy={cy} r={r + 4} fill="none" stroke={config.outerRingColor} strokeWidth={3} />
