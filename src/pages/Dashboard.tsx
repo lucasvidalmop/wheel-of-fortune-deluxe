@@ -1922,9 +1922,10 @@ const Dashboard = () => {
                               body: { action: 'create', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
                             if (error) { toast.error('Erro ao criar instância'); return; }
-                            if (data?.error) { toast.error(data.error); return; }
+                            if (!data?.ok) { const msg = data?.data?.response?.message || data?.data?.message || 'Erro ao criar instância'; toast.error(Array.isArray(msg) ? msg.join(', ') : msg); return; }
+                            const d = data.data;
                             toast.success('Instância criada com sucesso!');
-                            if (data?.qrcode?.base64) { setInstanceQrCode(data.qrcode.base64); setInstanceStatus('connecting'); }
+                            if (d?.qrcode?.base64) { setInstanceQrCode(d.qrcode.base64); setInstanceStatus('connecting'); }
                             else { setInstanceStatus('close'); }
                           } catch (err: any) { toast.error(err.message || 'Erro de conexão'); }
                           finally { setCreatingInstance(false); }
@@ -1945,9 +1946,10 @@ const Dashboard = () => {
                               body: { action: 'connect', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
                             if (error) { toast.error('Erro ao conectar'); setInstanceStatus('error'); return; }
-                            if (data?.error) { toast.error(data.error); setInstanceStatus('error'); return; }
-                            if (data?.base64) { setInstanceQrCode(data.base64); setInstanceStatus('connecting'); toast.info('Escaneie o QR Code no WhatsApp'); }
-                            else if (data?.instance?.state === 'open') { setInstanceStatus('open'); toast.success('WhatsApp já está conectado!'); }
+                            if (!data?.ok) { const msg = data?.data?.response?.message || data?.data?.message || 'Erro ao conectar'; toast.error(Array.isArray(msg) ? msg.join(', ') : msg); setInstanceStatus('error'); return; }
+                            const d = data.data;
+                            if (d?.base64) { setInstanceQrCode(d.base64); setInstanceStatus('connecting'); toast.info('Escaneie o QR Code no WhatsApp'); }
+                            else if (d?.instance?.state === 'open') { setInstanceStatus('open'); toast.success('WhatsApp já está conectado!'); }
                             else { setInstanceStatus('close'); toast.info('Instância desconectada. Tente novamente.'); }
                           } catch (err: any) { toast.error(err.message || 'Erro de conexão'); setInstanceStatus('error'); }
                         }}
@@ -1966,7 +1968,8 @@ const Dashboard = () => {
                               body: { action: 'status', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
                             if (error) { toast.error('Erro ao verificar'); setInstanceStatus('error'); return; }
-                            const state = data?.instance?.state || data?.state || 'unknown';
+                            const d = data?.data;
+                            const state = d?.instance?.state || d?.state || 'unknown';
                             setInstanceStatus(state === 'open' ? 'open' : 'close');
                             toast.info(`Status: ${state === 'open' ? '🟢 Conectado' : '🔴 Desconectado'}`);
                           } catch (err: any) { toast.error(err.message || 'Erro'); setInstanceStatus('error'); }
