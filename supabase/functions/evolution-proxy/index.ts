@@ -58,11 +58,12 @@ serve(async (req) => {
     if (method === "POST") headers["Content-Type"] = "application/json";
 
     const response = await fetch(url, { method, headers, body: fetchBody });
-    const data = await response.json();
+    let data;
+    try { data = await response.json(); } catch { data = null; }
 
     return new Response(
-      JSON.stringify(data),
-      { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ ok: response.ok, status: response.status, data }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Evolution proxy error:", error);
