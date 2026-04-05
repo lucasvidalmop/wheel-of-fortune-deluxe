@@ -280,39 +280,45 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             const vSize = (config.valueFontSize ?? 22) * s;
             const tSize = (config.titleFontSize ?? 10) * s;
             return (
-              <g key={`text-${i}`} transform={`rotate(${midAngle + 90}, ${tx}, ${ty})`}>
-                {!config.hideSegmentValue && (
-                  <text
-                    x={tx}
-                    y={config.hideSegmentTitle ? ty : ty - tSize * 0.8}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fill={seg.textColor}
-                    fontSize={vSize}
-                    fontWeight="900"
-                    fontFamily="'Orbitron', sans-serif"
-                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9))' }}
-                  >
-                    {seg.reward}
-                  </text>
-                )}
-                {!config.hideSegmentTitle && (
-                  <text
-                    x={tx}
-                    y={config.hideSegmentValue ? ty : ty + vSize * 0.6}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fill={seg.textColor}
-                    fontSize={tSize}
-                    fontWeight="700"
-                    fontFamily="'Orbitron', sans-serif"
-                    opacity="0.9"
-                    style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
-                  >
-                    {seg.title}
-                  </text>
-                )}
-              </g>
+              (() => {
+                const showValue = !config.hideSegmentValue && !seg.hideValue;
+                const showTitle = !config.hideSegmentTitle && !seg.hideTitle;
+                return (
+                  <g key={`text-${i}`} transform={`rotate(${midAngle + 90}, ${tx}, ${ty})`}>
+                    {showValue && (
+                      <text
+                        x={tx}
+                        y={showTitle ? ty - tSize * 0.8 : ty}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fill={seg.textColor}
+                        fontSize={vSize}
+                        fontWeight="900"
+                        fontFamily="'Orbitron', sans-serif"
+                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.9))' }}
+                      >
+                        {seg.reward}
+                      </text>
+                    )}
+                    {showTitle && (
+                      <text
+                        x={tx}
+                        y={showValue ? ty + vSize * 0.6 : ty}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fill={seg.textColor}
+                        fontSize={tSize}
+                        fontWeight="700"
+                        fontFamily="'Orbitron', sans-serif"
+                        opacity="0.9"
+                        style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
+                      >
+                        {seg.title}
+                      </text>
+                    )}
+                  </g>
+                );
+              })()
             );
           })}
         </g>

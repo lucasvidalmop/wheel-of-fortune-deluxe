@@ -160,22 +160,25 @@ const Roleta = () => {
           ctx.rotate(midAngle + Math.PI / 2);
           ctx.textAlign = 'center';
 
+          const showValue = !config.hideSegmentValue && !seg.hideValue;
+          const showTitle = !config.hideSegmentTitle && !seg.hideTitle;
+
           // Value (reward number)
-          if (!config.hideSegmentValue) {
+          if (showValue) {
             ctx.fillStyle = seg.textColor;
             ctx.font = `900 ${vSize}px 'Orbitron', Arial, sans-serif`;
             ctx.shadowColor = 'rgba(0,0,0,0.9)';
             ctx.shadowBlur = 4;
-            ctx.fillText(seg.reward, 0, config.hideSegmentTitle ? 0 : -tSize * 0.5);
+            ctx.fillText(seg.reward, 0, showTitle ? -tSize * 0.5 : 0);
           }
 
           // Title
-          if (!config.hideSegmentTitle) {
+          if (showTitle) {
             ctx.fillStyle = seg.textColor;
             ctx.font = `700 ${tSize}px 'Orbitron', Arial, sans-serif`;
             ctx.shadowColor = 'rgba(0,0,0,0.9)';
             ctx.shadowBlur = 4;
-            ctx.fillText(seg.title, 0, config.hideSegmentValue ? 0 : vSize * 0.5);
+            ctx.fillText(seg.title, 0, showValue ? vSize * 0.5 : 0);
           }
 
           ctx.restore();
