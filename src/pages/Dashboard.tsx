@@ -2390,12 +2390,47 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* WhatsApp notification */}
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 mb-5">
+              <label className="flex items-center gap-2.5 cursor-pointer mb-3">
+                <input type="checkbox" checked={batchWhatsappEnabled} onChange={e => setBatchWhatsappEnabled(e.target.checked)} className="rounded border-white/20" />
+                <MessageCircle size={16} className="text-green-400" />
+                <span className="text-sm font-medium text-foreground">Enviar WhatsApp ao liberar giros</span>
+              </label>
+              {batchWhatsappEnabled && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {WHATSAPP_SPIN_TEMPLATES.map(tpl => (
+                      <button key={tpl.id} onClick={() => setBatchWhatsappTemplate(tpl.id)}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${batchWhatsappTemplate === tpl.id ? 'bg-green-500/15 text-green-400 border-green-500/30' : 'bg-white/[0.02] text-muted-foreground border-white/[0.06] hover:bg-white/[0.06]'}`}>
+                        {tpl.label}
+                      </button>
+                    ))}
+                  </div>
+                  {batchWhatsappTemplate === 'custom' ? (
+                    <textarea value={batchWhatsappCustomMsg} onChange={e => setBatchWhatsappCustomMsg(e.target.value)} rows={3} placeholder="Use {nome}, {giros}, {link} como variáveis..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs resize-y focus:outline-none focus:ring-1 focus:ring-green-500/40 placeholder:text-muted-foreground" />
+                  ) : (
+                    <div className="rounded-lg bg-white/[0.04] p-3 border border-white/[0.06]">
+                      <p className="text-[11px] text-muted-foreground mb-1">Pré-visualização:</p>
+                      <p className="text-xs text-foreground">
+                        {(WHATSAPP_SPIN_TEMPLATES.find(t => t.id === batchWhatsappTemplate)?.message || '')
+                          .replace(/\{nome\}/g, 'Nome')
+                          .replace(/\{giros\}/g, String(batchGrantSpinCount))
+                          .replace(/\{link\}/g, `${window.location.origin}/${slug}`)}
+                      </p>
+                    </div>
+                  )}
+                  {!evolutionApiUrl && <p className="text-[10px] text-amber-400">⚠️ Configure a Evolution API na aba WhatsApp primeiro</p>}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button onClick={() => setShowBatchGrantModal(false)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] transition-all border border-white/[0.08]">
                 Cancelar
               </button>
               <button onClick={confirmBatchGrantSpin} className="flex-1 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                Liberar {batchGrantSpinCount} Giro(s) para {selectedUserIds.size} inscrito(s)
+                {batchWhatsappEnabled ? `📱 Liberar + WhatsApp (${selectedUserIds.size})` : `Liberar ${batchGrantSpinCount} Giro(s) para ${selectedUserIds.size} inscrito(s)`}
               </button>
             </div>
           </div>
