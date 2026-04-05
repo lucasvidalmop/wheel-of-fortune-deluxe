@@ -5,6 +5,7 @@ import { WheelConfig } from './types';
 import { toast } from 'sonner';
 import { Settings, X, ChevronDown, Upload, Trash2, Plus } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import { playSpinSound } from '@/lib/spinSound';
 
 interface CustomizationPanelProps {
   config: WheelConfig;
