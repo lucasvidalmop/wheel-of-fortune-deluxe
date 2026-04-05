@@ -1782,7 +1782,19 @@ const Dashboard = () => {
 
             <p className="text-sm text-muted-foreground mb-4">Escolha como o prêmio será definido para todos os selecionados:</p>
 
-            <div className="flex gap-2 mb-5">
+            {/* Spin count */}
+            <div className="mb-4">
+              <label className="text-xs text-muted-foreground mb-1.5 block">Quantidade de giros por inscrito</label>
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={batchGrantSpinCount}
+                onChange={e => setBatchGrantSpinCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 transition"
+              />
+            </div>
+
               <button
                 onClick={() => setBatchGrantMode('random')}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all border ${batchGrantMode === 'random' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/[0.04] text-muted-foreground border-white/[0.08] hover:bg-white/[0.08]'}`}
