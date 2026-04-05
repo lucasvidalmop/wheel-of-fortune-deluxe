@@ -47,7 +47,10 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
 
     // Play sound if enabled
     if (config.spinSoundEnabled !== false) {
-      playSpinSound(5000);
+      const customUrl = config.spinSoundMode === 'custom' && config.customSpinSoundUrl
+        ? config.customSpinSoundUrl
+        : undefined;
+      playSpinSound(5000, customUrl);
     }
 
     const winnerIdx = (forcedSegment != null && forcedSegment >= 0 && forcedSegment < numSegments) ? forcedSegment : pickWeightedSegment();

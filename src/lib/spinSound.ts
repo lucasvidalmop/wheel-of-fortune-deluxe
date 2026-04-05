@@ -2,6 +2,7 @@
 // Simulates the "tick tick tick" of a spinning wheel that slows down
 
 let audioCtx: AudioContext | null = null;
+let customAudioEl: HTMLAudioElement | null = null;
 
 function getAudioContext(): AudioContext {
   if (!audioCtx) {
@@ -10,14 +11,29 @@ function getAudioContext(): AudioContext {
   return audioCtx;
 }
 
-export function playSpinSound(durationMs = 5000) {
+export function playSpinSound(durationMs = 5000, customUrl?: string) {
+  // Stop any previous custom audio
+  stopSpinSound();
+
+  if (customUrl) {
+    try {
+      customAudioEl = new Audio(customUrl);
+      customAudioEl.currentTime = 0;
+      customAudioEl.play().catch(() => {});
+      // Auto-stop after duration
+      setTimeout(() => stopSpinSound(), durationMs + 500);
+    } catch {
+      // fallback silently
+    }
+    return;
+  }
+
   try {
     const ctx = getAudioContext();
     const totalTicks = 60;
     const startTime = ctx.currentTime;
 
     for (let i = 0; i < totalTicks; i++) {
-      // Exponential slowdown: ticks get further apart
       const progress = i / totalTicks;
       const delay = (durationMs / 1000) * (1 - Math.pow(1 - progress, 2.5));
 
@@ -26,12 +42,10 @@ export function playSpinSound(durationMs = 5000) {
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      // Higher pitch at start, lower at end
       const freq = 800 + (1 - progress) * 1200;
       osc.frequency.setValueAtTime(freq, startTime + delay);
       osc.type = 'sine';
 
-      // Short tick sound
       const tickDuration = 0.02 + progress * 0.04;
       const volume = 0.08 + (1 - progress) * 0.12;
 
@@ -43,7 +57,6 @@ export function playSpinSound(durationMs = 5000) {
       osc.stop(startTime + delay + tickDuration + 0.01);
     }
 
-    // Final "ding" sound when wheel stops
     const finalTime = startTime + durationMs / 1000 - 0.1;
     const ding = ctx.createOscillator();
     const dingGain = ctx.createGain();
@@ -57,6 +70,14 @@ export function playSpinSound(durationMs = 5000) {
     ding.start(finalTime);
     ding.stop(finalTime + 0.6);
   } catch {
-    // Audio not supported - silently ignore
+    // Audio not supported
+  }
+}
+
+export function stopSpinSound() {
+  if (customAudioEl) {
+    customAudioEl.pause();
+    customAudioEl.currentTime = 0;
+    customAudioEl = null;
   }
 }

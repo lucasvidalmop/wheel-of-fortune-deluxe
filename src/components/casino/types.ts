@@ -152,6 +152,8 @@ export interface WheelConfig {
   postLoginDialogTextAlign?: 'left' | 'center' | 'right';
   // Sound & center button
   spinSoundEnabled?: boolean;
+  spinSoundMode?: 'default' | 'custom';
+  customSpinSoundUrl?: string;
   centerButtonSpinEnabled?: boolean;
 }
 
