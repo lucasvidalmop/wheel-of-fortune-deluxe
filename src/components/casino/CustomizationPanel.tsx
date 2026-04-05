@@ -342,7 +342,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
   };
 
   return (
-    <div className="space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3 sticky top-0 z-20">
+    <div className="space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pré-visualização dos segmentos</span>
         <div className="flex gap-1 rounded-lg bg-muted/40 p-0.5">
