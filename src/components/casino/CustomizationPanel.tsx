@@ -194,6 +194,129 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
   );
 };
 
+/* ── Segment Preview (mini wheel) ── */
+const SegmentPreview: React.FC<{ config: WheelConfig }> = ({ config }) => {
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const segments = config.segments;
+  const numSegs = segments.length;
+  const segAngle = 360 / numSegs;
+
+  const size = previewMode === 'mobile' ? 160 : 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 8;
+
+  const polarToCart = (angleDeg: number, radius: number) => ({
+    x: cx + radius * Math.cos((angleDeg - 90) * Math.PI / 180),
+    y: cy + radius * Math.sin((angleDeg - 90) * Math.PI / 180),
+  });
+
+  return (
+    <div className="rounded-xl border border-border/40 bg-muted/20 p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pré-visualização</span>
+        <div className="flex gap-1 p-0.5 rounded-lg bg-muted/40">
+          <button
+            onClick={() => setPreviewMode('desktop')}
+            className={`text-[10px] px-2 py-1 rounded-md font-medium transition-all ${previewMode === 'desktop' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}
+          >
+            🖥️ Desktop
+          </button>
+          <button
+            onClick={() => setPreviewMode('mobile')}
+            className={`text-[10px] px-2 py-1 rounded-md font-medium transition-all ${previewMode === 'mobile' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'}`}
+          >
+            📱 Mobile
+          </button>
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <div
+          className="rounded-xl border border-border/30 flex items-center justify-center"
+          style={{
+            width: previewMode === 'mobile' ? 200 : '100%',
+            height: previewMode === 'mobile' ? 280 : 260,
+            background: config.backgroundImageUrl
+              ? `url(${config.backgroundImageUrl}) center/cover`
+              : 'radial-gradient(ellipse at center, rgba(30,10,60,0.9), rgba(10,5,25,0.95))',
+          }}
+        >
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            {/* Outer ring */}
+            <circle cx={cx} cy={cy} r={r + 4} fill="none" stroke={config.outerRingColor} strokeWidth={3} />
+
+            {/* Segments */}
+            {segments.map((seg, i) => {
+              const startAngle = i * segAngle;
+              const endAngle = (i + 1) * segAngle;
+              const start = polarToCart(startAngle, r);
+              const end = polarToCart(endAngle, r);
+              const largeArc = segAngle > 180 ? 1 : 0;
+              const path = `M${cx},${cy} L${start.x},${start.y} A${r},${r} 0 ${largeArc} 1 ${end.x},${end.y} Z`;
+
+              const midAngle = startAngle + segAngle / 2;
+              const textR = r * 0.65;
+              const textPos = polarToCart(midAngle, textR);
+              const fontSize = previewMode === 'mobile' ? 7 : 9;
+
+              return (
+                <g key={seg.id}>
+                  <path d={path} fill={seg.color} stroke={config.dividerColor} strokeWidth={config.dividerWidth ?? 2} />
+                  {!config.hideSegmentText && (
+                    <text
+                      x={textPos.x}
+                      y={textPos.y}
+                      fill={seg.textColor}
+                      fontSize={fontSize}
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      transform={`rotate(${midAngle}, ${textPos.x}, ${textPos.y})`}
+                    >
+                      {seg.reward || seg.title}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+
+            {/* Center cap */}
+            <circle cx={cx} cy={cy} r={r * 0.15} fill={config.centerCapColor} stroke={config.dividerColor} strokeWidth={1} />
+
+            {/* Center image */}
+            {config.centerImageUrl && (
+              <image
+                href={config.centerImageUrl}
+                x={cx - r * 0.12}
+                y={cy - r * 0.12}
+                width={r * 0.24}
+                height={r * 0.24}
+                clipPath={`circle(${r * 0.12}px at ${r * 0.12}px ${r * 0.12}px)`}
+              />
+            )}
+
+            {/* Pointer */}
+            <polygon
+              points={`${cx},${cy - r - 8} ${cx - 6},${cy - r + 4} ${cx + 6},${cy - r + 4}`}
+              fill={config.pointerColor}
+              stroke={config.dividerColor}
+              strokeWidth={0.5}
+            />
+
+            {/* LEDs */}
+            {Array.from({ length: Math.min(numSegs * 3, 24) }).map((_, i) => {
+              const angle = (i / Math.min(numSegs * 3, 24)) * 360;
+              const pos = polarToCart(angle, r + 2);
+              return <circle key={i} cx={pos.x} cy={pos.y} r={1.5} fill={config.ledColor} opacity={0.8} />;
+            })}
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ══════════════════════════════════════════════
    MAIN PANEL
    ══════════════════════════════════════════════ */
@@ -281,6 +404,9 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
 
       {/* ── Segmentos ── */}
       <Card title="Segmentos" icon={<span className="text-base">🍕</span>} defaultOpen>
+        {/* Mini wheel preview */}
+        <SegmentPreview config={config} />
+
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{config.segments.length} fatia(s)</span>
           <button
