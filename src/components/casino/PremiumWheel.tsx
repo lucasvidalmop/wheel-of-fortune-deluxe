@@ -16,6 +16,7 @@ interface PremiumWheelProps {
 const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment, isMobile = false, onShare }) => {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [spinDuration, setSpinDuration] = useState(5);
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
   const [ledPhase, setLedPhase] = useState(0);
   const ledInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -40,36 +41,48 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
     return config.segments.length - 1;
   }, [config.segments]);
 
-  const spin = useCallback(() => {
+  const spin = useCallback(async () => {
     if (isSpinning || disabled) return;
     setIsSpinning(true);
     setWinnerIndex(null);
 
-    // Play sound if enabled
-    if (config.spinSoundEnabled !== false) {
-      const customUrl = config.spinSoundMode === 'custom' && config.customSpinSoundUrl
-        ? config.customSpinSoundUrl
-        : undefined;
-      playSpinSound(5000, customUrl);
+    const isCustom = config.spinSoundMode === 'custom' && config.customSpinSoundUrl;
+    let durationMs = 5000; // default for built-in sound
+
+    if (config.spinSoundEnabled !== false && isCustom) {
+      durationMs = await getCustomAudioDuration(config.customSpinSoundUrl!);
+      // clamp between 3s and 30s
+      durationMs = Math.max(3000, Math.min(30000, durationMs));
     }
 
-    const winnerIdx = (forcedSegment != null && forcedSegment >= 0 && forcedSegment < numSegments) ? forcedSegment : pickWeightedSegment();
-    const targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle;
-    const extraSpins = 5 + Math.floor(Math.random() * 5);
-    const totalRotation = extraSpins * 360 + targetOffset;
-    const baseRotation = Math.ceil(rotation / 360) * 360;
-    setRotation(baseRotation + totalRotation);
+    const durationSec = durationMs / 1000;
+    setSpinDuration(durationSec);
 
-    if (ledInterval.current) clearInterval(ledInterval.current);
-    ledInterval.current = setInterval(() => setLedPhase(p => p + 1), 80);
+    // Play sound
+    if (config.spinSoundEnabled !== false) {
+      playSpinSound(durationMs, isCustom ? config.customSpinSoundUrl : undefined);
+    }
 
-    setTimeout(() => {
-      setIsSpinning(false);
+    // Use requestAnimationFrame to ensure duration state is applied before rotation
+    requestAnimationFrame(() => {
+      const winnerIdx = (forcedSegment != null && forcedSegment >= 0 && forcedSegment < numSegments) ? forcedSegment : pickWeightedSegment();
+      const targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle;
+      const extraSpins = 5 + Math.floor(Math.random() * 5);
+      const totalRotation = extraSpins * 360 + targetOffset;
+      const baseRotation = Math.ceil(rotation / 360) * 360;
+      setRotation(baseRotation + totalRotation);
+
       if (ledInterval.current) clearInterval(ledInterval.current);
-      setWinnerIndex(winnerIdx);
-      onSpinEnd?.(winnerIdx);
-    }, 5000);
-  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments, config.spinSoundEnabled]);
+      ledInterval.current = setInterval(() => setLedPhase(p => p + 1), 80);
+
+      setTimeout(() => {
+        setIsSpinning(false);
+        if (ledInterval.current) clearInterval(ledInterval.current);
+        setWinnerIndex(winnerIdx);
+        onSpinEnd?.(winnerIdx);
+      }, durationMs);
+    });
+  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments, config.spinSoundEnabled, config.spinSoundMode, config.customSpinSoundUrl]);
 
   const getSegmentPath = (index: number, r: number, ir: number) => {
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
