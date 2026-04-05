@@ -1795,6 +1795,7 @@ const Dashboard = () => {
               />
             </div>
 
+            <div className="flex gap-2 mb-5">
               <button
                 onClick={() => setBatchGrantMode('random')}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all border ${batchGrantMode === 'random' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/[0.04] text-muted-foreground border-white/[0.08] hover:bg-white/[0.08]'}`}
