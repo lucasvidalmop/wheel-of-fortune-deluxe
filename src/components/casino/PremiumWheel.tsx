@@ -297,26 +297,31 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
           })}
         </g>
 
-        {/* === CENTER CAP (static, does not spin) === */}
-        <circle cx={cx} cy={cy} r={innerR + 8} fill="url(#capGrad)" stroke={config.dividerColor} strokeWidth="2" />
-        <circle cx={cx} cy={cy} r={innerR - 2} fill={config.centerCapColor} stroke="#555" strokeWidth="1" />
+        {/* === CENTER CAP (static, clickable when enabled) === */}
+        <g
+          onClick={config.centerButtonSpinEnabled ? spin : undefined}
+          style={{ cursor: config.centerButtonSpinEnabled && !isSpinning && !disabled ? 'pointer' : 'default' }}
+        >
+          <circle cx={cx} cy={cy} r={innerR + 8} fill="url(#capGrad)" stroke={config.dividerColor} strokeWidth="2" />
+          <circle cx={cx} cy={cy} r={innerR - 2} fill={config.centerCapColor} stroke="#555" strokeWidth="1" />
 
-        {config.centerImageUrl ? (
-          <image
-            href={config.centerImageUrl}
-            x={cx - innerR + 3 + (config.centerImageOffsetX ?? 0)}
-            y={cy - innerR + 3 + (config.centerImageOffsetY ?? 0)}
-            width={(innerR - 3) * 2 * (config.centerImageScale ?? 1)}
-            height={(innerR - 3) * 2 * (config.centerImageScale ?? 1)}
-            clipPath="url(#center-clip)"
-            preserveAspectRatio="xMidYMid slice"
-          />
-        ) : (
-          <>
-            <circle cx={cx - 5} cy={cy - 8} r={12} fill="white" opacity="0.12" />
-            <text x={cx} y={cy + 5} textAnchor="middle" fontSize="24" fill={config.ledColor} fontFamily="'Orbitron', sans-serif" fontWeight="900" style={{ filter: `drop-shadow(0 0 6px ${config.ledColor})` }}>⚡</text>
-          </>
-        )}
+          {config.centerImageUrl ? (
+            <image
+              href={config.centerImageUrl}
+              x={cx - innerR + 3 + (config.centerImageOffsetX ?? 0)}
+              y={cy - innerR + 3 + (config.centerImageOffsetY ?? 0)}
+              width={(innerR - 3) * 2 * (config.centerImageScale ?? 1)}
+              height={(innerR - 3) * 2 * (config.centerImageScale ?? 1)}
+              clipPath="url(#center-clip)"
+              preserveAspectRatio="xMidYMid slice"
+            />
+          ) : (
+            <>
+              <circle cx={cx - 5} cy={cy - 8} r={12} fill="white" opacity="0.12" />
+              <text x={cx} y={cy + 5} textAnchor="middle" fontSize="24" fill={config.ledColor} fontFamily="'Orbitron', sans-serif" fontWeight="900" style={{ filter: `drop-shadow(0 0 6px ${config.ledColor})` }}>⚡</text>
+            </>
+          )}
+        </g>
 
         {/* === LAYER 6: Top pointer pointing DOWN === */}
         <g transform={`translate(${cx}, ${cy - outerR - 8})`}>
