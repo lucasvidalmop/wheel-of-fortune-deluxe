@@ -1962,13 +1962,10 @@ const Dashboard = () => {
                         onClick={async () => {
                           setInstanceStatus('loading');
                           try {
-                            const apiUrl = evolutionApiUrl.replace(/\/+$/, '');
-                            const res = await fetch(`${apiUrl}/instance/connectionState/${evolutionInstance}`, {
-                              method: 'GET',
-                              headers: { 'apikey': evolutionApiKey },
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'status', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
-                            const data = await res.json();
-                            if (!res.ok) { toast.error(data?.message || 'Erro ao verificar'); setInstanceStatus('error'); return; }
+                            if (error) { toast.error('Erro ao verificar'); setInstanceStatus('error'); return; }
                             const state = data?.instance?.state || data?.state || 'unknown';
                             setInstanceStatus(state === 'open' ? 'open' : 'close');
                             toast.info(`Status: ${state === 'open' ? '🟢 Conectado' : '🔴 Desconectado'}`);
