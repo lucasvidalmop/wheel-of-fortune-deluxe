@@ -159,7 +159,7 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
       {open && (
         <div className="fixed inset-0 z-[60] flex justify-end">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative w-full max-w-sm bg-background border-l border-white/[0.08] shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="relative w-full max-w-sm bg-background border-l border-white/[0.08] shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
             <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-white/[0.06] p-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
