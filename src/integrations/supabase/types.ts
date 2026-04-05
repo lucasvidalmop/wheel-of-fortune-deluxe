@@ -373,6 +373,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_wheel_config_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_wheel_user_spins: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
