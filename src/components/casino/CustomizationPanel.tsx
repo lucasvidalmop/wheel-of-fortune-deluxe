@@ -302,7 +302,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left"
                 >
                   <div className="w-4 h-4 rounded-md border border-border/50" style={{ background: seg.color }} />
-                  <span className="text-sm font-medium text-foreground flex-1 truncate">{seg.title || `Seg ${i + 1}`}</span>
+                  <span className="text-sm font-medium text-foreground flex-1 truncate">{seg.reward || `Seg ${i + 1}`}</span>
                   <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{seg.percentage}%</span>
                   <ChevronDown size={12} className={`text-muted-foreground transition-transform duration-200 ${segOpen ? 'rotate-180' : ''}`} />
                 </button>
