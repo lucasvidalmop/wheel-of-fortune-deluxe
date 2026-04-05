@@ -640,6 +640,18 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
           </div>
         </div>
       </div>
+      {/* Resize handle */}
+      {floating && (
+        <div
+          onMouseDown={onResizeStart}
+          className="absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize flex items-end justify-end pr-1 pb-1"
+          title="Redimensionar"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" className="text-muted-foreground">
+            <path d="M9 1L1 9M9 5L5 9M9 8L8 9" stroke="currentColor" strokeWidth="1.2" fill="none" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 };
