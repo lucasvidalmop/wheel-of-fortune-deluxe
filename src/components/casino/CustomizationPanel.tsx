@@ -722,8 +722,6 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
 
       {/* ── Segmentos ── */}
       <Card title="Segmentos" icon={<span className="text-base">🍕</span>} defaultOpen>
-        {/* Mini wheel preview */}
-        <SegmentPreview config={config} />
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{config.segments.length} fatia(s)</span>
