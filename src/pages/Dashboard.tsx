@@ -20,6 +20,10 @@ interface WheelUser {
   created_at: string;
   fixed_prize_enabled: boolean;
   fixed_prize_segment: number | null;
+  pix_key_type: string;
+  pix_key: string;
+  user_type: string;
+  responsible: string;
 }
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -45,7 +49,7 @@ const Dashboard = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
-  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null });
+  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null, pix_key_type: '', pix_key: '', user_type: '', responsible: '' });
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [viewingUserData, setViewingUserData] = useState<WheelUser | null>(null);
@@ -274,20 +278,20 @@ const Dashboard = () => {
       if (editingUser) {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null })
+          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible })
           .eq('id', editingUser.id);
         if (error) { toast.error('Erro: ' + error.message); return; }
         toast.success('Atualizado!');
       } else {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id });
+          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible });
         if (error) { toast.error('Erro: ' + error.message); return; }
         toast.success('Inscrito criado!');
       }
       setShowForm(false);
       setEditingUser(null);
-      setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null });
+      setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '' });
       fetchUsers();
     } finally {
       setSavingUser(false);
@@ -296,13 +300,13 @@ const Dashboard = () => {
 
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
-    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null });
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '' });
     setShowForm(true);
   };
 
   const openNew = () => {
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null });
+    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '' });
     setShowForm(true);
   };
 
@@ -396,9 +400,9 @@ const Dashboard = () => {
   };
 
   const handleExportCSV = () => {
-    const header = 'Nome,E-mail,Celular,ID da Conta,Data\n';
-    const rows = filteredUsers.map(u =>
-      `"${u.name}","${u.email}","${u.phone || ''}","${u.account_id}","${u.created_at || ''}"`
+    const header = '#,Nome,E-mail,Celular,ID da Conta,Tipo Chave PIX,Chave PIX,Data de Inscrição,Tipo,Responsável\n';
+    const rows = filteredUsers.map((u, i) =>
+      `${i + 1},"${u.name}","${u.email}","${u.phone || ''}","${u.account_id}","${u.pix_key_type || ''}","${u.pix_key || ''}","${u.created_at || ''}","${u.user_type || ''}","${u.responsible || ''}"`
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -767,6 +771,32 @@ const Dashboard = () => {
                         <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Account ID</label>
                         <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
                       </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tipo Chave PIX</label>
+                          <select value={form.pix_key_type} onChange={e => setForm({ ...form, pix_key_type: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40">
+                            <option value="">Selecione</option>
+                            <option value="CPF">CPF</option>
+                            <option value="Email">Email</option>
+                            <option value="Telefone">Telefone</option>
+                            <option value="Aleatória">Aleatória</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Chave PIX</label>
+                          <input type="text" value={form.pix_key} onChange={e => setForm({ ...form, pix_key: e.target.value })} placeholder="Chave PIX" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tipo</label>
+                          <input type="text" value={form.user_type} onChange={e => setForm({ ...form, user_type: e.target.value })} placeholder="Ex: VIP, Comum" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Responsável</label>
+                          <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        </div>
+                      </div>
 
                       {/* Fixed prize */}
                       <div className="space-y-2 pt-2 border-t border-white/[0.06]">
@@ -839,7 +869,8 @@ const Dashboard = () => {
                       </button>
                     </div>
                   )}
-                  <table className="w-full text-sm table-fixed">
+                  <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[900px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="px-3 py-3.5 w-10">
@@ -856,11 +887,17 @@ const Dashboard = () => {
                             className="rounded border-white/20 bg-white/[0.05]"
                           />
                         </th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Celular</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-32">Account ID</th>
-                        <th className="text-center px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-48">Ações</th>
+                        <th className="text-left px-2 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-8">#</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Celular</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Account ID</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-20">PIX Tipo</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-28">Chave PIX</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Inscrição</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-16">Tipo</th>
+                        <th className="text-left px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Responsável</th>
+                        <th className="text-center px-3 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-40">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -878,10 +915,16 @@ const Dashboard = () => {
                               className="rounded border-white/20 bg-white/[0.05]"
                             />
                           </td>
-                          <td className="px-4 py-3 text-foreground font-medium truncate">{user.name}</td>
-                          <td className="px-4 py-3 text-muted-foreground truncate">{user.email}</td>
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{user.phone}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
+                          <td className="px-2 py-3 text-muted-foreground text-xs">{index + 1}</td>
+                          <td className="px-3 py-3 text-foreground font-medium truncate">{user.name}</td>
+                          <td className="px-3 py-3 text-muted-foreground truncate">{user.email}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.phone}</td>
+                          <td className="px-3 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.pix_key_type || '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs truncate">{user.pix_key || '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs">{user.user_type || '—'}</td>
+                          <td className="px-3 py-3 text-muted-foreground text-xs truncate">{user.responsible || '—'}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-center gap-1.5">
                               <button
@@ -902,6 +945,7 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </GlassCard>
               )}
               <p className="text-xs text-muted-foreground">{filteredUsers.length} inscrito(s)</p>

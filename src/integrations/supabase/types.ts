@@ -298,8 +298,12 @@ export type Database = {
           name: string
           owner_id: string | null
           phone: string
+          pix_key: string | null
+          pix_key_type: string | null
+          responsible: string | null
           spins_available: number
           updated_at: string | null
+          user_type: string | null
         }
         Insert: {
           account_id: string
@@ -311,8 +315,12 @@ export type Database = {
           name: string
           owner_id?: string | null
           phone?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          responsible?: string | null
           spins_available?: number
           updated_at?: string | null
+          user_type?: string | null
         }
         Update: {
           account_id?: string
@@ -324,8 +332,12 @@ export type Database = {
           name?: string
           owner_id?: string | null
           phone?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          responsible?: string | null
           spins_available?: number
           updated_at?: string | null
+          user_type?: string | null
         }
         Relationships: []
       }
