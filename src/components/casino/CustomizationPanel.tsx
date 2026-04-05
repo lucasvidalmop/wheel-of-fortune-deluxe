@@ -420,7 +420,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
     <div
       ref={panelElRef}
       className={floating
-        ? 'rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-shadow'
+        ? 'relative rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-3 shadow-2xl space-y-2 transition-shadow'
         : 'space-y-2 rounded-xl border border-border/40 bg-muted/20 p-3'
       }
       style={floatingStyle}
