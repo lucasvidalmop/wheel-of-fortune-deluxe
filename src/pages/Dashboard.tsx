@@ -120,6 +120,12 @@ const Dashboard = () => {
   const [batchGrantMode, setBatchGrantMode] = useState<'random' | 'fixed'>('random');
   const [batchGrantSegment, setBatchGrantSegment] = useState<number>(0);
   const [batchGrantSpinCount, setBatchGrantSpinCount] = useState<number>(1);
+  const [spinWhatsappEnabled, setSpinWhatsappEnabled] = useState(false);
+  const [spinWhatsappTemplate, setSpinWhatsappTemplate] = useState('welcome');
+  const [spinWhatsappCustomMsg, setSpinWhatsappCustomMsg] = useState('');
+  const [batchWhatsappEnabled, setBatchWhatsappEnabled] = useState(false);
+  const [batchWhatsappTemplate, setBatchWhatsappTemplate] = useState('welcome');
+  const [batchWhatsappCustomMsg, setBatchWhatsappCustomMsg] = useState('');
   const [savingUser, setSavingUser] = useState(false);
 
   useEffect(() => {
