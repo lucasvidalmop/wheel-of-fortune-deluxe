@@ -214,7 +214,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
           style={{
             transform: `rotate(${rotation}deg)`,
             transformOrigin: `${cx}px ${cy}px`,
-            transition: isSpinning ? 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
+            transition: isSpinning ? `transform ${spinDuration}s cubic-bezier(0.17, 0.67, 0.12, 0.99)` : 'none',
           }}
         >
           <circle cx={cx} cy={cy} r={outerR - 2} fill="#111" />
