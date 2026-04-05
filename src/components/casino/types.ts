@@ -150,6 +150,9 @@ export interface WheelConfig {
   postLoginDialogBodyBold?: boolean;
   postLoginDialogBodyItalic?: boolean;
   postLoginDialogTextAlign?: 'left' | 'center' | 'right';
+  // Sound & center button
+  spinSoundEnabled?: boolean;
+  centerButtonSpinEnabled?: boolean;
 }
 
 export const defaultSegments: WheelSegment[] = [
