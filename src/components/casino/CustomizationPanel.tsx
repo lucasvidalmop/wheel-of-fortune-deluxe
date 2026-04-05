@@ -265,6 +265,8 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
             <RangeInput label="Tamanho do valor" value={config.valueFontSize ?? 22} min={8} max={40} onChange={v => updateGlobal('valueFontSize', v)} />
             <RangeInput label="Tamanho do título" value={config.titleFontSize ?? 10} min={6} max={30} onChange={v => updateGlobal('titleFontSize', v)} />
             <ToggleSwitch label="Ocultar texto dos segmentos" checked={!!config.hideSegmentText} onChange={v => updateGlobal('hideSegmentText', v)} />
+            <ToggleSwitch label="Ocultar título dos segmentos" checked={!!config.hideSegmentTitle} onChange={v => updateGlobal('hideSegmentTitle', v)} />
+            <ToggleSwitch label="Ocultar valor dos segmentos" checked={!!config.hideSegmentValue} onChange={v => updateGlobal('hideSegmentValue', v)} />
           </div>
         </div>
       </div>

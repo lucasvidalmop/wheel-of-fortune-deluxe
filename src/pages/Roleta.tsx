@@ -161,15 +161,22 @@ const Roleta = () => {
           ctx.textAlign = 'center';
 
           // Value (reward number)
-          ctx.fillStyle = seg.textColor;
-          ctx.font = `900 ${vSize}px 'Orbitron', Arial, sans-serif`;
-          ctx.shadowColor = 'rgba(0,0,0,0.9)';
-          ctx.shadowBlur = 4;
-          ctx.fillText(seg.reward, 0, -tSize * 0.5);
+          if (!config.hideSegmentValue) {
+            ctx.fillStyle = seg.textColor;
+            ctx.font = `900 ${vSize}px 'Orbitron', Arial, sans-serif`;
+            ctx.shadowColor = 'rgba(0,0,0,0.9)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(seg.reward, 0, config.hideSegmentTitle ? 0 : -tSize * 0.5);
+          }
 
           // Title
-          ctx.font = `700 ${tSize}px 'Orbitron', Arial, sans-serif`;
-          ctx.fillText(seg.title, 0, vSize * 0.5);
+          if (!config.hideSegmentTitle) {
+            ctx.fillStyle = seg.textColor;
+            ctx.font = `700 ${tSize}px 'Orbitron', Arial, sans-serif`;
+            ctx.shadowColor = 'rgba(0,0,0,0.9)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(seg.title, 0, config.hideSegmentValue ? 0 : vSize * 0.5);
+          }
 
           ctx.restore();
         }

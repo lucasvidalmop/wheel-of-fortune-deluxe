@@ -47,6 +47,8 @@ export interface WheelConfig {
   backgroundImageScale?: number;
   fontSizeScale: number;
   hideSegmentText: boolean;
+  hideSegmentTitle?: boolean;
+  hideSegmentValue?: boolean;
   dividerWidth: number;
   ledSize: number;
   titleFontSize: number;
