@@ -379,13 +379,19 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
               className="text-xl font-bold font-display mb-3"
               style={{ color: config.resultTextColor }}
             >
-              {config.segments[winnerIndex].title}
+              🎉 {config.segments[winnerIndex].reward}
             </h3>
+            <p
+              className="text-lg font-bold mb-1"
+              style={{ color: config.resultTextColor }}
+            >
+              {config.segments[winnerIndex].title}
+            </p>
             <p
               className="text-sm mb-4"
               style={{ color: config.resultTextColor, opacity: 0.85 }}
             >
-              Parabéns! Você ganhou {config.segments[winnerIndex].title}!
+              Parabéns! Você ganhou {config.segments[winnerIndex].reward} — {config.segments[winnerIndex].title}!
             </p>
             <button
               data-share-btn
