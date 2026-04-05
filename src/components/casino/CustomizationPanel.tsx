@@ -1112,7 +1112,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
 
 
     </div>
-    <SegmentPreview config={config} floating />
+    {createPortal(<SegmentPreview config={config} floating />, document.body)}
     </>
   );
 };
