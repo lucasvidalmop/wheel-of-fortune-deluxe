@@ -1922,9 +1922,10 @@ const Dashboard = () => {
                               body: { action: 'create', evolutionApiUrl, evolutionApiKey, evolutionInstance }
                             });
                             if (error) { toast.error('Erro ao criar instância'); return; }
-                            if (data?.error) { toast.error(data.error); return; }
+                            if (!data?.ok) { const msg = data?.data?.response?.message || data?.data?.message || 'Erro ao criar instância'; toast.error(Array.isArray(msg) ? msg.join(', ') : msg); return; }
+                            const d = data.data;
                             toast.success('Instância criada com sucesso!');
-                            if (data?.qrcode?.base64) { setInstanceQrCode(data.qrcode.base64); setInstanceStatus('connecting'); }
+                            if (d?.qrcode?.base64) { setInstanceQrCode(d.qrcode.base64); setInstanceStatus('connecting'); }
                             else { setInstanceStatus('close'); }
                           } catch (err: any) { toast.error(err.message || 'Erro de conexão'); }
                           finally { setCreatingInstance(false); }
