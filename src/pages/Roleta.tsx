@@ -276,7 +276,7 @@ const Roleta = () => {
         body: {
           session_id: sessionId,
           slug,
-          owner_id: data.user_id,
+          owner_id: row.user_id,
           referrer: document.referrer || null,
           page_url: window.location.href,
         },
