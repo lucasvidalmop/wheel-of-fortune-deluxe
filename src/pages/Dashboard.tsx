@@ -319,6 +319,7 @@ const Dashboard = () => {
     setGrantSpinUser(user);
     setGrantSpinMode('random');
     setGrantSpinSegment(0);
+    setGrantSpinCount(1);
   };
 
   const confirmGrantSpin = async () => {
