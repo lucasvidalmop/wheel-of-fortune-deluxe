@@ -400,9 +400,9 @@ const Dashboard = () => {
   };
 
   const handleExportCSV = () => {
-    const header = 'Nome,E-mail,Celular,ID da Conta,Data\n';
-    const rows = filteredUsers.map(u =>
-      `"${u.name}","${u.email}","${u.phone || ''}","${u.account_id}","${u.created_at || ''}"`
+    const header = '#,Nome,E-mail,Celular,ID da Conta,Tipo Chave PIX,Chave PIX,Data de Inscrição,Tipo,Responsável\n';
+    const rows = filteredUsers.map((u, i) =>
+      `${i + 1},"${u.name}","${u.email}","${u.phone || ''}","${u.account_id}","${u.pix_key_type || ''}","${u.pix_key || ''}","${u.created_at || ''}","${u.user_type || ''}","${u.responsible || ''}"`
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
