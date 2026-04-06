@@ -182,6 +182,13 @@ export interface WheelConfig {
   postLoginDialogBodyBold?: boolean;
   postLoginDialogBodyItalic?: boolean;
   postLoginDialogTextAlign?: 'left' | 'center' | 'right';
+  // Agree button
+  postLoginDialogAgreeEnabled?: boolean;
+  postLoginDialogAgreeText?: string;
+  postLoginDialogAgreeBgColor?: string;
+  postLoginDialogAgreeTextColor?: string;
+  postLoginDialogAgreeFontSize?: number;
+  postLoginDialogAgreeBorderRadius?: number;
   // Dialog visual extras
   postLoginDialogBorderRadius?: number;
   postLoginDialogBorderWidth?: number;

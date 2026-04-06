@@ -198,6 +198,27 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
             )}
           </CollapsibleSection>
 
+          <CollapsibleSection title="Botão Concordar" icon={<ExternalLink size={14} />}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{config.postLoginDialogAgreeEnabled ? 'Ativo' : 'Inativo'}</span>
+              <button onClick={() => set('postLoginDialogAgreeEnabled', !config.postLoginDialogAgreeEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${config.postLoginDialogAgreeEnabled ? 'bg-primary' : 'bg-white/10'}`}>
+                <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${config.postLoginDialogAgreeEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+            {config.postLoginDialogAgreeEnabled && (
+              <>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Texto do botão</label>
+                  <input type="text" value={config.postLoginDialogAgreeText ?? 'Concordo'} onChange={e => set('postLoginDialogAgreeText', e.target.value)} className="w-full text-xs px-2 py-1.5 rounded border border-white/10 bg-white/5 text-foreground" />
+                </div>
+                <ColorInput label="Cor de Fundo" value={config.postLoginDialogAgreeBgColor ?? '#22c55e'} onChange={v => set('postLoginDialogAgreeBgColor', v)} />
+                <ColorInput label="Cor do Texto" value={config.postLoginDialogAgreeTextColor ?? '#ffffff'} onChange={v => set('postLoginDialogAgreeTextColor', v)} />
+                <SliderInput label="Tamanho da Fonte" value={config.postLoginDialogAgreeFontSize ?? 14} min={10} max={24} onChange={v => set('postLoginDialogAgreeFontSize', v)} />
+                <SliderInput label="Arredondamento" value={config.postLoginDialogAgreeBorderRadius ?? 8} min={0} max={30} onChange={v => set('postLoginDialogAgreeBorderRadius', v)} />
+              </>
+            )}
+          </CollapsibleSection>
+
           {/* Preview */}
           <CollapsibleSection title="Pré-visualização" icon={<Eye size={14} />} defaultOpen>
             <div className="flex justify-end gap-1 mb-2">
@@ -257,6 +278,22 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                     cursor: 'pointer',
                   }}>
                     {config.postLoginDialogBtnText || 'Acessar'}
+                  </button>
+                )}
+                {config.postLoginDialogAgreeEnabled && (
+                  <button style={{
+                    background: config.postLoginDialogAgreeBgColor ?? '#22c55e',
+                    color: config.postLoginDialogAgreeTextColor ?? '#ffffff',
+                    fontSize: (config.postLoginDialogAgreeFontSize ?? 14) * 0.85,
+                    fontWeight: 700,
+                    border: 'none',
+                    borderRadius: config.postLoginDialogAgreeBorderRadius ?? 8,
+                    padding: '8px 20px',
+                    width: '100%',
+                    marginTop: 8,
+                    cursor: 'pointer',
+                  }}>
+                    {config.postLoginDialogAgreeText || 'Concordo'}
                   </button>
                 )}
               </div>
