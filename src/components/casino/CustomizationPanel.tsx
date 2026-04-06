@@ -1154,6 +1154,39 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                         </>
                       )}
                     </div>
+
+                    {/* Second image - Desktop */}
+                    <div className="border-t border-border/20 pt-2 mt-1">
+                      <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">🖥️ Imagem 2 Desktop</h5>
+                      <p className="text-[10px] text-muted-foreground/70 italic">Segunda camada de imagem no segmento</p>
+                      <ImageUpload label="Imagem 2 desktop" value={seg.image2Url} onChange={v => updateSegment(i, 'image2Url', v)} compact />
+                      {seg.image2Url && (
+                        <>
+                          <ImagePositionControls
+                            offsetX={seg.image2OffsetX ?? 0} offsetY={seg.image2OffsetY ?? 0} scale={seg.image2Scale ?? 1}
+                            onChangeX={v => updateSegment(i, 'image2OffsetX', v)} onChangeY={v => updateSegment(i, 'image2OffsetY', v)} onChangeScale={v => updateSegment(i, 'image2Scale', v)}
+                          />
+                          <RangeInput label="Rotação da imagem 2" value={seg.image2Rotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'image2Rotation', v)} suffix="°" />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Second image - Mobile */}
+                    <div className="border-t border-border/20 pt-2 mt-1">
+                      <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">📱 Imagem 2 Mobile</h5>
+                      <p className="text-[10px] text-muted-foreground/70 italic">Opcional: segunda imagem diferente para mobile</p>
+                      <ImageUpload label="Imagem 2 mobile" value={seg.mobileImage2Url} onChange={v => updateSegment(i, 'mobileImage2Url', v)} compact />
+                      {seg.mobileImage2Url && (
+                        <>
+                          <ImagePositionControls
+                            offsetX={seg.mobileImage2OffsetX ?? 0} offsetY={seg.mobileImage2OffsetY ?? 0} scale={seg.mobileImage2Scale ?? 1}
+                            onChangeX={v => updateSegment(i, 'mobileImage2OffsetX', v)} onChangeY={v => updateSegment(i, 'mobileImage2OffsetY', v)} onChangeScale={v => updateSegment(i, 'mobileImage2Scale', v)}
+                          />
+                          <RangeInput label="Rotação da imagem 2" value={seg.mobileImage2Rotation ?? 0} min={0} max={360} step={1} onChange={v => updateSegment(i, 'mobileImage2Rotation', v)} suffix="°" />
+                        </>
+                      )}
+                    </div>
+
                     {config.segments.length > 2 && (
                       <button
                         onClick={() => onChange({ ...config, segments: config.segments.filter((_, idx) => idx !== i) })}

@@ -16,6 +16,17 @@ export interface WheelSegment {
   mobileImageOffsetY?: number;
   mobileImageScale?: number;
   mobileImageRotation?: number;
+  // Second image layer
+  image2Url?: string;
+  image2OffsetX?: number;
+  image2OffsetY?: number;
+  image2Scale?: number;
+  image2Rotation?: number;
+  mobileImage2Url?: string;
+  mobileImage2OffsetX?: number;
+  mobileImage2OffsetY?: number;
+  mobileImage2Scale?: number;
+  mobileImage2Rotation?: number;
   // Per-segment title customization
   titleFontSize?: number;
   titleOffsetX?: number;

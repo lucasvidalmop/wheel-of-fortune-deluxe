@@ -263,6 +263,42 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             );
           })}
 
+          {/* Second segment images */}
+          {config.segments.map((seg, i) => {
+            const img2Url = isMobile && seg.mobileImage2Url ? seg.mobileImage2Url : seg.image2Url;
+            if (!img2Url) return null;
+            const bounds = getSegmentBounds(i);
+            const useMobile = isMobile && seg.mobileImage2Url;
+            const dScale = seg.image2Scale ?? 1;
+            const dOffX = seg.image2OffsetX ?? 0;
+            const dOffY = seg.image2OffsetY ?? 0;
+            const dRot = seg.image2Rotation ?? 0;
+            const scale = useMobile ? (seg.mobileImage2Scale ?? dScale) : dScale;
+            const scaledW = bounds.width * scale;
+            const scaledH = bounds.height * scale;
+            const offX = useMobile ? (seg.mobileImage2OffsetX ?? dOffX) : dOffX;
+            const offY = useMobile ? (seg.mobileImage2OffsetY ?? dOffY) : dOffY;
+            const ox = offX - (scaledW - bounds.width) / 2;
+            const oy = offY - (scaledH - bounds.height) / 2;
+            const rot = useMobile ? (seg.mobileImage2Rotation ?? dRot) : dRot;
+            const imgCx = bounds.x + ox + scaledW / 2;
+            const imgCy = bounds.y + oy + scaledH / 2;
+            return (
+              <g key={`img2-${i}`} clipPath={`url(#seg-clip-${i})`}>
+                <image
+                  href={img2Url}
+                  x={bounds.x + ox}
+                  y={bounds.y + oy}
+                  width={scaledW}
+                  height={scaledH}
+                  preserveAspectRatio="xMidYMid slice"
+                  opacity="0.85"
+                  transform={rot ? `rotate(${rot}, ${imgCx}, ${imgCy})` : undefined}
+                />
+              </g>
+            );
+          })}
+
           {/* Gloss overlay */}
           <circle cx={cx} cy={cy} r={outerR - 18} fill="url(#glossOverlay)" />
 
