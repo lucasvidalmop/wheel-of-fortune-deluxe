@@ -1013,17 +1013,19 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
             return (
               <div
                 key={seg.id}
-                draggable
-                onDragStart={e => handleDragStart(e, i)}
                 onDragOver={e => handleDragOver(e, i)}
                 onDrop={e => handleDrop(e, i)}
-                onDragEnd={handleDragEnd}
                 className={`rounded-lg border overflow-hidden transition-all ${dragIdx === i ? 'opacity-40' : ''} ${overIdx === i && dragIdx !== i ? 'border-primary border-dashed' : ''} ${segOpen ? 'border-primary/30 bg-card shadow-sm' : 'border-border/40 hover:border-border'}`}
               >
                 <div className="flex items-center">
                   <div
+                    draggable
+                    onDragStart={e => handleDragStart(e, i)}
+                    onDragEnd={handleDragEnd}
                     className="flex items-center justify-center px-1.5 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
                     onMouseDown={e => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
+                    title="Arraste para reordenar"
                   >
                     <GripVertical size={14} />
                   </div>
