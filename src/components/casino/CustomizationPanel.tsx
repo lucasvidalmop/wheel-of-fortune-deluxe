@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { WheelConfig } from './types';
 
 import { toast } from 'sonner';
-import { Settings, X, ChevronDown, Upload, Trash2, Plus } from 'lucide-react';
+import { Settings, X, ChevronDown, Upload, Trash2, Plus, GripVertical } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { playSpinSound } from '@/lib/spinSound';
 
