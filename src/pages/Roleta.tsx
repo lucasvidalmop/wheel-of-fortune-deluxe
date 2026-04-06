@@ -723,7 +723,13 @@ const Roleta = () => {
 
       {/* Post-login dialog overlay */}
       {showPostLoginDialog && config.postLoginDialogEnabled && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70" onClick={() => setShowPostLoginDialog(false)}>
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{
+            backgroundColor: `${config.postLoginDialogBackdropColor ?? '#000000'}${Math.round((config.postLoginDialogBackdropOpacity ?? 70) * 2.55).toString(16).padStart(2, '0')}`,
+          }}
+          onClick={() => setShowPostLoginDialog(false)}
+        >
           <div
             onClick={e => e.stopPropagation()}
             style={{
@@ -732,14 +738,21 @@ const Roleta = () => {
                 : (config.postLoginDialogWidth ?? 400),
               maxWidth: '90vw',
               background: config.postLoginDialogBgColor ?? '#140c28',
-              border: `1px solid ${config.postLoginDialogBorderColor ?? '#ffffff14'}`,
-              borderRadius: 12,
-              padding: isMobile ? 20 : 24,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+              border: `${config.postLoginDialogBorderWidth ?? 1}px solid ${config.postLoginDialogBorderColor ?? '#ffffff14'}`,
+              borderRadius: config.postLoginDialogBorderRadius ?? 12,
+              paddingLeft: isMobile ? (config.postLoginDialogMobilePaddingX ?? config.postLoginDialogPaddingX ?? 20) : (config.postLoginDialogPaddingX ?? 24),
+              paddingRight: isMobile ? (config.postLoginDialogMobilePaddingX ?? config.postLoginDialogPaddingX ?? 20) : (config.postLoginDialogPaddingX ?? 24),
+              paddingTop: isMobile ? (config.postLoginDialogMobilePaddingY ?? config.postLoginDialogPaddingY ?? 20) : (config.postLoginDialogPaddingY ?? 24),
+              paddingBottom: isMobile ? (config.postLoginDialogMobilePaddingY ?? config.postLoginDialogPaddingY ?? 20) : (config.postLoginDialogPaddingY ?? 24),
+              boxShadow: `0 ${config.postLoginDialogShadowSize ?? 20}px ${(config.postLoginDialogShadowSize ?? 20) * 3}px ${config.postLoginDialogShadowColor ?? 'rgba(0,0,0,0.6)'}`,
             }}
           >
             <div className="flex justify-end mb-1">
-              <button onClick={() => setShowPostLoginDialog(false)} className="text-white/40 hover:text-white/70 transition text-lg leading-none">✕</button>
+              <button
+                onClick={() => setShowPostLoginDialog(false)}
+                style={{ color: config.postLoginDialogCloseBtnColor ?? 'rgba(255,255,255,0.4)' }}
+                className="hover:opacity-80 transition text-lg leading-none"
+              >✕</button>
             </div>
             <h3 style={{
               color: config.postLoginDialogTitleColor ?? '#ffffff',
