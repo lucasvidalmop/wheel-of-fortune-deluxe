@@ -1011,10 +1011,25 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
           {config.segments.map((seg, i) => {
             const segOpen = openSegments[seg.id] ?? false;
             return (
-              <div key={seg.id} className={`rounded-lg border overflow-hidden transition-all ${segOpen ? 'border-primary/30 bg-card shadow-sm' : 'border-border/40 hover:border-border'}`}>
+              <div
+                key={seg.id}
+                draggable
+                onDragStart={e => handleDragStart(e, i)}
+                onDragOver={e => handleDragOver(e, i)}
+                onDrop={e => handleDrop(e, i)}
+                onDragEnd={handleDragEnd}
+                className={`rounded-lg border overflow-hidden transition-all ${dragIdx === i ? 'opacity-40' : ''} ${overIdx === i && dragIdx !== i ? 'border-primary border-dashed' : ''} ${segOpen ? 'border-primary/30 bg-card shadow-sm' : 'border-border/40 hover:border-border'}`}
+              >
+                <div className="flex items-center">
+                  <div
+                    className="flex items-center justify-center px-1.5 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+                    onMouseDown={e => e.stopPropagation()}
+                  >
+                    <GripVertical size={14} />
+                  </div>
                 <button
                   onClick={() => setOpenSegments(prev => ({ ...prev, [seg.id]: !prev[seg.id] }))}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left"
+                  className="flex-1 flex items-center gap-2.5 px-2 py-2.5 text-left"
                 >
                   <div className="w-4 h-4 rounded-md border border-border/50" style={{ background: seg.color }} />
                   <span className="text-sm font-medium text-foreground flex-1 truncate">{seg.reward || `Seg ${i + 1}`}</span>
