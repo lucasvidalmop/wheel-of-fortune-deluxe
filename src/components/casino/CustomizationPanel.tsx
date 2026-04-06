@@ -831,6 +831,34 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
     onChange({ ...config, segments: segs });
   };
 
+  // Drag-and-drop reorder state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, idx: number) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setOverIdx(idx);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) { setDragIdx(null); setOverIdx(null); return; }
+    const segs = [...config.segments];
+    const [moved] = segs.splice(dragIdx, 1);
+    segs.splice(idx, 0, moved);
+    onChange({ ...config, segments: segs });
+    setDragIdx(null);
+    setOverIdx(null);
+  }, [dragIdx, config, onChange]);
+
+  const handleDragEnd = useCallback(() => { setDragIdx(null); setOverIdx(null); }, []);
+
   return (
     <>
     <div className="w-full space-y-3 relative">
