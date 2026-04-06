@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { WheelConfig } from './types';
 
 import { toast } from 'sonner';
-import { Settings, X, ChevronDown, Upload, Trash2, Plus } from 'lucide-react';
+import { Settings, X, ChevronDown, Upload, Trash2, Plus, GripVertical } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { playSpinSound } from '@/lib/spinSound';
 
@@ -831,6 +831,34 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
     onChange({ ...config, segments: segs });
   };
 
+  // Drag-and-drop reorder state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, idx: number) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setOverIdx(idx);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) { setDragIdx(null); setOverIdx(null); return; }
+    const segs = [...config.segments];
+    const [moved] = segs.splice(dragIdx, 1);
+    segs.splice(idx, 0, moved);
+    onChange({ ...config, segments: segs });
+    setDragIdx(null);
+    setOverIdx(null);
+  }, [dragIdx, config, onChange]);
+
+  const handleDragEnd = useCallback(() => { setDragIdx(null); setOverIdx(null); }, []);
+
   return (
     <>
     <div className="w-full space-y-3 relative">
@@ -983,16 +1011,32 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
           {config.segments.map((seg, i) => {
             const segOpen = openSegments[seg.id] ?? false;
             return (
-              <div key={seg.id} className={`rounded-lg border overflow-hidden transition-all ${segOpen ? 'border-primary/30 bg-card shadow-sm' : 'border-border/40 hover:border-border'}`}>
+              <div
+                key={seg.id}
+                draggable
+                onDragStart={e => handleDragStart(e, i)}
+                onDragOver={e => handleDragOver(e, i)}
+                onDrop={e => handleDrop(e, i)}
+                onDragEnd={handleDragEnd}
+                className={`rounded-lg border overflow-hidden transition-all ${dragIdx === i ? 'opacity-40' : ''} ${overIdx === i && dragIdx !== i ? 'border-primary border-dashed' : ''} ${segOpen ? 'border-primary/30 bg-card shadow-sm' : 'border-border/40 hover:border-border'}`}
+              >
+                <div className="flex items-center">
+                  <div
+                    className="flex items-center justify-center px-1.5 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+                    onMouseDown={e => e.stopPropagation()}
+                  >
+                    <GripVertical size={14} />
+                  </div>
                 <button
                   onClick={() => setOpenSegments(prev => ({ ...prev, [seg.id]: !prev[seg.id] }))}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left"
+                  className="flex-1 flex items-center gap-2.5 px-2 py-2.5 text-left"
                 >
                   <div className="w-4 h-4 rounded-md border border-border/50" style={{ background: seg.color }} />
                   <span className="text-sm font-medium text-foreground flex-1 truncate">{seg.reward || `Seg ${i + 1}`}</span>
                   <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{seg.percentage}%</span>
                   <ChevronDown size={12} className={`text-muted-foreground transition-transform duration-200 ${segOpen ? 'rotate-180' : ''}`} />
                 </button>
+                </div>
                 {segOpen && (
                   <div className="px-3 pb-3 space-y-2.5 border-t border-border/30 pt-2.5">
                     <div className="grid grid-cols-2 gap-2">
