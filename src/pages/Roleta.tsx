@@ -808,6 +808,30 @@ const Roleta = () => {
                 {config.postLoginDialogBtnText || 'Acessar'}
               </a>
             )}
+            {config.postLoginDialogAgreeEnabled && (
+              <button
+                onClick={() => setShowPostLoginDialog(false)}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  marginTop: 12,
+                  textAlign: 'center',
+                  background: config.postLoginDialogAgreeBgColor ?? '#22c55e',
+                  color: config.postLoginDialogAgreeTextColor ?? '#ffffff',
+                  fontSize: config.postLoginDialogAgreeFontSize ?? 14,
+                  fontWeight: 700,
+                  borderRadius: config.postLoginDialogAgreeBorderRadius ?? 8,
+                  padding: '10px 24px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'filter 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
+                onMouseLeave={e => (e.currentTarget.style.filter = 'none')}
+              >
+                {config.postLoginDialogAgreeText || 'Concordo'}
+              </button>
+            )}
           </div>
         </div>
       )}
