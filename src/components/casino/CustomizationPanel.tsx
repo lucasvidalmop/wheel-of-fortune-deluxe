@@ -278,7 +278,7 @@ const ColorSettingsDrawer: React.FC<{ open: boolean; onClose: () => void; config
 /* ── Segment Preview (mini wheel) ── */
 const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({ config, floating }) => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
   const [panelSize, setPanelSize] = useState<{ w: number; h: number }>({ w: 320, h: 0 });
   const [detachedReady, setDetachedReady] = useState(false);
