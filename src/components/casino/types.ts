@@ -182,6 +182,19 @@ export interface WheelConfig {
   postLoginDialogBodyBold?: boolean;
   postLoginDialogBodyItalic?: boolean;
   postLoginDialogTextAlign?: 'left' | 'center' | 'right';
+  // Dialog visual extras
+  postLoginDialogBorderRadius?: number;
+  postLoginDialogBorderWidth?: number;
+  postLoginDialogPaddingX?: number;
+  postLoginDialogPaddingY?: number;
+  postLoginDialogBackdropColor?: string;
+  postLoginDialogBackdropOpacity?: number;
+  postLoginDialogShadowColor?: string;
+  postLoginDialogShadowSize?: number;
+  postLoginDialogCloseBtnColor?: string;
+  // Mobile padding overrides
+  postLoginDialogMobilePaddingX?: number;
+  postLoginDialogMobilePaddingY?: number;
   // Sound & center button
   spinSoundEnabled?: boolean;
   spinSoundMode?: 'default' | 'custom';

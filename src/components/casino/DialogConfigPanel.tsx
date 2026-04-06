@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { WheelConfig } from './types';
-import { Monitor, Smartphone, Eye, Bold, Italic, AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { Monitor, Smartphone, Eye, Bold, Italic, AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronRight, ExternalLink, Palette, Layout, Type } from 'lucide-react';
 
 const FONT_OPTIONS = [
   'Inter', 'Arial', 'Georgia', 'Verdana', 'Trebuchet MS', 'Courier New',
@@ -70,6 +70,15 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
   const btnFontSize = isMobilePreview
     ? (config.postLoginDialogMobileBtnFontSize ?? config.postLoginDialogBtnFontSize ?? 14)
     : (config.postLoginDialogBtnFontSize ?? 14);
+  const padX = isMobilePreview
+    ? (config.postLoginDialogMobilePaddingX ?? config.postLoginDialogPaddingX ?? 20)
+    : (config.postLoginDialogPaddingX ?? 24);
+  const padY = isMobilePreview
+    ? (config.postLoginDialogMobilePaddingY ?? config.postLoginDialogPaddingY ?? 20)
+    : (config.postLoginDialogPaddingY ?? 24);
+
+  const backdropOpacity = config.postLoginDialogBackdropOpacity ?? 70;
+  const backdropHex = `${config.postLoginDialogBackdropColor ?? '#000000'}${Math.round(backdropOpacity * 2.55).toString(16).padStart(2, '0')}`;
 
   return (
     <div className="space-y-4">
@@ -88,7 +97,8 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
 
       {config.postLoginDialogEnabled && (
         <>
-          <CollapsibleSection title="Conteúdo" defaultOpen>
+          {/* Content */}
+          <CollapsibleSection title="Conteúdo" icon={<Type size={14} />} defaultOpen>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Título</label>
               <input type="text" value={config.postLoginDialogTitle ?? ''} onChange={e => set('postLoginDialogTitle', e.target.value)} placeholder="Bem-vindo!" className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm" />
@@ -101,7 +111,7 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Mensagem (use Enter para quebrar linhas)</label>
+              <label className="text-xs text-muted-foreground">Mensagem (Enter para quebrar linhas)</label>
               <textarea value={config.postLoginDialogBody ?? ''} onChange={e => set('postLoginDialogBody', e.target.value)} placeholder="Linha 1&#10;Linha 2&#10;Linha 3" rows={5} className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-sm resize-y" />
               <div className="flex items-center gap-1 mt-1">
                 <select value={config.postLoginDialogBodyFont ?? 'Inter'} onChange={e => set('postLoginDialogBodyFont', e.target.value)} className="flex-1 px-2 py-1 rounded border border-white/[0.08] text-xs" style={{ colorScheme: 'dark' }}>
@@ -123,7 +133,47 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Botão de Link">
+          {/* Visual / Colors */}
+          <CollapsibleSection title="Cores & Visual" icon={<Palette size={14} />}>
+            <ColorInput label="Fundo do Diálogo" value={config.postLoginDialogBgColor ?? '#140c28'} onChange={v => set('postLoginDialogBgColor', v)} />
+            <ColorInput label="Cor do Título" value={config.postLoginDialogTitleColor ?? '#ffffff'} onChange={v => set('postLoginDialogTitleColor', v)} />
+            <ColorInput label="Cor do Texto" value={config.postLoginDialogTextColor ?? '#ffffffcc'} onChange={v => set('postLoginDialogTextColor', v)} />
+            <ColorInput label="Cor da Borda" value={config.postLoginDialogBorderColor ?? '#ffffff14'} onChange={v => set('postLoginDialogBorderColor', v)} />
+            <ColorInput label="Cor do Botão Fechar" value={config.postLoginDialogCloseBtnColor ?? '#ffffff66'} onChange={v => set('postLoginDialogCloseBtnColor', v)} />
+            <SliderInput label="Largura da Borda" value={config.postLoginDialogBorderWidth ?? 1} min={0} max={6} onChange={v => set('postLoginDialogBorderWidth', v)} />
+            <SliderInput label="Arredondamento" value={config.postLoginDialogBorderRadius ?? 12} min={0} max={32} onChange={v => set('postLoginDialogBorderRadius', v)} />
+            <div className="border-t border-white/[0.06] pt-2 mt-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Backdrop</span>
+            </div>
+            <ColorInput label="Cor do Fundo" value={config.postLoginDialogBackdropColor ?? '#000000'} onChange={v => set('postLoginDialogBackdropColor', v)} />
+            <SliderInput label="Opacidade" value={config.postLoginDialogBackdropOpacity ?? 70} min={0} max={100} unit="%" onChange={v => set('postLoginDialogBackdropOpacity', v)} />
+            <div className="border-t border-white/[0.06] pt-2 mt-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Sombra</span>
+            </div>
+            <ColorInput label="Cor da Sombra" value={config.postLoginDialogShadowColor ?? 'rgba(0,0,0,0.6)'} onChange={v => set('postLoginDialogShadowColor', v)} />
+            <SliderInput label="Tamanho da Sombra" value={config.postLoginDialogShadowSize ?? 20} min={0} max={60} onChange={v => set('postLoginDialogShadowSize', v)} />
+          </CollapsibleSection>
+
+          {/* Layout / Sizing */}
+          <CollapsibleSection title="Layout Desktop" icon={<Monitor size={14} />}>
+            <SliderInput label="Largura" value={config.postLoginDialogWidth ?? 400} min={280} max={600} onChange={v => set('postLoginDialogWidth', v)} />
+            <SliderInput label="Tamanho do Título" value={config.postLoginDialogTitleSize ?? 20} min={12} max={36} onChange={v => set('postLoginDialogTitleSize', v)} />
+            <SliderInput label="Tamanho do Texto" value={config.postLoginDialogBodySize ?? 14} min={10} max={24} onChange={v => set('postLoginDialogBodySize', v)} />
+            <SliderInput label="Padding Horizontal" value={config.postLoginDialogPaddingX ?? 24} min={8} max={60} onChange={v => set('postLoginDialogPaddingX', v)} />
+            <SliderInput label="Padding Vertical" value={config.postLoginDialogPaddingY ?? 24} min={8} max={60} onChange={v => set('postLoginDialogPaddingY', v)} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Layout Mobile" icon={<Smartphone size={14} />}>
+            <SliderInput label="Largura" value={config.postLoginDialogMobileWidth ?? config.postLoginDialogWidth ?? 400} min={250} max={400} onChange={v => set('postLoginDialogMobileWidth', v)} />
+            <SliderInput label="Tamanho do Título" value={config.postLoginDialogMobileTitleSize ?? config.postLoginDialogTitleSize ?? 20} min={12} max={30} onChange={v => set('postLoginDialogMobileTitleSize', v)} />
+            <SliderInput label="Tamanho do Texto" value={config.postLoginDialogMobileBodySize ?? config.postLoginDialogBodySize ?? 14} min={10} max={20} onChange={v => set('postLoginDialogMobileBodySize', v)} />
+            <SliderInput label="Tamanho da Fonte do Botão" value={config.postLoginDialogMobileBtnFontSize ?? config.postLoginDialogBtnFontSize ?? 14} min={10} max={22} onChange={v => set('postLoginDialogMobileBtnFontSize', v)} />
+            <SliderInput label="Padding Horizontal" value={config.postLoginDialogMobilePaddingX ?? config.postLoginDialogPaddingX ?? 20} min={8} max={40} onChange={v => set('postLoginDialogMobilePaddingX', v)} />
+            <SliderInput label="Padding Vertical" value={config.postLoginDialogMobilePaddingY ?? config.postLoginDialogPaddingY ?? 20} min={8} max={40} onChange={v => set('postLoginDialogMobilePaddingY', v)} />
+          </CollapsibleSection>
+
+          {/* Button */}
+          <CollapsibleSection title="Botão de Link" icon={<ExternalLink size={14} />}>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">{config.postLoginDialogBtnEnabled !== false ? 'Ativo' : 'Inativo'}</span>
               <button onClick={() => set('postLoginDialogBtnEnabled', !(config.postLoginDialogBtnEnabled !== false))} className={`relative w-11 h-6 rounded-full transition-colors ${config.postLoginDialogBtnEnabled !== false ? 'bg-primary' : 'bg-white/10'}`}>
@@ -142,46 +192,33 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 </div>
                 <ColorInput label="Cor do Botão" value={config.postLoginDialogBtnBgColor ?? '#0ABACC'} onChange={v => set('postLoginDialogBtnBgColor', v)} />
                 <ColorInput label="Cor do Texto do Botão" value={config.postLoginDialogBtnTextColor ?? '#000000'} onChange={v => set('postLoginDialogBtnTextColor', v)} />
-                <SliderInput label="Tamanho da Fonte do Botão" value={config.postLoginDialogBtnFontSize ?? 14} min={10} max={24} onChange={v => set('postLoginDialogBtnFontSize', v)} />
-                <SliderInput label="Borda do Botão" value={config.postLoginDialogBtnBorderRadius ?? 8} min={0} max={30} onChange={v => set('postLoginDialogBtnBorderRadius', v)} />
+                <SliderInput label="Tamanho da Fonte" value={config.postLoginDialogBtnFontSize ?? 14} min={10} max={24} onChange={v => set('postLoginDialogBtnFontSize', v)} />
+                <SliderInput label="Arredondamento do Botão" value={config.postLoginDialogBtnBorderRadius ?? 8} min={0} max={30} onChange={v => set('postLoginDialogBtnBorderRadius', v)} />
               </>
             )}
           </CollapsibleSection>
 
-          <CollapsibleSection title="Desktop" icon={<Monitor size={14} />}>
-            <ColorInput label="Fundo" value={config.postLoginDialogBgColor ?? '#140c28'} onChange={v => set('postLoginDialogBgColor', v)} />
-            <ColorInput label="Cor do Título" value={config.postLoginDialogTitleColor ?? '#ffffff'} onChange={v => set('postLoginDialogTitleColor', v)} />
-            <ColorInput label="Cor do Texto" value={config.postLoginDialogTextColor ?? '#ffffffcc'} onChange={v => set('postLoginDialogTextColor', v)} />
-            <ColorInput label="Cor da Borda" value={config.postLoginDialogBorderColor ?? '#ffffff14'} onChange={v => set('postLoginDialogBorderColor', v)} />
-            <SliderInput label="Largura" value={config.postLoginDialogWidth ?? 400} min={280} max={600} onChange={v => set('postLoginDialogWidth', v)} />
-            <SliderInput label="Tamanho do Título" value={config.postLoginDialogTitleSize ?? 20} min={12} max={36} onChange={v => set('postLoginDialogTitleSize', v)} />
-            <SliderInput label="Tamanho do Texto" value={config.postLoginDialogBodySize ?? 14} min={10} max={24} onChange={v => set('postLoginDialogBodySize', v)} />
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Mobile" icon={<Smartphone size={14} />}>
-            <SliderInput label="Largura" value={config.postLoginDialogMobileWidth ?? config.postLoginDialogWidth ?? 400} min={250} max={400} onChange={v => set('postLoginDialogMobileWidth', v)} />
-            <SliderInput label="Tamanho do Título" value={config.postLoginDialogMobileTitleSize ?? config.postLoginDialogTitleSize ?? 20} min={12} max={30} onChange={v => set('postLoginDialogMobileTitleSize', v)} />
-            <SliderInput label="Tamanho do Texto" value={config.postLoginDialogMobileBodySize ?? config.postLoginDialogBodySize ?? 14} min={10} max={20} onChange={v => set('postLoginDialogMobileBodySize', v)} />
-            <SliderInput label="Tamanho da Fonte do Botão" value={config.postLoginDialogMobileBtnFontSize ?? config.postLoginDialogBtnFontSize ?? 14} min={10} max={22} onChange={v => set('postLoginDialogMobileBtnFontSize', v)} />
-          </CollapsibleSection>
-
+          {/* Preview */}
           <CollapsibleSection title="Pré-visualização" icon={<Eye size={14} />} defaultOpen>
             <div className="flex justify-end gap-1 mb-2">
               <button onClick={() => setPreviewMode('desktop')} className={`p-1.5 rounded-md text-xs ${previewMode === 'desktop' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Monitor size={14} /></button>
               <button onClick={() => setPreviewMode('mobile')} className={`p-1.5 rounded-md text-xs ${previewMode === 'mobile' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}><Smartphone size={14} /></button>
             </div>
-            <div className="flex items-center justify-center py-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 12 }}>
+            <div className="flex items-center justify-center py-4" style={{ background: backdropHex, borderRadius: 12 }}>
               <div style={{
                 width: Math.min(dialogWidth, isMobilePreview ? 300 : 380),
                 background: config.postLoginDialogBgColor ?? '#140c28',
-                border: `1px solid ${config.postLoginDialogBorderColor ?? '#ffffff14'}`,
-                borderRadius: 12,
-                padding: isMobilePreview ? 16 : 20,
-                boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                border: `${config.postLoginDialogBorderWidth ?? 1}px solid ${config.postLoginDialogBorderColor ?? '#ffffff14'}`,
+                borderRadius: config.postLoginDialogBorderRadius ?? 12,
+                paddingLeft: padX * 0.85,
+                paddingRight: padX * 0.85,
+                paddingTop: padY * 0.85,
+                paddingBottom: padY * 0.85,
+                boxShadow: `0 ${(config.postLoginDialogShadowSize ?? 20) * 0.5}px ${(config.postLoginDialogShadowSize ?? 20) * 1.5}px ${config.postLoginDialogShadowColor ?? 'rgba(0,0,0,0.6)'}`,
                 transform: `scale(${isMobilePreview ? 0.85 : 0.9})`,
               }}>
                 <div className="flex justify-end mb-1">
-                  <span className="text-white/40 text-xs cursor-default">✕</span>
+                  <span style={{ color: config.postLoginDialogCloseBtnColor ?? 'rgba(255,255,255,0.4)' }} className="text-xs cursor-default">✕</span>
                 </div>
                 <h3 style={{
                   color: config.postLoginDialogTitleColor ?? '#ffffff',
@@ -228,7 +265,7 @@ const DialogConfigPanel: React.FC<Props> = ({ config, onChange }) => {
         </>
       )}
 
-      {/* Auto-redirect section - independent from dialog */}
+      {/* Auto-redirect section */}
       <div className="border-t border-white/[0.06] pt-4 mt-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
