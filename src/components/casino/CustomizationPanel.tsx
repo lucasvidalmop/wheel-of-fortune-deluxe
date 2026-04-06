@@ -1036,6 +1036,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                   <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{seg.percentage}%</span>
                   <ChevronDown size={12} className={`text-muted-foreground transition-transform duration-200 ${segOpen ? 'rotate-180' : ''}`} />
                 </button>
+                </div>
                 {segOpen && (
                   <div className="px-3 pb-3 space-y-2.5 border-t border-border/30 pt-2.5">
                     <div className="grid grid-cols-2 gap-2">
