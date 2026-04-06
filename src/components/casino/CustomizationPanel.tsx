@@ -149,12 +149,12 @@ type RangeInputProps = {
 };
 
 const RangeInput: React.FC<RangeInputProps> = ({ label, value, min, max, step = 1, onChange, suffix = '' }) => (
-  <div className="space-y-1">
+  <div className="space-y-1" draggable={false} onDragStart={e => { e.preventDefault(); e.stopPropagation(); }} onMouseDown={e => e.stopPropagation()}>
     <div className="flex items-center justify-between">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="rounded bg-muted/50 px-1.5 py-0.5 text-[10px] font-mono text-foreground">{step < 1 ? value.toFixed(1) : value}{suffix}</span>
     </div>
-    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="h-1 w-full rounded-full accent-primary" />
+    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="h-1 w-full rounded-full accent-primary" draggable={false} onDragStart={e => { e.preventDefault(); e.stopPropagation(); }} />
   </div>
 );
 
