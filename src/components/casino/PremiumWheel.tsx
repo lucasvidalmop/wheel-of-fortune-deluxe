@@ -233,14 +233,18 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
             if (!imgUrl) return null;
             const bounds = getSegmentBounds(i);
             const useMobile = isMobile && seg.mobileImageUrl;
-            const scale = useMobile ? (seg.mobileImageScale ?? 1) : (seg.imageScale ?? 1);
+            const desktopScale = seg.imageScale ?? 1;
+            const desktopOffX = seg.imageOffsetX ?? 0;
+            const desktopOffY = seg.imageOffsetY ?? 0;
+            const desktopRot = seg.imageRotation ?? 0;
+            const scale = useMobile ? (seg.mobileImageScale ?? desktopScale) : desktopScale;
             const scaledW = bounds.width * scale;
             const scaledH = bounds.height * scale;
-            const offX = useMobile ? (seg.mobileImageOffsetX ?? 0) : (seg.imageOffsetX ?? 0);
-            const offY = useMobile ? (seg.mobileImageOffsetY ?? 0) : (seg.imageOffsetY ?? 0);
+            const offX = useMobile ? (seg.mobileImageOffsetX ?? desktopOffX) : desktopOffX;
+            const offY = useMobile ? (seg.mobileImageOffsetY ?? desktopOffY) : desktopOffY;
             const ox = offX - (scaledW - bounds.width) / 2;
             const oy = offY - (scaledH - bounds.height) / 2;
-            const rot = useMobile ? (seg.mobileImageRotation ?? 0) : (seg.imageRotation ?? 0);
+            const rot = useMobile ? (seg.mobileImageRotation ?? desktopRot) : desktopRot;
             const imgCx = bounds.x + ox + scaledW / 2;
             const imgCy = bounds.y + oy + scaledH / 2;
             return (
