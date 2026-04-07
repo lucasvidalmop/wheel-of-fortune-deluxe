@@ -260,6 +260,39 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_message_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          owner_id: string
+          recipient_name: string
+          recipient_phone: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          owner_id: string
+          recipient_name?: string
+          recipient_phone: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          owner_id?: string
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
       wheel_configs: {
         Row: {
           config: Json
