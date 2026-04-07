@@ -299,7 +299,32 @@ const Dashboard = () => {
   const handleSaveConfig = async () => {
     setSavingConfig(true);
     try {
-      // Read current DB config first to merge (preserve dashboardTheme etc.)
+      const { segments, ...rest } = wheelConfig;
+      const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
+        ...s,
+        imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
+      }));
+
+      // Build config from local state only (source of truth)
+      const cleanConfig: Record<string, any> = {
+        ...rest,
+        segments: cleanSegments,
+        dashboardTheme: dashboardTheme || undefined,
+      };
+
+      // Strip data: URLs for image fields
+      ['authLogoUrl', 'authBgImageUrl', 'authBgImageMobileUrl', 'headerImageUrl', 'backgroundImageUrl', 'centerImageUrl'].forEach(key => {
+        if (typeof cleanConfig[key] === 'string' && cleanConfig[key].startsWith('data:')) {
+          cleanConfig[key] = '';
+        }
+      });
+
+      // Remove undefined keys so they don't erase DB values
+      Object.keys(cleanConfig).forEach(k => {
+        if (cleanConfig[k] === undefined) delete cleanConfig[k];
+      });
+
+      // Read current DB config to preserve any keys not in local state (e.g. dashboardTheme set by admin)
       const { data: dbRow } = await (supabase as any)
         .from('wheel_configs')
         .select('config')
@@ -307,30 +332,27 @@ const Dashboard = () => {
         .maybeSingle();
       const dbConfig = dbRow?.config || {};
 
-      const { segments, ...rest } = wheelConfig;
-      const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
-        ...s,
-        imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
-      }));
-      const cleanConfig = {
-        ...dbConfig,
-        ...rest,
-        segments: cleanSegments,
-        authLogoUrl: typeof rest.authLogoUrl === 'string' && rest.authLogoUrl.startsWith('data:') ? '' : rest.authLogoUrl,
-        authBgImageUrl: typeof rest.authBgImageUrl === 'string' && rest.authBgImageUrl.startsWith('data:') ? '' : rest.authBgImageUrl,
-        authBgImageMobileUrl: typeof rest.authBgImageMobileUrl === 'string' && rest.authBgImageMobileUrl.startsWith('data:') ? '' : rest.authBgImageMobileUrl,
-        dashboardTheme: dashboardTheme || dbConfig.dashboardTheme || undefined,
-      };
-      const { error } = await (supabase as any)
+      // Merge: DB values as base, local changes on top
+      const mergedConfig = { ...dbConfig, ...cleanConfig };
+
+      const { data: updated, error } = await (supabase as any)
         .from('wheel_configs')
-        .update({ config: cleanConfig, updated_at: new Date().toISOString() })
-        .eq('user_id', session.user.id);
+        .update({ config: mergedConfig, updated_at: new Date().toISOString() })
+        .eq('user_id', session.user.id)
+        .select('config')
+        .maybeSingle();
+
       if (error) {
         toast.error('Erro ao salvar: ' + error.message);
+      } else if (!updated) {
+        toast.error('Erro: configuração não foi atualizada. Recarregue a página.');
       } else {
         toast.success('Configuração salva!');
-        // Sync local state with what was saved
-        setWheelConfig({ ...defaultConfig, ...cleanConfig });
+        // Sync local state with what was actually saved in DB
+        setWheelConfig({ ...defaultConfig, ...updated.config });
+        if (updated.config?.dashboardTheme) {
+          setDashboardTheme({ ...defaultTheme, ...updated.config.dashboardTheme });
+        }
       }
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + (err?.message || 'desconhecido'));
