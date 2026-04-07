@@ -82,7 +82,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
         onSpinEnd?.(winnerIdx);
       }, durationMs);
     });
-  }, [isSpinning, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments, config.spinSoundEnabled, config.spinSoundMode, config.customSpinSoundUrl]);
+  }, [isSpinning, disabled, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments, config.spinSoundEnabled, config.spinSoundMode, config.customSpinSoundUrl]);
 
   const getSegmentPath = (index: number, r: number, ir: number) => {
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
