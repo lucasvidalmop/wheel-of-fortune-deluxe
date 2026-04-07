@@ -356,13 +356,16 @@ const Admin = () => {
   };
 
   const handleCloneConfig = async () => {
-    if (!cloneSource || !cloneTarget) { toast.error('Selecione origem e destino'); return; }
-    if (cloneSource === cloneTarget) { toast.error('Origem e destino devem ser diferentes'); return; }
+    if (!cloneSource || !cloneTarget) { toast.error('Informe o código de destino'); return; }
     setCloning(true);
     try {
       const source = dashboardConfigs.find((c: any) => c.id === cloneSource);
       if (!source) { toast.error('Configuração de origem não encontrada'); setCloning(false); return; }
-      const { error } = await (supabase as any).from('wheel_configs').update({ config: source.config }).eq('id', cloneTarget);
+      // Find target by clone_code
+      const target = dashboardConfigs.find((c: any) => c.clone_code === cloneTarget.toUpperCase().trim());
+      if (!target) { toast.error('Código de destino não encontrado'); setCloning(false); return; }
+      if (target.id === cloneSource) { toast.error('Origem e destino devem ser diferentes'); setCloning(false); return; }
+      const { error } = await (supabase as any).from('wheel_configs').update({ config: source.config }).eq('id', target.id);
       if (error) { toast.error('Erro ao clonar: ' + error.message); } else {
         toast.success('Dashboard clonado com sucesso!');
         setCloneSource(null);
