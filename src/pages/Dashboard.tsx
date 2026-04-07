@@ -298,25 +298,43 @@ const Dashboard = () => {
 
   const handleSaveConfig = async () => {
     setSavingConfig(true);
-    const { segments, ...rest } = wheelConfig;
-    const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
-      ...s,
-      imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
-    }));
-    const cleanConfig = {
-      ...rest,
-      segments: cleanSegments,
-      authLogoUrl: typeof rest.authLogoUrl === 'string' && rest.authLogoUrl.startsWith('data:') ? '' : rest.authLogoUrl,
-      authBgImageUrl: typeof rest.authBgImageUrl === 'string' && rest.authBgImageUrl.startsWith('data:') ? '' : rest.authBgImageUrl,
-      authBgImageMobileUrl: typeof rest.authBgImageMobileUrl === 'string' && rest.authBgImageMobileUrl.startsWith('data:') ? '' : rest.authBgImageMobileUrl,
-      ...(dashboardTheme ? { dashboardTheme } : {}),
-    };
-    const { error } = await (supabase as any)
-      .from('wheel_configs')
-      .update({ config: cleanConfig, updated_at: new Date().toISOString() })
-      .eq('user_id', session.user.id);
-    if (error) toast.error('Erro ao salvar: ' + error.message);
-    else toast.success('Configuração salva!');
+    try {
+      // Read current DB config first to merge (preserve dashboardTheme etc.)
+      const { data: dbRow } = await (supabase as any)
+        .from('wheel_configs')
+        .select('config')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      const dbConfig = dbRow?.config || {};
+
+      const { segments, ...rest } = wheelConfig;
+      const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
+        ...s,
+        imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
+      }));
+      const cleanConfig = {
+        ...dbConfig,
+        ...rest,
+        segments: cleanSegments,
+        authLogoUrl: typeof rest.authLogoUrl === 'string' && rest.authLogoUrl.startsWith('data:') ? '' : rest.authLogoUrl,
+        authBgImageUrl: typeof rest.authBgImageUrl === 'string' && rest.authBgImageUrl.startsWith('data:') ? '' : rest.authBgImageUrl,
+        authBgImageMobileUrl: typeof rest.authBgImageMobileUrl === 'string' && rest.authBgImageMobileUrl.startsWith('data:') ? '' : rest.authBgImageMobileUrl,
+        dashboardTheme: dashboardTheme || dbConfig.dashboardTheme || undefined,
+      };
+      const { error } = await (supabase as any)
+        .from('wheel_configs')
+        .update({ config: cleanConfig, updated_at: new Date().toISOString() })
+        .eq('user_id', session.user.id);
+      if (error) {
+        toast.error('Erro ao salvar: ' + error.message);
+      } else {
+        toast.success('Configuração salva!');
+        // Sync local state with what was saved
+        setWheelConfig({ ...defaultConfig, ...cleanConfig });
+      }
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err?.message || 'desconhecido'));
+    }
     setSavingConfig(false);
   };
 
