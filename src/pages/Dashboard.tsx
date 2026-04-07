@@ -88,6 +88,7 @@ const Dashboard = () => {
   // WhatsApp state
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [whatsappSending, setWhatsappSending] = useState(false);
+  const [whatsappDelaySeconds, setWhatsappDelaySeconds] = useState(2);
   const [whatsappTarget, setWhatsappTarget] = useState<'all' | 'selected'>('all');
   const [selectedWhatsappPhones, setSelectedWhatsappPhones] = useState<string[]>([]);
   const [whatsappSearch, setWhatsappSearch] = useState('');
@@ -2398,6 +2399,18 @@ const Dashboard = () => {
               <GlassCard className="p-5 space-y-3">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><MessageCircle size={16} className="text-green-400" /> Mensagem</h3>
                 <textarea value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)} rows={4} placeholder="Digite a mensagem..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                <div className="flex items-center gap-3 pt-1">
+                  <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={whatsappDelaySeconds}
+                    onChange={e => setWhatsappDelaySeconds(Math.max(1, Math.min(60, Number(e.target.value) || 1)))}
+                    className="w-20 px-2 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-center focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <span className="text-xs text-muted-foreground">segundos</span>
+                </div>
               </GlassCard>
 
               <button
@@ -2437,7 +2450,7 @@ const Dashboard = () => {
                     }
                     // Delay between sends to avoid rate limiting/timeouts
                     if (i < phones.length - 1) {
-                      await new Promise(resolve => setTimeout(resolve, 1500));
+                      await new Promise(resolve => setTimeout(resolve, whatsappDelaySeconds * 1000));
                     }
                   }
                   setWhatsappSending(false);
