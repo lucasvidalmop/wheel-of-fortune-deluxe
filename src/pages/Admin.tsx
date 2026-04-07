@@ -58,6 +58,14 @@ const Admin = () => {
   const [editAdminForm, setEditAdminForm] = useState({ email: '', password: '', name: '' });
   const [editAdminSaving, setEditAdminSaving] = useState(false);
 
+  // Dashboard cloning state
+  const [dashboardConfigs, setDashboardConfigs] = useState<any[]>([]);
+  const [dashboardsLoading, setDashboardsLoading] = useState(false);
+  const [cloneSource, setCloneSource] = useState<string | null>(null);
+  const [cloneTarget, setCloneTarget] = useState<string>('');
+  const [cloning, setCloning] = useState(false);
+  const [editAdminSaving, setEditAdminSaving] = useState(false);
+
   useSiteSettings();
 
   useEffect(() => {
