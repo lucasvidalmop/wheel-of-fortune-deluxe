@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CustomizationPanel from '@/components/casino/CustomizationPanel';
@@ -26,6 +26,54 @@ interface WheelUser {
   responsible: string;
 }
 
+interface PersistedDashboardSettings {
+  emailSubject: string;
+  emailBody: string;
+  emailTemplate: 'original' | 'custom';
+  emailBannerUrl: string;
+  emailSenderName: string;
+  smsMessage: string;
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  twilioPhoneNumber: string;
+  whatsappMessage: string;
+  whatsappDelaySeconds: number;
+  evolutionApiUrl: string;
+  evolutionApiKey: string;
+  evolutionInstance: string;
+  spinWhatsappEnabled: boolean;
+  spinWhatsappTemplate: string;
+  spinWhatsappCustomMsg: string;
+  batchWhatsappEnabled: boolean;
+  batchWhatsappTemplate: string;
+  batchWhatsappCustomMsg: string;
+  excludeBulkSent: boolean;
+}
+
+const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
+  emailSubject: '🎰 Você tem um giro disponível!',
+  emailBody: 'Olá! Você foi convidado para girar a roleta e concorrer a prêmios incríveis. Acesse o link abaixo e boa sorte!',
+  emailTemplate: 'original',
+  emailBannerUrl: '',
+  emailSenderName: 'Royal Spin Wheel',
+  smsMessage: '',
+  twilioAccountSid: '',
+  twilioAuthToken: '',
+  twilioPhoneNumber: '',
+  whatsappMessage: '',
+  whatsappDelaySeconds: 2,
+  evolutionApiUrl: '',
+  evolutionApiKey: '',
+  evolutionInstance: '',
+  spinWhatsappEnabled: false,
+  spinWhatsappTemplate: 'welcome',
+  spinWhatsappCustomMsg: '',
+  batchWhatsappEnabled: false,
+  batchWhatsappTemplate: 'welcome',
+  batchWhatsappCustomMsg: '',
+  excludeBulkSent: false,
+};
+
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
     {children}
@@ -43,6 +91,8 @@ const WHATSAPP_SPIN_TEMPLATES = [
 
 const Dashboard = () => {
   useSiteSettings();
+  const configHydratedRef = useRef(false);
+  const lastPersistedSettingsRef = useRef('');
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
@@ -159,6 +209,84 @@ const Dashboard = () => {
   const [batchWhatsappCustomMsg, setBatchWhatsappCustomMsg] = useState('');
   const [savingUser, setSavingUser] = useState(false);
 
+  const syncLegacyIntegrationStorage = (settings: PersistedDashboardSettings) => {
+    const legacyEntries: Array<[string, string]> = [
+      ['twilio_account_sid', settings.twilioAccountSid],
+      ['twilio_auth_token', settings.twilioAuthToken],
+      ['twilio_phone_number', settings.twilioPhoneNumber],
+      ['evolution_api_url', settings.evolutionApiUrl],
+      ['evolution_api_key', settings.evolutionApiKey],
+      ['evolution_instance', settings.evolutionInstance],
+    ];
+
+    legacyEntries.forEach(([key, value]) => {
+      if (value) localStorage.setItem(key, value);
+      else localStorage.removeItem(key);
+    });
+  };
+
+  const buildPersistedDashboardSettings = (): PersistedDashboardSettings => ({
+    emailSubject,
+    emailBody,
+    emailTemplate,
+    emailBannerUrl,
+    emailSenderName,
+    smsMessage,
+    twilioAccountSid,
+    twilioAuthToken,
+    twilioPhoneNumber,
+    whatsappMessage,
+    whatsappDelaySeconds,
+    evolutionApiUrl,
+    evolutionApiKey,
+    evolutionInstance,
+    spinWhatsappEnabled,
+    spinWhatsappTemplate,
+    spinWhatsappCustomMsg,
+    batchWhatsappEnabled,
+    batchWhatsappTemplate,
+    batchWhatsappCustomMsg,
+    excludeBulkSent,
+  });
+
+  const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
+    const settings: PersistedDashboardSettings = {
+      ...DEFAULT_PERSISTED_DASHBOARD_SETTINGS,
+      twilioAccountSid: localStorage.getItem('twilio_account_sid') || '',
+      twilioAuthToken: localStorage.getItem('twilio_auth_token') || '',
+      twilioPhoneNumber: localStorage.getItem('twilio_phone_number') || '',
+      evolutionApiUrl: localStorage.getItem('evolution_api_url') || '',
+      evolutionApiKey: localStorage.getItem('evolution_api_key') || '',
+      evolutionInstance: localStorage.getItem('evolution_instance') || '',
+      ...(rawSettings || {}),
+    };
+
+    setEmailSubject(settings.emailSubject);
+    setEmailBody(settings.emailBody);
+    setEmailTemplate(settings.emailTemplate === 'custom' ? 'custom' : 'original');
+    setEmailBannerUrl(settings.emailBannerUrl || '');
+    setEmailSenderName(settings.emailSenderName || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderName);
+    setSmsMessage(settings.smsMessage || '');
+    setTwilioAccountSid(settings.twilioAccountSid || '');
+    setTwilioAuthToken(settings.twilioAuthToken || '');
+    setTwilioPhoneNumber(settings.twilioPhoneNumber || '');
+    setWhatsappMessage(settings.whatsappMessage || '');
+    setWhatsappDelaySeconds(Number(settings.whatsappDelaySeconds) > 0 ? Number(settings.whatsappDelaySeconds) : 2);
+    setEvolutionApiUrl(settings.evolutionApiUrl || '');
+    setEvolutionApiKey(settings.evolutionApiKey || '');
+    setEvolutionInstance(settings.evolutionInstance || '');
+    setSpinWhatsappEnabled(!!settings.spinWhatsappEnabled);
+    setSpinWhatsappTemplate(settings.spinWhatsappTemplate || 'welcome');
+    setSpinWhatsappCustomMsg(settings.spinWhatsappCustomMsg || '');
+    setBatchWhatsappEnabled(!!settings.batchWhatsappEnabled);
+    setBatchWhatsappTemplate(settings.batchWhatsappTemplate || 'welcome');
+    setBatchWhatsappCustomMsg(settings.batchWhatsappCustomMsg || '');
+    setExcludeBulkSent(!!settings.excludeBulkSent);
+
+    syncLegacyIntegrationStorage(settings);
+    lastPersistedSettingsRef.current = JSON.stringify(settings);
+  };
+
   useEffect(() => {
     let dataLoaded = false;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
@@ -183,6 +311,7 @@ const Dashboard = () => {
   }, []);
 
   const loadData = async (userId: string) => {
+    configHydratedRef.current = false;
     setLoading(true);
     let { data: cfg } = await (supabase as any)
       .from('wheel_configs')
@@ -211,15 +340,80 @@ const Dashboard = () => {
 
       setWheelConfig(loadedConfig);
       setDashboardTheme({ ...defaultTheme, ...(cfg.config?.dashboardTheme || {}) });
+      applyPersistedDashboardSettings(cfg.config?.dashboardSettings || {});
     } else {
       setWheelConfig(defaultConfig);
       setDashboardTheme(defaultTheme);
+      applyPersistedDashboardSettings();
     }
+
+    configHydratedRef.current = true;
 
     setLoading(false);
     fetchUsers(userId);
     fetchHistory(userId);
   };
+
+  useEffect(() => {
+    if (!session?.user?.id || !configHydratedRef.current || !configId) return;
+
+    const settings = buildPersistedDashboardSettings();
+    const serialized = JSON.stringify(settings);
+    syncLegacyIntegrationStorage(settings);
+
+    if (serialized === lastPersistedSettingsRef.current) return;
+
+    const timeoutId = window.setTimeout(async () => {
+      const latestSettings = buildPersistedDashboardSettings();
+      const latestSerialized = JSON.stringify(latestSettings);
+      if (latestSerialized === lastPersistedSettingsRef.current) return;
+
+      const { data: dbRow } = await (supabase as any)
+        .from('wheel_configs')
+        .select('config')
+        .eq('id', configId)
+        .maybeSingle();
+
+      const dbConfig = dbRow?.config || {};
+      const { error } = await (supabase as any)
+        .from('wheel_configs')
+        .update({
+          config: { ...dbConfig, dashboardSettings: latestSettings },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', configId);
+
+      if (!error) {
+        lastPersistedSettingsRef.current = latestSerialized;
+      }
+    }, 400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    session?.user?.id,
+    configId,
+    emailSubject,
+    emailBody,
+    emailTemplate,
+    emailBannerUrl,
+    emailSenderName,
+    smsMessage,
+    twilioAccountSid,
+    twilioAuthToken,
+    twilioPhoneNumber,
+    whatsappMessage,
+    whatsappDelaySeconds,
+    evolutionApiUrl,
+    evolutionApiKey,
+    evolutionInstance,
+    spinWhatsappEnabled,
+    spinWhatsappTemplate,
+    spinWhatsappCustomMsg,
+    batchWhatsappEnabled,
+    batchWhatsappTemplate,
+    batchWhatsappCustomMsg,
+    excludeBulkSent,
+  ]);
 
   const fetchUsers = async (userId?: string) => {
     const uid = userId || session?.user?.id;
@@ -314,6 +508,7 @@ const Dashboard = () => {
         ...rest,
         segments: cleanSegments,
         dashboardTheme: dashboardTheme || undefined,
+        dashboardSettings: buildPersistedDashboardSettings(),
       };
 
       // Strip data: URLs for image fields
@@ -355,6 +550,7 @@ const Dashboard = () => {
         // Sync local state with what was actually saved in DB
         setWheelConfig({ ...defaultConfig, ...updated.config });
         setDashboardTheme({ ...defaultTheme, ...(updated.config?.dashboardTheme || {}) });
+        applyPersistedDashboardSettings(updated.config?.dashboardSettings || {});
       }
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + (err?.message || 'desconhecido'));
