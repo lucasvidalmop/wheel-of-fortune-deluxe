@@ -307,7 +307,7 @@ const Dashboard = () => {
           .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible });
         if (error) {
           if (error.message?.includes('duplicate') || error.code === '23505') {
-            toast.error('Já existe um inscrito com esse e-mail e ID de conta.');
+            toast.error('Já existe um inscrito com esse e-mail ou ID de conta.');
           } else {
             toast.error('Erro: ' + error.message);
           }
