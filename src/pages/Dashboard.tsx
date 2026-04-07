@@ -2403,25 +2403,42 @@ const Dashboard = () => {
               <button
                 onClick={async () => {
                   if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
-                  const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-                  const phones = whatsappTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedWhatsappPhones;
+                  const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
+                  const phones = whatsappTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedWhatsappPhones.filter(p => !excludeBulkSent || !bulkSentPhones.has(p));
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setWhatsappSending(true);
                   let sent = 0, errors = 0;
                   const allUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-                  for (const phone of phones) {
+                  for (let i = 0; i < phones.length; i++) {
+                    const phone = phones[i];
                     const matchedUser = allUsers.find(u => u.phone === phone);
-                    const { error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
-                    await (supabase as any).from('whatsapp_message_log').insert({
-                      owner_id: session.user.id,
-                      recipient_phone: phone,
-                      recipient_name: matchedUser?.name || '',
-                      message: whatsappMessage,
-                      status: error ? 'error' : 'sent',
-                      error_message: error?.message || null,
-                    });
-                    if (error) errors++; else sent++;
+                    try {
+                      const { error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
+                      await (supabase as any).from('whatsapp_message_log').insert({
+                        owner_id: session.user.id,
+                        recipient_phone: phone,
+                        recipient_name: matchedUser?.name || '',
+                        message: whatsappMessage,
+                        status: error ? 'error' : 'sent',
+                        error_message: error?.message || null,
+                      });
+                      if (error) errors++; else sent++;
+                    } catch (e: any) {
+                      errors++;
+                      await (supabase as any).from('whatsapp_message_log').insert({
+                        owner_id: session.user.id,
+                        recipient_phone: phone,
+                        recipient_name: matchedUser?.name || '',
+                        message: whatsappMessage,
+                        status: 'error',
+                        error_message: e?.message || 'Erro desconhecido',
+                      });
+                    }
+                    // Delay between sends to avoid rate limiting/timeouts
+                    if (i < phones.length - 1) {
+                      await new Promise(resolve => setTimeout(resolve, 1500));
+                    }
                   }
                   setWhatsappSending(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
