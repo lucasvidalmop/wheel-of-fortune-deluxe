@@ -1254,26 +1254,19 @@ const Dashboard = () => {
                               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end gap-1 shrink-0">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleGrantSpin(user)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
-                              >
-                                {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
-                              </button>
-                              <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
-                                <Pencil size={13} />
-                              </button>
-                              <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive transition border border-white/[0.06]">
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                            {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] && (
-                              <span className="text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md truncate max-w-[120px]">
-                                🎯 {wheelConfig.segments[user.fixed_prize_segment].title}
-                              </span>
-                            )}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => handleGrantSpin(user)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
+                            >
+                              {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                            </button>
+                            <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
+                              <Pencil size={13} />
+                            </button>
+                            <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive transition border border-white/[0.06]">
+                              <Trash2 size={13} />
+                            </button>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-[11px]">
@@ -1281,8 +1274,22 @@ const Dashboard = () => {
                           <div><span className="text-muted-foreground">Acc:</span> <span className="text-foreground font-mono">{user.account_id?.slice(0, 10)}...</span></div>
                           <div><span className="text-muted-foreground">PIX:</span> <span className="text-foreground">{user.pix_key_type || '—'} {user.pix_key ? `/ ${user.pix_key}` : ''}</span></div>
                           <div><span className="text-muted-foreground">Data:</span> <span className="text-foreground">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</span></div>
-                          <div><span className="text-muted-foreground">Tipo:</span> <span className="text-foreground">{user.user_type || '—'}</span></div>
-                          <div><span className="text-muted-foreground">Resp:</span> <span className="text-foreground">{user.responsible || '—'}</span></div>
+                          {spinsFilter !== 'with' && (
+                            <>
+                              <div><span className="text-muted-foreground">Tipo:</span> <span className="text-foreground">{user.user_type || '—'}</span></div>
+                              <div><span className="text-muted-foreground">Resp:</span> <span className="text-foreground">{user.responsible || '—'}</span></div>
+                            </>
+                          )}
+                          {spinsFilter === 'with' && (
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Prêmio:</span>{' '}
+                              {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] ? (
+                                <span className="text-amber-400 font-medium">🎯 {wheelConfig.segments[user.fixed_prize_segment].title}</span>
+                              ) : (
+                                <span className="text-muted-foreground/60 italic">Aleatório</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
