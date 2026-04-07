@@ -335,6 +335,43 @@ const Admin = () => {
     u.account_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ═══ DASHBOARD CLONING ═══
+  const fetchDashboards = async () => {
+    setDashboardsLoading(true);
+    try {
+      const { data: configs } = await (supabase as any).from('wheel_configs').select('*').order('created_at', { ascending: false });
+      // Fetch user info for each config
+      const res = await supabase.functions.invoke('list-system-users');
+      const sysUsers = res.data?.users || [];
+      const userMap: Record<string, any> = {};
+      sysUsers.forEach((u: any) => { userMap[u.id] = u; });
+      const enriched = (configs || []).map((c: any) => ({
+        ...c,
+        user_email: userMap[c.user_id]?.email || '—',
+        user_name: userMap[c.user_id]?.name || '—',
+      }));
+      setDashboardConfigs(enriched);
+    } catch { }
+    setDashboardsLoading(false);
+  };
+
+  const handleCloneConfig = async () => {
+    if (!cloneSource || !cloneTarget) { toast.error('Selecione origem e destino'); return; }
+    if (cloneSource === cloneTarget) { toast.error('Origem e destino devem ser diferentes'); return; }
+    setCloning(true);
+    try {
+      const source = dashboardConfigs.find((c: any) => c.id === cloneSource);
+      if (!source) { toast.error('Configuração de origem não encontrada'); setCloning(false); return; }
+      const { error } = await (supabase as any).from('wheel_configs').update({ config: source.config }).eq('id', cloneTarget);
+      if (error) { toast.error('Erro ao clonar: ' + error.message); } else {
+        toast.success('Dashboard clonado com sucesso!');
+        setCloneSource(null);
+        setCloneTarget('');
+        fetchDashboards();
+      }
+    } catch (err: any) { toast.error(err.message); }
+    setCloning(false);
+  };
 
 
   // ═══ LOADING ═══
