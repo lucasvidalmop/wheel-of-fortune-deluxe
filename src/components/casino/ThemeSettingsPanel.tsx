@@ -99,16 +99,14 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
       const merged = { ...defaultTheme, ...initialTheme };
       setTheme(merged);
       applyThemeToDOM(merged);
+      return;
     }
-  }, [initialTheme]);
 
-  // Apply on mount from localStorage if no initialTheme
-  useEffect(() => {
-    if (!initialTheme) {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) applyThemeToDOM({ ...defaultTheme, ...JSON.parse(saved) });
-    }
-  }, [storageKey, initialTheme]);
+    const saved = localStorage.getItem(storageKey);
+    const fallbackTheme = saved ? { ...defaultTheme, ...JSON.parse(saved) } : defaultTheme;
+    setTheme(fallbackTheme);
+    applyThemeToDOM(fallbackTheme);
+  }, [initialTheme, storageKey]);
 
   const save = useCallback((t: ThemeSettings) => {
     setTheme(t);

@@ -204,12 +204,16 @@ const Dashboard = () => {
       setSlug(cfg.slug);
       setNewSlug(cfg.slug);
       setConfigId(cfg.id);
-      if (cfg.config && Object.keys(cfg.config).length > 0) {
-        setWheelConfig({ ...defaultConfig, ...cfg.config });
-        if (cfg.config.dashboardTheme) {
-          setDashboardTheme({ ...defaultTheme, ...cfg.config.dashboardTheme });
-        }
-      }
+
+      const loadedConfig = cfg.config && Object.keys(cfg.config).length > 0
+        ? { ...defaultConfig, ...cfg.config }
+        : defaultConfig;
+
+      setWheelConfig(loadedConfig);
+      setDashboardTheme({ ...defaultTheme, ...(cfg.config?.dashboardTheme || {}) });
+    } else {
+      setWheelConfig(defaultConfig);
+      setDashboardTheme(defaultTheme);
     }
 
     setLoading(false);
@@ -350,9 +354,7 @@ const Dashboard = () => {
         toast.success('Configuração salva!');
         // Sync local state with what was actually saved in DB
         setWheelConfig({ ...defaultConfig, ...updated.config });
-        if (updated.config?.dashboardTheme) {
-          setDashboardTheme({ ...defaultTheme, ...updated.config.dashboardTheme });
-        }
+        setDashboardTheme({ ...defaultTheme, ...(updated.config?.dashboardTheme || {}) });
       }
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + (err?.message || 'desconhecido'));
@@ -907,7 +909,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex relative overflow-hidden">
-      <ThemeSettingsPanel storageKey="dashboard_theme" initialTheme={dashboardTheme} onThemeChange={handleThemeChange} />
+      <ThemeSettingsPanel
+        storageKey={session?.user?.id ? `dashboard_theme_${session.user.id}` : 'dashboard_theme'}
+        initialTheme={dashboardTheme ?? defaultTheme}
+        onThemeChange={handleThemeChange}
+      />
       <div id="theme-bg-layer" className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15" style={{ backgroundImage: 'var(--theme-bg-image, none)' }} />
       {/* Background ambient glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
