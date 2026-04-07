@@ -646,7 +646,41 @@ const Dashboard = () => {
           const { error: rowError } = await (supabase as any).from('wheel_users').insert(row);
           if (rowError) {
             if (rowError.message?.includes('duplicate') || rowError.code === '23505') {
-              duplicates++;
+              // Try to find existing user by email and update their account_id
+              const { data: existing } = await (supabase as any)
+                .from('wheel_users')
+                .select('id, account_id, email')
+                .eq('owner_id', row.owner_id)
+                .ilike('email', row.email)
+                .maybeSingle();
+
+              if (existing) {
+                const updates: Record<string, any> = {};
+                if (existing.account_id !== row.account_id) updates.account_id = row.account_id;
+                if (row.name) updates.name = row.name;
+                if (row.phone) updates.phone = row.phone;
+                if (row.pix_key_type) updates.pix_key_type = row.pix_key_type;
+                if (row.pix_key) updates.pix_key = row.pix_key;
+                if (row.user_type) updates.user_type = row.user_type;
+                if (row.responsible) updates.responsible = row.responsible;
+
+                if (Object.keys(updates).length > 0) {
+                  updates.updated_at = new Date().toISOString();
+                  const { error: updateError } = await (supabase as any)
+                    .from('wheel_users')
+                    .update(updates)
+                    .eq('id', existing.id);
+                  if (!updateError) {
+                    duplicates++;
+                  } else {
+                    errors++;
+                  }
+                } else {
+                  duplicates++;
+                }
+              } else {
+                duplicates++;
+              }
             } else {
               errors++;
             }
