@@ -691,7 +691,7 @@ const Dashboard = () => {
       }
 
       let msg = `${imported} importado(s)`;
-      if (duplicates > 0) msg += `, ${duplicates} duplicado(s) ignorado(s)`;
+      if (duplicates > 0) msg += `, ${duplicates} atualizado(s)`;
       if (errors > 0) msg += `, ${errors} erro(s)`;
       toast.success(msg);
       fetchUsers();
