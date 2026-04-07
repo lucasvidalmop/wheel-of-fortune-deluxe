@@ -2069,8 +2069,11 @@ const Dashboard = () => {
           {/* ══════ WHATSAPP TAB ══════ */}
           {activeTab === 'whatsapp' && (
             <div className="max-w-2xl space-y-5">
-              <div className="flex items-center justify-end">
-                <button onClick={() => setShowWhatsappConfig(!showWhatsappConfig)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition text-sm">
+              <div className="flex items-center gap-2 justify-end">
+                <button onClick={() => { setShowWhatsappHistory(!showWhatsappHistory); if (!showWhatsappHistory) fetchWhatsappLogs(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showWhatsappHistory ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Clock size={15} /> Histórico
+                </button>
+                <button onClick={() => setShowWhatsappConfig(!showWhatsappConfig)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showWhatsappConfig ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
                   <Settings size={15} /> Configurar API
                 </button>
               </div>
