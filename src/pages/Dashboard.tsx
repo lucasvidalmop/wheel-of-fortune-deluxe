@@ -2474,16 +2474,18 @@ const Dashboard = () => {
                     const phone = phones[i];
                     const matchedUser = allUsers.find(u => u.phone === phone);
                     try {
-                      const { error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
+                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
+                      const hasError = !!error || !!respData?.error;
+                      const errorMsg = error?.message || respData?.error || null;
                       await (supabase as any).from('whatsapp_message_log').insert({
                         owner_id: session.user.id,
                         recipient_phone: phone,
                         recipient_name: matchedUser?.name || '',
                         message: whatsappMessage,
-                        status: error ? 'error' : 'sent',
-                        error_message: error?.message || null,
+                        status: hasError ? 'error' : 'sent',
+                        error_message: errorMsg,
                       });
-                      if (error) errors++; else sent++;
+                      if (hasError) errors++; else sent++;
                     } catch (e: any) {
                       errors++;
                       await (supabase as any).from('whatsapp_message_log').insert({
