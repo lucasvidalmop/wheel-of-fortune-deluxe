@@ -55,6 +55,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without'>('all');
 
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
