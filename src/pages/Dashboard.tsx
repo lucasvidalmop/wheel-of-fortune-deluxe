@@ -101,6 +101,8 @@ const Dashboard = () => {
   const [whatsappLogs, setWhatsappLogs] = useState<any[]>([]);
   const [whatsappLogsLoading, setWhatsappLogsLoading] = useState(false);
   const [showWhatsappHistory, setShowWhatsappHistory] = useState(false);
+  const [excludeBulkSent, setExcludeBulkSent] = useState(false);
+  const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
 
   const fetchWhatsappLogs = async () => {
     if (!session?.user?.id) return;
