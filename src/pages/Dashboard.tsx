@@ -2356,8 +2356,18 @@ const Dashboard = () => {
                   if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setWhatsappSending(true);
                   let sent = 0, errors = 0;
+                  const allUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                   for (const phone of phones) {
+                    const matchedUser = allUsers.find(u => u.phone === phone);
                     const { error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
+                    await (supabase as any).from('whatsapp_message_log').insert({
+                      owner_id: session.user.id,
+                      recipient_phone: phone,
+                      recipient_name: matchedUser?.name || '',
+                      message: whatsappMessage,
+                      status: error ? 'error' : 'sent',
+                      error_message: error?.message || null,
+                    });
                     if (error) errors++; else sent++;
                   }
                   setWhatsappSending(false);
