@@ -500,13 +500,13 @@ const Roleta = () => {
           }}
         >
           {/* Header: logo, text, or logo+text */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between pointer-events-none" style={{ position: 'relative', zIndex: 0 }}>
             <div className="flex-1">
               {(ac.authHeaderMode === 'logo' || ac.authHeaderMode === 'logo_text') && ac.authLogoUrl && (
                 <img
                   src={ac.authLogoUrl}
                   alt="Logo"
-                  className="object-contain mb-3"
+                  className="object-contain mb-3 pointer-events-none"
                   style={{
                     height: ac.authLogoSize ?? 80,
                     maxWidth: '100%',
@@ -533,7 +533,7 @@ const Roleta = () => {
           </div>
 
           {/* Email */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" style={{ position: 'relative', zIndex: 10 }}>
             <label className="text-xs font-bold tracking-wider uppercase" style={{ color: ac.authLabelColor ?? '#ffffff' }}>
               E-MAIL
             </label>
@@ -549,6 +549,8 @@ const Roleta = () => {
                 background: 'rgba(255,255,255,0.04)',
                 border: `2px solid ${ac.authInputBorderColor ?? '#D4A017'}`,
                 color: '#fff',
+                position: 'relative',
+                zIndex: 10,
               }}
               onFocus={e => (e.target.style.borderColor = ac.authInputBorderColor ? `${ac.authInputBorderColor}` : '#FFD700')}
               onBlur={e => (e.target.style.borderColor = ac.authInputBorderColor ?? '#D4A017')}
