@@ -986,27 +986,24 @@ const Admin = () => {
                     <div>
                       <h3 className="text-sm font-bold text-foreground">Clonar Dashboard</h3>
                       <p className="text-[10px] text-muted-foreground">
-                        Origem: <span className="text-primary font-semibold">{dashboardConfigs.find(c => c.id === cloneSource)?.slug || '—'}</span>
+                        Origem: <span className="text-primary font-semibold font-mono">{dashboardConfigs.find(c => c.id === cloneSource)?.clone_code || '—'}</span>
                         {' '}({dashboardConfigs.find(c => c.id === cloneSource)?.user_name})
                       </p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Destino</label>
-                    <select
+                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Código do Dashboard Destino</label>
+                    <input
+                      type="text"
                       value={cloneTarget}
-                      onChange={e => setCloneTarget(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
-                    >
-                      <option value="">Selecione o dashboard destino...</option>
-                      {dashboardConfigs.filter(c => c.id !== cloneSource).map(c => (
-                        <option key={c.id} value={c.id}>{c.slug} — {c.user_name} ({c.user_email})</option>
-                      ))}
-                    </select>
+                      onChange={e => setCloneTarget(e.target.value.toUpperCase())}
+                      placeholder="Cole o código do dashboard destino..."
+                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono tracking-wider focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/40"
+                    />
                   </div>
                   <div className="flex gap-3">
                     <button onClick={() => { setCloneSource(null); setCloneTarget(''); }} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
-                    <button onClick={handleCloneConfig} disabled={cloning || !cloneTarget} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                    <button onClick={handleCloneConfig} disabled={cloning || !cloneTarget.trim()} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
                       {cloning ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Clonando...</> : <><Copy size={14} /> Clonar Visual</>}
                     </button>
                   </div>
