@@ -2340,19 +2340,39 @@ const Dashboard = () => {
                         className="w-full pl-8 pr-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 placeholder:text-muted-foreground"
                       />
                     </div>
-                    <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
-                      {users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).filter(u => {
+                    {(() => {
+                      const filteredWhatsappUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).filter(u => {
                         if (!whatsappSearch.trim()) return true;
                         const q = whatsappSearch.toLowerCase();
                         return u.name.toLowerCase().includes(q) || u.phone.includes(q);
-                      }).map(u => (
-                        <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                          <input type="checkbox" checked={selectedWhatsappPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]); else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
-                          <span className="text-sm text-foreground">{u.name}</span>
-                          <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
-                        </label>
-                      ))}
-                    </div>
+                      });
+                      const filteredPhones = filteredWhatsappUsers.map(u => u.phone);
+                      const allFilteredSelected = filteredPhones.length > 0 && filteredPhones.every(p => selectedWhatsappPhones.includes(p));
+                      return (
+                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                          <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
+                            <input type="checkbox" checked={allFilteredSelected} onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedWhatsappPhones(prev => [...new Set([...prev, ...filteredPhones])]);
+                              } else {
+                                setSelectedWhatsappPhones(prev => prev.filter(p => !filteredPhones.includes(p)));
+                              }
+                            }} className="rounded border-white/20" />
+                            <span className="text-sm font-medium text-foreground">Selecionar todos</span>
+                            <span className="text-xs text-muted-foreground ml-auto">{filteredPhones.length} contatos</span>
+                          </label>
+                          <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                            {filteredWhatsappUsers.map(u => (
+                              <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                <input type="checkbox" checked={selectedWhatsappPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]); else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                                <span className="text-sm text-foreground">{u.name}</span>
+                                <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </GlassCard>
