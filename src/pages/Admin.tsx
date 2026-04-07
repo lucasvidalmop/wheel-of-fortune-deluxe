@@ -962,6 +962,133 @@ const Admin = () => {
             </div>
           )}
 
+          {/* ══════ DASHBOARDS TAB ══════ */}
+          {activeTab === 'dashboards' && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Gerencie e clone configurações visuais entre dashboards</p>
+                <button onClick={fetchDashboards} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                  <RotateCcw size={14} /> Atualizar
+                </button>
+              </div>
+
+              {/* Clone Panel */}
+              {cloneSource && (
+                <GlassCard className="p-5 space-y-4 border-primary/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                      <Copy className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Clonar Dashboard</h3>
+                      <p className="text-[10px] text-muted-foreground">
+                        Origem: <span className="text-primary font-semibold">{dashboardConfigs.find(c => c.id === cloneSource)?.slug || '—'}</span>
+                        {' '}({dashboardConfigs.find(c => c.id === cloneSource)?.user_name})
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Destino</label>
+                    <select
+                      value={cloneTarget}
+                      onChange={e => setCloneTarget(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
+                    >
+                      <option value="">Selecione o dashboard destino...</option>
+                      {dashboardConfigs.filter(c => c.id !== cloneSource).map(c => (
+                        <option key={c.id} value={c.id}>{c.slug} — {c.user_name} ({c.user_email})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => { setCloneSource(null); setCloneTarget(''); }} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
+                    <button onClick={handleCloneConfig} disabled={cloning || !cloneTarget} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                      {cloning ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Clonando...</> : <><Copy size={14} /> Clonar Visual</>}
+                    </button>
+                  </div>
+                </GlassCard>
+              )}
+
+              {/* Dashboard List */}
+              {dashboardsLoading ? (
+                <div className="text-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" /><span className="text-muted-foreground">Carregando...</span></div>
+              ) : dashboardConfigs.length === 0 ? (
+                <GlassCard className="text-center py-16">
+                  <Monitor size={40} className="text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground">Nenhum dashboard encontrado</p>
+                </GlassCard>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {dashboardConfigs.map((cfg: any) => {
+                    const segments = (cfg.config as any)?.segments || [];
+                    const segCount = segments.length;
+                    return (
+                      <GlassCard key={cfg.id} className={`p-5 space-y-4 transition-all ${cloneSource === cfg.id ? 'ring-2 ring-primary/40' : ''}`}>
+                        {/* Code badge */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center">
+                              <Monitor size={14} className="text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-foreground">{cfg.user_name}</p>
+                              <p className="text-[10px] text-muted-foreground">{cfg.user_email}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Slug / Code */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Código do Dashboard</label>
+                          <div className="flex items-center gap-2">
+                            <code className="flex-1 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-primary font-mono text-xs truncate">{cfg.slug}</code>
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(cfg.slug); toast.success('Código copiado!'); }}
+                              className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]"
+                              title="Copiar código"
+                            >
+                              <Copy size={12} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                          <span>{segCount} segmento(s)</span>
+                          <span>Criado: {new Date(cfg.created_at).toLocaleDateString('pt-BR')}</span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <a
+                            href={`/roleta/${cfg.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs font-medium hover:bg-white/[0.08] transition"
+                          >
+                            <Eye size={12} /> Ver
+                          </a>
+                          <button
+                            onClick={() => { setCloneSource(cfg.id); setCloneTarget(''); }}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition ${
+                              cloneSource === cfg.id
+                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                            }`}
+                          >
+                            <Copy size={12} /> Clonar
+                          </button>
+                        </div>
+                      </GlassCard>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">{dashboardConfigs.length} dashboard(s)</p>
+            </div>
+          )}
+
           {/* ══════ HISTORY ══════ */}
           {activeTab === 'history' && (
             <div className="space-y-4">
