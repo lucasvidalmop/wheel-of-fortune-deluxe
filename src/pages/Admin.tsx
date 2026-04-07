@@ -356,13 +356,16 @@ const Admin = () => {
   };
 
   const handleCloneConfig = async () => {
-    if (!cloneSource || !cloneTarget) { toast.error('Selecione origem e destino'); return; }
-    if (cloneSource === cloneTarget) { toast.error('Origem e destino devem ser diferentes'); return; }
+    if (!cloneSource || !cloneTarget) { toast.error('Informe o código de destino'); return; }
     setCloning(true);
     try {
       const source = dashboardConfigs.find((c: any) => c.id === cloneSource);
       if (!source) { toast.error('Configuração de origem não encontrada'); setCloning(false); return; }
-      const { error } = await (supabase as any).from('wheel_configs').update({ config: source.config }).eq('id', cloneTarget);
+      // Find target by clone_code
+      const target = dashboardConfigs.find((c: any) => c.clone_code === cloneTarget.toUpperCase().trim());
+      if (!target) { toast.error('Código de destino não encontrado'); setCloning(false); return; }
+      if (target.id === cloneSource) { toast.error('Origem e destino devem ser diferentes'); setCloning(false); return; }
+      const { error } = await (supabase as any).from('wheel_configs').update({ config: source.config }).eq('id', target.id);
       if (error) { toast.error('Erro ao clonar: ' + error.message); } else {
         toast.success('Dashboard clonado com sucesso!');
         setCloneSource(null);
@@ -983,27 +986,24 @@ const Admin = () => {
                     <div>
                       <h3 className="text-sm font-bold text-foreground">Clonar Dashboard</h3>
                       <p className="text-[10px] text-muted-foreground">
-                        Origem: <span className="text-primary font-semibold">{dashboardConfigs.find(c => c.id === cloneSource)?.slug || '—'}</span>
+                        Origem: <span className="text-primary font-semibold font-mono">{dashboardConfigs.find(c => c.id === cloneSource)?.clone_code || '—'}</span>
                         {' '}({dashboardConfigs.find(c => c.id === cloneSource)?.user_name})
                       </p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Destino</label>
-                    <select
+                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Código do Dashboard Destino</label>
+                    <input
+                      type="text"
                       value={cloneTarget}
-                      onChange={e => setCloneTarget(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
-                    >
-                      <option value="">Selecione o dashboard destino...</option>
-                      {dashboardConfigs.filter(c => c.id !== cloneSource).map(c => (
-                        <option key={c.id} value={c.id}>{c.slug} — {c.user_name} ({c.user_email})</option>
-                      ))}
-                    </select>
+                      onChange={e => setCloneTarget(e.target.value.toUpperCase())}
+                      placeholder="Cole o código do dashboard destino..."
+                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono tracking-wider focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/40"
+                    />
                   </div>
                   <div className="flex gap-3">
                     <button onClick={() => { setCloneSource(null); setCloneTarget(''); }} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
-                    <button onClick={handleCloneConfig} disabled={cloning || !cloneTarget} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                    <button onClick={handleCloneConfig} disabled={cloning || !cloneTarget.trim()} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
                       {cloning ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Clonando...</> : <><Copy size={14} /> Clonar Visual</>}
                     </button>
                   </div>
@@ -1038,19 +1038,24 @@ const Admin = () => {
                           </div>
                         </div>
 
-                        {/* Slug / Code */}
+                        {/* Clone Code */}
                         <div className="space-y-1">
-                          <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Código do Dashboard</label>
+                          <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Código de Clonagem</label>
                           <div className="flex items-center gap-2">
-                            <code className="flex-1 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-primary font-mono text-xs truncate">{cfg.slug}</code>
+                            <code className="flex-1 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-primary font-mono text-sm font-bold tracking-widest text-center">{cfg.clone_code}</code>
                             <button
-                              onClick={() => { navigator.clipboard.writeText(cfg.slug); toast.success('Código copiado!'); }}
+                              onClick={() => { navigator.clipboard.writeText(cfg.clone_code); toast.success('Código copiado!'); }}
                               className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]"
                               title="Copiar código"
                             >
                               <Copy size={12} />
                             </button>
                           </div>
+                        </div>
+
+                        {/* Slug */}
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <Globe size={10} /> <span className="truncate">/{cfg.slug}</span>
                         </div>
 
                         {/* Info */}
