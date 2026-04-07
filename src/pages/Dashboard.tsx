@@ -1175,24 +1175,26 @@ const Dashboard = () => {
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.user_type || '—'}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.responsible || '—'}</td>
                           <td className="px-1 py-2">
-                            <div className="flex items-center justify-center gap-1">
-                              <button
-                                onClick={() => handleGrantSpin(user)}
-                                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
-                              >
-                                {user.spins_available >= 1 ? `${user.spins_available}✓` : 'Giro'}
-                              </button>
+                            <div className="flex flex-col items-center gap-1">
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleGrantSpin(user)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
+                                >
+                                  {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                                </button>
+                                <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
+                                  <Pencil size={13} />
+                                </button>
+                                <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir">
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
                               {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] && (
-                                <span className="text-[9px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-md truncate max-w-[80px]" title={`Prêmio fixo: ${wheelConfig.segments[user.fixed_prize_segment].title}`}>
+                                <span className="text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md truncate max-w-[120px]">
                                   🎯 {wheelConfig.segments[user.fixed_prize_segment].title}
                                 </span>
                               )}
-                              <button onClick={() => openEdit(user)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
-                                <Pencil size={12} />
-                              </button>
-                              <button onClick={() => handleDeleteUser(user.id)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir">
-                                <Trash2 size={12} />
-                              </button>
                             </div>
                           </td>
                         </tr>
@@ -1237,24 +1239,26 @@ const Dashboard = () => {
                               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              onClick={() => handleGrantSpin(user)}
-                              className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
-                            >
-                              {user.spins_available >= 1 ? `${user.spins_available}✓` : 'Giro'}
-                            </button>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleGrantSpin(user)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
+                              >
+                                {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                              </button>
+                              <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
+                                <Pencil size={13} />
+                              </button>
+                              <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive transition border border-white/[0.06]">
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                             {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] && (
-                              <span className="text-[9px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-md truncate max-w-[60px]" title={`Prêmio fixo: ${wheelConfig.segments[user.fixed_prize_segment].title}`}>
+                              <span className="text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md truncate max-w-[120px]">
                                 🎯 {wheelConfig.segments[user.fixed_prize_segment].title}
                               </span>
                             )}
-                            <button onClick={() => openEdit(user)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
-                              <Pencil size={12} />
-                            </button>
-                            <button onClick={() => handleDeleteUser(user.id)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive transition border border-white/[0.06]">
-                              <Trash2 size={12} />
-                            </button>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-[11px]">
