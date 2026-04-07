@@ -2359,7 +2359,7 @@ const Dashboard = () => {
                       />
                     </div>
                     {(() => {
-                      const filteredWhatsappUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).filter(u => {
+                      const filteredWhatsappUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone))).filter(u => {
                         if (!whatsappSearch.trim()) return true;
                         const q = whatsappSearch.toLowerCase();
                         return u.name.toLowerCase().includes(q) || u.phone.includes(q);
