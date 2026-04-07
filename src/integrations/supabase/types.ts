@@ -295,6 +295,7 @@ export type Database = {
       }
       wheel_configs: {
         Row: {
+          clone_code: string
           config: Json
           created_at: string
           id: string
@@ -303,6 +304,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          clone_code?: string
           config?: Json
           created_at?: string
           id?: string
@@ -311,6 +313,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          clone_code?: string
           config?: Json
           created_at?: string
           id?: string
