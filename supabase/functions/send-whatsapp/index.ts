@@ -23,7 +23,7 @@ serve(async (req) => {
 
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) {
       return new Response(
-        JSON.stringify({ error: "Credenciais da Evolution API não configuradas. Acesse as configurações de WhatsApp." }),
+        JSON.stringify({ error: "Credenciais da Evolution API não configuradas." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -37,29 +37,49 @@ serve(async (req) => {
       cleanPhone = "55" + cleanPhone;
     }
 
-    // Call Evolution API
+    // Call Evolution API with timeout
     const apiUrl = evolutionApiUrl.replace(/\/+$/, "");
     const url = `${apiUrl}/message/sendText/${evolutionInstance}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "apikey": evolutionApiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        number: cleanPhone,
-        text: message,
-      }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-    const data = await response.json();
+    let response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "apikey": evolutionApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          number: cleanPhone,
+          text: message,
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      const isTimeout = fetchError.name === "AbortError";
+      return new Response(
+        JSON.stringify({ 
+          error: isTimeout 
+            ? "Tempo limite excedido ao enviar mensagem. Verifique a Evolution API."
+            : `Erro de conexão: ${fetchError.message}`
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    clearTimeout(timeoutId);
+
+    let data;
+    try { data = await response.json(); } catch { data = null; }
 
     if (!response.ok) {
       console.error("Evolution API error:", data);
       return new Response(
-        JSON.stringify({ error: data.message || data.error || "Erro ao enviar WhatsApp" }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: data?.message || data?.error || "Erro ao enviar WhatsApp" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -71,7 +91,7 @@ serve(async (req) => {
     console.error("WhatsApp error:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Erro interno" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
