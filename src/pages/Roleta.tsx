@@ -500,13 +500,13 @@ const Roleta = () => {
           }}
         >
           {/* Header: logo, text, or logo+text */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between pointer-events-none" style={{ position: 'relative', zIndex: 0 }}>
             <div className="flex-1">
               {(ac.authHeaderMode === 'logo' || ac.authHeaderMode === 'logo_text') && ac.authLogoUrl && (
                 <img
                   src={ac.authLogoUrl}
                   alt="Logo"
-                  className="object-contain mb-3"
+                  className="object-contain mb-3 pointer-events-none"
                   style={{
                     height: ac.authLogoSize ?? 80,
                     maxWidth: '100%',
