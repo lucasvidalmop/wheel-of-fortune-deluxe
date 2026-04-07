@@ -117,6 +117,17 @@ const Dashboard = () => {
     setWhatsappLogsLoading(false);
   };
 
+  const fetchBulkSentPhones = async () => {
+    if (!session?.user?.id) return;
+    const { data } = await (supabase as any)
+      .from('whatsapp_message_log')
+      .select('recipient_phone')
+      .eq('owner_id', session.user.id)
+      .eq('status', 'sent');
+    const phones = new Set<string>((data || []).map((d: any) => d.recipient_phone));
+    setBulkSentPhones(phones);
+  };
+
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [editingSlug, setEditingSlug] = useState(false);
