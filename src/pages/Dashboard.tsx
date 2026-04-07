@@ -962,6 +962,29 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Spins filter */}
+              <div className="flex gap-2 mt-2">
+                {([
+                  { value: 'all' as const, label: 'Todos' },
+                  { value: 'with' as const, label: 'Com giros' },
+                  { value: 'without' as const, label: 'Sem giros' },
+                ]).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSpinsFilter(opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      spinsFilter === opt.value
+                        ? 'bg-primary/20 text-primary border border-primary/30'
+                        : 'bg-white/[0.04] text-muted-foreground border border-white/[0.08] hover:bg-white/[0.08]'
+                    }`}
+                  >
+                    {opt.label}
+                    {opt.value === 'with' && ` (${users.filter(u => u.spins_available >= 1).length})`}
+                    {opt.value === 'without' && ` (${users.filter(u => u.spins_available < 1).length})`}
+                  </button>
+                ))}
+              </div>
+
               {/* User form modal */}
               {showForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
