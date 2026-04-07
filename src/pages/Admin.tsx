@@ -64,7 +64,6 @@ const Admin = () => {
   const [cloneSource, setCloneSource] = useState<string | null>(null);
   const [cloneTarget, setCloneTarget] = useState<string>('');
   const [cloning, setCloning] = useState(false);
-  const [editAdminSaving, setEditAdminSaving] = useState(false);
 
   useSiteSettings();
 
