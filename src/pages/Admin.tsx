@@ -1038,19 +1038,24 @@ const Admin = () => {
                           </div>
                         </div>
 
-                        {/* Slug / Code */}
+                        {/* Clone Code */}
                         <div className="space-y-1">
-                          <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Código do Dashboard</label>
+                          <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Código de Clonagem</label>
                           <div className="flex items-center gap-2">
-                            <code className="flex-1 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-primary font-mono text-xs truncate">{cfg.slug}</code>
+                            <code className="flex-1 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-primary font-mono text-sm font-bold tracking-widest text-center">{cfg.clone_code}</code>
                             <button
-                              onClick={() => { navigator.clipboard.writeText(cfg.slug); toast.success('Código copiado!'); }}
+                              onClick={() => { navigator.clipboard.writeText(cfg.clone_code); toast.success('Código copiado!'); }}
                               className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]"
                               title="Copiar código"
                             >
                               <Copy size={12} />
                             </button>
                           </div>
+                        </div>
+
+                        {/* Slug */}
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <Globe size={10} /> <span className="truncate">/{cfg.slug}</span>
                         </div>
 
                         {/* Info */}
