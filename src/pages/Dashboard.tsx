@@ -305,7 +305,14 @@ const Dashboard = () => {
         const { error } = await (supabase as any)
           .from('wheel_users')
           .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible });
-        if (error) { toast.error('Erro: ' + error.message); return; }
+        if (error) {
+          if (error.message?.includes('duplicate') || error.code === '23505') {
+            toast.error('Já existe um inscrito com esse e-mail e ID de conta.');
+          } else {
+            toast.error('Erro: ' + error.message);
+          }
+          return;
+        }
         toast.success('Inscrito criado!');
       }
       setShowForm(false);
@@ -614,6 +621,7 @@ const Dashboard = () => {
       let imported = 0;
       let errors = 0;
 
+      let duplicates = 0;
       for (let i = 0; i < rowsToInsert.length; i += chunkSize) {
         const chunk = rowsToInsert.slice(i, i + chunkSize);
         const { error, data } = await (supabase as any)
@@ -628,12 +636,22 @@ const Dashboard = () => {
 
         for (const row of chunk) {
           const { error: rowError } = await (supabase as any).from('wheel_users').insert(row);
-          if (rowError) errors++;
-          else imported++;
+          if (rowError) {
+            if (rowError.message?.includes('duplicate') || rowError.code === '23505') {
+              duplicates++;
+            } else {
+              errors++;
+            }
+          } else {
+            imported++;
+          }
         }
       }
 
-      toast.success(`${imported} importado(s)${errors > 0 ? `, ${errors} erro(s)` : ''}`);
+      let msg = `${imported} importado(s)`;
+      if (duplicates > 0) msg += `, ${duplicates} duplicado(s) ignorado(s)`;
+      if (errors > 0) msg += `, ${errors} erro(s)`;
+      toast.success(msg);
       fetchUsers();
     };
 
