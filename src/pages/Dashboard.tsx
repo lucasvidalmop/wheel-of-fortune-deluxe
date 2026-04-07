@@ -55,6 +55,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without'>('all');
 
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
@@ -673,11 +674,15 @@ const Dashboard = () => {
     setViewingUserLoading(false);
   };
 
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.account_id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.account_id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSpins = spinsFilter === 'all' ? true
+      : spinsFilter === 'with' ? u.spins_available >= 1
+      : u.spins_available < 1;
+    return matchesSearch && matchesSpins;
+  });
 
   const handleThemeChange = async (newTheme: ThemeSettings) => {
     setDashboardTheme(newTheme);
@@ -955,6 +960,29 @@ const Dashboard = () => {
                     <span className="hidden sm:inline">Novo</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Spins filter */}
+              <div className="flex gap-2 mt-2">
+                {([
+                  { value: 'all' as const, label: 'Todos' },
+                  { value: 'with' as const, label: 'Com giros' },
+                  { value: 'without' as const, label: 'Sem giros' },
+                ]).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSpinsFilter(opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      spinsFilter === opt.value
+                        ? 'bg-primary/20 text-primary border border-primary/30'
+                        : 'bg-white/[0.04] text-muted-foreground border border-white/[0.08] hover:bg-white/[0.08]'
+                    }`}
+                  >
+                    {opt.label}
+                    {opt.value === 'with' && ` (${users.filter(u => u.spins_available >= 1).length})`}
+                    {opt.value === 'without' && ` (${users.filter(u => u.spins_available < 1).length})`}
+                  </button>
+                ))}
               </div>
 
               {/* User form modal */}
