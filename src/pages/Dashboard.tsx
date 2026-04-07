@@ -98,6 +98,22 @@ const Dashboard = () => {
   const [instanceStatus, setInstanceStatus] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
   const [instanceQrCode, setInstanceQrCode] = useState<string | null>(null);
   const [creatingInstance, setCreatingInstance] = useState(false);
+  const [whatsappLogs, setWhatsappLogs] = useState<any[]>([]);
+  const [whatsappLogsLoading, setWhatsappLogsLoading] = useState(false);
+  const [showWhatsappHistory, setShowWhatsappHistory] = useState(false);
+
+  const fetchWhatsappLogs = async () => {
+    if (!session?.user?.id) return;
+    setWhatsappLogsLoading(true);
+    const { data } = await (supabase as any)
+      .from('whatsapp_message_log')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setWhatsappLogs(data || []);
+    setWhatsappLogsLoading(false);
+  };
 
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
