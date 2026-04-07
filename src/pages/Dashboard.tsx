@@ -674,11 +674,15 @@ const Dashboard = () => {
     setViewingUserLoading(false);
   };
 
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.account_id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.account_id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSpins = spinsFilter === 'all' ? true
+      : spinsFilter === 'with' ? u.spins_available >= 1
+      : u.spins_available < 1;
+    return matchesSearch && matchesSpins;
+  });
 
   const handleThemeChange = async (newTheme: ThemeSettings) => {
     setDashboardTheme(newTheme);
