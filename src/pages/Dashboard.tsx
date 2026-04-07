@@ -98,6 +98,22 @@ const Dashboard = () => {
   const [instanceStatus, setInstanceStatus] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
   const [instanceQrCode, setInstanceQrCode] = useState<string | null>(null);
   const [creatingInstance, setCreatingInstance] = useState(false);
+  const [whatsappLogs, setWhatsappLogs] = useState<any[]>([]);
+  const [whatsappLogsLoading, setWhatsappLogsLoading] = useState(false);
+  const [showWhatsappHistory, setShowWhatsappHistory] = useState(false);
+
+  const fetchWhatsappLogs = async () => {
+    if (!session?.user?.id) return;
+    setWhatsappLogsLoading(true);
+    const { data } = await (supabase as any)
+      .from('whatsapp_message_log')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setWhatsappLogs(data || []);
+    setWhatsappLogsLoading(false);
+  };
 
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -372,11 +388,26 @@ const Dashboard = () => {
       .replace(/\{nome\}/g, user.name)
       .replace(/\{giros\}/g, String(count))
       .replace(/\{link\}/g, wheelLink);
+    let sendError: string | null = null;
     try {
-      await supabase.functions.invoke('send-whatsapp', {
+      const { error } = await supabase.functions.invoke('send-whatsapp', {
         body: { recipientPhone: user.phone, message: finalMsg, evolutionApiUrl, evolutionApiKey, evolutionInstance }
       });
-    } catch (e) { console.error('WhatsApp send error:', e); }
+      if (error) sendError = error.message;
+    } catch (e: any) {
+      sendError = e?.message || 'Erro desconhecido';
+      console.error('WhatsApp send error:', e);
+    }
+    try {
+      await (supabase as any).from('whatsapp_message_log').insert({
+        owner_id: session?.user?.id,
+        recipient_phone: user.phone,
+        recipient_name: user.name,
+        message: finalMsg,
+        status: sendError ? 'error' : 'sent',
+        error_message: sendError,
+      });
+    } catch (e) { /* silent */ }
   };
 
   const confirmGrantSpin = async () => {
@@ -2053,8 +2084,11 @@ const Dashboard = () => {
           {/* ══════ WHATSAPP TAB ══════ */}
           {activeTab === 'whatsapp' && (
             <div className="max-w-2xl space-y-5">
-              <div className="flex items-center justify-end">
-                <button onClick={() => setShowWhatsappConfig(!showWhatsappConfig)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition text-sm">
+              <div className="flex items-center gap-2 justify-end">
+                <button onClick={() => { setShowWhatsappHistory(!showWhatsappHistory); if (!showWhatsappHistory) fetchWhatsappLogs(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showWhatsappHistory ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Clock size={15} /> Histórico
+                </button>
+                <button onClick={() => setShowWhatsappConfig(!showWhatsappConfig)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showWhatsappConfig ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
                   <Settings size={15} /> Configurar API
                 </button>
               </div>
@@ -2251,6 +2285,39 @@ const Dashboard = () => {
                 </GlassCard>
               )}
 
+              {showWhatsappHistory && (
+                <GlassCard className="p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} className="text-primary" /> Histórico de Mensagens</h3>
+                    <button onClick={fetchWhatsappLogs} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                  </div>
+                  {whatsappLogsLoading ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm animate-pulse">Carregando histórico...</div>
+                  ) : whatsappLogs.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">Nenhuma mensagem enviada ainda.</div>
+                  ) : (
+                    <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.1] [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {whatsappLogs.map((log: any) => (
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition">
+                          <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${log.status === 'sent' ? 'bg-green-400' : 'bg-red-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold text-foreground truncate">{log.recipient_name || 'Sem nome'}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{log.recipient_phone}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{log.message}</p>
+                            {log.error_message && <p className="text-[10px] text-red-400 mt-1">Erro: {log.error_message}</p>}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+                            {new Date(log.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
               <GlassCard className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
                 <div className="flex gap-2">
@@ -2304,8 +2371,18 @@ const Dashboard = () => {
                   if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setWhatsappSending(true);
                   let sent = 0, errors = 0;
+                  const allUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                   for (const phone of phones) {
+                    const matchedUser = allUsers.find(u => u.phone === phone);
                     const { error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
+                    await (supabase as any).from('whatsapp_message_log').insert({
+                      owner_id: session.user.id,
+                      recipient_phone: phone,
+                      recipient_name: matchedUser?.name || '',
+                      message: whatsappMessage,
+                      status: error ? 'error' : 'sent',
+                      error_message: error?.message || null,
+                    });
                     if (error) errors++; else sent++;
                   }
                   setWhatsappSending(false);
