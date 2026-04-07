@@ -388,11 +388,26 @@ const Dashboard = () => {
       .replace(/\{nome\}/g, user.name)
       .replace(/\{giros\}/g, String(count))
       .replace(/\{link\}/g, wheelLink);
+    let sendError: string | null = null;
     try {
-      await supabase.functions.invoke('send-whatsapp', {
+      const { error } = await supabase.functions.invoke('send-whatsapp', {
         body: { recipientPhone: user.phone, message: finalMsg, evolutionApiUrl, evolutionApiKey, evolutionInstance }
       });
-    } catch (e) { console.error('WhatsApp send error:', e); }
+      if (error) sendError = error.message;
+    } catch (e: any) {
+      sendError = e?.message || 'Erro desconhecido';
+      console.error('WhatsApp send error:', e);
+    }
+    try {
+      await (supabase as any).from('whatsapp_message_log').insert({
+        owner_id: session?.user?.id,
+        recipient_phone: user.phone,
+        recipient_name: user.name,
+        message: finalMsg,
+        status: sendError ? 'error' : 'sent',
+        error_message: sendError,
+      });
+    } catch (e) { /* silent */ }
   };
 
   const confirmGrantSpin = async () => {
