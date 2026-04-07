@@ -1182,6 +1182,12 @@ const Dashboard = () => {
                               >
                                 {user.spins_available >= 1 ? `${user.spins_available}✓` : 'Giro'}
                               </button>
+                              {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] && (
+                                <span className="text-[9px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-md truncate max-w-[80px]" title={`Prêmio fixo: ${wheelConfig.segments[user.fixed_prize_segment].title}`}>
+                                  🎯 {wheelConfig.segments[user.fixed_prize_segment].title}
+                                </span>
+                              )
+                              </button>
                               <button onClick={() => openEdit(user)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
                                 <Pencil size={12} />
                               </button>
@@ -1238,6 +1244,12 @@ const Dashboard = () => {
                               className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
                             >
                               {user.spins_available >= 1 ? `${user.spins_available}✓` : 'Giro'}
+                            </button>
+                            {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] && (
+                              <span className="text-[9px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-md truncate max-w-[60px]" title={`Prêmio fixo: ${wheelConfig.segments[user.fixed_prize_segment].title}`}>
+                                🎯 {wheelConfig.segments[user.fixed_prize_segment].title}
+                              </span>
+                            )
                             </button>
                             <button onClick={() => openEdit(user)} className="p-1 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
                               <Pencil size={12} />
