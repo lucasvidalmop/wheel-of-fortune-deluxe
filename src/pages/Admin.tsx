@@ -441,6 +441,7 @@ const Admin = () => {
     { key: 'site', icon: <Globe size={20} />, label: 'Site' },
     { key: 'users', icon: <Users size={20} />, label: 'Inscritos' },
     { key: 'admins', icon: <UserPlus size={20} />, label: 'Usuários' },
+    { key: 'dashboards', icon: <Monitor size={20} />, label: 'Dashboards' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico' },
   ];
 
@@ -448,6 +449,7 @@ const Admin = () => {
     site: 'Configurações do Site',
     users: 'Todos os Inscritos',
     admins: 'Gerenciar Usuários',
+    dashboards: 'Clonagem de Dashboards',
     history: 'Histórico Global',
   };
 
