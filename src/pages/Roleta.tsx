@@ -684,11 +684,11 @@ const Roleta = () => {
       {/* Logged-in user badge - moved below wheel */}
 
       {/* Header */}
-      {config.headerMode === 'image' && config.headerImageUrl ? (
+      {(config.headerMode === 'image' || config.headerMode === 'image_text') && config.headerImageUrl && (
         <img
           src={config.headerImageUrl}
           alt="Header"
-          className="relative z-10 mb-4 md:mb-10 object-contain max-h-16 md:max-h-none"
+          className="relative z-10 mb-2 md:mb-4 object-contain max-h-16 md:max-h-none"
           style={{
             height: config.headerImageSize,
             maxWidth: '90vw',
@@ -697,7 +697,8 @@ const Roleta = () => {
               : `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
           }}
         />
-      ) : (
+      )}
+      {(config.headerMode === 'text' || config.headerMode === 'image_text') && (
         <>
           <h1
             className="relative z-10 font-display font-black tracking-[0.3em] uppercase mb-1 md:mb-2 text-center"

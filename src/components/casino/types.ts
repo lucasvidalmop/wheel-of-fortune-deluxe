@@ -64,7 +64,7 @@ export interface WheelConfig {
   resultBorderColor: string;
   pageTitle: string;
   pageSubtitle: string;
-  headerMode: 'text' | 'image';
+  headerMode: 'text' | 'image' | 'image_text';
   headerImageUrl?: string;
   headerImageOffsetX?: number;
   headerImageOffsetY?: number;
