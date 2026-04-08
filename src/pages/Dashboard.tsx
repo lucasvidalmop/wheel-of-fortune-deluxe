@@ -161,6 +161,11 @@ const Dashboard = () => {
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito'>('credenciais');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositDescription, setDepositDescription] = useState('');
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [depositQrData, setDepositQrData] = useState<any>(null);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
@@ -2787,65 +2792,239 @@ const Dashboard = () => {
           {/* ══════ FINANCEIRO TAB ══════ */}
           {activeTab === 'financeiro' && (
             <div className="max-w-2xl space-y-5">
-              <GlassCard className="p-5 space-y-5">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                    <Wallet size={20} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground">EdPay — Gateway de Pagamento</h3>
-                    <p className="text-xs text-muted-foreground">Configure suas credenciais para processar pagamentos via PIX</p>
-                  </div>
-                </div>
+              {/* Sub-tabs */}
+              <div className="flex gap-2">
+                {[
+                  { key: 'credenciais' as const, label: '🔑 Credenciais' },
+                  { key: 'deposito' as const, label: '💰 Depósito PIX' },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setFinanceiroSubTab(tab.key)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      financeiroSubTab === tab.key
+                        ? 'bg-primary/15 text-primary border border-primary/20'
+                        : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] border border-transparent'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Pública</label>
-                    <input
-                      type="text"
-                      value={edpayPublicKey}
-                      onChange={e => setEdpayPublicKey(e.target.value)}
-                      placeholder="pk_live_..."
-                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Secreta</label>
-                    <div className="relative">
-                      <input
-                        type={showEdpaySecret ? 'text' : 'password'}
-                        value={edpaySecretKey}
-                        onChange={e => setEdpaySecretKey(e.target.value)}
-                        placeholder="sk_live_..."
-                        className="w-full px-4 py-2.5 pr-12 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowEdpaySecret(!showEdpaySecret)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Eye size={16} />
-                      </button>
+              {/* Credenciais Sub-tab */}
+              {financeiroSubTab === 'credenciais' && (
+                <GlassCard className="p-5 space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                      <Wallet size={20} className="text-primary" />
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">⚠️ A chave secreta é salva de forma segura junto com a configuração da sua roleta.</p>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">EdPay — Gateway de Pagamento</h3>
+                      <p className="text-xs text-muted-foreground">Configure suas credenciais para processar pagamentos via PIX</p>
+                    </div>
                   </div>
-                </div>
 
-                {edpayPublicKey && edpaySecretKey && (
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-xs font-medium text-emerald-400">Credenciais configuradas</span>
-                  </div>
-                )}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Pública</label>
+                      <input
+                        type="text"
+                        value={edpayPublicKey}
+                        onChange={e => setEdpayPublicKey(e.target.value)}
+                        placeholder="pk_live_..."
+                        className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                      />
+                    </div>
 
-                {(!edpayPublicKey || !edpaySecretKey) && (
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <div className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="text-xs font-medium text-amber-400">Preencha ambas as chaves para ativar os pagamentos</span>
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Secreta</label>
+                      <div className="relative">
+                        <input
+                          type={showEdpaySecret ? 'text' : 'password'}
+                          value={edpaySecretKey}
+                          onChange={e => setEdpaySecretKey(e.target.value)}
+                          placeholder="sk_live_..."
+                          className="w-full px-4 py-2.5 pr-12 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowEdpaySecret(!showEdpaySecret)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">⚠️ A chave secreta é salva de forma segura junto com a configuração da sua roleta.</p>
+                    </div>
                   </div>
-                )}
-              </GlassCard>
+
+                  {edpayPublicKey && edpaySecretKey && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-xs font-medium text-emerald-400">Credenciais configuradas</span>
+                    </div>
+                  )}
+
+                  {(!edpayPublicKey || !edpaySecretKey) && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <div className="w-2 h-2 rounded-full bg-amber-400" />
+                      <span className="text-xs font-medium text-amber-400">Preencha ambas as chaves para ativar os pagamentos</span>
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
+              {/* Depósito Sub-tab */}
+              {financeiroSubTab === 'deposito' && (
+                <>
+                  {(!edpayPublicKey || !edpaySecretKey) ? (
+                    <GlassCard className="p-5">
+                      <div className="flex flex-col items-center gap-3 py-6 text-center">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                          <Wallet size={28} className="text-amber-400" />
+                        </div>
+                        <h3 className="text-sm font-bold text-foreground">Credenciais não configuradas</h3>
+                        <p className="text-xs text-muted-foreground max-w-sm">Configure suas chaves da EdPay na aba "Credenciais" antes de gerar depósitos.</p>
+                        <button
+                          onClick={() => setFinanceiroSubTab('credenciais')}
+                          className="mt-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all"
+                        >
+                          Ir para Credenciais
+                        </button>
+                      </div>
+                    </GlassCard>
+                  ) : (
+                    <GlassCard className="p-5 space-y-5">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                          <span className="text-xl">💰</span>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground">Gerar QR Code PIX</h3>
+                          <p className="text-xs text-muted-foreground">Crie um QR Code para receber pagamentos via PIX</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor (R$)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            step="0.01"
+                            value={depositAmount}
+                            onChange={e => setDepositAmount(e.target.value)}
+                            placeholder="0,00"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição (opcional)</label>
+                          <input
+                            type="text"
+                            value={depositDescription}
+                            onChange={e => setDepositDescription(e.target.value)}
+                            placeholder="Ex: Depósito para roleta"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          />
+                        </div>
+
+                        <button
+                          onClick={async () => {
+                            if (!depositAmount || Number(depositAmount) < 1) {
+                              toast.error('Valor mínimo: R$ 1,00');
+                              return;
+                            }
+                            setDepositLoading(true);
+                            setDepositQrData(null);
+                            try {
+                              const { data, error } = await supabase.functions.invoke('edpay-generate-qrcode', {
+                                body: {
+                                  amount: Number(depositAmount),
+                                  edpayPublicKey,
+                                  edpaySecretKey,
+                                  description: depositDescription || 'Depósito via Roleta',
+                                },
+                              });
+                              if (error) throw error;
+                              if (data?.error) {
+                                toast.error(data.error);
+                              } else {
+                                setDepositQrData(data?.data || data);
+                                toast.success('QR Code gerado com sucesso!');
+                              }
+                            } catch (err: any) {
+                              toast.error(err?.message || 'Erro ao gerar QR Code');
+                            } finally {
+                              setDepositLoading(false);
+                            }
+                          }}
+                          disabled={depositLoading || !depositAmount}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {depositLoading ? (
+                            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Gerando...</>
+                          ) : (
+                            '🔲 Gerar QR Code PIX'
+                          )}
+                        </button>
+                      </div>
+
+                      {/* QR Code Result */}
+                      {depositQrData && (
+                        <div className="mt-4 p-4 rounded-xl bg-white/[0.06] border border-white/[0.08] space-y-4">
+                          <h4 className="text-sm font-bold text-foreground text-center">QR Code gerado!</h4>
+
+                          {/* Display QR image if available */}
+                          {(depositQrData.qr_code_base64 || depositQrData.qrcode || depositQrData.image || depositQrData.qr_code) && (
+                            <div className="flex justify-center">
+                              <img
+                                src={depositQrData.qr_code_base64 || depositQrData.qrcode || depositQrData.image || depositQrData.qr_code}
+                                alt="QR Code PIX"
+                                className="w-48 h-48 rounded-xl bg-white p-2"
+                              />
+                            </div>
+                          )}
+
+                          {/* Copy-paste code */}
+                          {(depositQrData.pix_copy_paste || depositQrData.copy_paste || depositQrData.emv || depositQrData.payload) && (
+                            <div>
+                              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Código PIX (Copia e Cola)</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={depositQrData.pix_copy_paste || depositQrData.copy_paste || depositQrData.emv || depositQrData.payload}
+                                  className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground"
+                                />
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(depositQrData.pix_copy_paste || depositQrData.copy_paste || depositQrData.emv || depositQrData.payload);
+                                    toast.success('Código copiado!');
+                                  }}
+                                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-all"
+                                >
+                                  <Copy size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Show full response for debugging */}
+                          <details className="text-[10px] text-muted-foreground">
+                            <summary className="cursor-pointer hover:text-foreground transition-colors">Ver resposta completa</summary>
+                            <pre className="mt-2 p-2 rounded-lg bg-black/20 overflow-auto max-h-40 text-[10px]">
+                              {JSON.stringify(depositQrData, null, 2)}
+                            </pre>
+                          </details>
+                        </div>
+                      )}
+                    </GlassCard>
+                  )}
+                </>
+              )}
             </div>
           )}
 
