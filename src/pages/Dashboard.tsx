@@ -2120,14 +2120,37 @@ const Dashboard = () => {
                   </button>
                 </div>
                 {emailTarget === 'selected' && (
-                  <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
-                    {users.map(u => (
-                      <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                        <input type="checkbox" checked={selectedEmails.includes(u.email)} onChange={e => { if (e.target.checked) setSelectedEmails([...selectedEmails, u.email]); else setSelectedEmails(selectedEmails.filter(em => em !== u.email)); }} className="rounded border-white/20 bg-white/[0.05]" />
-                        <span className="text-sm text-foreground">{u.name}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">{u.email}</span>
-                      </label>
-                    ))}
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Pesquisar por nome ou email..."
+                        value={emailSearchTerm}
+                        onChange={e => setEmailSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 placeholder:text-muted-foreground"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
+                      {users.filter(u => {
+                        if (!emailSearchTerm.trim()) return true;
+                        const term = emailSearchTerm.toLowerCase();
+                        return u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
+                      }).map(u => (
+                        <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                          <input type="checkbox" checked={selectedEmails.includes(u.email)} onChange={e => { if (e.target.checked) setSelectedEmails([...selectedEmails, u.email]); else setSelectedEmails(selectedEmails.filter(em => em !== u.email)); }} className="rounded border-white/20 bg-white/[0.05]" />
+                          <span className="text-sm text-foreground">{u.name}</span>
+                          <span className="text-xs text-muted-foreground ml-auto">{u.email}</span>
+                        </label>
+                      ))}
+                      {users.filter(u => {
+                        if (!emailSearchTerm.trim()) return true;
+                        const term = emailSearchTerm.toLowerCase();
+                        return u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
+                      }).length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-3">Nenhum resultado encontrado</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </GlassCard>
