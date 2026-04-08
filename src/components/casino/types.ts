@@ -42,6 +42,7 @@ export interface WheelSegment {
   hideValue?: boolean;
   postSpinMessage?: string;
   postSpinEmoji?: string;
+  autoPayment?: boolean;
 }
 
 export interface WheelConfig {
