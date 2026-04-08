@@ -3109,31 +3109,33 @@ const Dashboard = () => {
                         <div className="mt-4 p-4 rounded-xl bg-white/[0.06] border border-white/[0.08] space-y-4">
                           <h4 className="text-sm font-bold text-foreground text-center">QR Code gerado!</h4>
 
-                          {/* Display QR image if available */}
-                          {(depositQrData.qr_code_base64 || depositQrData.qrcode || depositQrData.image || depositQrData.qr_code) && (
+                          {depositQrData.id && (
+                            <p className="text-xs text-muted-foreground text-center">ID da transação: <span className="text-foreground font-mono">{depositQrData.id}</span></p>
+                          )}
+
+                          {depositQrData.qrcode && (
                             <div className="flex justify-center">
                               <img
-                                src={depositQrData.qr_code_base64 || depositQrData.qrcode || depositQrData.image || depositQrData.qr_code}
+                                src={depositQrData.qrcode}
                                 alt="QR Code PIX"
                                 className="w-48 h-48 rounded-xl bg-white p-2"
                               />
                             </div>
                           )}
 
-                          {/* Copy-paste code */}
-                          {(depositQrData.pix_copy_paste || depositQrData.copy_paste || depositQrData.emv || depositQrData.payload) && (
+                          {depositQrData.copiacola && (
                             <div>
                               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Código PIX (Copia e Cola)</label>
                               <div className="flex gap-2">
                                 <input
                                   type="text"
                                   readOnly
-                                  value={depositQrData.pix_copy_paste || depositQrData.copy_paste || depositQrData.emv || depositQrData.payload}
+                                  value={depositQrData.copiacola}
                                   className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground"
                                 />
                                 <button
                                   onClick={() => {
-                                    navigator.clipboard.writeText(depositQrData.pix_copy_paste || depositQrData.copy_paste || depositQrData.emv || depositQrData.payload);
+                                    navigator.clipboard.writeText(depositQrData.copiacola);
                                     toast.success('Código copiado!');
                                   }}
                                   className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-all"
@@ -3144,7 +3146,6 @@ const Dashboard = () => {
                             </div>
                           )}
 
-                          {/* Show full response for debugging */}
                           <details className="text-[10px] text-muted-foreground">
                             <summary className="cursor-pointer hover:text-foreground transition-colors">Ver resposta completa</summary>
                             <pre className="mt-2 p-2 rounded-lg bg-black/20 overflow-auto max-h-40 text-[10px]">
