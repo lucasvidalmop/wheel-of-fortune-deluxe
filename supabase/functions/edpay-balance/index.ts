@@ -82,6 +82,7 @@ Deno.serve(async (req) => {
     }
 
     const balanceData = await balanceResponse.json();
+    console.log("EdPay balance response:", JSON.stringify(balanceData));
 
     return new Response(JSON.stringify({ success: true, data: balanceData }), {
       status: 200,
