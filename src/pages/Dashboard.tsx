@@ -3195,6 +3195,7 @@ const Dashboard = () => {
                     </div>
                   )}
                 </GlassCard>
+              </>
               )}
 
               {/* Saldo Sub-tab */}
