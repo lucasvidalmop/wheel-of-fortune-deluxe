@@ -614,7 +614,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
 
           <div className="relative z-10 flex h-full flex-col items-center justify-between px-3 py-4 text-center">
             <div className="space-y-1">
-              {config.headerMode === 'image' && config.headerImageUrl ? (
+              {(config.headerMode === 'image' || config.headerMode === 'image_text') && config.headerImageUrl && (
                 <img
                   src={config.headerImageUrl}
                   alt=""
@@ -627,7 +627,8 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
                       : `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
                   }}
                 />
-              ) : (
+              )}
+              {(config.headerMode === 'text' || config.headerMode === 'image_text') && (
                 <>
                   <h3
                     className="font-black uppercase tracking-[0.18em]"
