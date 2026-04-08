@@ -19,6 +19,9 @@ export interface ThemeSettings {
   inputTextColor: string;
   modalBgColor: string;
   modalAccentColor: string;
+  modalIconColor: string;
+  modalBtnColor: string;
+  modalBtnTextColor: string;
 }
 
 export const defaultTheme: ThemeSettings = {
@@ -37,6 +40,9 @@ export const defaultTheme: ThemeSettings = {
   inputTextColor: '#ffffff',
   modalBgColor: '#1a1a2e',
   modalAccentColor: '#e6a817',
+  modalIconColor: '#f59e0b',
+  modalBtnColor: '#f59e0b',
+  modalBtnTextColor: '#ffffff',
 };
 
 interface Props {
@@ -83,11 +89,14 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
   root.style.setProperty('--theme-input-text', t.inputTextColor || '#ffffff');
   root.style.setProperty('--theme-modal-bg', t.modalBgColor || '#1a1a2e');
   root.style.setProperty('--theme-modal-accent', t.modalAccentColor || '#e6a817');
+  root.style.setProperty('--theme-modal-icon', t.modalIconColor || '#f59e0b');
+  root.style.setProperty('--theme-modal-btn', t.modalBtnColor || '#f59e0b');
+  root.style.setProperty('--theme-modal-btn-text', t.modalBtnTextColor || '#ffffff');
 };
 
 const clearThemeFromDOM = () => {
   const root = document.documentElement;
-  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text', '--theme-modal-bg', '--theme-modal-accent'].forEach(p => root.style.removeProperty(p));
+  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text', '--theme-modal-bg', '--theme-modal-accent', '--theme-modal-icon', '--theme-modal-btn', '--theme-modal-btn-text'].forEach(p => root.style.removeProperty(p));
 };
 
 const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) => {
@@ -214,6 +223,9 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
                   <ColorInput label="Fundo do modal" value={theme.modalBgColor} onChange={v => save({ ...theme, modalBgColor: v })} />
                   <ColorInput label="Cor destaque do modal" value={theme.modalAccentColor} onChange={v => save({ ...theme, modalAccentColor: v })} />
+                  <ColorInput label="Cor do ícone" value={theme.modalIconColor} onChange={v => save({ ...theme, modalIconColor: v })} />
+                  <ColorInput label="Cor do botão salvar" value={theme.modalBtnColor} onChange={v => save({ ...theme, modalBtnColor: v })} />
+                  <ColorInput label="Cor texto do botão" value={theme.modalBtnTextColor} onChange={v => save({ ...theme, modalBtnTextColor: v })} />
                 </div>
               </div>
 
