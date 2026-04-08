@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      edpay_transactions: {
+        Row: {
+          amount: number | null
+          created_at: string
+          edpay_id: string | null
+          id: string
+          metadata: Json | null
+          owner_id: string
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          edpay_id?: string | null
+          id?: string
+          metadata?: Json | null
+          owner_id: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          edpay_id?: string | null
+          id?: string
+          metadata?: Json | null
+          owner_id?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
