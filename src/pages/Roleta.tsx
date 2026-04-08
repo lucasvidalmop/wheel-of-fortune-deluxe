@@ -488,7 +488,7 @@ const Roleta = () => {
 
           if (ppError) {
             console.error('Failed to create prize_payment:', ppError);
-          } else if (ppResult?.auto_payment && ppResult?.id) {
+          } else if ((ppResult?.auto_payment || seg.autoPayment) && ppResult?.id) {
             // Trigger automatic payment via edge function
             try {
               await supabase.functions.invoke('edpay-pix-transfer', {
