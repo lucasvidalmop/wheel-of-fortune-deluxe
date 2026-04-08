@@ -158,16 +158,18 @@ Deno.serve(async (req) => {
 
     if (!transferResponse.ok) {
       console.error("EdPay transfer failed:", JSON.stringify(transferData));
+      // Revert to pending so it appears in approvals for manual retry
       await supabaseAdmin
         .from("prize_payments")
         .update({
-          status: "failed",
-          notes: `Erro EdPay: ${JSON.stringify(transferData)}`,
+          status: "pending",
+          auto_payment: false,
+          notes: `Falha auto-pagamento EdPay: ${JSON.stringify(transferData)}. Aguardando aprovação manual.`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", paymentId);
 
-      return new Response(JSON.stringify({ error: "Falha na transferência PIX", details: transferData }), {
+      return new Response(JSON.stringify({ error: "Falha na transferência PIX - enviado para aprovação manual", details: transferData }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
