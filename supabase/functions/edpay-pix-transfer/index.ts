@@ -41,14 +41,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // For auto-payment or when keys not provided, fetch from owner's wheel_config
-    if (autoPayment || !edpayPublicKey || !edpaySecretKey) {
-      const { data: configData } = await supabaseAdmin
-        .from("wheel_configs")
-        .select("config")
-        .eq("user_id", payment.owner_id)
-        .maybeSingle();
+    // Fetch owner's wheel_config (needed for EdPay keys and notification settings)
+    const { data: configData } = await supabaseAdmin
+      .from("wheel_configs")
+      .select("config")
+      .eq("user_id", payment.owner_id)
+      .maybeSingle();
 
+    // For auto-payment or when keys not provided, use config keys
+    if (autoPayment || !edpayPublicKey || !edpaySecretKey) {
       if (configData?.config) {
         const cfg = typeof configData.config === "string" ? JSON.parse(configData.config) : configData.config;
         const dashSettings = cfg.dashboardSettings || {};
