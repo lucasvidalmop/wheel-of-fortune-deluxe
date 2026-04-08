@@ -2634,8 +2634,11 @@ const Dashboard = () => {
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={excludeBulkSent} onChange={e => { setExcludeBulkSent(e.target.checked); if (e.target.checked) fetchBulkSentPhones(); }} className="rounded border-white/20" />
-                  <span className="text-xs text-muted-foreground">Excluir quem já recebeu disparo</span>
+                  <span className="text-xs text-muted-foreground">Excluir quem já recebeu disparo (24h)</span>
                   {excludeBulkSent && bulkSentPhones.size > 0 && <span className="text-xs text-yellow-400">({bulkSentPhones.size} excluídos)</span>}
+                  {excludeBulkSent && bulkSentCountdown && (
+                    <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">⏱ {bulkSentCountdown}</span>
+                  )}
                 </label>
                 <div className="flex gap-2">
                   <button onClick={() => { setWhatsappTarget('all'); setSelectedWhatsappPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
