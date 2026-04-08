@@ -17,6 +17,8 @@ export interface ThemeSettings {
   selectTextColor: string;
   inputBgColor: string;
   inputTextColor: string;
+  modalBgColor: string;
+  modalAccentColor: string;
 }
 
 export const defaultTheme: ThemeSettings = {
@@ -33,6 +35,8 @@ export const defaultTheme: ThemeSettings = {
   selectTextColor: '#ffffff',
   inputBgColor: '#0f0f1e',
   inputTextColor: '#ffffff',
+  modalBgColor: '#1a1a2e',
+  modalAccentColor: '#e6a817',
 };
 
 interface Props {
@@ -77,11 +81,13 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
   root.style.setProperty('--theme-select-text', t.selectTextColor || '#ffffff');
   root.style.setProperty('--theme-input-bg', t.inputBgColor || '#0f0f1e');
   root.style.setProperty('--theme-input-text', t.inputTextColor || '#ffffff');
+  root.style.setProperty('--theme-modal-bg', t.modalBgColor || '#1a1a2e');
+  root.style.setProperty('--theme-modal-accent', t.modalAccentColor || '#e6a817');
 };
 
 const clearThemeFromDOM = () => {
   const root = document.documentElement;
-  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text'].forEach(p => root.style.removeProperty(p));
+  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text', '--theme-modal-bg', '--theme-modal-accent'].forEach(p => root.style.removeProperty(p));
 };
 
 const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) => {
@@ -198,6 +204,20 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
                   <ColorInput label="Fundo dos inputs" value={theme.inputBgColor} onChange={v => save({ ...theme, inputBgColor: v })} />
                   <ColorInput label="Texto dos inputs" value={theme.inputTextColor} onChange={v => save({ ...theme, inputTextColor: v })} />
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <Palette size={14} className="text-primary" />
+                  Modal de Inscritos
+                </div>
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                  <ColorInput label="Fundo do modal" value={theme.modalBgColor} onChange={v => save({ ...theme, modalBgColor: v })} />
+                  <ColorInput label="Cor destaque do modal" value={theme.modalAccentColor} onChange={v => save({ ...theme, modalAccentColor: v })} />
+                </div>
+              </div>
+
+              <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
                   <Monitor size={14} className="text-primary" />
                   Efeitos Glass
