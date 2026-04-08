@@ -1441,7 +1441,7 @@ const Dashboard = () => {
                     {/* Header */}
                     <div className="relative px-6 pt-6 pb-4 border-b border-white/[0.06]">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${editingUser ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--theme-modal-icon, #f59e0b) 15%, transparent)', color: 'var(--theme-modal-icon, #f59e0b)' }}>
                           {editingUser ? <Pencil size={18} /> : <Plus size={18} />}
                         </div>
                         <div>
