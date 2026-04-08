@@ -81,11 +81,13 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
   root.style.setProperty('--theme-select-text', t.selectTextColor || '#ffffff');
   root.style.setProperty('--theme-input-bg', t.inputBgColor || '#0f0f1e');
   root.style.setProperty('--theme-input-text', t.inputTextColor || '#ffffff');
+  root.style.setProperty('--theme-modal-bg', t.modalBgColor || '#1a1a2e');
+  root.style.setProperty('--theme-modal-accent', t.modalAccentColor || '#e6a817');
 };
 
 const clearThemeFromDOM = () => {
   const root = document.documentElement;
-  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text'].forEach(p => root.style.removeProperty(p));
+  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text', '--theme-modal-bg', '--theme-modal-accent'].forEach(p => root.style.removeProperty(p));
 };
 
 const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) => {
