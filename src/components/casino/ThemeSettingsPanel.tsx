@@ -204,9 +204,20 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
                   <ColorInput label="Fundo dos inputs" value={theme.inputBgColor} onChange={v => save({ ...theme, inputBgColor: v })} />
                   <ColorInput label="Texto dos inputs" value={theme.inputTextColor} onChange={v => save({ ...theme, inputTextColor: v })} />
                 </div>
+              </div>
+
+              <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
-                  <Monitor size={14} className="text-primary" />
-                  Efeitos Glass
+                  <Palette size={14} className="text-primary" />
+                  Modal de Inscritos
+                </div>
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                  <ColorInput label="Fundo do modal" value={theme.modalBgColor} onChange={v => save({ ...theme, modalBgColor: v })} />
+                  <ColorInput label="Cor destaque do modal" value={theme.modalAccentColor} onChange={v => save({ ...theme, modalAccentColor: v })} />
+                </div>
+              </div>
+
+              <div className="space-y-3">
                 </div>
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-4">
                   <div className="space-y-2">
