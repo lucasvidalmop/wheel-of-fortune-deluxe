@@ -2783,7 +2783,6 @@ const Dashboard = () => {
             </div>
           )}
 
-        </div>
 
           {/* ══════ FINANCEIRO TAB ══════ */}
           {activeTab === 'financeiro' && (
