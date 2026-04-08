@@ -484,6 +484,7 @@ const Roleta = () => {
             p_prize: seg.title || `Segmento ${segmentIndex + 1}`,
             p_amount: prizeValue,
             p_spin_result_id: spinResultId || null,
+            p_force_auto: !!seg.autoPayment,
           });
 
           if (ppError) {
