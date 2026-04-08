@@ -1505,6 +1505,23 @@ const Dashboard = () => {
                         )}
                       </div>
 
+                      {/* Auto Payment Toggle */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold text-muted-foreground">💳 Pagamento Automático (EdPay)</label>
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, auto_payment: !form.auto_payment })}
+                            className={`w-11 h-6 rounded-full relative transition-all duration-300 ${form.auto_payment ? 'bg-emerald-500' : 'bg-white/[0.1]'}`}
+                          >
+                            <div className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-0.5 transition-all duration-300 ${form.auto_payment ? 'left-[22px]' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+                        {form.auto_payment && (
+                          <p className="text-[10px] text-emerald-400">✅ Quando ganhar um prêmio com valor, será pago automaticamente via PIX (EdPay)</p>
+                        )}
+                      </div>
+
                       <div className="flex gap-3 pt-2">
                         <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
                         <button type="submit" disabled={savingUser} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">{savingUser ? 'Salvando...' : editingUser ? 'Salvar' : 'Criar'}</button>
