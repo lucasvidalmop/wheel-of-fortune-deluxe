@@ -218,6 +218,9 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
               </div>
 
               <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <Monitor size={14} className="text-primary" />
+                  Efeitos Glass
                 </div>
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-4">
                   <div className="space-y-2">
