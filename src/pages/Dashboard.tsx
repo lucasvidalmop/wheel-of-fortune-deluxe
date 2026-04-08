@@ -162,9 +162,13 @@ const Dashboard = () => {
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
-  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo'>('credenciais');
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
+  const [cryptoAmount, setCryptoAmount] = useState('');
+  const [cryptoDescription, setCryptoDescription] = useState('');
+  const [cryptoLoading, setCryptoLoading] = useState(false);
+  const [cryptoData, setCryptoData] = useState<any>(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
