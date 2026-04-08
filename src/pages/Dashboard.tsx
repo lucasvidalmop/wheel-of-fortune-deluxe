@@ -3151,7 +3151,7 @@ const Dashboard = () => {
                             } else {
                               const bd = data.data;
                               console.log('EdPay balance raw:', JSON.stringify(bd));
-                              const bal = bd?.balance ?? bd?.available_balance ?? bd?.saldo ?? bd?.amount ?? (typeof bd === 'number' ? bd : 0);
+                              const bal = bd?.availableBalance ?? bd?.balance ?? bd?.available_balance ?? bd?.saldo ?? bd?.amount ?? (typeof bd === 'number' ? bd : 0);
                               setEdpayBalance(Number(bal) || 0);
                               toast.success('Saldo atualizado!');
                             }
