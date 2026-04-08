@@ -52,6 +52,11 @@ interface PersistedDashboardSettings {
   excludeBulkSent: boolean;
   edpayPublicKey: string;
   edpaySecretKey: string;
+  notifyEvolutionApiUrl: string;
+  notifyEvolutionApiKey: string;
+  notifyEvolutionInstance: string;
+  notifyWhatsappPhone: string;
+  notifyAutoPaymentEnabled: boolean;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -78,6 +83,11 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   excludeBulkSent: false,
   edpayPublicKey: '',
   edpaySecretKey: '',
+  notifyEvolutionApiUrl: '',
+  notifyEvolutionApiKey: '',
+  notifyEvolutionInstance: '',
+  notifyWhatsappPhone: '',
+  notifyAutoPaymentEnabled: false,
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
