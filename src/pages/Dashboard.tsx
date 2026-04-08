@@ -155,6 +155,8 @@ const Dashboard = () => {
   const [showWhatsappHistory, setShowWhatsappHistory] = useState(false);
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
+  const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
+  const [bulkSentCountdown, setBulkSentCountdown] = useState('');
 
   const fetchWhatsappLogs = async () => {
     if (!session?.user?.id) return;
@@ -171,14 +173,43 @@ const Dashboard = () => {
 
   const fetchBulkSentPhones = async () => {
     if (!session?.user?.id) return;
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data } = await (supabase as any)
       .from('whatsapp_message_log')
-      .select('recipient_phone')
+      .select('recipient_phone, created_at')
       .eq('owner_id', session.user.id)
-      .eq('status', 'sent');
-    const phones = new Set<string>((data || []).map((d: any) => d.recipient_phone));
+      .eq('status', 'sent')
+      .gte('created_at', since24h);
+    const rows = data || [];
+    const phones = new Set<string>(rows.map((d: any) => d.recipient_phone));
     setBulkSentPhones(phones);
+    if (rows.length > 0) {
+      const oldest = rows.reduce((min: string, d: any) => d.created_at < min ? d.created_at : min, rows[0].created_at);
+      setBulkSentOldestTime(new Date(oldest));
+    } else {
+      setBulkSentOldestTime(null);
+    }
   };
+
+  useEffect(() => {
+    if (!excludeBulkSent || !bulkSentOldestTime) { setBulkSentCountdown(''); return; }
+    const update = () => {
+      const expiresAt = bulkSentOldestTime.getTime() + 24 * 60 * 60 * 1000;
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        setBulkSentCountdown('');
+        fetchBulkSentPhones();
+        return;
+      }
+      const h = Math.floor(remaining / 3600000);
+      const m = Math.floor((remaining % 3600000) / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      setBulkSentCountdown(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [excludeBulkSent, bulkSentOldestTime]);
 
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
