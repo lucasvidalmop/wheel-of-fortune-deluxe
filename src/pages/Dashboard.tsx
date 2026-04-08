@@ -173,7 +173,12 @@ const Dashboard = () => {
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
-  const [showEdpaySecret, setShowEdpaySecret] = useState(false);
+  const [notifyEvolutionApiUrl, setNotifyEvolutionApiUrl] = useState('');
+  const [notifyEvolutionApiKey, setNotifyEvolutionApiKey] = useState('');
+  const [notifyEvolutionInstance, setNotifyEvolutionInstance] = useState('');
+  const [notifyWhatsappPhone, setNotifyWhatsappPhone] = useState('');
+  const [notifyAutoPaymentEnabled, setNotifyAutoPaymentEnabled] = useState(false);
+  const [showNotifySecret, setShowNotifySecret] = useState(false);
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
