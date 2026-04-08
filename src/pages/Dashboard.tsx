@@ -119,6 +119,7 @@ const Dashboard = () => {
   const [emailBody, setEmailBody] = useState('Olá! Você foi convidado para girar a roleta e concorrer a prêmios incríveis. Acesse o link abaixo e boa sorte!');
   const [emailSending, setEmailSending] = useState(false);
   const [emailTarget, setEmailTarget] = useState<'all' | 'selected'>('all');
+  const [emailSearchTerm, setEmailSearchTerm] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom'>('original');
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
