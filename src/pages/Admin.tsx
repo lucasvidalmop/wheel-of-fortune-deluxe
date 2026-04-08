@@ -35,7 +35,7 @@ const Admin = () => {
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'admins' | 'history' | 'site' | 'dashboards'>('users');
-  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '' });
+  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text' });
   const [apiBackendUrl, setApiBackendUrl] = useState(() => localStorage.getItem('wheel_api_url') || '');
   const [siteSaving, setSiteSaving] = useState(false);
   const [siteUploading, setSiteUploading] = useState(false);
@@ -115,7 +115,7 @@ const Admin = () => {
 
   const fetchSiteSettings = async () => {
     const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
-    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '' });
+    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '', home_mode: data.home_mode || 'text' });
   };
 
   const handleSaveSiteSettings = async () => {
