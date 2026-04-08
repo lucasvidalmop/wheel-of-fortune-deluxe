@@ -1,7 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
-const EDPAY_API_BASE = "https://api.edpay.me/v1";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -9,56 +11,76 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Sessão inválida" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const userId = claimsData.claims.sub;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
-    const { paymentId, edpayPublicKey, edpaySecretKey } = body;
+    const { paymentId, autoPayment } = body;
+    let { edpayPublicKey, edpaySecretKey } = body;
 
-    if (!paymentId || !edpayPublicKey || !edpaySecretKey) {
-      return new Response(JSON.stringify({ error: "Campos obrigatórios: paymentId, edpayPublicKey, edpaySecretKey" }), {
+    if (!paymentId) {
+      return new Response(JSON.stringify({ error: "paymentId obrigatório" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Use service role to read/update payment
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
-    // Fetch payment record
+    // Fetch payment record (using service role for auto-payment support)
     const { data: payment, error: paymentError } = await supabaseAdmin
       .from("prize_payments")
       .select("*")
       .eq("id", paymentId)
-      .eq("owner_id", userId)
       .maybeSingle();
 
     if (paymentError || !payment) {
       return new Response(JSON.stringify({ error: "Pagamento não encontrado" }), {
         status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // For auto-payment or when keys not provided, fetch from owner's wheel_config
+    if (autoPayment || !edpayPublicKey || !edpaySecretKey) {
+      const { data: configData } = await supabaseAdmin
+        .from("wheel_configs")
+        .select("config")
+        .eq("user_id", payment.owner_id)
+        .maybeSingle();
+
+      if (configData?.config) {
+        const cfg = typeof configData.config === "string" ? JSON.parse(configData.config) : configData.config;
+        const dashSettings = cfg.dashboardSettings || {};
+        edpayPublicKey = edpayPublicKey || dashSettings.edpayPublicKey || "";
+        edpaySecretKey = edpaySecretKey || dashSettings.edpaySecretKey || "";
+      }
+    }
+
+    // If not auto-payment, verify the caller is the owner
+    if (!autoPayment) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "Não autorizado" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await supabaseUser.auth.getUser();
+      if (!user || user.id !== payment.owner_id) {
+        return new Response(JSON.stringify({ error: "Não autorizado" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (!edpayPublicKey || !edpaySecretKey) {
+      return new Response(JSON.stringify({ error: "Credenciais EdPay não configuradas" }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -107,7 +129,6 @@ Deno.serve(async (req) => {
     }
 
     // Step 2: Execute PIX transfer
-    // Map pix_key_type to EdPay pix_type format
     const pixTypeMap: Record<string, string> = {
       cpf: "CPF",
       cnpj: "CNPJ",
@@ -137,8 +158,6 @@ Deno.serve(async (req) => {
 
     if (!transferResponse.ok) {
       console.error("EdPay transfer failed:", JSON.stringify(transferData));
-
-      // Update payment status to failed
       await supabaseAdmin
         .from("prize_payments")
         .update({
