@@ -6,6 +6,7 @@ interface SiteSettings {
   site_description: string;
   favicon_url: string;
   bg_image_url: string;
+  home_mode: 'text' | 'image' | 'image_text';
 }
 
 export const useSiteSettings = () => {
