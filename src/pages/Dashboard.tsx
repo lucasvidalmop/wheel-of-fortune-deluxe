@@ -163,7 +163,7 @@ const Dashboard = () => {
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
-  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw'>('credenciais');
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
@@ -182,6 +182,8 @@ const Dashboard = () => {
   const [prizePayments, setPrizePayments] = useState<any[]>([]);
   const [prizePaymentsLoading, setPrizePaymentsLoading] = useState(false);
   const [payingPaymentId, setPayingPaymentId] = useState<string | null>(null);
+  const [paidHistory, setPaidHistory] = useState<any[]>([]);
+  const [paidHistoryLoading, setPaidHistoryLoading] = useState(false);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
@@ -677,6 +679,19 @@ const Dashboard = () => {
     setEditingUser(null);
     setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
     setShowForm(true);
+  };
+
+  const fetchPaidHistory = async () => {
+    if (!session?.user?.id) return;
+    setPaidHistoryLoading(true);
+    const { data } = await (supabase as any)
+      .from('prize_payments')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .in('status', ['paid', 'rejected'])
+      .order('created_at', { ascending: false });
+    setPaidHistory(data || []);
+    setPaidHistoryLoading(false);
   };
 
   const fetchPrizePayments = async () => {
@@ -2975,10 +2990,11 @@ const Dashboard = () => {
                   { key: 'crypto' as const, label: '🪙 Depósito USDT' },
                   { key: 'withdraw' as const, label: '📤 Saque USDT' },
                   { key: 'aprovacoes' as const, label: '✅ Aprovações' },
+                  { key: 'historico' as const, label: '📜 Histórico' },
                 ].map(tab => (
                   <button
                     key={tab.key}
-                    onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); }}
+                    onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); if (tab.key === 'historico') fetchPaidHistory(); }}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                       financeiroSubTab === tab.key
                         ? 'bg-primary/15 text-primary border border-primary/20'
@@ -3613,6 +3629,68 @@ const Dashboard = () => {
                             {p.edpay_transaction_id && (
                               <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
                             )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
+              {/* Histórico de prêmios pagos / rejeitados */}
+              {financeiroSubTab === 'historico' && (
+                <GlassCard className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-foreground">📜 Histórico de Pagamentos</h3>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Prêmios pagos e rejeitados</p>
+                    </div>
+                    <button
+                      onClick={fetchPaidHistory}
+                      className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  </div>
+
+                  {paidHistoryLoading ? (
+                    <div className="text-center py-8">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Carregando...</p>
+                    </div>
+                  ) : paidHistory.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">Nenhum pagamento no histórico</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {paidHistory.map((p: any) => {
+                        const isPaid = p.status === 'paid';
+                        return (
+                          <div key={p.id} className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-foreground">{p.user_name}</p>
+                                <p className="text-[10px] text-muted-foreground">{p.user_email} • {p.account_id}</p>
+                              </div>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${isPaid ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' : 'bg-red-500/15 text-red-400 border-red-500/20'}`}>
+                                {isPaid ? '💰 Pago' : '❌ Rejeitado'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">🎁 {p.prize}</span>
+                              <span className="font-bold text-foreground">R$ {Number(p.amount).toFixed(2)}</span>
+                            </div>
+                            {p.pix_key && (
+                              <p className="text-[10px] text-muted-foreground">PIX: {p.pix_key} ({p.pix_key_type})</p>
+                            )}
+                            {p.paid_at && (
+                              <p className="text-[10px] text-muted-foreground">Pago em: {new Date(p.paid_at).toLocaleString('pt-BR')}</p>
+                            )}
+                            {p.edpay_transaction_id && (
+                              <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground">Criado: {new Date(p.created_at).toLocaleString('pt-BR')}</p>
                           </div>
                         );
                       })}
