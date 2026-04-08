@@ -2948,7 +2948,66 @@ const Dashboard = () => {
                 </GlassCard>
               )}
 
-              {/* Depósito Sub-tab */}
+              {/* Saldo Sub-tab */}
+              {financeiroSubTab === 'saldo' && (
+                <GlassCard className="p-5 space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                      <DollarSign size={20} className="text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Saldo EdPay</h3>
+                      <p className="text-xs text-muted-foreground">Consulte seu saldo disponível</p>
+                    </div>
+                  </div>
+
+                  {(!edpayPublicKey || !edpaySecretKey) ? (
+                    <div className="text-center py-8 space-y-2">
+                      <DollarSign size={32} className="mx-auto text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">Configure suas credenciais primeiro</p>
+                      <button onClick={() => setFinanceiroSubTab('credenciais')} className="mt-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all">
+                        Ir para Credenciais
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {edpayBalance !== null && (
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 text-center">
+                          <p className="text-xs text-muted-foreground mb-1">Saldo Disponível</p>
+                          <p className="text-3xl font-bold text-green-400">
+                            R$ {edpayBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      )}
+                      <button
+                        onClick={async () => {
+                          setEdpayBalanceLoading(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('edpay-balance', {
+                              body: { edpayPublicKey, edpaySecretKey },
+                            });
+                            if (error || !data?.success) {
+                              toast.error(data?.error || 'Erro ao consultar saldo');
+                            } else {
+                              setEdpayBalance(data.data?.balance ?? 0);
+                              toast.success('Saldo atualizado!');
+                            }
+                          } catch (e: any) {
+                            toast.error('Erro ao consultar saldo');
+                          } finally {
+                            setEdpayBalanceLoading(false);
+                          }
+                        }}
+                        disabled={edpayBalanceLoading}
+                        className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        {edpayBalanceLoading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Consultando...</> : <><DollarSign size={16} /> Consultar Saldo</>}
+                      </button>
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
               {financeiroSubTab === 'deposito' && (
                 <>
                   {(!edpayPublicKey || !edpaySecretKey) ? (
