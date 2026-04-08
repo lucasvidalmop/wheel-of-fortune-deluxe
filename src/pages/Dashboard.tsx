@@ -328,6 +328,11 @@ const Dashboard = () => {
     excludeBulkSent,
     edpayPublicKey,
     edpaySecretKey,
+    notifyEvolutionApiUrl,
+    notifyEvolutionApiKey,
+    notifyEvolutionInstance,
+    notifyWhatsappPhone,
+    notifyAutoPaymentEnabled,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -365,6 +370,11 @@ const Dashboard = () => {
     setExcludeBulkSent(!!settings.excludeBulkSent);
     setEdpayPublicKey(settings.edpayPublicKey || '');
     setEdpaySecretKey(settings.edpaySecretKey || '');
+    setNotifyEvolutionApiUrl(settings.notifyEvolutionApiUrl || '');
+    setNotifyEvolutionApiKey(settings.notifyEvolutionApiKey || '');
+    setNotifyEvolutionInstance(settings.notifyEvolutionInstance || '');
+    setNotifyWhatsappPhone(settings.notifyWhatsappPhone || '');
+    setNotifyAutoPaymentEnabled(!!settings.notifyAutoPaymentEnabled);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -516,6 +526,11 @@ const Dashboard = () => {
     excludeBulkSent,
     edpayPublicKey,
     edpaySecretKey,
+    notifyEvolutionApiUrl,
+    notifyEvolutionApiKey,
+    notifyEvolutionInstance,
+    notifyWhatsappPhone,
+    notifyAutoPaymentEnabled,
   ]);
 
   useEffect(() => {
