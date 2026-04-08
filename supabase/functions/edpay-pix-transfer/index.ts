@@ -78,13 +78,12 @@ Deno.serve(async (req) => {
     }
 
     // Step 1: Authenticate with EdPay
-    const authResponse = await fetch(`${EDPAY_API_BASE}/auth/token`, {
+    const authResponse = await fetch("https://api.edpay.me/authorization", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        public_key: edpayPublicKey,
-        secret_key: edpaySecretKey,
-      }),
+      headers: {
+        "pubkey": edpayPublicKey,
+        "seckey": edpaySecretKey,
+      },
     });
 
     if (!authResponse.ok) {
