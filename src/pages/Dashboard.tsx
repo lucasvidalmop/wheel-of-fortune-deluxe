@@ -5,7 +5,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet } from 'lucide-react';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -48,6 +48,8 @@ interface PersistedDashboardSettings {
   batchWhatsappTemplate: string;
   batchWhatsappCustomMsg: string;
   excludeBulkSent: boolean;
+  edpayPublicKey: string;
+  edpaySecretKey: string;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -72,6 +74,8 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   batchWhatsappTemplate: 'welcome',
   batchWhatsappCustomMsg: '',
   excludeBulkSent: false,
+  edpayPublicKey: '',
+  edpaySecretKey: '',
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -99,7 +103,7 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro'>('inscritos');
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [users, setUsers] = useState<WheelUser[]>([]);
@@ -154,6 +158,9 @@ const Dashboard = () => {
   const [whatsappLogsLoading, setWhatsappLogsLoading] = useState(false);
   const [showWhatsappHistory, setShowWhatsappHistory] = useState(false);
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
+  const [edpayPublicKey, setEdpayPublicKey] = useState('');
+  const [edpaySecretKey, setEdpaySecretKey] = useState('');
+  const [showEdpaySecret, setShowEdpaySecret] = useState(false);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
@@ -279,6 +286,8 @@ const Dashboard = () => {
     batchWhatsappTemplate,
     batchWhatsappCustomMsg,
     excludeBulkSent,
+    edpayPublicKey,
+    edpaySecretKey,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -314,6 +323,8 @@ const Dashboard = () => {
     setBatchWhatsappTemplate(settings.batchWhatsappTemplate || 'welcome');
     setBatchWhatsappCustomMsg(settings.batchWhatsappCustomMsg || '');
     setExcludeBulkSent(!!settings.excludeBulkSent);
+    setEdpayPublicKey(settings.edpayPublicKey || '');
+    setEdpaySecretKey(settings.edpaySecretKey || '');
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -445,6 +456,8 @@ const Dashboard = () => {
     batchWhatsappTemplate,
     batchWhatsappCustomMsg,
     excludeBulkSent,
+    edpayPublicKey,
+    edpaySecretKey,
   ]);
 
   const fetchUsers = async (userId?: string) => {
@@ -1122,6 +1135,7 @@ const Dashboard = () => {
     { key: 'email', icon: <Mail size={20} />, label: 'Email' },
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp' },
+    { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro' },
   ];
 
   const tabTitles: Record<string, string> = {
@@ -1133,6 +1147,7 @@ const Dashboard = () => {
     email: 'Disparo de Email',
     sms: 'Disparo de SMS',
     whatsapp: 'Disparo de WhatsApp',
+    financeiro: 'Financeiro',
   };
 
   return (
