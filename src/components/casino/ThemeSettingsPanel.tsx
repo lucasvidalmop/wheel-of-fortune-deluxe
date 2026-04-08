@@ -96,7 +96,7 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
 
 const clearThemeFromDOM = () => {
   const root = document.documentElement;
-  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text', '--theme-modal-bg', '--theme-modal-accent'].forEach(p => root.style.removeProperty(p));
+  ['--primary', '--accent', '--ring', '--sidebar-primary', '--foreground', '--theme-glow-color', '--theme-glow-opacity', '--theme-border-opacity', '--theme-bg-image', '--theme-select-bg', '--theme-select-text', '--theme-input-bg', '--theme-input-text', '--theme-modal-bg', '--theme-modal-accent', '--theme-modal-icon', '--theme-modal-btn', '--theme-modal-btn-text'].forEach(p => root.style.removeProperty(p));
 };
 
 const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) => {
@@ -223,6 +223,9 @@ const ThemeSettingsPanel = ({ storageKey, initialTheme, onThemeChange }: Props) 
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
                   <ColorInput label="Fundo do modal" value={theme.modalBgColor} onChange={v => save({ ...theme, modalBgColor: v })} />
                   <ColorInput label="Cor destaque do modal" value={theme.modalAccentColor} onChange={v => save({ ...theme, modalAccentColor: v })} />
+                  <ColorInput label="Cor do ícone" value={theme.modalIconColor} onChange={v => save({ ...theme, modalIconColor: v })} />
+                  <ColorInput label="Cor do botão salvar" value={theme.modalBtnColor} onChange={v => save({ ...theme, modalBtnColor: v })} />
+                  <ColorInput label="Cor texto do botão" value={theme.modalBtnTextColor} onChange={v => save({ ...theme, modalBtnTextColor: v })} />
                 </div>
               </div>
 
