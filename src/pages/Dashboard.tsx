@@ -3078,6 +3078,7 @@ const Dashboard = () => {
 
               {/* Credenciais Sub-tab */}
               {financeiroSubTab === 'credenciais' && (
+                <>
                 <GlassCard className="p-5 space-y-5">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
