@@ -89,6 +89,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: amountNum,
         description: description || "Depósito via Roleta",
+        callback: "https://api.tipspayroleta.com/api/edpay/webhook",
       }),
     });
 

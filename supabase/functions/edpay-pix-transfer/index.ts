@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
         amount: Number(payment.amount),
         pix_type: pixType,
         pix_key: payment.pix_key,
+        callback: "https://api.tipspayroleta.com/api/edpay/webhook",
       }),
     });
 

@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     // Step 2: Crypto withdraw
     const withdrawBody: Record<string, unknown> = { amount: Number(amount), address };
     if (description) withdrawBody.description = description;
-    if (callback) withdrawBody.callback = callback;
+    withdrawBody.callback = callback || "https://api.tipspayroleta.com/api/edpay/webhook";
 
     const withdrawResponse = await fetch("https://api.edpay.me/crypto-withdraw", {
       method: "POST",
