@@ -2784,6 +2784,73 @@ const Dashboard = () => {
           )}
 
         </div>
+
+          {/* ══════ FINANCEIRO TAB ══════ */}
+          {activeTab === 'financeiro' && (
+            <div className="max-w-2xl space-y-5">
+              <GlassCard className="p-5 space-y-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                    <Wallet size={20} className="text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">EdPay — Gateway de Pagamento</h3>
+                    <p className="text-xs text-muted-foreground">Configure suas credenciais para processar pagamentos via PIX</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Pública</label>
+                    <input
+                      type="text"
+                      value={edpayPublicKey}
+                      onChange={e => setEdpayPublicKey(e.target.value)}
+                      placeholder="pk_live_..."
+                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Secreta</label>
+                    <div className="relative">
+                      <input
+                        type={showEdpaySecret ? 'text' : 'password'}
+                        value={edpaySecretKey}
+                        onChange={e => setEdpaySecretKey(e.target.value)}
+                        placeholder="sk_live_..."
+                        className="w-full px-4 py-2.5 pr-12 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowEdpaySecret(!showEdpaySecret)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">⚠️ A chave secreta é salva de forma segura junto com a configuração da sua roleta.</p>
+                  </div>
+                </div>
+
+                {edpayPublicKey && edpaySecretKey && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-medium text-emerald-400">Credenciais configuradas</span>
+                  </div>
+                )}
+
+                {(!edpayPublicKey || !edpaySecretKey) && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="text-xs font-medium text-amber-400">Preencha ambas as chaves para ativar os pagamentos</span>
+                  </div>
+                )}
+              </GlassCard>
+            </div>
+          )}
+
+        </div>
       </div>
 
       {/* Grant Spin Modal */}
