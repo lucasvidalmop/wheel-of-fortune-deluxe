@@ -162,7 +162,9 @@ const Dashboard = () => {
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
-  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes'>('credenciais');
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo'>('credenciais');
+  const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
+  const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
@@ -2865,6 +2867,7 @@ const Dashboard = () => {
               <div className="flex gap-2">
                 {[
                   { key: 'credenciais' as const, label: '🔑 Credenciais' },
+                  { key: 'saldo' as const, label: '💲 Saldo' },
                   { key: 'deposito' as const, label: '💰 Depósito PIX' },
                   { key: 'aprovacoes' as const, label: '✅ Aprovações' },
                 ].map(tab => (
