@@ -277,6 +277,7 @@ export type Database = {
           bg_image_url: string | null
           created_at: string
           favicon_url: string | null
+          home_mode: string
           id: number
           site_description: string | null
           site_title: string | null
@@ -286,6 +287,7 @@ export type Database = {
           bg_image_url?: string | null
           created_at?: string
           favicon_url?: string | null
+          home_mode?: string
           id?: number
           site_description?: string | null
           site_title?: string | null
@@ -295,6 +297,7 @@ export type Database = {
           bg_image_url?: string | null
           created_at?: string
           favicon_url?: string | null
+          home_mode?: string
           id?: number
           site_description?: string | null
           site_title?: string | null

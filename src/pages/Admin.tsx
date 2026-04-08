@@ -35,7 +35,7 @@ const Admin = () => {
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'admins' | 'history' | 'site' | 'dashboards'>('users');
-  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '' });
+  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text' });
   const [apiBackendUrl, setApiBackendUrl] = useState(() => localStorage.getItem('wheel_api_url') || '');
   const [siteSaving, setSiteSaving] = useState(false);
   const [siteUploading, setSiteUploading] = useState(false);
@@ -115,7 +115,7 @@ const Admin = () => {
 
   const fetchSiteSettings = async () => {
     const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
-    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '' });
+    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '', home_mode: data.home_mode || 'text' });
   };
 
   const handleSaveSiteSettings = async () => {
@@ -571,17 +571,42 @@ const Admin = () => {
                 <p className="text-xs text-muted-foreground">Estas configurações são aplicadas na página principal e como padrão para operadores que não definiram configurações próprias.</p>
               </div>
 
-              {/* Title */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Título do Site</label>
-                <input type="text" value={siteSettings.site_title} onChange={e => setSiteSettings(s => ({ ...s, site_title: e.target.value }))} placeholder="Wheel of Fortune" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+              {/* Home Mode Selector */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Modo da Página Principal</label>
+                <div className="flex gap-2">
+                  {([['text', 'Título + Descrição'], ['image', 'Somente Imagem'], ['image_text', 'Imagem + Texto']] as const).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      onClick={() => setSiteSettings(s => ({ ...s, home_mode: mode }))}
+                      className="flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all"
+                      style={{
+                        borderColor: siteSettings.home_mode === mode ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.08)',
+                        background: siteSettings.home_mode === mode ? 'hsl(var(--primary) / 0.15)' : 'rgba(255,255,255,0.04)',
+                        color: siteSettings.home_mode === mode ? 'hsl(var(--primary))' : 'inherit',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Description */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrição</label>
-                <textarea value={siteSettings.site_description} onChange={e => setSiteSettings(s => ({ ...s, site_description: e.target.value }))} placeholder="Descrição do site..." rows={3} className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all resize-none" />
-              </div>
+              {/* Title (shown for 'text' and 'image_text') */}
+              {(siteSettings.home_mode === 'text' || siteSettings.home_mode === 'image_text') && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Título do Site</label>
+                  <input type="text" value={siteSettings.site_title} onChange={e => setSiteSettings(s => ({ ...s, site_title: e.target.value }))} placeholder="Wheel of Fortune" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+                </div>
+              )}
+
+              {/* Description (shown for 'text' and 'image_text') */}
+              {(siteSettings.home_mode === 'text' || siteSettings.home_mode === 'image_text') && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrição</label>
+                  <textarea value={siteSettings.site_description} onChange={e => setSiteSettings(s => ({ ...s, site_description: e.target.value }))} placeholder="Descrição do site..." rows={3} className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all resize-none" />
+                </div>
+              )}
 
               {/* Favicon */}
               <div className="space-y-2">
