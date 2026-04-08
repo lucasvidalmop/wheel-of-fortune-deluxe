@@ -187,6 +187,36 @@ Deno.serve(async (req) => {
       })
       .eq("id", paymentId);
 
+    // Step 4: Send WhatsApp notification if configured
+    if (autoPayment) {
+      try {
+        const cfg = typeof configData?.config === "string" ? JSON.parse(configData.config) : configData?.config;
+        const ds = cfg?.dashboardSettings || {};
+        const notifyEnabled = ds.notifyAutoPaymentEnabled;
+        const notifyPhone = ds.notifyWhatsappPhone;
+        const notifyUrl = ds.notifyEvolutionApiUrl;
+        const notifyKey = ds.notifyEvolutionApiKey;
+        const notifyInstance = ds.notifyEvolutionInstance;
+
+        if (notifyEnabled && notifyPhone && notifyUrl && notifyKey && notifyInstance) {
+          let cleanNotifyPhone = notifyPhone.replace(/\D/g, "");
+          if (!cleanNotifyPhone.startsWith("55")) cleanNotifyPhone = "55" + cleanNotifyPhone;
+
+          const notifyApiUrl = notifyUrl.replace(/\/+$/, "");
+          const notifyMsg = `💰 *Pagamento Automático Realizado!*\n\n👤 *Inscrito:* ${payment.user_name}\n📧 *Email:* ${payment.user_email}\n🎁 *Prêmio:* ${payment.prize}\n💵 *Valor:* R$ ${Number(payment.amount).toFixed(2)}\n🔑 *PIX:* ${payment.pix_key}\n🕐 *Data:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
+
+          await fetch(`${notifyApiUrl}/message/sendText/${notifyInstance}`, {
+            method: "POST",
+            headers: { "apikey": notifyKey, "Content-Type": "application/json" },
+            body: JSON.stringify({ number: cleanNotifyPhone, text: notifyMsg }),
+          });
+          console.log("WhatsApp notification sent to owner");
+        }
+      } catch (notifyErr) {
+        console.error("Failed to send WhatsApp notification:", notifyErr);
+      }
+    }
+
     return new Response(JSON.stringify({ success: true, data: transferData }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
