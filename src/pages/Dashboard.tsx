@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CustomizationPanel from '@/components/casino/CustomizationPanel';
@@ -3124,13 +3125,15 @@ const Dashboard = () => {
                             <p className="text-xs text-muted-foreground text-center">ID da transação: <span className="text-foreground font-mono">{depositQrData.id}</span></p>
                           )}
 
-                          {depositQrData.qrcode && (
+                          {(depositQrData.qrcode || depositQrData.copiacola) && (
                             <div className="flex justify-center">
-                              <img
-                                src={depositQrData.qrcode}
-                                alt="QR Code PIX"
-                                className="w-48 h-48 rounded-xl bg-white p-2"
-                              />
+                              <div className="bg-white p-3 rounded-xl">
+                                <QRCodeSVG
+                                  value={depositQrData.copiacola || depositQrData.qrcode}
+                                  size={192}
+                                  level="M"
+                                />
+                              </div>
                             </div>
                           )}
 
