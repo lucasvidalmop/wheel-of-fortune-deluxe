@@ -36,6 +36,39 @@ const Roleta = () => {
     return id.substring(0, 2) + '*'.repeat(Math.max(3, id.length - 4)) + id.substring(id.length - 2);
   };
 
+  const extractPrizeAmount = (segment: WheelConfig['segments'][number]) => {
+    const currencyHint = /(?:r\$|brl|reais?)/i;
+    const nonCashHint = /(?:giro|giros|spin|spins|perdeu|amanh[ãa]|tente|brinde|cupom)/i;
+
+    const parseAmount = (value: string) => {
+      const match = value.replace(/\s+/g, '').match(/-?\d{1,3}(?:\.\d{3})*(?:,\d+)?|-?\d+(?:[.,]\d+)?/);
+      if (!match) return 0;
+
+      const raw = match[0];
+      const normalized = raw.includes(',')
+        ? raw.replace(/\./g, '').replace(',', '.')
+        : raw.replace(/,/g, '');
+
+      const amount = Number(normalized);
+      return Number.isFinite(amount) ? amount : 0;
+    };
+
+    const title = segment.title?.trim() || '';
+    const reward = segment.reward?.trim() || '';
+    const message = segment.postSpinMessage?.trim() || '';
+    const candidates = [title, reward, message].filter(Boolean);
+
+    const explicitMoneyText = candidates.find((value) => currencyHint.test(value));
+    if (explicitMoneyText) return parseAmount(explicitMoneyText);
+
+    const rewardLooksNumeric = /^-?\d+(?:[.,]\d+)?$/.test(reward.replace(/\s+/g, ''));
+    if (rewardLooksNumeric && !nonCashHint.test(title)) {
+      return parseAmount(reward);
+    }
+
+    return 0;
+  };
+
 
   const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -440,7 +473,7 @@ const Roleta = () => {
       });
 
       // Create prize_payment record via security definer function
-      const prizeValue = parseFloat(seg.reward) || 0;
+      const prizeValue = extractPrizeAmount(seg);
       if (ownerId && prizeValue > 0) {
         try {
           const { data: ppResult, error: ppError } = await (supabase as any).rpc('create_prize_payment', {
