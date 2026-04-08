@@ -19,6 +19,9 @@ export interface ThemeSettings {
   inputTextColor: string;
   modalBgColor: string;
   modalAccentColor: string;
+  modalIconColor: string;
+  modalBtnColor: string;
+  modalBtnTextColor: string;
 }
 
 export const defaultTheme: ThemeSettings = {
@@ -37,6 +40,9 @@ export const defaultTheme: ThemeSettings = {
   inputTextColor: '#ffffff',
   modalBgColor: '#1a1a2e',
   modalAccentColor: '#e6a817',
+  modalIconColor: '#f59e0b',
+  modalBtnColor: '#f59e0b',
+  modalBtnTextColor: '#ffffff',
 };
 
 interface Props {
@@ -83,6 +89,9 @@ export const applyThemeToDOM = (t: ThemeSettings) => {
   root.style.setProperty('--theme-input-text', t.inputTextColor || '#ffffff');
   root.style.setProperty('--theme-modal-bg', t.modalBgColor || '#1a1a2e');
   root.style.setProperty('--theme-modal-accent', t.modalAccentColor || '#e6a817');
+  root.style.setProperty('--theme-modal-icon', t.modalIconColor || '#f59e0b');
+  root.style.setProperty('--theme-modal-btn', t.modalBtnColor || '#f59e0b');
+  root.style.setProperty('--theme-modal-btn-text', t.modalBtnTextColor || '#ffffff');
 };
 
 const clearThemeFromDOM = () => {
