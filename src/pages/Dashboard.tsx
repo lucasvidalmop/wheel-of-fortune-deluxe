@@ -155,6 +155,8 @@ const Dashboard = () => {
   const [showWhatsappHistory, setShowWhatsappHistory] = useState(false);
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
+  const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
+  const [bulkSentCountdown, setBulkSentCountdown] = useState('');
 
   const fetchWhatsappLogs = async () => {
     if (!session?.user?.id) return;
@@ -171,14 +173,43 @@ const Dashboard = () => {
 
   const fetchBulkSentPhones = async () => {
     if (!session?.user?.id) return;
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data } = await (supabase as any)
       .from('whatsapp_message_log')
-      .select('recipient_phone')
+      .select('recipient_phone, created_at')
       .eq('owner_id', session.user.id)
-      .eq('status', 'sent');
-    const phones = new Set<string>((data || []).map((d: any) => d.recipient_phone));
+      .eq('status', 'sent')
+      .gte('created_at', since24h);
+    const rows = data || [];
+    const phones = new Set<string>(rows.map((d: any) => d.recipient_phone));
     setBulkSentPhones(phones);
+    if (rows.length > 0) {
+      const oldest = rows.reduce((min: string, d: any) => d.created_at < min ? d.created_at : min, rows[0].created_at);
+      setBulkSentOldestTime(new Date(oldest));
+    } else {
+      setBulkSentOldestTime(null);
+    }
   };
+
+  useEffect(() => {
+    if (!excludeBulkSent || !bulkSentOldestTime) { setBulkSentCountdown(''); return; }
+    const update = () => {
+      const expiresAt = bulkSentOldestTime.getTime() + 24 * 60 * 60 * 1000;
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        setBulkSentCountdown('');
+        fetchBulkSentPhones();
+        return;
+      }
+      const h = Math.floor(remaining / 3600000);
+      const m = Math.floor((remaining % 3600000) / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      setBulkSentCountdown(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [excludeBulkSent, bulkSentOldestTime]);
 
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -2603,8 +2634,11 @@ const Dashboard = () => {
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={excludeBulkSent} onChange={e => { setExcludeBulkSent(e.target.checked); if (e.target.checked) fetchBulkSentPhones(); }} className="rounded border-white/20" />
-                  <span className="text-xs text-muted-foreground">Excluir quem já recebeu disparo</span>
+                  <span className="text-xs text-muted-foreground">Excluir quem já recebeu disparo (24h)</span>
                   {excludeBulkSent && bulkSentPhones.size > 0 && <span className="text-xs text-yellow-400">({bulkSentPhones.size} excluídos)</span>}
+                  {excludeBulkSent && bulkSentCountdown && (
+                    <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">⏱ {bulkSentCountdown}</span>
+                  )}
                 </label>
                 <div className="flex gap-2">
                   <button onClick={() => { setWhatsappTarget('all'); setSelectedWhatsappPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
