@@ -1432,114 +1432,208 @@ const Dashboard = () => {
 
               {/* User form modal */}
               {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-foreground">{editingUser ? 'Editar Inscrito' : 'Novo Inscrito'}</h2>
-                      <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md" onClick={() => setShowForm(false)}>
+                  <div
+                    className="w-full max-w-lg mx-4 rounded-2xl border border-white/[0.1] bg-gradient-to-b from-[#1a1a2e] to-[#16162a] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {/* Header */}
+                    <div className="relative px-6 pt-6 pb-4 border-b border-white/[0.06]">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${editingUser ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                          {editingUser ? <Pencil size={18} /> : <Plus size={18} />}
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-bold text-white">{editingUser ? 'Editar Inscrito' : 'Novo Inscrito'}</h2>
+                          <p className="text-xs text-white/40">{editingUser ? 'Atualize as informações do usuário' : 'Preencha os dados para cadastrar'}</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setShowForm(false)} className="absolute top-5 right-5 p-2 rounded-xl hover:bg-white/[0.08] text-white/40 hover:text-white transition-all">
                         <X size={18} />
                       </button>
                     </div>
-                    <form onSubmit={handleSaveUser} className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Nome</label>
-                        <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Email</label>
-                        <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Celular</label>
-                        <input type="text" value={form.phone} placeholder="(00) 90000-0000" onChange={e => {
-                          const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
-                          let masked = '';
-                          if (digits.length > 0) masked += '(' + digits.slice(0, 2);
-                          if (digits.length >= 2) masked += ') ';
-                          if (digits.length > 2) masked += digits.slice(2, 7);
-                          if (digits.length > 7) masked += '-' + digits.slice(7, 11);
-                          setForm({ ...form, phone: masked });
-                        }} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Account ID</label>
-                        <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tipo Chave PIX</label>
-                          <select value={form.pix_key_type} onChange={e => setForm({ ...form, pix_key_type: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40">
-                            <option value="">Selecione</option>
-                            <option value="CPF">CPF</option>
-                            <option value="Email">Email</option>
-                            <option value="Telefone">Telefone</option>
-                            <option value="Aleatória">Aleatória</option>
-                          </select>
+
+                    {/* Form */}
+                    <form onSubmit={handleSaveUser} className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                      
+                      {/* Section: Dados Pessoais */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-white/50 uppercase tracking-widest">
+                          <Users size={12} />
+                          <span>Dados Pessoais</span>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Chave PIX</label>
-                          <input type="text" value={form.pix_key} onChange={e => setForm({ ...form, pix_key: e.target.value })} placeholder="Chave PIX" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tipo</label>
-                          <input type="text" value={form.user_type} onChange={e => setForm({ ...form, user_type: e.target.value })} placeholder="Ex: VIP, Comum" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Responsável</label>
-                          <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Nome *</label>
+                            <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nome completo"
+                              className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Email *</label>
+                              <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
+                                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Celular</label>
+                              <input type="text" value={form.phone} placeholder="(00) 90000-0000" onChange={e => {
+                                const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                let masked = '';
+                                if (digits.length > 0) masked += '(' + digits.slice(0, 2);
+                                if (digits.length >= 2) masked += ') ';
+                                if (digits.length > 2) masked += digits.slice(2, 7);
+                                if (digits.length > 7) masked += '-' + digits.slice(7, 11);
+                                setForm({ ...form, phone: masked });
+                              }} className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Account ID *</label>
+                              <input type="text" required value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })} placeholder="ID da conta"
+                                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Tipo</label>
+                              <input type="text" value={form.user_type} onChange={e => setForm({ ...form, user_type: e.target.value })} placeholder="Ex: VIP, Comum"
+                                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Responsável</label>
+                            <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável"
+                              className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                          </div>
                         </div>
                       </div>
 
-                      {/* Fixed prize */}
-                      <div className="space-y-2 pt-2 border-t border-white/[0.06]">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs text-muted-foreground font-medium">🎯 Prêmio pré-definido</label>
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, fixed_prize_enabled: !form.fixed_prize_enabled, fixed_prize_segment: !form.fixed_prize_enabled ? (form.fixed_prize_segment ?? 0) : form.fixed_prize_segment })}
-                            className={`w-11 h-6 rounded-full relative transition-all duration-300 ${form.fixed_prize_enabled ? 'bg-primary' : 'bg-white/[0.1]'}`}
-                          >
-                            <div className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-0.5 transition-all duration-300 ${form.fixed_prize_enabled ? 'left-[22px]' : 'left-0.5'}`} />
-                          </button>
+                      {/* Divider */}
+                      <div className="border-t border-white/[0.06]" />
+
+                      {/* Section: Chave PIX */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-white/50 uppercase tracking-widest">
+                          <DollarSign size={12} />
+                          <span>Chave PIX</span>
                         </div>
-                        {form.fixed_prize_enabled && (
-                          <select
-                            value={form.fixed_prize_segment ?? 0}
-                            onChange={e => setForm({ ...form, fixed_prize_segment: parseInt(e.target.value) })}
-                            className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
-                          >
-                            {wheelConfig.segments.map((seg, i) => (
-                              <option key={seg.id} value={i}>{seg.title} — {seg.reward}</option>
-                            ))}
-                          </select>
-                        )}
+                        <div className="grid grid-cols-5 gap-3">
+                          <div className="col-span-2">
+                            <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Tipo</label>
+                            <select value={form.pix_key_type} onChange={e => setForm({ ...form, pix_key_type: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all appearance-none">
+                              <option value="" className="bg-[#1a1a2e]">Selecione</option>
+                              <option value="CPF" className="bg-[#1a1a2e]">CPF</option>
+                              <option value="Email" className="bg-[#1a1a2e]">Email</option>
+                              <option value="Telefone" className="bg-[#1a1a2e]">Telefone</option>
+                              <option value="Aleatória" className="bg-[#1a1a2e]">Aleatória</option>
+                            </select>
+                          </div>
+                          <div className="col-span-3">
+                            <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Chave</label>
+                            <input type="text" value={form.pix_key} onChange={e => setForm({ ...form, pix_key: e.target.value })} placeholder="Informe a chave PIX"
+                              className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Auto Payment Toggle */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold text-muted-foreground">💳 Pagamento Automático (EdPay)</label>
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, auto_payment: !form.auto_payment })}
-                            className={`w-11 h-6 rounded-full relative transition-all duration-300 ${form.auto_payment ? 'bg-emerald-500' : 'bg-white/[0.1]'}`}
-                          >
-                            <div className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-0.5 transition-all duration-300 ${form.auto_payment ? 'left-[22px]' : 'left-0.5'}`} />
-                          </button>
-                        </div>
-                        {form.auto_payment && (
-                          <p className="text-[10px] text-emerald-400">✅ Quando ganhar um prêmio com valor, será pago automaticamente via PIX (EdPay)</p>
-                        )}
-                      </div>
+                      {/* Divider */}
+                      <div className="border-t border-white/[0.06]" />
 
-                      <div className="flex gap-3 pt-2">
-                        <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">Cancelar</button>
-                        <button type="submit" disabled={savingUser} className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">{savingUser ? 'Salvando...' : editingUser ? 'Salvar' : 'Criar'}</button>
+                      {/* Section: Configurações */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-white/50 uppercase tracking-widest">
+                          <Settings size={12} />
+                          <span>Configurações</span>
+                        </div>
+
+                        {/* Fixed Prize Toggle */}
+                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                <Target size={14} className="text-amber-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-white">Prêmio pré-definido</p>
+                                <p className="text-[10px] text-white/30">Definir qual prêmio o inscrito irá ganhar</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, fixed_prize_enabled: !form.fixed_prize_enabled, fixed_prize_segment: !form.fixed_prize_enabled ? (form.fixed_prize_segment ?? 0) : form.fixed_prize_segment })}
+                              className={`w-12 h-7 rounded-full relative transition-all duration-300 ${form.fixed_prize_enabled ? 'bg-amber-500 shadow-lg shadow-amber-500/30' : 'bg-white/[0.1]'}`}
+                            >
+                              <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${form.fixed_prize_enabled ? 'left-[26px]' : 'left-1'}`} />
+                            </button>
+                          </div>
+                          {form.fixed_prize_enabled && (
+                            <select
+                              value={form.fixed_prize_segment ?? 0}
+                              onChange={e => setForm({ ...form, fixed_prize_segment: parseInt(e.target.value) })}
+                              className="w-full px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.05] text-white text-sm focus:outline-none focus:border-amber-500/40 transition-all appearance-none"
+                            >
+                              {wheelConfig.segments.map((seg, i) => (
+                                <option key={seg.id} value={i} className="bg-[#1a1a2e]">{seg.title} — {seg.reward}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+
+                        {/* Auto Payment Toggle */}
+                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <Wallet size={14} className="text-emerald-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-white">Pagamento Automático</p>
+                                <p className="text-[10px] text-white/30">Pagar automaticamente via PIX (EdPay)</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, auto_payment: !form.auto_payment })}
+                              className={`w-12 h-7 rounded-full relative transition-all duration-300 ${form.auto_payment ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' : 'bg-white/[0.1]'}`}
+                            >
+                              <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${form.auto_payment ? 'left-[26px]' : 'left-1'}`} />
+                            </button>
+                          </div>
+                          {form.auto_payment && (
+                            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/[0.08] border border-emerald-500/20">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <p className="text-[11px] text-emerald-300">Prêmios com valor serão pagos automaticamente via PIX</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </form>
-                  </GlassCard>
+
+                    {/* Footer */}
+                    <div className="px-6 py-4 border-t border-white/[0.06] bg-white/[0.02] flex gap-3">
+                      <button type="button" onClick={() => setShowForm(false)}
+                        className="flex-1 py-3 rounded-xl border border-white/[0.08] bg-transparent text-white/60 text-sm font-medium hover:bg-white/[0.06] hover:text-white transition-all">
+                        Cancelar
+                      </button>
+                      <button type="submit" form="" disabled={savingUser} onClick={(e) => {
+                        e.preventDefault();
+                        const formEl = e.currentTarget.closest('.overflow-hidden')?.querySelector('form');
+                        if (formEl) formEl.requestSubmit();
+                      }}
+                        className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                          editingUser 
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-500/25 hover:shadow-amber-500/40' 
+                            : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40'
+                        }`}>
+                        {savingUser ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                            Salvando...
+                          </span>
+                        ) : editingUser ? '✏️ Salvar Alterações' : '✅ Criar Inscrito'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
