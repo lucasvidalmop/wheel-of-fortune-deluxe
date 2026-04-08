@@ -3095,6 +3095,124 @@ const Dashboard = () => {
                   )}
                 </>
               )}
+
+              {/* Aprovações Sub-tab */}
+              {financeiroSubTab === 'aprovacoes' && (
+                <GlassCard className="p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                        <Trophy size={20} className="text-amber-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-foreground">Aprovações de Prêmios</h3>
+                        <p className="text-xs text-muted-foreground">Gerencie os pagamentos de prêmios ganhos</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={fetchPrizePayments}
+                      className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      <RotateCcw size={16} />
+                    </button>
+                  </div>
+
+                  {prizePaymentsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Carregando...</p>
+                    </div>
+                  ) : prizePayments.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">Nenhum prêmio pendente de aprovação</p>
+                      <p className="text-xs text-muted-foreground mt-1">Os prêmios aparecerão aqui quando os inscritos ganharem na roleta</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {prizePayments.map((p: any) => {
+                        const statusColors: Record<string, string> = {
+                          pending: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+                          auto_pending: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
+                          approved: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+                          paid: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
+                          rejected: 'bg-red-500/15 text-red-400 border-red-500/20',
+                          failed: 'bg-red-500/15 text-red-400 border-red-500/20',
+                        };
+                        const statusLabels: Record<string, string> = {
+                          pending: '⏳ Pendente',
+                          auto_pending: '🤖 Auto (Pendente)',
+                          approved: '✅ Aprovado',
+                          paid: '💰 Pago',
+                          rejected: '❌ Rejeitado',
+                          failed: '⚠️ Falhou',
+                        };
+                        return (
+                          <div key={p.id} className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-foreground">{p.user_name}</p>
+                                <p className="text-[10px] text-muted-foreground">{p.user_email} • {p.account_id}</p>
+                              </div>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusColors[p.status] || 'bg-white/10 text-muted-foreground border-white/10'}`}>
+                                {statusLabels[p.status] || p.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">🎁 {p.prize}</span>
+                              <span className="font-bold text-foreground">R$ {Number(p.amount).toFixed(2)}</span>
+                            </div>
+                            {p.pix_key && (
+                              <p className="text-[10px] text-muted-foreground">PIX: {p.pix_key} ({p.pix_key_type})</p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground">{new Date(p.created_at).toLocaleString('pt-BR')}</p>
+
+                            {/* Actions */}
+                            {(p.status === 'pending' || p.status === 'auto_pending') && (
+                              <div className="flex gap-2 pt-1">
+                                <button
+                                  onClick={() => handlePayPrize(p.id)}
+                                  disabled={payingPaymentId === p.id || !edpayPublicKey || !edpaySecretKey}
+                                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+                                >
+                                  {payingPaymentId === p.id ? (
+                                    <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : '💸'} Pagar via PIX
+                                </button>
+                                <button
+                                  onClick={() => handleApprovePrize(p.id)}
+                                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-all"
+                                >
+                                  ✅
+                                </button>
+                                <button
+                                  onClick={() => handleRejectPrize(p.id)}
+                                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-all"
+                                >
+                                  ❌
+                                </button>
+                              </div>
+                            )}
+                            {p.status === 'approved' && (
+                              <button
+                                onClick={() => handlePayPrize(p.id)}
+                                disabled={payingPaymentId === p.id || !edpayPublicKey || !edpaySecretKey}
+                                className="w-full flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+                              >
+                                {payingPaymentId === p.id ? (
+                                  <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                                ) : '💸'} Pagar via PIX
+                              </button>
+                            )}
+                            {p.edpay_transaction_id && (
+                              <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
             </div>
           )}
 
