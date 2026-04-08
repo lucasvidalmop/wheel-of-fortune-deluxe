@@ -439,7 +439,7 @@ const Roleta = () => {
         p_owner_id: ownerId || null,
       });
 
-      // Create prize_payment record for approval
+      // Create prize_payment record for approval via security definer function
       const prizeValue = parseFloat(seg.reward) || 0;
       if (ownerId && prizeValue > 0) {
         try {
@@ -451,20 +451,32 @@ const Roleta = () => {
             .eq('owner_id', ownerId)
             .maybeSingle();
 
-          await (supabase as any).from('prize_payments').insert({
-            owner_id: ownerId,
-            wheel_user_id: wuData?.id || null,
-            spin_result_id: spinResultId || null,
-            account_id: accountId,
-            user_name: userName || '',
-            user_email: emailValue,
-            prize: seg.title || `Segmento ${segmentIndex + 1}`,
-            amount: prizeValue,
-            pix_key: wuData?.pix_key || '',
-            pix_key_type: wuData?.pix_key_type || '',
-            auto_payment: !!wuData?.auto_payment,
-            status: wuData?.auto_payment ? 'auto_pending' : 'pending',
+          const { data: paymentId, error: ppError } = await (supabase as any).rpc('create_prize_payment', {
+            p_owner_id: ownerId,
+            p_wheel_user_id: wuData?.id || null,
+            p_spin_result_id: spinResultId || null,
+            p_account_id: accountId,
+            p_user_name: userName || '',
+            p_user_email: emailValue,
+            p_prize: seg.title || `Segmento ${segmentIndex + 1}`,
+            p_amount: prizeValue,
+            p_pix_key: wuData?.pix_key || '',
+            p_pix_key_type: wuData?.pix_key_type || '',
+            p_auto_payment: !!wuData?.auto_payment,
           });
+
+          if (ppError) {
+            console.error('Failed to create prize_payment:', ppError);
+          } else if (paymentId && wuData?.auto_payment) {
+            // Trigger automatic payment via edge function
+            try {
+              await supabase.functions.invoke('edpay-pix-transfer', {
+                body: { paymentId, edpayPublicKey: '', edpaySecretKey: '', autoPayment: true },
+              });
+            } catch (autoErr) {
+              console.error('Auto-payment trigger failed:', autoErr);
+            }
+          }
         } catch (e) {
           console.error('Failed to create prize_payment:', e);
         }
