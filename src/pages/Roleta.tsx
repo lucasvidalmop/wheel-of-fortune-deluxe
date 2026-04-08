@@ -431,13 +431,44 @@ const Roleta = () => {
     if (!seg) return;
 
     if (accountId) {
-      await (supabase as any).rpc('record_spin_result', {
+      const { data: spinResultId } = await (supabase as any).rpc('record_spin_result', {
         p_account_id: accountId,
         p_user_name: userName || '',
         p_user_email: emailValue,
         p_prize: seg.title || `Segmento ${segmentIndex + 1}`,
         p_owner_id: ownerId || null,
       });
+
+      // Create prize_payment record for approval
+      const prizeValue = parseFloat(seg.reward) || 0;
+      if (ownerId && prizeValue > 0) {
+        try {
+          // Fetch wheel_user info for pix_key and auto_payment
+          const { data: wuData } = await (supabase as any)
+            .from('wheel_users')
+            .select('id, pix_key, pix_key_type, auto_payment')
+            .eq('account_id', accountId)
+            .eq('owner_id', ownerId)
+            .maybeSingle();
+
+          await (supabase as any).from('prize_payments').insert({
+            owner_id: ownerId,
+            wheel_user_id: wuData?.id || null,
+            spin_result_id: spinResultId || null,
+            account_id: accountId,
+            user_name: userName || '',
+            user_email: emailValue,
+            prize: seg.title || `Segmento ${segmentIndex + 1}`,
+            amount: prizeValue,
+            pix_key: wuData?.pix_key || '',
+            pix_key_type: wuData?.pix_key_type || '',
+            auto_payment: !!wuData?.auto_payment,
+            status: wuData?.auto_payment ? 'auto_pending' : 'pending',
+          });
+        } catch (e) {
+          console.error('Failed to create prize_payment:', e);
+        }
+      }
 
       // Prêmio pré-definido é desativado automaticamente pelo decrement_wheel_user_spins
       if (fixedPrizeEnabled) {
