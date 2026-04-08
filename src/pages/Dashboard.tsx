@@ -2866,6 +2866,7 @@ const Dashboard = () => {
                 {[
                   { key: 'credenciais' as const, label: '🔑 Credenciais' },
                   { key: 'deposito' as const, label: '💰 Depósito PIX' },
+                  { key: 'aprovacoes' as const, label: '✅ Aprovações' },
                 ].map(tab => (
                   <button
                     key={tab.key}
