@@ -42,8 +42,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const amountCents = Math.round(Number(amount) * 100);
-    if (amountCents < 100) {
+    const amountNum = Number(amount);
+    if (amountNum < 1) {
       return new Response(JSON.stringify({ error: "Valor mínimo: R$ 1,00" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -69,25 +69,25 @@ Deno.serve(async (req) => {
     }
 
     const authData = await authResponse.json();
-    const token = authData.token || authData.access_token || authData.data?.token;
+    const token = authData.token;
 
     if (!token) {
       console.error("EdPay auth response:", JSON.stringify(authData));
-      return new Response(JSON.stringify({ error: "Token não retornado pela EdPay", debug: authData }), {
+      return new Response(JSON.stringify({ error: "Token não retornado pela EdPay" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Step 2: Generate QR Code PIX
-    const qrResponse = await fetch(`${EDPAY_API_BASE}/pix/qrcode`, {
+    const qrResponse = await fetch("https://api.edpay.me/qrcode", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
-        amount: amountCents,
+        amount: amountNum,
         description: description || "Depósito via Roleta",
       }),
     });
