@@ -511,35 +511,18 @@ export type Database = {
           spins_available: number
         }[]
       }
-      create_prize_payment:
-        | {
-            Args: {
-              p_account_id?: string
-              p_amount?: number
-              p_owner_id: string
-              p_prize?: string
-              p_spin_result_id?: string
-              p_user_email?: string
-              p_user_name?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_account_id?: string
-              p_amount?: number
-              p_auto_payment?: boolean
-              p_owner_id: string
-              p_pix_key?: string
-              p_pix_key_type?: string
-              p_prize?: string
-              p_spin_result_id?: string
-              p_user_email?: string
-              p_user_name?: string
-              p_wheel_user_id?: string
-            }
-            Returns: string
-          }
+      create_prize_payment: {
+        Args: {
+          p_account_id?: string
+          p_amount?: number
+          p_owner_id: string
+          p_prize?: string
+          p_spin_result_id?: string
+          p_user_email?: string
+          p_user_name?: string
+        }
+        Returns: Json
+      }
       decrement_wheel_user_spins: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
