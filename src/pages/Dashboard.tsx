@@ -667,6 +667,54 @@ const Dashboard = () => {
     setShowForm(true);
   };
 
+  const fetchPrizePayments = async () => {
+    if (!session?.user?.id) return;
+    setPrizePaymentsLoading(true);
+    const { data } = await (supabase as any)
+      .from('prize_payments')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false });
+    setPrizePayments(data || []);
+    setPrizePaymentsLoading(false);
+  };
+
+  const handlePayPrize = async (paymentId: string) => {
+    if (!edpayPublicKey || !edpaySecretKey) {
+      toast.error('Configure as credenciais EdPay na aba Financeiro > Credenciais');
+      return;
+    }
+    setPayingPaymentId(paymentId);
+    try {
+      const { data, error } = await supabase.functions.invoke('edpay-pix-transfer', {
+        body: { paymentId, edpayPublicKey, edpaySecretKey },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+      } else {
+        toast.success('Pagamento realizado com sucesso!');
+        fetchPrizePayments();
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao processar pagamento');
+    } finally {
+      setPayingPaymentId(null);
+    }
+  };
+
+  const handleApprovePrize = async (paymentId: string) => {
+    await (supabase as any).from('prize_payments').update({ status: 'approved', updated_at: new Date().toISOString() }).eq('id', paymentId);
+    toast.success('Prêmio aprovado!');
+    fetchPrizePayments();
+  };
+
+  const handleRejectPrize = async (paymentId: string) => {
+    await (supabase as any).from('prize_payments').update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', paymentId);
+    toast.success('Prêmio rejeitado');
+    fetchPrizePayments();
+  };
+
   const handleGrantSpin = async (user: WheelUser) => {
     if (user.spins_available >= 1) {
       // Remove spin
