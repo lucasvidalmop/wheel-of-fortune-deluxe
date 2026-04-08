@@ -614,7 +614,7 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
 
           <div className="relative z-10 flex h-full flex-col items-center justify-between px-3 py-4 text-center">
             <div className="space-y-1">
-              {config.headerMode === 'image' && config.headerImageUrl ? (
+              {(config.headerMode === 'image' || config.headerMode === 'image_text') && config.headerImageUrl && (
                 <img
                   src={config.headerImageUrl}
                   alt=""
@@ -627,7 +627,8 @@ const SegmentPreview: React.FC<{ config: WheelConfig; floating?: boolean }> = ({
                       : `translate(${config.headerImageOffsetX ?? 0}px, ${config.headerImageOffsetY ?? 0}px) scale(${config.headerImageScale ?? 1})`,
                   }}
                 />
-              ) : (
+              )}
+              {(config.headerMode === 'text' || config.headerMode === 'image_text') && (
                 <>
                   <h3
                     className="font-black uppercase tracking-[0.18em]"
@@ -918,15 +919,11 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         <div className="flex gap-1.5 p-1 rounded-lg bg-muted/40">
           <TabButton active={config.headerMode === 'text'} label="Texto" onClick={() => updateGlobal('headerMode', 'text')} />
           <TabButton active={config.headerMode === 'image'} label="Imagem" onClick={() => updateGlobal('headerMode', 'image')} />
+          <TabButton active={config.headerMode === 'image_text'} label="Img+Texto" onClick={() => updateGlobal('headerMode', 'image_text')} />
         </div>
-        {config.headerMode === 'text' ? (
-          <div className="space-y-2">
-            <input type="text" value={config.pageTitle} onChange={e => updateGlobal('pageTitle', e.target.value)} placeholder="Título" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
-            <input type="text" value={config.pageSubtitle} onChange={e => updateGlobal('pageSubtitle', e.target.value)} placeholder="Subtítulo" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
-            <RangeInput label="Título" value={config.headerTitleSize ?? 36} min={16} max={72} onChange={v => updateGlobal('headerTitleSize', v)} />
-            <RangeInput label="Subtítulo" value={config.headerSubtitleSize ?? 12} min={8} max={36} onChange={v => updateGlobal('headerSubtitleSize', v)} />
-          </div>
-        ) : (
+
+        {/* Image controls (shown for 'image' and 'image_text') */}
+        {(config.headerMode === 'image' || config.headerMode === 'image_text') && (
           <div className="space-y-2">
             <ImageUpload label="Imagem do cabeçalho" value={config.headerImageUrl} onChange={v => updateGlobal('headerImageUrl', v)} />
             <RangeInput label="Tamanho" value={config.headerImageSize ?? 120} min={40} max={300} step={5} onChange={v => updateGlobal('headerImageSize', v)} />
@@ -936,6 +933,16 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                 onChangeX={v => updateGlobal('headerImageOffsetX', v)} onChangeY={v => updateGlobal('headerImageOffsetY', v)} onChangeScale={v => updateGlobal('headerImageScale', v)}
               />
             )}
+          </div>
+        )}
+
+        {/* Text controls (shown for 'text' and 'image_text') */}
+        {(config.headerMode === 'text' || config.headerMode === 'image_text') && (
+          <div className="space-y-2">
+            <input type="text" value={config.pageTitle} onChange={e => updateGlobal('pageTitle', e.target.value)} placeholder="Título" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
+            <input type="text" value={config.pageSubtitle} onChange={e => updateGlobal('pageSubtitle', e.target.value)} placeholder="Subtítulo" className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
+            <RangeInput label="Título" value={config.headerTitleSize ?? 36} min={16} max={72} onChange={v => updateGlobal('headerTitleSize', v)} />
+            <RangeInput label="Subtítulo" value={config.headerSubtitleSize ?? 12} min={8} max={36} onChange={v => updateGlobal('headerSubtitleSize', v)} />
           </div>
         )}
       </Card>
