@@ -24,6 +24,7 @@ interface WheelUser {
   pix_key: string;
   user_type: string;
   responsible: string;
+  auto_payment: boolean;
 }
 
 interface PersistedDashboardSettings {
@@ -113,7 +114,7 @@ const Dashboard = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
-  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null, pix_key_type: '', pix_key: '', user_type: '', responsible: '' });
+  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [viewingUserData, setViewingUserData] = useState<WheelUser | null>(null);
@@ -161,11 +162,14 @@ const Dashboard = () => {
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
-  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito'>('credenciais');
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes'>('credenciais');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositQrData, setDepositQrData] = useState<any>(null);
+  const [prizePayments, setPrizePayments] = useState<any[]>([]);
+  const [prizePaymentsLoading, setPrizePaymentsLoading] = useState(false);
+  const [payingPaymentId, setPayingPaymentId] = useState<string | null>(null);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
@@ -617,7 +621,7 @@ const Dashboard = () => {
       if (editingUser) {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible })
+          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment })
           .eq('id', editingUser.id);
         if (error) {
           if (error.message?.includes('duplicate') || error.code === '23505') {
@@ -631,7 +635,7 @@ const Dashboard = () => {
       } else {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible });
+          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment });
         if (error) {
           if (error.message?.includes('duplicate') || error.code === '23505') {
             toast.error('Já existe um inscrito com esse e-mail ou ID de conta.');
@@ -644,7 +648,7 @@ const Dashboard = () => {
       }
       setShowForm(false);
       setEditingUser(null);
-      setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '' });
+      setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
       fetchUsers();
     } finally {
       setSavingUser(false);
@@ -653,14 +657,62 @@ const Dashboard = () => {
 
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
-    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '' });
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '', auto_payment: user.auto_payment ?? false });
     setShowForm(true);
   };
 
   const openNew = () => {
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '' });
+    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
     setShowForm(true);
+  };
+
+  const fetchPrizePayments = async () => {
+    if (!session?.user?.id) return;
+    setPrizePaymentsLoading(true);
+    const { data } = await (supabase as any)
+      .from('prize_payments')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false });
+    setPrizePayments(data || []);
+    setPrizePaymentsLoading(false);
+  };
+
+  const handlePayPrize = async (paymentId: string) => {
+    if (!edpayPublicKey || !edpaySecretKey) {
+      toast.error('Configure as credenciais EdPay na aba Financeiro > Credenciais');
+      return;
+    }
+    setPayingPaymentId(paymentId);
+    try {
+      const { data, error } = await supabase.functions.invoke('edpay-pix-transfer', {
+        body: { paymentId, edpayPublicKey, edpaySecretKey },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+      } else {
+        toast.success('Pagamento realizado com sucesso!');
+        fetchPrizePayments();
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao processar pagamento');
+    } finally {
+      setPayingPaymentId(null);
+    }
+  };
+
+  const handleApprovePrize = async (paymentId: string) => {
+    await (supabase as any).from('prize_payments').update({ status: 'approved', updated_at: new Date().toISOString() }).eq('id', paymentId);
+    toast.success('Prêmio aprovado!');
+    fetchPrizePayments();
+  };
+
+  const handleRejectPrize = async (paymentId: string) => {
+    await (supabase as any).from('prize_payments').update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', paymentId);
+    toast.success('Prêmio rejeitado');
+    fetchPrizePayments();
   };
 
   const handleGrantSpin = async (user: WheelUser) => {
@@ -1450,6 +1502,23 @@ const Dashboard = () => {
                               <option key={seg.id} value={i}>{seg.title} — {seg.reward}</option>
                             ))}
                           </select>
+                        )}
+                      </div>
+
+                      {/* Auto Payment Toggle */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold text-muted-foreground">💳 Pagamento Automático (EdPay)</label>
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, auto_payment: !form.auto_payment })}
+                            className={`w-11 h-6 rounded-full relative transition-all duration-300 ${form.auto_payment ? 'bg-emerald-500' : 'bg-white/[0.1]'}`}
+                          >
+                            <div className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-0.5 transition-all duration-300 ${form.auto_payment ? 'left-[22px]' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+                        {form.auto_payment && (
+                          <p className="text-[10px] text-emerald-400">✅ Quando ganhar um prêmio com valor, será pago automaticamente via PIX (EdPay)</p>
                         )}
                       </div>
 
@@ -2797,10 +2866,11 @@ const Dashboard = () => {
                 {[
                   { key: 'credenciais' as const, label: '🔑 Credenciais' },
                   { key: 'deposito' as const, label: '💰 Depósito PIX' },
+                  { key: 'aprovacoes' as const, label: '✅ Aprovações' },
                 ].map(tab => (
                   <button
                     key={tab.key}
-                    onClick={() => setFinanceiroSubTab(tab.key)}
+                    onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); }}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                       financeiroSubTab === tab.key
                         ? 'bg-primary/15 text-primary border border-primary/20'
@@ -3024,6 +3094,124 @@ const Dashboard = () => {
                     </GlassCard>
                   )}
                 </>
+              )}
+
+              {/* Aprovações Sub-tab */}
+              {financeiroSubTab === 'aprovacoes' && (
+                <GlassCard className="p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                        <Trophy size={20} className="text-amber-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-foreground">Aprovações de Prêmios</h3>
+                        <p className="text-xs text-muted-foreground">Gerencie os pagamentos de prêmios ganhos</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={fetchPrizePayments}
+                      className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      <RotateCcw size={16} />
+                    </button>
+                  </div>
+
+                  {prizePaymentsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Carregando...</p>
+                    </div>
+                  ) : prizePayments.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">Nenhum prêmio pendente de aprovação</p>
+                      <p className="text-xs text-muted-foreground mt-1">Os prêmios aparecerão aqui quando os inscritos ganharem na roleta</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {prizePayments.map((p: any) => {
+                        const statusColors: Record<string, string> = {
+                          pending: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+                          auto_pending: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
+                          approved: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+                          paid: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
+                          rejected: 'bg-red-500/15 text-red-400 border-red-500/20',
+                          failed: 'bg-red-500/15 text-red-400 border-red-500/20',
+                        };
+                        const statusLabels: Record<string, string> = {
+                          pending: '⏳ Pendente',
+                          auto_pending: '🤖 Auto (Pendente)',
+                          approved: '✅ Aprovado',
+                          paid: '💰 Pago',
+                          rejected: '❌ Rejeitado',
+                          failed: '⚠️ Falhou',
+                        };
+                        return (
+                          <div key={p.id} className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-foreground">{p.user_name}</p>
+                                <p className="text-[10px] text-muted-foreground">{p.user_email} • {p.account_id}</p>
+                              </div>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusColors[p.status] || 'bg-white/10 text-muted-foreground border-white/10'}`}>
+                                {statusLabels[p.status] || p.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">🎁 {p.prize}</span>
+                              <span className="font-bold text-foreground">R$ {Number(p.amount).toFixed(2)}</span>
+                            </div>
+                            {p.pix_key && (
+                              <p className="text-[10px] text-muted-foreground">PIX: {p.pix_key} ({p.pix_key_type})</p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground">{new Date(p.created_at).toLocaleString('pt-BR')}</p>
+
+                            {/* Actions */}
+                            {(p.status === 'pending' || p.status === 'auto_pending') && (
+                              <div className="flex gap-2 pt-1">
+                                <button
+                                  onClick={() => handlePayPrize(p.id)}
+                                  disabled={payingPaymentId === p.id || !edpayPublicKey || !edpaySecretKey}
+                                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+                                >
+                                  {payingPaymentId === p.id ? (
+                                    <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : '💸'} Pagar via PIX
+                                </button>
+                                <button
+                                  onClick={() => handleApprovePrize(p.id)}
+                                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-all"
+                                >
+                                  ✅
+                                </button>
+                                <button
+                                  onClick={() => handleRejectPrize(p.id)}
+                                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-all"
+                                >
+                                  ❌
+                                </button>
+                              </div>
+                            )}
+                            {p.status === 'approved' && (
+                              <button
+                                onClick={() => handlePayPrize(p.id)}
+                                disabled={payingPaymentId === p.id || !edpayPublicKey || !edpaySecretKey}
+                                className="w-full flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+                              >
+                                {payingPaymentId === p.id ? (
+                                  <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                                ) : '💸'} Pagar via PIX
+                              </button>
+                            )}
+                            {p.edpay_transaction_id && (
+                              <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </GlassCard>
               )}
             </div>
           )}

@@ -158,6 +158,84 @@ export type Database = {
         }
         Relationships: []
       }
+      prize_payments: {
+        Row: {
+          account_id: string
+          amount: number
+          auto_payment: boolean
+          created_at: string
+          edpay_transaction_id: string | null
+          id: string
+          notes: string | null
+          owner_id: string
+          paid_at: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          prize: string
+          spin_result_id: string | null
+          status: string
+          updated_at: string
+          user_email: string
+          user_name: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          amount?: number
+          auto_payment?: boolean
+          created_at?: string
+          edpay_transaction_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id: string
+          paid_at?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          prize?: string
+          spin_result_id?: string | null
+          status?: string
+          updated_at?: string
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          auto_payment?: boolean
+          created_at?: string
+          edpay_transaction_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          paid_at?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          prize?: string
+          spin_result_id?: string | null
+          status?: string
+          updated_at?: string
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prize_payments_spin_result_id_fkey"
+            columns: ["spin_result_id"]
+            isOneToOne: false
+            referencedRelation: "spin_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prize_payments_wheel_user_id_fkey"
+            columns: ["wheel_user_id"]
+            isOneToOne: false
+            referencedRelation: "wheel_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           bg_image_url: string | null
@@ -326,6 +404,7 @@ export type Database = {
       wheel_users: {
         Row: {
           account_id: string
+          auto_payment: boolean
           created_at: string | null
           email: string
           fixed_prize_enabled: boolean
@@ -343,6 +422,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          auto_payment?: boolean
           created_at?: string | null
           email: string
           fixed_prize_enabled?: boolean
@@ -360,6 +440,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          auto_payment?: boolean
           created_at?: string | null
           email?: string
           fixed_prize_enabled?: boolean
