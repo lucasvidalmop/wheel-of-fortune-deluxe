@@ -365,7 +365,11 @@ const Admin = () => {
       const target = dashboardConfigs.find((c: any) => c.clone_code === cloneTarget.toUpperCase().trim());
       if (!target) { toast.error('Código de destino não encontrado'); setCloning(false); return; }
       if (target.id === cloneSource) { toast.error('Origem e destino devem ser diferentes'); setCloning(false); return; }
-      const { error } = await (supabase as any).from('wheel_configs').update({ config: source.config }).eq('id', target.id);
+      const clonedConfig = JSON.parse(JSON.stringify(source.config || {}));
+      const { error } = await (supabase as any)
+        .from('wheel_configs')
+        .update({ config: clonedConfig, updated_at: new Date().toISOString() })
+        .eq('id', target.id);
       if (error) { toast.error('Erro ao clonar: ' + error.message); } else {
         toast.success('Dashboard clonado com sucesso!');
         setCloneSource(null);

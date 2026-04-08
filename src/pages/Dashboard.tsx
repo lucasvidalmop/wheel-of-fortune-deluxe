@@ -99,6 +99,7 @@ const Dashboard = () => {
   useSiteSettings();
   const configHydratedRef = useRef(false);
   const lastPersistedSettingsRef = useRef('');
+  const lastConfigUpdatedAtRef = useRef<string | null>(null);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
@@ -353,6 +354,39 @@ const Dashboard = () => {
     lastPersistedSettingsRef.current = JSON.stringify(settings);
   };
 
+  const hydrateDashboardConfig = (cfg?: { id?: string; slug?: string; config?: Record<string, any>; updated_at?: string } | null) => {
+    if (cfg?.id) setConfigId(cfg.id);
+    if (cfg?.slug) {
+      setSlug(cfg.slug);
+      setNewSlug(cfg.slug);
+    }
+
+    const rawConfig = cfg?.config || {};
+    const loadedConfig = rawConfig && Object.keys(rawConfig).length > 0
+      ? { ...defaultConfig, ...rawConfig }
+      : defaultConfig;
+
+    setWheelConfig(loadedConfig);
+    setDashboardTheme({ ...defaultTheme, ...(rawConfig?.dashboardTheme || {}) });
+    applyPersistedDashboardSettings(rawConfig?.dashboardSettings || {});
+    lastConfigUpdatedAtRef.current = cfg?.updated_at || null;
+  };
+
+  const syncDashboardConfig = async (userId: string, force = false) => {
+    const { data: latest } = await (supabase as any)
+      .from('wheel_configs')
+      .select('id, slug, config, updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!latest) return;
+    if (!force && lastConfigUpdatedAtRef.current && latest.updated_at === lastConfigUpdatedAtRef.current) return;
+
+    configHydratedRef.current = false;
+    hydrateDashboardConfig(latest);
+    configHydratedRef.current = true;
+  };
+
   useEffect(() => {
     let dataLoaded = false;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
@@ -395,23 +429,8 @@ const Dashboard = () => {
       cfg = created || null;
     }
 
-    if (cfg) {
-      setSlug(cfg.slug);
-      setNewSlug(cfg.slug);
-      setConfigId(cfg.id);
-
-      const loadedConfig = cfg.config && Object.keys(cfg.config).length > 0
-        ? { ...defaultConfig, ...cfg.config }
-        : defaultConfig;
-
-      setWheelConfig(loadedConfig);
-      setDashboardTheme({ ...defaultTheme, ...(cfg.config?.dashboardTheme || {}) });
-      applyPersistedDashboardSettings(cfg.config?.dashboardSettings || {});
-    } else {
-      setWheelConfig(defaultConfig);
-      setDashboardTheme(defaultTheme);
-      applyPersistedDashboardSettings();
-    }
+    if (cfg) hydrateDashboardConfig(cfg);
+    else hydrateDashboardConfig(null);
 
     configHydratedRef.current = true;
 
@@ -482,6 +501,25 @@ const Dashboard = () => {
     edpayPublicKey,
     edpaySecretKey,
   ]);
+
+  useEffect(() => {
+    if (!session?.user?.id || !configId) return;
+
+    const syncIfNeeded = () => {
+      if (document.visibilityState === 'hidden') return;
+      void syncDashboardConfig(session.user.id);
+    };
+
+    const intervalId = window.setInterval(syncIfNeeded, 5000);
+    window.addEventListener('focus', syncIfNeeded);
+    document.addEventListener('visibilitychange', syncIfNeeded);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', syncIfNeeded);
+      document.removeEventListener('visibilitychange', syncIfNeeded);
+    };
+  }, [session?.user?.id, configId]);
 
   const fetchUsers = async (userId?: string) => {
     const uid = userId || session?.user?.id;
@@ -606,7 +644,7 @@ const Dashboard = () => {
         .from('wheel_configs')
         .update({ config: mergedConfig, updated_at: new Date().toISOString() })
         .eq('user_id', session.user.id)
-        .select('config')
+        .select('config, updated_at')
         .maybeSingle();
 
       if (error) {
@@ -615,6 +653,7 @@ const Dashboard = () => {
         toast.error('Erro: configuração não foi atualizada. Recarregue a página.');
       } else {
         toast.success('Configuração salva!');
+        lastConfigUpdatedAtRef.current = updated.updated_at || lastConfigUpdatedAtRef.current;
         // Sync local state with what was actually saved in DB
         setWheelConfig({ ...defaultConfig, ...updated.config });
         setDashboardTheme({ ...defaultTheme, ...(updated.config?.dashboardTheme || {}) });
