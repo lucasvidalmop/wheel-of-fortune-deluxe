@@ -1434,7 +1434,8 @@ const Dashboard = () => {
               {showForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md" onClick={() => setShowForm(false)}>
                   <div
-                    className="w-full max-w-lg mx-4 rounded-2xl border border-white/[0.1] bg-gradient-to-b from-[#1a1a2e] to-[#16162a] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden"
+                    className="w-full max-w-lg mx-4 rounded-2xl border border-white/[0.1] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden"
+                    style={{ background: `linear-gradient(to bottom, var(--theme-modal-bg, #1a1a2e), color-mix(in srgb, var(--theme-modal-bg, #1a1a2e) 85%, black))` }}
                     onClick={e => e.stopPropagation()}
                   >
                     {/* Header */}
