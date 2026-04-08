@@ -17,6 +17,8 @@ export interface ThemeSettings {
   selectTextColor: string;
   inputBgColor: string;
   inputTextColor: string;
+  modalBgColor: string;
+  modalAccentColor: string;
 }
 
 export const defaultTheme: ThemeSettings = {
@@ -33,6 +35,8 @@ export const defaultTheme: ThemeSettings = {
   selectTextColor: '#ffffff',
   inputBgColor: '#0f0f1e',
   inputTextColor: '#ffffff',
+  modalBgColor: '#1a1a2e',
+  modalAccentColor: '#e6a817',
 };
 
 interface Props {
