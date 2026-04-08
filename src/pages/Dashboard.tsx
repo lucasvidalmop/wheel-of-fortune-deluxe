@@ -173,6 +173,7 @@ const Dashboard = () => {
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
+  const [showEdpaySecret, setShowEdpaySecret] = useState(false);
   const [notifyEvolutionApiUrl, setNotifyEvolutionApiUrl] = useState('');
   const [notifyEvolutionApiKey, setNotifyEvolutionApiKey] = useState('');
   const [notifyEvolutionInstance, setNotifyEvolutionInstance] = useState('');
