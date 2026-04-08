@@ -2873,6 +2873,7 @@ const Dashboard = () => {
                   { key: 'credenciais' as const, label: '🔑 Credenciais' },
                   { key: 'saldo' as const, label: '💲 Saldo' },
                   { key: 'deposito' as const, label: '💰 Depósito PIX' },
+                  { key: 'crypto' as const, label: '🪙 Crypto USDT' },
                   { key: 'aprovacoes' as const, label: '✅ Aprovações' },
                 ].map(tab => (
                   <button
