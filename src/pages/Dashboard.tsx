@@ -3289,6 +3289,124 @@ const Dashboard = () => {
                 </GlassCard>
               )}
 
+              {/* Saque USDT Sub-tab */}
+              {financeiroSubTab === 'withdraw' && (
+                <GlassCard className="p-5 space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-lg">📤</div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Saque USDT (TRC20)</h3>
+                      <p className="text-xs text-muted-foreground">Envie USDT para qualquer carteira TRC20</p>
+                    </div>
+                  </div>
+
+                  {(!edpayPublicKey || !edpaySecretKey) ? (
+                    <div className="text-center py-8 space-y-2">
+                      <p className="text-sm text-muted-foreground">Configure suas credenciais primeiro</p>
+                      <button onClick={() => setFinanceiroSubTab('credenciais')} className="mt-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all">
+                        Ir para Credenciais
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor (USDT)</label>
+                        <input type="number" min="1" step="0.01" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="50.00" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Endereço TRC20</label>
+                        <input type="text" value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} placeholder="TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        <p className="text-[10px] text-muted-foreground mt-1">Deve começar com "T" e ter 34 caracteres</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição (opcional)</label>
+                        <input type="text" value={withdrawDescription} onChange={e => setWithdrawDescription(e.target.value)} placeholder="Saque para carteira pessoal" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-xs text-red-300">
+                        ⚠️ Atenção: Transações crypto são irreversíveis. Verifique o endereço com cuidado.
+                      </div>
+
+                      <button
+                        onClick={async () => {
+                          if (!withdrawAmount || Number(withdrawAmount) <= 0) { toast.error('Informe um valor válido'); return; }
+                          if (!withdrawAddress || !withdrawAddress.startsWith('T') || withdrawAddress.length !== 34) { toast.error('Endereço TRC20 inválido'); return; }
+                          setWithdrawLoading(true);
+                          setWithdrawData(null);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('edpay-crypto-withdraw', {
+                              body: { amount: Number(withdrawAmount), address: withdrawAddress, edpayPublicKey, edpaySecretKey, description: withdrawDescription || undefined },
+                            });
+                            if (error || !data?.success) {
+                              toast.error(data?.error || 'Erro ao processar saque');
+                            } else {
+                              setWithdrawData(data.data);
+                              toast.success('Saque enviado para processamento!');
+                            }
+                          } catch (e: any) {
+                            toast.error('Erro ao processar saque');
+                          } finally {
+                            setWithdrawLoading(false);
+                          }
+                        }}
+                        disabled={withdrawLoading}
+                        className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        {withdrawLoading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Processando...</> : '📤 Enviar Saque USDT'}
+                      </button>
+
+                      {withdrawData && (
+                        <div className="mt-4 p-4 rounded-xl bg-white/[0.06] border border-white/[0.08] space-y-3">
+                          <h4 className="text-sm font-bold text-foreground text-center">Saque enviado!</h4>
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            {withdrawData.id && (
+                              <div className="p-2 rounded-lg bg-white/[0.04] col-span-2">
+                                <span className="text-muted-foreground">ID:</span>
+                                <span className="ml-1 text-foreground font-mono font-semibold">{withdrawData.id}</span>
+                              </div>
+                            )}
+                            {withdrawData.status && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Status:</span>
+                                <span className="ml-1 text-yellow-400 font-semibold">{withdrawData.status}</span>
+                              </div>
+                            )}
+                            {withdrawData.amount != null && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Valor:</span>
+                                <span className="ml-1 text-foreground font-semibold">{withdrawData.amount} USDT</span>
+                              </div>
+                            )}
+                            {withdrawData.fee != null && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Taxa:</span>
+                                <span className="ml-1 text-foreground font-semibold">{withdrawData.fee} USDT</span>
+                              </div>
+                            )}
+                            {withdrawData.total != null && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Total:</span>
+                                <span className="ml-1 text-foreground font-semibold">{withdrawData.total} USDT</span>
+                              </div>
+                            )}
+                            {withdrawData.network && (
+                              <div className="p-2 rounded-lg bg-white/[0.04] col-span-2">
+                                <span className="text-muted-foreground">Rede:</span>
+                                <span className="ml-1 text-foreground font-semibold">{withdrawData.network}</span>
+                              </div>
+                            )}
+                          </div>
+                          <details className="text-[10px] text-muted-foreground">
+                            <summary className="cursor-pointer hover:text-foreground transition-colors">Ver resposta completa</summary>
+                            <pre className="mt-2 p-2 rounded-lg bg-black/20 overflow-auto max-h-40 text-[10px]">{JSON.stringify(withdrawData, null, 2)}</pre>
+                          </details>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
               {/* Aprovações Sub-tab */}
               {financeiroSubTab === 'aprovacoes' && (
                 <GlassCard className="p-5 space-y-4">
