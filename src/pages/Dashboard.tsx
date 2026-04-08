@@ -162,9 +162,13 @@ const Dashboard = () => {
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
-  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo'>('credenciais');
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
+  const [cryptoAmount, setCryptoAmount] = useState('');
+  const [cryptoDescription, setCryptoDescription] = useState('');
+  const [cryptoLoading, setCryptoLoading] = useState(false);
+  const [cryptoData, setCryptoData] = useState<any>(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
@@ -2869,6 +2873,7 @@ const Dashboard = () => {
                   { key: 'credenciais' as const, label: '🔑 Credenciais' },
                   { key: 'saldo' as const, label: '💲 Saldo' },
                   { key: 'deposito' as const, label: '💰 Depósito PIX' },
+                  { key: 'crypto' as const, label: '🪙 Crypto USDT' },
                   { key: 'aprovacoes' as const, label: '✅ Aprovações' },
                 ].map(tab => (
                   <button
@@ -3157,6 +3162,125 @@ const Dashboard = () => {
                     </GlassCard>
                   )}
                 </>
+              )}
+
+              {/* Crypto USDT Sub-tab */}
+              {financeiroSubTab === 'crypto' && (
+                <GlassCard className="p-5 space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-lg">🪙</div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Depósito USDT (TRC20)</h3>
+                      <p className="text-xs text-muted-foreground">Receba pagamentos em USDT via rede TRON</p>
+                    </div>
+                  </div>
+
+                  {(!edpayPublicKey || !edpaySecretKey) ? (
+                    <div className="text-center py-8 space-y-2">
+                      <p className="text-sm text-muted-foreground">Configure suas credenciais primeiro</p>
+                      <button onClick={() => setFinanceiroSubTab('credenciais')} className="mt-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all">
+                        Ir para Credenciais
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor (USD)</label>
+                        <input type="number" min="1" step="0.01" value={cryptoAmount} onChange={e => setCryptoAmount(e.target.value)} placeholder="100.00" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição (opcional)</label>
+                        <input type="text" value={cryptoDescription} onChange={e => setCryptoDescription(e.target.value)} placeholder="Recarga de conta" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!cryptoAmount || Number(cryptoAmount) <= 0) { toast.error('Informe um valor válido'); return; }
+                          setCryptoLoading(true);
+                          setCryptoData(null);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('edpay-crypto-deposit', {
+                              body: { amount: Number(cryptoAmount), edpayPublicKey, edpaySecretKey, description: cryptoDescription || undefined },
+                            });
+                            if (error || !data?.success) {
+                              toast.error(data?.error || 'Erro ao gerar depósito crypto');
+                            } else {
+                              setCryptoData(data.data);
+                              toast.success('Endereço USDT gerado!');
+                            }
+                          } catch (e: any) {
+                            toast.error('Erro ao gerar depósito crypto');
+                          } finally {
+                            setCryptoLoading(false);
+                          }
+                        }}
+                        disabled={cryptoLoading}
+                        className="w-full py-3 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        {cryptoLoading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Gerando...</> : '🪙 Gerar Depósito USDT'}
+                      </button>
+
+                      {cryptoData && (
+                        <div className="mt-4 p-4 rounded-xl bg-white/[0.06] border border-white/[0.08] space-y-4">
+                          <h4 className="text-sm font-bold text-foreground text-center">Depósito USDT gerado!</h4>
+
+                          {cryptoData.id && (
+                            <p className="text-xs text-muted-foreground text-center">ID: <span className="text-foreground font-mono">{cryptoData.id}</span></p>
+                          )}
+
+                          {cryptoData.qr_code && (
+                            <div className="flex justify-center">
+                              <img src={cryptoData.qr_code} alt="QR Code USDT" className="w-48 h-48 rounded-xl bg-white p-2" />
+                            </div>
+                          )}
+
+                          {cryptoData.address && (
+                            <div>
+                              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Endereço TRC20</label>
+                              <div className="flex gap-2">
+                                <input type="text" readOnly value={cryptoData.address} className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono" />
+                                <button onClick={() => { navigator.clipboard.writeText(cryptoData.address); toast.success('Endereço copiado!'); }} className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-all">
+                                  <Copy size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            {cryptoData.pay_amount && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Valor USDT:</span>
+                                <span className="ml-1 text-foreground font-semibold">{cryptoData.pay_amount}</span>
+                              </div>
+                            )}
+                            {cryptoData.network && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Rede:</span>
+                                <span className="ml-1 text-foreground font-semibold">{cryptoData.network}</span>
+                              </div>
+                            )}
+                            {cryptoData.rate && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Taxa:</span>
+                                <span className="ml-1 text-foreground font-semibold">{cryptoData.rate}</span>
+                              </div>
+                            )}
+                            {cryptoData.expired_at && (
+                              <div className="p-2 rounded-lg bg-white/[0.04]">
+                                <span className="text-muted-foreground">Expira:</span>
+                                <span className="ml-1 text-foreground font-semibold">{new Date(cryptoData.expired_at * 1000).toLocaleString('pt-BR')}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <details className="text-[10px] text-muted-foreground">
+                            <summary className="cursor-pointer hover:text-foreground transition-colors">Ver resposta completa</summary>
+                            <pre className="mt-2 p-2 rounded-lg bg-black/20 overflow-auto max-h-40 text-[10px]">{JSON.stringify(cryptoData, null, 2)}</pre>
+                          </details>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </GlassCard>
               )}
 
               {/* Aprovações Sub-tab */}
