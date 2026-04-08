@@ -1621,11 +1621,8 @@ const Dashboard = () => {
                         const formEl = e.currentTarget.closest('.overflow-hidden')?.querySelector('form');
                         if (formEl) formEl.requestSubmit();
                       }}
-                        className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                          editingUser 
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-500/25 hover:shadow-amber-500/40' 
-                            : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40'
-                        }`}>
+                        className="flex-1 py-3 rounded-xl font-bold text-sm transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110"
+                        style={{ backgroundColor: 'var(--theme-modal-btn, #f59e0b)', color: 'var(--theme-modal-btn-text, #ffffff)', boxShadow: '0 10px 25px -5px color-mix(in srgb, var(--theme-modal-btn, #f59e0b) 30%, transparent)' }}>
                         {savingUser ? (
                           <span className="flex items-center justify-center gap-2">
                             <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
