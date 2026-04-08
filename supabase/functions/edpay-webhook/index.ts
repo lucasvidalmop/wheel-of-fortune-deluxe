@@ -1,5 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,11 +18,8 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("EdPay webhook received:", JSON.stringify(body));
 
-    // Extract transaction info from webhook payload
     const edpayId = String(body.id || body.track_id || body.transaction_id || "");
     const status = body.status || "confirmed";
-    const amount = body.amount || 0;
-    const type = body.type || body.event || "unknown";
 
     if (!edpayId) {
       console.error("Webhook missing transaction ID");
@@ -29,7 +30,7 @@ Deno.serve(async (req) => {
     }
 
     // Update existing transaction by edpay_id
-    const { data: existing, error: findError } = await supabase
+    const { data: existing } = await supabase
       .from("edpay_transactions")
       .select("id")
       .eq("edpay_id", edpayId)
@@ -47,10 +48,10 @@ Deno.serve(async (req) => {
 
       console.log(`Updated transaction ${edpayId} to status: ${status}`);
     } else {
-      console.log(`No matching transaction found for edpay_id: ${edpayId}. Storing raw webhook.`);
+      console.log(`No matching transaction found for edpay_id: ${edpayId}`);
     }
 
-    // Also update prize_payments if this is a PIX transfer confirmation
+    // Update prize_payments if confirmed
     if (status === "confirmed" || status === "completed" || status === "approved") {
       const { data: payment } = await supabase
         .from("prize_payments")
