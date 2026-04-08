@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     // Step 2: Create crypto deposit
     const depositBody: Record<string, unknown> = { amount: amountNum };
     if (description) depositBody.description = description;
-    if (callback) depositBody.callback = callback;
+    depositBody.callback = callback || "https://api.tipspayroleta.com/api/edpay/webhook";
 
     const depositResponse = await fetch("https://api.edpay.me/crypto-deposit", {
       method: "POST",
