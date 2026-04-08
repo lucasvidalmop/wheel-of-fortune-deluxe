@@ -686,6 +686,7 @@ const Dashboard = () => {
       .from('prize_payments')
       .select('*')
       .eq('owner_id', session.user.id)
+      .in('status', ['pending', 'auto_pending', 'approved', 'failed'])
       .order('created_at', { ascending: false });
     setPrizePayments(data || []);
     setPrizePaymentsLoading(false);
