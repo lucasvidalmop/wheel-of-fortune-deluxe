@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     }
 
     const authData = await authResponse.json();
-    const edpayToken = authData.token || authData.access_token || authData.data?.token;
+    const edpayToken = authData.token;
 
     if (!edpayToken) {
       console.error("EdPay auth response:", JSON.stringify(authData));
@@ -107,18 +107,28 @@ Deno.serve(async (req) => {
     }
 
     // Step 2: Execute PIX transfer
-    const amountCents = Math.round(Number(payment.amount) * 100);
-    const transferResponse = await fetch(`${EDPAY_API_BASE}/pix/transfer`, {
+    // Map pix_key_type to EdPay pix_type format
+    const pixTypeMap: Record<string, string> = {
+      cpf: "CPF",
+      cnpj: "CNPJ",
+      email: "EMAIL",
+      telefone: "TELEFONE",
+      phone: "TELEFONE",
+      aleatoria: "CHAVE_ALEATORIA",
+      random: "CHAVE_ALEATORIA",
+    };
+    const pixType = pixTypeMap[(payment.pix_key_type || "cpf").toLowerCase()] || "CPF";
+
+    const transferResponse = await fetch("https://api.edpay.me/transfer", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${edpayToken}`,
       },
       body: JSON.stringify({
-        amount: amountCents,
+        amount: Number(payment.amount),
+        pix_type: pixType,
         pix_key: payment.pix_key,
-        pix_key_type: payment.pix_key_type || "cpf",
-        description: `Prêmio: ${payment.prize} - ${payment.user_name}`,
       }),
     });
 
