@@ -210,6 +210,56 @@ const Dashboard = () => {
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
+
+  // Scheduled messages state
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
+  const [scheduledLoading, setScheduledLoading] = useState(false);
+  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly' });
+  const [schedSaving, setSchedSaving] = useState(false);
+
+  const fetchScheduledMessages = async () => {
+    if (!session?.user?.id) return;
+    setScheduledLoading(true);
+    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).order('next_run_at', { ascending: true });
+    setScheduledMessages(data || []);
+    setScheduledLoading(false);
+  };
+
+  const saveScheduledMessage = async () => {
+    if (!schedForm.message.trim()) { toast.error('Digite a mensagem'); return; }
+    if (!schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
+    if (!schedForm.date) { toast.error('Selecione a data'); return; }
+    setSchedSaving(true);
+    const [hours, minutes] = schedForm.time.split(':').map(Number);
+    const scheduledAt = new Date(schedForm.date);
+    scheduledAt.setHours(hours, minutes, 0, 0);
+    const isoDate = scheduledAt.toISOString();
+
+    const { error } = await supabase.from('scheduled_messages').insert({
+      owner_id: session.user.id,
+      message: schedForm.message,
+      recipient_type: schedForm.recipientType,
+      recipient_value: schedForm.recipientValue,
+      recipient_label: schedForm.recipientLabel,
+      scheduled_at: isoDate,
+      next_run_at: isoDate,
+      recurrence: schedForm.recurrence,
+      status: 'pending',
+    } as any);
+
+    setSchedSaving(false);
+    if (error) { toast.error('Erro ao agendar: ' + error.message); return; }
+    toast.success('Mensagem agendada com sucesso!');
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none' });
+    fetchScheduledMessages();
+  };
+
+  const cancelScheduledMessage = async (id: string) => {
+    await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).eq('id', id);
+    toast.success('Agendamento cancelado');
+    fetchScheduledMessages();
+  };
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
@@ -3360,7 +3410,114 @@ const Dashboard = () => {
                 >
                   {whatsappSending ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Users size={16} /> Enviar para {notifySelectedGroups.length} Grupo(s)</>}
                 </button>
-              )}
+               )}
+
+              {/* ── Agendamento de Mensagens ── */}
+              <GlassCard className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} /> Agendamento de Mensagens</h3>
+                  <button onClick={() => { setShowScheduler(!showScheduler); if (!showScheduler) fetchScheduledMessages(); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition ${showScheduler ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    {showScheduler ? 'Fechar' : 'Abrir'}
+                  </button>
+                </div>
+
+                {showScheduler && (
+                  <div className="space-y-4">
+                    {/* Form */}
+                    <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Tipo</label>
+                          <select value={schedForm.recipientType} onChange={e => setSchedForm(f => ({ ...f, recipientType: e.target.value as any, recipientValue: '', recipientLabel: '' }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
+                            <option value="individual">Inscrito</option>
+                            <option value="group">Grupo</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Destinatário</label>
+                          {schedForm.recipientType === 'individual' ? (
+                            <select value={schedForm.recipientValue} onChange={e => { const u = users.find(u => u.phone === e.target.value); setSchedForm(f => ({ ...f, recipientValue: e.target.value, recipientLabel: u?.name || '' })); }} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
+                              <option value="">Selecione...</option>
+                              {users.filter(u => u.phone).map(u => <option key={u.id} value={u.phone}>{u.name} ({u.phone})</option>)}
+                            </select>
+                          ) : (
+                            <select value={schedForm.recipientValue} onChange={e => { const g = notifyGroups.find(g => g.id === e.target.value); setSchedForm(f => ({ ...f, recipientValue: e.target.value, recipientLabel: g?.subject || '' })); }} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
+                              <option value="">Selecione...</option>
+                              {notifyGroups.map(g => <option key={g.id} value={g.id}>{g.subject}</option>)}
+                            </select>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Data</label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left flex items-center gap-2">
+                                <CalendarIcon size={14} className="text-muted-foreground" />
+                                {schedForm.date ? schedForm.date.toLocaleDateString('pt-BR') : 'Selecione'}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar mode="single" selected={schedForm.date} onSelect={d => setSchedForm(f => ({ ...f, date: d || undefined }))} className="p-3 pointer-events-auto" />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Horário</label>
+                          <input type="time" value={schedForm.time} onChange={e => setSchedForm(f => ({ ...f, time: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Recorrência</label>
+                          <select value={schedForm.recurrence} onChange={e => setSchedForm(f => ({ ...f, recurrence: e.target.value as any }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
+                            <option value="none">Única vez</option>
+                            <option value="daily">Diário</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="monthly">Mensal</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <button onClick={saveScheduledMessage} disabled={schedSaving} className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/80 text-primary-foreground font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                        {schedSaving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><Clock size={16} /> Agendar Mensagem</>}
+                      </button>
+                    </div>
+
+                    {/* List */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-muted-foreground">Mensagens agendadas</h4>
+                      {scheduledLoading ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">Carregando...</p>
+                      ) : scheduledMessages.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">Nenhum agendamento</p>
+                      ) : (
+                        <div className="space-y-2 max-h-80 overflow-y-auto">
+                          {scheduledMessages.map((m: any) => (
+                            <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
+                              <div className="flex justify-between items-start">
+                                <span className="font-medium text-foreground truncate max-w-[70%]">{m.recipient_label || m.recipient_value}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${m.status === 'pending' ? 'bg-primary/20 text-primary' : m.status === 'sent' ? 'bg-green-500/20 text-green-400' : m.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' : 'bg-red-500/20 text-red-400'}`}>
+                                  {m.status === 'pending' ? '⏳ Pendente' : m.status === 'sent' ? '✅ Enviado' : m.status === 'cancelled' ? '🚫 Cancelado' : '❌ Falhou'}
+                                </span>
+                              </div>
+                              <p className="text-muted-foreground line-clamp-2">{m.message}</p>
+                              <div className="flex justify-between items-center text-muted-foreground">
+                                <span>📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleString('pt-BR')} {m.recurrence !== 'none' && `• 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
+                                {m.status === 'pending' && (
+                                  <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </GlassCard>
             </div>
           )}
 
