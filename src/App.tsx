@@ -24,6 +24,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/ref/:code" element={<Referral />} />
           <Route path="/:slug" element={<Roleta />} />
         </Routes>
       </BrowserRouter>
