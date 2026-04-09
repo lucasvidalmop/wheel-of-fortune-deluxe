@@ -3256,6 +3256,16 @@ const Dashboard = () => {
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
                       />
                     </div>
+                    {/* Timer de expiração */}
+                    <div>
+                      <label className="text-[10px] text-muted-foreground block mb-1">⏳ Expira em <span className="text-muted-foreground/50">(vazio = sem expiração)</span></label>
+                      <input
+                        type="datetime-local"
+                        value={referralForm.expires_at}
+                        onChange={e => setReferralForm(p => ({ ...p, expires_at: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
                     {/* Prêmios fixos (multi-select) */}
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">Prêmios garantidos <span className="text-muted-foreground/50">(nenhum = aleatório, múltiplos = sorteio entre selecionados)</span></label>
