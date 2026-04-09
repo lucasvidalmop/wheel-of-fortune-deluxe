@@ -252,6 +252,17 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
             <ColorField label="Cor do texto do botão" value={config.btnTextColor} onChange={v => update({ btnTextColor: v })} />
           </Section>
 
+          {/* ═══ TELA DE LIMITE ═══ */}
+          <Section icon={<Type size={14} className="text-primary" />} title="Tela de Limite Atingido">
+            <TextField label="Emoji" value={config.limitEmoji} onChange={v => update({ limitEmoji: v })} placeholder="⏰" />
+            <TextField label="Título" value={config.limitTitle} onChange={v => update({ limitTitle: v })} placeholder="Resgates Esgotados" />
+            <TextField label="Subtítulo" value={config.limitSubtitle} onChange={v => update({ limitSubtitle: v })} placeholder="Este link atingiu o limite máximo..." />
+            <ColorField label="Cor do título" value={config.limitTitleColor} onChange={v => update({ limitTitleColor: v })} />
+            <ColorField label="Cor do subtítulo" value={config.limitSubtitleColor} onChange={v => update({ limitSubtitleColor: v })} />
+            <ColorField label="Fundo do card" value={config.limitCardBgColor} onChange={v => update({ limitCardBgColor: v })} />
+            <ColorField label="Borda do card" value={config.limitCardBorderColor} onChange={v => update({ limitCardBorderColor: v })} />
+          </Section>
+
           <ReferralPagePreview config={config} linkLabel={linkLabel} />
           <div className="flex gap-3">
             <button onClick={handleReset} className="flex-1 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2">
