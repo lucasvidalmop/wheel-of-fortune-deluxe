@@ -602,6 +602,10 @@ const Dashboard = () => {
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
+    setReceiptFontColor(settings.receiptFontColor || '#1a1a2e');
+    setReceiptBgColor(settings.receiptBgColor || '#ffffff');
+    setReceiptAccentColor(settings.receiptAccentColor || '#3b82f6');
+    setReceiptOperatorName(settings.receiptOperatorName || '');
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
