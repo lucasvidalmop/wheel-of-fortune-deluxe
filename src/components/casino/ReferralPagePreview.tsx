@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { X, Eye, Minimize2, Maximize2, GripVertical } from 'lucide-react';
+import { X, Eye, Minimize2, Maximize2, GripVertical, ZoomIn, ZoomOut } from 'lucide-react';
 import { ReferralPageConfig } from './ReferralPageEditor';
 
 interface Props {
