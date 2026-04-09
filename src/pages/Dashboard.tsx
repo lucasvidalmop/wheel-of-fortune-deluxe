@@ -1506,7 +1506,7 @@ const Dashboard = () => {
                 ]).map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => setSpinsFilter(opt.value)}
+                    onClick={() => { setSpinsFilter(opt.value); setSearchTerm(''); }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                       spinsFilter === opt.value
                         ? 'bg-primary/20 text-primary border border-primary/30'
