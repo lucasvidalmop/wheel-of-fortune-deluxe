@@ -31,6 +31,14 @@ export interface ReferralPageConfig {
   successBtnText: string;
   titlePrefix: string;
   showCounter: boolean;
+  // Limit reached screen
+  limitEmoji: string;
+  limitTitle: string;
+  limitSubtitle: string;
+  limitTitleColor: string;
+  limitSubtitleColor: string;
+  limitCardBgColor: string;
+  limitCardBorderColor: string;
 }
 
 export const defaultPageConfig: ReferralPageConfig = {
@@ -59,6 +67,13 @@ export const defaultPageConfig: ReferralPageConfig = {
   successBtnText: '🎰 Ir para a Roleta',
   titlePrefix: '',
   showCounter: true,
+  limitEmoji: '⏰',
+  limitTitle: 'Resgates Esgotados',
+  limitSubtitle: 'Este link atingiu o limite máximo de resgates disponíveis.',
+  limitTitleColor: '',
+  limitSubtitleColor: '',
+  limitCardBgColor: '',
+  limitCardBorderColor: '',
 };
 
 interface Props {
