@@ -278,6 +278,7 @@ export type Database = {
           code: string
           created_at: string
           fixed_prize_segment: number | null
+          fixed_prize_segments: Json | null
           id: string
           is_active: boolean
           label: string
@@ -293,6 +294,7 @@ export type Database = {
           code?: string
           created_at?: string
           fixed_prize_segment?: number | null
+          fixed_prize_segments?: Json | null
           id?: string
           is_active?: boolean
           label?: string
@@ -308,6 +310,7 @@ export type Database = {
           code?: string
           created_at?: string
           fixed_prize_segment?: number | null
+          fixed_prize_segments?: Json | null
           id?: string
           is_active?: boolean
           label?: string
