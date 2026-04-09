@@ -3400,7 +3400,7 @@ const Dashboard = () => {
                     const phone = phones[i];
                     const matchedUser = allUsers.find(u => u.phone === phone);
                     try {
-                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
+                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined } });
                       const hasError = !!error || !!respData?.error;
                       const errorMsg = error?.message || respData?.error || null;
                       await (supabase as any).from('whatsapp_message_log').insert({
@@ -3449,7 +3449,7 @@ const Dashboard = () => {
                     for (const group of notifySelectedGroups) {
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
-                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance }
+                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
                         if (hasError) errors++; else sent++;
