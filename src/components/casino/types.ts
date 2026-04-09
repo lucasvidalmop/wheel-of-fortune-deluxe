@@ -212,6 +212,24 @@ export interface WheelConfig {
   autoRedirectEnabled?: boolean;
   autoRedirectUrl?: string;
   autoRedirectDelaySec?: number;
+  // Prize history button customization
+  prizeHistoryBtnEnabled?: boolean;
+  prizeHistoryBtnText?: string;
+  prizeHistoryBtnBgColor?: string;
+  prizeHistoryBtnTextColor?: string;
+  prizeHistoryBtnBorderColor?: string;
+  prizeHistoryBtnBorderRadius?: number;
+  prizeHistoryBtnFontSize?: number;
+  prizeHistoryBtnPaddingX?: number;
+  prizeHistoryBtnPaddingY?: number;
+  prizeHistoryBtnMobileFontSize?: number;
+  // Prize history modal customization
+  prizeHistoryModalBgColor?: string;
+  prizeHistoryModalTextColor?: string;
+  prizeHistoryModalTitleColor?: string;
+  prizeHistoryModalBorderColor?: string;
+  prizeHistoryModalAccentColor?: string;
+  prizeHistoryModalBorderRadius?: number;
 }
 
 export const defaultSegments: WheelSegment[] = [
