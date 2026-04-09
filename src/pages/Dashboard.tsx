@@ -5115,6 +5115,80 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Receipt Dialog */}
+      <Dialog open={!!receiptPayment} onOpenChange={(open) => { if (!open) setReceiptPayment(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText size={18} />
+              Comprovante de Pagamento
+            </DialogTitle>
+          </DialogHeader>
+          {receiptPayment && (
+            <div className="space-y-3 text-sm">
+              <div className="p-4 rounded-xl bg-muted/50 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Nome:</span>
+                  <span className="font-semibold text-foreground">{receiptPayment.user_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">E-mail:</span>
+                  <span className="text-foreground">{receiptPayment.user_email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ID Conta:</span>
+                  <span className="text-foreground">{receiptPayment.account_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Prêmio:</span>
+                  <span className="text-foreground">{receiptPayment.prize}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Valor:</span>
+                  <span className="font-bold text-foreground">R$ {Number(receiptPayment.amount).toFixed(2)}</span>
+                </div>
+                {receiptPayment.pix_key && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Chave PIX:</span>
+                    <span className="text-foreground">{receiptPayment.pix_key} ({receiptPayment.pix_key_type})</span>
+                  </div>
+                )}
+                {receiptPayment.paid_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Pago em:</span>
+                    <span className="text-foreground">{new Date(receiptPayment.paid_at).toLocaleString('pt-BR')}</span>
+                  </div>
+                )}
+                {receiptPayment.edpay_transaction_id && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">TX ID:</span>
+                    <span className="text-foreground font-mono text-xs">{receiptPayment.edpay_transaction_id}</span>
+                  </div>
+                )}
+              </div>
+
+              {receiptLoading && (
+                <div className="text-center py-4">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                </div>
+              )}
+
+              {receiptMeta && !receiptLoading && (
+                <div className="p-4 rounded-xl bg-muted/50 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Dados EdPay</p>
+                  {Object.entries(receiptMeta).map(([key, val]) => (
+                    <div key={key} className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{key}:</span>
+                      <span className="text-foreground max-w-[200px] truncate">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
