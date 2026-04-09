@@ -279,6 +279,7 @@ export type Database = {
           id: string
           is_active: boolean
           label: string
+          max_registrations: number | null
           owner_id: string
           registrations_count: number
           spins_per_registration: number
@@ -290,6 +291,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string
+          max_registrations?: number | null
           owner_id: string
           registrations_count?: number
           spins_per_registration?: number
@@ -301,6 +303,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string
+          max_registrations?: number | null
           owner_id?: string
           registrations_count?: number
           spins_per_registration?: number
