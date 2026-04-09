@@ -718,6 +718,14 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_prize_history: {
+        Args: { p_account_id: string; p_owner_id: string }
+        Returns: {
+          id: string
+          prize: string
+          spun_at: string
+        }[]
+      }
       get_wheel_config_by_slug: {
         Args: { p_slug: string }
         Returns: {
