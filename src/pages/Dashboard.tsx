@@ -122,7 +122,7 @@ const Dashboard = () => {
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
-  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segment: null as number | null, auto_payment: false });
+  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false });
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'default_style'>('links');
@@ -233,20 +233,20 @@ const Dashboard = () => {
     if (editingReferral) {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segment: referralForm.fixed_prize_segment, auto_payment: referralForm.auto_payment, updated_at: new Date().toISOString() })
+        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, updated_at: new Date().toISOString() })
         .eq('id', editingReferral.id);
       if (error) { toast.error('Erro ao atualizar'); return; }
       toast.success('Link atualizado!');
     } else {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segment: referralForm.fixed_prize_segment, auto_payment: referralForm.auto_payment });
+        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment });
       if (error) { toast.error('Erro ao criar link'); return; }
       toast.success('Link criado!');
     }
     setShowReferralForm(false);
     setEditingReferral(null);
-    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segment: null, auto_payment: false });
+    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false });
     fetchReferralLinks();
   };
 
@@ -3212,7 +3212,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Link2 size={16} /> Links de Referência</h3>
                   <button
-                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segment: null, auto_payment: false }); }}
+                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false }); }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/20 text-xs font-semibold hover:bg-primary/25 transition"
                   >
                     <Plus size={14} /> Novo Link
@@ -3256,19 +3256,32 @@ const Dashboard = () => {
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
                       />
                     </div>
-                    {/* Prêmio fixo */}
+                    {/* Prêmios fixos (multi-select) */}
                     <div>
-                      <label className="text-[10px] text-muted-foreground block mb-1">Prêmio garantido <span className="text-muted-foreground/50">(vazio = aleatório)</span></label>
-                      <select
-                        value={referralForm.fixed_prize_segment ?? ''}
-                        onChange={e => setReferralForm(p => ({ ...p, fixed_prize_segment: e.target.value === '' ? null : parseInt(e.target.value) }))}
-                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 appearance-none"
-                      >
-                        <option value="" className="bg-background">Aleatório (probabilidades)</option>
-                        {wheelConfig.segments.map((seg: any, i: number) => (
-                          <option key={seg.id} value={i} className="bg-background">{seg.title} — {seg.reward}</option>
-                        ))}
-                      </select>
+                      <label className="text-[10px] text-muted-foreground block mb-1">Prêmios garantidos <span className="text-muted-foreground/50">(nenhum = aleatório, múltiplos = sorteio entre selecionados)</span></label>
+                      <div className="space-y-1 max-h-40 overflow-y-auto rounded-lg border border-white/[0.08] bg-white/[0.02] p-2" style={{ scrollbarWidth: 'thin' }}>
+                        {wheelConfig.segments.map((seg: any, i: number) => {
+                          const isSelected = referralForm.fixed_prize_segments.includes(i);
+                          return (
+                            <label key={seg.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition ${isSelected ? 'bg-primary/15 border border-primary/30' : 'hover:bg-white/[0.04] border border-transparent'}`}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  setReferralForm(p => ({
+                                    ...p,
+                                    fixed_prize_segments: isSelected
+                                      ? p.fixed_prize_segments.filter(s => s !== i)
+                                      : [...p.fixed_prize_segments, i]
+                                  }));
+                                }}
+                                className="accent-primary"
+                              />
+                              <span className="text-xs text-foreground">{seg.title} — {seg.reward}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                     {/* Auto-payment */}
                     <div className="flex items-center justify-between">
@@ -3307,7 +3320,7 @@ const Dashboard = () => {
                             <p className="text-sm font-bold text-foreground">{link.label || 'Sem nome'}</p>
                             <p className="text-[10px] text-muted-foreground">
                               {link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição
-                              {link.fixed_prize_segment != null && wheelConfig.segments[link.fixed_prize_segment] ? ` • 🎯 ${wheelConfig.segments[link.fixed_prize_segment].title}` : ''}
+                              {link.fixed_prize_segments && (link.fixed_prize_segments as number[]).length > 0 ? ` • 🎯 ${(link.fixed_prize_segments as number[]).map((s: number) => wheelConfig.segments[s]?.title).filter(Boolean).join(', ')}` : link.fixed_prize_segment != null && wheelConfig.segments[link.fixed_prize_segment] ? ` • 🎯 ${wheelConfig.segments[link.fixed_prize_segment].title}` : ''}
                               {link.auto_payment ? ' • 💳 Auto' : ''}
                             </p>
                           </div>
@@ -3334,7 +3347,7 @@ const Dashboard = () => {
                         </div>
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
                           <button
-                            onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '', fixed_prize_segment: link.fixed_prize_segment ?? null, auto_payment: link.auto_payment ?? false }); setShowReferralForm(true); }}
+                            onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '', fixed_prize_segments: Array.isArray(link.fixed_prize_segments) ? link.fixed_prize_segments : link.fixed_prize_segment != null ? [link.fixed_prize_segment] : [], auto_payment: link.auto_payment ?? false }); setShowReferralForm(true); }}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] text-muted-foreground text-[10px] hover:bg-white/[0.1] transition"
                           >
                             <Pencil size={12} /> Editar
