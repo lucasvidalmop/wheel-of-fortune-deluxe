@@ -70,6 +70,27 @@ const Referral = () => {
         setSpinsGranted(result.spins || 1);
         if (result.slug) setWheelSlug(result.slug);
         setSuccess(true);
+
+        try {
+          if (result.owner_id) {
+            await supabase.functions.invoke('send-owner-notification', {
+              body: {
+                ownerId: result.owner_id,
+                type: 'referral_redeemed',
+                payload: {
+                  code: code?.toUpperCase() || '',
+                  email: email.trim(),
+                  accountId: accountId.trim(),
+                  spins: result.spins || 1,
+                  label: result.label || '',
+                },
+              },
+            });
+          }
+        } catch (notifyErr) {
+          console.error('Referral notification failed:', notifyErr);
+        }
+
         toast.success('Giro resgatado com sucesso!');
       } else {
         toast.error(result?.error || 'Erro ao registrar');
