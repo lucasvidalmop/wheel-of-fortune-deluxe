@@ -67,6 +67,8 @@ export const defaultPageConfig: ReferralPageConfig = {
   successTitle: 'Giro Liberado!',
   successSubtitle: '',
   successBtnText: '🎰 Ir para a Roleta',
+  successBtnBgColor: '',
+  successBtnTextColor: '',
   titlePrefix: '',
   showCounter: true,
   limitEmoji: '⏰',
