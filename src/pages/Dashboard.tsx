@@ -122,7 +122,7 @@ const Dashboard = () => {
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
-  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false });
+  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false, expires_at: '' });
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'default_style'>('links');
@@ -233,20 +233,20 @@ const Dashboard = () => {
     if (editingReferral) {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, updated_at: new Date().toISOString() })
+        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null, updated_at: new Date().toISOString() })
         .eq('id', editingReferral.id);
       if (error) { toast.error('Erro ao atualizar'); return; }
       toast.success('Link atualizado!');
     } else {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment });
+        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null });
       if (error) { toast.error('Erro ao criar link'); return; }
       toast.success('Link criado!');
     }
     setShowReferralForm(false);
     setEditingReferral(null);
-    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false });
+    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false, expires_at: '' });
     fetchReferralLinks();
   };
 
@@ -3212,7 +3212,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Link2 size={16} /> Links de Referência</h3>
                   <button
-                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false }); }}
+                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false, expires_at: '' }); }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/20 text-xs font-semibold hover:bg-primary/25 transition"
                   >
                     <Plus size={14} /> Novo Link
@@ -3253,6 +3253,16 @@ const Dashboard = () => {
                         value={referralForm.max_registrations}
                         onChange={e => setReferralForm(p => ({ ...p, max_registrations: e.target.value }))}
                         placeholder="Ilimitado"
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    {/* Timer de expiração */}
+                    <div>
+                      <label className="text-[10px] text-muted-foreground block mb-1">⏳ Expira em <span className="text-muted-foreground/50">(vazio = sem expiração)</span></label>
+                      <input
+                        type="datetime-local"
+                        value={referralForm.expires_at}
+                        onChange={e => setReferralForm(p => ({ ...p, expires_at: e.target.value }))}
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
                       />
                     </div>
@@ -3322,6 +3332,7 @@ const Dashboard = () => {
                               {link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição
                               {link.fixed_prize_segments && (link.fixed_prize_segments as number[]).length > 0 ? ` • 🎯 ${(link.fixed_prize_segments as number[]).map((s: number) => wheelConfig.segments[s]?.title).filter(Boolean).join(', ')}` : link.fixed_prize_segment != null && wheelConfig.segments[link.fixed_prize_segment] ? ` • 🎯 ${wheelConfig.segments[link.fixed_prize_segment].title}` : ''}
                               {link.auto_payment ? ' • 💳 Auto' : ''}
+                              {link.expires_at ? ` • ⏳ ${new Date(link.expires_at).toLocaleString('pt-BR')}${new Date(link.expires_at) <= new Date() ? ' (expirado)' : ''}` : ''}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -3347,7 +3358,7 @@ const Dashboard = () => {
                         </div>
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
                           <button
-                            onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '', fixed_prize_segments: Array.isArray(link.fixed_prize_segments) ? link.fixed_prize_segments : link.fixed_prize_segment != null ? [link.fixed_prize_segment] : [], auto_payment: link.auto_payment ?? false }); setShowReferralForm(true); }}
+                            onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '', fixed_prize_segments: Array.isArray(link.fixed_prize_segments) ? link.fixed_prize_segments : link.fixed_prize_segment != null ? [link.fixed_prize_segment] : [], auto_payment: link.auto_payment ?? false, expires_at: link.expires_at ? new Date(link.expires_at).toISOString().slice(0, 16) : '' }); setShowReferralForm(true); }}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] text-muted-foreground text-[10px] hover:bg-white/[0.1] transition"
                           >
                             <Pencil size={12} /> Editar

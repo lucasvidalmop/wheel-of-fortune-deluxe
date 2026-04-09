@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Upload, RotateCcw, Palette, Image, Type, MousePointer } from 'lucide-react';
+import { X, Upload, RotateCcw, Palette, Image, Type, MousePointer, Clock } from 'lucide-react';
 import ReferralPagePreview from './ReferralPagePreview';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +41,14 @@ export interface ReferralPageConfig {
   limitSubtitleColor: string;
   limitCardBgColor: string;
   limitCardBorderColor: string;
+  // Expired screen
+  expiredEmoji: string;
+  expiredTitle: string;
+  expiredSubtitle: string;
+  expiredTitleColor: string;
+  expiredSubtitleColor: string;
+  expiredCardBgColor: string;
+  expiredCardBorderColor: string;
 }
 
 export const defaultPageConfig: ReferralPageConfig = {
@@ -78,6 +86,13 @@ export const defaultPageConfig: ReferralPageConfig = {
   limitSubtitleColor: '',
   limitCardBgColor: '',
   limitCardBorderColor: '',
+  expiredEmoji: '⏳',
+  expiredTitle: 'Promoção Encerrada',
+  expiredSubtitle: 'O prazo desta promoção expirou.',
+  expiredTitleColor: '',
+  expiredSubtitleColor: '',
+  expiredCardBgColor: '',
+  expiredCardBorderColor: '',
 };
 
 interface Props {
@@ -273,6 +288,17 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
             <ColorField label="Cor do subtítulo" value={config.limitSubtitleColor} onChange={v => update({ limitSubtitleColor: v })} />
             <ColorField label="Fundo do card" value={config.limitCardBgColor} onChange={v => update({ limitCardBgColor: v })} />
             <ColorField label="Borda do card" value={config.limitCardBorderColor} onChange={v => update({ limitCardBorderColor: v })} />
+          </Section>
+
+          {/* ═══ TELA DE EXPIRADO ═══ */}
+          <Section icon={<Clock size={14} className="text-primary" />} title="Tela de Promoção Expirada">
+            <TextField label="Emoji" value={config.expiredEmoji} onChange={v => update({ expiredEmoji: v })} placeholder="⏳" />
+            <TextField label="Título" value={config.expiredTitle} onChange={v => update({ expiredTitle: v })} placeholder="Promoção Encerrada" />
+            <TextField label="Subtítulo" value={config.expiredSubtitle} onChange={v => update({ expiredSubtitle: v })} placeholder="O prazo desta promoção expirou." />
+            <ColorField label="Cor do título" value={config.expiredTitleColor} onChange={v => update({ expiredTitleColor: v })} />
+            <ColorField label="Cor do subtítulo" value={config.expiredSubtitleColor} onChange={v => update({ expiredSubtitleColor: v })} />
+            <ColorField label="Fundo do card" value={config.expiredCardBgColor} onChange={v => update({ expiredCardBgColor: v })} />
+            <ColorField label="Borda do card" value={config.expiredCardBorderColor} onChange={v => update({ expiredCardBorderColor: v })} />
           </Section>
 
           <ReferralPagePreview config={config} linkLabel={linkLabel} />
