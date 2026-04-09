@@ -361,6 +361,54 @@ export type Database = {
           },
         ]
       }
+      scheduled_messages: {
+        Row: {
+          created_at: string
+          id: string
+          last_sent_at: string | null
+          message: string
+          next_run_at: string | null
+          owner_id: string
+          recipient_label: string
+          recipient_type: string
+          recipient_value: string
+          recurrence: string
+          scheduled_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_sent_at?: string | null
+          message: string
+          next_run_at?: string | null
+          owner_id: string
+          recipient_label?: string
+          recipient_type?: string
+          recipient_value: string
+          recurrence?: string
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_sent_at?: string | null
+          message?: string
+          next_run_at?: string | null
+          owner_id?: string
+          recipient_label?: string
+          recipient_type?: string
+          recipient_value?: string
+          recurrence?: string
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           bg_image_url: string | null
