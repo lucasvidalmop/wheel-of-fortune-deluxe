@@ -116,7 +116,7 @@ const Referral = () => {
   const labelStyle: React.CSSProperties = cfg.labelColor ? { color: cfg.labelColor } : {};
 
   const icon = cfg.iconUrl
-    ? <img src={cfg.iconUrl} alt="icon" className="w-16 h-16 rounded-xl object-cover mx-auto" />
+    ? <img src={cfg.iconUrl} alt="icon" className="max-w-[180px] max-h-[100px] rounded-xl object-contain mx-auto" />
     : <div className="text-4xl">{cfg.iconEmoji || '🎰'}</div>;
 
   const titleText = cfg.titleText || linkData?.label || 'Resgatar Giro';

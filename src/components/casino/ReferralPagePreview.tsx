@@ -59,7 +59,7 @@ const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
   const labelStyle: React.CSSProperties = cfg.labelColor ? { color: cfg.labelColor } : { color: '#9ca3af' };
 
   const icon = cfg.iconUrl
-    ? <img src={cfg.iconUrl} alt="icon" className="w-8 h-8 rounded-lg object-cover mx-auto" />
+    ? <img src={cfg.iconUrl} alt="icon" className="max-w-[120px] max-h-[60px] rounded-lg object-contain mx-auto" />
     : <div className="text-2xl">{cfg.iconEmoji || '🎰'}</div>;
 
   const titleText = cfg.titleText || linkLabel || 'Resgatar Giro';
