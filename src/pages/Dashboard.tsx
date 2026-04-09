@@ -834,7 +834,7 @@ const Dashboard = () => {
     if (error) { toast.error('Erro ao atualizar status'); return; }
     toast.success(newType === 'qualified' ? '✅ Jogador qualificado!' : 'Status removido');
     fetchUsers();
-  
+  };
 
   const fetchPaidHistory = async () => {
     if (!session?.user?.id) return;
