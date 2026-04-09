@@ -138,7 +138,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay'>('all');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified'>('all');
 
   const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -1281,6 +1281,7 @@ const Dashboard = () => {
       : spinsFilter === 'with' ? u.spins_available >= 1
       : spinsFilter === 'without' ? u.spins_available < 1
       : spinsFilter === 'auto_pay' ? !!u.auto_payment
+      : spinsFilter === 'qualified' ? u.user_type === 'qualified'
       : true;
     return matchesSearch && matchesSpins;
   });
@@ -1579,6 +1580,7 @@ const Dashboard = () => {
                   { value: 'with' as const, label: 'Com giros' },
                   { value: 'without' as const, label: 'Sem giros' },
                   { value: 'auto_pay' as const, label: '💰 Auto Pay' },
+                  { value: 'qualified' as const, label: '✅ Qualificados' },
                 ]).map(opt => (
                   <button
                     key={opt.value}
@@ -1593,6 +1595,7 @@ const Dashboard = () => {
                     {opt.value === 'with' && ` (${users.filter(u => u.spins_available >= 1).length})`}
                     {opt.value === 'without' && ` (${users.filter(u => u.spins_available < 1).length})`}
                     {opt.value === 'auto_pay' && ` (${users.filter(u => u.auto_payment).length})`}
+                    {opt.value === 'qualified' && ` (${users.filter(u => u.user_type === 'qualified').length})`}
                   </button>
                 ))}
                 {spinsFilter === 'auto_pay' && users.filter(u => u.auto_payment).length > 0 && (
