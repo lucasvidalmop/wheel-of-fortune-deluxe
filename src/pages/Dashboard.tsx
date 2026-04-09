@@ -3513,7 +3513,29 @@ const Dashboard = () => {
                   <div className="space-y-4">
                     {/* Form */}
                     <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
-                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+
+                      {/* Media attachment for scheduler */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <input type="file" ref={schedMediaInputRef} className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" onChange={handleSchedMediaUpload} />
+                        <button type="button" onClick={() => schedMediaInputRef.current?.click()} disabled={schedMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground text-xs transition">
+                          {schedMediaUploading ? <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
+                          Anexar mídia
+                        </button>
+                        {schedMedia && (
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary">
+                            {schedMedia.mediatype === 'image' ? <ImageIcon size={12} /> : schedMedia.mediatype === 'video' ? <Video size={12} /> : <FileAudio size={12} />}
+                            <span className="truncate max-w-[120px]">{schedMedia.fileName}</span>
+                            <button onClick={() => setSchedMedia(null)} className="ml-1 text-red-400 hover:text-red-300"><X size={12} /></button>
+                          </div>
+                        )}
+                        {schedForm.recipientType === 'group' && (
+                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer ml-auto">
+                            <input type="checkbox" checked={schedForm.mentionAll} onChange={e => setSchedForm(f => ({ ...f, mentionAll: e.target.checked }))} className="rounded border-white/20" />
+                            @todos
+                          </label>
+                        )}
+                      </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
