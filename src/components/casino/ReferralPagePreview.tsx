@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Eye, Minimize2, Maximize2 } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { X, Eye, Minimize2, Maximize2, GripVertical } from 'lucide-react';
 import { ReferralPageConfig } from './ReferralPageEditor';
 
 interface Props {
@@ -8,8 +8,29 @@ interface Props {
 }
 
 const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  const [pos, setPos] = useState({ x: 20, y: 80 });
+  const dragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    dragging.current = true;
+    offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    e.preventDefault();
+  }, [pos]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragging.current) return;
+      setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
+    };
+    const onUp = () => { dragging.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, []);
 
   const bgStyle: React.CSSProperties = {
     background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || 'rgba(80,20,120,0.3)'} 0%, ${cfg.bgGradientTo || 'rgba(10,5,30,0.9)'} 70%)`,
@@ -56,60 +77,80 @@ const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.1] bg-white/[0.02] overflow-hidden">
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-3 py-2 bg-white/[0.04] border-b border-white/[0.06]">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Eye size={12} className="text-primary" /> Preview ao vivo
-        </span>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setMinimized(m => !m)} className="p-1 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition">
-            {minimized ? <Maximize2 size={12} /> : <Minimize2 size={12} />}
-          </button>
-          <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition">
-            <X size={12} />
-          </button>
-        </div>
-      </div>
+    <>
+      {/* Inline placeholder so the button space remains */}
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="w-full py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition flex items-center justify-center gap-2"
+      >
+        <Eye size={15} /> Fechar Preview
+      </button>
 
-      {!minimized && (
-        <div className="flex items-center justify-center py-6 px-4 relative" style={{ ...bgStyle, minHeight: 340 }}>
-          {!cfg.bgImage && !cfg.bgColor && (
-            <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || 'rgba(80,20,120,0.3)'} 0%, ${cfg.bgGradientTo || 'rgba(10,5,30,0.9)'} 70%)` }} />
-          )}
-          <div
-            className="relative z-10 w-full max-w-[260px] rounded-2xl p-4 space-y-3 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-            style={cardStyle}
-          >
-            <div className="text-center space-y-1">
-              {icon}
-              <h1 className="text-sm font-bold" style={titleStyle}>{displayTitle}</h1>
-              <p className="text-[10px]" style={subtitleStyle}>
-                {cfg.subtitleText || 'Informe seus dados para resgatar 1 giro(s)'}
-              </p>
-              {cfg.showCounter && (
-                <p className="text-[9px]" style={{ color: 'rgba(156,163,175,0.6)' }}>0/100 resgates</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              {['E-mail', 'ID da Conta', 'CPF'].map(label => (
-                <div key={label}>
-                  <label className="block text-[9px] font-medium mb-0.5" style={labelStyle}>{label} *</label>
-                  <div className="w-full px-2.5 py-1.5 rounded-lg border text-[10px]" style={inputStyle}>
-                    <span style={{ opacity: 0.35 }}>{label === 'CPF' ? '000.000.000-00' : label === 'E-mail' ? 'seu@email.com' : 'Seu ID'}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="w-full py-2 rounded-lg font-bold text-[10px] text-center" style={btnStyle}>
-              {cfg.btnText || '🎯 Resgatar Giro'}
-            </div>
+      {/* Floating draggable preview */}
+      <div
+        ref={boxRef}
+        className="fixed z-[65] rounded-2xl border border-white/[0.12] bg-background shadow-[0_12px_48px_rgba(0,0,0,0.6)] overflow-hidden"
+        style={{ left: pos.x, top: pos.y, width: minimized ? 220 : 300, pointerEvents: 'auto' }}
+      >
+        {/* Drag handle header */}
+        <div
+          onMouseDown={onMouseDown}
+          className="flex items-center justify-between px-3 py-2 bg-white/[0.06] border-b border-white/[0.08] cursor-grab active:cursor-grabbing select-none"
+        >
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <GripVertical size={12} className="text-muted-foreground/50" />
+            <Eye size={11} className="text-primary" /> Preview
+          </span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setMinimized(m => !m)} className="p-1 rounded hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition">
+              {minimized ? <Maximize2 size={11} /> : <Minimize2 size={11} />}
+            </button>
+            <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition">
+              <X size={11} />
+            </button>
           </div>
         </div>
-      )}
-    </div>
+
+        {!minimized && (
+          <div className="flex items-center justify-center py-5 px-3 relative" style={{ ...bgStyle, minHeight: 300 }}>
+            {!cfg.bgImage && !cfg.bgColor && (
+              <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || 'rgba(80,20,120,0.3)'} 0%, ${cfg.bgGradientTo || 'rgba(10,5,30,0.9)'} 70%)` }} />
+            )}
+            <div
+              className="relative z-10 w-full max-w-[240px] rounded-2xl p-3.5 space-y-2.5 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+              style={cardStyle}
+            >
+              <div className="text-center space-y-1">
+                {icon}
+                <h1 className="text-xs font-bold" style={titleStyle}>{displayTitle}</h1>
+                <p className="text-[9px]" style={subtitleStyle}>
+                  {cfg.subtitleText || 'Informe seus dados para resgatar 1 giro(s)'}
+                </p>
+                {cfg.showCounter && (
+                  <p className="text-[8px]" style={{ color: 'rgba(156,163,175,0.6)' }}>0/100 resgates</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                {['E-mail', 'ID da Conta', 'CPF'].map(label => (
+                  <div key={label}>
+                    <label className="block text-[8px] font-medium mb-0.5" style={labelStyle}>{label} *</label>
+                    <div className="w-full px-2 py-1 rounded border text-[9px]" style={inputStyle}>
+                      <span style={{ opacity: 0.35 }}>{label === 'CPF' ? '000.000.000-00' : label === 'E-mail' ? 'seu@email.com' : 'Seu ID'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="w-full py-1.5 rounded-lg font-bold text-[9px] text-center" style={btnStyle}>
+                {cfg.btnText || '🎯 Resgatar Giro'}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 
