@@ -486,16 +486,18 @@ const Dashboard = () => {
         .maybeSingle();
 
       const dbConfig = dbRow?.config || {};
+      const newUpdatedAt = new Date().toISOString();
       const { error } = await (supabase as any)
         .from('wheel_configs')
         .update({
           config: { ...dbConfig, dashboardSettings: latestSettings },
-          updated_at: new Date().toISOString(),
+          updated_at: newUpdatedAt,
         })
         .eq('id', configId);
 
       if (!error) {
         lastPersistedSettingsRef.current = latestSerialized;
+        lastConfigUpdatedAtRef.current = newUpdatedAt;
       }
     }, 400);
 
