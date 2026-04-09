@@ -366,6 +366,11 @@ export type Database = {
           created_at: string
           id: string
           last_sent_at: string | null
+          media_filename: string | null
+          media_mimetype: string | null
+          media_type: string | null
+          media_url: string | null
+          mention_all: boolean | null
           message: string
           next_run_at: string | null
           owner_id: string
@@ -381,6 +386,11 @@ export type Database = {
           created_at?: string
           id?: string
           last_sent_at?: string | null
+          media_filename?: string | null
+          media_mimetype?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          mention_all?: boolean | null
           message: string
           next_run_at?: string | null
           owner_id: string
@@ -396,6 +406,11 @@ export type Database = {
           created_at?: string
           id?: string
           last_sent_at?: string | null
+          media_filename?: string | null
+          media_mimetype?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          mention_all?: boolean | null
           message?: string
           next_run_at?: string | null
           owner_id?: string

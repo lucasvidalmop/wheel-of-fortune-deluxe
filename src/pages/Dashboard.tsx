@@ -6,7 +6,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
@@ -215,8 +215,34 @@ const Dashboard = () => {
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [scheduledLoading, setScheduledLoading] = useState(false);
-  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly' });
+  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false });
   const [schedSaving, setSchedSaving] = useState(false);
+  const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [schedMediaUploading, setSchedMediaUploading] = useState(false);
+  const schedMediaInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSchedMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSchedMediaUploading(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      let mediatype = 'document';
+      if (['jpg','jpeg','png','gif','webp'].includes(ext)) mediatype = 'image';
+      else if (['mp4','avi','mov','mkv','3gp'].includes(ext)) mediatype = 'video';
+      else if (['mp3','ogg','opus','wav','m4a','aac'].includes(ext)) mediatype = 'audio';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setSchedMedia({ url: urlData.publicUrl, mediatype, mimetype: file.type, fileName: file.name });
+      toast.success('Mídia anexada ao agendamento!');
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setSchedMediaUploading(false);
+    if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
+  };
 
   const fetchScheduledMessages = async () => {
     if (!session?.user?.id) return;
@@ -227,7 +253,7 @@ const Dashboard = () => {
   };
 
   const saveScheduledMessage = async () => {
-    if (!schedForm.message.trim()) { toast.error('Digite a mensagem'); return; }
+    if (!schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
     if (!schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
     if (!schedForm.date) { toast.error('Selecione a data'); return; }
     setSchedSaving(true);
@@ -246,12 +272,18 @@ const Dashboard = () => {
       next_run_at: isoDate,
       recurrence: schedForm.recurrence,
       status: 'pending',
+      media_url: schedMedia?.url || null,
+      media_type: schedMedia?.mediatype || null,
+      media_mimetype: schedMedia?.mimetype || null,
+      media_filename: schedMedia?.fileName || null,
+      mention_all: schedForm.mentionAll,
     } as any);
 
     setSchedSaving(false);
     if (error) { toast.error('Erro ao agendar: ' + error.message); return; }
     toast.success('Mensagem agendada com sucesso!');
-    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none' });
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false });
+    setSchedMedia(null);
     fetchScheduledMessages();
   };
 
@@ -3481,7 +3513,29 @@ const Dashboard = () => {
                   <div className="space-y-4">
                     {/* Form */}
                     <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
-                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+
+                      {/* Media attachment for scheduler */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <input type="file" ref={schedMediaInputRef} className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" onChange={handleSchedMediaUpload} />
+                        <button type="button" onClick={() => schedMediaInputRef.current?.click()} disabled={schedMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground text-xs transition">
+                          {schedMediaUploading ? <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
+                          Anexar mídia
+                        </button>
+                        {schedMedia && (
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary">
+                            {schedMedia.mediatype === 'image' ? <ImageIcon size={12} /> : schedMedia.mediatype === 'video' ? <Video size={12} /> : <FileAudio size={12} />}
+                            <span className="truncate max-w-[120px]">{schedMedia.fileName}</span>
+                            <button onClick={() => setSchedMedia(null)} className="ml-1 text-red-400 hover:text-red-300"><X size={12} /></button>
+                          </div>
+                        )}
+                        {schedForm.recipientType === 'group' && (
+                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer ml-auto">
+                            <input type="checkbox" checked={schedForm.mentionAll} onChange={e => setSchedForm(f => ({ ...f, mentionAll: e.target.checked }))} className="rounded border-white/20" />
+                            @todos
+                          </label>
+                        )}
+                      </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">

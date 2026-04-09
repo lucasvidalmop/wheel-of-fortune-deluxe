@@ -74,10 +74,32 @@ Deno.serve(async (req) => {
           if (!number.startsWith("55")) number = "55" + number;
         }
 
-        const response = await fetch(`${baseUrl}/message/sendText/${evolutionInstance}`, {
+        let url: string;
+        let body: Record<string, any>;
+
+        if (msg.media_url) {
+          url = `${baseUrl}/message/sendMedia/${evolutionInstance}`;
+          body = {
+            number,
+            mediatype: msg.media_type || "image",
+            mimetype: msg.media_mimetype || "image/jpeg",
+            caption: msg.message || "",
+            media: msg.media_url,
+            fileName: msg.media_filename || "file",
+          };
+        } else {
+          url = `${baseUrl}/message/sendText/${evolutionInstance}`;
+          body = { number, text: msg.message };
+        }
+
+        if (msg.mention_all && number.includes("@g.us")) {
+          body.mentionsEveryOne = true;
+        }
+
+        const response = await fetch(url, {
           method: "POST",
           headers: { "apikey": evolutionApiKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ number, text: msg.message }),
+          body: JSON.stringify(body),
         });
 
         const ok = response.ok;
