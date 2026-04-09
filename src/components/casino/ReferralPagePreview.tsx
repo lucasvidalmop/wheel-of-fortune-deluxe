@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { X, Eye, Minimize2, Maximize2, GripVertical } from 'lucide-react';
+import { X, Eye, Minimize2, Maximize2, GripVertical, ZoomIn, ZoomOut } from 'lucide-react';
 import { ReferralPageConfig } from './ReferralPageEditor';
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
 const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 20, y: 80 });
   const dragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
@@ -91,7 +92,7 @@ const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
       <div
         ref={boxRef}
         className="fixed z-[65] rounded-2xl border border-white/[0.12] bg-background shadow-[0_12px_48px_rgba(0,0,0,0.6)] overflow-hidden"
-        style={{ left: pos.x, top: pos.y, width: minimized ? 220 : 300, pointerEvents: 'auto' }}
+        style={{ left: pos.x, top: pos.y, width: minimized ? 220 : 300 * scale, pointerEvents: 'auto' }}
       >
         {/* Drag handle header */}
         <div
@@ -103,6 +104,13 @@ const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
             <Eye size={11} className="text-primary" /> Preview
           </span>
           <div className="flex items-center gap-1">
+            <button onClick={() => setScale(s => Math.max(0.6, s - 0.15))} className="p-1 rounded hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition" title="Diminuir">
+              <ZoomOut size={11} />
+            </button>
+            <span className="text-[9px] text-muted-foreground font-mono w-7 text-center">{Math.round(scale * 100)}%</span>
+            <button onClick={() => setScale(s => Math.min(2, s + 0.15))} className="p-1 rounded hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition" title="Aumentar">
+              <ZoomIn size={11} />
+            </button>
             <button onClick={() => setMinimized(m => !m)} className="p-1 rounded hover:bg-white/[0.1] text-muted-foreground hover:text-foreground transition">
               {minimized ? <Maximize2 size={11} /> : <Minimize2 size={11} />}
             </button>
