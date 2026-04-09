@@ -3256,6 +3256,31 @@ const Dashboard = () => {
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
                       />
                     </div>
+                    {/* Prêmio fixo */}
+                    <div>
+                      <label className="text-[10px] text-muted-foreground block mb-1">Prêmio garantido <span className="text-muted-foreground/50">(vazio = aleatório)</span></label>
+                      <select
+                        value={referralForm.fixed_prize_segment ?? ''}
+                        onChange={e => setReferralForm(p => ({ ...p, fixed_prize_segment: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 appearance-none"
+                      >
+                        <option value="" className="bg-background">Aleatório (probabilidades)</option>
+                        {wheelConfig.segments.map((seg: any, i: number) => (
+                          <option key={seg.id} value={i} className="bg-background">{seg.title} — {seg.reward}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {/* Auto-payment */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">💳 Pagamento automático</span>
+                      <button
+                        type="button"
+                        onClick={() => setReferralForm(p => ({ ...p, auto_payment: !p.auto_payment }))}
+                        className={`w-12 h-7 rounded-full relative transition-all duration-300 ${referralForm.auto_payment ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' : 'bg-white/[0.1]'}`}
+                      >
+                        <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${referralForm.auto_payment ? 'left-[26px]' : 'left-1'}`} />
+                      </button>
+                    </div>
                     <div className="flex gap-2">
                       <button onClick={() => { setShowReferralForm(false); setEditingReferral(null); }} className="flex-1 py-2 rounded-lg bg-white/[0.06] text-muted-foreground text-sm hover:bg-white/[0.1] transition">Cancelar</button>
                       <button onClick={handleSaveReferral} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-110 transition">Salvar</button>
