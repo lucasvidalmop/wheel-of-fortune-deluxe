@@ -108,6 +108,10 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyGroupJid: '',
   notifyGroupName: '',
   notifySelectedGroups: [],
+  receiptFontColor: '#1a1a2e',
+  receiptBgColor: '#ffffff',
+  receiptAccentColor: '#3b82f6',
+  receiptOperatorName: '',
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
