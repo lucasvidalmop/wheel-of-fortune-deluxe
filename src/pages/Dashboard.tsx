@@ -1495,12 +1495,12 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Spins filter */}
-              <div className="flex gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 {([
                   { value: 'all' as const, label: 'Todos' },
                   { value: 'with' as const, label: 'Com giros' },
                   { value: 'without' as const, label: 'Sem giros' },
+                  { value: 'auto_pay' as const, label: '💰 Auto Pay' },
                 ]).map(opt => (
                   <button
                     key={opt.value}
@@ -1514,6 +1514,7 @@ const Dashboard = () => {
                     {opt.label}
                     {opt.value === 'with' && ` (${users.filter(u => u.spins_available >= 1).length})`}
                     {opt.value === 'without' && ` (${users.filter(u => u.spins_available < 1).length})`}
+                    {opt.value === 'auto_pay' && ` (${users.filter(u => u.auto_payment).length})`}
                   </button>
                 ))}
               </div>
