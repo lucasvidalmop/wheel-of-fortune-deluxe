@@ -233,20 +233,20 @@ const Dashboard = () => {
     if (editingReferral) {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, updated_at: new Date().toISOString() })
+        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null, updated_at: new Date().toISOString() })
         .eq('id', editingReferral.id);
       if (error) { toast.error('Erro ao atualizar'); return; }
       toast.success('Link atualizado!');
     } else {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment });
+        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null });
       if (error) { toast.error('Erro ao criar link'); return; }
       toast.success('Link criado!');
     }
     setShowReferralForm(false);
     setEditingReferral(null);
-    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false });
+    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false, expires_at: '' });
     fetchReferralLinks();
   };
 
