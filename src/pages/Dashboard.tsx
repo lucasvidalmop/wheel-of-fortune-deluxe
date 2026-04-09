@@ -6,7 +6,8 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2 } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette } from 'lucide-react';
+import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -122,6 +123,7 @@ const Dashboard = () => {
   const [showReferralForm, setShowReferralForm] = useState(false);
   const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string });
   const [editingReferral, setEditingReferral] = useState<any>(null);
+  const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [users, setUsers] = useState<WheelUser[]>([]);
@@ -3267,6 +3269,12 @@ const Dashboard = () => {
                             <Pencil size={12} /> Editar
                           </button>
                           <button
+                            onClick={() => setCustomizingReferral(link)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/15 text-primary text-[10px] hover:bg-primary/25 transition"
+                          >
+                            <Palette size={12} /> Personalizar
+                          </button>
+                          <button
                             onClick={() => handleToggleReferral(link.id, link.is_active)}
                             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition ${link.is_active ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25' : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'}`}
                           >
@@ -3288,7 +3296,17 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* ══════ FINANCEIRO TAB ══════ */}
+          {customizingReferral && (
+            <ReferralPageEditor
+              linkId={customizingReferral.id}
+              linkLabel={customizingReferral.label}
+              currentConfig={customizingReferral.page_config || {}}
+              onClose={() => setCustomizingReferral(null)}
+              onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
+            />
+          )}
+
+
           {activeTab === 'financeiro' && (
             <div className="max-w-2xl space-y-5">
               {/* Sub-tabs */}

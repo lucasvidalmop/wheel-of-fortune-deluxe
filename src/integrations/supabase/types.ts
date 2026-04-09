@@ -281,6 +281,7 @@ export type Database = {
           label: string
           max_registrations: number | null
           owner_id: string
+          page_config: Json
           registrations_count: number
           spins_per_registration: number
           updated_at: string
@@ -293,6 +294,7 @@ export type Database = {
           label?: string
           max_registrations?: number | null
           owner_id: string
+          page_config?: Json
           registrations_count?: number
           spins_per_registration?: number
           updated_at?: string
@@ -305,6 +307,7 @@ export type Database = {
           label?: string
           max_registrations?: number | null
           owner_id?: string
+          page_config?: Json
           registrations_count?: number
           spins_per_registration?: number
           updated_at?: string
