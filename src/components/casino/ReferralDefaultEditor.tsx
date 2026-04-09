@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { ReferralPageConfig, defaultPageConfig } from './ReferralPageEditor';
+import ReferralPagePreview from './ReferralPagePreview';
 import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save } from 'lucide-react';
 
 interface Props {
@@ -189,6 +190,8 @@ const ReferralDefaultEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <ColorField label="Cor do botão" value={config.btnBgColor} onChange={v => update({ btnBgColor: v })} />
         <ColorField label="Cor do texto do botão" value={config.btnTextColor} onChange={v => update({ btnTextColor: v })} />
       </Section>
+
+      <ReferralPagePreview config={config} linkLabel="Preview Padrão" />
 
       <div className="flex gap-3">
         <button onClick={handleReset} className="flex-1 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2">
