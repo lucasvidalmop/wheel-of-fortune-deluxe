@@ -95,44 +95,66 @@ Deno.serve(async (req) => {
     const notifyUrl = ds.notifyEvolutionApiUrl;
     const notifyKey = ds.notifyEvolutionApiKey;
     const notifyInstance = ds.notifyEvolutionInstance;
+    const notifyGroupJid = ds.notifyGroupJid || "";
 
-    if (!notifyPhone || !notifyUrl || !notifyKey || !notifyInstance) {
+    if (!notifyUrl || !notifyKey || !notifyInstance) {
       return new Response(JSON.stringify({ success: false, skipped: true, reason: "missing_notification_config" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    let cleanPhone = String(notifyPhone).replace(/\D/g, "");
-    if (!cleanPhone.startsWith("55")) cleanPhone = `55${cleanPhone}`;
+    if (!notifyPhone && !notifyGroupJid) {
+      return new Response(JSON.stringify({ success: false, skipped: true, reason: "missing_notification_config" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const baseUrl = String(notifyUrl)
       .replace(/\/+$/, "")
       .replace(/\/manager$/i, "");
 
-    const response = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
-      method: "POST",
-      headers: {
-        "apikey": notifyKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        number: cleanPhone,
-        text: buildMessage(type, payload),
-      }),
-    });
+    const messageText = buildMessage(type, payload);
+    const results: { target: string; ok: boolean; error?: string }[] = [];
 
-    const responseText = await response.text();
+    // Send to individual phone number
+    if (notifyPhone) {
+      let cleanPhone = String(notifyPhone).replace(/\D/g, "");
+      if (!cleanPhone.startsWith("55")) cleanPhone = `55${cleanPhone}`;
 
-    if (!response.ok) {
-      return new Response(JSON.stringify({ error: `Falha ao enviar WhatsApp [${response.status}]: ${responseText}` }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      try {
+        const response = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
+          method: "POST",
+          headers: { "apikey": notifyKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ number: cleanPhone, text: messageText }),
+        });
+        const responseText = await response.text();
+        results.push({ target: "phone", ok: response.ok, error: response.ok ? undefined : responseText });
+      } catch (e) {
+        results.push({ target: "phone", ok: false, error: e instanceof Error ? e.message : "Erro" });
+      }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
+    // Send to group
+    if (notifyGroupJid) {
+      try {
+        const response = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
+          method: "POST",
+          headers: { "apikey": notifyKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ number: notifyGroupJid, text: messageText }),
+        });
+        const responseText = await response.text();
+        results.push({ target: "group", ok: response.ok, error: response.ok ? undefined : responseText });
+      } catch (e) {
+        results.push({ target: "group", ok: false, error: e instanceof Error ? e.message : "Erro" });
+      }
+    }
+
+    const allOk = results.every(r => r.ok);
+
+    return new Response(JSON.stringify({ success: allOk, results }), {
+      status: allOk ? 200 : 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
