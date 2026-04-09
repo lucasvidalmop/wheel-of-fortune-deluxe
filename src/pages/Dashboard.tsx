@@ -217,6 +217,10 @@ const Dashboard = () => {
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
+  const [receiptFontColor, setReceiptFontColor] = useState('#1a1a2e');
+  const [receiptBgColor, setReceiptBgColor] = useState('#ffffff');
+  const [receiptAccentColor, setReceiptAccentColor] = useState('#3b82f6');
+  const [receiptOperatorName, setReceiptOperatorName] = useState('');
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
