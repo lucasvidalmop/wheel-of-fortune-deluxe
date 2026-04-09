@@ -3259,35 +3259,111 @@ const Dashboard = () => {
                     {/* Timer de expiração */}
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">⏳ Expira em <span className="text-muted-foreground/50">(vazio = sem expiração)</span></label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          value={referralForm.expires_at ? referralForm.expires_at.split('T')[0] : ''}
-                          onChange={e => {
-                            const time = referralForm.expires_at ? referralForm.expires_at.split('T')[1] || '23:59' : '23:59';
-                            setReferralForm(p => ({ ...p, expires_at: e.target.value ? `${e.target.value}T${time}` : '' }));
-                          }}
-                          className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 [color-scheme:dark]"
-                        />
-                        <input
-                          type="time"
-                          value={referralForm.expires_at ? (referralForm.expires_at.split('T')[1] || '23:59') : ''}
-                          onChange={e => {
-                            const date = referralForm.expires_at ? referralForm.expires_at.split('T')[0] : '';
-                            if (date) setReferralForm(p => ({ ...p, expires_at: `${date}T${e.target.value}` }));
-                          }}
-                          disabled={!referralForm.expires_at}
-                          className="w-28 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 disabled:opacity-40 [color-scheme:dark]"
-                        />
-                      </div>
-                      {referralForm.expires_at && (
+                      {!referralForm.expires_at ? (
                         <button
                           type="button"
-                          onClick={() => setReferralForm(p => ({ ...p, expires_at: '' }))}
-                          className="text-[10px] text-red-400 hover:text-red-300 mt-1 transition"
+                          onClick={() => {
+                            const d = new Date();
+                            d.setDate(d.getDate() + 7);
+                            d.setHours(23, 59, 0, 0);
+                            setReferralForm(p => ({ ...p, expires_at: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T23:59` }));
+                          }}
+                          className="w-full py-2.5 rounded-lg border border-dashed border-white/[0.12] bg-white/[0.02] text-muted-foreground text-xs hover:bg-white/[0.06] hover:border-primary/30 hover:text-foreground transition flex items-center justify-center gap-2"
                         >
-                          ✕ Remover expiração
+                          <Clock size={13} /> Definir data de expiração
                         </button>
+                      ) : (
+                        <div className="rounded-lg border border-white/[0.1] bg-white/[0.04] p-3 space-y-2.5">
+                          <div className="flex gap-2">
+                            <div className="flex-1 space-y-1">
+                              <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wider font-semibold">Data</span>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button type="button" className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-sm text-left hover:bg-white/[0.08] transition flex items-center justify-between">
+                                    <span>{referralForm.expires_at ? (() => { const [y,m,d] = referralForm.expires_at.split('T')[0].split('-'); return `${d}/${m}/${y}`; })() : ''}</span>
+                                    <CalendarIcon size={13} className="text-muted-foreground" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 z-[70]" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={referralForm.expires_at ? new Date(referralForm.expires_at.split('T')[0] + 'T12:00:00') : undefined}
+                                    onSelect={(d) => {
+                                      if (!d) return;
+                                      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                                      const time = referralForm.expires_at?.split('T')[1] || '23:59';
+                                      setReferralForm(p => ({ ...p, expires_at: `${ds}T${time}` }));
+                                    }}
+                                    className="p-3 pointer-events-auto"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                            <div className="w-24 space-y-1">
+                              <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wider font-semibold">Hora</span>
+                              <div className="flex items-center gap-1">
+                                <select
+                                  value={referralForm.expires_at ? referralForm.expires_at.split('T')[1]?.split(':')[0] || '23' : '23'}
+                                  onChange={e => {
+                                    const mins = referralForm.expires_at?.split('T')[1]?.split(':')[1] || '59';
+                                    const date = referralForm.expires_at?.split('T')[0] || '';
+                                    setReferralForm(p => ({ ...p, expires_at: `${date}T${e.target.value}:${mins}` }));
+                                  }}
+                                  className="flex-1 px-1.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-sm focus:outline-none appearance-none text-center"
+                                >
+                                  {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
+                                    <option key={h} value={h} className="bg-background text-foreground">{h}</option>
+                                  ))}
+                                </select>
+                                <span className="text-muted-foreground font-bold">:</span>
+                                <select
+                                  value={referralForm.expires_at ? referralForm.expires_at.split('T')[1]?.split(':')[1] || '59' : '59'}
+                                  onChange={e => {
+                                    const hrs = referralForm.expires_at?.split('T')[1]?.split(':')[0] || '23';
+                                    const date = referralForm.expires_at?.split('T')[0] || '';
+                                    setReferralForm(p => ({ ...p, expires_at: `${date}T${hrs}:${e.target.value}` }));
+                                  }}
+                                  className="flex-1 px-1.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-sm focus:outline-none appearance-none text-center"
+                                >
+                                  {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map(m => (
+                                    <option key={m} value={m} className="bg-background text-foreground">{m}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Quick presets */}
+                          <div className="flex gap-1.5 flex-wrap">
+                            {[
+                              { label: '1h', fn: () => { const d = new Date(); d.setHours(d.getHours()+1); return d; } },
+                              { label: '24h', fn: () => { const d = new Date(); d.setDate(d.getDate()+1); return d; } },
+                              { label: '3 dias', fn: () => { const d = new Date(); d.setDate(d.getDate()+3); return d; } },
+                              { label: '7 dias', fn: () => { const d = new Date(); d.setDate(d.getDate()+7); return d; } },
+                              { label: '30 dias', fn: () => { const d = new Date(); d.setDate(d.getDate()+30); return d; } },
+                            ].map(preset => (
+                              <button
+                                key={preset.label}
+                                type="button"
+                                onClick={() => {
+                                  const d = preset.fn();
+                                  const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                                  const ts = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                                  setReferralForm(p => ({ ...p, expires_at: `${ds}T${ts}` }));
+                                }}
+                                className="px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[10px] text-muted-foreground hover:bg-primary/15 hover:text-primary hover:border-primary/20 transition"
+                              >
+                                +{preset.label}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setReferralForm(p => ({ ...p, expires_at: '' }))}
+                            className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300 transition"
+                          >
+                            <X size={10} /> Remover expiração
+                          </button>
+                        </div>
                       )}
                     </div>
                     {/* Prêmios fixos (multi-select) */}
