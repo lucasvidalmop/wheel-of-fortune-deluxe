@@ -94,6 +94,8 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyEvolutionInstance: '',
   notifyWhatsappPhone: '',
   notifyAutoPaymentEnabled: false,
+  notifyReferralEnabled: false,
+  notifyPendingPaymentEnabled: false,
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
