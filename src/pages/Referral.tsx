@@ -135,6 +135,28 @@ const Referral = () => {
   }
 
   const isLimitReached = linkData.max_registrations != null && linkData.registrations_count >= linkData.max_registrations;
+  const isExpired = linkData.expires_at && new Date(linkData.expires_at) <= new Date();
+
+  if (isExpired) {
+    const expCardStyle: React.CSSProperties = {
+      backgroundColor: cfg.expiredCardBgColor || cardStyle.backgroundColor,
+      borderColor: cfg.expiredCardBorderColor || cardStyle.borderColor,
+    };
+    return (
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
+        {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
+        <div className="relative z-10 text-center space-y-5 max-w-sm mx-4 rounded-2xl p-8 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]" style={expCardStyle}>
+          <div className="text-6xl">{cfg.expiredEmoji || '⏳'}</div>
+          <h1 className="text-2xl font-bold text-foreground" style={cfg.expiredTitleColor ? { color: cfg.expiredTitleColor } : titleStyle}>
+            {cfg.expiredTitle || 'Promoção Encerrada'}
+          </h1>
+          <p className="text-sm text-muted-foreground" style={cfg.expiredSubtitleColor ? { color: cfg.expiredSubtitleColor } : subtitleStyle}>
+            {cfg.expiredSubtitle || 'O prazo desta promoção expirou.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLimitReached) {
     const limitCardStyle: React.CSSProperties = {

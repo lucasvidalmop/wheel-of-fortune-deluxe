@@ -122,7 +122,7 @@ const Dashboard = () => {
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
-  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false });
+  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false, expires_at: '' });
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'default_style'>('links');
