@@ -231,6 +231,7 @@ const Dashboard = () => {
   const [scheduledLoading, setScheduledLoading] = useState(false);
   const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[] });
   const [schedSaving, setSchedSaving] = useState(false);
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
   const [schedMediaUploading, setSchedMediaUploading] = useState(false);
   const schedMediaInputRef = useRef<HTMLInputElement>(null);
@@ -266,6 +267,33 @@ const Dashboard = () => {
     setScheduledLoading(false);
   };
 
+  const resetSchedForm = () => {
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false, selectedGroups: [] });
+    setSchedMedia(null);
+    setEditingScheduleId(null);
+  };
+
+  const startEditSchedule = (m: any) => {
+    const dt = new Date(m.scheduled_at);
+    setSchedForm({
+      message: m.message || '',
+      recipientType: m.recipient_type || 'individual',
+      recipientValue: m.recipient_type === 'individual' ? m.recipient_value : '',
+      recipientLabel: m.recipient_type === 'individual' ? (m.recipient_label || '') : '',
+      date: dt,
+      time: `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`,
+      recurrence: m.recurrence || 'none',
+      mentionAll: m.mention_all || false,
+      selectedGroups: m.recipient_type === 'group' ? [{ id: m.recipient_value, name: m.recipient_label || m.recipient_value }] : [],
+    });
+    if (m.media_url) {
+      setSchedMedia({ url: m.media_url, mediatype: m.media_type || 'document', mimetype: m.media_mimetype || '', fileName: m.media_filename || 'file' });
+    } else {
+      setSchedMedia(null);
+    }
+    setEditingScheduleId(m.id);
+  };
+
   const saveScheduledMessage = async () => {
     if (!schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
     if (schedForm.recipientType === 'individual' && !schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
@@ -277,18 +305,9 @@ const Dashboard = () => {
     scheduledAt.setHours(hours, minutes, 0, 0);
     const isoDate = scheduledAt.toISOString();
 
-    const recipients = schedForm.recipientType === 'group'
-      ? schedForm.selectedGroups.map(g => ({ value: g.id, label: g.name }))
-      : [{ value: schedForm.recipientValue, label: schedForm.recipientLabel }];
-
-    const rows = recipients.map(r => ({
-      owner_id: session.user.id,
-      message: schedForm.message,
+    const baseRow = {
+      message: schedForm.message || '',
       recipient_type: schedForm.recipientType,
-      recipient_value: r.value,
-      recipient_label: r.label,
-      scheduled_at: isoDate,
-      next_run_at: isoDate,
       recurrence: schedForm.recurrence,
       status: 'pending',
       media_url: schedMedia?.url || null,
@@ -296,15 +315,41 @@ const Dashboard = () => {
       media_mimetype: schedMedia?.mimetype || null,
       media_filename: schedMedia?.fileName || null,
       mention_all: schedForm.mentionAll,
-    }));
+      scheduled_at: isoDate,
+      next_run_at: isoDate,
+      updated_at: new Date().toISOString(),
+    };
 
-    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    let error: any = null;
+
+    if (editingScheduleId) {
+      // Update existing
+      const recipient = schedForm.recipientType === 'group' && schedForm.selectedGroups.length > 0
+        ? { recipient_value: schedForm.selectedGroups[0].id, recipient_label: schedForm.selectedGroups[0].name }
+        : { recipient_value: schedForm.recipientValue, recipient_label: schedForm.recipientLabel };
+      const { error: err } = await supabase.from('scheduled_messages').update({ ...baseRow, ...recipient } as any).eq('id', editingScheduleId);
+      error = err;
+    } else {
+      // Insert new (possibly multiple groups)
+      const recipients = schedForm.recipientType === 'group'
+        ? schedForm.selectedGroups.map(g => ({ value: g.id, label: g.name }))
+        : [{ value: schedForm.recipientValue, label: schedForm.recipientLabel }];
+
+      const rows = recipients.map(r => ({
+        owner_id: session.user.id,
+        ...baseRow,
+        recipient_value: r.value,
+        recipient_label: r.label,
+      }));
+
+      const { error: err } = await supabase.from('scheduled_messages').insert(rows as any);
+      error = err;
+    }
 
     setSchedSaving(false);
-    if (error) { toast.error('Erro ao agendar: ' + error.message); return; }
-    toast.success('Mensagem agendada com sucesso!');
-    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false, selectedGroups: [] });
-    setSchedMedia(null);
+    if (error) { toast.error('Erro ao salvar: ' + error.message); return; }
+    toast.success(editingScheduleId ? 'Agendamento atualizado!' : 'Mensagem agendada com sucesso!');
+    resetSchedForm();
     fetchScheduledMessages();
   };
 
@@ -3658,9 +3703,16 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      <button onClick={saveScheduledMessage} disabled={schedSaving} className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/80 text-primary-foreground font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-                        {schedSaving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><Clock size={16} /> Agendar Mensagem</>}
-                      </button>
+                      <div className="flex gap-2">
+                        {editingScheduleId && (
+                          <button onClick={resetSchedForm} className="px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground font-medium text-sm transition-all">
+                            Cancelar edição
+                          </button>
+                        )}
+                        <button onClick={saveScheduledMessage} disabled={schedSaving} className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary/80 text-primary-foreground font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                          {schedSaving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Salvando...</> : editingScheduleId ? <><Pencil size={16} /> Atualizar Agendamento</> : <><Clock size={16} /> Agendar Mensagem</>}
+                        </button>
+                      </div>
                     </div>
 
                     {/* List */}
@@ -3684,7 +3736,10 @@ const Dashboard = () => {
                               <div className="flex justify-between items-center text-muted-foreground">
                                 <span>📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleString('pt-BR')} {m.recurrence !== 'none' && `• 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
                                 {m.status === 'pending' && (
-                                  <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
+                                  <div className="flex items-center gap-2">
+                                    <button onClick={() => startEditSchedule(m)} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><Pencil size={12} /> Editar</button>
+                                    <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
+                                  </div>
                                 )}
                               </div>
                             </div>
