@@ -65,6 +65,7 @@ interface PersistedDashboardSettings {
   notifyPendingPaymentEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
+  notifySelectedGroups: {id: string; subject: string}[];
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -100,6 +101,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyPendingPaymentEnabled: false,
   notifyGroupJid: '',
   notifyGroupName: '',
+  notifySelectedGroups: [],
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -204,6 +206,7 @@ const Dashboard = () => {
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
+  const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
@@ -410,6 +413,7 @@ const Dashboard = () => {
     notifyPendingPaymentEnabled,
     notifyGroupJid,
     notifyGroupName,
+    notifySelectedGroups,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -456,6 +460,7 @@ const Dashboard = () => {
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
+    setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -619,6 +624,7 @@ const Dashboard = () => {
     notifyPendingPaymentEnabled,
     notifyGroupJid,
     notifyGroupName,
+    notifySelectedGroups,
   ]);
 
   useEffect(() => {
@@ -3094,33 +3100,63 @@ const Dashboard = () => {
 
                 {notifyGroups.length > 0 ? (
                   <div className="space-y-2">
-                    <select
-                      value={notifyGroupJid}
-                      onChange={e => {
-                        const jid = e.target.value;
-                        setNotifyGroupJid(jid);
-                        const found = notifyGroups.find(g => g.id === jid);
-                        setNotifyGroupName(found?.subject || '');
-                      }}
-                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    >
-                      <option value="">Nenhum grupo selecionado</option>
-                      {notifyGroups.map(g => (
-                        <option key={g.id} value={g.id}>{g.subject}</option>
-                      ))}
-                    </select>
-                    {notifyGroupJid && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
-                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                        <span className="text-xs font-medium text-green-400">📌 {notifyGroupName || notifyGroupJid}</span>
-                        <button type="button" onClick={() => { setNotifyGroupJid(''); setNotifyGroupName(''); }} className="ml-auto text-xs text-red-400 hover:text-red-300">Remover</button>
+                    <div className="max-h-[200px] overflow-y-auto space-y-1.5 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.1] [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {notifyGroups.map(g => {
+                        const isSelected = notifySelectedGroups.some(sg => sg.id === g.id);
+                        return (
+                          <label key={g.id} className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-green-500/10 border-green-500/20' : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]'}`}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
+                                if (isSelected) {
+                                  const updated = notifySelectedGroups.filter(sg => sg.id !== g.id);
+                                  setNotifySelectedGroups(updated);
+                                  if (notifyGroupJid === g.id) {
+                                    setNotifyGroupJid(updated[0]?.id || '');
+                                    setNotifyGroupName(updated[0]?.subject || '');
+                                  }
+                                } else {
+                                  const updated = [...notifySelectedGroups, g];
+                                  setNotifySelectedGroups(updated);
+                                  if (!notifyGroupJid) {
+                                    setNotifyGroupJid(g.id);
+                                    setNotifyGroupName(g.subject);
+                                  }
+                                }
+                              }}
+                              className="rounded border-white/20 accent-green-500"
+                            />
+                            <div className="flex items-center gap-2 min-w-0">
+                              {isSelected && <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />}
+                              <span className="text-xs font-medium text-foreground truncate">{g.subject}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {notifySelectedGroups.length > 0 && (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+                        <span className="text-xs font-medium text-green-400">📌 {notifySelectedGroups.length} grupo(s) selecionado(s)</span>
+                        <button type="button" onClick={() => { setNotifySelectedGroups([]); setNotifyGroupJid(''); setNotifyGroupName(''); }} className="text-xs text-red-400 hover:text-red-300">Limpar todos</button>
                       </div>
                     )}
                   </div>
-                ) : notifyGroupJid ? (
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08]">
-                    <span className="text-xs text-foreground">📌 {notifyGroupName || notifyGroupJid}</span>
-                    <button type="button" onClick={() => { setNotifyGroupJid(''); setNotifyGroupName(''); }} className="text-xs text-red-400 hover:text-red-300">Remover</button>
+                ) : notifySelectedGroups.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {notifySelectedGroups.map(g => (
+                      <div key={g.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08]">
+                        <span className="text-xs text-foreground">📌 {g.subject}</span>
+                        <button type="button" onClick={() => {
+                          const updated = notifySelectedGroups.filter(sg => sg.id !== g.id);
+                          setNotifySelectedGroups(updated);
+                          if (notifyGroupJid === g.id) {
+                            setNotifyGroupJid(updated[0]?.id || '');
+                            setNotifyGroupName(updated[0]?.subject || '');
+                          }
+                        }} className="text-xs text-red-400 hover:text-red-300">Remover</button>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground/60">Configure a API acima e clique em "Buscar Grupos"</p>
@@ -3296,32 +3332,33 @@ const Dashboard = () => {
                 {whatsappSending ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar WhatsApp</>}
               </button>
 
-              {/* Send to Group button */}
-              {notifyGroupJid && (
+              {/* Send to Group(s) button */}
+              {notifySelectedGroups.length > 0 && (
                 <button
                   onClick={async () => {
                     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
                     if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
                     setWhatsappSending(true);
-                    try {
-                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
-                        body: { recipientPhone: notifyGroupJid, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance }
-                      });
-                      const hasError = !!error || !!respData?.error;
-                      if (hasError) {
-                        toast.error(error?.message || respData?.error || 'Erro ao enviar para grupo');
-                      } else {
-                        toast.success(`Mensagem enviada para o grupo "${notifyGroupName || 'Grupo'}"!`);
+                    let sent = 0, errors = 0;
+                    for (const group of notifySelectedGroups) {
+                      try {
+                        const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
+                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance }
+                        });
+                        const hasError = !!error || !!respData?.error;
+                        if (hasError) errors++; else sent++;
+                      } catch {
+                        errors++;
                       }
-                    } catch (e: any) {
-                      toast.error(e?.message || 'Erro ao enviar para grupo');
                     }
                     setWhatsappSending(false);
+                    if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
+                    else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
                   }}
                   disabled={whatsappSending}
                   className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
                 >
-                  {whatsappSending ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Users size={16} /> Enviar para Grupo: {notifyGroupName || 'Grupo'}</>}
+                  {whatsappSending ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Users size={16} /> Enviar para {notifySelectedGroups.length} Grupo(s)</>}
                 </button>
               )}
             </div>

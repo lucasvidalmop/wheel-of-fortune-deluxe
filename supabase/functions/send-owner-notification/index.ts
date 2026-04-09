@@ -96,6 +96,11 @@ Deno.serve(async (req) => {
     const notifyKey = ds.notifyEvolutionApiKey;
     const notifyInstance = ds.notifyEvolutionInstance;
     const notifyGroupJid = ds.notifyGroupJid || "";
+    const notifySelectedGroups: {id: string; subject: string}[] = Array.isArray(ds.notifySelectedGroups) ? ds.notifySelectedGroups : [];
+    // Build list of group JIDs (from new multi-select or legacy single)
+    const groupJids: string[] = notifySelectedGroups.length > 0
+      ? notifySelectedGroups.map((g: any) => g.id)
+      : notifyGroupJid ? [notifyGroupJid] : [];
 
     if (!notifyUrl || !notifyKey || !notifyInstance) {
       return new Response(JSON.stringify({ success: false, skipped: true, reason: "missing_notification_config" }), {
@@ -104,7 +109,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!notifyPhone && !notifyGroupJid) {
+    if (!notifyPhone && groupJids.length === 0) {
       return new Response(JSON.stringify({ success: false, skipped: true, reason: "missing_notification_config" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -136,18 +141,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send to group
-    if (notifyGroupJid) {
+    // Send to all selected groups
+    for (const jid of groupJids) {
       try {
         const response = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
           method: "POST",
           headers: { "apikey": notifyKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ number: notifyGroupJid, text: messageText }),
+          body: JSON.stringify({ number: jid, text: messageText }),
         });
         const responseText = await response.text();
-        results.push({ target: "group", ok: response.ok, error: response.ok ? undefined : responseText });
+        results.push({ target: `group:${jid}`, ok: response.ok, error: response.ok ? undefined : responseText });
       } catch (e) {
-        results.push({ target: "group", ok: false, error: e instanceof Error ? e.message : "Erro" });
+        results.push({ target: `group:${jid}`, ok: false, error: e instanceof Error ? e.message : "Erro" });
       }
     }
 
