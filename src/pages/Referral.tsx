@@ -134,6 +134,29 @@ const Referral = () => {
     );
   }
 
+  const isLimitReached = linkData.max_registrations != null && linkData.registrations_count >= linkData.max_registrations;
+
+  if (isLimitReached) {
+    const limitCardStyle: React.CSSProperties = {
+      backgroundColor: cfg.limitCardBgColor || cardStyle.backgroundColor,
+      borderColor: cfg.limitCardBorderColor || cardStyle.borderColor,
+    };
+    return (
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
+        {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
+        <div className="relative z-10 text-center space-y-5 max-w-sm mx-4 rounded-2xl p-8 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]" style={limitCardStyle}>
+          <div className="text-6xl">{cfg.limitEmoji || '⏰'}</div>
+          <h1 className="text-2xl font-bold text-foreground" style={cfg.limitTitleColor ? { color: cfg.limitTitleColor } : titleStyle}>
+            {cfg.limitTitle || 'Resgates Esgotados'}
+          </h1>
+          <p className="text-sm text-muted-foreground" style={cfg.limitSubtitleColor ? { color: cfg.limitSubtitleColor } : subtitleStyle}>
+            {cfg.limitSubtitle || 'Este link atingiu o limite máximo de resgates disponíveis.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
