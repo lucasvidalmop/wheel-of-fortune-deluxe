@@ -486,16 +486,18 @@ const Dashboard = () => {
         .maybeSingle();
 
       const dbConfig = dbRow?.config || {};
+      const newUpdatedAt = new Date().toISOString();
       const { error } = await (supabase as any)
         .from('wheel_configs')
         .update({
           config: { ...dbConfig, dashboardSettings: latestSettings },
-          updated_at: new Date().toISOString(),
+          updated_at: newUpdatedAt,
         })
         .eq('id', configId);
 
       if (!error) {
         lastPersistedSettingsRef.current = latestSerialized;
+        lastConfigUpdatedAtRef.current = newUpdatedAt;
       }
     }, 400);
 
@@ -3147,8 +3149,8 @@ const Dashboard = () => {
                         <MessageCircle size={20} className="text-green-400" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-bold text-foreground">Notificação de Pagamento Automático</h3>
-                        <p className="text-xs text-muted-foreground">Receba no WhatsApp quando um prêmio for pago automaticamente</p>
+                        <h3 className="text-sm font-bold text-foreground">Notificação de Pagamentos</h3>
+                        <p className="text-xs text-muted-foreground">Receba no WhatsApp quando qualquer prêmio for pago (automático ou manual)</p>
                       </div>
                     </div>
                     <button
@@ -3185,7 +3187,7 @@ const Dashboard = () => {
                       {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhone ? (
                         <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                          <span className="text-xs font-medium text-emerald-400">Notificações de pagamento automático ativas</span>
+                          <span className="text-xs font-medium text-emerald-400">Notificações de pagamento ativas</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
