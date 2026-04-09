@@ -274,8 +274,10 @@ export type Database = {
       }
       referral_links: {
         Row: {
+          auto_payment: boolean
           code: string
           created_at: string
+          fixed_prize_segment: number | null
           id: string
           is_active: boolean
           label: string
@@ -287,8 +289,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_payment?: boolean
           code?: string
           created_at?: string
+          fixed_prize_segment?: number | null
           id?: string
           is_active?: boolean
           label?: string
@@ -300,8 +304,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_payment?: boolean
           code?: string
           created_at?: string
+          fixed_prize_segment?: number | null
           id?: string
           is_active?: boolean
           label?: string
