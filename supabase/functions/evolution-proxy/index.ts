@@ -47,6 +47,9 @@ serve(async (req) => {
         url = `${apiUrl}/instance/logout/${evolutionInstance}`;
         method = "DELETE";
         break;
+      case "fetchGroups":
+        url = `${apiUrl}/group/fetchAllGroups/${evolutionInstance}?getParticipants=false`;
+        break;
       default:
         return new Response(
           JSON.stringify({ ok: false, error: "Ação inválida" }),
