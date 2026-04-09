@@ -92,7 +92,7 @@ const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
       <div
         ref={boxRef}
         className="fixed z-[65] rounded-2xl border border-white/[0.12] bg-background shadow-[0_12px_48px_rgba(0,0,0,0.6)] overflow-hidden"
-        style={{ left: pos.x, top: pos.y, width: minimized ? 220 : 300, pointerEvents: 'auto' }}
+        style={{ left: pos.x, top: pos.y, width: minimized ? 220 : 300 * scale, pointerEvents: 'auto' }}
       >
         {/* Drag handle header */}
         <div
