@@ -1207,7 +1207,9 @@ const Dashboard = () => {
       u.account_id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSpins = spinsFilter === 'all' ? true
       : spinsFilter === 'with' ? u.spins_available >= 1
-      : u.spins_available < 1;
+      : spinsFilter === 'without' ? u.spins_available < 1
+      : spinsFilter === 'auto_pay' ? !!u.auto_payment
+      : true;
     return matchesSearch && matchesSpins;
   });
 
