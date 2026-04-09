@@ -3127,6 +3127,7 @@ const Dashboard = () => {
                 )}
               </GlassCard>
 
+              {showWhatsappHistory && (
                 <GlassCard className="p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} className="text-primary" /> Histórico de Mensagens</h3>
