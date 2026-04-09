@@ -215,7 +215,7 @@ const Dashboard = () => {
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [scheduledLoading, setScheduledLoading] = useState(false);
-  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false });
+  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[] });
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
   const [schedMediaUploading, setSchedMediaUploading] = useState(false);
