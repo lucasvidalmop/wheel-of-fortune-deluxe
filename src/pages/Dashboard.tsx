@@ -3212,7 +3212,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Link2 size={16} /> Links de Referência</h3>
                   <button
-                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '' }); }}
+                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segment: null, auto_payment: false }); }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/20 text-xs font-semibold hover:bg-primary/25 transition"
                   >
                     <Plus size={14} /> Novo Link
@@ -3305,7 +3305,7 @@ const Dashboard = () => {
                         </div>
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
                           <button
-                            onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '' }); setShowReferralForm(true); }}
+                            onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '', fixed_prize_segment: link.fixed_prize_segment ?? null, auto_payment: link.auto_payment ?? false }); setShowReferralForm(true); }}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] text-muted-foreground text-[10px] hover:bg-white/[0.1] transition"
                           >
                             <Pencil size={12} /> Editar
