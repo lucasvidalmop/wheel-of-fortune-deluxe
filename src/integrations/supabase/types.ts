@@ -703,26 +703,16 @@ export type Database = {
         }
         Returns: string
       }
-      register_via_referral:
-        | {
-            Args: {
-              p_account_id: string
-              p_code: string
-              p_email: string
-              p_name?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_account_id: string
-              p_code: string
-              p_cpf?: string
-              p_email: string
-              p_name?: string
-            }
-            Returns: Json
-          }
+      register_via_referral: {
+        Args: {
+          p_account_id: string
+          p_code: string
+          p_cpf?: string
+          p_email: string
+          p_name?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"
