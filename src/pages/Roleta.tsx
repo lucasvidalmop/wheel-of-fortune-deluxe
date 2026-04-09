@@ -552,7 +552,25 @@ const Roleta = () => {
     }
   };
 
-  if (configLoading) {
+  const fetchPrizeHistory = async () => {
+    if (!accountId || !ownerId) return;
+    setPrizeHistoryLoading(true);
+    const { data } = await supabase
+      .from('spin_results')
+      .select('*')
+      .eq('account_id', accountId)
+      .eq('owner_id', ownerId)
+      .order('spun_at', { ascending: false })
+      .limit(50);
+    setPrizeHistory(data || []);
+    setPrizeHistoryLoading(false);
+  };
+
+  const openPrizeHistory = () => {
+    fetchPrizeHistory();
+    setShowPrizeHistory(true);
+  };
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Carregando roleta...</div>
