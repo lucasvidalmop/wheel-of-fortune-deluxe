@@ -5118,75 +5118,133 @@ const Dashboard = () => {
 
       {/* Receipt Dialog */}
       <Dialog open={!!receiptPayment} onOpenChange={(open) => { if (!open) setReceiptPayment(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText size={18} />
-              Comprovante de Pagamento
-            </DialogTitle>
-          </DialogHeader>
-          {receiptPayment && (
-            <div className="space-y-3 text-sm">
-              <div className="p-4 rounded-xl bg-muted/50 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Nome:</span>
-                  <span className="font-semibold text-foreground">{receiptPayment.user_name}</span>
+        <DialogContent className="max-w-lg p-0 overflow-hidden">
+          {receiptPayment && (() => {
+            const isPaid = receiptPayment.status === 'paid';
+            return (
+              <>
+                {/* Top bar */}
+                <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+                  <span className="text-sm font-semibold text-foreground">Comprovante de Pagamento</span>
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById('receipt-print-area');
+                      if (!el) return;
+                      const w = window.open('', '_blank');
+                      if (!w) return;
+                      w.document.write(`<html><head><title>Comprovante</title><style>
+                        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+                        body{padding:40px;color:#1a1a2e;max-width:500px;margin:0 auto}
+                        .header{text-align:center;margin-bottom:24px}
+                        .title{font-size:18px;font-weight:800;letter-spacing:1px;margin-bottom:4px}
+                        .sub{font-size:12px;color:#666}
+                        .badge{display:inline-block;margin-top:12px;padding:6px 20px;border-radius:20px;font-size:12px;font-weight:700}
+                        .badge-ok{background:#d1fae5;color:#047857;border:1px solid #6ee7b7}
+                        .badge-fail{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5}
+                        .section{border-top:1px solid #e5e7eb;padding:16px 0}
+                        .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+                        .row .label{color:#666}
+                        .row .val{font-weight:600;text-align:right;max-width:60%}
+                        .label-sm{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+                        .amount-box{border:2px solid #3b82f6;border-radius:12px;text-align:center;padding:16px;margin:16px 0}
+                        .amount-label{font-size:11px;color:#3b82f6;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+                        .amount-val{font-size:28px;font-weight:800;color:#3b82f6;margin:4px 0}
+                        .amount-sub{font-size:11px;color:#666}
+                        .footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}
+                      </style></head><body>${el.innerHTML}</body></html>`);
+                      w.document.close();
+                      w.print();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition-all"
+                  >
+                    🖨 Imprimir / PDF
+                  </button>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">E-mail:</span>
-                  <span className="text-foreground">{receiptPayment.user_email}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">ID Conta:</span>
-                  <span className="text-foreground">{receiptPayment.account_id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Prêmio:</span>
-                  <span className="text-foreground">{receiptPayment.prize}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Valor:</span>
-                  <span className="font-bold text-foreground">R$ {Number(receiptPayment.amount).toFixed(2)}</span>
-                </div>
-                {receiptPayment.pix_key && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Chave PIX:</span>
-                    <span className="text-foreground">{receiptPayment.pix_key} ({receiptPayment.pix_key_type})</span>
-                  </div>
-                )}
-                {receiptPayment.paid_at && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Pago em:</span>
-                    <span className="text-foreground">{new Date(receiptPayment.paid_at).toLocaleString('pt-BR')}</span>
-                  </div>
-                )}
-                {receiptPayment.edpay_transaction_id && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">TX ID:</span>
-                    <span className="text-foreground font-mono text-xs">{receiptPayment.edpay_transaction_id}</span>
-                  </div>
-                )}
-              </div>
 
-              {receiptLoading && (
-                <div className="text-center py-4">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                </div>
-              )}
-
-              {receiptMeta && !receiptLoading && (
-                <div className="p-4 rounded-xl bg-muted/50 space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Dados EdPay</p>
-                  {Object.entries(receiptMeta).map(([key, val]) => (
-                    <div key={key} className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{key}:</span>
-                      <span className="text-foreground max-w-[200px] truncate">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                {/* Printable content */}
+                <div id="receipt-print-area" className="px-6 py-5 space-y-4">
+                  {/* Header */}
+                  <div className="text-center space-y-1">
+                    <div className="text-2xl">💳</div>
+                    <h2 className="title text-lg font-extrabold tracking-wider text-foreground uppercase">Comprovante de Pagamento</h2>
+                    <p className="sub text-xs text-muted-foreground">Transferência PIX via EdPay</p>
+                    <div className="mt-3">
+                      <span className={`badge inline-block px-5 py-1.5 rounded-full text-xs font-bold border ${isPaid
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        : 'bg-red-500/15 text-red-400 border-red-500/30'}`}>
+                        {isPaid ? '✓ PAGAMENTO CONFIRMADO' : '✗ PAGAMENTO REJEITADO'}
+                      </span>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Transaction Info */}
+                  <div className="section border-t border-border pt-4 space-y-1.5">
+                    {receiptPayment.edpay_transaction_id && (
+                      <div className="row flex justify-between text-sm">
+                        <span className="label text-muted-foreground">ID EdPay</span>
+                        <span className="val font-mono text-xs text-foreground font-semibold">{receiptPayment.edpay_transaction_id}</span>
+                      </div>
+                    )}
+                    {receiptPayment.spin_result_id && (
+                      <div className="row flex justify-between text-sm">
+                        <span className="label text-muted-foreground">ID do Sorteio</span>
+                        <span className="val font-mono text-xs text-foreground font-semibold">{receiptPayment.spin_result_id}</span>
+                      </div>
+                    )}
+                    {receiptPayment.paid_at && (
+                      <div className="row flex justify-between text-sm">
+                        <span className="label text-muted-foreground">Data/Hora</span>
+                        <span className="val font-semibold text-foreground">{new Date(receiptPayment.paid_at).toLocaleString('pt-BR')}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sender */}
+                  <div className="section border-t border-border pt-4">
+                    <p className="label-sm text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-2">Enviado por</p>
+                    <p className="text-sm font-bold text-foreground">{session?.user?.email || 'Operador'}</p>
+                    <p className="text-xs text-muted-foreground">Plataforma EdPay · https://api.edpay.me/</p>
+                  </div>
+
+                  {/* Receiver */}
+                  <div className="section border-t border-border pt-4">
+                    <p className="label-sm text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-2">Recebedor</p>
+                    <p className="text-sm font-bold text-foreground">{receiptPayment.user_name}</p>
+                    <p className="text-xs text-muted-foreground">{receiptPayment.user_email} · {receiptPayment.account_id}</p>
+                    {receiptPayment.pix_key && (
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[10px] font-semibold bg-muted px-2 py-0.5 rounded text-muted-foreground uppercase">{receiptPayment.pix_key_type || 'PIX'}</span>
+                        <span className="text-xs font-mono text-foreground">{receiptPayment.pix_key}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Amount */}
+                  <div className="amount-box border-2 border-primary/40 rounded-xl text-center py-4 px-4">
+                    <p className="amount-label text-[10px] text-primary uppercase tracking-widest font-semibold">Valor Transferido</p>
+                    <p className="amount-val text-3xl font-extrabold text-primary mt-1">R$ {Number(receiptPayment.amount).toFixed(2).replace('.', ',')}</p>
+                    <p className="amount-sub text-[10px] text-muted-foreground mt-1">via PIX instantâneo</p>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="footer text-center border-t border-border pt-3 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground">
+                      Documento gerado em {new Date().toLocaleString('pt-BR')}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Este comprovante é válido como prova de pagamento.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                {receiptLoading && (
+                  <div className="text-center py-4">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
