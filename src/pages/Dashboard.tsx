@@ -442,6 +442,8 @@ const Dashboard = () => {
     setNotifyEvolutionInstance(settings.notifyEvolutionInstance || '');
     setNotifyWhatsappPhone(settings.notifyWhatsappPhone || '');
     setNotifyAutoPaymentEnabled(!!settings.notifyAutoPaymentEnabled);
+    setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
+    setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
