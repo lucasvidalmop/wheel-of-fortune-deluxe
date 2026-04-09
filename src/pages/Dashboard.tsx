@@ -68,6 +68,10 @@ interface PersistedDashboardSettings {
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
+  receiptFontColor: string;
+  receiptBgColor: string;
+  receiptAccentColor: string;
+  receiptOperatorName: string;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -104,6 +108,10 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyGroupJid: '',
   notifyGroupName: '',
   notifySelectedGroups: [],
+  receiptFontColor: '#1a1a2e',
+  receiptBgColor: '#ffffff',
+  receiptAccentColor: '#3b82f6',
+  receiptOperatorName: '',
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -209,6 +217,10 @@ const Dashboard = () => {
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
+  const [receiptFontColor, setReceiptFontColor] = useState('#1a1a2e');
+  const [receiptBgColor, setReceiptBgColor] = useState('#ffffff');
+  const [receiptAccentColor, setReceiptAccentColor] = useState('#3b82f6');
+  const [receiptOperatorName, setReceiptOperatorName] = useState('');
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
@@ -539,6 +551,10 @@ const Dashboard = () => {
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
+    receiptFontColor,
+    receiptBgColor,
+    receiptAccentColor,
+    receiptOperatorName,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -586,6 +602,10 @@ const Dashboard = () => {
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
+    setReceiptFontColor(settings.receiptFontColor || '#1a1a2e');
+    setReceiptBgColor(settings.receiptBgColor || '#ffffff');
+    setReceiptAccentColor(settings.receiptAccentColor || '#3b82f6');
+    setReceiptOperatorName(settings.receiptOperatorName || '');
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -4227,6 +4247,96 @@ const Dashboard = () => {
                   )}
                 </GlassCard>
 
+                {/* Receipt Config */}
+                <GlassCard className="p-5 space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                      <FileText size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Comprovante de Pagamento</h3>
+                      <p className="text-xs text-muted-foreground">Personalize a aparência do comprovante</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Apelido do Operador</label>
+                      <input
+                        type="text"
+                        value={receiptOperatorName}
+                        onChange={e => setReceiptOperatorName(e.target.value)}
+                        placeholder={session?.user?.email || 'Ex: Lucas BSB'}
+                        className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">Substitui o e-mail no campo "Enviado por" do comprovante</p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor da Fonte</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={receiptFontColor}
+                            onChange={e => setReceiptFontColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={receiptFontColor}
+                            onChange={e => setReceiptFontColor(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor de Fundo</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={receiptBgColor}
+                            onChange={e => setReceiptBgColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={receiptBgColor}
+                            onChange={e => setReceiptBgColor(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor Destaque</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={receiptAccentColor}
+                            onChange={e => setReceiptAccentColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={receiptAccentColor}
+                            onChange={e => setReceiptAccentColor(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview mini */}
+                    <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+                      <div className="text-center py-4 px-3" style={{ backgroundColor: receiptBgColor, color: receiptFontColor }}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest">Pré-visualização</p>
+                        <p className="text-lg font-extrabold mt-1" style={{ color: receiptAccentColor }}>R$ 10,00</p>
+                        <p className="text-[10px] mt-1">Enviado por: <b>{receiptOperatorName || session?.user?.email || 'Operador'}</b></p>
+                      </div>
+                    </div>
+                  </div>
+                </GlassCard>
+
               </>
               )}
 
@@ -5121,6 +5231,10 @@ const Dashboard = () => {
         <DialogContent className="max-w-lg p-0 overflow-hidden">
           {receiptPayment && (() => {
             const isPaid = receiptPayment.status === 'paid';
+            const rFont = receiptFontColor || '#1a1a2e';
+            const rBg = receiptBgColor || '#ffffff';
+            const rAccent = receiptAccentColor || '#3b82f6';
+            const rOperator = receiptOperatorName || session?.user?.email || 'Operador';
             return (
               <>
                 {/* Top bar */}
@@ -5134,22 +5248,13 @@ const Dashboard = () => {
                       if (!w) return;
                       w.document.write(`<html><head><title>Comprovante</title><style>
                         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-                        body{padding:40px;color:#1a1a2e;max-width:500px;margin:0 auto}
-                        .header{text-align:center;margin-bottom:24px}
-                        .title{font-size:18px;font-weight:800;letter-spacing:1px;margin-bottom:4px}
-                        .sub{font-size:12px;color:#666}
-                        .badge{display:inline-block;margin-top:12px;padding:6px 20px;border-radius:20px;font-size:12px;font-weight:700}
-                        .badge-ok{background:#d1fae5;color:#047857;border:1px solid #6ee7b7}
-                        .badge-fail{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5}
+                        body{padding:40px;color:${rFont};background:${rBg};max-width:500px;margin:0 auto}
                         .section{border-top:1px solid #e5e7eb;padding:16px 0}
                         .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
-                        .row .label{color:#666}
+                        .row .label{color:#888}
                         .row .val{font-weight:600;text-align:right;max-width:60%}
                         .label-sm{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
-                        .amount-box{border:2px solid #3b82f6;border-radius:12px;text-align:center;padding:16px;margin:16px 0}
-                        .amount-label{font-size:11px;color:#3b82f6;text-transform:uppercase;letter-spacing:1px;font-weight:600}
-                        .amount-val{font-size:28px;font-weight:800;color:#3b82f6;margin:4px 0}
-                        .amount-sub{font-size:11px;color:#666}
+                        .amount-box{border:2px solid ${rAccent};border-radius:12px;text-align:center;padding:16px;margin:16px 0}
                         .footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}
                       </style></head><body>${el.innerHTML}</body></html>`);
                       w.document.close();
@@ -5162,76 +5267,79 @@ const Dashboard = () => {
                 </div>
 
                 {/* Printable content */}
-                <div id="receipt-print-area" className="px-6 py-5 space-y-4">
+                <div id="receipt-print-area" className="px-6 py-5 space-y-4" style={{ backgroundColor: rBg, color: rFont }}>
                   {/* Header */}
                   <div className="text-center space-y-1">
                     <div className="text-2xl">💳</div>
-                    <h2 className="title text-lg font-extrabold tracking-wider text-foreground uppercase">Comprovante de Pagamento</h2>
-                    <p className="sub text-xs text-muted-foreground">Transferência PIX via EdPay</p>
+                    <h2 className="text-lg font-extrabold tracking-wider uppercase" style={{ color: rFont }}>Comprovante de Pagamento</h2>
+                    <p className="text-xs" style={{ color: '#888' }}>Transferência PIX via EdPay</p>
                     <div className="mt-3">
-                      <span className={`badge inline-block px-5 py-1.5 rounded-full text-xs font-bold border ${isPaid
-                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                        : 'bg-red-500/15 text-red-400 border-red-500/30'}`}>
+                      <span style={{
+                        display: 'inline-block', padding: '6px 20px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                        background: isPaid ? '#d1fae5' : '#fee2e2',
+                        color: isPaid ? '#047857' : '#b91c1c',
+                        border: `1px solid ${isPaid ? '#6ee7b7' : '#fca5a5'}`
+                      }}>
                         {isPaid ? '✓ PAGAMENTO CONFIRMADO' : '✗ PAGAMENTO REJEITADO'}
                       </span>
                     </div>
                   </div>
 
                   {/* Transaction Info */}
-                  <div className="section border-t border-border pt-4 space-y-1.5">
+                  <div className="section" style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
                     {receiptPayment.edpay_transaction_id && (
-                      <div className="row flex justify-between text-sm">
-                        <span className="label text-muted-foreground">ID EdPay</span>
-                        <span className="val font-mono text-xs text-foreground font-semibold">{receiptPayment.edpay_transaction_id}</span>
+                      <div className="row flex justify-between text-sm py-1">
+                        <span style={{ color: '#888' }}>ID EdPay</span>
+                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{receiptPayment.edpay_transaction_id}</span>
                       </div>
                     )}
                     {receiptPayment.spin_result_id && (
-                      <div className="row flex justify-between text-sm">
-                        <span className="label text-muted-foreground">ID do Sorteio</span>
-                        <span className="val font-mono text-xs text-foreground font-semibold">{receiptPayment.spin_result_id}</span>
+                      <div className="row flex justify-between text-sm py-1">
+                        <span style={{ color: '#888' }}>ID do Sorteio</span>
+                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{receiptPayment.spin_result_id}</span>
                       </div>
                     )}
                     {receiptPayment.paid_at && (
-                      <div className="row flex justify-between text-sm">
-                        <span className="label text-muted-foreground">Data/Hora</span>
-                        <span className="val font-semibold text-foreground">{new Date(receiptPayment.paid_at).toLocaleString('pt-BR')}</span>
+                      <div className="row flex justify-between text-sm py-1">
+                        <span style={{ color: '#888' }}>Data/Hora</span>
+                        <span className="font-semibold" style={{ color: rFont }}>{new Date(receiptPayment.paid_at).toLocaleString('pt-BR')}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Sender */}
-                  <div className="section border-t border-border pt-4">
-                    <p className="label-sm text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-2">Enviado por</p>
-                    <p className="text-sm font-bold text-foreground">{session?.user?.email || 'Operador'}</p>
-                    <p className="text-xs text-muted-foreground">Plataforma EdPay · https://api.edpay.me/</p>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Enviado por</p>
+                    <p className="text-sm font-bold" style={{ color: rFont }}>{rOperator}</p>
+                    <p className="text-xs" style={{ color: '#888' }}>Plataforma EdPay · https://api.edpay.me/</p>
                   </div>
 
                   {/* Receiver */}
-                  <div className="section border-t border-border pt-4">
-                    <p className="label-sm text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-2">Recebedor</p>
-                    <p className="text-sm font-bold text-foreground">{receiptPayment.user_name}</p>
-                    <p className="text-xs text-muted-foreground">{receiptPayment.user_email} · {receiptPayment.account_id}</p>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Recebedor</p>
+                    <p className="text-sm font-bold" style={{ color: rFont }}>{receiptPayment.user_name}</p>
+                    <p className="text-xs" style={{ color: '#888' }}>{receiptPayment.user_email} · {receiptPayment.account_id}</p>
                     {receiptPayment.pix_key && (
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-[10px] font-semibold bg-muted px-2 py-0.5 rounded text-muted-foreground uppercase">{receiptPayment.pix_key_type || 'PIX'}</span>
-                        <span className="text-xs font-mono text-foreground">{receiptPayment.pix_key}</span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded uppercase" style={{ background: '#f3f4f6', color: '#666' }}>{receiptPayment.pix_key_type || 'PIX'}</span>
+                        <span className="text-xs font-mono" style={{ color: rFont }}>{receiptPayment.pix_key}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Amount */}
-                  <div className="amount-box border-2 border-primary/40 rounded-xl text-center py-4 px-4">
-                    <p className="amount-label text-[10px] text-primary uppercase tracking-widest font-semibold">Valor Transferido</p>
-                    <p className="amount-val text-3xl font-extrabold text-primary mt-1">R$ {Number(receiptPayment.amount).toFixed(2).replace('.', ',')}</p>
-                    <p className="amount-sub text-[10px] text-muted-foreground mt-1">via PIX instantâneo</p>
+                  <div className="rounded-xl text-center py-4 px-4" style={{ border: `2px solid ${rAccent}` }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: rAccent }}>Valor Transferido</p>
+                    <p className="text-3xl font-extrabold mt-1" style={{ color: rAccent }}>R$ {Number(receiptPayment.amount).toFixed(2).replace('.', ',')}</p>
+                    <p className="text-[10px] mt-1" style={{ color: '#888' }}>via PIX instantâneo</p>
                   </div>
 
                   {/* Footer */}
-                  <div className="footer text-center border-t border-border pt-3 space-y-0.5">
-                    <p className="text-[10px] text-muted-foreground">
+                  <div className="text-center pt-3 space-y-0.5" style={{ borderTop: '1px solid #e5e7eb' }}>
+                    <p className="text-[10px]" style={{ color: '#999' }}>
                       Documento gerado em {new Date().toLocaleString('pt-BR')}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-[10px]" style={{ color: '#999' }}>
                       Este comprovante é válido como prova de pagamento.
                     </p>
                   </div>
