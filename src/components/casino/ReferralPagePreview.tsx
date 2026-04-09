@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { X, Eye } from 'lucide-react';
-import { ReferralPageConfig, defaultPageConfig } from './ReferralPageEditor';
+import { X, Eye, Minimize2, Maximize2 } from 'lucide-react';
+import { ReferralPageConfig } from './ReferralPageEditor';
 
 interface Props {
   config: ReferralPageConfig;
@@ -8,7 +8,8 @@ interface Props {
 }
 
 const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
+  const [minimized, setMinimized] = useState(false);
 
   const bgStyle: React.CSSProperties = {
     background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || 'rgba(80,20,120,0.3)'} 0%, ${cfg.bgGradientTo || 'rgba(10,5,30,0.9)'} 70%)`,
@@ -36,90 +37,79 @@ const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
   const labelStyle: React.CSSProperties = cfg.labelColor ? { color: cfg.labelColor } : { color: '#9ca3af' };
 
   const icon = cfg.iconUrl
-    ? <img src={cfg.iconUrl} alt="icon" className="w-10 h-10 rounded-lg object-cover mx-auto" />
-    : <div className="text-3xl">{cfg.iconEmoji || '🎰'}</div>;
+    ? <img src={cfg.iconUrl} alt="icon" className="w-8 h-8 rounded-lg object-cover mx-auto" />
+    : <div className="text-2xl">{cfg.iconEmoji || '🎰'}</div>;
 
   const titleText = cfg.titleText || linkLabel || 'Resgatar Giro';
   const displayTitle = cfg.titlePrefix ? `${cfg.titlePrefix} ${titleText}` : titleText;
 
-  return (
-    <>
+  if (!open) {
+    return (
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2"
+        className="w-full py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2"
       >
-        <Eye size={15} /> Pré-visualizar
+        <Eye size={15} /> Mostrar Preview
       </button>
+    );
+  }
 
-      {open && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative w-full max-w-md max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl border border-white/[0.1]">
-            {/* Close button */}
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition"
-            >
-              <X size={16} />
-            </button>
-            <div className="text-[10px] absolute top-3 left-3 z-20 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white/70 font-medium">
-              PREVIEW
+  return (
+    <div className="rounded-xl border border-white/[0.1] bg-white/[0.02] overflow-hidden">
+      {/* Header bar */}
+      <div className="flex items-center justify-between px-3 py-2 bg-white/[0.04] border-b border-white/[0.06]">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Eye size={12} className="text-primary" /> Preview ao vivo
+        </span>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setMinimized(m => !m)} className="p-1 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition">
+            {minimized ? <Maximize2 size={12} /> : <Minimize2 size={12} />}
+          </button>
+          <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition">
+            <X size={12} />
+          </button>
+        </div>
+      </div>
+
+      {!minimized && (
+        <div className="flex items-center justify-center py-6 px-4 relative" style={{ ...bgStyle, minHeight: 340 }}>
+          {!cfg.bgImage && !cfg.bgColor && (
+            <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || 'rgba(80,20,120,0.3)'} 0%, ${cfg.bgGradientTo || 'rgba(10,5,30,0.9)'} 70%)` }} />
+          )}
+          <div
+            className="relative z-10 w-full max-w-[260px] rounded-2xl p-4 space-y-3 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+            style={cardStyle}
+          >
+            <div className="text-center space-y-1">
+              {icon}
+              <h1 className="text-sm font-bold" style={titleStyle}>{displayTitle}</h1>
+              <p className="text-[10px]" style={subtitleStyle}>
+                {cfg.subtitleText || 'Informe seus dados para resgatar 1 giro(s)'}
+              </p>
+              {cfg.showCounter && (
+                <p className="text-[9px]" style={{ color: 'rgba(156,163,175,0.6)' }}>0/100 resgates</p>
+              )}
             </div>
 
-            {/* Preview content */}
-            <div className="flex items-center justify-center min-h-[500px] relative" style={bgStyle}>
-              {!cfg.bgImage && !cfg.bgColor && (
-                <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || 'rgba(80,20,120,0.3)'} 0%, ${cfg.bgGradientTo || 'rgba(10,5,30,0.9)'} 70%)` }} />
-              )}
-              <div
-                className="relative z-10 w-full max-w-xs mx-4 rounded-2xl p-5 space-y-4 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-                style={cardStyle}
-              >
-                <div className="text-center space-y-1.5">
-                  {icon}
-                  <h1 className="text-base font-bold" style={titleStyle}>{displayTitle}</h1>
-                  <p className="text-xs" style={subtitleStyle}>
-                    {cfg.subtitleText || 'Informe seus dados para resgatar 1 giro(s)'}
-                  </p>
-                  {cfg.showCounter && (
-                    <p className="text-[10px]" style={{ color: 'rgba(156,163,175,0.6)' }}>0/100 resgates realizados</p>
-                  )}
+            <div className="space-y-2">
+              {['E-mail', 'ID da Conta', 'CPF'].map(label => (
+                <div key={label}>
+                  <label className="block text-[9px] font-medium mb-0.5" style={labelStyle}>{label} *</label>
+                  <div className="w-full px-2.5 py-1.5 rounded-lg border text-[10px]" style={inputStyle}>
+                    <span style={{ opacity: 0.35 }}>{label === 'CPF' ? '000.000.000-00' : label === 'E-mail' ? 'seu@email.com' : 'Seu ID'}</span>
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="space-y-2.5">
-                  <div>
-                    <label className="block text-[10px] font-medium mb-0.5" style={labelStyle}>E-mail *</label>
-                    <div className="w-full px-3 py-2 rounded-lg border text-xs" style={inputStyle}>
-                      <span style={{ opacity: 0.4 }}>seu@email.com</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-medium mb-0.5" style={labelStyle}>ID da Conta *</label>
-                    <div className="w-full px-3 py-2 rounded-lg border text-xs" style={inputStyle}>
-                      <span style={{ opacity: 0.4 }}>Seu ID</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-medium mb-0.5" style={labelStyle}>CPF *</label>
-                    <div className="w-full px-3 py-2 rounded-lg border text-xs" style={inputStyle}>
-                      <span style={{ opacity: 0.4 }}>000.000.000-00</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className="w-full py-2.5 rounded-lg font-bold text-xs text-center"
-                  style={btnStyle}
-                >
-                  {cfg.btnText || '🎯 Resgatar Giro'}
-                </div>
-              </div>
+            <div className="w-full py-2 rounded-lg font-bold text-[10px] text-center" style={btnStyle}>
+              {cfg.btnText || '🎯 Resgatar Giro'}
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
