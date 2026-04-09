@@ -1969,7 +1969,7 @@ const Dashboard = () => {
                             />
                           </td>
                           <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
-                          <td className="px-2 py-2 text-foreground font-medium text-xs truncate max-w-0">{user.name}</td>
+                          <td className="px-2 py-2 text-foreground font-medium text-xs truncate max-w-0">{user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}{user.name}</td>
                           <td className="px-2 py-2 text-muted-foreground text-xs truncate max-w-0">{user.email}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.phone}</td>
                           <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground truncate">{user.account_id?.slice(0, 8)}...</td>
