@@ -191,6 +191,16 @@ const ReferralDefaultEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <ColorField label="Cor do texto do botão" value={config.btnTextColor} onChange={v => update({ btnTextColor: v })} />
       </Section>
 
+      <Section icon={<Type size={14} className="text-primary" />} title="Tela de Limite Atingido">
+        <TextField label="Emoji" value={config.limitEmoji} onChange={v => update({ limitEmoji: v })} placeholder="⏰" />
+        <TextField label="Título" value={config.limitTitle} onChange={v => update({ limitTitle: v })} placeholder="Resgates Esgotados" />
+        <TextField label="Subtítulo" value={config.limitSubtitle} onChange={v => update({ limitSubtitle: v })} placeholder="Este link atingiu o limite máximo..." />
+        <ColorField label="Cor do título" value={config.limitTitleColor} onChange={v => update({ limitTitleColor: v })} />
+        <ColorField label="Cor do subtítulo" value={config.limitSubtitleColor} onChange={v => update({ limitSubtitleColor: v })} />
+        <ColorField label="Fundo do card" value={config.limitCardBgColor} onChange={v => update({ limitCardBgColor: v })} />
+        <ColorField label="Borda do card" value={config.limitCardBorderColor} onChange={v => update({ limitCardBorderColor: v })} />
+      </Section>
+
       <ReferralPagePreview config={config} linkLabel="Preview Padrão" />
 
       <div className="flex gap-3">

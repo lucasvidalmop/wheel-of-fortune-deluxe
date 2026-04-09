@@ -31,6 +31,14 @@ export interface ReferralPageConfig {
   successBtnText: string;
   titlePrefix: string;
   showCounter: boolean;
+  // Limit reached screen
+  limitEmoji: string;
+  limitTitle: string;
+  limitSubtitle: string;
+  limitTitleColor: string;
+  limitSubtitleColor: string;
+  limitCardBgColor: string;
+  limitCardBorderColor: string;
 }
 
 export const defaultPageConfig: ReferralPageConfig = {
@@ -59,6 +67,13 @@ export const defaultPageConfig: ReferralPageConfig = {
   successBtnText: '🎰 Ir para a Roleta',
   titlePrefix: '',
   showCounter: true,
+  limitEmoji: '⏰',
+  limitTitle: 'Resgates Esgotados',
+  limitSubtitle: 'Este link atingiu o limite máximo de resgates disponíveis.',
+  limitTitleColor: '',
+  limitSubtitleColor: '',
+  limitCardBgColor: '',
+  limitCardBorderColor: '',
 };
 
 interface Props {
@@ -235,6 +250,17 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
           <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão">
             <ColorField label="Cor do botão" value={config.btnBgColor} onChange={v => update({ btnBgColor: v })} />
             <ColorField label="Cor do texto do botão" value={config.btnTextColor} onChange={v => update({ btnTextColor: v })} />
+          </Section>
+
+          {/* ═══ TELA DE LIMITE ═══ */}
+          <Section icon={<Type size={14} className="text-primary" />} title="Tela de Limite Atingido">
+            <TextField label="Emoji" value={config.limitEmoji} onChange={v => update({ limitEmoji: v })} placeholder="⏰" />
+            <TextField label="Título" value={config.limitTitle} onChange={v => update({ limitTitle: v })} placeholder="Resgates Esgotados" />
+            <TextField label="Subtítulo" value={config.limitSubtitle} onChange={v => update({ limitSubtitle: v })} placeholder="Este link atingiu o limite máximo..." />
+            <ColorField label="Cor do título" value={config.limitTitleColor} onChange={v => update({ limitTitleColor: v })} />
+            <ColorField label="Cor do subtítulo" value={config.limitSubtitleColor} onChange={v => update({ limitSubtitleColor: v })} />
+            <ColorField label="Fundo do card" value={config.limitCardBgColor} onChange={v => update({ limitCardBgColor: v })} />
+            <ColorField label="Borda do card" value={config.limitCardBorderColor} onChange={v => update({ limitCardBorderColor: v })} />
           </Section>
 
           <ReferralPagePreview config={config} linkLabel={linkLabel} />
