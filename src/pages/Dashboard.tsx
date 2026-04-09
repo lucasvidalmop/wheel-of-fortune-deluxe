@@ -4247,6 +4247,96 @@ const Dashboard = () => {
                   )}
                 </GlassCard>
 
+                {/* Receipt Config */}
+                <GlassCard className="p-5 space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                      <FileText size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Comprovante de Pagamento</h3>
+                      <p className="text-xs text-muted-foreground">Personalize a aparência do comprovante</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Apelido do Operador</label>
+                      <input
+                        type="text"
+                        value={receiptOperatorName}
+                        onChange={e => setReceiptOperatorName(e.target.value)}
+                        placeholder={session?.user?.email || 'Ex: Lucas BSB'}
+                        className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">Substitui o e-mail no campo "Enviado por" do comprovante</p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor da Fonte</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={receiptFontColor}
+                            onChange={e => setReceiptFontColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={receiptFontColor}
+                            onChange={e => setReceiptFontColor(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor de Fundo</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={receiptBgColor}
+                            onChange={e => setReceiptBgColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={receiptBgColor}
+                            onChange={e => setReceiptBgColor(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor Destaque</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={receiptAccentColor}
+                            onChange={e => setReceiptAccentColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={receiptAccentColor}
+                            onChange={e => setReceiptAccentColor(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview mini */}
+                    <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+                      <div className="text-center py-4 px-3" style={{ backgroundColor: receiptBgColor, color: receiptFontColor }}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest">Pré-visualização</p>
+                        <p className="text-lg font-extrabold mt-1" style={{ color: receiptAccentColor }}>R$ 10,00</p>
+                        <p className="text-[10px] mt-1">Enviado por: <b>{receiptOperatorName || session?.user?.email || 'Operador'}</b></p>
+                      </div>
+                    </div>
+                  </div>
+                </GlassCard>
+
               </>
               )}
 
