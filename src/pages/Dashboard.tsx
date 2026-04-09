@@ -3259,12 +3259,36 @@ const Dashboard = () => {
                     {/* Timer de expiração */}
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">⏳ Expira em <span className="text-muted-foreground/50">(vazio = sem expiração)</span></label>
-                      <input
-                        type="datetime-local"
-                        value={referralForm.expires_at}
-                        onChange={e => setReferralForm(p => ({ ...p, expires_at: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={referralForm.expires_at ? referralForm.expires_at.split('T')[0] : ''}
+                          onChange={e => {
+                            const time = referralForm.expires_at ? referralForm.expires_at.split('T')[1] || '23:59' : '23:59';
+                            setReferralForm(p => ({ ...p, expires_at: e.target.value ? `${e.target.value}T${time}` : '' }));
+                          }}
+                          className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 [color-scheme:dark]"
+                        />
+                        <input
+                          type="time"
+                          value={referralForm.expires_at ? (referralForm.expires_at.split('T')[1] || '23:59') : ''}
+                          onChange={e => {
+                            const date = referralForm.expires_at ? referralForm.expires_at.split('T')[0] : '';
+                            if (date) setReferralForm(p => ({ ...p, expires_at: `${date}T${e.target.value}` }));
+                          }}
+                          disabled={!referralForm.expires_at}
+                          className="w-28 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50 disabled:opacity-40 [color-scheme:dark]"
+                        />
+                      </div>
+                      {referralForm.expires_at && (
+                        <button
+                          type="button"
+                          onClick={() => setReferralForm(p => ({ ...p, expires_at: '' }))}
+                          className="text-[10px] text-red-400 hover:text-red-300 mt-1 transition"
+                        >
+                          ✕ Remover expiração
+                        </button>
+                      )}
                     </div>
                     {/* Prêmios fixos (multi-select) */}
                     <div>
