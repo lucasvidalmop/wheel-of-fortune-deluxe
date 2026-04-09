@@ -65,6 +65,7 @@ interface PersistedDashboardSettings {
   notifyPendingPaymentEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
+  notifySelectedGroups: {id: string; subject: string}[];
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -100,6 +101,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyPendingPaymentEnabled: false,
   notifyGroupJid: '',
   notifyGroupName: '',
+  notifySelectedGroups: [],
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -204,6 +206,7 @@ const Dashboard = () => {
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
+  const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
