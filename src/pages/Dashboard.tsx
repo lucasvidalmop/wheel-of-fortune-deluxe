@@ -1506,7 +1506,7 @@ const Dashboard = () => {
                 ]).map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => setSpinsFilter(opt.value)}
+                    onClick={() => { setSpinsFilter(opt.value); setSearchTerm(''); }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                       spinsFilter === opt.value
                         ? 'bg-primary/20 text-primary border border-primary/30'
@@ -1735,7 +1735,7 @@ const Dashboard = () => {
               ) : filteredUsers.length === 0 ? (
                 <GlassCard className="text-center py-16">
                   <Users size={40} className="text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-muted-foreground">{searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum inscrito ainda'}</p>
+                  <p className="text-muted-foreground">{searchTerm || spinsFilter !== 'all' ? 'Nenhum resultado encontrado' : 'Nenhum inscrito ainda'}</p>
                 </GlassCard>
               ) : (
                 <GlassCard className="overflow-hidden">
