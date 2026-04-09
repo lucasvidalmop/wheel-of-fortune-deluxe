@@ -413,6 +413,7 @@ const Dashboard = () => {
     notifyPendingPaymentEnabled,
     notifyGroupJid,
     notifyGroupName,
+    notifySelectedGroups,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
