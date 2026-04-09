@@ -3241,7 +3241,7 @@ const Dashboard = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-bold text-foreground">{link.label || 'Sem nome'}</p>
-                            <p className="text-[10px] text-muted-foreground">{link.registrations_count} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição</p>
+                            <p className="text-[10px] text-muted-foreground">{link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição</p>
                           </div>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${link.is_active ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' : 'bg-red-500/15 text-red-400 border-red-500/20'}`}>
                             {link.is_active ? '✅ Ativo' : '❌ Inativo'}
