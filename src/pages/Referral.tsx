@@ -4,13 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ReferralPageConfig, defaultPageConfig } from '@/components/casino/ReferralPageEditor';
 
-const formatCPF = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-};
 
 const Referral = () => {
   const { code } = useParams();
@@ -19,7 +12,7 @@ const Referral = () => {
   const [linkData, setLinkData] = useState<any>(null);
   const [email, setEmail] = useState('');
   const [accountId, setAccountId] = useState('');
-  const [cpf, setCpf] = useState('');
+  
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [spinsGranted, setSpinsGranted] = useState(0);
@@ -58,8 +51,7 @@ const Referral = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cpfDigits = cpf.replace(/\D/g, '');
-    if (!email.trim() || !accountId.trim() || cpfDigits.length !== 11) {
+    if (!email.trim() || !accountId.trim()) {
       toast.error('Preencha todos os campos corretamente');
       return;
     }
@@ -70,7 +62,7 @@ const Referral = () => {
         p_email: email.trim(),
         p_account_id: accountId.trim(),
         p_name: '',
-        p_cpf: cpfDigits,
+        p_cpf: '',
       });
       if (error) throw error;
       const result = typeof data === 'string' ? JSON.parse(data) : data;
@@ -202,15 +194,6 @@ const Referral = () => {
             <input
               type="text" value={accountId} onChange={e => setAccountId(e.target.value)}
               placeholder="Seu ID" required
-              className="w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1" style={labelStyle}>CPF <span className="text-destructive">*</span></label>
-            <input
-              type="text" value={cpf} onChange={e => setCpf(formatCPF(e.target.value))}
-              placeholder="000.000.000-00" required inputMode="numeric" maxLength={14}
               className="w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
               style={inputStyle}
             />
