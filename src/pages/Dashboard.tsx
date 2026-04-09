@@ -1941,12 +1941,6 @@ const Dashboard = () => {
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[60px]">PIX</th>
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[90px]">Chave</th>
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[70px]">Data</th>
-                        {spinsFilter !== 'with' && (
-                          <>
-                            <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[50px]">Tipo</th>
-                            <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[70px]">Resp.</th>
-                          </>
-                        )}
                         {spinsFilter === 'with' && (
                           <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[110px]">Prêmio</th>
                         )}
@@ -1976,12 +1970,6 @@ const Dashboard = () => {
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.pix_key_type || '—'}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.pix_key || '—'}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px]">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
-                          {spinsFilter !== 'with' && (
-                            <>
-                              <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.user_type || '—'}</td>
-                              <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.responsible || '—'}</td>
-                            </>
-                          )}
                           {spinsFilter === 'with' && (
                             <td className="px-2 py-2">
                               {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] ? (
