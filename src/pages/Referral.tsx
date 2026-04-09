@@ -14,6 +14,7 @@ const Referral = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [spinsGranted, setSpinsGranted] = useState(0);
+  const [wheelSlug, setWheelSlug] = useState('');
 
   useEffect(() => {
     const fetchLink = async () => {
