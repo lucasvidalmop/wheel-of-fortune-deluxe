@@ -3190,6 +3190,135 @@ const Dashboard = () => {
             </div>
           )}
 
+          {/* ══════ NOTIFICAÇÕES TAB ══════ */}
+          {activeTab === 'notificacoes' && (
+            <div className="max-w-2xl space-y-5">
+
+              {/* Toggle: Resgate de link de referência */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                      <Link2 size={20} className="text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Resgate de Link de Referência</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando alguém resgatar giros pelo link de referência</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyReferralEnabled(!notifyReferralEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyReferralEnabled ? 'bg-blue-500 shadow-lg shadow-blue-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyReferralEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Toggle: Pagamento pendente para aprovação */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                      <Clock size={20} className="text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Pagamento Pendente</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando houver um pagamento aguardando aprovação</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyPendingPaymentEnabled(!notifyPendingPaymentEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyPendingPaymentEnabled ? 'bg-amber-500 shadow-lg shadow-amber-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyPendingPaymentEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Toggle: Pagamento automático */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      <DollarSign size={20} className="text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Pagamento Automático</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um pagamento automático for processado</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyAutoPaymentEnabled(!notifyAutoPaymentEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyAutoPaymentEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyAutoPaymentEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Configuração WhatsApp para Notificações */}
+              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled) && (
+                <GlassCard className="p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                      <MessageCircle size={20} className="text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Configuração WhatsApp</h3>
+                      <p className="text-xs text-muted-foreground">Configure o WhatsApp para receber as notificações ativas</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Seu número WhatsApp</label>
+                      <input type="text" value={notifyWhatsappPhone} onChange={e => setNotifyWhatsappPhone(e.target.value)} placeholder="5511999999999" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">URL da API Evolution</label>
+                      <input type="text" value={notifyEvolutionApiUrl} onChange={e => setNotifyEvolutionApiUrl(e.target.value)} placeholder="https://sua-api.com" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">API Key</label>
+                      <div className="relative">
+                        <input type={showNotifySecret ? 'text' : 'password'} value={notifyEvolutionApiKey} onChange={e => setNotifyEvolutionApiKey(e.target.value)} placeholder="sua-api-key" className="w-full px-4 py-2.5 pr-12 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <button type="button" onClick={() => setShowNotifySecret(!showNotifySecret)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"><Eye size={16} /></button>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Nome da Instância</label>
+                      <input type="text" value={notifyEvolutionInstance} onChange={e => setNotifyEvolutionInstance(e.target.value)} placeholder="minha-instancia-notif" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    </div>
+
+                    {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhone ? (
+                      <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-xs font-medium text-emerald-400">Notificações configuradas e ativas</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        <div className="w-2 h-2 rounded-full bg-amber-400" />
+                        <span className="text-xs font-medium text-amber-400">Preencha todos os campos para ativar as notificações</span>
+                      </div>
+                    )}
+                  </div>
+                </GlassCard>
+              )}
+
+              {/* Empty state */}
+              {!notifyReferralEnabled && !notifyPendingPaymentEnabled && !notifyAutoPaymentEnabled && (
+                <div className="text-center py-8">
+                  <Bell size={40} className="mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-sm text-muted-foreground">Ative pelo menos uma notificação acima para configurar o canal de envio</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ══════ REFERRAL LINKS TAB ══════ */}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
