@@ -1934,12 +1934,12 @@ const Dashboard = () => {
                           />
                         </th>
                         <th className="text-left px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-6">#</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[90px]">Celular</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[80px]">Acc ID</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[60px]">PIX</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[90px]">Chave</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[180px]">Nome</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[120px]">Email</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[100px]">Celular</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[100px]">Acc ID</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[50px]">PIX</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[120px]">Chave</th>
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[70px]">Data</th>
                         {spinsFilter === 'with' && (
                           <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[110px]">Prêmio</th>
@@ -1963,12 +1963,12 @@ const Dashboard = () => {
                             />
                           </td>
                           <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
-                          <td className="px-2 py-2 text-foreground font-medium text-xs truncate max-w-0">{user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}{user.name}</td>
-                          <td className="px-2 py-2 text-muted-foreground text-xs truncate max-w-0">{user.email}</td>
-                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.phone}</td>
-                          <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground truncate">{user.account_id?.slice(0, 8)}...</td>
-                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.pix_key_type || '—'}</td>
-                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.pix_key || '—'}</td>
+                          <td className="px-2 py-2 text-foreground font-medium text-xs whitespace-nowrap">{user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}{user.name}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[10px] truncate max-w-[120px]">{user.email}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.phone}</td>
+                          <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{user.account_id}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.pix_key_type || '—'}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.pix_key || '—'}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px]">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                           {spinsFilter === 'with' && (
                             <td className="px-2 py-2">
