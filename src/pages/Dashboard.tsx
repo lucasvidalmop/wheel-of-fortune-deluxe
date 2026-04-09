@@ -1360,6 +1360,7 @@ const Dashboard = () => {
     sms: 'Disparo de SMS',
     whatsapp: 'Disparo de WhatsApp',
     financeiro: 'Financeiro',
+    referral: 'Links de Referência',
   };
 
   return (
