@@ -3218,6 +3218,7 @@ const Dashboard = () => {
                         placeholder="Ilimitado"
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
                       />
+                    </div>
                     <div className="flex gap-2">
                       <button onClick={() => { setShowReferralForm(false); setEditingReferral(null); }} className="flex-1 py-2 rounded-lg bg-white/[0.06] text-muted-foreground text-sm hover:bg-white/[0.1] transition">Cancelar</button>
                       <button onClick={handleSaveReferral} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-110 transition">Salvar</button>
