@@ -1347,6 +1347,7 @@ const Dashboard = () => {
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp' },
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro' },
+    { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
   ];
 
   const tabTitles: Record<string, string> = {
