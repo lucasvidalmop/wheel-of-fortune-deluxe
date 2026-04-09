@@ -3703,9 +3703,16 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      <button onClick={saveScheduledMessage} disabled={schedSaving} className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/80 text-primary-foreground font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-                        {schedSaving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><Clock size={16} /> Agendar Mensagem</>}
-                      </button>
+                      <div className="flex gap-2">
+                        {editingScheduleId && (
+                          <button onClick={resetSchedForm} className="px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground font-medium text-sm transition-all">
+                            Cancelar edição
+                          </button>
+                        )}
+                        <button onClick={saveScheduledMessage} disabled={schedSaving} className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary/80 text-primary-foreground font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                          {schedSaving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Salvando...</> : editingScheduleId ? <><Pencil size={16} /> Atualizar Agendamento</> : <><Clock size={16} /> Agendar Mensagem</>}
+                        </button>
+                      </div>
                     </div>
 
                     {/* List */}
