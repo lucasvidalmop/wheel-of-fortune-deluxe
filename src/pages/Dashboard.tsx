@@ -68,6 +68,10 @@ interface PersistedDashboardSettings {
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
+  receiptFontColor: string;
+  receiptBgColor: string;
+  receiptAccentColor: string;
+  receiptOperatorName: string;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
