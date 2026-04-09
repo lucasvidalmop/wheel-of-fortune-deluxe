@@ -551,6 +551,10 @@ const Dashboard = () => {
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
+    receiptFontColor,
+    receiptBgColor,
+    receiptAccentColor,
+    receiptOperatorName,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
