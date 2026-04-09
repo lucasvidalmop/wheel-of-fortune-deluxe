@@ -3269,6 +3269,12 @@ const Dashboard = () => {
                             <Pencil size={12} /> Editar
                           </button>
                           <button
+                            onClick={() => setCustomizingReferral(link)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/15 text-primary text-[10px] hover:bg-primary/25 transition"
+                          >
+                            <Palette size={12} /> Personalizar
+                          </button>
+                          <button
                             onClick={() => handleToggleReferral(link.id, link.is_active)}
                             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition ${link.is_active ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25' : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'}`}
                           >
