@@ -96,9 +96,18 @@ const Referral = () => {
           <p className="text-muted-foreground">
             Você recebeu <span className="text-primary font-bold">{spinsGranted} giro(s)</span> na roleta!
           </p>
-          <p className="text-xs text-muted-foreground">
-            Acesse a roleta para girar agora.
-          </p>
+          {wheelSlug ? (
+            <button
+              onClick={() => navigate(`/${wheelSlug}`)}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition"
+            >
+              🎰 Ir para a Roleta
+            </button>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Acesse a roleta para girar agora.
+            </p>
+          )}
         </div>
       </div>
     );
