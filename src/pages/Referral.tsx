@@ -126,15 +126,6 @@ const Referral = () => {
         </div>
 
         <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Nome</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Seu nome"
-              className="w-full px-4 py-3 rounded-xl border border-white/[0.1] bg-white/[0.04] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
-            />
           </div>
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">E-mail <span className="text-destructive">*</span></label>
