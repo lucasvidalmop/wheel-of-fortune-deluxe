@@ -398,6 +398,8 @@ const Dashboard = () => {
     notifyEvolutionInstance,
     notifyWhatsappPhone,
     notifyAutoPaymentEnabled,
+    notifyReferralEnabled,
+    notifyPendingPaymentEnabled,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
