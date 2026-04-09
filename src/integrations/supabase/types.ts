@@ -311,6 +311,41 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_redemptions: {
+        Row: {
+          account_id: string
+          cpf: string
+          created_at: string
+          email: string
+          id: string
+          referral_link_id: string
+        }
+        Insert: {
+          account_id: string
+          cpf?: string
+          created_at?: string
+          email: string
+          id?: string
+          referral_link_id: string
+        }
+        Update: {
+          account_id?: string
+          cpf?: string
+          created_at?: string
+          email?: string
+          id?: string
+          referral_link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_redemptions_referral_link_id_fkey"
+            columns: ["referral_link_id"]
+            isOneToOne: false
+            referencedRelation: "referral_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           bg_image_url: string | null
@@ -656,15 +691,26 @@ export type Database = {
         }
         Returns: string
       }
-      register_via_referral: {
-        Args: {
-          p_account_id: string
-          p_code: string
-          p_email: string
-          p_name?: string
-        }
-        Returns: Json
-      }
+      register_via_referral:
+        | {
+            Args: {
+              p_account_id: string
+              p_code: string
+              p_email: string
+              p_name?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_account_id: string
+              p_code: string
+              p_cpf?: string
+              p_email: string
+              p_name?: string
+            }
+            Returns: Json
+          }
     }
     Enums: {
       app_role: "admin" | "user"
