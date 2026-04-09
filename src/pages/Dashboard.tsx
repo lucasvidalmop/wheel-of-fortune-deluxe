@@ -3547,9 +3547,9 @@ const Dashboard = () => {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <label className="text-[10px] text-muted-foreground font-medium">Tipo</label>
-                          <select value={schedForm.recipientType} onChange={e => setSchedForm(f => ({ ...f, recipientType: e.target.value as any, recipientValue: '', recipientLabel: '' }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
+                          <select value={schedForm.recipientType} onChange={e => setSchedForm(f => ({ ...f, recipientType: e.target.value as any, recipientValue: '', recipientLabel: '', selectedGroups: [] }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
                             <option value="individual">Inscrito</option>
-                            <option value="group">Grupo</option>
+                            <option value="group">Grupo(s)</option>
                           </select>
                         </div>
                         <div className="space-y-1">
@@ -3560,10 +3560,30 @@ const Dashboard = () => {
                               {users.filter(u => u.phone).map(u => <option key={u.id} value={u.phone}>{u.name} ({u.phone})</option>)}
                             </select>
                           ) : (
-                            <select value={schedForm.recipientValue} onChange={e => { const g = notifyGroups.find(g => g.id === e.target.value); setSchedForm(f => ({ ...f, recipientValue: e.target.value, recipientLabel: g?.subject || '' })); }} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
-                              <option value="">Selecione...</option>
-                              {notifyGroups.map(g => <option key={g.id} value={g.id}>{g.subject}</option>)}
-                            </select>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left truncate">
+                                  {schedForm.selectedGroups.length > 0 ? `${schedForm.selectedGroups.length} grupo(s)` : 'Selecione...'}
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 max-h-60 overflow-y-auto p-2 space-y-1" align="start">
+                                {notifyGroups.map(g => {
+                                  const checked = schedForm.selectedGroups.some(sg => sg.id === g.id);
+                                  return (
+                                    <label key={g.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] cursor-pointer text-xs text-foreground">
+                                      <Checkbox checked={checked} onCheckedChange={() => {
+                                        setSchedForm(f => {
+                                          const exists = f.selectedGroups.some(sg => sg.id === g.id);
+                                          const selectedGroups = exists ? f.selectedGroups.filter(sg => sg.id !== g.id) : [...f.selectedGroups, { id: g.id, name: g.subject }];
+                                          return { ...f, selectedGroups };
+                                        });
+                                      }} />
+                                      {g.subject}
+                                    </label>
+                                  );
+                                })}
+                              </PopoverContent>
+                            </Popover>
                           )}
                         </div>
                       </div>
