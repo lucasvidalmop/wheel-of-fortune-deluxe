@@ -3187,7 +3187,7 @@ const Dashboard = () => {
                       {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhone ? (
                         <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                          <span className="text-xs font-medium text-emerald-400">Notificações de pagamento automático ativas</span>
+                          <span className="text-xs font-medium text-emerald-400">Notificações de pagamento ativas</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
