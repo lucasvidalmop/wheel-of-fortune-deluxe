@@ -4854,10 +4854,18 @@ const Dashboard = () => {
                             {p.edpay_transaction_id && (
                               <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
                             )}
-                            <p className="text-[10px] text-muted-foreground">Criado: {new Date(p.created_at).toLocaleString('pt-BR')}</p>
-                          </div>
-                        );
-                      })}
+                            <div className="flex items-center justify-between">
+                              <p className="text-[10px] text-muted-foreground">Criado: {new Date(p.created_at).toLocaleString('pt-BR')}</p>
+                              {isPaid && p.edpay_transaction_id && (
+                                <button
+                                  onClick={() => openReceipt(p)}
+                                  className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors"
+                                >
+                                  <FileText size={12} />
+                                  Comprovante
+                                </button>
+                              )}
+                            </div>
                     </div>
                   )}
                 </GlassCard>
