@@ -260,6 +260,37 @@ const Dashboard = () => {
     toast.success('Agendamento cancelado');
     fetchScheduledMessages();
   };
+
+  // Media attachment state
+  const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [whatsappMediaUploading, setWhatsappMediaUploading] = useState(false);
+  const [whatsappMentionAll, setWhatsappMentionAll] = useState(false);
+  const whatsappMediaInputRef = useRef<HTMLInputElement>(null);
+
+  const handleWhatsappMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setWhatsappMediaUploading(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      let mediatype = 'document';
+      if (['jpg','jpeg','png','gif','webp'].includes(ext)) mediatype = 'image';
+      else if (['mp4','avi','mov','mkv','3gp'].includes(ext)) mediatype = 'video';
+      else if (['mp3','ogg','opus','wav','m4a','aac'].includes(ext)) mediatype = 'audio';
+
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setWhatsappMedia({ url: urlData.publicUrl, mediatype, mimetype: file.type, fileName: file.name });
+      toast.success(`${mediatype === 'image' ? 'Imagem' : mediatype === 'video' ? 'Vídeo' : mediatype === 'audio' ? 'Áudio' : 'Arquivo'} anexado!`);
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setWhatsappMediaUploading(false);
+    if (whatsappMediaInputRef.current) whatsappMediaInputRef.current.value = '';
+  };
+
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
