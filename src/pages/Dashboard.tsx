@@ -254,7 +254,8 @@ const Dashboard = () => {
 
   const saveScheduledMessage = async () => {
     if (!schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
-    if (!schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
+    if (schedForm.recipientType === 'individual' && !schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
+    if (schedForm.recipientType === 'group' && schedForm.selectedGroups.length === 0) { toast.error('Selecione ao menos um grupo'); return; }
     if (!schedForm.date) { toast.error('Selecione a data'); return; }
     setSchedSaving(true);
     const [hours, minutes] = schedForm.time.split(':').map(Number);
@@ -262,12 +263,16 @@ const Dashboard = () => {
     scheduledAt.setHours(hours, minutes, 0, 0);
     const isoDate = scheduledAt.toISOString();
 
-    const { error } = await supabase.from('scheduled_messages').insert({
+    const recipients = schedForm.recipientType === 'group'
+      ? schedForm.selectedGroups.map(g => ({ value: g.id, label: g.name }))
+      : [{ value: schedForm.recipientValue, label: schedForm.recipientLabel }];
+
+    const rows = recipients.map(r => ({
       owner_id: session.user.id,
       message: schedForm.message,
       recipient_type: schedForm.recipientType,
-      recipient_value: schedForm.recipientValue,
-      recipient_label: schedForm.recipientLabel,
+      recipient_value: r.value,
+      recipient_label: r.label,
       scheduled_at: isoDate,
       next_run_at: isoDate,
       recurrence: schedForm.recurrence,
@@ -277,12 +282,14 @@ const Dashboard = () => {
       media_mimetype: schedMedia?.mimetype || null,
       media_filename: schedMedia?.fileName || null,
       mention_all: schedForm.mentionAll,
-    } as any);
+    }));
+
+    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
 
     setSchedSaving(false);
     if (error) { toast.error('Erro ao agendar: ' + error.message); return; }
     toast.success('Mensagem agendada com sucesso!');
-    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false });
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false, selectedGroups: [] });
     setSchedMedia(null);
     fetchScheduledMessages();
   };
