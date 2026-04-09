@@ -211,6 +211,52 @@ const Dashboard = () => {
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
 
+  const fetchReferralLinks = async () => {
+    if (!session?.user?.id) return;
+    setReferralLoading(true);
+    const { data } = await (supabase as any)
+      .from('referral_links')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false });
+    setReferralLinks(data || []);
+    setReferralLoading(false);
+  };
+
+  const handleSaveReferral = async () => {
+    if (!referralForm.label.trim()) { toast.error('Preencha o nome do link'); return; }
+    if (editingReferral) {
+      const { error } = await (supabase as any)
+        .from('referral_links')
+        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, updated_at: new Date().toISOString() })
+        .eq('id', editingReferral.id);
+      if (error) { toast.error('Erro ao atualizar'); return; }
+      toast.success('Link atualizado!');
+    } else {
+      const { error } = await (supabase as any)
+        .from('referral_links')
+        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration });
+      if (error) { toast.error('Erro ao criar link'); return; }
+      toast.success('Link criado!');
+    }
+    setShowReferralForm(false);
+    setEditingReferral(null);
+    setReferralForm({ label: '', spins_per_registration: 1 });
+    fetchReferralLinks();
+  };
+
+  const handleToggleReferral = async (id: string, currentActive: boolean) => {
+    await (supabase as any).from('referral_links').update({ is_active: !currentActive, updated_at: new Date().toISOString() }).eq('id', id);
+    fetchReferralLinks();
+  };
+
+  const handleDeleteReferral = async (id: string) => {
+    if (!confirm('Excluir este link?')) return;
+    await (supabase as any).from('referral_links').delete().eq('id', id);
+    toast.success('Link excluído');
+    fetchReferralLinks();
+  };
+
   const fetchWhatsappLogs = async () => {
     if (!session?.user?.id) return;
     setWhatsappLogsLoading(true);
