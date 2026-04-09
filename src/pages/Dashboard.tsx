@@ -3296,7 +3296,17 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* ══════ FINANCEIRO TAB ══════ */}
+          {customizingReferral && (
+            <ReferralPageEditor
+              linkId={customizingReferral.id}
+              linkLabel={customizingReferral.label}
+              currentConfig={customizingReferral.page_config || {}}
+              onClose={() => setCustomizingReferral(null)}
+              onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
+            />
+          )}
+
+
           {activeTab === 'financeiro' && (
             <div className="max-w-2xl space-y-5">
               {/* Sub-tabs */}
