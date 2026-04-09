@@ -3295,6 +3295,35 @@ const Dashboard = () => {
               >
                 {whatsappSending ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar WhatsApp</>}
               </button>
+
+              {/* Send to Group button */}
+              {notifyGroupJid && (
+                <button
+                  onClick={async () => {
+                    if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
+                    if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                    setWhatsappSending(true);
+                    try {
+                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
+                        body: { recipientPhone: notifyGroupJid, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance }
+                      });
+                      const hasError = !!error || !!respData?.error;
+                      if (hasError) {
+                        toast.error(error?.message || respData?.error || 'Erro ao enviar para grupo');
+                      } else {
+                        toast.success(`Mensagem enviada para o grupo "${notifyGroupName || 'Grupo'}"!`);
+                      }
+                    } catch (e: any) {
+                      toast.error(e?.message || 'Erro ao enviar para grupo');
+                    }
+                    setWhatsappSending(false);
+                  }}
+                  disabled={whatsappSending}
+                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                >
+                  {whatsappSending ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Users size={16} /> Enviar para Grupo: {notifyGroupName || 'Grupo'}</>}
+                </button>
+              )}
             </div>
           )}
 
