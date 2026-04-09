@@ -1435,8 +1435,64 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
         )}
       </Card>
 
+      {/* ── Botão "Ver Meus Prêmios" ── */}
+      <Card title="Botão Ver Prêmios" icon={<span className="text-base">🏆</span>}>
+        <div className="flex items-center justify-between py-1.5">
+          <span className="text-sm text-muted-foreground">Exibir botão</span>
+          <button
+            onClick={() => updateGlobal('prizeHistoryBtnEnabled', !(config.prizeHistoryBtnEnabled !== false))}
+            className={`w-10 h-5 rounded-full transition-colors ${config.prizeHistoryBtnEnabled !== false ? 'bg-primary' : 'bg-muted'}`}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${config.prizeHistoryBtnEnabled !== false ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        {config.prizeHistoryBtnEnabled !== false && (
+          <>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium">Texto do botão</label>
+              <input type="text" value={config.prizeHistoryBtnText ?? ''} placeholder="VER MEUS PRÊMIOS" onChange={e => updateGlobal('prizeHistoryBtnText', e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground" />
+            </div>
+            <ColorInput label="Cor de fundo" value={config.prizeHistoryBtnBgColor ?? config.buttonColor ?? '#FFD700'} onChange={v => updateGlobal('prizeHistoryBtnBgColor', v)} />
+            <ColorInput label="Cor do texto" value={config.prizeHistoryBtnTextColor ?? config.buttonTextColor ?? '#000000'} onChange={v => updateGlobal('prizeHistoryBtnTextColor', v)} />
+            <ColorInput label="Cor da borda" value={config.prizeHistoryBtnBorderColor ?? 'transparent'} onChange={v => updateGlobal('prizeHistoryBtnBorderColor', v)} />
+            <RangeInput label="Borda arredondada" value={config.prizeHistoryBtnBorderRadius ?? 8} min={0} max={30} onChange={v => updateGlobal('prizeHistoryBtnBorderRadius', v)} suffix="px" />
+            <RangeInput label="Tamanho fonte" value={config.prizeHistoryBtnFontSize ?? 12} min={8} max={24} onChange={v => updateGlobal('prizeHistoryBtnFontSize', v)} suffix="px" />
+            <RangeInput label="Fonte mobile" value={config.prizeHistoryBtnMobileFontSize ?? config.prizeHistoryBtnFontSize ?? 12} min={8} max={24} onChange={v => updateGlobal('prizeHistoryBtnMobileFontSize', v)} suffix="px" />
+            <RangeInput label="Padding X" value={config.prizeHistoryBtnPaddingX ?? 20} min={4} max={60} onChange={v => updateGlobal('prizeHistoryBtnPaddingX', v)} suffix="px" />
+            <RangeInput label="Padding Y" value={config.prizeHistoryBtnPaddingY ?? 8} min={2} max={30} onChange={v => updateGlobal('prizeHistoryBtnPaddingY', v)} suffix="px" />
 
-    </div>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-3 mb-1">Modal de Prêmios</p>
+            <ColorInput label="Fundo do modal" value={config.prizeHistoryModalBgColor ?? '#140c28'} onChange={v => updateGlobal('prizeHistoryModalBgColor', v)} />
+            <ColorInput label="Cor do texto" value={config.prizeHistoryModalTextColor ?? '#ffffff'} onChange={v => updateGlobal('prizeHistoryModalTextColor', v)} />
+            <ColorInput label="Cor do título" value={config.prizeHistoryModalTitleColor ?? '#FFD700'} onChange={v => updateGlobal('prizeHistoryModalTitleColor', v)} />
+            <ColorInput label="Cor da borda" value={config.prizeHistoryModalBorderColor ?? '#ffffff14'} onChange={v => updateGlobal('prizeHistoryModalBorderColor', v)} />
+            <ColorInput label="Cor destaque" value={config.prizeHistoryModalAccentColor ?? config.glowColor ?? '#FFD700'} onChange={v => updateGlobal('prizeHistoryModalAccentColor', v)} />
+            <RangeInput label="Borda arredondada" value={config.prizeHistoryModalBorderRadius ?? 12} min={0} max={30} onChange={v => updateGlobal('prizeHistoryModalBorderRadius', v)} suffix="px" />
+
+            {/* Preview */}
+            <div className="mt-2 p-3 rounded-lg border border-border bg-muted/20 flex justify-center">
+              <button
+                className="font-bold uppercase tracking-wider"
+                style={{
+                  background: config.prizeHistoryBtnBgColor ?? config.buttonColor ?? '#FFD700',
+                  color: config.prizeHistoryBtnTextColor ?? config.buttonTextColor ?? '#000000',
+                  border: `1px solid ${config.prizeHistoryBtnBorderColor ?? 'transparent'}`,
+                  borderRadius: config.prizeHistoryBtnBorderRadius ?? 8,
+                  fontSize: config.prizeHistoryBtnFontSize ?? 12,
+                  paddingLeft: config.prizeHistoryBtnPaddingX ?? 20,
+                  paddingRight: config.prizeHistoryBtnPaddingX ?? 20,
+                  paddingTop: config.prizeHistoryBtnPaddingY ?? 8,
+                  paddingBottom: config.prizeHistoryBtnPaddingY ?? 8,
+                }}
+              >
+                🏆 {config.prizeHistoryBtnText || 'VER MEUS PRÊMIOS'}
+              </button>
+            </div>
+          </>
+        )}
+      </Card>
+
+
     {createPortal(<SegmentPreview config={config} floating />, document.body)}
     </>
   );
