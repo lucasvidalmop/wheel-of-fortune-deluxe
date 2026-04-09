@@ -2054,7 +2054,7 @@ const Dashboard = () => {
                               className="rounded border-white/20 bg-white/[0.05] shrink-0 mt-0.5"
                             />
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">#{index + 1} {user.name}</p>
+                              <p className="text-sm font-medium text-foreground truncate">{user.user_type === 'qualified' && '✅ '}#{index + 1} {user.name}</p>
                               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                             </div>
                           </div>
@@ -2064,6 +2064,13 @@ const Dashboard = () => {
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
                             >
                               {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                            </button>
+                            <button
+                              onClick={() => handleToggleQualified(user)}
+                              className={`p-1.5 rounded-lg transition border ${user.user_type === 'qualified' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-white/[0.06] text-muted-foreground border-white/[0.06]'}`}
+                              title={user.user_type === 'qualified' ? 'Remover qualificação' : 'Qualificar'}
+                            >
+                              <span className="text-[13px]">✅</span>
                             </button>
                             <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
                               <Pencil size={13} />
