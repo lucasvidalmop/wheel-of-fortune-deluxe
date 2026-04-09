@@ -3049,6 +3049,84 @@ const Dashboard = () => {
                 </GlassCard>
               )}
 
+              {/* ── Grupos WhatsApp ── */}
+              <GlassCard className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                      <Users size={20} className="text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Grupos WhatsApp</h3>
+                      <p className="text-xs text-muted-foreground">Selecione um grupo para receber notificações automáticas</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!evolutionApiUrl || !evolutionApiKey || !evolutionInstance || notifyGroupsLoading}
+                    onClick={async () => {
+                      setNotifyGroupsLoading(true);
+                      try {
+                        const { data } = await supabase.functions.invoke('evolution-proxy', {
+                          body: {
+                            action: 'fetchGroups',
+                            evolutionApiUrl,
+                            evolutionApiKey,
+                            evolutionInstance,
+                          },
+                        });
+                        if (data?.ok && Array.isArray(data.data)) {
+                          setNotifyGroups(data.data.map((g: any) => ({ id: g.id, subject: g.subject || g.id })));
+                          toast.success(`${data.data.length} grupo(s) encontrado(s)`);
+                        } else {
+                          toast.error('Erro ao buscar grupos. Verifique se a API está conectada.');
+                        }
+                      } catch {
+                        toast.error('Erro ao buscar grupos');
+                      }
+                      setNotifyGroupsLoading(false);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 disabled:opacity-40 transition flex items-center gap-1.5"
+                  >
+                    <RotateCcw size={14} /> {notifyGroupsLoading ? 'Buscando...' : 'Buscar Grupos'}
+                  </button>
+                </div>
+
+                {notifyGroups.length > 0 ? (
+                  <div className="space-y-2">
+                    <select
+                      value={notifyGroupJid}
+                      onChange={e => {
+                        const jid = e.target.value;
+                        setNotifyGroupJid(jid);
+                        const found = notifyGroups.find(g => g.id === jid);
+                        setNotifyGroupName(found?.subject || '');
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    >
+                      <option value="">Nenhum grupo selecionado</option>
+                      {notifyGroups.map(g => (
+                        <option key={g.id} value={g.id}>{g.subject}</option>
+                      ))}
+                    </select>
+                    {notifyGroupJid && (
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        <span className="text-xs font-medium text-green-400">📌 {notifyGroupName || notifyGroupJid}</span>
+                        <button type="button" onClick={() => { setNotifyGroupJid(''); setNotifyGroupName(''); }} className="ml-auto text-xs text-red-400 hover:text-red-300">Remover</button>
+                      </div>
+                    )}
+                  </div>
+                ) : notifyGroupJid ? (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08]">
+                    <span className="text-xs text-foreground">📌 {notifyGroupName || notifyGroupJid}</span>
+                    <button type="button" onClick={() => { setNotifyGroupJid(''); setNotifyGroupName(''); }} className="text-xs text-red-400 hover:text-red-300">Remover</button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground/60">Configure a API acima e clique em "Buscar Grupos"</p>
+                )}
+              </GlassCard>
+
               {showWhatsappHistory && (
                 <GlassCard className="p-5 space-y-4">
                   <div className="flex items-center justify-between">
@@ -3324,78 +3402,15 @@ const Dashboard = () => {
                       <input type="text" value={notifyEvolutionInstance} onChange={e => setNotifyEvolutionInstance(e.target.value)} placeholder="minha-instancia-notif" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
 
-                    {/* Group selector */}
-                    <div className="space-y-2 pt-2 border-t border-white/[0.06]">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs text-muted-foreground">Enviar também para grupo</label>
-                        {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              setNotifyGroupsLoading(true);
-                              try {
-                                const { data } = await supabase.functions.invoke('evolution-proxy', {
-                                  body: {
-                                    action: 'fetchGroups',
-                                    evolutionApiUrl: notifyEvolutionApiUrl,
-                                    evolutionApiKey: notifyEvolutionApiKey,
-                                    evolutionInstance: notifyEvolutionInstance,
-                                  },
-                                });
-                                if (data?.ok && Array.isArray(data.data)) {
-                                  setNotifyGroups(data.data.map((g: any) => ({ id: g.id, subject: g.subject || g.id })));
-                                } else {
-                                  toast.error('Erro ao buscar grupos');
-                                }
-                              } catch {
-                                toast.error('Erro ao buscar grupos');
-                              }
-                              setNotifyGroupsLoading(false);
-                            }}
-                            className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-                          >
-                            {notifyGroupsLoading ? 'Carregando...' : '🔄 Buscar grupos'}
-                          </button>
-                        )}
-                      </div>
-                      {notifyGroups.length > 0 ? (
-                        <select
-                          value={notifyGroupJid}
-                          onChange={e => {
-                            const jid = e.target.value;
-                            setNotifyGroupJid(jid);
-                            const found = notifyGroups.find(g => g.id === jid);
-                            setNotifyGroupName(found?.subject || '');
-                          }}
-                          className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                        >
-                          <option value="">Nenhum (apenas número)</option>
-                          {notifyGroups.map(g => (
-                            <option key={g.id} value={g.id}>{g.subject}</option>
-                          ))}
-                        </select>
-                      ) : notifyGroupJid ? (
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08]">
-                          <span className="text-xs text-foreground">📌 {notifyGroupName || notifyGroupJid}</span>
-                          <button type="button" onClick={() => { setNotifyGroupJid(''); setNotifyGroupName(''); }} className="text-xs text-red-400 hover:text-red-300">Remover</button>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground/60">Clique em "Buscar grupos" para listar os grupos disponíveis</p>
-                      )}
-                    </div>
-
-                    {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && (notifyWhatsappPhone || notifyGroupJid) ? (
+                    {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhone ? (
                       <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-xs font-medium text-emerald-400">
-                          Notificações configuradas
-                          {notifyWhatsappPhone && notifyGroupJid ? ' (número + grupo)' : notifyGroupJid ? ' (grupo)' : ' (número)'}
-                        </span>
+                        <span className="text-xs font-medium text-emerald-400">Notificações configuradas e ativas</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                         <div className="w-2 h-2 rounded-full bg-amber-400" />
-                        <span className="text-xs font-medium text-amber-400">Preencha os campos e defina um número ou grupo para ativar</span>
+                        <span className="text-xs font-medium text-amber-400">Preencha todos os campos para ativar as notificações</span>
                       </div>
                     )}
                   </div>
