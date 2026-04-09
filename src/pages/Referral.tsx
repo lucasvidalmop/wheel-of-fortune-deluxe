@@ -53,8 +53,9 @@ const Referral = () => {
       const result = typeof data === 'string' ? JSON.parse(data) : data;
       if (result?.success) {
         setSpinsGranted(result.spins || 1);
+        if (result.slug) setWheelSlug(result.slug);
         setSuccess(true);
-        toast.success('Inscrição realizada com sucesso!');
+        toast.success('Giro resgatado com sucesso!');
       } else {
         toast.error(result?.error || 'Erro ao registrar');
       }
