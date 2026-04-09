@@ -3168,6 +3168,114 @@ const Dashboard = () => {
             </div>
           )}
 
+          {/* ══════ REFERRAL LINKS TAB ══════ */}
+          {activeTab === 'referral' && (
+            <div className="max-w-2xl space-y-5">
+              <GlassCard className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Link2 size={16} /> Links de Referência</h3>
+                  <button
+                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1 }); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/20 text-xs font-semibold hover:bg-primary/25 transition"
+                  >
+                    <Plus size={14} /> Novo Link
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Crie links para que usuários se inscrevam e ganhem giros automaticamente. Compartilhe o link <code className="text-primary">/ref/CODIGO</code> com os jogadores.
+                </p>
+
+                {showReferralForm && (
+                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 space-y-3">
+                    <h4 className="text-xs font-bold text-foreground">{editingReferral ? 'Editar Link' : 'Criar Novo Link'}</h4>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground block mb-1">Nome / Label</label>
+                      <input
+                        value={referralForm.label}
+                        onChange={e => setReferralForm(p => ({ ...p, label: e.target.value }))}
+                        placeholder="Ex: Campanha Janeiro"
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground block mb-1">Giros por inscrição</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={999}
+                        value={referralForm.spins_per_registration}
+                        onChange={e => setReferralForm(p => ({ ...p, spins_per_registration: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setShowReferralForm(false); setEditingReferral(null); }} className="flex-1 py-2 rounded-lg bg-white/[0.06] text-muted-foreground text-sm hover:bg-white/[0.1] transition">Cancelar</button>
+                      <button onClick={handleSaveReferral} className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-110 transition">Salvar</button>
+                    </div>
+                  </div>
+                )}
+
+                {referralLoading ? (
+                  <div className="text-center py-6 text-sm text-muted-foreground animate-pulse">Carregando...</div>
+                ) : referralLinks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Link2 size={32} className="mx-auto mb-3 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">Nenhum link criado</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">Crie um link para começar a receber inscrições</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {referralLinks.map(link => (
+                      <div key={link.id} className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-foreground">{link.label || 'Sem nome'}</p>
+                            <p className="text-[10px] text-muted-foreground">{link.registrations_count} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição</p>
+                          </div>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${link.is_active ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' : 'bg-red-500/15 text-red-400 border-red-500/20'}`}>
+                            {link.is_active ? '✅ Ativo' : '❌ Inativo'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs text-primary font-mono bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg flex-1 truncate">
+                            {window.location.origin}/ref/{link.code}
+                          </code>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/ref/${link.code}`); toast.success('Link copiado!'); }}
+                            className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition"
+                            title="Copiar"
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration }); setShowReferralForm(true); }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] text-muted-foreground text-[10px] hover:bg-white/[0.1] transition"
+                          >
+                            <Pencil size={12} /> Editar
+                          </button>
+                          <button
+                            onClick={() => handleToggleReferral(link.id, link.is_active)}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition ${link.is_active ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25' : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'}`}
+                          >
+                            {link.is_active ? '⏸️ Desativar' : '▶️ Ativar'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteReferral(link.id)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500/15 text-red-400 text-[10px] hover:bg-red-500/25 transition"
+                          >
+                            <Trash2 size={12} /> Excluir
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Criado: {new Date(link.created_at).toLocaleString('pt-BR')}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </GlassCard>
+            </div>
+          )}
 
           {/* ══════ FINANCEIRO TAB ══════ */}
           {activeTab === 'financeiro' && (
