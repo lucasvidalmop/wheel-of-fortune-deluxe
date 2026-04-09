@@ -277,6 +277,7 @@ export type Database = {
           auto_payment: boolean
           code: string
           created_at: string
+          expires_at: string | null
           fixed_prize_segment: number | null
           fixed_prize_segments: Json | null
           id: string
@@ -293,6 +294,7 @@ export type Database = {
           auto_payment?: boolean
           code?: string
           created_at?: string
+          expires_at?: string | null
           fixed_prize_segment?: number | null
           fixed_prize_segments?: Json | null
           id?: string
@@ -309,6 +311,7 @@ export type Database = {
           auto_payment?: boolean
           code?: string
           created_at?: string
+          expires_at?: string | null
           fixed_prize_segment?: number | null
           fixed_prize_segments?: Json | null
           id?: string
