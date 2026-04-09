@@ -210,6 +210,56 @@ const Dashboard = () => {
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
+
+  // Scheduled messages state
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
+  const [scheduledLoading, setScheduledLoading] = useState(false);
+  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly' });
+  const [schedSaving, setSchedSaving] = useState(false);
+
+  const fetchScheduledMessages = async () => {
+    if (!session?.user?.id) return;
+    setScheduledLoading(true);
+    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).order('next_run_at', { ascending: true });
+    setScheduledMessages(data || []);
+    setScheduledLoading(false);
+  };
+
+  const saveScheduledMessage = async () => {
+    if (!schedForm.message.trim()) { toast.error('Digite a mensagem'); return; }
+    if (!schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
+    if (!schedForm.date) { toast.error('Selecione a data'); return; }
+    setSchedSaving(true);
+    const [hours, minutes] = schedForm.time.split(':').map(Number);
+    const scheduledAt = new Date(schedForm.date);
+    scheduledAt.setHours(hours, minutes, 0, 0);
+    const isoDate = scheduledAt.toISOString();
+
+    const { error } = await supabase.from('scheduled_messages').insert({
+      owner_id: session.user.id,
+      message: schedForm.message,
+      recipient_type: schedForm.recipientType,
+      recipient_value: schedForm.recipientValue,
+      recipient_label: schedForm.recipientLabel,
+      scheduled_at: isoDate,
+      next_run_at: isoDate,
+      recurrence: schedForm.recurrence,
+      status: 'pending',
+    } as any);
+
+    setSchedSaving(false);
+    if (error) { toast.error('Erro ao agendar: ' + error.message); return; }
+    toast.success('Mensagem agendada com sucesso!');
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none' });
+    fetchScheduledMessages();
+  };
+
+  const cancelScheduledMessage = async (id: string) => {
+    await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).eq('id', id);
+    toast.success('Agendamento cancelado');
+    fetchScheduledMessages();
+  };
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
