@@ -126,7 +126,6 @@ const Referral = () => {
         </div>
 
         <div className="space-y-3">
-          </div>
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">E-mail <span className="text-destructive">*</span></label>
             <input
