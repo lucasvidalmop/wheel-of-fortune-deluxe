@@ -272,6 +272,42 @@ export type Database = {
           },
         ]
       }
+      referral_links: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          owner_id: string
+          registrations_count: number
+          spins_per_registration: number
+          updated_at: string
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          owner_id: string
+          registrations_count?: number
+          spins_per_registration?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          owner_id?: string
+          registrations_count?: number
+          spins_per_registration?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           bg_image_url: string | null
@@ -454,6 +490,7 @@ export type Database = {
           phone: string
           pix_key: string | null
           pix_key_type: string | null
+          referral_link_id: string | null
           responsible: string | null
           spins_available: number
           updated_at: string | null
@@ -472,6 +509,7 @@ export type Database = {
           phone?: string
           pix_key?: string | null
           pix_key_type?: string | null
+          referral_link_id?: string | null
           responsible?: string | null
           spins_available?: number
           updated_at?: string | null
@@ -490,12 +528,21 @@ export type Database = {
           phone?: string
           pix_key?: string | null
           pix_key_type?: string | null
+          referral_link_id?: string | null
           responsible?: string | null
           spins_available?: number
           updated_at?: string | null
           user_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wheel_users_referral_link_id_fkey"
+            columns: ["referral_link_id"]
+            isOneToOne: false
+            referencedRelation: "referral_links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -605,6 +652,15 @@ export type Database = {
           p_user_name: string
         }
         Returns: string
+      }
+      register_via_referral: {
+        Args: {
+          p_account_id: string
+          p_code: string
+          p_email: string
+          p_name?: string
+        }
+        Returns: Json
       }
     }
     Enums: {
