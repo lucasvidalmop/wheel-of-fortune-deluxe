@@ -828,6 +828,82 @@ const Roleta = () => {
         </div>
       )}
 
+      {/* Prize History Button */}
+      {accountId && config.prizeHistoryBtnEnabled !== false && (
+        <button
+          onClick={openPrizeHistory}
+          className="relative z-10 mb-2 font-bold uppercase tracking-wider transition-all hover:brightness-110"
+          style={{
+            background: config.prizeHistoryBtnBgColor ?? config.buttonColor ?? '#FFD700',
+            color: config.prizeHistoryBtnTextColor ?? config.buttonTextColor ?? '#000000',
+            border: `1px solid ${config.prizeHistoryBtnBorderColor ?? 'transparent'}`,
+            borderRadius: config.prizeHistoryBtnBorderRadius ?? 8,
+            fontSize: isMobile
+              ? (config.prizeHistoryBtnMobileFontSize ?? config.prizeHistoryBtnFontSize ?? 12)
+              : (config.prizeHistoryBtnFontSize ?? 12),
+            paddingLeft: config.prizeHistoryBtnPaddingX ?? 20,
+            paddingRight: config.prizeHistoryBtnPaddingX ?? 20,
+            paddingTop: config.prizeHistoryBtnPaddingY ?? 8,
+            paddingBottom: config.prizeHistoryBtnPaddingY ?? 8,
+          }}
+        >
+          🏆 {config.prizeHistoryBtnText || 'VER MEUS PRÊMIOS'}
+        </button>
+      )}
+
+      {/* Prize History Modal */}
+      {showPrizeHistory && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+          onClick={() => setShowPrizeHistory(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-md mx-4 max-h-[80vh] flex flex-col"
+            style={{
+              background: config.prizeHistoryModalBgColor ?? '#140c28',
+              border: `1px solid ${config.prizeHistoryModalBorderColor ?? '#ffffff14'}`,
+              borderRadius: config.prizeHistoryModalBorderRadius ?? 12,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+            }}
+          >
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: config.prizeHistoryModalBorderColor ?? '#ffffff14' }}>
+              <h3 className="font-bold text-lg" style={{ color: config.prizeHistoryModalTitleColor ?? '#FFD700' }}>
+                🏆 Meus Prêmios
+              </h3>
+              <button onClick={() => setShowPrizeHistory(false)} className="text-lg opacity-50 hover:opacity-100 transition" style={{ color: config.prizeHistoryModalTextColor ?? '#ffffff' }}>✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {prizeHistoryLoading ? (
+                <p className="text-center text-sm animate-pulse" style={{ color: config.prizeHistoryModalTextColor ?? '#ffffffaa' }}>Carregando...</p>
+              ) : prizeHistory.length === 0 ? (
+                <p className="text-center text-sm py-8" style={{ color: config.prizeHistoryModalTextColor ?? '#ffffffaa' }}>Nenhum prêmio encontrado.</p>
+              ) : (
+                prizeHistory.map((p: any) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between p-3 rounded-lg"
+                    style={{
+                      background: `${config.prizeHistoryModalAccentColor ?? config.glowColor ?? '#FFD700'}10`,
+                      border: `1px solid ${config.prizeHistoryModalAccentColor ?? config.glowColor ?? '#FFD700'}20`,
+                    }}
+                  >
+                    <div>
+                      <p className="font-bold text-sm" style={{ color: config.prizeHistoryModalAccentColor ?? config.glowColor ?? '#FFD700' }}>{p.prize}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: config.prizeHistoryModalTextColor ?? '#ffffffaa' }}>
+                        {new Date(p.spun_at).toLocaleString('pt-BR')}
+                      </p>
+                    </div>
+                    <span className="text-lg">🎰</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Post-login dialog overlay */}
       {showPostLoginDialog && config.postLoginDialogEnabled && (
         <div
