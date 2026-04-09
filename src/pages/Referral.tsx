@@ -14,6 +14,7 @@ const Referral = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [spinsGranted, setSpinsGranted] = useState(0);
+  const [wheelSlug, setWheelSlug] = useState('');
 
   useEffect(() => {
     const fetchLink = async () => {
@@ -52,8 +53,9 @@ const Referral = () => {
       const result = typeof data === 'string' ? JSON.parse(data) : data;
       if (result?.success) {
         setSpinsGranted(result.spins || 1);
+        if (result.slug) setWheelSlug(result.slug);
         setSuccess(true);
-        toast.success('Inscrição realizada com sucesso!');
+        toast.success('Giro resgatado com sucesso!');
       } else {
         toast.error(result?.error || 'Erro ao registrar');
       }
@@ -94,9 +96,18 @@ const Referral = () => {
           <p className="text-muted-foreground">
             Você recebeu <span className="text-primary font-bold">{spinsGranted} giro(s)</span> na roleta!
           </p>
-          <p className="text-xs text-muted-foreground">
-            Acesse a roleta para girar agora.
-          </p>
+          {wheelSlug ? (
+            <button
+              onClick={() => navigate(`/${wheelSlug}`)}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition"
+            >
+              🎰 Ir para a Roleta
+            </button>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Acesse a roleta para girar agora.
+            </p>
+          )}
         </div>
       </div>
     );
