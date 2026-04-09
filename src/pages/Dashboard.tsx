@@ -3392,7 +3392,7 @@ const Dashboard = () => {
                   const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
                   const phones = whatsappTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedWhatsappPhones.filter(p => !excludeBulkSent || !bulkSentPhones.has(p));
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
-                  if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                  if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                   setWhatsappSending(true);
                   let sent = 0, errors = 0;
                   const allUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
@@ -3443,7 +3443,7 @@ const Dashboard = () => {
                 <button
                   onClick={async () => {
                     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
-                    if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                    if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                     setWhatsappSending(true);
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups) {
