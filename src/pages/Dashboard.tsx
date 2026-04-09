@@ -994,6 +994,21 @@ const Dashboard = () => {
     setPaidHistoryLoading(false);
   };
 
+  const openReceipt = async (payment: any) => {
+    setReceiptPayment(payment);
+    setReceiptMeta(null);
+    setReceiptLoading(true);
+    if (payment.edpay_transaction_id) {
+      const { data } = await (supabase as any)
+        .from('edpay_transactions')
+        .select('metadata')
+        .eq('edpay_id', payment.edpay_transaction_id)
+        .maybeSingle();
+      setReceiptMeta(data?.metadata || null);
+    }
+    setReceiptLoading(false);
+  };
+
   const fetchPrizePayments = async () => {
     if (!session?.user?.id) return;
     setPrizePaymentsLoading(true);
