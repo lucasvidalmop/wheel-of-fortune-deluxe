@@ -39,15 +39,17 @@ const Referral = () => {
         toast.error('Link inválido ou desativado');
       } else {
         setLinkData(data);
-        if (data.page_config && typeof data.page_config === 'object') {
-          setCfg({ ...defaultPageConfig, ...data.page_config });
-        }
+        // Load page config: individual > default from wheel_configs > defaultPageConfig
         const { data: wcData } = await (supabase as any)
           .from('wheel_configs')
-          .select('slug')
+          .select('slug, config')
           .eq('user_id', data.owner_id)
           .maybeSingle();
         if (wcData?.slug) setWheelSlug(wcData.slug);
+
+        const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
+        const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
+        setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
       }
       setLoading(false);
     };
