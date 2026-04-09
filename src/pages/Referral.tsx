@@ -29,6 +29,13 @@ const Referral = () => {
         toast.error('Link inválido ou desativado');
       } else {
         setLinkData(data);
+        // Pre-fetch operator slug
+        const { data: wcData } = await (supabase as any)
+          .from('wheel_configs')
+          .select('slug')
+          .eq('user_id', data.owner_id)
+          .maybeSingle();
+        if (wcData?.slug) setWheelSlug(wcData.slug);
       }
       setLoading(false);
     };
