@@ -138,7 +138,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay'>('all');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified'>('all');
 
   const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -825,6 +825,17 @@ const Dashboard = () => {
     setShowForm(true);
   };
 
+  const handleToggleQualified = async (user: WheelUser) => {
+    const newType = user.user_type === 'qualified' ? '' : 'qualified';
+    const { error } = await (supabase as any)
+      .from('wheel_users')
+      .update({ user_type: newType })
+      .eq('id', user.id);
+    if (error) { toast.error('Erro ao atualizar status'); return; }
+    toast.success(newType === 'qualified' ? '✅ Jogador qualificado!' : 'Status removido');
+    fetchUsers();
+  };
+
   const fetchPaidHistory = async () => {
     if (!session?.user?.id) return;
     setPaidHistoryLoading(true);
@@ -1281,6 +1292,7 @@ const Dashboard = () => {
       : spinsFilter === 'with' ? u.spins_available >= 1
       : spinsFilter === 'without' ? u.spins_available < 1
       : spinsFilter === 'auto_pay' ? !!u.auto_payment
+      : spinsFilter === 'qualified' ? u.user_type === 'qualified'
       : true;
     return matchesSearch && matchesSpins;
   });
@@ -1579,6 +1591,7 @@ const Dashboard = () => {
                   { value: 'with' as const, label: 'Com giros' },
                   { value: 'without' as const, label: 'Sem giros' },
                   { value: 'auto_pay' as const, label: '💰 Auto Pay' },
+                  { value: 'qualified' as const, label: '✅ Qualificados' },
                 ]).map(opt => (
                   <button
                     key={opt.value}
@@ -1593,6 +1606,7 @@ const Dashboard = () => {
                     {opt.value === 'with' && ` (${users.filter(u => u.spins_available >= 1).length})`}
                     {opt.value === 'without' && ` (${users.filter(u => u.spins_available < 1).length})`}
                     {opt.value === 'auto_pay' && ` (${users.filter(u => u.auto_payment).length})`}
+                    {opt.value === 'qualified' && ` (${users.filter(u => u.user_type === 'qualified').length})`}
                   </button>
                 ))}
                 {spinsFilter === 'auto_pay' && users.filter(u => u.auto_payment).length > 0 && (
@@ -1955,7 +1969,7 @@ const Dashboard = () => {
                             />
                           </td>
                           <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
-                          <td className="px-2 py-2 text-foreground font-medium text-xs truncate max-w-0">{user.name}</td>
+                          <td className="px-2 py-2 text-foreground font-medium text-xs truncate max-w-0">{user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}{user.name}</td>
                           <td className="px-2 py-2 text-muted-foreground text-xs truncate max-w-0">{user.email}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate">{user.phone}</td>
                           <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground truncate">{user.account_id?.slice(0, 8)}...</td>
@@ -1986,6 +2000,13 @@ const Dashboard = () => {
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
                               >
                                 {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                              </button>
+                              <button
+                                onClick={() => handleToggleQualified(user)}
+                                className={`p-1.5 rounded-lg transition border ${user.user_type === 'qualified' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30' : 'bg-white/[0.06] text-muted-foreground hover:bg-emerald-500/15 hover:text-emerald-400 border-white/[0.06]'}`}
+                                title={user.user_type === 'qualified' ? 'Remover qualificação' : 'Marcar como qualificado'}
+                              >
+                                <span className="text-[13px]">✅</span>
                               </button>
                               <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
                                 <Pencil size={13} />
@@ -2033,7 +2054,7 @@ const Dashboard = () => {
                               className="rounded border-white/20 bg-white/[0.05] shrink-0 mt-0.5"
                             />
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">#{index + 1} {user.name}</p>
+                              <p className="text-sm font-medium text-foreground truncate">{user.user_type === 'qualified' && '✅ '}#{index + 1} {user.name}</p>
                               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                             </div>
                           </div>
@@ -2043,6 +2064,13 @@ const Dashboard = () => {
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08]'}`}
                             >
                               {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                            </button>
+                            <button
+                              onClick={() => handleToggleQualified(user)}
+                              className={`p-1.5 rounded-lg transition border ${user.user_type === 'qualified' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-white/[0.06] text-muted-foreground border-white/[0.06]'}`}
+                              title={user.user_type === 'qualified' ? 'Remover qualificação' : 'Qualificar'}
+                            >
+                              <span className="text-[13px]">✅</span>
                             </button>
                             <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground transition border border-white/[0.06]">
                               <Pencil size={13} />
