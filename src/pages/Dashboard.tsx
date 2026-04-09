@@ -7,7 +7,8 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
@@ -352,6 +353,9 @@ const Dashboard = () => {
   const [payingPaymentId, setPayingPaymentId] = useState<string | null>(null);
   const [paidHistory, setPaidHistory] = useState<any[]>([]);
   const [paidHistoryLoading, setPaidHistoryLoading] = useState(false);
+  const [receiptPayment, setReceiptPayment] = useState<any | null>(null);
+  const [receiptMeta, setReceiptMeta] = useState<any | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
@@ -988,6 +992,21 @@ const Dashboard = () => {
       .order('created_at', { ascending: false });
     setPaidHistory(data || []);
     setPaidHistoryLoading(false);
+  };
+
+  const openReceipt = async (payment: any) => {
+    setReceiptPayment(payment);
+    setReceiptMeta(null);
+    setReceiptLoading(true);
+    if (payment.edpay_transaction_id) {
+      const { data } = await (supabase as any)
+        .from('edpay_transactions')
+        .select('metadata')
+        .eq('edpay_id', payment.edpay_transaction_id)
+        .maybeSingle();
+      setReceiptMeta(data?.metadata || null);
+    }
+    setReceiptLoading(false);
   };
 
   const fetchPrizePayments = async () => {
@@ -4835,7 +4854,18 @@ const Dashboard = () => {
                             {p.edpay_transaction_id && (
                               <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
                             )}
-                            <p className="text-[10px] text-muted-foreground">Criado: {new Date(p.created_at).toLocaleString('pt-BR')}</p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-[10px] text-muted-foreground">Criado: {new Date(p.created_at).toLocaleString('pt-BR')}</p>
+                              {isPaid && p.edpay_transaction_id && (
+                                <button
+                                  onClick={() => openReceipt(p)}
+                                  className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors"
+                                >
+                                  <FileText size={12} />
+                                  Comprovante
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -5085,6 +5115,80 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Receipt Dialog */}
+      <Dialog open={!!receiptPayment} onOpenChange={(open) => { if (!open) setReceiptPayment(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText size={18} />
+              Comprovante de Pagamento
+            </DialogTitle>
+          </DialogHeader>
+          {receiptPayment && (
+            <div className="space-y-3 text-sm">
+              <div className="p-4 rounded-xl bg-muted/50 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Nome:</span>
+                  <span className="font-semibold text-foreground">{receiptPayment.user_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">E-mail:</span>
+                  <span className="text-foreground">{receiptPayment.user_email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ID Conta:</span>
+                  <span className="text-foreground">{receiptPayment.account_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Prêmio:</span>
+                  <span className="text-foreground">{receiptPayment.prize}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Valor:</span>
+                  <span className="font-bold text-foreground">R$ {Number(receiptPayment.amount).toFixed(2)}</span>
+                </div>
+                {receiptPayment.pix_key && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Chave PIX:</span>
+                    <span className="text-foreground">{receiptPayment.pix_key} ({receiptPayment.pix_key_type})</span>
+                  </div>
+                )}
+                {receiptPayment.paid_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Pago em:</span>
+                    <span className="text-foreground">{new Date(receiptPayment.paid_at).toLocaleString('pt-BR')}</span>
+                  </div>
+                )}
+                {receiptPayment.edpay_transaction_id && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">TX ID:</span>
+                    <span className="text-foreground font-mono text-xs">{receiptPayment.edpay_transaction_id}</span>
+                  </div>
+                )}
+              </div>
+
+              {receiptLoading && (
+                <div className="text-center py-4">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                </div>
+              )}
+
+              {receiptMeta && !receiptLoading && (
+                <div className="p-4 rounded-xl bg-muted/50 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Dados EdPay</p>
+                  {Object.entries(receiptMeta).map(([key, val]) => (
+                    <div key={key} className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{key}:</span>
+                      <span className="text-foreground max-w-[200px] truncate">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
