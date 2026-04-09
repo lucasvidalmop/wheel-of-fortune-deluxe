@@ -825,6 +825,17 @@ const Dashboard = () => {
     setShowForm(true);
   };
 
+  const handleToggleQualified = async (user: WheelUser) => {
+    const newType = user.user_type === 'qualified' ? '' : 'qualified';
+    const { error } = await (supabase as any)
+      .from('wheel_users')
+      .update({ user_type: newType })
+      .eq('id', user.id);
+    if (error) { toast.error('Erro ao atualizar status'); return; }
+    toast.success(newType === 'qualified' ? '✅ Jogador qualificado!' : 'Status removido');
+    fetchUsers();
+  
+
   const fetchPaidHistory = async () => {
     if (!session?.user?.id) return;
     setPaidHistoryLoading(true);
