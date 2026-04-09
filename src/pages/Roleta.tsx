@@ -555,13 +555,10 @@ const Roleta = () => {
   const fetchPrizeHistory = async () => {
     if (!accountId || !ownerId) return;
     setPrizeHistoryLoading(true);
-    const { data } = await supabase
-      .from('spin_results')
-      .select('*')
-      .eq('account_id', accountId)
-      .eq('owner_id', ownerId)
-      .order('spun_at', { ascending: false })
-      .limit(50);
+    const { data } = await (supabase as any).rpc('get_prize_history', {
+      p_account_id: accountId,
+      p_owner_id: ownerId,
+    });
     setPrizeHistory(data || []);
     setPrizeHistoryLoading(false);
   };
