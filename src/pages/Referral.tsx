@@ -185,11 +185,6 @@ const Referral = () => {
           <p className="text-sm text-muted-foreground" style={subtitleStyle}>
             {cfg.subtitleText || <>Informe seus dados para resgatar <span className="font-bold" style={{ color: cfg.btnBgColor || undefined }}>{linkData.spins_per_registration} giro(s)</span></>}
           </p>
-          {cfg.showCounter && linkData.max_registrations && (
-            <p className="text-xs text-muted-foreground/70">
-              {linkData.registrations_count}/{linkData.max_registrations} resgates realizados
-            </p>
-          )}
         </div>
 
         <div className="space-y-3">
