@@ -6,7 +6,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban } from 'lucide-react';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -124,6 +124,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay'>('all');
 
+  const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
@@ -1521,24 +1522,67 @@ const Dashboard = () => {
                 ))}
                 {spinsFilter === 'auto_pay' && users.filter(u => u.auto_payment).length > 0 && (
                   <button
-                    onClick={async () => {
-                      const autoPayUsers = users.filter(u => u.auto_payment);
-                      if (!confirm(`Desativar pagamento automático de ${autoPayUsers.length} inscrito(s)?`)) return;
-                      const ids = autoPayUsers.map(u => u.id);
-                      const { error } = await (supabase as any)
-                        .from('wheel_users')
-                        .update({ auto_payment: false, updated_at: new Date().toISOString() })
-                        .in('id', ids);
-                      if (error) { toast.error('Erro ao desativar auto pay'); return; }
-                      toast.success(`Auto pay desativado para ${ids.length} inscrito(s)!`);
-                      fetchUsers();
-                    }}
+                    onClick={() => setShowDisableAutoPayModal(true)}
                     className="px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/20 text-destructive border border-destructive/30 hover:bg-destructive/30 transition-all"
                   >
                     🚫 Desativar Todos
                   </button>
                 )}
               </div>
+
+              {/* Disable Auto Pay Confirmation Modal */}
+              {showDisableAutoPayModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md" onClick={() => setShowDisableAutoPayModal(false)}>
+                  <div
+                    className="w-full max-w-sm mx-4 rounded-2xl border border-white/[0.1] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden"
+                    style={{ background: `linear-gradient(to bottom, var(--theme-modal-bg, #1a1a2e), color-mix(in srgb, var(--theme-modal-bg, #1a1a2e) 85%, black))` }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <div className="px-6 pt-6 pb-4 border-b border-white/[0.06]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-destructive/15 flex items-center justify-center">
+                          <Ban size={18} className="text-destructive" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground">Desativar Auto Pay</h3>
+                          <p className="text-xs text-muted-foreground">Esta ação não pode ser desfeita</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-6 py-5">
+                      <p className="text-sm text-muted-foreground">
+                        Desativar pagamento automático de <span className="font-bold text-foreground">{users.filter(u => u.auto_payment).length}</span> inscrito(s)?
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-2">Todos os inscritos com auto pay ativado terão essa opção desativada.</p>
+                    </div>
+                    <div className="flex gap-3 px-6 pb-6">
+                      <button
+                        onClick={() => setShowDisableAutoPayModal(false)}
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const autoPayUsers = users.filter(u => u.auto_payment);
+                          const ids = autoPayUsers.map(u => u.id);
+                          const { error } = await (supabase as any)
+                            .from('wheel_users')
+                            .update({ auto_payment: false, updated_at: new Date().toISOString() })
+                            .in('id', ids);
+                          setShowDisableAutoPayModal(false);
+                          if (error) { toast.error('Erro ao desativar auto pay'); return; }
+                          toast.success(`Auto pay desativado para ${ids.length} inscrito(s)!`);
+                          fetchUsers();
+                        }}
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:brightness-110 transition shadow-lg shadow-destructive/20"
+                      >
+                        🚫 Desativar Todos
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* User form modal */}
               {showForm && (
