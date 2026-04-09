@@ -3332,6 +3332,7 @@ const Dashboard = () => {
                               {link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição
                               {link.fixed_prize_segments && (link.fixed_prize_segments as number[]).length > 0 ? ` • 🎯 ${(link.fixed_prize_segments as number[]).map((s: number) => wheelConfig.segments[s]?.title).filter(Boolean).join(', ')}` : link.fixed_prize_segment != null && wheelConfig.segments[link.fixed_prize_segment] ? ` • 🎯 ${wheelConfig.segments[link.fixed_prize_segment].title}` : ''}
                               {link.auto_payment ? ' • 💳 Auto' : ''}
+                              {link.expires_at ? ` • ⏳ ${new Date(link.expires_at).toLocaleString('pt-BR')}${new Date(link.expires_at) <= new Date() ? ' (expirado)' : ''}` : ''}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
