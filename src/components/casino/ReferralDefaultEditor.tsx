@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { ReferralPageConfig, defaultPageConfig } from './ReferralPageEditor';
+import ReferralPagePreview from './ReferralPagePreview';
 import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save } from 'lucide-react';
 
 interface Props {

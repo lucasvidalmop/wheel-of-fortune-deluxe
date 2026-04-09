@@ -237,7 +237,7 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
             <ColorField label="Cor do texto do botão" value={config.btnTextColor} onChange={v => update({ btnTextColor: v })} />
           </Section>
 
-          {/* ═══ ACTIONS ═══ */}
+          <ReferralPagePreview config={config} linkLabel={linkLabel} />
           <div className="flex gap-3">
             <button onClick={handleReset} className="flex-1 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2">
               <RotateCcw size={15} /> Resetar
