@@ -28,13 +28,16 @@ serve(async (req) => {
       );
     }
 
-    // Clean phone number - ensure format for Brazil
-    let cleanPhone = recipientPhone.replace(/\D/g, "");
-    if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) {
-      cleanPhone = cleanPhone.slice(1);
-    }
-    if (!cleanPhone.startsWith("55")) {
-      cleanPhone = "55" + cleanPhone;
+    // Clean phone number - if it's a group JID (@g.us), use as-is
+    let cleanPhone = recipientPhone;
+    if (!recipientPhone.includes('@g.us')) {
+      cleanPhone = recipientPhone.replace(/\D/g, "");
+      if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) {
+        cleanPhone = cleanPhone.slice(1);
+      }
+      if (!cleanPhone.startsWith("55")) {
+        cleanPhone = "55" + cleanPhone;
+      }
     }
 
     // Call Evolution API with timeout
