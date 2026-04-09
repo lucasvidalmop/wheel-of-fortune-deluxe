@@ -1981,8 +1981,8 @@ const Dashboard = () => {
                               )}
                             </td>
                           )}
-                          <td className="px-1 py-2">
-                            <div className="flex items-center justify-center gap-1.5">
+                          <td className="px-1 py-3 align-middle">
+                            <div className="flex items-center justify-center gap-1.5 min-h-[40px]">
                               <button
                                 onClick={() => handleGrantSpin(user)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
