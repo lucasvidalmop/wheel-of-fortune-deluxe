@@ -215,8 +215,34 @@ const Dashboard = () => {
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [scheduledLoading, setScheduledLoading] = useState(false);
-  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly' });
+  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false });
   const [schedSaving, setSchedSaving] = useState(false);
+  const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [schedMediaUploading, setSchedMediaUploading] = useState(false);
+  const schedMediaInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSchedMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSchedMediaUploading(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      let mediatype = 'document';
+      if (['jpg','jpeg','png','gif','webp'].includes(ext)) mediatype = 'image';
+      else if (['mp4','avi','mov','mkv','3gp'].includes(ext)) mediatype = 'video';
+      else if (['mp3','ogg','opus','wav','m4a','aac'].includes(ext)) mediatype = 'audio';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setSchedMedia({ url: urlData.publicUrl, mediatype, mimetype: file.type, fileName: file.name });
+      toast.success('Mídia anexada ao agendamento!');
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setSchedMediaUploading(false);
+    if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
+  };
 
   const fetchScheduledMessages = async () => {
     if (!session?.user?.id) return;
@@ -227,7 +253,7 @@ const Dashboard = () => {
   };
 
   const saveScheduledMessage = async () => {
-    if (!schedForm.message.trim()) { toast.error('Digite a mensagem'); return; }
+    if (!schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
     if (!schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
     if (!schedForm.date) { toast.error('Selecione a data'); return; }
     setSchedSaving(true);
@@ -246,12 +272,18 @@ const Dashboard = () => {
       next_run_at: isoDate,
       recurrence: schedForm.recurrence,
       status: 'pending',
+      media_url: schedMedia?.url || null,
+      media_type: schedMedia?.mediatype || null,
+      media_mimetype: schedMedia?.mimetype || null,
+      media_filename: schedMedia?.fileName || null,
+      mention_all: schedForm.mentionAll,
     } as any);
 
     setSchedSaving(false);
     if (error) { toast.error('Erro ao agendar: ' + error.message); return; }
     toast.success('Mensagem agendada com sucesso!');
-    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none' });
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false });
+    setSchedMedia(null);
     fetchScheduledMessages();
   };
 
