@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Upload, RotateCcw, Palette, Image, Type, MousePointer } from 'lucide-react';
+import ReferralPagePreview from './ReferralPagePreview';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
