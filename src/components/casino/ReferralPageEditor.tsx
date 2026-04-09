@@ -29,6 +29,8 @@ export interface ReferralPageConfig {
   successTitle: string;
   successSubtitle: string;
   successBtnText: string;
+  successBtnBgColor: string;
+  successBtnTextColor: string;
   titlePrefix: string;
   showCounter: boolean;
   // Limit reached screen
@@ -65,6 +67,8 @@ export const defaultPageConfig: ReferralPageConfig = {
   successTitle: 'Giro Liberado!',
   successSubtitle: '',
   successBtnText: '🎰 Ir para a Roleta',
+  successBtnBgColor: '',
+  successBtnTextColor: '',
   titlePrefix: '',
   showCounter: true,
   limitEmoji: '⏰',
@@ -247,9 +251,15 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
           </Section>
 
           {/* ═══ BOTÃO ═══ */}
-          <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão">
+          <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão Principal">
             <ColorField label="Cor do botão" value={config.btnBgColor} onChange={v => update({ btnBgColor: v })} />
             <ColorField label="Cor do texto do botão" value={config.btnTextColor} onChange={v => update({ btnTextColor: v })} />
+          </Section>
+
+          {/* ═══ BOTÃO SUCESSO ═══ */}
+          <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão de Sucesso">
+            <ColorField label="Cor do botão" value={config.successBtnBgColor} onChange={v => update({ successBtnBgColor: v })} />
+            <ColorField label="Cor do texto" value={config.successBtnTextColor} onChange={v => update({ successBtnTextColor: v })} />
           </Section>
 
           {/* ═══ TELA DE LIMITE ═══ */}

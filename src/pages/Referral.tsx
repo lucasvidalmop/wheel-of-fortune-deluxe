@@ -170,8 +170,11 @@ const Referral = () => {
           {wheelSlug ? (
             <button
               onClick={() => navigate(`/${wheelSlug}`)}
-              className={`w-full py-3 rounded-xl font-bold text-sm hover:brightness-110 transition ${!cfg.btnBgColor ? 'bg-primary text-primary-foreground' : ''}`}
-              style={btnStyle}
+              className={`w-full py-3 rounded-xl font-bold text-sm hover:brightness-110 transition ${!cfg.successBtnBgColor && !cfg.btnBgColor ? 'bg-primary text-primary-foreground' : ''}`}
+              style={{
+                ...(cfg.successBtnBgColor ? { backgroundColor: cfg.successBtnBgColor } : cfg.btnBgColor ? { backgroundColor: cfg.btnBgColor } : {}),
+                ...(cfg.successBtnTextColor ? { color: cfg.successBtnTextColor } : cfg.btnTextColor ? { color: cfg.btnTextColor } : {}),
+              }}
             >
               {cfg.successBtnText || '🎰 Ir para a Roleta'}
             </button>
