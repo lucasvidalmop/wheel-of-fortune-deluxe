@@ -10,6 +10,7 @@ interface Props {
 const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 20, y: 80 });
   const dragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
