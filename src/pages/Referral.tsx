@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ReferralPageConfig, defaultPageConfig } from '@/components/casino/ReferralPageEditor';
 
 const formatCPF = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -23,6 +24,7 @@ const Referral = () => {
   const [success, setSuccess] = useState(false);
   const [spinsGranted, setSpinsGranted] = useState(0);
   const [wheelSlug, setWheelSlug] = useState('');
+  const [cfg, setCfg] = useState<ReferralPageConfig>(defaultPageConfig);
 
   useEffect(() => {
     const fetchLink = async () => {
@@ -37,6 +39,9 @@ const Referral = () => {
         toast.error('Link inválido ou desativado');
       } else {
         setLinkData(data);
+        if (data.page_config && typeof data.page_config === 'object') {
+          setCfg({ ...defaultPageConfig, ...data.page_config });
+        }
         const { data: wcData } = await (supabase as any)
           .from('wheel_configs')
           .select('slug')
@@ -82,6 +87,39 @@ const Referral = () => {
     setSubmitting(false);
   };
 
+  // Styled helpers
+  const bgStyle: React.CSSProperties = {
+    background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`,
+    ...(cfg.bgImage ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
+  };
+
+  const cardStyle: React.CSSProperties = {
+    backgroundColor: cfg.cardBgColor || 'rgba(255,255,255,0.04)',
+    borderColor: cfg.cardBorderColor || 'rgba(255,255,255,0.08)',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: cfg.inputBgColor || 'rgba(255,255,255,0.04)',
+    borderColor: cfg.inputBorderColor || 'rgba(255,255,255,0.1)',
+    color: cfg.inputTextColor || undefined,
+  };
+
+  const btnStyle: React.CSSProperties = {
+    ...(cfg.btnBgColor ? { backgroundColor: cfg.btnBgColor } : {}),
+    ...(cfg.btnTextColor ? { color: cfg.btnTextColor } : {}),
+  };
+
+  const titleStyle: React.CSSProperties = cfg.titleColor ? { color: cfg.titleColor } : {};
+  const subtitleStyle: React.CSSProperties = cfg.subtitleColor ? { color: cfg.subtitleColor } : {};
+  const labelStyle: React.CSSProperties = cfg.labelColor ? { color: cfg.labelColor } : {};
+
+  const icon = cfg.iconUrl
+    ? <img src={cfg.iconUrl} alt="icon" className="w-16 h-16 rounded-xl object-cover mx-auto" />
+    : <div className="text-4xl">{cfg.iconEmoji || '🎰'}</div>;
+
+  const titleText = cfg.titleText || linkData?.label || 'Resgatar Giro';
+  const displayTitle = cfg.titlePrefix ? `${cfg.titlePrefix} ${titleText}` : titleText;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -104,25 +142,24 @@ const Referral = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
-        <div className="relative z-10 text-center space-y-6 max-w-sm mx-4 rounded-2xl p-8 border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
+        {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
+        <div className="relative z-10 text-center space-y-6 max-w-sm mx-4 rounded-2xl p-8 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]" style={cardStyle}>
           <div className="text-6xl animate-bounce">🎉</div>
-          <h1 className="text-2xl font-bold text-foreground">Giro Liberado!</h1>
-          <p className="text-muted-foreground">
-            Você recebeu <span className="text-primary font-bold">{spinsGranted} giro(s)</span> na roleta!
+          <h1 className="text-2xl font-bold text-foreground" style={titleStyle}>{cfg.successTitle || 'Giro Liberado!'}</h1>
+          <p className="text-muted-foreground" style={subtitleStyle}>
+            {cfg.successSubtitle || <>Você recebeu <span className="font-bold" style={{ color: cfg.btnBgColor || undefined }}>{spinsGranted} giro(s)</span> na roleta!</>}
           </p>
           {wheelSlug ? (
             <button
               onClick={() => navigate(`/${wheelSlug}`)}
-              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition"
+              className={`w-full py-3 rounded-xl font-bold text-sm hover:brightness-110 transition ${!cfg.btnBgColor ? 'bg-primary text-primary-foreground' : ''}`}
+              style={btnStyle}
             >
-              🎰 Ir para a Roleta
+              {cfg.successBtnText || '🎰 Ir para a Roleta'}
             </button>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              Acesse a roleta para girar agora.
-            </p>
+            <p className="text-xs text-muted-foreground">Acesse a roleta para girar agora.</p>
           )}
         </div>
       </div>
@@ -130,22 +167,23 @@ const Referral = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
+      {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
 
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 w-full max-w-sm mx-4 rounded-2xl p-6 space-y-5 border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+        className="relative z-10 w-full max-w-sm mx-4 rounded-2xl p-6 space-y-5 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+        style={cardStyle}
       >
         <div className="text-center space-y-2">
-          <div className="text-4xl">🎰</div>
-          <h1 className="text-xl font-bold text-foreground">
-            {linkData.label || 'Resgatar Giro'}
+          {icon}
+          <h1 className="text-xl font-bold text-foreground" style={titleStyle}>
+            {displayTitle}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Informe seus dados para resgatar <span className="text-primary font-bold">{linkData.spins_per_registration} giro(s)</span>
+          <p className="text-sm text-muted-foreground" style={subtitleStyle}>
+            {cfg.subtitleText || <>Informe seus dados para resgatar <span className="font-bold" style={{ color: cfg.btnBgColor || undefined }}>{linkData.spins_per_registration} giro(s)</span></>}
           </p>
-          {linkData.max_registrations && (
+          {cfg.showCounter && linkData.max_registrations && (
             <p className="text-xs text-muted-foreground/70">
               {linkData.registrations_count}/{linkData.max_registrations} resgates realizados
             </p>
@@ -154,48 +192,40 @@ const Referral = () => {
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">E-mail <span className="text-destructive">*</span></label>
+            <label className="block text-xs font-medium mb-1" style={labelStyle}>E-mail <span className="text-destructive">*</span></label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              className="w-full px-4 py-3 rounded-xl border border-white/[0.1] bg-white/[0.04] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+              type="email" value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="seu@email.com" required
+              className="w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
+              style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">ID da Conta <span className="text-destructive">*</span></label>
+            <label className="block text-xs font-medium mb-1" style={labelStyle}>ID da Conta <span className="text-destructive">*</span></label>
             <input
-              type="text"
-              value={accountId}
-              onChange={e => setAccountId(e.target.value)}
-              placeholder="Seu ID"
-              required
-              className="w-full px-4 py-3 rounded-xl border border-white/[0.1] bg-white/[0.04] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+              type="text" value={accountId} onChange={e => setAccountId(e.target.value)}
+              placeholder="Seu ID" required
+              className="w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
+              style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">CPF <span className="text-destructive">*</span></label>
+            <label className="block text-xs font-medium mb-1" style={labelStyle}>CPF <span className="text-destructive">*</span></label>
             <input
-              type="text"
-              value={cpf}
-              onChange={e => setCpf(formatCPF(e.target.value))}
-              placeholder="000.000.000-00"
-              required
-              inputMode="numeric"
-              maxLength={14}
-              className="w-full px-4 py-3 rounded-xl border border-white/[0.1] bg-white/[0.04] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+              type="text" value={cpf} onChange={e => setCpf(formatCPF(e.target.value))}
+              placeholder="000.000.000-00" required inputMode="numeric" maxLength={14}
+              className="w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
+              style={inputStyle}
             />
           </div>
         </div>
 
         <button
-          type="submit"
-          disabled={submitting}
-          className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          type="submit" disabled={submitting}
+          className={`w-full py-3 rounded-xl font-bold text-sm hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed ${!cfg.btnBgColor ? 'bg-primary text-primary-foreground' : ''}`}
+          style={btnStyle}
         >
-          {submitting ? 'Verificando...' : '🎯 Resgatar Giro'}
+          {submitting ? 'Verificando...' : (cfg.btnText || '🎯 Resgatar Giro')}
         </button>
       </form>
     </div>
