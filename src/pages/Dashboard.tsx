@@ -122,7 +122,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without'>('all');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay'>('all');
 
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
@@ -1207,7 +1207,9 @@ const Dashboard = () => {
       u.account_id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSpins = spinsFilter === 'all' ? true
       : spinsFilter === 'with' ? u.spins_available >= 1
-      : u.spins_available < 1;
+      : spinsFilter === 'without' ? u.spins_available < 1
+      : spinsFilter === 'auto_pay' ? !!u.auto_payment
+      : true;
     return matchesSearch && matchesSpins;
   });
 
@@ -1495,12 +1497,12 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Spins filter */}
-              <div className="flex gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 {([
                   { value: 'all' as const, label: 'Todos' },
                   { value: 'with' as const, label: 'Com giros' },
                   { value: 'without' as const, label: 'Sem giros' },
+                  { value: 'auto_pay' as const, label: '💰 Auto Pay' },
                 ]).map(opt => (
                   <button
                     key={opt.value}
@@ -1514,6 +1516,7 @@ const Dashboard = () => {
                     {opt.label}
                     {opt.value === 'with' && ` (${users.filter(u => u.spins_available >= 1).length})`}
                     {opt.value === 'without' && ` (${users.filter(u => u.spins_available < 1).length})`}
+                    {opt.value === 'auto_pay' && ` (${users.filter(u => u.auto_payment).length})`}
                   </button>
                 ))}
               </div>
