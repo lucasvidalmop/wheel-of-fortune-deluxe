@@ -1519,6 +1519,25 @@ const Dashboard = () => {
                     {opt.value === 'auto_pay' && ` (${users.filter(u => u.auto_payment).length})`}
                   </button>
                 ))}
+                {spinsFilter === 'auto_pay' && users.filter(u => u.auto_payment).length > 0 && (
+                  <button
+                    onClick={async () => {
+                      const autoPayUsers = users.filter(u => u.auto_payment);
+                      if (!confirm(`Desativar pagamento automático de ${autoPayUsers.length} inscrito(s)?`)) return;
+                      const ids = autoPayUsers.map(u => u.id);
+                      const { error } = await (supabase as any)
+                        .from('wheel_users')
+                        .update({ auto_payment: false, updated_at: new Date().toISOString() })
+                        .in('id', ids);
+                      if (error) { toast.error('Erro ao desativar auto pay'); return; }
+                      toast.success(`Auto pay desativado para ${ids.length} inscrito(s)!`);
+                      fetchUsers();
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/20 text-destructive border border-destructive/30 hover:bg-destructive/30 transition-all"
+                  >
+                    🚫 Desativar Todos
+                  </button>
+                )}
               </div>
 
               {/* User form modal */}
