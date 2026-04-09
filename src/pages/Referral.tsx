@@ -118,6 +118,11 @@ const Referral = () => {
           <p className="text-sm text-muted-foreground">
             Preencha seus dados para ganhar <span className="text-primary font-bold">{linkData.spins_per_registration} giro(s)</span>
           </p>
+          {linkData.max_registrations && (
+            <p className="text-xs text-muted-foreground/70">
+              {linkData.registrations_count}/{linkData.max_registrations} vagas preenchidas
+            </p>
+          )}
         </div>
 
         <div className="space-y-3">
