@@ -6,7 +6,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
@@ -260,6 +260,37 @@ const Dashboard = () => {
     toast.success('Agendamento cancelado');
     fetchScheduledMessages();
   };
+
+  // Media attachment state
+  const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [whatsappMediaUploading, setWhatsappMediaUploading] = useState(false);
+  const [whatsappMentionAll, setWhatsappMentionAll] = useState(false);
+  const whatsappMediaInputRef = useRef<HTMLInputElement>(null);
+
+  const handleWhatsappMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setWhatsappMediaUploading(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      let mediatype = 'document';
+      if (['jpg','jpeg','png','gif','webp'].includes(ext)) mediatype = 'image';
+      else if (['mp4','avi','mov','mkv','3gp'].includes(ext)) mediatype = 'video';
+      else if (['mp3','ogg','opus','wav','m4a','aac'].includes(ext)) mediatype = 'audio';
+
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setWhatsappMedia({ url: urlData.publicUrl, mediatype, mimetype: file.type, fileName: file.name });
+      toast.success(`${mediatype === 'image' ? 'Imagem' : mediatype === 'video' ? 'Vídeo' : mediatype === 'audio' ? 'Áudio' : 'Arquivo'} anexado!`);
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setWhatsappMediaUploading(false);
+    if (whatsappMediaInputRef.current) whatsappMediaInputRef.current.value = '';
+  };
+
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
@@ -3315,7 +3346,32 @@ const Dashboard = () => {
 
               <GlassCard className="p-5 space-y-3">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><MessageCircle size={16} className="text-green-400" /> Mensagem</h3>
-                <textarea value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)} rows={4} placeholder="Digite a mensagem..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                <textarea value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)} rows={4} placeholder="Digite a mensagem (ou legenda da mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+
+                {/* Media attachment */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input ref={whatsappMediaInputRef} type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={handleWhatsappMediaUpload} />
+                    <button onClick={() => whatsappMediaInputRef.current?.click()} disabled={whatsappMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground text-xs transition">
+                      {whatsappMediaUploading ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
+                      {whatsappMediaUploading ? 'Enviando...' : 'Anexar mídia'}
+                    </button>
+                    {whatsappMedia && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-xs text-primary">
+                        {whatsappMedia.mediatype === 'image' ? <Image size={14} /> : whatsappMedia.mediatype === 'video' ? <Film size={14} /> : whatsappMedia.mediatype === 'audio' ? <Mic size={14} /> : <Paperclip size={14} />}
+                        <span className="truncate max-w-[150px]">{whatsappMedia.fileName}</span>
+                        <button onClick={() => setWhatsappMedia(null)} className="text-red-400 hover:text-red-300"><X size={14} /></button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mention all toggle */}
+                  <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                    <input type="checkbox" checked={whatsappMentionAll} onChange={e => setWhatsappMentionAll(e.target.checked)} className="rounded border-white/20 bg-white/[0.04]" />
+                    <span className="text-muted-foreground">Marcar todos do grupo (@todos)</span>
+                  </label>
+                </div>
+
                 <div className="flex items-center gap-3 pt-1">
                   <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
                   <input
@@ -3336,7 +3392,7 @@ const Dashboard = () => {
                   const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
                   const phones = whatsappTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedWhatsappPhones.filter(p => !excludeBulkSent || !bulkSentPhones.has(p));
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
-                  if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                  if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                   setWhatsappSending(true);
                   let sent = 0, errors = 0;
                   const allUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
@@ -3344,7 +3400,7 @@ const Dashboard = () => {
                     const phone = phones[i];
                     const matchedUser = allUsers.find(u => u.phone === phone);
                     try {
-                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance } });
+                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined } });
                       const hasError = !!error || !!respData?.error;
                       const errorMsg = error?.message || respData?.error || null;
                       await (supabase as any).from('whatsapp_message_log').insert({
@@ -3387,13 +3443,13 @@ const Dashboard = () => {
                 <button
                   onClick={async () => {
                     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
-                    if (!whatsappMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                    if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                     setWhatsappSending(true);
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups) {
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
-                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance }
+                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
                         if (hasError) errors++; else sent++;

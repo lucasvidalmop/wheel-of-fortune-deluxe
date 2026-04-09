@@ -12,11 +12,18 @@ serve(async (req) => {
   }
 
   try {
-    const { recipientPhone, message, evolutionApiUrl, evolutionApiKey, evolutionInstance } = await req.json();
+    const { recipientPhone, message, evolutionApiUrl, evolutionApiKey, evolutionInstance, media, mentionsEveryOne } = await req.json();
 
-    if (!recipientPhone || !message) {
+    if (!recipientPhone) {
       return new Response(
-        JSON.stringify({ error: "recipientPhone e message são obrigatórios" }),
+        JSON.stringify({ error: "recipientPhone é obrigatório" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!media && !message) {
+      return new Response(
+        JSON.stringify({ error: "message ou media são obrigatórios" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -40,12 +47,38 @@ serve(async (req) => {
       }
     }
 
-    // Call Evolution API with timeout
-    const apiUrl = evolutionApiUrl.replace(/\/+$/, "");
-    const url = `${apiUrl}/message/sendText/${evolutionInstance}`;
-
+    const apiUrl = evolutionApiUrl.replace(/\/+$/, "").replace(/\/manager$/i, "");
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    let url: string;
+    let body: Record<string, any>;
+
+    if (media && media.url) {
+      // Send media message (image, video, audio, document)
+      url = `${apiUrl}/message/sendMedia/${evolutionInstance}`;
+      body = {
+        number: cleanPhone,
+        mediatype: media.mediatype || "image", // image, video, audio, document
+        mimetype: media.mimetype || "image/jpeg",
+        caption: message || "",
+        media: media.url,
+        fileName: media.fileName || "file",
+      };
+      if (mentionsEveryOne && cleanPhone.includes("@g.us")) {
+        body.mentionsEveryOne = true;
+      }
+    } else {
+      // Send text message
+      url = `${apiUrl}/message/sendText/${evolutionInstance}`;
+      body = {
+        number: cleanPhone,
+        text: message,
+      };
+      if (mentionsEveryOne && cleanPhone.includes("@g.us")) {
+        body.mentionsEveryOne = true;
+      }
+    }
 
     let response;
     try {
@@ -55,10 +88,7 @@ serve(async (req) => {
           "apikey": evolutionApiKey,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          number: cleanPhone,
-          text: message,
-        }),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
     } catch (fetchError) {
