@@ -1,0 +1,1 @@
+CREATE POLICY "Anon can read slug from wheel_configs" ON public.wheel_configs FOR SELECT TO anon USING (true);
