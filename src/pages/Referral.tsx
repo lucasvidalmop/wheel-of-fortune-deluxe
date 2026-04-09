@@ -90,12 +90,12 @@ const Referral = () => {
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
         <div className="relative z-10 text-center space-y-6 max-w-sm mx-4 rounded-2xl p-8 border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
           <div className="text-6xl animate-bounce">🎉</div>
-          <h1 className="text-2xl font-bold text-foreground">Inscrição Confirmada!</h1>
+          <h1 className="text-2xl font-bold text-foreground">Giro Liberado!</h1>
           <p className="text-muted-foreground">
             Você recebeu <span className="text-primary font-bold">{spinsGranted} giro(s)</span> na roleta!
           </p>
           <p className="text-xs text-muted-foreground">
-            Aguarde a liberação do operador para girar a roleta.
+            Acesse a roleta para girar agora.
           </p>
         </div>
       </div>
@@ -113,14 +113,14 @@ const Referral = () => {
         <div className="text-center space-y-2">
           <div className="text-4xl">🎰</div>
           <h1 className="text-xl font-bold text-foreground">
-            {linkData.label || 'Inscrição na Roleta'}
+            {linkData.label || 'Resgatar Giro'}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Preencha seus dados para ganhar <span className="text-primary font-bold">{linkData.spins_per_registration} giro(s)</span>
+            Informe seus dados para resgatar <span className="text-primary font-bold">{linkData.spins_per_registration} giro(s)</span>
           </p>
           {linkData.max_registrations && (
             <p className="text-xs text-muted-foreground/70">
-              {linkData.registrations_count}/{linkData.max_registrations} vagas preenchidas
+              {linkData.registrations_count}/{linkData.max_registrations} resgates realizados
             </p>
           )}
         </div>
@@ -155,7 +155,7 @@ const Referral = () => {
           disabled={submitting}
           className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? 'Registrando...' : '🎯 Inscrever-se'}
+          {submitting ? 'Verificando...' : '🎯 Resgatar Giro'}
         </button>
       </form>
     </div>
