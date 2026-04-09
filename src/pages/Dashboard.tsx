@@ -3305,7 +3305,11 @@ const Dashboard = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-bold text-foreground">{link.label || 'Sem nome'}</p>
-                            <p className="text-[10px] text-muted-foreground">{link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição
+                              {link.fixed_prize_segment != null && wheelConfig.segments[link.fixed_prize_segment] ? ` • 🎯 ${wheelConfig.segments[link.fixed_prize_segment].title}` : ''}
+                              {link.auto_payment ? ' • 💳 Auto' : ''}
+                            </p>
                           </div>
                           <div className="flex items-center gap-2">
                             {hasCustomStyle && (
