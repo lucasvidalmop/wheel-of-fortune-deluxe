@@ -141,11 +141,11 @@ const ReferralPagePreview = ({ config: cfg, linkLabel }: Props) => {
               </div>
 
               <div className="space-y-1.5">
-                {['E-mail', 'ID da Conta', 'CPF'].map(label => (
+                {['E-mail', 'ID da Conta'].map(label => (
                   <div key={label}>
                     <label className="block text-[8px] font-medium mb-0.5" style={labelStyle}>{label} *</label>
                     <div className="w-full px-2 py-1 rounded border text-[9px]" style={inputStyle}>
-                      <span style={{ opacity: 0.35 }}>{label === 'CPF' ? '000.000.000-00' : label === 'E-mail' ? 'seu@email.com' : 'Seu ID'}</span>
+                      <span style={{ opacity: 0.35 }}>{label === 'E-mail' ? 'seu@email.com' : 'Seu ID'}</span>
                     </div>
                   </div>
                 ))}
