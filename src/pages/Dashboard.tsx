@@ -3736,7 +3736,10 @@ const Dashboard = () => {
                               <div className="flex justify-between items-center text-muted-foreground">
                                 <span>📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleString('pt-BR')} {m.recurrence !== 'none' && `• 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
                                 {m.status === 'pending' && (
-                                  <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
+                                  <div className="flex items-center gap-2">
+                                    <button onClick={() => startEditSchedule(m)} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><Pencil size={12} /> Editar</button>
+                                    <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
+                                  </div>
                                 )}
                               </div>
                             </div>
