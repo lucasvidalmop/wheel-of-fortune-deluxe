@@ -3610,63 +3610,6 @@ const Dashboard = () => {
                   )}
                 </GlassCard>
 
-                {/* Notificação WhatsApp de Pagamento Automático */}
-                <GlassCard className="p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                        <MessageCircle size={20} className="text-green-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-foreground">Notificação de Pagamentos</h3>
-                        <p className="text-xs text-muted-foreground">Receba no WhatsApp quando qualquer prêmio for pago (automático ou manual)</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setNotifyAutoPaymentEnabled(!notifyAutoPaymentEnabled)}
-                      className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyAutoPaymentEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' : 'bg-white/[0.1]'}`}
-                    >
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyAutoPaymentEnabled ? 'left-[26px]' : 'left-1'}`} />
-                    </button>
-                  </div>
-
-                  {notifyAutoPaymentEnabled && (
-                    <div className="space-y-3 pt-2 border-t border-white/[0.06]">
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Seu número WhatsApp (para receber notificações)</label>
-                        <input type="text" value={notifyWhatsappPhone} onChange={e => setNotifyWhatsappPhone(e.target.value)} placeholder="5511999999999" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">URL da API Evolution (Notificações)</label>
-                        <input type="text" value={notifyEvolutionApiUrl} onChange={e => setNotifyEvolutionApiUrl(e.target.value)} placeholder="https://sua-api.com" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">API Key (Notificações)</label>
-                        <div className="relative">
-                          <input type={showNotifySecret ? 'text' : 'password'} value={notifyEvolutionApiKey} onChange={e => setNotifyEvolutionApiKey(e.target.value)} placeholder="sua-api-key" className="w-full px-4 py-2.5 pr-12 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                          <button type="button" onClick={() => setShowNotifySecret(!showNotifySecret)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"><Eye size={16} /></button>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Nome da Instância (Notificações)</label>
-                        <input type="text" value={notifyEvolutionInstance} onChange={e => setNotifyEvolutionInstance(e.target.value)} placeholder="minha-instancia-notif" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                      </div>
-
-                      {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhone ? (
-                        <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                          <span className="text-xs font-medium text-emerald-400">Notificações de pagamento ativas</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                          <div className="w-2 h-2 rounded-full bg-amber-400" />
-                          <span className="text-xs font-medium text-amber-400">Preencha todos os campos para ativar as notificações</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </GlassCard>
               </>
               )}
 
