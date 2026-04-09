@@ -460,6 +460,7 @@ const Dashboard = () => {
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
+    setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -623,6 +624,7 @@ const Dashboard = () => {
     notifyPendingPaymentEnabled,
     notifyGroupJid,
     notifyGroupName,
+    notifySelectedGroups,
   ]);
 
   useEffect(() => {
