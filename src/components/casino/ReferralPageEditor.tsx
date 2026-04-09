@@ -252,12 +252,14 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
 
           {/* ═══ BOTÃO ═══ */}
           <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão Principal">
+            <TextField label="Texto do botão" value={config.btnText} onChange={v => update({ btnText: v })} placeholder="🎯 Resgatar Giro" />
             <ColorField label="Cor do botão" value={config.btnBgColor} onChange={v => update({ btnBgColor: v })} />
             <ColorField label="Cor do texto do botão" value={config.btnTextColor} onChange={v => update({ btnTextColor: v })} />
           </Section>
 
           {/* ═══ BOTÃO SUCESSO ═══ */}
           <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão de Sucesso">
+            <TextField label="Texto do botão" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="🎰 Ir para a Roleta" />
             <ColorField label="Cor do botão" value={config.successBtnBgColor} onChange={v => update({ successBtnBgColor: v })} />
             <ColorField label="Cor do texto" value={config.successBtnTextColor} onChange={v => update({ successBtnTextColor: v })} />
           </Section>
