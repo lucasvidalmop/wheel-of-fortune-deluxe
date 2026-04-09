@@ -603,6 +603,8 @@ const Dashboard = () => {
     notifyEvolutionInstance,
     notifyWhatsappPhone,
     notifyAutoPaymentEnabled,
+    notifyReferralEnabled,
+    notifyPendingPaymentEnabled,
   ]);
 
   useEffect(() => {
