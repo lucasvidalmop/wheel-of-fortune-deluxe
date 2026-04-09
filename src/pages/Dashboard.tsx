@@ -353,6 +353,9 @@ const Dashboard = () => {
   const [payingPaymentId, setPayingPaymentId] = useState<string | null>(null);
   const [paidHistory, setPaidHistory] = useState<any[]>([]);
   const [paidHistoryLoading, setPaidHistoryLoading] = useState(false);
+  const [receiptPayment, setReceiptPayment] = useState<any | null>(null);
+  const [receiptMeta, setReceiptMeta] = useState<any | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
