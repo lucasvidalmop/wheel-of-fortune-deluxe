@@ -63,6 +63,8 @@ interface PersistedDashboardSettings {
   notifyAutoPaymentEnabled: boolean;
   notifyReferralEnabled: boolean;
   notifyPendingPaymentEnabled: boolean;
+  notifyGroupJid: string;
+  notifyGroupName: string;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -96,6 +98,8 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyAutoPaymentEnabled: false,
   notifyReferralEnabled: false,
   notifyPendingPaymentEnabled: false,
+  notifyGroupJid: '',
+  notifyGroupName: '',
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -198,6 +202,10 @@ const Dashboard = () => {
   const [notifyAutoPaymentEnabled, setNotifyAutoPaymentEnabled] = useState(false);
   const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
+  const [notifyGroupJid, setNotifyGroupJid] = useState('');
+  const [notifyGroupName, setNotifyGroupName] = useState('');
+  const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
+  const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
@@ -400,6 +408,8 @@ const Dashboard = () => {
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
+    notifyGroupJid,
+    notifyGroupName,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -444,6 +454,8 @@ const Dashboard = () => {
     setNotifyAutoPaymentEnabled(!!settings.notifyAutoPaymentEnabled);
     setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
+    setNotifyGroupJid(settings.notifyGroupJid || '');
+    setNotifyGroupName(settings.notifyGroupName || '');
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -605,6 +617,8 @@ const Dashboard = () => {
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
+    notifyGroupJid,
+    notifyGroupName,
   ]);
 
   useEffect(() => {
