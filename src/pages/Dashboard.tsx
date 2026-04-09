@@ -1735,7 +1735,7 @@ const Dashboard = () => {
               ) : filteredUsers.length === 0 ? (
                 <GlassCard className="text-center py-16">
                   <Users size={40} className="text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-muted-foreground">{searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum inscrito ainda'}</p>
+                  <p className="text-muted-foreground">{searchTerm || spinsFilter !== 'all' ? 'Nenhum resultado encontrado' : 'Nenhum inscrito ainda'}</p>
                 </GlassCard>
               ) : (
                 <GlassCard className="overflow-hidden">
