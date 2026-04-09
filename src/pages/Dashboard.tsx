@@ -123,6 +123,7 @@ const Dashboard = () => {
   const [showReferralForm, setShowReferralForm] = useState(false);
   const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string });
   const [editingReferral, setEditingReferral] = useState<any>(null);
+  const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [users, setUsers] = useState<WheelUser[]>([]);
