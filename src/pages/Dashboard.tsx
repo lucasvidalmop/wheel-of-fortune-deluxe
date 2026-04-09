@@ -61,6 +61,8 @@ interface PersistedDashboardSettings {
   notifyEvolutionInstance: string;
   notifyWhatsappPhone: string;
   notifyAutoPaymentEnabled: boolean;
+  notifyReferralEnabled: boolean;
+  notifyPendingPaymentEnabled: boolean;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
