@@ -204,7 +204,8 @@ Deno.serve(async (req) => {
           if (!cleanNotifyPhone.startsWith("55")) cleanNotifyPhone = "55" + cleanNotifyPhone;
 
           const notifyApiUrl = notifyUrl.replace(/\/+$/, "");
-          const notifyMsg = `💰 *Pagamento Automático Realizado!*\n\n👤 *Inscrito:* ${payment.user_name}\n📧 *Email:* ${payment.user_email}\n🎁 *Prêmio:* ${payment.prize}\n💵 *Valor:* R$ ${Number(payment.amount).toFixed(2)}\n🔑 *PIX:* ${payment.pix_key}\n🕐 *Data:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
+          const paymentTypeLabel = autoPayment ? "Automático" : "Manual";
+          const notifyMsg = `💰 *Pagamento ${paymentTypeLabel} Realizado!*\n\n👤 *Inscrito:* ${payment.user_name}\n📧 *Email:* ${payment.user_email}\n🎁 *Prêmio:* ${payment.prize}\n💵 *Valor:* R$ ${Number(payment.amount).toFixed(2)}\n🔑 *PIX:* ${payment.pix_key}\n🕐 *Data:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
 
           await fetch(`${notifyApiUrl}/message/sendText/${notifyInstance}`, {
             method: "POST",
