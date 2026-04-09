@@ -30,6 +30,9 @@ const Roleta = () => {
   const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [showPostLoginDialog, setShowPostLoginDialog] = useState(false);
+  const [showPrizeHistory, setShowPrizeHistory] = useState(false);
+  const [prizeHistory, setPrizeHistory] = useState<any[]>([]);
+  const [prizeHistoryLoading, setPrizeHistoryLoading] = useState(false);
 
   const maskId = (id: string) => {
     if (id.length <= 3) return '***';
