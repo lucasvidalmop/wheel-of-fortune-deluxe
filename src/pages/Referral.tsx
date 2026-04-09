@@ -3,6 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+const formatCPF = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+};
+
 const Referral = () => {
   const { code } = useParams();
   const navigate = useNavigate();
@@ -10,7 +18,7 @@ const Referral = () => {
   const [linkData, setLinkData] = useState<any>(null);
   const [email, setEmail] = useState('');
   const [accountId, setAccountId] = useState('');
-  const [name, setName] = useState('');
+  const [cpf, setCpf] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [spinsGranted, setSpinsGranted] = useState(0);
@@ -29,7 +37,6 @@ const Referral = () => {
         toast.error('Link inválido ou desativado');
       } else {
         setLinkData(data);
-        // Pre-fetch operator slug
         const { data: wcData } = await (supabase as any)
           .from('wheel_configs')
           .select('slug')
@@ -44,8 +51,9 @@ const Referral = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !accountId.trim()) {
-      toast.error('Preencha todos os campos obrigatórios');
+    const cpfDigits = cpf.replace(/\D/g, '');
+    if (!email.trim() || !accountId.trim() || cpfDigits.length !== 11) {
+      toast.error('Preencha todos os campos corretamente');
       return;
     }
     setSubmitting(true);
@@ -54,7 +62,8 @@ const Referral = () => {
         p_code: code?.toUpperCase() || '',
         p_email: email.trim(),
         p_account_id: accountId.trim(),
-        p_name: name.trim(),
+        p_name: '',
+        p_cpf: cpfDigits,
       });
       if (error) throw error;
       const result = typeof data === 'string' ? JSON.parse(data) : data;
@@ -163,6 +172,19 @@ const Referral = () => {
               onChange={e => setAccountId(e.target.value)}
               placeholder="Seu ID"
               required
+              className="w-full px-4 py-3 rounded-xl border border-white/[0.1] bg-white/[0.04] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">CPF <span className="text-destructive">*</span></label>
+            <input
+              type="text"
+              value={cpf}
+              onChange={e => setCpf(formatCPF(e.target.value))}
+              placeholder="000.000.000-00"
+              required
+              inputMode="numeric"
+              maxLength={14}
               className="w-full px-4 py-3 rounded-xl border border-white/[0.1] bg-white/[0.04] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
             />
           </div>
