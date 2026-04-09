@@ -2001,6 +2001,12 @@ const Dashboard = () => {
                               >
                                 {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
                               </button>
+                              <button
+                                onClick={() => handleToggleQualified(user)}
+                                className={`p-1.5 rounded-lg transition border ${user.user_type === 'qualified' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30' : 'bg-white/[0.06] text-muted-foreground hover:bg-emerald-500/15 hover:text-emerald-400 border-white/[0.06]'}`}
+                                title={user.user_type === 'qualified' ? 'Remover qualificação' : 'Marcar como qualificado'}
+                              >
+                                <span className="text-[13px]">✅</span>
                               <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
                                 <Pencil size={13} />
                               </button>
