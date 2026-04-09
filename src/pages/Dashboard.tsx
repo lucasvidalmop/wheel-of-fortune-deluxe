@@ -2007,6 +2007,7 @@ const Dashboard = () => {
                                 title={user.user_type === 'qualified' ? 'Remover qualificação' : 'Marcar como qualificado'}
                               >
                                 <span className="text-[13px]">✅</span>
+                              </button>
                               <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
                                 <Pencil size={13} />
                               </button>
