@@ -4966,7 +4966,7 @@ const Dashboard = () => {
                             )}
                             <div className="flex items-center justify-between">
                               <p className="text-[10px] text-muted-foreground">Criado: {new Date(p.created_at).toLocaleString('pt-BR')}</p>
-                              {isPaid && p.edpay_transaction_id && (
+                              {isPaid && (
                                 <button
                                   onClick={() => openReceipt(p)}
                                   className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors"
