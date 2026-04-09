@@ -29,6 +29,8 @@ export interface ReferralPageConfig {
   successTitle: string;
   successSubtitle: string;
   successBtnText: string;
+  successBtnBgColor: string;
+  successBtnTextColor: string;
   titlePrefix: string;
   showCounter: boolean;
   // Limit reached screen
