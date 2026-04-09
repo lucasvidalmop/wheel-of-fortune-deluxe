@@ -116,7 +116,12 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral'>('inscritos');
+  const [referralLinks, setReferralLinks] = useState<any[]>([]);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [showReferralForm, setShowReferralForm] = useState(false);
+  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1 });
+  const [editingReferral, setEditingReferral] = useState<any>(null);
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [users, setUsers] = useState<WheelUser[]>([]);
