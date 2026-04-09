@@ -3149,8 +3149,8 @@ const Dashboard = () => {
                         <MessageCircle size={20} className="text-green-400" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-bold text-foreground">Notificação de Pagamento Automático</h3>
-                        <p className="text-xs text-muted-foreground">Receba no WhatsApp quando um prêmio for pago automaticamente</p>
+                        <h3 className="text-sm font-bold text-foreground">Notificação de Pagamentos</h3>
+                        <p className="text-xs text-muted-foreground">Receba no WhatsApp quando qualquer prêmio for pago (automático ou manual)</p>
                       </div>
                     </div>
                     <button
