@@ -3177,6 +3177,37 @@ const Dashboard = () => {
           {/* ══════ REFERRAL LINKS TAB ══════ */}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
+              {/* Sub-tabs */}
+              <div className="flex gap-2">
+                {([
+                  { key: 'links' as const, label: '🔗 Links', icon: Link2 },
+                  { key: 'default_style' as const, label: '🎨 Visual Padrão', icon: Palette },
+                ] as const).map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setReferralSubTab(tab.key)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      referralSubTab === tab.key
+                        ? 'bg-primary/15 text-primary border border-primary/20'
+                        : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] border border-transparent'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {referralSubTab === 'default_style' && (
+                <GlassCard className="p-5">
+                  <ReferralDefaultEditor
+                    userId={session.user.id}
+                    currentConfig={defaultReferralConfig}
+                    onSaved={(cfg) => setDefaultReferralConfig(cfg)}
+                  />
+                </GlassCard>
+              )}
+
+              {referralSubTab === 'links' && (
               <GlassCard className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Link2 size={16} /> Links de Referência</h3>
@@ -3188,7 +3219,7 @@ const Dashboard = () => {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Crie links para que usuários se inscrevam e ganhem giros automaticamente. Compartilhe o link <code className="text-primary">/ref/CODIGO</code> com os jogadores.
+                  Crie links para que usuários se inscrevam e ganhem giros automaticamente. Links sem personalização individual usam o <span className="text-primary font-semibold">Visual Padrão</span>.
                 </p>
 
                 {showReferralForm && (
@@ -3242,16 +3273,23 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {referralLinks.map(link => (
+                    {referralLinks.map(link => {
+                      const hasCustomStyle = link.page_config && Object.keys(link.page_config).length > 0;
+                      return (
                       <div key={link.id} className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 space-y-2">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-bold text-foreground">{link.label || 'Sem nome'}</p>
                             <p className="text-[10px] text-muted-foreground">{link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição</p>
                           </div>
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${link.is_active ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' : 'bg-red-500/15 text-red-400 border-red-500/20'}`}>
-                            {link.is_active ? '✅ Ativo' : '❌ Inativo'}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {hasCustomStyle && (
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/20">🎨 Custom</span>
+                            )}
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${link.is_active ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' : 'bg-red-500/15 text-red-400 border-red-500/20'}`}>
+                              {link.is_active ? '✅ Ativo' : '❌ Inativo'}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <code className="text-xs text-primary font-mono bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg flex-1 truncate">
@@ -3265,7 +3303,7 @@ const Dashboard = () => {
                             <Copy size={14} />
                           </button>
                         </div>
-                        <div className="flex items-center gap-2 pt-1">
+                        <div className="flex items-center gap-2 pt-1 flex-wrap">
                           <button
                             onClick={() => { setEditingReferral(link); setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '' }); setShowReferralForm(true); }}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] text-muted-foreground text-[10px] hover:bg-white/[0.1] transition"
@@ -3293,10 +3331,12 @@ const Dashboard = () => {
                         </div>
                         <p className="text-[10px] text-muted-foreground">Criado: {new Date(link.created_at).toLocaleString('pt-BR')}</p>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </GlassCard>
+              )}
             </div>
           )}
 
