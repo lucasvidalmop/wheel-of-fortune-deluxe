@@ -1367,6 +1367,7 @@ const Dashboard = () => {
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp' },
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro' },
+    { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
   ];
 
@@ -1380,6 +1381,7 @@ const Dashboard = () => {
     sms: 'Disparo de SMS',
     whatsapp: 'Disparo de WhatsApp',
     financeiro: 'Financeiro',
+    notificacoes: 'Notificações',
     referral: 'Links de Referência',
   };
 
