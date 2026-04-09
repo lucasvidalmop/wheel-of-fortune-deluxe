@@ -452,6 +452,7 @@ const Dashboard = () => {
     setWheelConfig(loadedConfig);
     setDashboardTheme({ ...defaultTheme, ...(rawConfig?.dashboardTheme || {}) });
     applyPersistedDashboardSettings(rawConfig?.dashboardSettings || {});
+    setDefaultReferralConfig(rawConfig?.defaultReferralPageConfig || {});
     lastConfigUpdatedAtRef.current = cfg?.updated_at || null;
   };
 
