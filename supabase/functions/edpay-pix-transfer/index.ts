@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
       .eq("id", paymentId);
 
     // Step 4: Send WhatsApp notification if configured
-    if (autoPayment) {
+    {
       try {
         const cfg = typeof configData?.config === "string" ? JSON.parse(configData.config) : configData?.config;
         const ds = cfg?.dashboardSettings || {};
