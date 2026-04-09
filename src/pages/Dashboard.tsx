@@ -6,7 +6,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
