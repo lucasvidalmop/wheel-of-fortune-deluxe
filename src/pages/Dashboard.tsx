@@ -196,6 +196,8 @@ const Dashboard = () => {
   const [notifyEvolutionInstance, setNotifyEvolutionInstance] = useState('');
   const [notifyWhatsappPhone, setNotifyWhatsappPhone] = useState('');
   const [notifyAutoPaymentEnabled, setNotifyAutoPaymentEnabled] = useState(false);
+  const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
+  const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
