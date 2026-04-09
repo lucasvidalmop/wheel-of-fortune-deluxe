@@ -124,6 +124,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay'>('all');
 
+  const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
