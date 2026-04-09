@@ -106,7 +106,11 @@ Deno.serve(async (req) => {
     let cleanPhone = String(notifyPhone).replace(/\D/g, "");
     if (!cleanPhone.startsWith("55")) cleanPhone = `55${cleanPhone}`;
 
-    const response = await fetch(`${String(notifyUrl).replace(/\/+$/, "")}/message/sendText/${notifyInstance}`, {
+    const baseUrl = String(notifyUrl)
+      .replace(/\/+$/, "")
+      .replace(/\/manager$/i, "");
+
+    const response = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
       method: "POST",
       headers: {
         "apikey": notifyKey,
