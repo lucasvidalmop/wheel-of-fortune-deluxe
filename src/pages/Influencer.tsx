@@ -426,9 +426,9 @@ const Influencer = () => {
                       <p className="text-[10px] text-white/35 mt-0.5">Hoje: {winsToday}/1 vitória(s)</p>
                       <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
+                    <button onClick={() => openPrizeDialog(u)} className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
                       <Trophy size={14} style={{ color: accent }} />
-                    </div>
+                    </button>
                   </div>
                 );
               })}
