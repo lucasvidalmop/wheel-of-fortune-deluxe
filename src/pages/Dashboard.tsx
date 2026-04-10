@@ -5121,6 +5121,7 @@ const Dashboard = () => {
                 )}
               </div>
 
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Users size={20} className="text-muted-foreground" />
                   <h3 className="text-base font-bold text-foreground">Usuários Fantasmas</h3>
