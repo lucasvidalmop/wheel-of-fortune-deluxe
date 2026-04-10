@@ -77,6 +77,7 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
   const [config, setConfig] = useState<InfluencerPageConfig>({ ...defaultInfluencerConfig, ...currentConfig });
   const [saving, setSaving] = useState(false);
   const [uploadingSound, setUploadingSound] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
   const soundInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
