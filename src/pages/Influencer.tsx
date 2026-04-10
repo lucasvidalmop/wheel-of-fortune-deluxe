@@ -656,7 +656,7 @@ const Influencer = () => {
         <div className="flex items-center border-b shrink-0" style={{ borderColor: `${accent}20`, background: tabBgColor || undefined }}>
           <div className="flex flex-1">
           {([
-            { key: 'participants' as const, label: 'Participantes', count: users.length, prefix: '≡' },
+            { key: 'participants' as const, label: 'Participantes', count: allParticipants.length, prefix: '≡' },
             { key: 'winners' as const, label: 'Ganhadores Hoje', prefix: '★' },
             { key: 'history' as const, label: 'Histórico', prefix: '↻' },
           ]).map(tab => {
