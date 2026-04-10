@@ -250,10 +250,6 @@ const Influencer = () => {
       });
       setPrizeSent(true);
       fetchTodayWinners(session.user.id);
-      setTimeout(() => {
-        setShowPrizeDialog(false);
-        toast.success(`Prêmio de ${formatCurrency(prizeAmount)} enviado para ${prizeUser.name}!`);
-      }, 1500);
     } catch (err: any) {
       toast.error('Erro ao enviar prêmio: ' + (err.message || ''));
       setPrizeSending(false);
