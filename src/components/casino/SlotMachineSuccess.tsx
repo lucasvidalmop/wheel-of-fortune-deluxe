@@ -12,7 +12,7 @@ interface SlotMachineSuccessProps {
   successSubtitle: string;
   successBtnText: string;
   slotMatchIcon?: string;
-  slotMatchImageUrl?: string;
+  slotReelImages?: string[];
   slotLuckyText?: string;
   slotReelBgColor?: string;
   slotFrameBgColor?: string;
