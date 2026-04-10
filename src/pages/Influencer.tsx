@@ -449,7 +449,7 @@ const Influencer = () => {
         </div>
 
         {/* ─── Tabs ─── */}
-      <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4" style={{ borderColor: `${accent}25`, background: cardBg }}>
+      <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4 backdrop-blur-xl" style={glassCardStyle}>
         <div className="flex items-center border-b shrink-0" style={{ borderColor: `${accent}20`, background: tabBgColor || undefined }}>
           <div className="flex flex-1">
           {([
