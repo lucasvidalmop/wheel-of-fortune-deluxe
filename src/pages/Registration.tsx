@@ -415,7 +415,7 @@ const Registration = () => {
         {/* Footer */}
         <div className="px-6 pb-5 text-center space-y-3">
           <div className="text-[10px] space-y-1" style={{ color: subtitleColor }}>
-            <p>© {new Date().getFullYear()} Todos os direitos reservados.</p>
+            <p>{cfg.footerText || `© ${new Date().getFullYear()} Todos os direitos reservados.`}</p>
           </div>
         </div>
       </div>
