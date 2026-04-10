@@ -302,7 +302,7 @@ const Registration = () => {
           {/* ID da Conta */}
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>
-              {cfg.btnText ? `ID da Conta` : 'ID da Conta'}
+              ID da Conta {cfg.casinoName && <span style={{ color: accentColor }}>*{cfg.casinoName}</span>}
             </label>
             <div className="relative">
               <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: `${labelColor}` }} />
@@ -382,7 +382,7 @@ const Registration = () => {
                 {confirmData && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <span className="text-xs" style={{ color: subtitleColor }}>
-                {cfg.confirmText || 'Confirmo que os dados são da minha conta.'}
+                {cfg.confirmText || <>Confirmo que os dados são da minha conta{cfg.casinoName ? <span style={{ color: accentColor }}> *{cfg.casinoName}</span> : ''}.</>}
               </span>
             </label>
           </div>
@@ -412,10 +412,34 @@ const Registration = () => {
           </div>
         </form>
 
+        {/* CTA Button */}
+        {cfg.ctaBtnShow !== false && cfg.ctaBtnUrl && (
+          <div className="px-6 pb-4">
+            <a
+              href={cfg.ctaBtnUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider text-center transition-all hover:brightness-110"
+              style={{
+                backgroundColor: cfg.ctaBtnBgColor || '#ffffff',
+                color: cfg.ctaBtnTextColor || '#000000',
+                border: `1px solid ${cfg.ctaBtnBorderColor || 'rgba(255,255,255,0.1)'}`,
+              }}
+            >
+              {cfg.ctaBtnText
+                ? cfg.ctaBtnText.replace('{casino}', cfg.casinoName || '')
+                : `CRIE SUA CONTA NA ${cfg.casinoName || 'PLATAFORMA'} PARA PARTICIPAR DE TODOS OS SORTEIOS!`}
+            </a>
+          </div>
+        )}
+
         {/* Footer */}
         <div className="px-6 pb-5 text-center space-y-3">
           <div className="text-[10px] space-y-1" style={{ color: subtitleColor }}>
-            <p>{cfg.footerText || `© ${new Date().getFullYear()} Todos os direitos reservados.`}</p>
+            <p>{cfg.footerText || `© ${new Date().getFullYear()} ${cfg.casinoName ? `${cfg.casinoName.toUpperCase()}!` : ''} Todos os direitos reservados.`}</p>
+            {cfg.casinoName && cfg.ctaBtnUrl && (
+              <a href={cfg.ctaBtnUrl} target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: accentColor }}>{cfg.casinoName}</a>
+            )}
           </div>
         </div>
       </div>
