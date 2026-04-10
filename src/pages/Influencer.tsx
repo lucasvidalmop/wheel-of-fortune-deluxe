@@ -415,8 +415,8 @@ const Influencer = () => {
               {filteredUsers.map(u => {
                 const winsToday = todayWinsForUser(u.account_id);
                 return (
-                  <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:border-white/[0.15]"
-                    style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:brightness-110"
+                    style={{ borderColor: `${accent}30`, background: 'rgba(255,255,255,0.02)' }}>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-bold truncate" style={{ color: textColor }}>{u.name}</p>
                       <p className="text-[10px] text-white/35 mt-0.5">Hoje: {winsToday}/1 vitória(s)</p>
