@@ -1092,7 +1092,7 @@ const Dashboard = () => {
     fetchUsers();
   };
 
-
+  const fetchPaidHistory = async () => {
     if (!session?.user?.id) return;
     setPaidHistoryLoading(true);
     const { data } = await (supabase as any)
