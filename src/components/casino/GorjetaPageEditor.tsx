@@ -50,7 +50,10 @@ export interface GorjetaPageConfig {
   // Terms modal
   termsTitle: string;
   termsContent: string;
-}
+  // Slot machine animation
+  slotMatchIcon: string;
+  slotLuckyText: string;
+  successSubtitle: string;
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
   bgColor: '',
@@ -113,6 +116,9 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
 
 3.1. Para estar apto a participar dos sorteios, o usuário deverá ser considerado usuário ativo.
 3.2. Considera-se usuário ativo aquele que realizou ao menos um depósito na plataforma.`,
+  slotMatchIcon: '⚡',
+  slotLuckyText: '🎰 BOA SORTE! 🎰',
+  successSubtitle: 'Agora é só aguardar o sorteio...',
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
