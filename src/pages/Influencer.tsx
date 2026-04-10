@@ -94,6 +94,9 @@ const Influencer = () => {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [sendingIndex, setSendingIndex] = useState(0);
   const sessionCreatedIds = useRef<Set<string>>(new Set());
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [resetCountdown, setResetCountdown] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Individual prize dialog
   const [showPrizeDialog, setShowPrizeDialog] = useState(false);
