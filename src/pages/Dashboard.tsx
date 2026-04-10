@@ -2957,6 +2957,7 @@ const Dashboard = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-white/[0.06]">
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Tipo</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">IP</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Localização</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Dispositivo</th>
@@ -2969,6 +2970,11 @@ const Dashboard = () => {
                       <tbody>
                         {filtered.slice(0, 50).map((v: any) => (
                           <tr key={v.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors">
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold uppercase ${(v.page_type || 'roleta') === 'roleta' ? 'bg-primary/10 text-primary' : (v.page_type) === 'gorjeta' ? 'bg-amber-400/10 text-amber-400' : 'bg-emerald-400/10 text-emerald-400'}`}>
+                                {v.page_type || 'roleta'}
+                              </span>
+                            </td>
                             <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{v.ip_address || '—'}</td>
                             <td className="px-4 py-3 text-xs text-foreground">{[v.city, v.country].filter(Boolean).join(', ') || '—'}</td>
                             <td className="px-4 py-3">
