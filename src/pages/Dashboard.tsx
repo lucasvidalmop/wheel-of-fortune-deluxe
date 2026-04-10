@@ -74,6 +74,8 @@ interface PersistedDashboardSettings {
   receiptBgColor: string;
   receiptAccentColor: string;
   receiptOperatorName: string;
+  hideReceiptSection: boolean;
+  hideEdpaySection: boolean;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -114,6 +116,8 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   receiptBgColor: '#ffffff',
   receiptAccentColor: '#3b82f6',
   receiptOperatorName: '',
+  hideReceiptSection: false,
+  hideEdpaySection: false,
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -224,6 +228,8 @@ const Dashboard = () => {
   const [receiptBgColor, setReceiptBgColor] = useState('#ffffff');
   const [receiptAccentColor, setReceiptAccentColor] = useState('#3b82f6');
   const [receiptOperatorName, setReceiptOperatorName] = useState('');
+  const [hideReceiptSection, setHideReceiptSection] = useState(false);
+  const [hideEdpaySection, setHideEdpaySection] = useState(false);
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
@@ -609,6 +615,8 @@ const Dashboard = () => {
     receiptBgColor,
     receiptAccentColor,
     receiptOperatorName,
+    hideReceiptSection,
+    hideEdpaySection,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -660,6 +668,8 @@ const Dashboard = () => {
     setReceiptBgColor(settings.receiptBgColor || '#ffffff');
     setReceiptAccentColor(settings.receiptAccentColor || '#3b82f6');
     setReceiptOperatorName(settings.receiptOperatorName || '');
+    setHideReceiptSection(!!settings.hideReceiptSection);
+    setHideEdpaySection(!!settings.hideEdpaySection);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -824,6 +834,12 @@ const Dashboard = () => {
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
+    receiptFontColor,
+    receiptBgColor,
+    receiptAccentColor,
+    receiptOperatorName,
+    hideReceiptSection,
+    hideEdpaySection,
   ]);
 
   useEffect(() => {
@@ -4409,58 +4425,51 @@ const Dashboard = () => {
               {/* Credenciais Sub-tab */}
               {financeiroSubTab === 'credenciais' && (
                 <>
+                <GlassCard className="p-4 space-y-3">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Visibilidade das Seções</h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">EdPay — Chaves</span>
+                    <button onClick={() => setHideEdpaySection(!hideEdpaySection)} className={`w-10 h-5 rounded-full transition-colors ${!hideEdpaySection ? 'bg-primary' : 'bg-white/10'}`}>
+                      <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${!hideEdpaySection ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">Comprovante de Pagamento</span>
+                    <button onClick={() => setHideReceiptSection(!hideReceiptSection)} className={`w-10 h-5 rounded-full transition-colors ${!hideReceiptSection ? 'bg-primary' : 'bg-white/10'}`}>
+                      <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${!hideReceiptSection ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                </GlassCard>
+
+                {!hideEdpaySection && (
                 <GlassCard className="p-5 space-y-5">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                      <Wallet size={20} className="text-primary" />
-                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center"><Wallet size={20} className="text-primary" /></div>
                     <div>
                       <h3 className="text-sm font-bold text-foreground">EdPay — Gateway de Pagamento</h3>
                       <p className="text-xs text-muted-foreground">Configure suas credenciais para processar pagamentos via PIX</p>
                     </div>
                   </div>
-
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Pública</label>
-                      <input
-                        type="text"
-                        value={edpayPublicKey}
-                        onChange={e => setEdpayPublicKey(e.target.value)}
-                        placeholder="pk_live_..."
-                        className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                      />
+                      <input type="text" value={edpayPublicKey} onChange={e => setEdpayPublicKey(e.target.value)} placeholder="pk_live_..." className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
-
                     <div>
                       <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Chave Secreta</label>
                       <div className="relative">
-                        <input
-                          type={showEdpaySecret ? 'text' : 'password'}
-                          value={edpaySecretKey}
-                          onChange={e => setEdpaySecretKey(e.target.value)}
-                          placeholder="sk_live_..."
-                          className="w-full px-4 py-2.5 pr-12 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowEdpaySecret(!showEdpaySecret)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <Eye size={16} />
-                        </button>
+                        <input type={showEdpaySecret ? 'text' : 'password'} value={edpaySecretKey} onChange={e => setEdpaySecretKey(e.target.value)} placeholder="sk_live_..." className="w-full px-4 py-2.5 pr-12 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <button type="button" onClick={() => setShowEdpaySecret(!showEdpaySecret)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"><Eye size={16} /></button>
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1">⚠️ A chave secreta é salva de forma segura junto com a configuração da sua roleta.</p>
                     </div>
                   </div>
-
                   {edpayPublicKey && edpaySecretKey && (
                     <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                       <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                       <span className="text-xs font-medium text-emerald-400">Credenciais configuradas</span>
                     </div>
                   )}
-
                   {(!edpayPublicKey || !edpaySecretKey) && (
                     <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                       <div className="w-2 h-2 rounded-full bg-amber-400" />
@@ -4468,87 +4477,46 @@ const Dashboard = () => {
                     </div>
                   )}
                 </GlassCard>
+                )}
 
-                {/* Receipt Config */}
+                {!hideReceiptSection && (
                 <GlassCard className="p-5 space-y-5">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                      <FileText size={20} className="text-primary" />
-                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center"><FileText size={20} className="text-primary" /></div>
                     <div>
                       <h3 className="text-sm font-bold text-foreground">Comprovante de Pagamento</h3>
                       <p className="text-xs text-muted-foreground">Personalize a aparência do comprovante</p>
                     </div>
                   </div>
-
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Apelido do Operador</label>
-                      <input
-                        type="text"
-                        value={receiptOperatorName}
-                        onChange={e => setReceiptOperatorName(e.target.value)}
-                        placeholder={session?.user?.email || 'Ex: Lucas BSB'}
-                        className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                      />
+                      <input type="text" value={receiptOperatorName} onChange={e => setReceiptOperatorName(e.target.value)} placeholder={session?.user?.email || 'Ex: Lucas BSB'} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       <p className="text-[10px] text-muted-foreground mt-1">Substitui o e-mail no campo "Enviado por" do comprovante</p>
                     </div>
-
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor da Fonte</label>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={receiptFontColor}
-                            onChange={e => setReceiptFontColor(e.target.value)}
-                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
-                          />
-                          <input
-                            type="text"
-                            value={receiptFontColor}
-                            onChange={e => setReceiptFontColor(e.target.value)}
-                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
-                          />
+                          <input type="color" value={receiptFontColor} onChange={e => setReceiptFontColor(e.target.value)} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent" />
+                          <input type="text" value={receiptFontColor} onChange={e => setReceiptFontColor(e.target.value)} className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor de Fundo</label>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={receiptBgColor}
-                            onChange={e => setReceiptBgColor(e.target.value)}
-                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
-                          />
-                          <input
-                            type="text"
-                            value={receiptBgColor}
-                            onChange={e => setReceiptBgColor(e.target.value)}
-                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
-                          />
+                          <input type="color" value={receiptBgColor} onChange={e => setReceiptBgColor(e.target.value)} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent" />
+                          <input type="text" value={receiptBgColor} onChange={e => setReceiptBgColor(e.target.value)} className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Cor Destaque</label>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={receiptAccentColor}
-                            onChange={e => setReceiptAccentColor(e.target.value)}
-                            className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
-                          />
-                          <input
-                            type="text"
-                            value={receiptAccentColor}
-                            onChange={e => setReceiptAccentColor(e.target.value)}
-                            className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono"
-                          />
+                          <input type="color" value={receiptAccentColor} onChange={e => setReceiptAccentColor(e.target.value)} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent" />
+                          <input type="text" value={receiptAccentColor} onChange={e => setReceiptAccentColor(e.target.value)} className="flex-1 px-2 py-1.5 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-foreground font-mono" />
                         </div>
                       </div>
                     </div>
-
-                    {/* Preview mini */}
                     <div className="rounded-xl border border-white/[0.08] overflow-hidden">
                       <div className="text-center py-4 px-3" style={{ backgroundColor: receiptBgColor, color: receiptFontColor }}>
                         <p className="text-[10px] font-bold uppercase tracking-widest">Pré-visualização</p>
@@ -4558,7 +4526,11 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </GlassCard>
+                )}
 
+                <button onClick={handleSaveConfig} className="w-full py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all">
+                  Salvar Configurações
+                </button>
               </>
               )}
 
