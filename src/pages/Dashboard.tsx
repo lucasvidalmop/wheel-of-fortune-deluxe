@@ -2290,8 +2290,6 @@ const Dashboard = () => {
                           <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
                           <td className="px-2 py-2 font-medium text-xs whitespace-nowrap">
                             <span className={`${user.blacklisted ? 'line-through opacity-50 text-destructive' : 'text-foreground'}`}>
-                              {user.blacklisted && <Ban size={11} className="inline mr-1 text-destructive" />}
-                              {user.guaranteed_next_win && <Star size={11} className="inline mr-1 text-emerald-400 fill-emerald-400" />}
                               {user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}
                               {user.name}
                             </span>
