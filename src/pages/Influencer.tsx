@@ -297,23 +297,80 @@ const Influencer = () => {
 
   return (
     <div className="min-h-screen" style={{ background: bgColor, color: textColor }}>
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-36 space-y-3">
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-36 space-y-4">
 
-        {/* ─── Top: Atualizar + Clock ─── */}
+        {/* ─── Top card: Title + Counter + Progress ─── */}
+        <div className="rounded-2xl border border-white/[0.08] p-5" style={{ background: cardBg }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${accent}20`, border: `2px solid ${accent}` }}>
+                <Trophy size={18} style={{ color: accent }} />
+              </div>
+              <div>
+                <h1 className="text-base font-black tracking-wide uppercase" style={{ color: textColor }}>
+                  {linkLabel || gorjetaRef || 'TROPA DO FAZ MIL E DORME!'}
+                </h1>
+                <p className="text-[11px] text-white/40">{prizesRemaining} prêmio(s) restante(s)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold" style={{ color: accent }}>{sentToday}</span>
+              <span className="text-xs text-white/30">/{dailyLimit}</span>
+              <span className="ml-1 px-3 py-1.5 rounded-lg text-xs font-mono font-bold border" style={{ borderColor: accent, color: accent }}>
+                {timer}
+              </span>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] text-white/40">Progresso diário</span>
+              <span className="text-[11px] font-bold" style={{ color: accent }}>{progressPercent}%</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progressPercent}%`, background: `linear-gradient(90deg, ${accent}, ${accent}cc)` }} />
+            </div>
+          </div>
+
+          <div className="flex justify-end mt-3">
+            <button onClick={handleResetDayCounter} className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-lg border transition hover:bg-white/[0.04]" style={{ borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}>
+              <RotateCcw size={12} /> Reiniciar contador do dia
+            </button>
+          </div>
+        </div>
+
+        {/* ─── Link bar ─── */}
+        {gorjetaUrl && (
+          <div className="rounded-xl border border-white/[0.06] p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <LinkIcon size={12} style={{ color: accent }} />
+              <span className="text-[11px] font-semibold text-white/50">LINK:</span>
+            </div>
+            <input readOnly value={gorjetaUrl} className="flex-1 bg-transparent text-xs text-white/50 font-mono truncate outline-none" />
+            <button onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+              style={{ borderColor: `${accent}40`, color: accent }}>
+              <Copy size={12} /> Copiar
+            </button>
+          </div>
+        )}
+
+        {/* ─── Refresh + Clock ─── */}
         <div className="flex items-center justify-between">
           <button onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition hover:bg-white/[0.04]"
-            style={{ borderColor: `${accent}50`, color: accent }}>
-            <RefreshCw size={14} /> Atualizar
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+            style={{ borderColor: `${accent}40`, color: accent }}>
+            <RefreshCw size={13} /> Atualizar
           </button>
-          <span className="text-sm text-white/40 font-mono">{timer}</span>
+          <span className="text-xs text-white/30 font-mono">{timer}</span>
         </div>
 
         {/* ─── Tabs ─── */}
-        <div className="flex border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="flex border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           {([
             { key: 'participants' as const, label: 'Participantes', count: users.length, prefix: '≡' },
-            { key: 'winners' as const, label: 'Ganhadores Hoje', count: todayWinners.length, prefix: '★' },
+            { key: 'winners' as const, label: 'Ganhadores Hoje', prefix: '★' },
             { key: 'history' as const, label: 'Histórico', prefix: '↻' },
           ]).map(tab => {
             const isActive = activeTab === tab.key;
@@ -321,13 +378,13 @@ const Influencer = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-[12px] font-semibold transition-all border-b-2 ${isActive ? '' : 'border-transparent text-white/35 hover:text-white/55'}`}
+                className={`flex items-center gap-1.5 px-4 py-3 text-[12px] font-medium transition-all border-b-2 ${isActive ? '' : 'border-transparent text-white/35 hover:text-white/55'}`}
                 style={isActive ? { color: accent, borderColor: accent } : undefined}
               >
                 <span className="text-sm">{tab.prefix}</span>
                 {tab.label}
                 {tab.count !== undefined && (
-                  <span className="ml-1.5 px-2 py-0.5 rounded text-[10px] font-bold"
+                  <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
                     style={isActive ? { background: `${accent}20`, color: accent } : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
                     {tab.count}
                   </span>
@@ -342,14 +399,14 @@ const Influencer = () => {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-                <Search size={14} className="text-white/30" />
+                <Search size={14} className="text-white/25" />
                 <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                   placeholder="Buscar por nome ou credencial..."
-                  className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30" />
+                  className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/25" />
               </div>
               <button onClick={handleExportCSV}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold border transition hover:bg-white/[0.04]"
-                style={{ borderColor: `${accent}50`, color: accent }}>
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+                style={{ borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
                 <FileDown size={14} /> CSV
               </button>
             </div>
@@ -357,24 +414,15 @@ const Influencer = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {filteredUsers.map(u => {
                 const winsToday = todayWinsForUser(u.account_id);
-                const hasWon = winsToday > 0;
                 return (
-                  <div key={u.id}
-                    className="flex items-center justify-between p-3.5 rounded-xl border transition"
-                    style={{
-                      borderColor: hasWon ? accent : 'rgba(255,255,255,0.06)',
-                      background: hasWon ? `${accent}08` : 'rgba(255,255,255,0.02)',
-                    }}>
+                  <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:border-white/[0.15]"
+                    style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-bold truncate" style={{ color: textColor }}>{u.name}</p>
-                      <p className="text-[10px] mt-0.5" style={{ color: hasWon ? accent : 'rgba(255,255,255,0.35)' }}>
-                        Hoje: {winsToday}/1 vitória(s)
-                      </p>
+                      <p className="text-[10px] text-white/35 mt-0.5">Hoje: {winsToday}/1 vitória(s)</p>
                       <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
-                    <button onClick={() => openPrizeDialog(u)}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer"
-                      style={{ background: `${accent}18`, border: `1px solid ${accent}40` }}>
+                    <button onClick={() => openPrizeDialog(u)} className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
                       <Trophy size={14} style={{ color: accent }} />
                     </button>
                   </div>
