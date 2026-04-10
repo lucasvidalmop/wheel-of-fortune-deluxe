@@ -92,8 +92,54 @@ const Influencer = () => {
   const [prizeCustomAmount, setPrizeCustomAmount] = useState('30,00');
   const [prizeSending, setPrizeSending] = useState(false);
   const [prizeSent, setPrizeSent] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
+  // Group history by time proximity (within 2 min) + same amount = raffle batch
+  const historyGroups: RaffleGroup[] = React.useMemo(() => {
+    if (historyWinners.length === 0) return [];
+    const groups: RaffleGroup[] = [];
+    let current: TodayWinner[] = [historyWinners[0]];
+
+    for (let i = 1; i < historyWinners.length; i++) {
+      const prev = historyWinners[i - 1];
+      const curr = historyWinners[i];
+      const timeDiff = Math.abs(new Date(prev.created_at).getTime() - new Date(curr.created_at).getTime());
+      if (timeDiff < 120000 && prev.amount === curr.amount) {
+        current.push(curr);
+      } else {
+        const amt = current[0].amount;
+        groups.push({
+          key: current[0].id,
+          amount: amt,
+          total: amt * current.length,
+          count: current.length,
+          date: current[current.length - 1].created_at,
+          winners: current,
+        });
+        current = [curr];
+      }
+    }
+    const amt = current[0].amount;
+    groups.push({
+      key: current[0].id,
+      amount: amt,
+      total: amt * current.length,
+      count: current.length,
+      date: current[current.length - 1].created_at,
+      winners: current,
+    });
+    return groups;
+  }, [historyWinners]);
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+
     const update = () => {
       const now = new Date();
       setTimer(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`);
