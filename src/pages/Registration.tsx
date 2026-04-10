@@ -444,6 +444,40 @@ const Registration = () => {
           </div>
         </div>
       </div>
+
+      {/* Terms Modal */}
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowTerms(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative z-10 w-full max-w-md max-h-[80vh] rounded-2xl border flex flex-col overflow-hidden"
+            style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: cardBorder }}>
+              <h3 className="text-base font-bold" style={{ color: accentColor }}>{cfg.termsTitle || 'Termos de Uso – Gorjeta'}</h3>
+              <button onClick={() => setShowTerms(false)} className="text-white/40 hover:text-white transition text-xl leading-none">✕</button>
+            </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: subtitleColor }}>
+                {cfg.termsContent || defaultGorjetaConfig.termsContent}
+              </div>
+            </div>
+            {/* Footer */}
+            <div className="px-5 py-4 border-t" style={{ borderColor: cardBorder }}>
+              <button
+                onClick={() => setShowTerms(false)}
+                className="w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider hover:brightness-110 transition"
+                style={{ backgroundColor: accentColor, color: cfg.btnTextColor || '#000000' }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
