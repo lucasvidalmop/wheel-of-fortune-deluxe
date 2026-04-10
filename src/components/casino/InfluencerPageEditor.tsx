@@ -245,6 +245,36 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.borderWidth}px</span>
           </div>
         </div>
+
+        {/* Border Glow */}
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/[0.06]">
+          <span className="text-xs text-muted-foreground">Brilho nas bordas</span>
+          <button
+            onClick={() => update({ borderGlowEnabled: !config.borderGlowEnabled })}
+            className={`w-10 h-5 rounded-full transition-all relative ${config.borderGlowEnabled ? 'bg-primary' : 'bg-white/[0.1]'}`}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all ${config.borderGlowEnabled ? 'left-5' : 'left-0.5'}`} />
+          </button>
+        </div>
+        {config.borderGlowEnabled && (
+          <>
+            <ColorField label="Cor do brilho da borda" value={config.borderGlowColor} onChange={v => update({ borderGlowColor: v })} />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">Intensidade</span>
+              <div className="flex items-center gap-2">
+                <input type="range" min="1" max="30" value={config.borderGlowIntensity} onChange={e => update({ borderGlowIntensity: parseInt(e.target.value) })} className="w-24 accent-primary h-1.5" />
+                <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.borderGlowIntensity}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">Espalhamento</span>
+              <div className="flex items-center gap-2">
+                <input type="range" min="2" max="50" value={config.borderGlowSpread} onChange={e => update({ borderGlowSpread: parseInt(e.target.value) })} className="w-24 accent-primary h-1.5" />
+                <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.borderGlowSpread}px</span>
+              </div>
+            </div>
+          </>
+        )}
       </Section>
 
       <Section icon={<Type size={14} className="text-primary" />} title="Cores do Texto">
