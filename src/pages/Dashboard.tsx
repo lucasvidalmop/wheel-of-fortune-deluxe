@@ -4365,6 +4365,14 @@ const Dashboard = () => {
                     onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
                   />
                 )}
+
+                {gorjetaSubTab === 'influencer' && session?.user?.id && (
+                  <InfluencerPageEditor
+                    userId={session.user.id}
+                    currentConfig={(wheelConfig as any).influencerPageConfig || {}}
+                    onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
+                  />
+                )}
               </div>
             );
           })()}
