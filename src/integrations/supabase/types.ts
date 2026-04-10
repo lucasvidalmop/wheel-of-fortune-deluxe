@@ -149,6 +149,7 @@ export type Database = {
           ip_address: string | null
           os: string | null
           owner_id: string | null
+          page_type: string
           page_url: string | null
           referrer: string | null
           region: string | null
@@ -167,6 +168,7 @@ export type Database = {
           ip_address?: string | null
           os?: string | null
           owner_id?: string | null
+          page_type?: string
           page_url?: string | null
           referrer?: string | null
           region?: string | null
@@ -185,6 +187,7 @@ export type Database = {
           ip_address?: string | null
           os?: string | null
           owner_id?: string | null
+          page_type?: string
           page_url?: string | null
           referrer?: string | null
           region?: string | null
