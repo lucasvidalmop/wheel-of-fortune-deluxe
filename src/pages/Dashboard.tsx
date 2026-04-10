@@ -2241,7 +2241,7 @@ const Dashboard = () => {
                     </div>
                   )}
                   <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-sm table-fixed">
+                  <table className="w-full text-sm table-auto min-w-[1100px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="px-2 py-3 w-8">
@@ -2269,7 +2269,7 @@ const Dashboard = () => {
                         {spinsFilter === 'with' && (
                           <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[110px]">Prêmio</th>
                         )}
-                        <th className="text-center px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[140px]">Ações</th>
+                        <th className="text-center px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider min-w-[240px]">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
