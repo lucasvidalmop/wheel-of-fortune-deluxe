@@ -836,7 +836,7 @@ const Influencer = () => {
                     <div className="border-t px-3 pb-3 pt-2 space-y-1.5" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                       {g.winners.map((w, i) => (
                         <div key={w.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                          <span className="w-5 h-5 flex items-center justify-center rounded-full text-[9px] font-bold" style={{ background: `${accent}20`, color: accent }}>{i + 1}</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded-full text-[9px] font-bold" style={{ background: `${accent}20`, color: accent, boxShadow: `0 0 8px ${accent}50` }}>{i + 1}</span>
                           <span className="text-[11px] text-white/70 flex-1 truncate">{w.user_name}</span>
                           <span className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)}</span>
                         </div>
@@ -1023,7 +1023,7 @@ const Influencer = () => {
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {winners.map((w, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.06)', background: i === 0 ? `${accent}10` : 'rgba(255,255,255,0.02)' }}>
-                        <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: accent, color: btnText }}>{i + 1}º</span>
+                        <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: accent, color: btnText, boxShadow: `0 0 12px ${accent}60` }}>{i + 1}º</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold uppercase truncate">{w.user.name}</p>
                           <p className="text-[10px] text-white/30 font-mono">{maskAccountId(w.user.account_id)}</p>
