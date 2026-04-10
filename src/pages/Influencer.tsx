@@ -324,6 +324,21 @@ const Influencer = () => {
   const textColor = influencerConfig.textColor || '#ffffff';
   const btnBg = influencerConfig.btnBgColor || accent;
   const btnText = influencerConfig.btnTextColor || '#000000';
+  const tabActiveColor = influencerConfig.tabActiveColor || accent;
+  const tabInactiveColor = influencerConfig.tabInactiveColor || 'rgba(255,255,255,0.35)';
+  const tabBorderWidth = influencerConfig.tabBorderWidth || 2;
+  const tabBgColor = influencerConfig.tabBgColor || '';
+  const raffleSoundEnabled = influencerConfig.raffleSoundEnabled || false;
+  const raffleSoundUrl = influencerConfig.raffleSoundUrl || '';
+
+  const playRaffleSound = () => {
+    if (raffleSoundEnabled && raffleSoundUrl) {
+      try {
+        const audio = new Audio(raffleSoundUrl);
+        audio.play().catch(() => {});
+      } catch {}
+    }
+  };
 
   // Login
   if (!session) {
