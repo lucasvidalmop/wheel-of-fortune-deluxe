@@ -1629,7 +1629,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex relative overflow-hidden">
+    <div className="min-h-screen bg-background flex relative overflow-x-hidden overflow-y-auto">
       <ThemeSettingsPanel
         storageKey={session?.user?.id ? `dashboard_theme_${session.user.id}` : 'dashboard_theme'}
         initialTheme={dashboardTheme ?? defaultTheme}
