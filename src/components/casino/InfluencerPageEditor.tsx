@@ -179,7 +179,7 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
       </Section>
 
       {/* Background Image */}
-      <Section icon={<Image size={14} className="text-primary" />} title="Imagem de Fundo">
+      <Section icon={<ImageIcon size={14} className="text-primary" />} title="Imagem de Fundo">
         {config.bgImageUrl ? (
           <div className="space-y-3">
             <div className="relative rounded-xl overflow-hidden border border-white/[0.08]">
