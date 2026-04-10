@@ -668,6 +668,8 @@ const Dashboard = () => {
     setReceiptBgColor(settings.receiptBgColor || '#ffffff');
     setReceiptAccentColor(settings.receiptAccentColor || '#3b82f6');
     setReceiptOperatorName(settings.receiptOperatorName || '');
+    setHideReceiptSection(!!settings.hideReceiptSection);
+    setHideEdpaySection(!!settings.hideEdpaySection);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -832,6 +834,12 @@ const Dashboard = () => {
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
+    receiptFontColor,
+    receiptBgColor,
+    receiptAccentColor,
+    receiptOperatorName,
+    hideReceiptSection,
+    hideEdpaySection,
   ]);
 
   useEffect(() => {
