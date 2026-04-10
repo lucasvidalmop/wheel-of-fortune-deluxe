@@ -226,6 +226,40 @@ const Influencer = () => {
 
   const closeRaffle = () => { setShowRaffle(false); setRaffleStep('config'); };
 
+  const openPrizeDialog = (user: WheelUser) => {
+    setPrizeUser(user);
+    setPrizeAmount(30);
+    setPrizeCustomAmount('30,00');
+    setPrizeSending(false);
+    setPrizeSent(false);
+    setShowPrizeDialog(true);
+  };
+
+  const executeSinglePrize = async () => {
+    if (!prizeUser || !session?.user?.id) return;
+    setPrizeSending(true);
+    try {
+      await (supabase as any).rpc('create_prize_payment', {
+        p_owner_id: session.user.id,
+        p_account_id: prizeUser.account_id,
+        p_user_name: prizeUser.name,
+        p_user_email: prizeUser.email,
+        p_prize: `Prêmio R$ ${prizeAmount.toFixed(2)}`,
+        p_amount: prizeAmount,
+        p_force_auto: prizeUser.auto_payment,
+      });
+      setPrizeSent(true);
+      fetchTodayWinners(session.user.id);
+      setTimeout(() => {
+        setShowPrizeDialog(false);
+        toast.success(`Prêmio de ${formatCurrency(prizeAmount)} enviado para ${prizeUser.name}!`);
+      }, 1500);
+    } catch (err: any) {
+      toast.error('Erro ao enviar prêmio: ' + (err.message || ''));
+      setPrizeSending(false);
+    }
+  };
+
   const baseUrl = window.location.origin;
   const gorjetaUrl = gorjetaRef ? `${baseUrl}/gorjeta?ref=${gorjetaRef}` : '';
   const prizesRemaining = Math.max(0, dailyLimit - sentToday);
