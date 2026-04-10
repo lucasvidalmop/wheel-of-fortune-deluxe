@@ -229,6 +229,13 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
           </div>
         </div>
         <ColorField label="Cor das bordas" value={config.borderColor} onChange={v => update({ borderColor: v })} />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Espessura das bordas</span>
+          <div className="flex items-center gap-2">
+            <input type="range" min="0" max="5" step="0.5" value={config.borderWidth} onChange={e => update({ borderWidth: parseFloat(e.target.value) })} className="w-24 accent-primary h-1.5" />
+            <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.borderWidth}px</span>
+          </div>
+        </div>
       </Section>
 
       <Section icon={<Type size={14} className="text-primary" />} title="Cores do Texto">
