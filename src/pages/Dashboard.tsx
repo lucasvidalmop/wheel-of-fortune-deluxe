@@ -15,6 +15,7 @@ import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
+import InfluencerPageEditor from '@/components/casino/InfluencerPageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
@@ -142,7 +143,7 @@ const Dashboard = () => {
   const [loginLoading, setLoginLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta'>('inscritos');
-  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual'>('link');
+  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer'>('link');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
@@ -4235,6 +4236,7 @@ const Dashboard = () => {
                   {([
                     { key: 'link' as const, label: '🔗 Link', icon: Link2 },
                     { key: 'visual' as const, label: '🎨 Visual', icon: Palette },
+                    { key: 'influencer' as const, label: '🎯 Visual Influencer', icon: Target },
                   ] as const).map(tab => (
                     <button
                       key={tab.key}
@@ -4361,6 +4363,14 @@ const Dashboard = () => {
                     userId={session.user.id}
                     currentConfig={(wheelConfig as any).gorjetaPageConfig || {}}
                     onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
+                  />
+                )}
+
+                {gorjetaSubTab === 'influencer' && session?.user?.id && (
+                  <InfluencerPageEditor
+                    userId={session.user.id}
+                    currentConfig={(wheelConfig as any).influencerPageConfig || {}}
+                    onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
                   />
                 )}
               </div>
