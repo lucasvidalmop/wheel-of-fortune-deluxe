@@ -12,6 +12,7 @@ interface SlotMachineSuccessProps {
   successSubtitle: string;
   successBtnText: string;
   slotMatchIcon?: string;
+  slotMatchImageUrl?: string;
   slotLuckyText?: string;
   slotReelBgColor?: string;
   slotFrameBgColor?: string;
@@ -86,6 +87,15 @@ const SlotReel = ({
 
     return () => clearInterval(intervalRef.current!);
   }, [targetIcon, delay, onStop]);
+
+  const hasImage = !!reelBgColor; // placeholder, will use from props
+
+  const renderIcon = (icon: string, imageUrl?: string, size?: string) => {
+    if (imageUrl) {
+      return <img src={imageUrl} alt="slot" className={`${size || 'w-8 h-8'} object-contain`} />;
+    }
+    return <span>{icon}</span>;
+  };
 
   return (
     <div
