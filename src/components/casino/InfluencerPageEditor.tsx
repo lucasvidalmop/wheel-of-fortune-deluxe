@@ -11,6 +11,12 @@ export interface InfluencerPageConfig {
   textColor: string;
   btnBgColor: string;
   btnTextColor: string;
+  // Background image
+  bgImageUrl: string;
+  // Glass effects
+  glowColor: string;
+  glowOpacity: number;
+  borderOpacity: number;
   // Tab styling
   tabActiveColor: string;
   tabInactiveColor: string;
@@ -28,6 +34,10 @@ export const defaultInfluencerConfig: InfluencerPageConfig = {
   textColor: '#ffffff',
   btnBgColor: '#2dd4bf',
   btnTextColor: '#000000',
+  bgImageUrl: '',
+  glowColor: '#2dd4bf',
+  glowOpacity: 3,
+  borderOpacity: 8,
   tabActiveColor: '',
   tabInactiveColor: '',
   tabBorderWidth: 2,
