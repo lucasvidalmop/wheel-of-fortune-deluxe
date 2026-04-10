@@ -160,6 +160,7 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
   const [config, setConfig] = useState<GorjetaPageConfig>({ ...defaultGorjetaConfig, ...currentConfig });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [previewKey, setPreviewKey] = useState(0);
 
   useEffect(() => {
     setConfig({ ...defaultGorjetaConfig, ...currentConfig });
