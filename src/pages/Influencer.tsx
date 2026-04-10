@@ -191,6 +191,7 @@ const Influencer = () => {
       setDrawProbability(rawConfig.drawProbability ?? 0);
       setMinRealWinners(rawConfig.minRealWinners ?? 0);
       setGhostUsers(rawConfig.ghostUsers || []);
+      setMaxWinsPerDay(rawConfig.maxWinsPerDay ?? 1);
     }
     setLoading(false);
     fetchUsers(userId);
