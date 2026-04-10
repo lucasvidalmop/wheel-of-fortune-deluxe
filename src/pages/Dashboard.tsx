@@ -451,6 +451,40 @@ const Dashboard = () => {
     setReferralLoading(false);
   };
 
+  const fetchGorjetaHistory = async () => {
+    if (!session?.user?.id) return;
+    setGorjetaHistoryLoading(true);
+    try {
+      // Get gorjeta referral link IDs for this owner
+      const gorjetaRef = (wheelConfig as any).gorjetaRef || '';
+      const { data: links } = await (supabase as any)
+        .from('referral_links')
+        .select('id, code, label')
+        .eq('owner_id', session.user.id);
+      
+      const gorjetaLinkIds = (links || [])
+        .filter((l: any) => l.label === 'Gorjeta' || l.code === gorjetaRef)
+        .map((l: any) => l.id);
+
+      if (gorjetaLinkIds.length === 0) {
+        setGorjetaHistory([]);
+        setGorjetaHistoryLoading(false);
+        return;
+      }
+
+      const { data: redemptions } = await (supabase as any)
+        .from('referral_redemptions')
+        .select('*, referral_links!inner(code, label)')
+        .in('referral_link_id', gorjetaLinkIds)
+        .order('created_at', { ascending: false });
+
+      setGorjetaHistory(redemptions || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setGorjetaHistoryLoading(false);
+  };
+
   const handleSaveReferral = async () => {
     if (!referralForm.label.trim()) { toast.error('Preencha o nome do link'); return; }
     if (editingReferral) {
@@ -1754,7 +1788,7 @@ const Dashboard = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); if (item.key === 'hist_gorjeta') fetchGorjetaHistory(); }}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
                   activeTab === item.key
@@ -1810,7 +1844,7 @@ const Dashboard = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); if (item.key === 'hist_gorjeta') fetchGorjetaHistory(); }}
                 className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                   activeTab === item.key
                     ? 'bg-primary/15 text-primary border border-primary/20'
