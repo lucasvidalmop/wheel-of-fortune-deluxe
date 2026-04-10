@@ -1150,6 +1150,34 @@ const Dashboard = () => {
     fetchPrizePayments();
   };
 
+  const handleBulkReject = async () => {
+    if (selectedPrizeIds.size === 0) { toast.error('Selecione ao menos um prêmio'); return; }
+    const ids = Array.from(selectedPrizeIds);
+    await (supabase as any).from('prize_payments').update({ status: 'rejected', updated_at: new Date().toISOString() }).in('id', ids);
+    toast.success(`${ids.length} prêmio(s) rejeitado(s)`);
+    setSelectedPrizeIds(new Set());
+    fetchPrizePayments();
+  };
+
+  const handleBulkPay = async () => {
+    if (selectedPrizeIds.size === 0) { toast.error('Selecione ao menos um prêmio'); return; }
+    if (!edpayPublicKey || !edpaySecretKey) { toast.error('Configure as credenciais EdPay'); return; }
+    setBulkPaying(true);
+    const ids = Array.from(selectedPrizeIds);
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      try {
+        const { data, error } = await supabase.functions.invoke('edpay-pix-transfer', { body: { paymentId: id, edpayPublicKey, edpaySecretKey } });
+        if (error || data?.error) { fail++; } else { ok++; }
+      } catch { fail++; }
+    }
+    toast.success(`${ok} pago(s)${fail > 0 ? `, ${fail} falha(s)` : ''}`);
+    setSelectedPrizeIds(new Set());
+    setBulkPaying(false);
+    fetchPrizePayments();
+  };
+
+
   const handleGrantSpin = async (user: WheelUser) => {
     if (user.spins_available >= 1) {
       // Remove spin
