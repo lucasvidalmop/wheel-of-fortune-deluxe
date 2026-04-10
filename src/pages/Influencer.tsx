@@ -353,114 +353,41 @@ const Influencer = () => {
     }
   };
 
+  const delay = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms));
+
   const startRaffle = () => {
     setRaffleStep('config'); setRaffleQty(1); setRaffleAmount(30);
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
   };
 
-  const executeRaffle = async () => {
-    if (users.length === 0 && ghostUsers.length === 0) { toast.error('Sem participantes'); return; }
-    const qty = raffleQty;
+  const persistRaffleResults = async (finalSelected: Winner[]) => {
+    if (!session?.user?.id) return;
 
-    // Build pool of real users (shuffled), excluding those who hit daily limit AND blacklisted
-    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay && !u.blacklisted);
-    
-    // Separate guaranteed winners from regular eligible
-    const guaranteedUsers = eligibleUsers.filter(u => u.guaranteed_next_win);
-    const regularUsers = eligibleUsers.filter(u => !u.guaranteed_next_win);
-    const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
+    for (const winner of finalSelected) {
+      if ((winner.user as any)._isGhost) continue;
 
-    // Build ghost user objects (they won't create payments)
-    const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
-      id: `ghost_${Math.random().toString(36).slice(2)}`,
-      account_id: generateFakeAccountId(),
-      email: '',
-      phone: '',
-      name,
-      spins_available: 0,
-      created_at: '',
-      pix_key: '',
-      pix_key_type: '',
-      auto_payment: false,
-      blacklisted: false,
-      guaranteed_next_win: false,
-      _isGhost: true,
-    }));
+      try {
+        const result = await (supabase as any).rpc('create_prize_payment', {
+          p_owner_id: session.user.id,
+          p_account_id: winner.user.account_id,
+          p_user_name: winner.user.name,
+          p_user_email: winner.user.email,
+          p_prize: `Sorteio R$ ${winner.amount.toFixed(2)}`,
+          p_amount: winner.amount,
+          p_force_auto: winner.user.auto_payment,
+        });
 
-    const selected: { user: WheelUser & { _isGhost?: boolean }; amount: number; status: 'pending' | 'sending' | 'sent' }[] = [];
-
-    // 1. First, add ALL guaranteed winners (they always get in)
-    const guaranteedCount = Math.min(guaranteedUsers.length, qty);
-    for (let i = 0; i < guaranteedCount; i++) {
-      selected.push({ user: guaranteedUsers[i], amount: raffleAmount, status: 'pending' });
-    }
-
-    // 2. Then, guarantee minimum real winners from regular pool
-    const remainingAfterGuaranteed = qty - selected.length;
-    const realMin = Math.min(minRealWinners, shuffledRegular.length, remainingAfterGuaranteed);
-
-    for (let i = 0; i < realMin && i < shuffledRegular.length; i++) {
-      selected.push({ user: shuffledRegular[i], amount: raffleAmount, status: 'pending' });
-    }
-    const usedRealIdx = realMin;
-
-    // 3. Fill remaining slots using probability
-    let realIdx = usedRealIdx;
-    let ghostIdx = 0;
-    const remaining = qty - selected.length;
-    const prob = drawProbability / 100;
-
-    for (let i = 0; i < remaining; i++) {
-      const pickReal = Math.random() < prob;
-      if (pickReal && realIdx < shuffledRegular.length) {
-        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
-      } else if (ghostIdx < ghostPool.length) {
-        selected.push({ user: ghostPool[ghostIdx++] as any, amount: raffleAmount, status: 'pending' });
-      } else if (realIdx < shuffledRegular.length) {
-        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
-      }
-    }
-
-    // Shuffle final order so ghosts aren't always at the end
-    const finalSelected = selected.sort(() => Math.random() - 0.5);
-
-    setWinners(finalSelected);
-    setRaffleStep('sending');
-    setSendingIndex(0);
-    
-
-    for (let i = 0; i < finalSelected.length; i++) {
-      setSendingIndex(i);
-      setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sending' } : w));
-      playRaffleSound();
-
-      // Only create payment for real users (not ghosts)
-      if (!(finalSelected[i].user as any)._isGhost) {
-        try {
-          const result = await (supabase as any).rpc('create_prize_payment', {
-            p_owner_id: session.user.id,
-            p_account_id: finalSelected[i].user.account_id,
-            p_user_name: finalSelected[i].user.name,
-            p_user_email: finalSelected[i].user.email,
-            p_prize: `Sorteio R$ ${raffleAmount.toFixed(2)}`,
-            p_amount: raffleAmount,
-            p_force_auto: finalSelected[i].user.auto_payment,
-          });
-          if (result?.data?.id) {
-            sessionCreatedIds.current.add(result.data.id);
-            // Auto-pay via PIX if auto_payment is enabled
-            if (result?.data?.auto_payment || finalSelected[i].user.auto_payment) {
-              triggerAutoPay(result.data.id).catch(console.error);
-            }
+        if (result?.data?.id) {
+          sessionCreatedIds.current.add(result.data.id);
+          if (result?.data?.auto_payment || winner.user.auto_payment) {
+            triggerAutoPay(result.data.id).catch(console.error);
           }
-        } catch (err) { console.error('Erro ao criar pagamento:', err); }
+        }
+      } catch (err) {
+        console.error('Erro ao criar pagamento:', err);
       }
-
-      setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sent' } : w));
-      await new Promise(r => setTimeout(r, 800));
     }
 
-    // Save ghost winners to localStorage for social proof
     const ghostEntries: TodayWinner[] = finalSelected
       .filter(w => (w.user as any)._isGhost)
       .map(w => ({
@@ -471,14 +398,13 @@ const Influencer = () => {
         created_at: new Date().toISOString(),
         prize: `Sorteio R$ ${w.amount.toFixed(2)}`,
       }));
-    // Track ghost IDs in session
+
     ghostEntries.forEach(g => sessionCreatedIds.current.add(g.id));
     if (ghostEntries.length > 0) {
       const existing = loadGhostWinners();
       saveGhostWinners([...ghostEntries, ...existing]);
     }
 
-    // Start 60s countdown — after that, these entries become permanent
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     if (countdownRef.current) clearInterval(countdownRef.current);
     setResetCountdown(60);
@@ -496,21 +422,116 @@ const Influencer = () => {
       setResetCountdown(0);
     }, 60_000);
 
-    setSendingIndex(finalSelected.length);
-
-    // Reset guaranteed_next_win for real users that were selected
     const guaranteedWinnerIds = finalSelected
       .filter(w => !(w.user as any)._isGhost && w.user.guaranteed_next_win)
       .map(w => w.user.id);
+
     if (guaranteedWinnerIds.length > 0) {
       await (supabase as any).from('wheel_users').update({ guaranteed_next_win: false }).in('id', guaranteedWinnerIds);
       setUsers(prev => prev.map(u => guaranteedWinnerIds.includes(u.id) ? { ...u, guaranteed_next_win: false } : u));
     }
 
-    setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); fetchHistory(session?.user?.id); }, 600);
+    await Promise.all([
+      fetchTodayWinners(session.user.id),
+      fetchHistory(session.user.id),
+    ]);
   };
 
-  const closeRaffle = () => { setShowRaffle(false); setRaffleStep('config'); };
+  const executeRaffle = async () => {
+    if (users.length === 0 && ghostUsers.length === 0) { toast.error('Sem participantes'); return; }
+    const qty = raffleQty;
+
+    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay && !u.blacklisted);
+    const guaranteedUsers = eligibleUsers.filter(u => u.guaranteed_next_win);
+    const regularUsers = eligibleUsers.filter(u => !u.guaranteed_next_win);
+    const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
+
+    const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
+      id: `ghost_${Math.random().toString(36).slice(2)}`,
+      account_id: generateFakeAccountId(),
+      email: '',
+      phone: '',
+      name,
+      spins_available: 0,
+      created_at: '',
+      pix_key: '',
+      pix_key_type: '',
+      auto_payment: false,
+      blacklisted: false,
+      guaranteed_next_win: false,
+      _isGhost: true,
+    }));
+
+    const selected: Winner[] = [];
+
+    const guaranteedCount = Math.min(guaranteedUsers.length, qty);
+    for (let i = 0; i < guaranteedCount; i++) {
+      selected.push({ user: guaranteedUsers[i], amount: raffleAmount, status: 'pending' });
+    }
+
+    const remainingAfterGuaranteed = qty - selected.length;
+    const realMin = Math.min(minRealWinners, shuffledRegular.length, remainingAfterGuaranteed);
+    for (let i = 0; i < realMin && i < shuffledRegular.length; i++) {
+      selected.push({ user: shuffledRegular[i], amount: raffleAmount, status: 'pending' });
+    }
+
+    let realIdx = realMin;
+    let ghostIdx = 0;
+    const remaining = qty - selected.length;
+    const prob = drawProbability / 100;
+
+    for (let i = 0; i < remaining; i++) {
+      const pickReal = Math.random() < prob;
+      if (pickReal && realIdx < shuffledRegular.length) {
+        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
+      } else if (ghostIdx < ghostPool.length) {
+        selected.push({ user: ghostPool[ghostIdx++] as any, amount: raffleAmount, status: 'pending' });
+      } else if (realIdx < shuffledRegular.length) {
+        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
+      }
+    }
+
+    const finalSelected = [...selected].sort(() => Math.random() - 0.5);
+
+    setWinners(finalSelected);
+    setRaffleStep('sending');
+    setSendingIndex(0);
+
+    void persistRaffleResults(finalSelected).catch((err) => {
+      console.error('Erro ao persistir sorteio:', err);
+      toast.error('O sorteio foi exibido, mas houve erro ao salvar parte dos prêmios.');
+    });
+
+    await delay(120);
+
+    for (let i = 0; i < finalSelected.length; i++) {
+      setSendingIndex(i);
+      setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sending' } : w));
+      playRaffleSound();
+      await delay(150);
+      setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sent' } : w));
+      await delay(250);
+    }
+
+    setSendingIndex(finalSelected.length);
+    await delay(250);
+    setRaffleStep('results');
+  };
+
+  const stopRaffleSound = () => {
+    const win = window as any;
+    const audio = win.__influencerRaffleAudio as HTMLAudioElement | undefined;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  };
+
+  const closeRaffle = () => {
+    stopRaffleSound();
+    setShowRaffle(false);
+    setRaffleStep('config');
+  };
 
   const openPrizeDialog = (user: WheelUser) => {
     setPrizeUser(user);
@@ -534,7 +555,6 @@ const Influencer = () => {
         p_amount: prizeAmount,
         p_force_auto: prizeUser.auto_payment,
       });
-      // Auto-pay via PIX if auto_payment is enabled
       if (result?.data?.id && (result?.data?.auto_payment || prizeUser.auto_payment)) {
         await triggerAutoPay(result.data.id);
       }
@@ -575,40 +595,58 @@ const Influencer = () => {
   const borderGlowSpread = influencerConfig.borderGlowSpread ?? 12;
 
   const playRaffleSound = () => {
-    // Custom audio
-    if (raffleSoundEnabled && raffleSoundUrl) {
+    if (!raffleSoundEnabled) return;
+
+    const win = window as any;
+
+    if (raffleSoundUrl) {
       try {
-        const audio = new Audio(raffleSoundUrl);
-        audio.play().catch(() => {});
+        let audio = win.__influencerRaffleAudio as HTMLAudioElement | undefined;
+        if (!audio || audio.src !== raffleSoundUrl) {
+          audio = new Audio(raffleSoundUrl);
+          audio.preload = 'auto';
+          win.__influencerRaffleAudio = audio;
+        }
+        audio.pause();
+        audio.currentTime = 0;
+        void audio.play().catch(() => {});
       } catch {}
       return;
     }
-    // Built-in "cha-ching" coin sound via Web Audio API
+
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextCtor = window.AudioContext || win.webkitAudioContext;
+      if (!AudioContextCtor) return;
+
+      const ctx = win.__influencerRaffleAudioCtx || (win.__influencerRaffleAudioCtx = new AudioContextCtor());
+      if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+
       const now = ctx.currentTime;
-      // High-pitched coin hit
-      const osc1 = ctx.createOscillator();
-      const g1 = ctx.createGain();
-      osc1.connect(g1); g1.connect(ctx.destination);
-      osc1.frequency.setValueAtTime(2400, now);
-      osc1.frequency.exponentialRampToValueAtTime(3200, now + 0.02);
-      osc1.type = 'sine';
-      g1.gain.setValueAtTime(0.18, now);
-      g1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-      osc1.start(now); osc1.stop(now + 0.15);
-      // Second ring
-      const osc2 = ctx.createOscillator();
-      const g2 = ctx.createGain();
-      osc2.connect(g2); g2.connect(ctx.destination);
-      osc2.frequency.setValueAtTime(3800, now + 0.04);
-      osc2.type = 'sine';
-      g2.gain.setValueAtTime(0, now);
-      g2.gain.linearRampToValueAtTime(0.12, now + 0.05);
-      g2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-      osc2.start(now + 0.04); osc2.stop(now + 0.25);
-      // Close context after sound ends
-      setTimeout(() => ctx.close().catch(() => {}), 400);
+      const master = ctx.createGain();
+      master.connect(ctx.destination);
+      master.gain.setValueAtTime(0.16, now);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+      const hit = ctx.createOscillator();
+      hit.type = 'triangle';
+      hit.frequency.setValueAtTime(1800, now);
+      hit.frequency.exponentialRampToValueAtTime(980, now + 0.08);
+      hit.connect(master);
+      hit.start(now);
+      hit.stop(now + 0.09);
+
+      const sparkle = ctx.createOscillator();
+      const sparkleGain = ctx.createGain();
+      sparkle.type = 'sine';
+      sparkle.frequency.setValueAtTime(2600, now + 0.03);
+      sparkle.frequency.exponentialRampToValueAtTime(1400, now + 0.14);
+      sparkleGain.gain.setValueAtTime(0, now);
+      sparkleGain.gain.linearRampToValueAtTime(0.08, now + 0.04);
+      sparkleGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+      sparkle.connect(sparkleGain);
+      sparkleGain.connect(ctx.destination);
+      sparkle.start(now + 0.03);
+      sparkle.stop(now + 0.16);
     } catch {}
   };
 
