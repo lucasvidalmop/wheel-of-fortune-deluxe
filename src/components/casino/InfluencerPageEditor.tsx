@@ -246,6 +246,13 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             </div>
           </div>
         )}
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Opacidade do fundo</span>
+          <div className="flex items-center gap-2">
+            <input type="range" min="0" max="100" value={config.cardBgOpacity ?? 95} onChange={e => update({ cardBgOpacity: parseInt(e.target.value) })} className="w-24 accent-primary h-1.5" />
+            <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.cardBgOpacity ?? 95}%</span>
+          </div>
+        </div>
         <ColorField label="Cor do brilho" value={config.glowColor} onChange={v => update({ glowColor: v })} />
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">Intensidade do brilho</span>
