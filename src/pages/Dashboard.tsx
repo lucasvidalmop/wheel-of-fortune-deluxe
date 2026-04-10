@@ -1577,7 +1577,8 @@ const Dashboard = () => {
       : spinsFilter === 'duplicados' ? (() => {
           const emailCount = users.filter(o => o.email && o.email.toLowerCase() === u.email.toLowerCase()).length;
           const idCount = users.filter(o => o.account_id === u.account_id).length;
-          return emailCount > 1 || idCount > 1;
+          const nameCount = u.name ? users.filter(o => o.name && o.name.toLowerCase().trim() === u.name.toLowerCase().trim()).length : 0;
+          return emailCount > 1 || idCount > 1 || nameCount > 1;
         })()
       : true;
     return matchesSearch && matchesSpins;
