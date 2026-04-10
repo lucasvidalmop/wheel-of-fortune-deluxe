@@ -5029,13 +5029,15 @@ const Dashboard = () => {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Nome do usuário fantasma"
+                    placeholder="Nome1, Nome2, Nome3 (separe por vírgula)"
                     value={ghostUserName}
                     onChange={(e) => setGhostUserName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && ghostUserName.trim()) {
+                        const names = ghostUserName.split(',').map(n => n.trim()).filter(Boolean);
+                        if (names.length === 0) return;
                         const current: string[] = (wheelConfig as any).ghostUsers || [];
-                        setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ghostUserName.trim()] }));
+                        setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ...names] }));
                         setGhostUserName('');
                       }
                     }}
@@ -5043,9 +5045,10 @@ const Dashboard = () => {
                   />
                   <button
                     onClick={() => {
-                      if (!ghostUserName.trim()) return;
+                      const names = ghostUserName.split(',').map(n => n.trim()).filter(Boolean);
+                      if (names.length === 0) return;
                       const current: string[] = (wheelConfig as any).ghostUsers || [];
-                      setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ghostUserName.trim()] }));
+                      setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ...names] }));
                       setGhostUserName('');
                     }}
                     className="px-4 py-2.5 rounded-xl bg-accent/20 border border-accent/30 text-accent-foreground hover:bg-accent/30 transition text-sm font-medium"
