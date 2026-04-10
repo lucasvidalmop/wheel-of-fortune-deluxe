@@ -592,28 +592,50 @@ const Influencer = () => {
 
               {raffleStep === 'sending' && (
                 <>
-                  <div className="text-center py-2">
-                    <p className="text-base font-black" style={{ color: accent }}>💰 ENVIANDO PRÊMIOS 💸</p>
+                  {/* Animated sending header */}
+                  <div className="text-center py-4 space-y-3">
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-2xl animate-bounce" style={{ animationDuration: '0.8s' }}>💰</span>
+                      <p className="text-lg font-black uppercase tracking-wider animate-pulse" style={{ color: accent, textShadow: `0 0 20px ${accent}60, 0 0 40px ${accent}30` }}>
+                        ENVIANDO PRÊMIOS
+                      </p>
+                      <span className="text-2xl animate-bounce" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }}>💸</span>
+                    </div>
+                    {/* Animated dots */}
+                    <div className="flex items-center justify-center gap-1.5">
+                      {[0, 1, 2, 3, 4].map(i => (
+                        <div key={i} className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accent, animationDelay: `${i * 0.15}s`, animationDuration: '0.8s' }} />
+                      ))}
+                    </div>
                   </div>
+
+                  {/* Progress bar */}
                   <div>
-                    <div className="h-2 rounded-full overflow-hidden mb-1" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(winners.filter(w => w.status === 'sent').length / winners.length) * 100}%`, background: `linear-gradient(90deg, ${accent}, #3b82f6)` }} />
+                    <div className="h-2.5 rounded-full overflow-hidden mb-1.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div className="h-full rounded-full transition-all duration-500 relative overflow-hidden" style={{ width: `${(winners.filter(w => w.status === 'sent').length / winners.length) * 100}%`, background: `linear-gradient(90deg, ${accent}, #3b82f6)` }}>
+                        <div className="absolute inset-0 animate-pulse" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)', animationDuration: '1s' }} />
+                      </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[10px] text-white/40">Progresso</span>
-                      <span className="text-[10px] font-bold text-white/60">{winners.filter(w => w.status === 'sent').length}/{winners.length}</span>
+                      <span className="text-[10px] font-bold" style={{ color: accent }}>{winners.filter(w => w.status === 'sent').length}/{winners.length}</span>
                     </div>
                   </div>
+
+                  {/* Winners list with staggered animation */}
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {winners.filter(w => w.status !== 'pending').map((w, i) => (
-                      <div key={i} className="flex items-center gap-2 p-2.5 rounded-xl border border-white/[0.06] animate-fade-in" style={{ background: 'rgba(0,180,100,0.08)' }}>
+                      <div key={i} className="flex items-center gap-2 p-2.5 rounded-xl border animate-fade-in"
+                        style={{ borderColor: w.status === 'sent' ? `${accent}30` : 'rgba(255,255,255,0.06)', background: w.status === 'sent' ? `${accent}08` : 'rgba(255,255,255,0.02)' }}>
                         <span className="text-sm">💵</span>
-                        <span className="text-xs text-white/80 flex-1">{formatCurrency(w.amount)} → {w.user.name}</span>
-                        {w.status === 'sent' && <span className="text-sm" style={{ color: '#4ade80' }}>✓</span>}
-                        {w.status === 'sending' && <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />}
+                        <span className="text-xs text-white/80 flex-1 truncate">{formatCurrency(w.amount)} → <strong>{w.user.name}</strong></span>
+                        {w.status === 'sent' && <span className="text-base" style={{ color: '#4ade80' }}>✓</span>}
+                        {w.status === 'sending' && <div className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />}
                       </div>
                     ))}
                   </div>
+
+                  {/* Disabled button with spinner */}
                   <button disabled className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 opacity-80" style={{ background: accent, color: btnText }}>
                     <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${btnText} transparent ${btnText} ${btnText}` }} />
                     AGUARDE...
