@@ -119,6 +119,7 @@ const SlotMachineSuccess = ({
   ctaUrl,
   onCtaClick,
   showCta,
+  inline = false,
 }: SlotMachineSuccessProps) => {
   const [phase, setPhase] = useState<'slots' | 'lucky' | 'success'>('slots');
   const [stoppedCount, setStoppedCount] = useState(0);
