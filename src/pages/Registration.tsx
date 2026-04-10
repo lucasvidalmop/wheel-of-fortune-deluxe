@@ -138,7 +138,7 @@ const Registration = () => {
   };
 
   // ─── Styles ───
-  const accentColor = cfg.btnBgColor || '#2dd4bf';
+  const accentColor = cfg.accentColor || cfg.btnBgColor || '#2dd4bf';
 
   const bgStyle: React.CSSProperties = {
     background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`,
