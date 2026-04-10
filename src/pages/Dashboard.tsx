@@ -146,8 +146,9 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'configuracoes'>('inscritos');
   const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer'>('link');
+  const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
@@ -1662,6 +1663,7 @@ const Dashboard = () => {
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
+    { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
   ];
 
   const tabTitles: Record<string, string> = {
@@ -1677,6 +1679,7 @@ const Dashboard = () => {
     notificacoes: 'Notificações',
     referral: 'Links de Referência',
     gorjeta: 'Página de Gorjeta',
+    configuracoes: 'Configurações',
   };
 
   return (
@@ -4454,6 +4457,132 @@ const Dashboard = () => {
               </div>
             );
           })()}
+
+
+          {activeTab === 'configuracoes' && (
+            <div className="w-full max-w-2xl min-w-0 space-y-6">
+              {/* Probabilidade do Sorteio */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Target size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Probabilidade do Sorteio</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Define a chance de um usuário <strong className="text-foreground">real</strong> ser selecionado versus um <strong className="text-primary">fantasma</strong> nas vagas <em>restantes</em> depois da fila pré-definida e do mínimo de reais. 100% = apenas reais. 0% = apenas fantasmas.
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm text-muted-foreground">Probabilidade de sorteio (%)</label>
+                    <span className="text-sm font-bold text-primary">{(wheelConfig as any).drawProbability ?? 0}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={(wheelConfig as any).drawProbability ?? 0}
+                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, drawProbability: Number(e.target.value) }))}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer accent-primary bg-white/[0.08]"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0% — Só fantasmas</span>
+                    <span>100% — Só reais</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={(wheelConfig as any).drawProbability ?? 0}
+                      onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, drawProbability: Math.max(0, Math.min(100, Number(e.target.value))) }))}
+                      className="w-20 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                    />
+                    <span className="text-sm text-muted-foreground">%</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-white/[0.06] pt-4 mt-4">
+                  <h4 className="text-sm font-bold text-primary mb-2">Mínimo de pessoas reais por sorteio (global)</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Valor <strong className="text-foreground">padrão</strong> para todos os influenciadores que não tiverem valor próprio. Em cada sorteio, o sistema tenta garantir <strong className="text-foreground">pelo menos X ganhadores reais</strong> (se houver inscritos elegíveis). As vagas restantes são preenchidas pela <strong className="text-foreground">probabilidade</strong> acima (reais vs fantasmas). Use <strong className="text-foreground">0</strong> ou vazio para não forçar mínimo (só a %).
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      value={(wheelConfig as any).minRealWinners ?? 0}
+                      onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, minRealWinners: Math.max(0, Number(e.target.value)) }))}
+                      className="w-20 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                    />
+                    <span className="text-sm text-muted-foreground">pessoas reais mínimas (global admin)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Usuários Fantasmas */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Users size={20} className="text-muted-foreground" />
+                  <h3 className="text-base font-bold text-foreground">Usuários Fantasmas</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Nomes fictícios que entram no pool do sorteio conforme a probabilidade configurada acima.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Nome do usuário fantasma"
+                    value={ghostUserName}
+                    onChange={(e) => setGhostUserName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && ghostUserName.trim()) {
+                        const current: string[] = (wheelConfig as any).ghostUsers || [];
+                        setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ghostUserName.trim()] }));
+                        setGhostUserName('');
+                      }
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <button
+                    onClick={() => {
+                      if (!ghostUserName.trim()) return;
+                      const current: string[] = (wheelConfig as any).ghostUsers || [];
+                      setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ghostUserName.trim()] }));
+                      setGhostUserName('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-accent/20 border border-accent/30 text-accent-foreground hover:bg-accent/30 transition text-sm font-medium"
+                  >
+                    Adicionar
+                  </button>
+                </div>
+
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] min-h-[80px] p-3">
+                  {((wheelConfig as any).ghostUsers || []).length === 0 ? (
+                    <div className="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground">
+                      <span>👻</span> Nenhum usuário fantasma cadastrado.
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {((wheelConfig as any).ghostUsers as string[]).map((name: string, idx: number) => (
+                        <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-sm text-foreground">
+                          {name}
+                          <button
+                            onClick={() => {
+                              const current: string[] = [...((wheelConfig as any).ghostUsers || [])];
+                              current.splice(idx, 1);
+                              setWheelConfig((prev: any) => ({ ...prev, ghostUsers: current }));
+                            }}
+                            className="text-muted-foreground hover:text-destructive transition ml-0.5"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
 
           {activeTab === 'financeiro' && (
