@@ -106,8 +106,23 @@ const Registration = () => {
       document.head.appendChild(meta);
       cleanups.push(() => meta.remove());
     };
-    if (seoConfig.ogTitle) { document.title = seoConfig.ogTitle; addMeta('og:title', seoConfig.ogTitle); }
-    if (seoConfig.ogDescription) { addMeta('description', seoConfig.ogDescription); addMeta('og:description', seoConfig.ogDescription); }
+    // Page title (tab name)
+    const pageTitle = seoConfig.pageTitle || seoConfig.ogTitle;
+    if (pageTitle) { document.title = pageTitle; }
+    // Favicon
+    if (seoConfig.faviconUrl) {
+      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      const oldHref = link?.getAttribute('href');
+      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); cleanups.push(() => link.remove()); }
+      link.href = seoConfig.faviconUrl;
+      cleanups.push(() => { if (oldHref) link.href = oldHref; });
+    }
+    // Meta description
+    const pageDesc = seoConfig.pageDescription || seoConfig.ogDescription;
+    if (pageDesc) { addMeta('description', pageDesc); }
+    // OG tags
+    if (pageTitle) { addMeta('og:title', pageTitle); }
+    if (pageDesc) { addMeta('og:description', pageDesc); }
     if (seoConfig.ogImage) { addMeta('og:image', seoConfig.ogImage); }
     if (seoConfig.keywords) { addMeta('keywords', seoConfig.keywords); }
     if (seoConfig.facebookPixelId) {
