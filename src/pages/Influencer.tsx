@@ -386,11 +386,11 @@ const Influencer = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: bgColor, color: textColor }}>
+    <div className="min-h-screen" style={pageBgStyle}>
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-6 flex flex-col" style={{ height: 'calc(100vh)' }}>
 
         {/* ─── Top card: Title + Counter + Progress ─── */}
-        <div className="rounded-2xl border p-4 space-y-3" style={{ borderColor: `${accent}25`, background: cardBg }}>
+        <div className="rounded-2xl border p-4 space-y-3 backdrop-blur-xl" style={glassCardStyle}>
           {/* Row 1: Icon + Title + Counter */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
