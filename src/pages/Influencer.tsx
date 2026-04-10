@@ -178,6 +178,9 @@ const Influencer = () => {
       setLinkLabel(rawConfig.influencerLabel || rawConfig.gorjetaRef || '');
       setDailyLimit(rawConfig.influencerDailyLimit || 500);
       setInfluencerConfig(rawConfig.influencerPageConfig || {});
+      setDrawProbability(rawConfig.drawProbability ?? 0);
+      setMinRealWinners(rawConfig.minRealWinners ?? 0);
+      setGhostUsers(rawConfig.ghostUsers || []);
     }
     setLoading(false);
     fetchUsers(userId);
