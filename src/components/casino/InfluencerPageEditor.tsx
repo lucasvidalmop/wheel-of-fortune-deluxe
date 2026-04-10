@@ -226,6 +226,7 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.borderOpacity}%</span>
           </div>
         </div>
+        <ColorField label="Cor das bordas" value={config.borderColor} onChange={v => update({ borderColor: v })} />
       </Section>
 
       <Section icon={<Type size={14} className="text-primary" />} title="Cores do Texto">
