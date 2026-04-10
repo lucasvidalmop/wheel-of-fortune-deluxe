@@ -423,6 +423,8 @@ const Dashboard = () => {
   const [prizePayments, setPrizePayments] = useState<any[]>([]);
   const [prizePaymentsLoading, setPrizePaymentsLoading] = useState(false);
   const [payingPaymentId, setPayingPaymentId] = useState<string | null>(null);
+  const [selectedPrizeIds, setSelectedPrizeIds] = useState<Set<string>>(new Set());
+  const [bulkPaying, setBulkPaying] = useState(false);
   const [paidHistory, setPaidHistory] = useState<any[]>([]);
   const [paidHistoryLoading, setPaidHistoryLoading] = useState(false);
   const [receiptPayment, setReceiptPayment] = useState<any | null>(null);
@@ -1147,6 +1149,34 @@ const Dashboard = () => {
     toast.success('Prêmio rejeitado');
     fetchPrizePayments();
   };
+
+  const handleBulkReject = async () => {
+    if (selectedPrizeIds.size === 0) { toast.error('Selecione ao menos um prêmio'); return; }
+    const ids = Array.from(selectedPrizeIds);
+    await (supabase as any).from('prize_payments').update({ status: 'rejected', updated_at: new Date().toISOString() }).in('id', ids);
+    toast.success(`${ids.length} prêmio(s) rejeitado(s)`);
+    setSelectedPrizeIds(new Set());
+    fetchPrizePayments();
+  };
+
+  const handleBulkPay = async () => {
+    if (selectedPrizeIds.size === 0) { toast.error('Selecione ao menos um prêmio'); return; }
+    if (!edpayPublicKey || !edpaySecretKey) { toast.error('Configure as credenciais EdPay'); return; }
+    setBulkPaying(true);
+    const ids = Array.from(selectedPrizeIds);
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      try {
+        const { data, error } = await supabase.functions.invoke('edpay-pix-transfer', { body: { paymentId: id, edpayPublicKey, edpaySecretKey } });
+        if (error || data?.error) { fail++; } else { ok++; }
+      } catch { fail++; }
+    }
+    toast.success(`${ok} pago(s)${fail > 0 ? `, ${fail} falha(s)` : ''}`);
+    setSelectedPrizeIds(new Set());
+    setBulkPaying(false);
+    fetchPrizePayments();
+  };
+
 
   const handleGrantSpin = async (user: WheelUser) => {
     if (user.spins_available >= 1) {
@@ -5229,6 +5259,43 @@ const Dashboard = () => {
                       <p className="text-xs text-muted-foreground mt-1">Os prêmios aparecerão aqui quando os inscritos ganharem na roleta</p>
                     </div>
                   ) : (
+                    <>
+                    {/* Select all + bulk actions */}
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedPrizeIds.size === prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').length && selectedPrizeIds.size > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPrizeIds(new Set(prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').map((p: any) => p.id)));
+                            } else {
+                              setSelectedPrizeIds(new Set());
+                            }
+                          }}
+                          className="w-4 h-4 rounded accent-primary"
+                        />
+                        <span className="text-xs text-muted-foreground">Selecionar todos ({prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').length})</span>
+                      </label>
+                      {selectedPrizeIds.size > 0 && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleBulkPay}
+                            disabled={bulkPaying || !edpayPublicKey || !edpaySecretKey}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+                          >
+                            {bulkPaying ? <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> : '💸'} Pagar {selectedPrizeIds.size}
+                          </button>
+                          <button
+                            onClick={handleBulkReject}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                          >
+                            ❌ Recusar {selectedPrizeIds.size}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
                       {prizePayments.map((p: any) => {
                         const statusColors: Record<string, string> = {
@@ -5247,16 +5314,31 @@ const Dashboard = () => {
                           rejected: '❌ Rejeitado',
                           failed: '⚠️ Falhou',
                         };
+                        const isActionable = p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed';
                         return (
-                          <div key={p.id} className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm font-semibold text-foreground">{p.user_name}</p>
-                                <p className="text-[10px] text-muted-foreground">{p.user_email} • {p.account_id}</p>
+                          <div key={p.id} className={`p-3 rounded-xl bg-white/[0.04] border ${selectedPrizeIds.has(p.id) ? 'border-primary/40' : 'border-white/[0.06]'} space-y-2`}>
+                            <div className="flex items-center gap-2">
+                              {isActionable && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedPrizeIds.has(p.id)}
+                                  onChange={(e) => {
+                                    const next = new Set(selectedPrizeIds);
+                                    if (e.target.checked) next.add(p.id); else next.delete(p.id);
+                                    setSelectedPrizeIds(next);
+                                  }}
+                                  className="w-4 h-4 shrink-0 rounded accent-primary"
+                                />
+                              )}
+                              <div className="flex-1 flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm font-semibold text-foreground">{p.user_name}</p>
+                                  <p className="text-[10px] text-muted-foreground">{p.user_email} • {p.account_id}</p>
+                                </div>
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusColors[p.status] || 'bg-white/10 text-muted-foreground border-white/10'}`}>
+                                  {statusLabels[p.status] || p.status}
+                                </span>
                               </div>
-                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusColors[p.status] || 'bg-white/10 text-muted-foreground border-white/10'}`}>
-                                {statusLabels[p.status] || p.status}
-                              </span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-muted-foreground">🎁 {p.prize}</span>
@@ -5267,7 +5349,6 @@ const Dashboard = () => {
                             )}
                             <p className="text-[10px] text-muted-foreground">{new Date(p.created_at).toLocaleString('pt-BR')}</p>
 
-                            {/* Actions */}
                             {(p.status === 'pending' || p.status === 'auto_pending') && (
                               <div className="flex gap-2 pt-1">
                                 <button
@@ -5311,8 +5392,10 @@ const Dashboard = () => {
                         );
                       })}
                     </div>
+                    </>
                   )}
                 </GlassCard>
+              )}
               )}
 
               {/* Histórico de prêmios pagos / rejeitados */}
