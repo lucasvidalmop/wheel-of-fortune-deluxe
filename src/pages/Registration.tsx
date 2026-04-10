@@ -84,6 +84,8 @@ const Registration = () => {
         if (wcData?.slug) setWheelSlug(wcData.slug);
         const gorjetaCfg = wcData?.config?.gorjetaPageConfig || {};
         setCfg({ ...defaultGorjetaConfig, ...gorjetaCfg });
+        const seo = wcData?.config?.gorjetaSeo || {};
+        setSeoConfig(seo);
       }
       setLoading(false);
     };
