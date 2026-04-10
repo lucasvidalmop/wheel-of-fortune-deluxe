@@ -14,6 +14,8 @@ export interface InfluencerPageConfig {
   // Background image
   bgImageUrl: string;
   // Glass effects
+  glassEnabled: boolean;
+  glassBlur: number;
   glowColor: string;
   glowOpacity: number;
   borderOpacity: number;
@@ -42,6 +44,8 @@ export const defaultInfluencerConfig: InfluencerPageConfig = {
   btnBgColor: '#2dd4bf',
   btnTextColor: '#000000',
   bgImageUrl: '',
+  glassEnabled: true,
+  glassBlur: 16,
   glowColor: '#2dd4bf',
   glowOpacity: 3,
   borderOpacity: 8,
@@ -222,6 +226,24 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
 
       {/* Glass Effects */}
       <Section icon={<Monitor size={14} className="text-primary" />} title="Efeitos Glass">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Ativar efeito glass</span>
+          <button
+            onClick={() => update({ glassEnabled: !config.glassEnabled })}
+            className={`w-10 h-5 rounded-full transition-all relative ${config.glassEnabled !== false ? 'bg-primary' : 'bg-white/[0.1]'}`}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all ${config.glassEnabled !== false ? 'left-5' : 'left-0.5'}`} />
+          </button>
+        </div>
+        {config.glassEnabled !== false && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-muted-foreground">Intensidade do blur</span>
+            <div className="flex items-center gap-2">
+              <input type="range" min="0" max="40" value={config.glassBlur ?? 16} onChange={e => update({ glassBlur: parseInt(e.target.value) })} className="w-24 accent-primary h-1.5" />
+              <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.glassBlur ?? 16}px</span>
+            </div>
+          </div>
+        )}
         <ColorField label="Cor do brilho" value={config.glowColor} onChange={v => update({ glowColor: v })} />
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">Intensidade do brilho</span>
