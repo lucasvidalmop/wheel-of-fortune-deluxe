@@ -4513,7 +4513,7 @@ const Dashboard = () => {
                       onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, minRealWinners: Math.max(0, Number(e.target.value)) }))}
                       className="w-20 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                     />
-                    <span className="text-sm text-muted-foreground">pessoas reais mínimas (global admin)</span>
+                    <span className="text-sm text-muted-foreground">pessoas reais mínimas</span>
                   </div>
                 </div>
               </div>
