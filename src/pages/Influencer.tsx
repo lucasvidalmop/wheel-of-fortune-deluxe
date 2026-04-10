@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon, Ban } from 'lucide-react';
+import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface WheelUser {
@@ -330,19 +330,7 @@ const Influencer = () => {
 
   const todayWinsForUser = (accountId: string) => todayWinners.filter(w => w.account_id === accountId).length;
 
-  const toggleBlacklist = async (user: WheelUser) => {
-    const newVal = !user.blacklisted;
-    await (supabase as any).from('wheel_users').update({ blacklisted: newVal }).eq('id', user.id);
-    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, blacklisted: newVal } : u));
-    toast.success(newVal ? 'Usuário na blacklist' : 'Blacklist removida');
-  };
 
-  const toggleGuaranteedWin = async (user: WheelUser) => {
-    const newVal = !user.guaranteed_next_win;
-    await (supabase as any).from('wheel_users').update({ guaranteed_next_win: newVal }).eq('id', user.id);
-    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, guaranteed_next_win: newVal } : u));
-    toast.success(newVal ? 'Usuário será sorteado 100%' : 'Sorteio garantido removido');
-  };
 
   const handleExportCSV = () => {
     const csv = ['Nome,ID,Email,Telefone,Vitórias Hoje']
@@ -752,68 +740,17 @@ const Influencer = () => {
               {filteredUsers.map(u => {
                 const winsToday = todayWinsForUser(u.account_id);
                 const isMaxed = winsToday >= maxWinsPerDay;
-                const isGhost = u.id.startsWith('ghost_participant_');
-                const isBlacklisted = u.blacklisted;
-                const isGuaranteed = u.guaranteed_next_win;
-                
-                let cardBorderColor = `${accent}30`;
-                let cardBgColor = 'rgba(255,255,255,0.02)';
-                let nameColor = textColor;
-                
-                if (isBlacklisted) {
-                  cardBorderColor = 'rgba(239,68,68,0.4)';
-                  cardBgColor = 'rgba(239,68,68,0.06)';
-                  nameColor = 'rgba(239,68,68,0.6)';
-                } else if (isGuaranteed) {
-                  cardBorderColor = `rgba(34,197,94,0.5)`;
-                  cardBgColor = 'rgba(34,197,94,0.06)';
-                } else if (isMaxed) {
-                  cardBorderColor = 'rgba(239,68,68,0.6)';
-                  cardBgColor = 'rgba(239,68,68,0.05)';
-                  nameColor = '#ef4444';
-                }
-                
                 return (
                   <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:brightness-110"
-                    style={{ borderColor: cardBorderColor, background: cardBgColor }}>
+                    style={{ borderColor: isMaxed ? 'rgba(239,68,68,0.6)' : `${accent}30`, background: isMaxed ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)' }}>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        {isBlacklisted && <Ban size={11} className="text-red-400 shrink-0" />}
-                        {isGuaranteed && <Star size={11} className="text-green-400 shrink-0 fill-green-400" />}
-                        <p className="text-[13px] font-bold truncate" style={{ color: nameColor, textDecoration: isBlacklisted ? 'line-through' : 'none', opacity: isBlacklisted ? 0.5 : 1 }}>{u.name}</p>
-                      </div>
+                      <p className="text-[13px] font-bold truncate" style={{ color: isMaxed ? '#ef4444' : textColor }}>{u.name}</p>
                       <p className="text-[10px] mt-0.5" style={{ color: isMaxed ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.35)' }}>Hoje: {winsToday}/{maxWinsPerDay} vitória(s)</p>
                       <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0 ml-2">
-                      {!isGhost && (
-                        <>
-                          <button
-                            onClick={() => toggleBlacklist(u)}
-                            title={isBlacklisted ? 'Remover da blacklist' : 'Adicionar à blacklist'}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90"
-                            style={{
-                              background: isBlacklisted ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.04)',
-                              border: `1px solid ${isBlacklisted ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                            }}>
-                            <Ban size={12} style={{ color: isBlacklisted ? '#ef4444' : 'rgba(255,255,255,0.3)' }} />
-                          </button>
-                          <button
-                            onClick={() => toggleGuaranteedWin(u)}
-                            title={isGuaranteed ? 'Remover sorteio garantido' : 'Garantir próximo sorteio'}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90"
-                            style={{
-                              background: isGuaranteed ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.04)',
-                              border: `1px solid ${isGuaranteed ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                            }}>
-                            <Star size={12} style={{ color: isGuaranteed ? '#22c55e' : 'rgba(255,255,255,0.3)' }} fill={isGuaranteed ? '#22c55e' : 'none'} />
-                          </button>
-                        </>
-                      )}
-                      <button onClick={() => openPrizeDialog(u)} className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
-                        <Trophy size={12} style={{ color: accent }} />
-                      </button>
-                    </div>
+                    <button onClick={() => openPrizeDialog(u)} className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
+                      <Trophy size={14} style={{ color: accent }} />
+                    </button>
                   </div>
                 );
               })}

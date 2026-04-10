@@ -7,7 +7,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -34,6 +34,8 @@ interface WheelUser {
   user_type: string;
   responsible: string;
   auto_payment: boolean;
+  blacklisted: boolean;
+  guaranteed_next_win: boolean;
 }
 
 interface PersistedDashboardSettings {
@@ -162,7 +164,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified' | 'duplicados'>('all');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified' | 'duplicados' | 'blacklist' | 'guaranteed'>('all');
 
   const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -1074,6 +1076,22 @@ const Dashboard = () => {
     fetchUsers();
   };
 
+  const handleToggleBlacklist = async (user: WheelUser) => {
+    const newVal = !user.blacklisted;
+    const { error } = await (supabase as any).from('wheel_users').update({ blacklisted: newVal }).eq('id', user.id);
+    if (error) { toast.error('Erro ao atualizar blacklist'); return; }
+    toast.success(newVal ? '🚫 Usuário na blacklist (shadowban)' : 'Blacklist removida');
+    fetchUsers();
+  };
+
+  const handleToggleGuaranteedWin = async (user: WheelUser) => {
+    const newVal = !user.guaranteed_next_win;
+    const { error } = await (supabase as any).from('wheel_users').update({ guaranteed_next_win: newVal }).eq('id', user.id);
+    if (error) { toast.error('Erro ao atualizar sorteio garantido'); return; }
+    toast.success(newVal ? '⭐ Usuário será sorteado 100% no próximo sorteio' : 'Sorteio garantido removido');
+    fetchUsers();
+  };
+
   const fetchPaidHistory = async () => {
     if (!session?.user?.id) return;
     setPaidHistoryLoading(true);
@@ -1580,6 +1598,8 @@ const Dashboard = () => {
           const nameCount = u.name ? users.filter(o => o.name && o.name.toLowerCase().trim() === u.name.toLowerCase().trim()).length : 0;
           return emailCount > 1 || idCount > 1 || nameCount > 1;
         })()
+      : spinsFilter === 'blacklist' ? !!u.blacklisted
+      : spinsFilter === 'guaranteed' ? !!u.guaranteed_next_win
       : true;
     return matchesSearch && matchesSpins;
   });
@@ -1884,6 +1904,8 @@ const Dashboard = () => {
                   { value: 'auto_pay' as const, label: '💰 Auto Pay' },
                   { value: 'qualified' as const, label: '✅ Qualificados' },
                   { value: 'duplicados' as const, label: '🔁 Duplicados' },
+                  { value: 'blacklist' as const, label: '🚫 Blacklist' },
+                  { value: 'guaranteed' as const, label: '⭐ Sorteio 100%' },
                 ]).map(opt => (
                   <button
                     key={opt.value}
@@ -1908,6 +1930,8 @@ const Dashboard = () => {
                       });
                       return users.filter(u => (emailMap.get(u.email.toLowerCase()) || 0) > 1 || (idMap.get(u.account_id) || 0) > 1).length;
                     })()})`}
+                    {opt.value === 'blacklist' && ` (${users.filter(u => u.blacklisted).length})`}
+                    {opt.value === 'guaranteed' && ` (${users.filter(u => u.guaranteed_next_win).length})`}
                   </button>
                 ))}
                 {spinsFilter === 'auto_pay' && users.filter(u => u.auto_payment).length > 0 && (
@@ -2250,7 +2274,7 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {filteredUsers.map((user, index) => (
-                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''}`}>
+                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''} ${user.blacklisted ? 'bg-red-500/[0.04]' : ''} ${user.guaranteed_next_win ? 'bg-emerald-500/[0.04]' : ''}`}>
                           <td className="px-2 py-2">
                             <input
                               type="checkbox"
@@ -2264,7 +2288,14 @@ const Dashboard = () => {
                             />
                           </td>
                           <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
-                          <td className="px-2 py-2 text-foreground font-medium text-xs whitespace-nowrap">{user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}{user.name}</td>
+                          <td className="px-2 py-2 font-medium text-xs whitespace-nowrap">
+                            <span className={`${user.blacklisted ? 'line-through opacity-50 text-destructive' : 'text-foreground'}`}>
+                              {user.blacklisted && <Ban size={11} className="inline mr-1 text-destructive" />}
+                              {user.guaranteed_next_win && <Star size={11} className="inline mr-1 text-emerald-400 fill-emerald-400" />}
+                              {user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}
+                              {user.name}
+                            </span>
+                          </td>
                           <td className="px-2 py-2 text-muted-foreground text-[10px] truncate max-w-[120px]">{user.email}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.phone}</td>
                           <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{user.account_id}</td>
@@ -2283,12 +2314,26 @@ const Dashboard = () => {
                             </td>
                           )}
                           <td className="px-1 py-3 align-middle">
-                            <div className="flex items-center justify-center gap-1.5 min-h-[40px]">
+                            <div className="flex items-center justify-center gap-1 min-h-[40px]">
                               <button
                                 onClick={() => handleGrantSpin(user)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
                               >
                                 {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                              </button>
+                              <button
+                                onClick={() => handleToggleBlacklist(user)}
+                                className={`p-1.5 rounded-lg transition border ${user.blacklisted ? 'bg-destructive/15 text-destructive border-destructive/30 hover:bg-white/[0.06] hover:text-muted-foreground hover:border-white/[0.06]' : 'bg-white/[0.06] text-muted-foreground hover:bg-destructive/15 hover:text-destructive border-white/[0.06] hover:border-destructive/30'}`}
+                                title={user.blacklisted ? 'Remover da blacklist' : 'Blacklist (shadowban)'}
+                              >
+                                <Ban size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleToggleGuaranteedWin(user)}
+                                className={`p-1.5 rounded-lg transition border ${user.guaranteed_next_win ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-white/[0.06] hover:text-muted-foreground hover:border-white/[0.06]' : 'bg-white/[0.06] text-muted-foreground hover:bg-emerald-500/15 hover:text-emerald-400 border-white/[0.06] hover:border-emerald-500/30'}`}
+                                title={user.guaranteed_next_win ? 'Remover sorteio garantido' : 'Sorteio 100% garantido'}
+                              >
+                                <Star size={13} fill={user.guaranteed_next_win ? 'currentColor' : 'none'} />
                               </button>
                               <button
                                 onClick={() => handleToggleQualified(user)}
