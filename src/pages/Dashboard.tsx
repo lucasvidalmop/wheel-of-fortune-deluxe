@@ -5057,6 +5057,17 @@ const Dashboard = () => {
                   </button>
                 </div>
 
+                {((wheelConfig as any).ghostUsers || []).length > 0 && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [] }))}
+                      className="text-xs text-destructive hover:underline"
+                    >
+                      Remover todos
+                    </button>
+                  </div>
+                )}
+
                 <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] min-h-[80px] p-3">
                   {((wheelConfig as any).ghostUsers || []).length === 0 ? (
                     <div className="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground">
