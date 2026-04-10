@@ -1,0 +1,1 @@
+ALTER TABLE public.prize_payments ADD COLUMN IF NOT EXISTS hidden_from_influencer boolean NOT NULL DEFAULT false;
