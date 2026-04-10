@@ -16,6 +16,7 @@ interface SlotMachineSuccessProps {
   ctaUrl?: string;
   onCtaClick?: () => void;
   showCta: boolean;
+  inline?: boolean;
 }
 
 // Floating particles
