@@ -2790,6 +2790,27 @@ const Dashboard = () => {
 
             return (
             <div className="space-y-4">
+              {/* Filter buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {([
+                  { key: 'all', label: 'Todos' },
+                  { key: 'roleta', label: 'Roleta' },
+                  { key: 'referral', label: 'Referral' },
+                  { key: 'gorjeta', label: 'Gorjeta' },
+                ] as const).map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setAnalyticsFilter(f.key)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${analyticsFilter === f.key ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]'}`}
+                  >
+                    {f.label}
+                    <span className="ml-1.5 text-xs opacity-70">
+                      ({f.key === 'all' ? pageViews.length : pageViews.filter((v: any) => (v.page_type || 'roleta') === f.key).length})
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               {/* Top stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
@@ -2924,7 +2945,7 @@ const Dashboard = () => {
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                   Carregando...
                 </div>
-              ) : pageViews.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <GlassCard className="text-center py-16">
                   <BarChart3 size={40} className="text-muted-foreground/30 mx-auto mb-3" />
                   <p className="text-muted-foreground">Nenhum acesso registrado ainda</p>
@@ -2946,7 +2967,7 @@ const Dashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {pageViews.slice(0, 50).map((v: any) => (
+                        {filtered.slice(0, 50).map((v: any) => (
                           <tr key={v.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors">
                             <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{v.ip_address || '—'}</td>
                             <td className="px-4 py-3 text-xs text-foreground">{[v.city, v.country].filter(Boolean).join(', ') || '—'}</td>
