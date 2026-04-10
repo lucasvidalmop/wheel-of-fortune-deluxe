@@ -1930,6 +1930,8 @@ const Dashboard = () => {
                       });
                       return users.filter(u => (emailMap.get(u.email.toLowerCase()) || 0) > 1 || (idMap.get(u.account_id) || 0) > 1).length;
                     })()})`}
+                    {opt.value === 'blacklist' && ` (${users.filter(u => u.blacklisted).length})`}
+                    {opt.value === 'guaranteed' && ` (${users.filter(u => u.guaranteed_next_win).length})`}
                   </button>
                 ))}
                 {spinsFilter === 'auto_pay' && users.filter(u => u.auto_payment).length > 0 && (
