@@ -1598,6 +1598,8 @@ const Dashboard = () => {
           const nameCount = u.name ? users.filter(o => o.name && o.name.toLowerCase().trim() === u.name.toLowerCase().trim()).length : 0;
           return emailCount > 1 || idCount > 1 || nameCount > 1;
         })()
+      : spinsFilter === 'blacklist' ? !!u.blacklisted
+      : spinsFilter === 'guaranteed' ? !!u.guaranteed_next_win
       : true;
     return matchesSearch && matchesSpins;
   });
