@@ -331,6 +331,10 @@ const Influencer = () => {
   const tabBgColor = influencerConfig.tabBgColor || '';
   const raffleSoundEnabled = influencerConfig.raffleSoundEnabled || false;
   const raffleSoundUrl = influencerConfig.raffleSoundUrl || '';
+  const bgImageUrl = influencerConfig.bgImageUrl || '';
+  const glowColor = influencerConfig.glowColor || accent;
+  const glowOpacity = influencerConfig.glowOpacity ?? 3;
+  const borderOpacity = influencerConfig.borderOpacity ?? 8;
 
   const playRaffleSound = () => {
     if (raffleSoundEnabled && raffleSoundUrl) {
@@ -339,6 +343,19 @@ const Influencer = () => {
         audio.play().catch(() => {});
       } catch {}
     }
+  };
+
+  const pageBgStyle: React.CSSProperties = {
+    background: bgColor,
+    color: textColor,
+    ...(bgImageUrl ? { backgroundImage: `url(${bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}),
+  };
+
+  const glassCardStyle: React.CSSProperties = {
+    borderColor: `rgba(255,255,255,${borderOpacity / 100})`,
+    background: cardBg,
+    backdropFilter: 'blur(16px)',
+    boxShadow: `0 0 ${glowOpacity * 4}px ${glowColor}${Math.round(glowOpacity * 5).toString(16).padStart(2, '0')}`,
   };
 
   // Login
