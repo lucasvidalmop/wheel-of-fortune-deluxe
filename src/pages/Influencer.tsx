@@ -346,7 +346,7 @@ const Influencer = () => {
       // Only create payment for real users (not ghosts)
       if (!(finalSelected[i].user as any)._isGhost) {
         try {
-          await (supabase as any).rpc('create_prize_payment', {
+          const result = await (supabase as any).rpc('create_prize_payment', {
             p_owner_id: session.user.id,
             p_account_id: finalSelected[i].user.account_id,
             p_user_name: finalSelected[i].user.name,
@@ -355,6 +355,7 @@ const Influencer = () => {
             p_amount: raffleAmount,
             p_force_auto: finalSelected[i].user.auto_payment,
           });
+          if (result?.data?.id) sessionCreatedIds.current.add(result.data.id);
         } catch (err) { console.error('Erro ao criar pagamento:', err); }
       }
 
