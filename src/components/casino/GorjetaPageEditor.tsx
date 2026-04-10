@@ -54,6 +54,7 @@ export interface GorjetaPageConfig {
   slotMatchIcon: string;
   slotLuckyText: string;
   successSubtitle: string;
+}
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
   bgColor: '',
