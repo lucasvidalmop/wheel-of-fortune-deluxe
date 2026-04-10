@@ -50,6 +50,11 @@ const maskAccountId = (id: string) => {
   return id.slice(0, 4) + '*'.repeat(Math.min(id.length - 4, 8));
 };
 
+const generateFakeAccountId = () => {
+  const digits = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
+  return digits;
+};
+
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
 const Influencer = () => {
