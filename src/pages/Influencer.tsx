@@ -281,8 +281,11 @@ const Influencer = () => {
       saveGhostWinners(ghosts);
     }
 
-    // Clear session tracking
+    // Clear session tracking and timers
     sessionCreatedIds.current.clear();
+    if (resetTimerRef.current) { clearTimeout(resetTimerRef.current); resetTimerRef.current = null; }
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
+    setResetCountdown(0);
 
     // Refresh lists
     await fetchTodayWinners(session?.user?.id);
