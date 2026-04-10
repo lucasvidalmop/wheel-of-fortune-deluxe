@@ -298,6 +298,11 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="CADASTRO EFETUADO!" />
         <TextField label="Subtítulo de sucesso" value={config.successSubtitle} onChange={v => update({ successSubtitle: v })} placeholder="Agora é só aguardar o sorteio..." />
         <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
+        <TextField label="Link do botão CTA (sucesso)" value={config.successCtaUrl} onChange={v => update({ successCtaUrl: v })} placeholder="https://exemplo.com" />
+        <ColorField label="Cor de fundo da página" value={config.successBgColor} onChange={v => update({ successBgColor: v })} />
+        <ColorField label="Cor dos rolos (reel)" value={config.slotReelBgColor} onChange={v => update({ slotReelBgColor: v })} />
+        <ColorField label="Cor do fundo do caça-níquel" value={config.slotFrameBgColor} onChange={v => update({ slotFrameBgColor: v })} />
+        <ColorField label="Cor da borda do caça-níquel" value={config.slotFrameBorderColor} onChange={v => update({ slotFrameBorderColor: v })} />
         <p className="text-[10px] text-muted-foreground">A animação mostra um caça-níquel girando → resultado → tela de sucesso com partículas flutuantes.</p>
 
         {/* Inline Full Animation Preview */}
