@@ -151,6 +151,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
+  const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
   const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
@@ -455,30 +456,13 @@ const Dashboard = () => {
     if (!session?.user?.id) return;
     setGorjetaHistoryLoading(true);
     try {
-      // Get gorjeta referral link IDs for this owner
-      const gorjetaRef = (wheelConfig as any).gorjetaRef || '';
-      const { data: links } = await (supabase as any)
-        .from('referral_links')
-        .select('id, code, label')
-        .eq('owner_id', session.user.id);
-      
-      const gorjetaLinkIds = (links || [])
-        .filter((l: any) => l.label === 'Gorjeta' || l.code === gorjetaRef)
-        .map((l: any) => l.id);
-
-      if (gorjetaLinkIds.length === 0) {
-        setGorjetaHistory([]);
-        setGorjetaHistoryLoading(false);
-        return;
-      }
-
-      const { data: redemptions } = await (supabase as any)
-        .from('referral_redemptions')
-        .select('*, referral_links!inner(code, label)')
-        .in('referral_link_id', gorjetaLinkIds)
-        .order('created_at', { ascending: false });
-
-      setGorjetaHistory(redemptions || []);
+      const { data } = await (supabase as any)
+        .from('prize_payments')
+        .select('*, wheel_users!prize_payments_wheel_user_id_fkey(name, email, phone, account_id, pix_key, pix_key_type, user_type, responsible, auto_payment, blacklisted, guaranteed_next_win, created_at)')
+        .eq('owner_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(500);
+      setGorjetaHistory(data || []);
     } catch (e) {
       console.error(e);
     }
@@ -4585,7 +4569,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock size={20} className="text-primary" />
-                  <h3 className="text-sm font-bold text-foreground">Resgates de Gorjeta</h3>
+                  <h3 className="text-sm font-bold text-foreground">Histórico de Sorteados</h3>
                 </div>
                 <button
                   onClick={fetchGorjetaHistory}
@@ -4596,6 +4580,28 @@ const Dashboard = () => {
                 </button>
               </div>
 
+              {/* Summary cards */}
+              {gorjetaHistory.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <GlassCard className="p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Sorteados</p>
+                    <p className="text-lg font-bold text-foreground">{gorjetaHistory.length}</p>
+                  </GlassCard>
+                  <GlassCard className="p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Pago</p>
+                    <p className="text-lg font-bold text-primary">R$ {gorjetaHistory.reduce((s: number, i: any) => s + (i.amount || 0), 0).toFixed(2).replace('.', ',')}</p>
+                  </GlassCard>
+                  <GlassCard className="p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pendentes</p>
+                    <p className="text-lg font-bold text-yellow-400">{gorjetaHistory.filter((i: any) => i.status === 'pending' || i.status === 'auto_pending').length}</p>
+                  </GlassCard>
+                  <GlassCard className="p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pagos</p>
+                    <p className="text-lg font-bold text-green-400">{gorjetaHistory.filter((i: any) => i.status === 'paid').length}</p>
+                  </GlassCard>
+                </div>
+              )}
+
               {gorjetaHistoryLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -4603,7 +4609,7 @@ const Dashboard = () => {
               ) : gorjetaHistory.length === 0 ? (
                 <GlassCard className="p-8 text-center">
                   <Gift size={32} className="mx-auto text-muted-foreground/40 mb-3" />
-                  <p className="text-sm text-muted-foreground">Nenhum resgate de gorjeta encontrado.</p>
+                  <p className="text-sm text-muted-foreground">Nenhum sorteado encontrado.</p>
                 </GlassCard>
               ) : (
                 <GlassCard className="p-0 overflow-hidden">
@@ -4611,43 +4617,119 @@ const Dashboard = () => {
                     <table className="w-full text-left">
                       <thead>
                         <tr className="border-b border-white/[0.06]">
-                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
-                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">ID Conta</th>
-                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">CPF</th>
-                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Link</th>
-                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Data</th>
+                          <th className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Nome</th>
+                          <th className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">ID</th>
+                          <th className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Prêmio</th>
+                          <th className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Valor</th>
+                          <th className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                          <th className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Data</th>
+                          <th className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider text-center">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {gorjetaHistory.map((item: any) => (
-                          <tr key={item.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                            <td className="px-4 py-2.5 text-xs text-foreground">{item.email}</td>
-                            <td className="px-4 py-2.5 text-xs text-muted-foreground font-mono">
-                              <div className="flex items-center gap-1">
-                                <span className="truncate max-w-[120px]">{item.account_id}</span>
+                        {gorjetaHistory.map((item: any) => {
+                          const wu = item.wheel_users;
+                          const statusColors: Record<string, string> = {
+                            paid: 'bg-green-500/20 text-green-400',
+                            pending: 'bg-yellow-500/20 text-yellow-400',
+                            auto_pending: 'bg-blue-500/20 text-blue-400',
+                            failed: 'bg-red-500/20 text-red-400',
+                          };
+                          const statusLabels: Record<string, string> = {
+                            paid: 'Pago',
+                            pending: 'Pendente',
+                            auto_pending: 'Auto',
+                            failed: 'Falhou',
+                          };
+                          return (
+                            <tr key={item.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                              <td className="px-3 py-2.5 text-xs text-foreground font-medium">{item.user_name || wu?.name || '—'}</td>
+                              <td className="px-3 py-2.5 text-xs text-muted-foreground font-mono">
+                                <div className="flex items-center gap-1">
+                                  <span className="truncate max-w-[100px]">{item.account_id}</span>
+                                  <button
+                                    onClick={() => { navigator.clipboard.writeText(item.account_id); toast.success('ID copiado!'); }}
+                                    className="shrink-0 p-0.5 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"
+                                  >
+                                    <Copy size={12} />
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="px-3 py-2.5 text-xs text-muted-foreground">{item.prize || '—'}</td>
+                              <td className="px-3 py-2.5 text-xs text-foreground font-semibold">R$ {(item.amount || 0).toFixed(2).replace('.', ',')}</td>
+                              <td className="px-3 py-2.5">
+                                <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusColors[item.status] || 'bg-white/[0.08] text-muted-foreground'}`}>
+                                  {statusLabels[item.status] || item.status}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                                {new Date(item.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="px-3 py-2.5 text-center">
                                 <button
-                                  onClick={() => { navigator.clipboard.writeText(item.account_id); toast.success('ID copiado!'); }}
-                                  className="shrink-0 p-0.5 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"
+                                  onClick={() => setGorjetaDetailUser({ ...item, ...wu })}
+                                  className="px-2.5 py-1 rounded-lg bg-primary/15 text-primary border border-primary/20 text-[10px] font-semibold hover:bg-primary/25 transition"
                                 >
-                                  <Copy size={12} />
+                                  <Eye size={12} className="inline mr-1" />Ver Dados
                                 </button>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5 text-xs text-muted-foreground">{item.cpf || '—'}</td>
-                            <td className="px-4 py-2.5 text-xs text-muted-foreground">{item.referral_links?.code || '—'}</td>
-                            <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                              {new Date(item.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
                   <div className="px-4 py-3 border-t border-white/[0.06] text-xs text-muted-foreground">
-                    Total: <span className="font-semibold text-foreground">{gorjetaHistory.length}</span> resgates
+                    Total: <span className="font-semibold text-foreground">{gorjetaHistory.length}</span> sorteados
                   </div>
                 </GlassCard>
               )}
+
+              {/* Detail Dialog */}
+              <Dialog open={!!gorjetaDetailUser} onOpenChange={(open) => { if (!open) setGorjetaDetailUser(null); }}>
+                <DialogContent className="max-w-md bg-card border border-white/[0.08]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-foreground">
+                      <Users size={18} className="text-primary" />
+                      Dados do Sorteado
+                    </DialogTitle>
+                  </DialogHeader>
+                  {gorjetaDetailUser && (
+                    <div className="space-y-3 mt-2">
+                      {[
+                        { label: 'Nome', value: gorjetaDetailUser.user_name || gorjetaDetailUser.name },
+                        { label: 'Email', value: gorjetaDetailUser.user_email || gorjetaDetailUser.email },
+                        { label: 'Telefone', value: gorjetaDetailUser.phone },
+                        { label: 'ID Conta', value: gorjetaDetailUser.account_id, copy: true },
+                        { label: 'PIX Tipo', value: gorjetaDetailUser.pix_key_type },
+                        { label: 'PIX Chave', value: gorjetaDetailUser.pix_key, copy: true },
+                        { label: 'Tipo Usuário', value: gorjetaDetailUser.user_type },
+                        { label: 'Responsável', value: gorjetaDetailUser.responsible },
+                        { label: 'Prêmio', value: gorjetaDetailUser.prize },
+                        { label: 'Valor', value: gorjetaDetailUser.amount ? `R$ ${Number(gorjetaDetailUser.amount).toFixed(2).replace('.', ',')}` : '' },
+                        { label: 'Status', value: gorjetaDetailUser.status },
+                        { label: 'Auto Payment', value: gorjetaDetailUser.auto_payment ? 'Sim' : 'Não' },
+                        { label: 'Data', value: gorjetaDetailUser.created_at ? new Date(gorjetaDetailUser.created_at).toLocaleString('pt-BR') : '' },
+                      ].filter(r => r.value).map((row) => (
+                        <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+                          <span className="text-xs text-muted-foreground">{row.label}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-foreground font-medium max-w-[200px] truncate">{row.value}</span>
+                            {row.copy && (
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(String(row.value)); toast.success(`${row.label} copiado!`); }}
+                                className="p-0.5 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"
+                              >
+                                <Copy size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           )}
 
