@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ReferralPageConfig, defaultPageConfig } from '@/components/casino/ReferralPageEditor';
+import { GorjetaPageConfig, defaultGorjetaConfig } from '@/components/casino/GorjetaPageEditor';
 import { Gift, User, Mail, Phone, MapPin, Key, AlertCircle, Shield, CheckSquare } from 'lucide-react';
 
 const PIX_TYPES = [
@@ -20,7 +20,7 @@ const Registration = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [linkData, setLinkData] = useState<any>(null);
-  const [cfg, setCfg] = useState<ReferralPageConfig>(defaultPageConfig);
+  const [cfg, setCfg] = useState<GorjetaPageConfig>(defaultGorjetaConfig);
   const [wheelSlug, setWheelSlug] = useState('');
 
   // Form fields
@@ -56,9 +56,8 @@ const Registration = () => {
           .eq('user_id', data.owner_id)
           .maybeSingle();
         if (wcData?.slug) setWheelSlug(wcData.slug);
-        const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
-        const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
-        setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
+        const gorjetaCfg = wcData?.config?.gorjetaPageConfig || {};
+        setCfg({ ...defaultGorjetaConfig, ...gorjetaCfg });
       }
       setLoading(false);
     };
@@ -139,7 +138,7 @@ const Registration = () => {
   };
 
   // ─── Styles ───
-  const accentColor = cfg.btnBgColor || '#2dd4bf';
+  const accentColor = cfg.accentColor || cfg.btnBgColor || '#2dd4bf';
 
   const bgStyle: React.CSSProperties = {
     background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`,
@@ -351,7 +350,7 @@ const Registration = () => {
           <div className="flex items-center gap-2.5 p-3 rounded-xl text-xs"
             style={{ backgroundColor: `${accentColor}08`, border: `1px solid ${accentColor}15`, color: subtitleColor }}>
             <AlertCircle size={16} className="shrink-0" style={{ color: accentColor }} />
-            <span>Importante: Prazo de até 72h para crédito.</span>
+            <span>{cfg.warningText || 'Importante: Prazo de até 72h para crédito.'}</span>
           </div>
 
           {/* Checkboxes */}
@@ -368,7 +367,7 @@ const Registration = () => {
                 {acceptTerms && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <span className="text-xs" style={{ color: subtitleColor }}>
-                Aceito os <a href="#" className="font-semibold underline" style={{ color: accentColor }} onClick={e => e.preventDefault()}>Termos de Uso</a>.
+                {cfg.termsText || <>Aceito os <a href="#" className="font-semibold underline" style={{ color: accentColor }} onClick={e => e.preventDefault()}>Termos de Uso</a>.</>}
               </span>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer group">
@@ -383,7 +382,7 @@ const Registration = () => {
                 {confirmData && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <span className="text-xs" style={{ color: subtitleColor }}>
-                Confirmo que os dados são da minha conta.
+                {cfg.confirmText || 'Confirmo que os dados são da minha conta.'}
               </span>
             </label>
           </div>
@@ -416,7 +415,7 @@ const Registration = () => {
         {/* Footer */}
         <div className="px-6 pb-5 text-center space-y-3">
           <div className="text-[10px] space-y-1" style={{ color: subtitleColor }}>
-            <p>© {new Date().getFullYear()} Todos os direitos reservados.</p>
+            <p>{cfg.footerText || `© ${new Date().getFullYear()} Todos os direitos reservados.`}</p>
           </div>
         </div>
       </div>

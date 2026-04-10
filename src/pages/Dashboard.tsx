@@ -14,6 +14,7 @@ import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
+import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
@@ -141,6 +142,7 @@ const Dashboard = () => {
   const [loginLoading, setLoginLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta'>('inscritos');
+  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual'>('link');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
@@ -4228,113 +4230,139 @@ const Dashboard = () => {
             const showQr = (wheelConfig as any).gorjetaShowQr !== false;
             return (
               <div className="max-w-2xl space-y-5">
-                <GlassCard className="p-5 space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Gift size={20} className="text-primary" />
-                    <h3 className="text-sm font-bold text-foreground">Configurar Página de Gorjeta</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Defina o código de referência que será usado na sua página de gorjeta. O link final será: <span className="font-mono text-primary">{baseUrl}/gorjeta?ref=SEU_CODIGO</span>
-                  </p>
+                {/* Sub-tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
+                  {([
+                    { key: 'link' as const, label: '🔗 Link', icon: Link2 },
+                    { key: 'visual' as const, label: '🎨 Visual', icon: Palette },
+                  ] as const).map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setGorjetaSubTab(tab.key)}
+                      className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                        gorjetaSubTab === tab.key
+                          ? 'bg-primary/15 text-primary border border-primary/20'
+                          : 'text-muted-foreground hover:bg-white/[0.04] border border-transparent'
+                      }`}
+                    >
+                      <tab.icon size={14} />
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Código de Referência (ref)</label>
-                    <input
-                      type="text"
-                      value={gorjetaRef}
-                      onChange={e => {
-                        const val = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '');
-                        setWheelConfig((prev: any) => ({ ...prev, gorjetaRef: val }));
-                      }}
-                      placeholder="Ex: meucafe"
-                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
-                    />
-                    <p className="text-[10px] text-muted-foreground mt-1">Use letras, números, - ou _.</p>
-                  </div>
+                {gorjetaSubTab === 'link' && (
+                  <GlassCard className="p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gift size={20} className="text-primary" />
+                      <h3 className="text-sm font-bold text-foreground">Configurar Link de Gorjeta</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Defina o código de referência que será usado na sua página de gorjeta. O link final será: <span className="font-mono text-primary">{baseUrl}/gorjeta?ref=SEU_CODIGO</span>
+                    </p>
 
-                  {gorjetaUrl && (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Seu Link de Gorjeta</label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={gorjetaUrl}
-                            className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono text-xs"
-                          />
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Código de Referência (ref)</label>
+                      <input
+                        type="text"
+                        value={gorjetaRef}
+                        onChange={e => {
+                          const val = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '');
+                          setWheelConfig((prev: any) => ({ ...prev, gorjetaRef: val }));
+                        }}
+                        placeholder="Ex: meucafe"
+                        className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">Use letras, números, - ou _.</p>
+                    </div>
+
+                    {gorjetaUrl && (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Seu Link de Gorjeta</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              readOnly
+                              value={gorjetaUrl}
+                              className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono text-xs"
+                            />
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
+                              className="shrink-0 px-3 py-2.5 rounded-xl text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-all flex items-center gap-1.5"
+                            >
+                              <Copy size={14} /> Copiar
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
                           <button
-                            onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
-                            className="shrink-0 px-3 py-2.5 rounded-xl text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-all flex items-center gap-1.5"
+                            onClick={() => window.open(gorjetaUrl, '_blank')}
+                            className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-all flex items-center gap-1.5"
                           >
-                            <Copy size={14} /> Copiar
+                            <ExternalLink size={14} /> Abrir Página
+                          </button>
+                          <button
+                            onClick={() => setWheelConfig((prev: any) => ({ ...prev, gorjetaShowQr: !showQr }))}
+                            className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-all flex items-center gap-1.5"
+                          >
+                            <Eye size={14} /> {showQr ? 'Esconder QR Code' : 'Mostrar QR Code'}
                           </button>
                         </div>
+
+                        {showQr && (
+                          <div className="flex justify-center p-4 bg-white rounded-xl">
+                            <QRCodeSVG value={gorjetaUrl} size={160} />
+                          </div>
+                        )}
                       </div>
+                    )}
 
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => window.open(gorjetaUrl, '_blank')}
-                          className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-all flex items-center gap-1.5"
-                        >
-                          <ExternalLink size={14} /> Abrir Página
-                        </button>
-                        <button
-                          onClick={() => setWheelConfig((prev: any) => ({ ...prev, gorjetaShowQr: !showQr }))}
-                          className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-all flex items-center gap-1.5"
-                        >
-                          <Eye size={14} /> {showQr ? 'Esconder QR Code' : 'Mostrar QR Code'}
-                        </button>
-                      </div>
-
-                      {showQr && (
-                        <div className="flex justify-center p-4 bg-white rounded-xl">
-                          <QRCodeSVG value={gorjetaUrl} size={160} />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <button
-                    onClick={async () => {
-                      await handleSaveConfig();
-                      // Auto-create referral link if gorjetaRef is set
-                      const ref = (wheelConfig as any).gorjetaRef;
-                      if (ref && session?.user?.id) {
-                        const { data: existing } = await (supabase as any)
-                          .from('referral_links')
-                          .select('id')
-                          .eq('code', ref)
-                          .eq('owner_id', session.user.id)
-                          .maybeSingle();
-                        if (!existing) {
-                          const { error: createErr } = await (supabase as any)
+                    <button
+                      onClick={async () => {
+                        await handleSaveConfig();
+                        const ref = (wheelConfig as any).gorjetaRef;
+                        if (ref && session?.user?.id) {
+                          const { data: existing } = await (supabase as any)
                             .from('referral_links')
-                            .insert({
-                              code: ref,
-                              owner_id: session.user.id,
-                              label: 'Gorjeta',
-                              spins_per_registration: 1,
-                              is_active: true,
-                            });
-                          if (createErr) {
-                            toast.error('Erro ao criar link: ' + createErr.message);
-                          } else {
-                            toast.success('Link de gorjeta criado automaticamente!');
+                            .select('id')
+                            .eq('code', ref)
+                            .eq('owner_id', session.user.id)
+                            .maybeSingle();
+                          if (!existing) {
+                            const { error: createErr } = await (supabase as any)
+                              .from('referral_links')
+                              .insert({
+                                code: ref,
+                                owner_id: session.user.id,
+                                label: 'Gorjeta',
+                                spins_per_registration: 1,
+                                is_active: true,
+                              });
+                            if (createErr) {
+                              toast.error('Erro ao criar link: ' + createErr.message);
+                            } else {
+                              toast.success('Link de gorjeta criado automaticamente!');
+                            }
                           }
                         }
-                      }
-                    }}
-                    disabled={savingConfig}
-                    className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20"
-                  >
-                    {savingConfig ? 'Salvando...' : '💾 Salvar Configuração'}
-                  </button>
-                </GlassCard>
+                      }}
+                      disabled={savingConfig}
+                      className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20"
+                    >
+                      {savingConfig ? 'Salvando...' : '💾 Salvar Configuração'}
+                    </button>
+                  </GlassCard>
+                )}
 
-                <p className="text-[10px] text-center text-muted-foreground">
-                  💡 O link de referral será criado automaticamente ao salvar.
-                </p>
+                {gorjetaSubTab === 'visual' && session?.user?.id && (
+                  <GorjetaPageEditor
+                    userId={session.user.id}
+                    currentConfig={(wheelConfig as any).gorjetaPageConfig || {}}
+                    onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
+                  />
+                )}
               </div>
             );
           })()}
