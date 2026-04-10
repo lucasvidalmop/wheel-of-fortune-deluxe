@@ -16,6 +16,7 @@ export interface InfluencerPageConfig {
   // Glass effects
   glassEnabled: boolean;
   glassBlur: number;
+  cardBgOpacity: number;
   glowColor: string;
   glowOpacity: number;
   borderOpacity: number;
@@ -46,6 +47,7 @@ export const defaultInfluencerConfig: InfluencerPageConfig = {
   bgImageUrl: '',
   glassEnabled: true,
   glassBlur: 16,
+  cardBgOpacity: 95,
   glowColor: '#2dd4bf',
   glowOpacity: 3,
   borderOpacity: 8,
