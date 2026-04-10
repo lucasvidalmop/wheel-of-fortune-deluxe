@@ -343,6 +343,16 @@ const Influencer = () => {
     URL.revokeObjectURL(url);
   };
 
+  const triggerAutoPay = async (paymentId: string) => {
+    try {
+      await supabase.functions.invoke('edpay-pix-transfer', {
+        body: { paymentId, autoPayment: true },
+      });
+    } catch (err) {
+      console.error('Auto-pay failed for', paymentId, err);
+    }
+  };
+
   const startRaffle = () => {
     setRaffleStep('config'); setRaffleQty(1); setRaffleAmount(30);
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
@@ -435,7 +445,13 @@ const Influencer = () => {
             p_amount: raffleAmount,
             p_force_auto: finalSelected[i].user.auto_payment,
           });
-          if (result?.data?.id) sessionCreatedIds.current.add(result.data.id);
+          if (result?.data?.id) {
+            sessionCreatedIds.current.add(result.data.id);
+            // Auto-pay via PIX if auto_payment is enabled
+            if (result?.data?.auto_payment || finalSelected[i].user.auto_payment) {
+              triggerAutoPay(result.data.id).catch(console.error);
+            }
+          }
         } catch (err) { console.error('Erro ao criar pagamento:', err); }
       }
 
@@ -508,7 +524,7 @@ const Influencer = () => {
     if (!prizeUser || !session?.user?.id) return;
     setPrizeSending(true);
     try {
-      await (supabase as any).rpc('create_prize_payment', {
+      const result = await (supabase as any).rpc('create_prize_payment', {
         p_owner_id: session.user.id,
         p_account_id: prizeUser.account_id,
         p_user_name: prizeUser.name,
@@ -517,6 +533,10 @@ const Influencer = () => {
         p_amount: prizeAmount,
         p_force_auto: prizeUser.auto_payment,
       });
+      // Auto-pay via PIX if auto_payment is enabled
+      if (result?.data?.id && (result?.data?.auto_payment || prizeUser.auto_payment)) {
+        await triggerAutoPay(result.data.id);
+      }
       setPrizeSent(true);
       fetchTodayWinners(session.user.id);
     } catch (err: any) {
