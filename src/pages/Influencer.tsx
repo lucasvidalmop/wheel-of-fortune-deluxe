@@ -94,6 +94,9 @@ const Influencer = () => {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [sendingIndex, setSendingIndex] = useState(0);
   const sessionCreatedIds = useRef<Set<string>>(new Set());
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [resetCountdown, setResetCountdown] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Individual prize dialog
   const [showPrizeDialog, setShowPrizeDialog] = useState(false);
@@ -278,8 +281,11 @@ const Influencer = () => {
       saveGhostWinners(ghosts);
     }
 
-    // Clear session tracking
+    // Clear session tracking and timers
     sessionCreatedIds.current.clear();
+    if (resetTimerRef.current) { clearTimeout(resetTimerRef.current); resetTimerRef.current = null; }
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
+    setResetCountdown(0);
 
     // Refresh lists
     await fetchTodayWinners(session?.user?.id);
@@ -409,6 +415,24 @@ const Influencer = () => {
       const existing = loadGhostWinners();
       saveGhostWinners([...ghostEntries, ...existing]);
     }
+
+    // Start 60s countdown — after that, these entries become permanent
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setResetCountdown(60);
+    countdownRef.current = setInterval(() => {
+      setResetCountdown(prev => {
+        if (prev <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    resetTimerRef.current = setTimeout(() => {
+      sessionCreatedIds.current.clear();
+      setResetCountdown(0);
+    }, 60_000);
 
     setSendingIndex(finalSelected.length);
     setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); fetchHistory(session?.user?.id); }, 600);
@@ -573,8 +597,16 @@ const Influencer = () => {
           </div>
 
           {/* Row 3: Reset button */}
-          <div className="flex justify-end">
-            <button onClick={handleResetDayCounter} className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]" style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}>
+          <div className="flex justify-end items-center gap-2">
+            {resetCountdown > 0 && (
+              <span className="text-[10px] font-mono text-white/30">{resetCountdown}s restantes</span>
+            )}
+            <button
+              onClick={handleResetDayCounter}
+              disabled={sessionCreatedIds.current.size === 0}
+              className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
+            >
               <RotateCcw size={11} /> Reiniciar contador do dia
             </button>
           </div>
