@@ -54,6 +54,9 @@ export interface GorjetaPageConfig {
   // Slot machine animation
   slotMatchIcon: string;
   slotMatchImageUrl: string;
+  slotReelImage1: string;
+  slotReelImage2: string;
+  slotReelImage3: string;
   slotLuckyText: string;
   slotReelBgColor: string;
   slotFrameBgColor: string;
@@ -126,6 +129,9 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
 3.2. Considera-se usuário ativo aquele que realizou ao menos um depósito na plataforma.`,
   slotMatchIcon: '⚡',
   slotMatchImageUrl: '',
+  slotReelImage1: '',
+  slotReelImage2: '',
+  slotReelImage3: '',
   slotLuckyText: '🎰 BOA SORTE! 🎰',
   slotReelBgColor: 'rgba(100, 40, 20, 0.9)',
   slotFrameBgColor: 'rgba(60, 20, 10, 0.8)',
@@ -297,35 +303,44 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
       </Section>
 
       <Section icon={<Gift size={14} className="text-primary" />} title="Animação de Conclusão (Slot Machine)">
-        <TextField label="Emoji do slot (ícone que aparece)" value={config.slotMatchIcon} onChange={v => update({ slotMatchIcon: v })} placeholder="⚡" />
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">Imagem do slot (substitui o emoji) — 80×80px recomendado</label>
-          {config.slotMatchImageUrl && (
-            <div className="flex items-center gap-2 mb-2">
-              <img src={config.slotMatchImageUrl} alt="Slot icon" className="w-10 h-10 rounded object-contain bg-black/30" />
-              <button onClick={() => update({ slotMatchImageUrl: '' })} className="text-[10px] text-red-400 hover:text-red-300">Remover</button>
+        <TextField label="Emoji do slot (fallback)" value={config.slotMatchIcon} onChange={v => update({ slotMatchIcon: v })} placeholder="⚡" />
+        <label className="text-[10px] text-muted-foreground block mb-1">Imagens dos 3 reels (80×80px recomendado) — substituem o emoji</label>
+        <div className="grid grid-cols-3 gap-2">
+          {([['slotReelImage1', 'Reel 1'], ['slotReelImage2', 'Reel 2'], ['slotReelImage3', 'Reel 3']] as const).map(([key, label]) => (
+            <div key={key} className="flex flex-col items-center gap-1">
+              <span className="text-[9px] text-muted-foreground">{label}</span>
+              {config[key] ? (
+                <div className="relative group">
+                  <img src={config[key]} alt={label} className="w-14 h-14 rounded-lg object-contain bg-black/30 border border-white/10" />
+                  <button
+                    onClick={() => update({ [key]: '' })}
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >✕</button>
+                </div>
+              ) : (
+                <label className="w-14 h-14 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.06] transition-colors">
+                  <Upload size={12} className="text-muted-foreground" />
+                  <span className="text-[8px] text-muted-foreground mt-0.5">80×80</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const { publicUrl } = await uploadAppAsset(file, 'slot-icons');
+                        update({ [key]: publicUrl });
+                        toast.success(`${label} enviada!`);
+                      } catch (err: any) {
+                        toast.error(err.message || 'Erro ao enviar imagem');
+                      }
+                    }}
+                  />
+                </label>
+              )}
             </div>
-          )}
-          <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-muted-foreground cursor-pointer hover:bg-white/[0.08] transition-colors">
-            <Upload size={14} />
-            {config.slotMatchImageUrl ? 'Trocar imagem' : 'Enviar imagem (80×80px)'}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                try {
-                  const { publicUrl } = await uploadAppAsset(file, 'slot-icons');
-                  update({ slotMatchImageUrl: publicUrl });
-                  toast.success('Imagem enviada!');
-                } catch (err: any) {
-                  toast.error(err.message || 'Erro ao enviar imagem');
-                }
-              }}
-            />
-          </label>
+          ))}
         </div>
         <TextField label="Texto de sorte" value={config.slotLuckyText} onChange={v => update({ slotLuckyText: v })} placeholder="🎰 BOA SORTE! 🎰" />
         <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="CADASTRO EFETUADO!" />
@@ -378,7 +393,7 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
                 successSubtitle={config.successSubtitle}
                 successBtnText={config.successBtnText}
                 slotMatchIcon={config.slotMatchIcon}
-                slotMatchImageUrl={config.slotMatchImageUrl}
+                slotReelImages={[config.slotReelImage1, config.slotReelImage2, config.slotReelImage3]}
                 slotLuckyText={config.slotLuckyText}
                 slotReelBgColor={config.slotReelBgColor}
                 slotFrameBgColor={config.slotFrameBgColor}
