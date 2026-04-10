@@ -429,13 +429,13 @@ const Influencer = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-[12px] font-medium transition-all border-b-2 ${isActive ? '' : 'border-transparent text-white/35 hover:text-white/55'}`}
+                className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold transition-all border-b-2 ${isActive ? '' : 'border-transparent text-white/35 hover:text-white/55'}`}
                 style={isActive ? { color: accent, borderColor: accent } : undefined}
               >
-                <span className="text-sm">{tab.prefix}</span>
+                <span className="text-base">{tab.prefix}</span>
                 {tab.label}
                 {tab.count !== undefined && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                  <span className="ml-1 px-2 py-0.5 rounded text-xs font-bold"
                     style={isActive ? { background: `${accent}20`, color: accent } : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
                     {tab.count}
                   </span>
@@ -445,13 +445,13 @@ const Influencer = () => {
           })}
           </div>
           <button onClick={handleRefresh}
-            className="flex items-center gap-1.5 px-3 py-2 mr-2 rounded-lg text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+            className="flex items-center gap-1.5 px-3 py-2 mr-3 rounded-lg text-xs font-semibold border transition hover:bg-white/[0.04]"
             style={{ borderColor: `${accent}40`, color: accent }}>
-            <RefreshCw size={13} /> Atualizar
+            <RefreshCw size={14} /> Atualizar
           </button>
         </div>
 
-        <div className="p-3 overflow-y-auto flex-1 min-h-0">
+        <div className="p-4 overflow-y-auto flex-1 min-h-0">
         {/* ─── Participants ─── */}
         {activeTab === 'participants' && (
           <div className="space-y-3">
