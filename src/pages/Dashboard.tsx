@@ -395,6 +395,7 @@ const Dashboard = () => {
   const [manualPayPrize, setManualPayPrize] = useState('');
   const [manualPaySearch, setManualPaySearch] = useState('');
   const [manualPaySending, setManualPaySending] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
