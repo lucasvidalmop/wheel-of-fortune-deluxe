@@ -350,7 +350,7 @@ const Registration = () => {
           <div className="flex items-center gap-2.5 p-3 rounded-xl text-xs"
             style={{ backgroundColor: `${accentColor}08`, border: `1px solid ${accentColor}15`, color: subtitleColor }}>
             <AlertCircle size={16} className="shrink-0" style={{ color: accentColor }} />
-            <span>Importante: Prazo de até 72h para crédito.</span>
+            <span>{cfg.warningText || 'Importante: Prazo de até 72h para crédito.'}</span>
           </div>
 
           {/* Checkboxes */}
@@ -367,7 +367,7 @@ const Registration = () => {
                 {acceptTerms && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <span className="text-xs" style={{ color: subtitleColor }}>
-                Aceito os <a href="#" className="font-semibold underline" style={{ color: accentColor }} onClick={e => e.preventDefault()}>Termos de Uso</a>.
+                {cfg.termsText || <>Aceito os <a href="#" className="font-semibold underline" style={{ color: accentColor }} onClick={e => e.preventDefault()}>Termos de Uso</a>.</>}
               </span>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer group">
@@ -382,7 +382,7 @@ const Registration = () => {
                 {confirmData && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <span className="text-xs" style={{ color: subtitleColor }}>
-                Confirmo que os dados são da minha conta.
+                {cfg.confirmText || 'Confirmo que os dados são da minha conta.'}
               </span>
             </label>
           </div>
