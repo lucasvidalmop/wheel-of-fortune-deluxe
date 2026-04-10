@@ -686,12 +686,13 @@ const Influencer = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {filteredUsers.map(u => {
                 const winsToday = todayWinsForUser(u.account_id);
+                const isMaxed = winsToday >= maxWinsPerDay;
                 return (
                   <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:brightness-110"
-                    style={{ borderColor: `${accent}30`, background: 'rgba(255,255,255,0.02)' }}>
+                    style={{ borderColor: isMaxed ? 'rgba(239,68,68,0.6)' : `${accent}30`, background: isMaxed ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)' }}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-bold truncate" style={{ color: textColor }}>{u.name}</p>
-                      <p className="text-[10px] text-white/35 mt-0.5">Hoje: {winsToday}/1 vitória(s)</p>
+                      <p className="text-[13px] font-bold truncate" style={{ color: isMaxed ? '#ef4444' : textColor }}>{u.name}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: isMaxed ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.35)' }}>Hoje: {winsToday}/{maxWinsPerDay} vitória(s)</p>
                       <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
                     <button onClick={() => openPrizeDialog(u)} className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
