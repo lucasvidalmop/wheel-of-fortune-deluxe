@@ -4243,13 +4243,13 @@ const Dashboard = () => {
                       type="text"
                       value={gorjetaRef}
                       onChange={e => {
-                        const val = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+                        const val = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '');
                         setWheelConfig((prev: any) => ({ ...prev, gorjetaRef: val }));
                       }}
-                      placeholder="Ex: MEUCAFE"
+                      placeholder="Ex: meucafe"
                       className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
                     />
-                    <p className="text-[10px] text-muted-foreground mt-1">Use letras, números, - ou _. O código será convertido para maiúsculas.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Use letras, números, - ou _.</p>
                   </div>
 
                   {gorjetaUrl && (
@@ -4296,7 +4296,35 @@ const Dashboard = () => {
                   )}
 
                   <button
-                    onClick={handleSaveConfig}
+                    onClick={async () => {
+                      await handleSaveConfig();
+                      // Auto-create referral link if gorjetaRef is set
+                      const ref = (wheelConfig as any).gorjetaRef;
+                      if (ref && session?.user?.id) {
+                        const { data: existing } = await (supabase as any)
+                          .from('referral_links')
+                          .select('id')
+                          .eq('code', ref)
+                          .eq('owner_id', session.user.id)
+                          .maybeSingle();
+                        if (!existing) {
+                          const { error: createErr } = await (supabase as any)
+                            .from('referral_links')
+                            .insert({
+                              code: ref,
+                              owner_id: session.user.id,
+                              label: 'Gorjeta',
+                              spins_per_registration: 1,
+                              is_active: true,
+                            });
+                          if (createErr) {
+                            toast.error('Erro ao criar link: ' + createErr.message);
+                          } else {
+                            toast.success('Link de gorjeta criado automaticamente!');
+                          }
+                        }
+                      }
+                    }}
                     disabled={savingConfig}
                     className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20"
                   >
@@ -4305,7 +4333,7 @@ const Dashboard = () => {
                 </GlassCard>
 
                 <p className="text-[10px] text-center text-muted-foreground">
-                  💡 O código deve corresponder a um link de referral ativo na aba "Links Ref." para que a inscrição funcione.
+                  💡 O link de referral será criado automaticamente ao salvar.
                 </p>
               </div>
             );
