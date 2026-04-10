@@ -423,6 +423,8 @@ const Dashboard = () => {
   const [prizePayments, setPrizePayments] = useState<any[]>([]);
   const [prizePaymentsLoading, setPrizePaymentsLoading] = useState(false);
   const [payingPaymentId, setPayingPaymentId] = useState<string | null>(null);
+  const [selectedPrizeIds, setSelectedPrizeIds] = useState<Set<string>>(new Set());
+  const [bulkPaying, setBulkPaying] = useState(false);
   const [paidHistory, setPaidHistory] = useState<any[]>([]);
   const [paidHistoryLoading, setPaidHistoryLoading] = useState(false);
   const [receiptPayment, setReceiptPayment] = useState<any | null>(null);
