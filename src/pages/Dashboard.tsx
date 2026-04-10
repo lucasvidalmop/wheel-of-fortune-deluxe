@@ -2298,7 +2298,14 @@ const Dashboard = () => {
                           </td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate max-w-[160px]">{user.email}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.phone}</td>
-                          <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{user.account_id}</td>
+                          <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
+                            <div className="flex items-center gap-1">
+                              <span>{user.account_id}</span>
+                              <button onClick={() => { navigator.clipboard.writeText(user.account_id); toast.success('ID copiado!'); }} className="p-0.5 rounded hover:bg-white/[0.08] transition text-muted-foreground hover:text-foreground" title="Copiar ID">
+                                <Copy size={11} />
+                              </button>
+                            </div>
+                          </td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.pix_key_type || '—'}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] truncate max-w-[140px]">{user.pix_key || '—'}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
@@ -2313,54 +2320,56 @@ const Dashboard = () => {
                               )}
                             </td>
                           )}
-                          <td className="px-2 py-2 text-center">
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <button className="p-1.5 rounded-md hover:bg-white/[0.08] transition text-muted-foreground hover:text-foreground">
-                                  <Settings size={14} />
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent align="end" className="w-44 p-1.5 bg-card border border-white/[0.08] shadow-xl" sideOffset={4}>
-                                <div className="flex flex-col gap-0.5">
-                                  <button
-                                    onClick={() => handleGrantSpin(user)}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full"
-                                  >
-                                    <RotateCcw size={13} className="text-primary" />
-                                    <span>{user.spins_available >= 1 ? `Giros: ${user.spins_available}` : 'Dar giro'}</span>
+                          <td className="px-2 py-2 align-middle">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => handleToggleBlacklist(user)}
+                                title={user.blacklisted ? 'Remover blacklist' : 'Blacklist'}
+                                className={`p-1.5 rounded-md transition ${user.blacklisted ? 'bg-destructive/20 text-destructive' : 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive'}`}
+                              >
+                                <Ban size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleToggleGuaranteedWin(user)}
+                                title={user.guaranteed_next_win ? 'Remover garantido' : 'Próx. rodada'}
+                                className={`p-1.5 rounded-md transition ${user.guaranteed_next_win ? 'bg-emerald-500/20 text-emerald-400' : 'text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-400'}`}
+                              >
+                                <Star size={14} />
+                              </button>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button className="p-1.5 rounded-md hover:bg-white/[0.08] transition text-muted-foreground hover:text-foreground">
+                                    <Settings size={14} />
                                   </button>
-                                  <button
-                                    onClick={() => openEdit(user)}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full"
-                                  >
-                                    <Pencil size={13} className="text-primary" />
-                                    <span>Editar</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleToggleBlacklist(user)}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full ${user.blacklisted ? 'text-destructive' : ''}`}
-                                  >
-                                    <Ban size={13} className={user.blacklisted ? 'text-destructive' : 'text-muted-foreground'} />
-                                    <span>{user.blacklisted ? 'Remover blacklist' : 'Blacklist'}</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleToggleGuaranteedWin(user)}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full ${user.guaranteed_next_win ? 'text-emerald-400' : ''}`}
-                                  >
-                                    <Star size={13} className={user.guaranteed_next_win ? 'text-emerald-400' : 'text-muted-foreground'} />
-                                    <span>{user.guaranteed_next_win ? 'Remover garantido' : 'Próx. rodada'}</span>
-                                  </button>
-                                  <div className="border-t border-white/[0.06] my-0.5" />
-                                  <button
-                                    onClick={() => handleDeleteUser(user.id)}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-destructive/10 transition text-left w-full text-destructive"
-                                  >
-                                    <Trash2 size={13} />
-                                    <span>Excluir</span>
-                                  </button>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
+                                </PopoverTrigger>
+                                <PopoverContent align="end" className="w-44 p-1.5 bg-card border border-white/[0.08] shadow-xl" sideOffset={4}>
+                                  <div className="flex flex-col gap-0.5">
+                                    <button
+                                      onClick={() => handleGrantSpin(user)}
+                                      className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full"
+                                    >
+                                      <RotateCcw size={13} className="text-primary" />
+                                      <span>{user.spins_available >= 1 ? `Giros: ${user.spins_available}` : 'Dar giro'}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => openEdit(user)}
+                                      className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full"
+                                    >
+                                      <Pencil size={13} className="text-primary" />
+                                      <span>Editar</span>
+                                    </button>
+                                    <div className="border-t border-white/[0.06] my-0.5" />
+                                    <button
+                                      onClick={() => handleDeleteUser(user.id)}
+                                      className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-destructive/10 transition text-left w-full text-destructive"
+                                    >
+                                      <Trash2 size={13} />
+                                      <span>Excluir</span>
+                                    </button>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                           </td>
                         </tr>
                       ))}
