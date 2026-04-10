@@ -232,7 +232,10 @@ const Influencer = () => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
     const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at, prize').eq('owner_id', uid).order('created_at', { ascending: false }).limit(500);
-    setHistoryWinners(data || []);
+    const realHistory: TodayWinner[] = data || [];
+    const ghostWinners = loadGhostWinners();
+    const merged = [...realHistory, ...ghostWinners].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setHistoryWinners(merged);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
