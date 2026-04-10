@@ -244,7 +244,7 @@ const SlotMachineSuccess = ({
                 boxShadow: `0 8px 25px ${btnBgColor}30`,
               }}
             >
-              🎰 {successBtnText}
+              {successBtnText}
             </a>
           ) : showCta && onCtaClick ? (
             <button
@@ -256,7 +256,7 @@ const SlotMachineSuccess = ({
                 boxShadow: `0 8px 25px ${btnBgColor}30`,
               }}
             >
-              🎰 {successBtnText}
+              {successBtnText}
             </button>
           ) : null}
 
