@@ -106,27 +106,13 @@ const Registration = () => {
         p_account_id: accountId.trim(),
         p_name: name.trim(),
         p_cpf: cpf.replace(/\D/g, ''),
+        p_phone: phone.replace(/\D/g, ''),
+        p_pix_key: pixKey.trim(),
+        p_pix_key_type: pixKeyType,
       });
       if (error) throw error;
       const result = typeof data === 'string' ? JSON.parse(data) : data;
       if (result?.success) {
-        // Update extra fields on the wheel_user
-        if (result.wheel_user_id || result.user_id) {
-          const uid = result.wheel_user_id || result.user_id;
-          await (supabase as any).from('wheel_users').update({
-            phone: phone.trim(),
-            pix_key_type: pixKeyType,
-            pix_key: pixKey.trim(),
-          }).eq('id', uid);
-        } else {
-          // fallback: update by account_id + owner
-          await (supabase as any).from('wheel_users').update({
-            phone: phone.trim(),
-            pix_key_type: pixKeyType,
-            pix_key: pixKey.trim(),
-          }).eq('account_id', accountId.trim()).eq('owner_id', result.owner_id);
-        }
-
         setSpinsGranted(result.spins || 1);
         if (result.slug) setWheelSlug(result.slug);
         setSuccess(true);
