@@ -256,7 +256,36 @@ const Influencer = () => {
     toast.success('Atualizado!');
   };
 
-  const handleResetDayCounter = () => { setSentToday(0); toast.success('Contador reiniciado!'); };
+  const handleResetDayCounter = async () => {
+    if (sessionCreatedIds.current.size === 0) {
+      setSentToday(0);
+      toast.success('Contador reiniciado!');
+      return;
+    }
+
+    const idsToRemove = new Set(sessionCreatedIds.current);
+
+    // Delete real prize_payments created in this session
+    const realIds = [...idsToRemove].filter(id => !id.startsWith('ghost_'));
+    if (realIds.length > 0) {
+      await (supabase as any).from('prize_payments').delete().in('id', realIds);
+    }
+
+    // Remove ghost entries from localStorage
+    const ghostIdsToRemove = [...idsToRemove].filter(id => id.startsWith('ghost_'));
+    if (ghostIdsToRemove.length > 0) {
+      const ghosts = loadGhostWinners().filter(g => !ghostIdsToRemove.includes(g.id));
+      saveGhostWinners(ghosts);
+    }
+
+    // Clear session tracking
+    sessionCreatedIds.current.clear();
+
+    // Refresh lists
+    await fetchTodayWinners(session?.user?.id);
+    await fetchHistory(session?.user?.id);
+    toast.success('Contador reiniciado e últimos sorteios removidos!');
+  };
 
   const filteredUsers = users.filter(u => {
     const term = searchTerm.toLowerCase();
