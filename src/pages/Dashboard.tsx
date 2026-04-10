@@ -165,6 +165,7 @@ const Dashboard = () => {
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'roleta' | 'referral' | 'gorjeta'>('all');
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
