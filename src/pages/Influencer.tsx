@@ -1009,7 +1009,8 @@ const Influencer = () => {
                       <div className="flex-1 rounded-xl border border-white/[0.08] p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
                         <input type="number" value={raffleQty}
                           onChange={e => setRaffleQty(Math.max(1, Math.min(users.length, parseInt(e.target.value) || 1)))}
-                          className="w-full bg-transparent text-center text-2xl font-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" style={{ color: accent }} min={1} max={users.length} />
+                          className="w-full border-0 bg-transparent text-center text-2xl font-black outline-none shadow-none [appearance:textfield] focus:bg-transparent focus:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          style={{ color: accent, backgroundColor: 'transparent', boxShadow: 'none' }} min={1} max={users.length} />
                       </div>
                       <div className="flex flex-col gap-1">
                         <button onClick={() => setRaffleQty(q => Math.min(users.length, q + 1))} className="w-8 h-8 rounded-lg border flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accent}33` }}><Plus size={14} /></button>
