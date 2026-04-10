@@ -23,6 +23,7 @@ const Registration = () => {
   const [linkData, setLinkData] = useState<any>(null);
   const [cfg, setCfg] = useState<GorjetaPageConfig>(defaultGorjetaConfig);
   const [wheelSlug, setWheelSlug] = useState('');
+  const [seoConfig, setSeoConfig] = useState<any>({});
 
   // Form fields
   const [name, setName] = useState('');
