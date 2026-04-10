@@ -306,6 +306,7 @@ const Registration = () => {
         successSubtitle={cfg.successSubtitle || 'Agora é só aguardar o sorteio...'}
         successBtnText={cfg.successBtnText || 'VOCÊ PODE SER O PRÓXIMO GANHADOR!'}
         slotMatchIcon={cfg.slotMatchIcon || '⚡'}
+        slotMatchImageUrl={cfg.slotMatchImageUrl}
         slotLuckyText={cfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
         slotReelBgColor={cfg.slotReelBgColor}
         slotFrameBgColor={cfg.slotFrameBgColor}
