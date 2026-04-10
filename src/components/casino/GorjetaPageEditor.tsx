@@ -320,6 +320,7 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
                 slotLuckyText={config.slotLuckyText}
                 ctaUrl={config.ctaBtnUrl}
                 showCta={config.ctaBtnShow}
+                inline
               />
             </div>
           </div>
