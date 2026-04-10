@@ -27,11 +27,26 @@ const Registration = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [cpf, setCpf] = useState('');
   const [accountId, setAccountId] = useState('');
   const [pixKeyType, setPixKeyType] = useState('');
   const [pixKey, setPixKey] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [confirmData, setConfirmData] = useState(false);
+
+  const maskPhone = (v: string) => {
+    const d = v.replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 2) return d;
+    if (d.length <= 7) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  };
+  const maskCpf = (v: string) => {
+    const d = v.replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
+    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+  };
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -291,12 +306,27 @@ const Registration = () => {
             <div className="relative">
               <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: `${labelColor}` }} />
               <input
-                type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                placeholder="(11) 98765-4321"
+                type="tel" value={phone} onChange={e => setPhone(maskPhone(e.target.value))}
+                placeholder="(DD) 9XXXX-XXXX"
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
                 style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: phone ? accentColor : 'rgba(255,255,255,0.15)' }} />
+            </div>
+          </div>
+
+          {/* CPF */}
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>CPF</label>
+            <div className="relative">
+              <Shield size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: `${labelColor}` }} />
+              <input
+                type="text" value={cpf} onChange={e => setCpf(maskCpf(e.target.value))}
+                placeholder="000.000.000-00"
+                className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
+                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+              />
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: cpf ? accentColor : 'rgba(255,255,255,0.15)' }} />
             </div>
           </div>
 
@@ -309,7 +339,7 @@ const Registration = () => {
               <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: `${labelColor}` }} />
               <input
                 type="text" value={accountId} onChange={e => setAccountId(e.target.value)}
-                placeholder="Seu ID de usuário"
+                placeholder={cfg.casinoName ? `Seu ID de usuário ${cfg.casinoName}` : 'Seu ID de usuário'}
                 required
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
                 style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
