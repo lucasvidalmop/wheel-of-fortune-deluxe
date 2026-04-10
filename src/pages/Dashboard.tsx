@@ -2382,6 +2382,13 @@ const Dashboard = () => {
                                       <Pencil size={13} className="text-primary" />
                                       <span>Editar</span>
                                     </button>
+                                    <button
+                                      onClick={() => handleToggleQualified(user)}
+                                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full ${user.user_type === 'qualified' ? 'text-emerald-400' : ''}`}
+                                    >
+                                      <span className="text-[13px]">✅</span>
+                                      <span>{user.user_type === 'qualified' ? 'Remover qualificação' : 'Qualificar'}</span>
+                                    </button>
                                     <div className="border-t border-white/[0.06] my-0.5" />
                                     <button
                                       onClick={() => handleDeleteUser(user.id)}
