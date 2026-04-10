@@ -164,7 +164,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified' | 'duplicados'>('all');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified' | 'duplicados' | 'blacklist' | 'guaranteed'>('all');
 
   const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
