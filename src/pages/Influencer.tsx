@@ -525,17 +525,39 @@ const Influencer = () => {
         {/* ─── History ─── */}
         {activeTab === 'history' && (
           <div className="space-y-2">
-            {historyWinners.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum histórico encontrado</p>}
-            {historyWinners.map((w, i) => (
-              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                <span className="w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-bold bg-white/[0.06] text-white/40">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold uppercase truncate">{w.user_name}</p>
-                  <p className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)} · {new Date(w.created_at).toLocaleString('pt-BR')}</p>
+            {historyGroups.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum histórico encontrado</p>}
+            {historyGroups.map((g) => {
+              const isExpanded = expandedGroups.has(g.key);
+              return (
+                <div key={g.key} className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <button onClick={() => toggleGroup(g.key)} className="w-full flex items-center justify-between p-3.5 text-left hover:bg-white/[0.02] transition">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white/80">
+                        {g.count} ganhador(es) · {formatCurrency(g.amount)} cada
+                      </p>
+                      <p className="text-[10px] text-white/30 font-mono mt-0.5">
+                        {new Date(g.date).toLocaleDateString('pt-BR')} {new Date(g.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(g.total)}</span>
+                      {isExpanded ? <ChevronUp size={14} className="text-white/40" /> : <ChevronDown size={14} className="text-white/40" />}
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t px-3 pb-3 pt-2 space-y-1.5" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                      {g.winners.map((w, i) => (
+                        <div key={w.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                          <span className="w-5 h-5 flex items-center justify-center rounded-full text-[9px] font-bold" style={{ background: `${accent}20`, color: accent }}>{i + 1}</span>
+                          <span className="text-[11px] text-white/70 flex-1 truncate">{w.user_name}</span>
+                          <span className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(w.amount)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         </div>
