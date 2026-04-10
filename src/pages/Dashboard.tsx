@@ -18,6 +18,7 @@ import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
 import InfluencerPageEditor from '@/components/casino/InfluencerPageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 interface WheelUser {
   id: string;
@@ -410,7 +411,7 @@ const Dashboard = () => {
   const [manualPayPrize, setManualPayPrize] = useState('');
   const [manualPaySearch, setManualPaySearch] = useState('');
   const [manualPaySending, setManualPaySending] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+  const { confirm: confirmDialog, ConfirmDialog } = useConfirmDialog();
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
@@ -497,7 +498,7 @@ const Dashboard = () => {
   };
 
   const handleDeleteReferral = async (id: string) => {
-    if (!confirm('Excluir este link?')) return;
+    if (!await confirmDialog({ title: 'Excluir Link', message: 'Tem certeza que deseja excluir este link de referência?', variant: 'danger', confirmLabel: 'Excluir' })) return;
     await (supabase as any).from('referral_links').delete().eq('id', id);
     toast.success('Link excluído');
     fetchReferralLinks();
@@ -1313,7 +1314,7 @@ const Dashboard = () => {
   };
 
   const handleClearHistory = async () => {
-    if (!confirm('Tem certeza que deseja limpar todo o histórico de sorteio?')) return;
+    if (!await confirmDialog({ title: 'Limpar Histórico', message: 'Tem certeza que deseja limpar todo o histórico de sorteio? Esta ação é irreversível.', variant: 'danger', confirmLabel: 'Limpar' })) return;
     const uid = session?.user?.id;
     if (!uid) return;
     const { error } = await (supabase as any).from('spin_results').delete().eq('owner_id', uid);
@@ -1323,7 +1324,7 @@ const Dashboard = () => {
   };
 
   const handleClearAnalytics = async () => {
-    if (!confirm('Tem certeza que deseja limpar todo o histórico de analytics?')) return;
+    if (!await confirmDialog({ title: 'Limpar Analytics', message: 'Tem certeza que deseja limpar todo o histórico de analytics? Esta ação é irreversível.', variant: 'danger', confirmLabel: 'Limpar' })) return;
     const uid = session?.user?.id;
     if (!uid) return;
     const { error } = await (supabase as any).from('page_views').delete().eq('owner_id', uid);
@@ -1333,7 +1334,7 @@ const Dashboard = () => {
   };
 
   const handleDeleteUser = async (id: string) => {
-    if (!confirm('Excluir este usuário?')) return;
+    if (!await confirmDialog({ title: 'Excluir Usuário', message: 'Tem certeza que deseja excluir este usuário?', variant: 'danger', confirmLabel: 'Excluir' })) return;
     await (supabase as any).from('wheel_users').delete().eq('id', id);
     toast.success('Excluído!');
     fetchUsers();
@@ -1341,7 +1342,7 @@ const Dashboard = () => {
 
   const handleDeleteSelectedUsers = async () => {
     if (selectedUserIds.size === 0) return;
-    if (!confirm(`Excluir ${selectedUserIds.size} inscrito(s) selecionado(s)?`)) return;
+    if (!await confirmDialog({ title: 'Excluir Selecionados', message: `Tem certeza que deseja excluir ${selectedUserIds.size} inscrito(s) selecionado(s)?`, variant: 'danger', confirmLabel: 'Excluir' })) return;
     const ids = Array.from(selectedUserIds);
     const { error } = await (supabase as any).from('wheel_users').delete().in('id', ids);
     if (error) { toast.error('Erro ao excluir inscritos'); return; }
