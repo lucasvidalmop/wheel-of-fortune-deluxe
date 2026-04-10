@@ -201,7 +201,7 @@ const SlotMachineSuccess = ({
               boxShadow: `0 0 60px ${accentColor}40, 0 0 120px ${accentColor}20`,
             }}
           >
-            {slotReelImages?.[0] ? <img src={slotReelImages[0]} alt="slot" className="w-12 h-12 object-contain" /> : slotMatchIcon}
+            {slotMatchIcon}
           </div>
         </div>
       )}
@@ -218,7 +218,7 @@ const SlotMachineSuccess = ({
                 boxShadow: `0 0 40px ${accentColor}30`,
               }}
             >
-              {slotReelImages?.[0] ? <img src={slotReelImages[0]} alt="slot" className="w-10 h-10 object-contain" /> : slotMatchIcon}
+              {slotMatchIcon}
             </div>
           </div>
 
