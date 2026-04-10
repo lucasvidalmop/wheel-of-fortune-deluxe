@@ -290,7 +290,7 @@ const Influencer = () => {
     // Build ghost user objects (they won't create payments)
     const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
       id: `ghost_${Math.random().toString(36).slice(2)}`,
-      account_id: '',
+      account_id: generateFakeAccountId(),
       email: '',
       phone: '',
       name,
