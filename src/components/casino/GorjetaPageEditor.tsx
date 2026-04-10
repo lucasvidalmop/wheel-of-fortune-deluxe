@@ -47,6 +47,9 @@ export interface GorjetaPageConfig {
   ctaBtnTextColor: string;
   ctaBtnBorderColor: string;
   ctaBtnShow: boolean;
+  // Terms modal
+  termsTitle: string;
+  termsContent: string;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
@@ -89,6 +92,27 @@ export const defaultGorjetaConfig: GorjetaPageConfig = {
   ctaBtnTextColor: '#000000',
   ctaBtnBorderColor: 'rgba(255,255,255,0.1)',
   ctaBtnShow: true,
+  termsTitle: 'Termos de Uso – Gorjeta',
+  termsContent: `TERMOS DE USO – GORJETA
+
+Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara que leu, compreendeu e concorda integralmente com os presentes Termos de Uso.
+
+1. Elegibilidade para Participação
+
+1.1. Apenas poderão participar dos sorteios usuários que tenham criado sua conta por meio do link oficial indicado pelo organizador.
+1.2. Contas criadas fora do link indicado não serão elegíveis para participação nos sorteios ou recebimento de prêmios.
+1.3. O participante deve cumprir todas as regras estabelecidas neste termo para estar apto a participar.
+
+2. Idade Mínima
+
+2.1. A participação nos sorteios é exclusiva para maiores de 18 (dezoito) anos.
+2.2. Ao participar, o usuário declara que possui 18 anos ou mais.
+2.3. Caso seja identificado que o participante é menor de idade, sua participação será imediatamente cancelada, e qualquer prêmio eventualmente ganho não será concedido.
+
+3. Requisitos de Usuário Ativo
+
+3.1. Para estar apto a participar dos sorteios, o usuário deverá ser considerado usuário ativo.
+3.2. Considera-se usuário ativo aquele que realizou ao menos um depósito na plataforma.`,
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
@@ -248,6 +272,20 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="Inscrição Confirmada!" />
         <TextField label="Botão de sucesso" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="Ir para a Roleta" />
         <TextField label="Rodapé" value={config.footerText} onChange={v => update({ footerText: v })} placeholder="© 2025 Todos os direitos reservados." />
+      </Section>
+
+      <Section icon={<Type size={14} className="text-primary" />} title="Termos de Uso (Modal)">
+        <TextField label="Título do modal" value={config.termsTitle} onChange={v => update({ termsTitle: v })} placeholder="Termos de Uso – Gorjeta" />
+        <div>
+          <label className="text-[10px] text-muted-foreground block mb-1">Conteúdo dos termos</label>
+          <textarea
+            value={config.termsContent}
+            onChange={e => update({ termsContent: e.target.value })}
+            rows={10}
+            placeholder="Digite os termos de uso completos..."
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:border-primary/50 resize-y"
+          />
+        </div>
       </Section>
 
       <Section icon={<Palette size={14} className="text-primary" />} title="Cor Destaque (Accent)">
