@@ -67,6 +67,9 @@ const Influencer = () => {
   const [dailyLimit, setDailyLimit] = useState(500);
   const [sentToday, setSentToday] = useState(0);
   const [influencerConfig, setInfluencerConfig] = useState<any>({});
+  const [drawProbability, setDrawProbability] = useState(0);
+  const [minRealWinners, setMinRealWinners] = useState(0);
+  const [ghostUsers, setGhostUsers] = useState<string[]>([]);
 
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
