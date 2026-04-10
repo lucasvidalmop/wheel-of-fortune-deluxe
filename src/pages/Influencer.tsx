@@ -295,7 +295,31 @@ const Influencer = () => {
     toast.success('Contador reiniciado e últimos sorteios removidos!');
   };
 
-  const filteredUsers = users.filter(u => {
+  // Build ghost participants with stable fake IDs (seeded from name)
+  const ghostParticipants: WheelUser[] = useMemo(() => ghostUsers.map((name, i) => ({
+    id: `ghost_participant_${i}`,
+    account_id: String(10000000 + Math.abs([...name].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0) + i * 7919) % 90000000),
+    email: '',
+    phone: '',
+    name,
+    spins_available: 0,
+    created_at: new Date().toISOString(),
+    pix_key: '',
+    pix_key_type: '',
+    auto_payment: false,
+  })), [ghostUsers]);
+
+  const allParticipants = useMemo(() => {
+    // Interleave ghosts among real users for natural appearance
+    const combined = [...users];
+    ghostParticipants.forEach((g, i) => {
+      const pos = Math.min(Math.floor((i + 1) * (users.length + 1) / (ghostParticipants.length + 1)), combined.length);
+      combined.splice(pos, 0, g);
+    });
+    return combined;
+  }, [users, ghostParticipants]);
+
+  const filteredUsers = allParticipants.filter(u => {
     const term = searchTerm.toLowerCase();
     return u.name.toLowerCase().includes(term) || u.account_id.toLowerCase().includes(term);
   });
