@@ -4220,7 +4220,7 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {referralLinks.map(link => {
+                    {referralLinks.filter(link => link.code?.toLowerCase() !== ((wheelConfig as any).gorjetaRef || '').toLowerCase()).map(link => {
                       const hasCustomStyle = link.page_config && Object.keys(link.page_config).length > 0;
                       return (
                       <div key={link.id} className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 space-y-2">
