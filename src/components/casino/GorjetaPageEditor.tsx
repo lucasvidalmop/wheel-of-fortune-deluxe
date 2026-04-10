@@ -54,6 +54,11 @@ export interface GorjetaPageConfig {
   // Slot machine animation
   slotMatchIcon: string;
   slotLuckyText: string;
+  slotReelBgColor: string;
+  slotFrameBgColor: string;
+  slotFrameBorderColor: string;
+  successBgColor: string;
+  successCtaUrl: string;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
@@ -119,6 +124,11 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
 3.2. Considera-se usuário ativo aquele que realizou ao menos um depósito na plataforma.`,
   slotMatchIcon: '⚡',
   slotLuckyText: '🎰 BOA SORTE! 🎰',
+  slotReelBgColor: 'rgba(100, 40, 20, 0.9)',
+  slotFrameBgColor: 'rgba(60, 20, 10, 0.8)',
+  slotFrameBorderColor: 'rgba(255,220,150,0.4)',
+  successBgColor: 'rgba(0,0,0,0.92)',
+  successCtaUrl: '',
   
 };
 
