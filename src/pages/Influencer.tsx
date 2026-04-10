@@ -338,37 +338,27 @@ const Influencer = () => {
               <RotateCcw size={12} /> Reiniciar contador do dia
             </button>
           </div>
-        </div>
-
-        {/* ─── Link bar ─── */}
-        {gorjetaUrl && (
-          <div className="rounded-xl border border-white/[0.06] p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <LinkIcon size={12} style={{ color: accent }} />
-              <span className="text-[11px] font-semibold text-white/50">LINK:</span>
+          {/* ─── Link bar inside top card ─── */}
+          {gorjetaUrl && (
+            <div className="mt-4 rounded-xl border border-white/[0.06] p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <LinkIcon size={12} style={{ color: accent }} />
+                <span className="text-[11px] font-semibold text-white/50">LINK:</span>
+              </div>
+              <input readOnly value={gorjetaUrl} className="flex-1 bg-transparent text-xs text-white/50 font-mono truncate outline-none" />
+              <button onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+                style={{ borderColor: `${accent}40`, color: accent }}>
+                <Copy size={12} /> Copiar
+              </button>
             </div>
-            <input readOnly value={gorjetaUrl} className="flex-1 bg-transparent text-xs text-white/50 font-mono truncate outline-none" />
-            <button onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition hover:bg-white/[0.04]"
-              style={{ borderColor: `${accent}40`, color: accent }}>
-              <Copy size={12} /> Copiar
-            </button>
-          </div>
-        )}
-
-        {/* ─── Refresh + Clock ─── */}
-        <div className="flex items-center justify-between">
-          <button onClick={handleRefresh}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-semibold border transition hover:bg-white/[0.04]"
-            style={{ borderColor: `${accent}40`, color: accent }}>
-            <RefreshCw size={13} /> Atualizar
-          </button>
-          <span className="text-xs text-white/30 font-mono">{timer}</span>
+          )}
         </div>
 
         {/* ─── Tabs ─── */}
       <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.01)' }}>
-        <div className="flex border-b shrink-0" style={{ borderColor: `${accent}20` }}>
+        <div className="flex items-center border-b shrink-0" style={{ borderColor: `${accent}20` }}>
+          <div className="flex flex-1">
           {([
             { key: 'participants' as const, label: 'Participantes', count: users.length, prefix: '≡' },
             { key: 'winners' as const, label: 'Ganhadores Hoje', prefix: '★' },
@@ -393,6 +383,12 @@ const Influencer = () => {
               </button>
             );
           })}
+          </div>
+          <button onClick={handleRefresh}
+            className="flex items-center gap-1.5 px-3 py-2 mr-2 rounded-lg text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+            style={{ borderColor: `${accent}40`, color: accent }}>
+            <RefreshCw size={13} /> Atualizar
+          </button>
         </div>
 
         <div className="p-3 overflow-y-auto flex-1 min-h-0">
