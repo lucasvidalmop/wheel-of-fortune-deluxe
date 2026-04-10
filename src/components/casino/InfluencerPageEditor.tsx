@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Palette, Type, Save, RotateCcw, Volume2, Upload, X, Sliders } from 'lucide-react';
+import { Palette, Type, Save, RotateCcw, Volume2, Upload, X, Sliders, Image as ImageIcon, Monitor } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 export interface InfluencerPageConfig {
@@ -11,6 +11,12 @@ export interface InfluencerPageConfig {
   textColor: string;
   btnBgColor: string;
   btnTextColor: string;
+  // Background image
+  bgImageUrl: string;
+  // Glass effects
+  glowColor: string;
+  glowOpacity: number;
+  borderOpacity: number;
   // Tab styling
   tabActiveColor: string;
   tabInactiveColor: string;
@@ -28,6 +34,10 @@ export const defaultInfluencerConfig: InfluencerPageConfig = {
   textColor: '#ffffff',
   btnBgColor: '#2dd4bf',
   btnTextColor: '#000000',
+  bgImageUrl: '',
+  glowColor: '#2dd4bf',
+  glowOpacity: 3,
+  borderOpacity: 8,
   tabActiveColor: '',
   tabInactiveColor: '',
   tabBorderWidth: 2,
@@ -67,6 +77,7 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
   const [config, setConfig] = useState<InfluencerPageConfig>({ ...defaultInfluencerConfig, ...currentConfig });
   const [saving, setSaving] = useState(false);
   const [uploadingSound, setUploadingSound] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
   const soundInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -124,6 +135,26 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
     e.target.value = '';
   };
 
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBg(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, `influencer-bg/${userId}`);
+      update({ bgImageUrl: publicUrl });
+      toast.success('Background atualizado!');
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || ''));
+    }
+    setUploadingBg(false);
+    e.target.value = '';
+  };
+
+  const removeBg = () => {
+    update({ bgImageUrl: '' });
+    toast.success('Background removido!');
+  };
+
   const removeSound = () => {
     update({ raffleSoundUrl: '', raffleSoundEnabled: false });
     toast.success('Som removido');
@@ -145,6 +176,54 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
       <Section icon={<Palette size={14} className="text-primary" />} title="Cores do Fundo">
         <ColorField label="Fundo da página" value={config.bgColor} onChange={v => update({ bgColor: v })} />
         <ColorField label="Fundo dos cards" value={config.cardBgColor} onChange={v => update({ cardBgColor: v })} />
+      </Section>
+
+      {/* Background Image */}
+      <Section icon={<ImageIcon size={14} className="text-primary" />} title="Imagem de Fundo">
+        {config.bgImageUrl ? (
+          <div className="space-y-3">
+            <div className="relative rounded-xl overflow-hidden border border-white/[0.08]">
+              <img src={config.bgImageUrl} alt="Background" className="w-full h-32 object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            </div>
+            <div className="flex gap-2">
+              <label className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs cursor-pointer hover:bg-white/[0.08] transition">
+                <Upload size={14} /> Trocar
+                <input type="file" accept="image/*" onChange={handleBgUpload} className="hidden" />
+              </label>
+              <button onClick={removeBg} className="flex-1 py-2 rounded-xl border border-destructive/20 text-destructive text-xs hover:bg-destructive/10 transition">
+                Remover
+              </button>
+            </div>
+          </div>
+        ) : (
+          <label className="flex flex-col items-center justify-center gap-2 py-8 rounded-xl border-2 border-dashed border-white/[0.1] hover:border-primary/30 cursor-pointer transition group">
+            <Upload size={24} className="text-muted-foreground group-hover:text-primary transition" />
+            <span className="text-xs text-muted-foreground group-hover:text-foreground transition">
+              {uploadingBg ? 'Enviando...' : 'Clique para enviar imagem de fundo'}
+            </span>
+            <input type="file" accept="image/*" onChange={handleBgUpload} className="hidden" disabled={uploadingBg} />
+          </label>
+        )}
+      </Section>
+
+      {/* Glass Effects */}
+      <Section icon={<Monitor size={14} className="text-primary" />} title="Efeitos Glass">
+        <ColorField label="Cor do brilho" value={config.glowColor} onChange={v => update({ glowColor: v })} />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Intensidade do brilho</span>
+          <div className="flex items-center gap-2">
+            <input type="range" min="0" max="20" value={config.glowOpacity} onChange={e => update({ glowOpacity: parseInt(e.target.value) })} className="w-24 accent-primary h-1.5" />
+            <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.glowOpacity}%</span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Opacidade das bordas</span>
+          <div className="flex items-center gap-2">
+            <input type="range" min="0" max="30" value={config.borderOpacity} onChange={e => update({ borderOpacity: parseInt(e.target.value) })} className="w-24 accent-primary h-1.5" />
+            <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.borderOpacity}%</span>
+          </div>
+        </div>
       </Section>
 
       <Section icon={<Type size={14} className="text-primary" />} title="Cores do Texto">

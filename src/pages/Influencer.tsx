@@ -331,6 +331,10 @@ const Influencer = () => {
   const tabBgColor = influencerConfig.tabBgColor || '';
   const raffleSoundEnabled = influencerConfig.raffleSoundEnabled || false;
   const raffleSoundUrl = influencerConfig.raffleSoundUrl || '';
+  const bgImageUrl = influencerConfig.bgImageUrl || '';
+  const glowColor = influencerConfig.glowColor || accent;
+  const glowOpacity = influencerConfig.glowOpacity ?? 3;
+  const borderOpacity = influencerConfig.borderOpacity ?? 8;
 
   const playRaffleSound = () => {
     if (raffleSoundEnabled && raffleSoundUrl) {
@@ -339,6 +343,19 @@ const Influencer = () => {
         audio.play().catch(() => {});
       } catch {}
     }
+  };
+
+  const pageBgStyle: React.CSSProperties = {
+    background: bgColor,
+    color: textColor,
+    ...(bgImageUrl ? { backgroundImage: `url(${bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}),
+  };
+
+  const glassCardStyle: React.CSSProperties = {
+    borderColor: `rgba(255,255,255,${borderOpacity / 100})`,
+    background: cardBg,
+    backdropFilter: 'blur(16px)',
+    boxShadow: `0 0 ${glowOpacity * 4}px ${glowColor}${Math.round(glowOpacity * 5).toString(16).padStart(2, '0')}`,
   };
 
   // Login
@@ -369,11 +386,11 @@ const Influencer = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: bgColor, color: textColor }}>
+    <div className="min-h-screen" style={pageBgStyle}>
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-6 flex flex-col" style={{ height: 'calc(100vh)' }}>
 
         {/* ─── Top card: Title + Counter + Progress ─── */}
-        <div className="rounded-2xl border p-4 space-y-3" style={{ borderColor: `${accent}25`, background: cardBg }}>
+        <div className="rounded-2xl border p-4 space-y-3 backdrop-blur-xl" style={glassCardStyle}>
           {/* Row 1: Icon + Title + Counter */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -432,7 +449,7 @@ const Influencer = () => {
         </div>
 
         {/* ─── Tabs ─── */}
-      <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4" style={{ borderColor: `${accent}25`, background: cardBg }}>
+      <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4 backdrop-blur-xl" style={glassCardStyle}>
         <div className="flex items-center border-b shrink-0" style={{ borderColor: `${accent}20`, background: tabBgColor || undefined }}>
           <div className="flex flex-1">
           {([
