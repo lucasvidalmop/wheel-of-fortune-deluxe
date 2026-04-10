@@ -4518,6 +4518,41 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Limite de vitórias por dia */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Trophy size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Limite de Vitórias por Dia</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Define quantas vezes uma pessoa pode ser sorteada em um período de <strong className="text-foreground">24 horas</strong>. Ao atingir o limite, o participante fica bloqueado (borda vermelha) e não entra no próximo sorteio até o prazo expirar.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    value={(wheelConfig as any).maxWinsPerDay ?? 1}
+                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, maxWinsPerDay: Math.max(1, Number(e.target.value)) }))}
+                    className="w-20 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <span className="text-sm text-muted-foreground">vitória(s) máximas por 24h</span>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Tem certeza? Isso irá limpar o histórico de vitórias de hoje para todos os participantes.')) return;
+                      const todayStart = new Date();
+                      todayStart.setHours(0, 0, 0, 0);
+                      await (supabase as any).from('prize_payments').delete().eq('owner_id', session?.user?.id).gte('created_at', todayStart.toISOString());
+                      toast.success('Contadores de vitórias do dia reiniciados!');
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition text-sm font-medium"
+                  >
+                    <RotateCcw size={14} /> Reiniciar contadores do dia
+                  </button>
+                </div>
+              </div>
+
               {/* Usuários Fantasmas */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
