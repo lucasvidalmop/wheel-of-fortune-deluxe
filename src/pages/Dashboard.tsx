@@ -4993,8 +4993,15 @@ const Dashboard = () => {
 
                       <button
                         disabled={manualPaySending || manualPaySelectedIds.size === 0 || !manualPayAmount || Number(manualPayAmount) <= 0}
-                        onClick={async () => {
-                          if (!confirm(`Confirma o envio de ${manualPaySelectedIds.size} pagamento(s) de R$ ${Number(manualPayAmount).toFixed(2)} cada?`)) return;
+                        onClick={() => {
+                          const count = manualPaySelectedIds.size;
+                          const amt = Number(manualPayAmount).toFixed(2);
+                          const total = (count * Number(manualPayAmount)).toFixed(2);
+                          setConfirmModal({
+                            title: '💳 Confirmar Pagamento Manual',
+                            message: `Enviar ${count} pagamento(s) de R$ ${amt} cada?\nTotal: R$ ${total}`,
+                            onConfirm: async () => {
+                              setConfirmModal(null);
                           setManualPaySending(true);
                           let success = 0;
                           let failed = 0;
