@@ -17,6 +17,7 @@ export interface InfluencerPageConfig {
   glowColor: string;
   glowOpacity: number;
   borderOpacity: number;
+  borderColor: string;
   // Tab styling
   tabActiveColor: string;
   tabInactiveColor: string;
@@ -38,6 +39,7 @@ export const defaultInfluencerConfig: InfluencerPageConfig = {
   glowColor: '#2dd4bf',
   glowOpacity: 3,
   borderOpacity: 8,
+  borderColor: '',
   tabActiveColor: '',
   tabInactiveColor: '',
   tabBorderWidth: 2,
