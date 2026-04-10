@@ -598,9 +598,6 @@ const Influencer = () => {
 
           {/* Row 3: Reset button */}
           <div className="flex justify-end items-center gap-2">
-            {resetCountdown > 0 && (
-              <span className="text-[10px] font-mono text-white/30">{resetCountdown}s restantes</span>
-            )}
             <button
               onClick={handleResetDayCounter}
               className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]"
