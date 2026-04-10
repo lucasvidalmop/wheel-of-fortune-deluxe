@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
-import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save, Gift, Eye } from 'lucide-react';
+import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save, Gift, Eye, RefreshCw } from 'lucide-react';
+import SlotMachineSuccess from './SlotMachineSuccess';
 
 export interface GorjetaPageConfig {
   bgColor: string;
@@ -159,6 +160,7 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
   const [config, setConfig] = useState<GorjetaPageConfig>({ ...defaultGorjetaConfig, ...currentConfig });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [previewKey, setPreviewKey] = useState(0);
 
   useEffect(() => {
     setConfig({ ...defaultGorjetaConfig, ...currentConfig });
@@ -288,101 +290,38 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
         <p className="text-[10px] text-muted-foreground">A animação mostra um caça-níquel girando → resultado → tela de sucesso com partículas flutuantes.</p>
 
-        {/* Inline Preview */}
+        {/* Inline Full Animation Preview */}
         <div className="mt-2">
-          <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1"><Eye size={12} /> Pré-visualização da tela final:</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Eye size={12} /> Pré-visualização:</p>
+            <button
+              type="button"
+              onClick={() => setPreviewKey(k => k + 1)}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.08] text-[10px] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground transition"
+            >
+              <RefreshCw size={10} /> Reiniciar
+            </button>
+          </div>
           <div
             className="relative rounded-xl overflow-hidden border border-white/[0.08]"
-            style={{ background: 'rgba(0,0,0,0.92)', minHeight: 280 }}
+            style={{ height: 340 }}
           >
-            {/* Simulated particles */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute rounded-full"
-                  style={{
-                    width: 3 + Math.random() * 3,
-                    height: 3 + Math.random() * 3,
-                    left: `${10 + Math.random() * 80}%`,
-                    top: `${10 + Math.random() * 80}%`,
-                    backgroundColor: i % 3 === 0 ? config.accentColor : `${config.accentColor}80`,
-                    opacity: 0.3 + Math.random() * 0.5,
-                    animation: `dotPulse 2s ${i * 0.2}s ease-in-out infinite`,
-                  }}
-                />
-              ))}
+            <div key={previewKey} className="absolute inset-0">
+              <SlotMachineSuccess
+                accentColor={config.accentColor}
+                titleColor={config.titleColor}
+                subtitleColor={config.subtitleColor}
+                btnBgColor={config.btnBgColor}
+                btnTextColor={config.btnTextColor}
+                successTitle={config.successTitle}
+                successSubtitle={config.successSubtitle}
+                successBtnText={config.successBtnText}
+                slotMatchIcon={config.slotMatchIcon}
+                slotLuckyText={config.slotLuckyText}
+                ctaUrl={config.ctaBtnUrl}
+                showCta={config.ctaBtnShow}
+              />
             </div>
-
-            <div className="relative z-10 flex flex-col items-center text-center px-5 py-6 space-y-3">
-              {/* Glowing icon */}
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
-                style={{
-                  backgroundColor: `${config.accentColor}20`,
-                  boxShadow: `0 0 30px ${config.accentColor}30`,
-                }}
-              >
-                {config.slotMatchIcon || '⚡'}
-              </div>
-
-              {/* Title */}
-              <h3
-                className="text-lg font-extrabold uppercase tracking-wide"
-                style={{ color: config.titleColor }}
-              >
-                {config.successTitle || 'Inscrição Confirmada!'}
-              </h3>
-
-              {/* Decorative line */}
-              <div className="flex items-center justify-center gap-2">
-                <div className="h-px w-8" style={{ backgroundColor: `${config.accentColor}40` }} />
-                <span style={{ color: config.accentColor, fontSize: 10 }}>✦</span>
-                <div className="h-px w-8" style={{ backgroundColor: `${config.accentColor}40` }} />
-              </div>
-
-              {/* Subtitle */}
-              {(config.successSubtitle) && (
-                <p className="text-xs" style={{ color: config.subtitleColor }}>
-                  {config.successSubtitle}
-                </p>
-              )}
-
-              {/* CTA Button */}
-              {config.ctaBtnShow && (
-                <div
-                  className="w-full max-w-[220px] py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
-                  style={{
-                    backgroundColor: config.btnBgColor,
-                    color: config.btnTextColor,
-                    boxShadow: `0 6px 20px ${config.btnBgColor}30`,
-                  }}
-                >
-                  🎰 {config.successBtnText || 'Ir para a Roleta'}
-                </div>
-              )}
-
-              {/* Dots */}
-              <div className="flex justify-center gap-1.5 pt-1">
-                {[0, 1, 2].map(i => (
-                  <div
-                    key={i}
-                    className="w-1 h-1 rounded-full"
-                    style={{
-                      backgroundColor: `${config.accentColor}${i === 1 ? '' : '50'}`,
-                      animation: `dotPulse 1.5s ${i * 0.3}s ease-in-out infinite`,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <style>{`
-              @keyframes dotPulse {
-                0%, 100% { opacity: 0.3; transform: scale(0.8); }
-                50% { opacity: 1; transform: scale(1.2); }
-              }
-            `}</style>
           </div>
         </div>
       </Section>
