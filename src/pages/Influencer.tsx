@@ -345,7 +345,6 @@ const Influencer = () => {
 
   const triggerAutoPay = async (paymentId: string) => {
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       await supabase.functions.invoke('edpay-pix-transfer', {
         body: { paymentId, autoPayment: true },
       });
