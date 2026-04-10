@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -30,6 +31,16 @@ interface TodayWinner {
   account_id: string;
   amount: number;
   created_at: string;
+  prize?: string;
+}
+
+interface RaffleGroup {
+  key: string;
+  amount: number;
+  total: number;
+  count: number;
+  date: string;
+  winners: TodayWinner[];
 }
 
 type RaffleStep = 'config' | 'sending' | 'results';
@@ -82,6 +93,52 @@ const Influencer = () => {
   const [prizeCustomAmount, setPrizeCustomAmount] = useState('30,00');
   const [prizeSending, setPrizeSending] = useState(false);
   const [prizeSent, setPrizeSent] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Group history by time proximity (within 2 min) + same amount = raffle batch
+  const historyGroups: RaffleGroup[] = useMemo(() => {
+    if (historyWinners.length === 0) return [];
+    const groups: RaffleGroup[] = [];
+    let current: TodayWinner[] = [historyWinners[0]];
+
+    for (let i = 1; i < historyWinners.length; i++) {
+      const prev = historyWinners[i - 1];
+      const curr = historyWinners[i];
+      const timeDiff = Math.abs(new Date(prev.created_at).getTime() - new Date(curr.created_at).getTime());
+      if (timeDiff < 120000 && prev.amount === curr.amount) {
+        current.push(curr);
+      } else {
+        const amt = current[0].amount;
+        groups.push({
+          key: current[0].id,
+          amount: amt,
+          total: amt * current.length,
+          count: current.length,
+          date: current[current.length - 1].created_at,
+          winners: current,
+        });
+        current = [curr];
+      }
+    }
+    const amt = current[0].amount;
+    groups.push({
+      key: current[0].id,
+      amount: amt,
+      total: amt * current.length,
+      count: current.length,
+      date: current[current.length - 1].created_at,
+      winners: current,
+    });
+    return groups;
+  }, [historyWinners]);
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const update = () => {
@@ -147,7 +204,7 @@ const Influencer = () => {
   const fetchHistory = async (userId?: string) => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
-    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).order('created_at', { ascending: false }).limit(200);
+    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at, prize').eq('owner_id', uid).order('created_at', { ascending: false }).limit(500);
     setHistoryWinners(data || []);
   };
 
@@ -468,17 +525,39 @@ const Influencer = () => {
         {/* ─── History ─── */}
         {activeTab === 'history' && (
           <div className="space-y-2">
-            {historyWinners.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum histórico encontrado</p>}
-            {historyWinners.map((w, i) => (
-              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                <span className="w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-bold bg-white/[0.06] text-white/40">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold uppercase truncate">{w.user_name}</p>
-                  <p className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)} · {new Date(w.created_at).toLocaleString('pt-BR')}</p>
+            {historyGroups.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum histórico encontrado</p>}
+            {historyGroups.map((g) => {
+              const isExpanded = expandedGroups.has(g.key);
+              return (
+                <div key={g.key} className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <button onClick={() => toggleGroup(g.key)} className="w-full flex items-center justify-between p-3.5 text-left hover:bg-white/[0.02] transition">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white/80">
+                        {g.count} ganhador(es) · {formatCurrency(g.amount)} cada
+                      </p>
+                      <p className="text-[10px] text-white/30 font-mono mt-0.5">
+                        {new Date(g.date).toLocaleDateString('pt-BR')} {new Date(g.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(g.total)}</span>
+                      {isExpanded ? <ChevronUp size={14} className="text-white/40" /> : <ChevronDown size={14} className="text-white/40" />}
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t px-3 pb-3 pt-2 space-y-1.5" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                      {g.winners.map((w, i) => (
+                        <div key={w.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                          <span className="w-5 h-5 flex items-center justify-center rounded-full text-[9px] font-bold" style={{ background: `${accent}20`, color: accent }}>{i + 1}</span>
+                          <span className="text-[11px] text-white/70 flex-1 truncate">{w.user_name}</span>
+                          <span className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(w.amount)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         </div>
