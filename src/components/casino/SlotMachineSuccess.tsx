@@ -199,7 +199,7 @@ const SlotMachineSuccess = ({
           {/* Glowing icon */}
           <div className="flex justify-center">
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl animate-[emojiPulse_1.5s_ease-in-out_infinite]"
+              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl animate-[emojiPulse_3s_ease-in-out_infinite]"
               style={{
                 backgroundColor: `${accentColor}20`,
                 boxShadow: `0 0 40px ${accentColor}30`,
