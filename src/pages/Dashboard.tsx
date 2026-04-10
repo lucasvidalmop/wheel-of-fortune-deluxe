@@ -1822,8 +1822,8 @@ const Dashboard = () => {
       </div>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
-        <div className="w-full max-w-6xl min-w-0 mx-auto lg:py-6 space-y-5">
+      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-3 md:p-4 transition-all duration-500 relative z-10 ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
+        <div className="w-full max-w-[1600px] min-w-0 mx-auto lg:py-4 space-y-4">
 
           {/* Page title bar */}
           <div className="flex items-center justify-between">
