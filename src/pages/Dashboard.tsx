@@ -2241,7 +2241,7 @@ const Dashboard = () => {
                     </div>
                   )}
                   <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-sm table-auto min-w-[1100px]">
+                  <table className="w-full text-sm table-auto">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="px-2 py-3 w-8">
