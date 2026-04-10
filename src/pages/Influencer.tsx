@@ -297,7 +297,7 @@ const Influencer = () => {
 
   return (
     <div className="min-h-screen" style={{ background: bgColor, color: textColor }}>
-      <div className="max-w-2xl mx-auto px-4 pt-6 pb-36 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-6 flex flex-col" style={{ height: 'calc(100vh)' }}>
 
         {/* ─── Top card: Title + Counter + Progress ─── */}
         <div className="rounded-2xl border border-white/[0.08] p-5" style={{ background: cardBg }}>
