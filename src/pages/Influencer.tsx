@@ -364,9 +364,13 @@ const Influencer = () => {
     if (users.length === 0 && ghostUsers.length === 0) { toast.error('Sem participantes'); return; }
     const qty = raffleQty;
 
-    // Build pool of real users (shuffled), excluding those who hit daily limit
-    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay);
-    const shuffledReal = [...eligibleUsers].sort(() => Math.random() - 0.5);
+    // Build pool of real users (shuffled), excluding those who hit daily limit AND blacklisted
+    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay && !u.blacklisted);
+    
+    // Separate guaranteed winners from regular eligible
+    const guaranteedUsers = eligibleUsers.filter(u => u.guaranteed_next_win);
+    const regularUsers = eligibleUsers.filter(u => !u.guaranteed_next_win);
+    const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
 
     // Build ghost user objects (they won't create payments)
     const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
@@ -380,34 +384,42 @@ const Influencer = () => {
       pix_key: '',
       pix_key_type: '',
       auto_payment: false,
+      blacklisted: false,
+      guaranteed_next_win: false,
       _isGhost: true,
     }));
 
-    // Determine how many real winners (minimum + probability-based for remaining slots)
-    const realMin = Math.min(minRealWinners, shuffledReal.length, qty);
     const selected: { user: WheelUser & { _isGhost?: boolean }; amount: number; status: 'pending' | 'sending' | 'sent' }[] = [];
 
-    // 1. First, guarantee minimum real winners
-    for (let i = 0; i < realMin && i < shuffledReal.length; i++) {
-      selected.push({ user: shuffledReal[i], amount: raffleAmount, status: 'pending' });
+    // 1. First, add ALL guaranteed winners (they always get in)
+    const guaranteedCount = Math.min(guaranteedUsers.length, qty);
+    for (let i = 0; i < guaranteedCount; i++) {
+      selected.push({ user: guaranteedUsers[i], amount: raffleAmount, status: 'pending' });
+    }
+
+    // 2. Then, guarantee minimum real winners from regular pool
+    const remainingAfterGuaranteed = qty - selected.length;
+    const realMin = Math.min(minRealWinners, shuffledRegular.length, remainingAfterGuaranteed);
+
+    for (let i = 0; i < realMin && i < shuffledRegular.length; i++) {
+      selected.push({ user: shuffledRegular[i], amount: raffleAmount, status: 'pending' });
     }
     const usedRealIdx = realMin;
 
-    // 2. Fill remaining slots using probability
+    // 3. Fill remaining slots using probability
     let realIdx = usedRealIdx;
     let ghostIdx = 0;
     const remaining = qty - selected.length;
-    const prob = drawProbability / 100; // 0 = all ghosts, 1 = all real
+    const prob = drawProbability / 100;
 
     for (let i = 0; i < remaining; i++) {
       const pickReal = Math.random() < prob;
-      if (pickReal && realIdx < shuffledReal.length) {
-        selected.push({ user: shuffledReal[realIdx++], amount: raffleAmount, status: 'pending' });
+      if (pickReal && realIdx < shuffledRegular.length) {
+        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
       } else if (ghostIdx < ghostPool.length) {
         selected.push({ user: ghostPool[ghostIdx++] as any, amount: raffleAmount, status: 'pending' });
-      } else if (realIdx < shuffledReal.length) {
-        // Fallback to real if no more ghosts
-        selected.push({ user: shuffledReal[realIdx++], amount: raffleAmount, status: 'pending' });
+      } else if (realIdx < shuffledRegular.length) {
+        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
       }
     }
 
