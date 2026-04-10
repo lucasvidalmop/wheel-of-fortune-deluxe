@@ -30,6 +30,16 @@ interface TodayWinner {
   account_id: string;
   amount: number;
   created_at: string;
+  prize?: string;
+}
+
+interface RaffleGroup {
+  key: string;
+  amount: number;
+  total: number;
+  count: number;
+  date: string;
+  winners: TodayWinner[];
 }
 
 type RaffleStep = 'config' | 'sending' | 'results';
