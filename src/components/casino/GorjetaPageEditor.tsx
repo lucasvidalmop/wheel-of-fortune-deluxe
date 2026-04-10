@@ -280,7 +280,14 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Rodapé" value={config.footerText} onChange={v => update({ footerText: v })} placeholder="© 2025 Todos os direitos reservados." />
       </Section>
 
-      <Section icon={<Type size={14} className="text-primary" />} title="Termos de Uso (Modal)">
+      <Section icon={<Gift size={14} className="text-primary" />} title="Animação de Conclusão (Slot Machine)">
+        <TextField label="Emoji do slot (ícone que aparece)" value={config.slotMatchIcon} onChange={v => update({ slotMatchIcon: v })} placeholder="⚡" />
+        <TextField label="Texto de sorte" value={config.slotLuckyText} onChange={v => update({ slotLuckyText: v })} placeholder="🎰 BOA SORTE! 🎰" />
+        <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="CADASTRO EFETUADO!" />
+        <TextField label="Subtítulo de sucesso" value={config.successSubtitle} onChange={v => update({ successSubtitle: v })} placeholder="Agora é só aguardar o sorteio..." />
+        <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
+        <p className="text-[10px] text-muted-foreground">A animação mostra um caça-níquel girando → resultado → tela de sucesso com partículas flutuantes.</p>
+      </Section>
         <TextField label="Título do modal" value={config.termsTitle} onChange={v => update({ termsTitle: v })} placeholder="Termos de Uso – Gorjeta" />
         <div>
           <label className="text-[10px] text-muted-foreground block mb-1">Conteúdo dos termos</label>
