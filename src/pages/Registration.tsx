@@ -302,7 +302,7 @@ const Registration = () => {
           {/* ID da Conta */}
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>
-              ID da Conta {cfg.casinoName && <span style={{ color: accentColor }}>*{cfg.casinoName}</span>}
+              ID da Conta {cfg.casinoName && <span style={{ color: accentColor }}>{cfg.casinoName}</span>}
             </label>
             <div className="relative">
               <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: `${labelColor}` }} />
@@ -382,7 +382,7 @@ const Registration = () => {
                 {confirmData && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <span className="text-xs" style={{ color: subtitleColor }}>
-                {cfg.confirmText || <>Confirmo que os dados são da minha conta{cfg.casinoName ? <span style={{ color: accentColor }}> *{cfg.casinoName}</span> : ''}.</>}
+                Confirmo que os dados são da minha conta{cfg.casinoName ? <span style={{ color: accentColor }}> {cfg.casinoName}</span> : ''}.
               </span>
             </label>
           </div>
