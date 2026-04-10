@@ -23,6 +23,7 @@ const Registration = () => {
   const [linkData, setLinkData] = useState<any>(null);
   const [cfg, setCfg] = useState<GorjetaPageConfig>(defaultGorjetaConfig);
   const [wheelSlug, setWheelSlug] = useState('');
+  const [seoConfig, setSeoConfig] = useState<any>({});
 
   // Form fields
   const [name, setName] = useState('');
@@ -83,11 +84,60 @@ const Registration = () => {
         if (wcData?.slug) setWheelSlug(wcData.slug);
         const gorjetaCfg = wcData?.config?.gorjetaPageConfig || {};
         setCfg({ ...defaultGorjetaConfig, ...gorjetaCfg });
+        const seo = wcData?.config?.gorjetaSeo || {};
+        setSeoConfig(seo);
       }
       setLoading(false);
     };
     fetchLink();
   }, [code]);
+
+  // Inject SEO metatags and pixels
+  useEffect(() => {
+    if (!seoConfig || Object.keys(seoConfig).length === 0) return;
+    const cleanups: (() => void)[] = [];
+    const addMeta = (property: string, content: string) => {
+      if (!content) return;
+      const existing = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+      if (existing) { existing.setAttribute('content', content); return; }
+      const meta = document.createElement('meta');
+      if (property.startsWith('og:')) { meta.setAttribute('property', property); } else { meta.setAttribute('name', property); }
+      meta.setAttribute('content', content);
+      document.head.appendChild(meta);
+      cleanups.push(() => meta.remove());
+    };
+    if (seoConfig.ogTitle) { document.title = seoConfig.ogTitle; addMeta('og:title', seoConfig.ogTitle); }
+    if (seoConfig.ogDescription) { addMeta('description', seoConfig.ogDescription); addMeta('og:description', seoConfig.ogDescription); }
+    if (seoConfig.ogImage) { addMeta('og:image', seoConfig.ogImage); }
+    if (seoConfig.keywords) { addMeta('keywords', seoConfig.keywords); }
+    if (seoConfig.facebookPixelId) {
+      const s = document.createElement('script');
+      s.innerHTML = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${seoConfig.facebookPixelId}');fbq('track','PageView');`;
+      document.head.appendChild(s); cleanups.push(() => s.remove());
+    }
+    if (seoConfig.googleAnalyticsId) {
+      const g1 = document.createElement('script'); g1.async = true; g1.src = `https://www.googletagmanager.com/gtag/js?id=${seoConfig.googleAnalyticsId}`;
+      const g2 = document.createElement('script'); g2.innerHTML = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${seoConfig.googleAnalyticsId}');`;
+      document.head.appendChild(g1); document.head.appendChild(g2); cleanups.push(() => { g1.remove(); g2.remove(); });
+    }
+    if (seoConfig.gtmId) {
+      const g = document.createElement('script');
+      g.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${seoConfig.gtmId}');`;
+      document.head.appendChild(g); cleanups.push(() => g.remove());
+    }
+    if (seoConfig.tiktokPixelId) {
+      const t = document.createElement('script');
+      t.innerHTML = `!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${seoConfig.tiktokPixelId}');ttq.page();}(window,document,'ttq');`;
+      document.head.appendChild(t); cleanups.push(() => t.remove());
+    }
+    if (seoConfig.customHeadScript) {
+      const div = document.createElement('div');
+      div.innerHTML = seoConfig.customHeadScript;
+      Array.from(div.children).forEach(child => { document.head.appendChild(child); cleanups.push(() => child.remove()); });
+    }
+    return () => cleanups.forEach(fn => fn());
+  }, [seoConfig]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +167,6 @@ const Registration = () => {
         setSpinsGranted(result.spins || 1);
         if (result.slug) setWheelSlug(result.slug);
         setSuccess(true);
-
 
         toast.success('Inscrição realizada com sucesso!');
       } else {
