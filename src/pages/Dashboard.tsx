@@ -2241,7 +2241,7 @@ const Dashboard = () => {
                     </div>
                   )}
                   <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-sm table-fixed">
+                  <table className="w-full text-sm table-auto min-w-[1100px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="px-2 py-3 w-8">
@@ -2259,17 +2259,17 @@ const Dashboard = () => {
                           />
                         </th>
                         <th className="text-left px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-6">#</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[180px]">Nome</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[120px]">Email</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[100px]">Celular</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[100px]">Acc ID</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[50px]">PIX</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[120px]">Chave</th>
-                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[70px]">Data</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Celular</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Acc ID</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">PIX</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Chave</th>
+                        <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Data</th>
                         {spinsFilter === 'with' && (
                           <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[110px]">Prêmio</th>
                         )}
-                        <th className="text-center px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[140px]">Ações</th>
+                        <th className="text-center px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider min-w-[240px]">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
