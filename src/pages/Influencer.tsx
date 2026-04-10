@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon } from 'lucide-react';
+import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon, Ban } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface WheelUser {
