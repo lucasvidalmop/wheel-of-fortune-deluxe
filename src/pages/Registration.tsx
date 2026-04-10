@@ -97,7 +97,7 @@ const Registration = () => {
         p_email: email.trim(),
         p_account_id: accountId.trim(),
         p_name: name.trim(),
-        p_cpf: '',
+        p_cpf: cpf.replace(/\D/g, ''),
       });
       if (error) throw error;
       const result = typeof data === 'string' ? JSON.parse(data) : data;
