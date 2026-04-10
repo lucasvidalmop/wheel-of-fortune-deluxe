@@ -227,7 +227,7 @@ const Influencer = () => {
     if (!uid) return;
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).gte('created_at', todayStart.toISOString()).order('created_at', { ascending: false });
+    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).eq('hidden_from_influencer', false).gte('created_at', todayStart.toISOString()).order('created_at', { ascending: false });
     const realWinners: TodayWinner[] = data || [];
     // Merge ghost winners from today
     const ghostWinners = loadGhostWinners().filter(g => new Date(g.created_at) >= todayStart);
@@ -239,7 +239,7 @@ const Influencer = () => {
   const fetchHistory = async (userId?: string) => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
-    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at, prize').eq('owner_id', uid).order('created_at', { ascending: false }).limit(500);
+    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at, prize').eq('owner_id', uid).eq('hidden_from_influencer', false).order('created_at', { ascending: false }).limit(500);
     const realHistory: TodayWinner[] = data || [];
     const ghostWinners = loadGhostWinners();
     const merged = [...realHistory, ...ghostWinners].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
