@@ -59,6 +59,7 @@ export interface GorjetaPageConfig {
   slotFrameBorderColor: string;
   successBgColor: string;
   successCtaUrl: string;
+  successCtaShow: boolean;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
@@ -129,6 +130,7 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
   slotFrameBorderColor: 'rgba(255,220,150,0.4)',
   successBgColor: 'rgba(0,0,0,0.92)',
   successCtaUrl: '',
+  successCtaShow: true,
   
 };
 
@@ -297,8 +299,21 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Texto de sorte" value={config.slotLuckyText} onChange={v => update({ slotLuckyText: v })} placeholder="🎰 BOA SORTE! 🎰" />
         <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="CADASTRO EFETUADO!" />
         <TextField label="Subtítulo de sucesso" value={config.successSubtitle} onChange={v => update({ successSubtitle: v })} placeholder="Agora é só aguardar o sorteio..." />
-        <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
-        <TextField label="Link do botão CTA (sucesso)" value={config.successCtaUrl} onChange={v => update({ successCtaUrl: v })} placeholder="https://exemplo.com" />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Mostrar botão CTA no sucesso</span>
+          <button
+            onClick={() => update({ successCtaShow: !config.successCtaShow })}
+            className={`w-10 h-5 rounded-full transition-colors ${config.successCtaShow ? 'bg-primary' : 'bg-white/10'}`}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${config.successCtaShow ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        {config.successCtaShow && (
+          <>
+            <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
+            <TextField label="Link do botão CTA (sucesso)" value={config.successCtaUrl} onChange={v => update({ successCtaUrl: v })} placeholder="https://exemplo.com" />
+          </>
+        )}
         <ColorField label="Cor de fundo da página" value={config.successBgColor} onChange={v => update({ successBgColor: v })} />
         <ColorField label="Cor dos rolos (reel)" value={config.slotReelBgColor} onChange={v => update({ slotReelBgColor: v })} />
         <ColorField label="Cor do fundo do caça-níquel" value={config.slotFrameBgColor} onChange={v => update({ slotFrameBgColor: v })} />
@@ -338,7 +353,7 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
                 slotFrameBorderColor={config.slotFrameBorderColor}
                 successBgColor={config.successBgColor}
                 ctaUrl={config.successCtaUrl || config.ctaBtnUrl}
-                showCta={config.ctaBtnShow}
+                showCta={config.successCtaShow}
                 inline
               />
             </div>

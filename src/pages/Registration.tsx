@@ -205,7 +205,7 @@ const Registration = () => {
         slotFrameBorderColor={cfg.slotFrameBorderColor}
         successBgColor={cfg.successBgColor}
         ctaUrl={successCtaUrl}
-        showCta={!!successCtaUrl}
+        showCta={cfg.successCtaShow !== false && !!successCtaUrl}
       />
     );
   }
