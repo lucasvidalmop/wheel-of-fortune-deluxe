@@ -2737,8 +2737,8 @@ const Dashboard = () => {
           {activeTab === 'analytics' && (() => {
             const filtered = analyticsFilter === 'all' ? pageViews : pageViews.filter((v: any) => (v.page_type || 'roleta') === analyticsFilter);
             const total = filtered.length;
-            const uniqueIPs = new Set(pageViews.map((v: any) => v.ip_address)).size;
-            const avgDuration = total > 0 ? Math.round(pageViews.reduce((s: number, v: any) => s + (v.duration_seconds || 0), 0) / total) : 0;
+            const uniqueIPs = new Set(filtered.map((v: any) => v.ip_address)).size;
+            const avgDuration = total > 0 ? Math.round(filtered.reduce((s: number, v: any) => s + (v.duration_seconds || 0), 0) / total) : 0;
             const formatDuration = (s: number) => s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
 
             // Device breakdown
