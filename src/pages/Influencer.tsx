@@ -337,6 +337,10 @@ const Influencer = () => {
   const borderOpacity = influencerConfig.borderOpacity ?? 8;
   const borderColor = influencerConfig.borderColor || '';
   const borderWidth = influencerConfig.borderWidth ?? 1;
+  const borderGlowEnabled = influencerConfig.borderGlowEnabled || false;
+  const borderGlowColor = influencerConfig.borderGlowColor || accent;
+  const borderGlowIntensity = influencerConfig.borderGlowIntensity ?? 8;
+  const borderGlowSpread = influencerConfig.borderGlowSpread ?? 12;
 
   const playRaffleSound = () => {
     if (raffleSoundEnabled && raffleSoundUrl) {
@@ -355,13 +359,19 @@ const Influencer = () => {
 
   const resolvedBorderColor = borderColor || `rgba(255,255,255,${borderOpacity / 100})`;
 
+  const borderGlowShadow = borderGlowEnabled
+    ? `0 0 ${borderGlowIntensity}px ${borderGlowColor}, 0 0 ${borderGlowSpread}px ${borderGlowColor}60, inset 0 0 ${Math.round(borderGlowIntensity / 2)}px ${borderGlowColor}30`
+    : '';
+
+  const baseBoxShadow = `0 0 ${glowOpacity * 4}px ${glowColor}${Math.round(glowOpacity * 5).toString(16).padStart(2, '0')}`;
+
   const glassCardStyle: React.CSSProperties = {
-    borderColor: resolvedBorderColor,
+    borderColor: borderGlowEnabled ? borderGlowColor : resolvedBorderColor,
     borderWidth: `${borderWidth}px`,
     borderStyle: 'solid',
     background: cardBg,
     backdropFilter: 'blur(16px)',
-    boxShadow: `0 0 ${glowOpacity * 4}px ${glowColor}${Math.round(glowOpacity * 5).toString(16).padStart(2, '0')}`,
+    boxShadow: [baseBoxShadow, borderGlowShadow].filter(Boolean).join(', '),
   };
 
   // Login
