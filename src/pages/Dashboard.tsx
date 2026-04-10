@@ -395,6 +395,7 @@ const Dashboard = () => {
   const [manualPayPrize, setManualPayPrize] = useState('');
   const [manualPaySearch, setManualPaySearch] = useState('');
   const [manualPaySending, setManualPaySending] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
@@ -4992,8 +4993,15 @@ const Dashboard = () => {
 
                       <button
                         disabled={manualPaySending || manualPaySelectedIds.size === 0 || !manualPayAmount || Number(manualPayAmount) <= 0}
-                        onClick={async () => {
-                          if (!confirm(`Confirma o envio de ${manualPaySelectedIds.size} pagamento(s) de R$ ${Number(manualPayAmount).toFixed(2)} cada?`)) return;
+                        onClick={() => {
+                          const count = manualPaySelectedIds.size;
+                          const amt = Number(manualPayAmount).toFixed(2);
+                          const total = (count * Number(manualPayAmount)).toFixed(2);
+                          setConfirmModal({
+                            title: '💳 Confirmar Pagamento Manual',
+                            message: `Enviar ${count} pagamento(s) de R$ ${amt} cada?\nTotal: R$ ${total}`,
+                            onConfirm: async () => {
+                              setConfirmModal(null);
                           setManualPaySending(true);
                           let success = 0;
                           let failed = 0;
@@ -5033,6 +5041,8 @@ const Dashboard = () => {
                           if (success > 0) toast.success(`${success} pagamento(s) enviado(s) com sucesso!`);
                           if (failed > 0) toast.error(`${failed} pagamento(s) falharam`);
                           setManualPaySelectedIds(new Set());
+                            },
+                          });
                         }}
                         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -5609,6 +5619,30 @@ const Dashboard = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Custom Confirm Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setConfirmModal(null)}>
+          <div className="w-full max-w-sm mx-4 rounded-2xl border border-white/[0.08] bg-[#1a1a2e] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-foreground mb-3">{confirmModal.title}</h3>
+            <p className="text-sm text-muted-foreground whitespace-pre-line mb-6">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => confirmModal.onConfirm()}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
