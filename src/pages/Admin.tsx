@@ -5,6 +5,7 @@ import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, 
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 interface WheelUser {
   id: string;
@@ -21,6 +22,7 @@ const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<
 );
 
 const Admin = () => {
+  const { confirm: confirmDialog, ConfirmDialog } = useConfirmDialog();
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -185,7 +187,7 @@ const Admin = () => {
   };
 
   const handleToggleAllSpins = async (grant: boolean) => {
-    if (!confirm(`Tem certeza que deseja ${grant ? 'liberar giros para todos' : 'remover giros de todos'}?`)) return;
+    if (!await confirmDialog({ title: grant ? 'Liberar Giros' : 'Remover Giros', message: `Tem certeza que deseja ${grant ? 'liberar giros para todos' : 'remover giros de todos'}?`, variant: 'warning', confirmLabel: grant ? 'Liberar' : 'Remover' })) return;
     const { error } = await (supabase as any).from('wheel_users').update({ spins_available: grant ? 1 : 0 }).gte('id', '00000000-0000-0000-0000-000000000000');
     if (error) { toast.error('Erro ao atualizar'); return; }
     toast.success(grant ? 'Giros liberados!' : 'Giros removidos!');
@@ -193,8 +195,7 @@ const Admin = () => {
   };
 
   const handleDeleteAll = async () => {
-    if (!confirm('Tem certeza que deseja EXCLUIR TODOS os cadastros?')) return;
-    if (!confirm('CONFIRMAR: Todos os usuários serão excluídos permanentemente.')) return;
+    if (!await confirmDialog({ title: '⚠️ Excluir Todos', message: 'Tem certeza que deseja EXCLUIR TODOS os cadastros? Esta ação é permanente.', variant: 'danger', confirmLabel: 'Excluir Todos' })) return;
     const { error } = await (supabase as any).from('wheel_users').delete().gte('id', '00000000-0000-0000-0000-000000000000');
     if (error) { toast.error('Erro'); return; }
     toast.success('Todos excluídos!');
@@ -202,7 +203,7 @@ const Admin = () => {
   };
 
   const handleDeleteUser = async (id: string) => {
-    if (!confirm('Excluir este usuário?')) return;
+    if (!await confirmDialog({ title: 'Excluir Usuário', message: 'Tem certeza que deseja excluir este usuário?', variant: 'danger', confirmLabel: 'Excluir' })) return;
     await (supabase as any).from('wheel_users').delete().eq('id', id);
     toast.success('Excluído!');
     fetchUsers();
@@ -254,7 +255,7 @@ const Admin = () => {
   };
 
   const handleDeleteSystemUser = async (userId: string) => {
-    if (!confirm('Excluir este operador? Todos os dados serão removidos.')) return;
+    if (!await confirmDialog({ title: 'Excluir Operador', message: 'Excluir este operador? Todos os dados serão removidos.', variant: 'danger', confirmLabel: 'Excluir' })) return;
     try {
       const res = await supabase.functions.invoke('update-system-user', { body: { action: 'delete', user_id: userId } });
       if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Operador excluído!'); fetchSystemUsers(); }
@@ -277,7 +278,7 @@ const Admin = () => {
   };
 
   const handleDeleteAdminUser = async (userId: string) => {
-    if (!confirm('Excluir este admin? Todos os dados serão removidos.')) return;
+    if (!await confirmDialog({ title: 'Excluir Admin', message: 'Excluir este admin? Todos os dados serão removidos.', variant: 'danger', confirmLabel: 'Excluir' })) return;
     try {
       const res = await supabase.functions.invoke('update-system-user', { body: { action: 'delete', user_id: userId } });
       if (res.data?.error) { toast.error(res.data.error); } else { toast.success('Admin excluído!'); fetchAdminUsers(); }
@@ -1178,6 +1179,7 @@ const Admin = () => {
 
         </div>
       </div>
+      {ConfirmDialog}
     </div>
   );
 };
