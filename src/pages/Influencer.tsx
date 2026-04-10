@@ -343,6 +343,17 @@ const Influencer = () => {
     URL.revokeObjectURL(url);
   };
 
+  const triggerAutoPay = async (paymentId: string) => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      await supabase.functions.invoke('edpay-pix-transfer', {
+        body: { paymentId, autoPayment: true },
+      });
+    } catch (err) {
+      console.error('Auto-pay failed for', paymentId, err);
+    }
+  };
+
   const startRaffle = () => {
     setRaffleStep('config'); setRaffleQty(1); setRaffleAmount(30);
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
