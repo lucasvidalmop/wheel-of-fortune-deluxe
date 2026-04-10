@@ -38,6 +38,15 @@ export interface GorjetaPageConfig {
   expiredSubtitle: string;
   limitTitle: string;
   limitSubtitle: string;
+  // Casino name
+  casinoName: string;
+  // CTA button
+  ctaBtnText: string;
+  ctaBtnUrl: string;
+  ctaBtnBgColor: string;
+  ctaBtnTextColor: string;
+  ctaBtnBorderColor: string;
+  ctaBtnShow: boolean;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
@@ -73,6 +82,13 @@ export const defaultGorjetaConfig: GorjetaPageConfig = {
   expiredSubtitle: 'O prazo desta promoção expirou.',
   limitTitle: 'Inscrições Esgotadas',
   limitSubtitle: 'Este link atingiu o limite máximo de inscrições.',
+  casinoName: '',
+  ctaBtnText: 'CRIE SUA CONTA PARA PARTICIPAR DE TODOS OS SORTEIOS!',
+  ctaBtnUrl: '',
+  ctaBtnBgColor: '#ffffff',
+  ctaBtnTextColor: '#000000',
+  ctaBtnBorderColor: 'rgba(255,255,255,0.1)',
+  ctaBtnShow: true,
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
@@ -194,6 +210,32 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             </label>
           )}
         </div>
+      </Section>
+
+      <Section icon={<Gift size={14} className="text-primary" />} title="Nome do Cassino">
+        <TextField label="Nome do cassino (ex: 1PRA1)" value={config.casinoName} onChange={v => update({ casinoName: v })} placeholder="Nome do Cassino" />
+        <p className="text-[10px] text-muted-foreground">Aparece em: "ID da Conta *NOME", "Confirmo que os dados são da minha conta *NOME", rodapé e botão CTA.</p>
+      </Section>
+
+      <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão CTA (Link Externo)">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Mostrar botão CTA</span>
+          <button
+            onClick={() => update({ ctaBtnShow: !config.ctaBtnShow })}
+            className={`w-10 h-5 rounded-full transition-colors ${config.ctaBtnShow ? 'bg-primary' : 'bg-white/10'}`}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${config.ctaBtnShow ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        {config.ctaBtnShow && (
+          <div className="space-y-3">
+            <TextField label="Texto do botão CTA" value={config.ctaBtnText} onChange={v => update({ ctaBtnText: v })} placeholder="CRIE SUA CONTA PARA PARTICIPAR..." />
+            <TextField label="URL do botão (link)" value={config.ctaBtnUrl} onChange={v => update({ ctaBtnUrl: v })} placeholder="https://exemplo.com/registro" />
+            <ColorField label="Fundo do botão CTA" value={config.ctaBtnBgColor} onChange={v => update({ ctaBtnBgColor: v })} />
+            <ColorField label="Texto do botão CTA" value={config.ctaBtnTextColor} onChange={v => update({ ctaBtnTextColor: v })} />
+            <ColorField label="Borda do botão CTA" value={config.ctaBtnBorderColor} onChange={v => update({ ctaBtnBorderColor: v })} />
+          </div>
+        )}
       </Section>
 
       <Section icon={<Type size={14} className="text-primary" />} title="Textos">
