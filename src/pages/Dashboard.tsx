@@ -228,6 +228,8 @@ const Dashboard = () => {
   const [receiptBgColor, setReceiptBgColor] = useState('#ffffff');
   const [receiptAccentColor, setReceiptAccentColor] = useState('#3b82f6');
   const [receiptOperatorName, setReceiptOperatorName] = useState('');
+  const [hideReceiptSection, setHideReceiptSection] = useState(false);
+  const [hideEdpaySection, setHideEdpaySection] = useState(false);
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
@@ -613,6 +615,8 @@ const Dashboard = () => {
     receiptBgColor,
     receiptAccentColor,
     receiptOperatorName,
+    hideReceiptSection,
+    hideEdpaySection,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
