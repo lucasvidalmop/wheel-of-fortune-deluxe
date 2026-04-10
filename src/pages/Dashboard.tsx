@@ -389,7 +389,12 @@ const Dashboard = () => {
     if (whatsappMediaInputRef.current) whatsappMediaInputRef.current.value = '';
   };
 
-  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico' | 'pagamento_manual'>('credenciais');
+  const [manualPaySelectedIds, setManualPaySelectedIds] = useState<Set<string>>(new Set());
+  const [manualPayAmount, setManualPayAmount] = useState('');
+  const [manualPayPrize, setManualPayPrize] = useState('');
+  const [manualPaySearch, setManualPaySearch] = useState('');
+  const [manualPaySending, setManualPaySending] = useState(false);
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
@@ -4222,12 +4227,13 @@ const Dashboard = () => {
                   { key: 'deposito' as const, label: '💰 Depósito PIX' },
                   { key: 'crypto' as const, label: '🪙 Depósito USDT' },
                   { key: 'withdraw' as const, label: '📤 Saque USDT' },
+                  { key: 'pagamento_manual' as const, label: '💳 Pagamento Manual' },
                   { key: 'aprovacoes' as const, label: '✅ Aprovações' },
                   { key: 'historico' as const, label: '📜 Histórico' },
                 ].map(tab => (
                   <button
                     key={tab.key}
-                    onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); if (tab.key === 'historico') fetchPaidHistory(); }}
+                    onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); if (tab.key === 'historico') fetchPaidHistory(); if (tab.key === 'pagamento_manual') fetchUsers(); }}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                       financeiroSubTab === tab.key
                         ? 'bg-primary/15 text-primary border border-primary/20'
@@ -4843,6 +4849,199 @@ const Dashboard = () => {
                           </details>
                         </div>
                       )}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
+              {/* Pagamento Manual Sub-tab */}
+              {financeiroSubTab === 'pagamento_manual' && (
+                <GlassCard className="p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                      <DollarSign size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Pagamento Manual</h3>
+                      <p className="text-xs text-muted-foreground">Selecione inscritos e envie pagamentos manualmente via PIX</p>
+                    </div>
+                  </div>
+
+                  {(!edpayPublicKey || !edpaySecretKey) ? (
+                    <div className="text-center py-8 space-y-2">
+                      <DollarSign size={32} className="mx-auto text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">Configure suas credenciais primeiro</p>
+                      <button onClick={() => setFinanceiroSubTab('credenciais')} className="mt-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all">
+                        Ir para Credenciais
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor por pessoa (R$)</label>
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={manualPayAmount}
+                            onChange={e => setManualPayAmount(e.target.value)}
+                            placeholder="10.00"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição do prêmio</label>
+                          <input
+                            type="text"
+                            value={manualPayPrize}
+                            onChange={e => setManualPayPrize(e.target.value)}
+                            placeholder="Ex: Bônus especial"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          type="text"
+                          placeholder="Buscar inscrito por nome, email ou ID..."
+                          value={manualPaySearch}
+                          onChange={e => setManualPaySearch(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                        />
+                      </div>
+
+                      {(() => {
+                        const filtered = users.filter(u => {
+                          if (!manualPaySearch) return true;
+                          const q = manualPaySearch.toLowerCase();
+                          return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.account_id.toLowerCase().includes(q);
+                        });
+                        const allFilteredSelected = filtered.length > 0 && filtered.every(u => manualPaySelectedIds.has(u.id));
+                        return (
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => {
+                                if (allFilteredSelected) {
+                                  const next = new Set(manualPaySelectedIds);
+                                  filtered.forEach(u => next.delete(u.id));
+                                  setManualPaySelectedIds(next);
+                                } else {
+                                  const next = new Set(manualPaySelectedIds);
+                                  filtered.forEach(u => { if (u.pix_key) next.add(u.id); });
+                                  setManualPaySelectedIds(next);
+                                }
+                              }}
+                              className="text-xs text-primary hover:text-primary/80 font-semibold transition-colors"
+                            >
+                              {allFilteredSelected ? 'Desmarcar todos' : 'Selecionar todos (com PIX)'}
+                            </button>
+                            <span className="text-xs text-muted-foreground">{manualPaySelectedIds.size} selecionado(s)</span>
+                          </div>
+                        );
+                      })()}
+
+                      <div className="max-h-[40vh] overflow-y-auto space-y-1.5 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+                        {users
+                          .filter(u => {
+                            if (!manualPaySearch) return true;
+                            const q = manualPaySearch.toLowerCase();
+                            return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.account_id.toLowerCase().includes(q);
+                          })
+                          .map(u => (
+                            <label
+                              key={u.id}
+                              className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                                manualPaySelectedIds.has(u.id)
+                                  ? 'bg-primary/10 border-primary/20'
+                                  : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05]'
+                              } ${!u.pix_key ? 'opacity-50' : ''}`}
+                            >
+                              <Checkbox
+                                checked={manualPaySelectedIds.has(u.id)}
+                                disabled={!u.pix_key}
+                                onCheckedChange={(checked) => {
+                                  const next = new Set(manualPaySelectedIds);
+                                  if (checked) next.add(u.id); else next.delete(u.id);
+                                  setManualPaySelectedIds(next);
+                                }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{u.name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{u.email} • {u.account_id}</p>
+                                {u.pix_key ? (
+                                  <p className="text-[10px] text-emerald-400">PIX: {u.pix_key} ({u.pix_key_type})</p>
+                                ) : (
+                                  <p className="text-[10px] text-amber-400">⚠️ Sem chave PIX cadastrada</p>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+                      </div>
+
+                      {manualPaySelectedIds.size > 0 && manualPayAmount && Number(manualPayAmount) > 0 && (
+                        <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 space-y-1">
+                          <p className="text-xs text-foreground font-semibold">
+                            💳 Resumo: {manualPaySelectedIds.size} pagamento(s) × R$ {Number(manualPayAmount).toFixed(2)} = <span className="text-primary">R$ {(manualPaySelectedIds.size * Number(manualPayAmount)).toFixed(2)}</span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Prêmio: {manualPayPrize || '(sem descrição)'}</p>
+                        </div>
+                      )}
+
+                      <button
+                        disabled={manualPaySending || manualPaySelectedIds.size === 0 || !manualPayAmount || Number(manualPayAmount) <= 0}
+                        onClick={async () => {
+                          if (!confirm(`Confirma o envio de ${manualPaySelectedIds.size} pagamento(s) de R$ ${Number(manualPayAmount).toFixed(2)} cada?`)) return;
+                          setManualPaySending(true);
+                          let success = 0;
+                          let failed = 0;
+                          const selectedUsers = users.filter(u => manualPaySelectedIds.has(u.id));
+                          for (const u of selectedUsers) {
+                            try {
+                              const { data: ppData, error: ppErr } = await (supabase as any)
+                                .from('prize_payments')
+                                .insert({
+                                  owner_id: session.user.id,
+                                  account_id: u.account_id,
+                                  user_name: u.name,
+                                  user_email: u.email,
+                                  prize: manualPayPrize || 'Pagamento manual',
+                                  amount: Number(manualPayAmount),
+                                  pix_key: u.pix_key || '',
+                                  pix_key_type: u.pix_key_type || '',
+                                  auto_payment: false,
+                                  status: 'approved',
+                                })
+                                .select('id')
+                                .single();
+                              if (ppErr) { failed++; continue; }
+                              const { data, error } = await supabase.functions.invoke('edpay-pix-transfer', {
+                                body: { paymentId: ppData.id, edpayPublicKey, edpaySecretKey },
+                              });
+                              if (error || data?.error) {
+                                failed++;
+                              } else {
+                                success++;
+                              }
+                            } catch {
+                              failed++;
+                            }
+                          }
+                          setManualPaySending(false);
+                          if (success > 0) toast.success(`${success} pagamento(s) enviado(s) com sucesso!`);
+                          if (failed > 0) toast.error(`${failed} pagamento(s) falharam`);
+                          setManualPaySelectedIds(new Set());
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {manualPaySending ? (
+                          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Processando...</>
+                        ) : (
+                          <>💸 Enviar {manualPaySelectedIds.size} Pagamento(s)</>
+                        )}
+                      </button>
                     </div>
                   )}
                 </GlassCard>
