@@ -43,7 +43,7 @@ const Registration = () => {
       const { data, error } = await (supabase as any)
         .from('referral_links')
         .select('*')
-        .eq('code', code.toUpperCase())
+        .eq('code', code)
         .eq('is_active', true)
         .maybeSingle();
       if (error || !data) {
@@ -78,7 +78,7 @@ const Registration = () => {
     setSubmitting(true);
     try {
       const { data, error } = await (supabase as any).rpc('register_via_referral', {
-        p_code: code?.toUpperCase() || '',
+        p_code: code || '',
         p_email: email.trim(),
         p_account_id: accountId.trim(),
         p_name: name.trim(),
