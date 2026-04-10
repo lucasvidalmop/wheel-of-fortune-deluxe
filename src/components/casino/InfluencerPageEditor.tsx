@@ -17,6 +17,7 @@ export interface InfluencerPageConfig {
   glowColor: string;
   glowOpacity: number;
   borderOpacity: number;
+  borderColor: string;
   // Tab styling
   tabActiveColor: string;
   tabInactiveColor: string;
@@ -38,6 +39,7 @@ export const defaultInfluencerConfig: InfluencerPageConfig = {
   glowColor: '#2dd4bf',
   glowOpacity: 3,
   borderOpacity: 8,
+  borderColor: '',
   tabActiveColor: '',
   tabInactiveColor: '',
   tabBorderWidth: 2,
@@ -224,6 +226,7 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{config.borderOpacity}%</span>
           </div>
         </div>
+        <ColorField label="Cor das bordas" value={config.borderColor} onChange={v => update({ borderColor: v })} />
       </Section>
 
       <Section icon={<Type size={14} className="text-primary" />} title="Cores do Texto">
