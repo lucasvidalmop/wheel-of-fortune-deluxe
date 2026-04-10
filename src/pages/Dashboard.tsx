@@ -2743,22 +2743,22 @@ const Dashboard = () => {
 
             // Device breakdown
             const devices: Record<string, number> = {};
-            pageViews.forEach((v: any) => { devices[v.device_type || 'Desconhecido'] = (devices[v.device_type || 'Desconhecido'] || 0) + 1; });
+            filtered.forEach((v: any) => { devices[v.device_type || 'Desconhecido'] = (devices[v.device_type || 'Desconhecido'] || 0) + 1; });
             const deviceEntries = Object.entries(devices).sort((a, b) => b[1] - a[1]);
 
             // Browser breakdown
             const browsers: Record<string, number> = {};
-            pageViews.forEach((v: any) => { browsers[v.browser || 'Desconhecido'] = (browsers[v.browser || 'Desconhecido'] || 0) + 1; });
+            filtered.forEach((v: any) => { browsers[v.browser || 'Desconhecido'] = (browsers[v.browser || 'Desconhecido'] || 0) + 1; });
             const browserEntries = Object.entries(browsers).sort((a, b) => b[1] - a[1]);
 
             // OS breakdown
             const osStat: Record<string, number> = {};
-            pageViews.forEach((v: any) => { osStat[v.os || 'Desconhecido'] = (osStat[v.os || 'Desconhecido'] || 0) + 1; });
+            filtered.forEach((v: any) => { osStat[v.os || 'Desconhecido'] = (osStat[v.os || 'Desconhecido'] || 0) + 1; });
             const osEntries = Object.entries(osStat).sort((a, b) => b[1] - a[1]);
 
             // Country/City breakdown
             const locations: Record<string, number> = {};
-            pageViews.forEach((v: any) => {
+            filtered.forEach((v: any) => {
               const loc = [v.city, v.country].filter(Boolean).join(', ') || 'Desconhecido';
               locations[loc] = (locations[loc] || 0) + 1;
             });
@@ -2772,7 +2772,7 @@ const Dashboard = () => {
             });
             const visitsPerDay: Record<string, number> = {};
             last7.forEach(d => { visitsPerDay[d] = 0; });
-            pageViews.forEach((v: any) => {
+            filtered.forEach((v: any) => {
               const day = new Date(v.created_at).toISOString().split('T')[0];
               if (visitsPerDay[day] !== undefined) visitsPerDay[day]++;
             });
@@ -2796,7 +2796,7 @@ const Dashboard = () => {
                   { label: 'Total de Acessos', value: total, icon: <Globe size={18} />, color: 'text-primary', bg: 'bg-primary/10' },
                   { label: 'IPs Únicos', value: uniqueIPs, icon: <MapPin size={18} />, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
                   { label: 'Tempo Médio', value: formatDuration(avgDuration), icon: <Clock size={18} />, color: 'text-sky-400', bg: 'bg-sky-400/10' },
-                  { label: 'Hoje', value: pageViews.filter((v: any) => new Date(v.created_at).toISOString().split('T')[0] === todayStr).length, icon: <BarChart3 size={18} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+                  { label: 'Hoje', value: filtered.filter((v: any) => new Date(v.created_at).toISOString().split('T')[0] === todayStr).length, icon: <BarChart3 size={18} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
                 ].map(card => (
                   <GlassCard key={card.label} className="p-4 space-y-2">
                     <div className={`p-2 rounded-xl ${card.bg} w-fit`}>
