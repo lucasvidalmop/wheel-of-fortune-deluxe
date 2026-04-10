@@ -206,20 +206,21 @@ const Registration = () => {
   }
 
   if (success) {
+    const successCtaUrl = cfg.ctaBtnUrl || '';
     return (
       <SlotMachineSuccess
         accentColor={accentColor}
         titleColor={titleColor}
         subtitleColor={subtitleColor}
-        btnBgColor={accentColor}
-        btnTextColor={cfg.btnTextColor || '#000000'}
+        btnBgColor={cfg.ctaBtnBgColor || accentColor}
+        btnTextColor={cfg.ctaBtnTextColor || cfg.btnTextColor || '#000000'}
         successTitle={cfg.successTitle || 'CADASTRO EFETUADO!'}
         successSubtitle={cfg.successSubtitle || 'Agora é só aguardar o sorteio...'}
         successBtnText={cfg.successBtnText || 'VOCÊ PODE SER O PRÓXIMO GANHADOR!'}
         slotMatchIcon={cfg.slotMatchIcon || '⚡'}
         slotLuckyText={cfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
-        onCtaClick={() => wheelSlug ? navigate(`/${wheelSlug}`) : undefined}
-        showCta={!!wheelSlug}
+        ctaUrl={successCtaUrl}
+        showCta={!!successCtaUrl}
       />
     );
   }
