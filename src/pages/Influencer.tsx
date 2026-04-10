@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, ExternalLink, Plus, Minus, X, Star, Clock, Users, Award, History } from 'lucide-react';
+import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface WheelUser {
@@ -50,7 +50,6 @@ const Influencer = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Config
   const [slug, setSlug] = useState('');
   const [gorjetaRef, setGorjetaRef] = useState('');
   const [linkLabel, setLinkLabel] = useState('');
@@ -58,24 +57,16 @@ const Influencer = () => {
   const [sentToday, setSentToday] = useState(0);
   const [influencerConfig, setInfluencerConfig] = useState<any>({});
 
-  // Users
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Tabs
   const [activeTab, setActiveTab] = useState<'participants' | 'winners' | 'history'>('participants');
-
-  // Today's winners
   const [todayWinners, setTodayWinners] = useState<TodayWinner[]>([]);
-
-  // History
   const [historyWinners, setHistoryWinners] = useState<TodayWinner[]>([]);
 
-  // Timer
   const [timer, setTimer] = useState('');
 
-  // Raffle dialog
   const [showRaffle, setShowRaffle] = useState(false);
   const [raffleStep, setRaffleStep] = useState<RaffleStep>('config');
   const [raffleQty, setRaffleQty] = useState(1);
@@ -84,21 +75,16 @@ const Influencer = () => {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [sendingIndex, setSendingIndex] = useState(0);
 
-  // Timer effect
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const s = String(now.getSeconds()).padStart(2, '0');
-      setTimer(`${h}:${m}:${s}`);
+      setTimer(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`);
     };
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Auth
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
@@ -116,11 +102,7 @@ const Influencer = () => {
   const loadData = async (userId: string) => {
     setLoading(true);
     const { data: cfg } = await (supabase as any)
-      .from('wheel_configs')
-      .select('slug, config')
-      .eq('user_id', userId)
-      .maybeSingle();
-
+      .from('wheel_configs').select('slug, config').eq('user_id', userId).maybeSingle();
     if (cfg) {
       setSlug(cfg.slug || '');
       const rawConfig = cfg.config || {};
@@ -139,11 +121,7 @@ const Influencer = () => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
     setUsersLoading(true);
-    const { data } = await (supabase as any)
-      .from('wheel_users')
-      .select('*')
-      .eq('owner_id', uid)
-      .order('created_at', { ascending: false });
+    const { data } = await (supabase as any).from('wheel_users').select('*').eq('owner_id', uid).order('created_at', { ascending: false });
     setUsers(data || []);
     setUsersLoading(false);
   };
@@ -153,12 +131,7 @@ const Influencer = () => {
     if (!uid) return;
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const { data } = await (supabase as any)
-      .from('prize_payments')
-      .select('id, user_name, account_id, amount, created_at')
-      .eq('owner_id', uid)
-      .gte('created_at', todayStart.toISOString())
-      .order('created_at', { ascending: false });
+    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).gte('created_at', todayStart.toISOString()).order('created_at', { ascending: false });
     setTodayWinners(data || []);
     setSentToday((data || []).length);
   };
@@ -166,12 +139,7 @@ const Influencer = () => {
   const fetchHistory = async (userId?: string) => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
-    const { data } = await (supabase as any)
-      .from('prize_payments')
-      .select('id, user_name, account_id, amount, created_at')
-      .eq('owner_id', uid)
-      .order('created_at', { ascending: false })
-      .limit(200);
+    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).order('created_at', { ascending: false }).limit(200);
     setHistoryWinners(data || []);
   };
 
@@ -183,10 +151,7 @@ const Influencer = () => {
     setLoginLoading(false);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-  };
+  const handleLogout = async () => { await supabase.auth.signOut(); setSession(null); };
 
   const handleRefresh = () => {
     if (!session?.user?.id) return;
@@ -195,19 +160,14 @@ const Influencer = () => {
     toast.success('Atualizado!');
   };
 
-  const handleResetDayCounter = () => {
-    setSentToday(0);
-    toast.success('Contador reiniciado!');
-  };
+  const handleResetDayCounter = () => { setSentToday(0); toast.success('Contador reiniciado!'); };
 
   const filteredUsers = users.filter(u => {
     const term = searchTerm.toLowerCase();
     return u.name.toLowerCase().includes(term) || u.account_id.toLowerCase().includes(term);
   });
 
-  const todayWinsForUser = (accountId: string) => {
-    return todayWinners.filter(w => w.account_id === accountId).length;
-  };
+  const todayWinsForUser = (accountId: string) => todayWinners.filter(w => w.account_id === accountId).length;
 
   const handleExportCSV = () => {
     const csv = ['Nome,ID,Email,Telefone,Vitórias Hoje']
@@ -216,21 +176,13 @@ const Influencer = () => {
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'participantes.csv';
-    a.click();
+    a.href = url; a.download = 'participantes.csv'; a.click();
     URL.revokeObjectURL(url);
   };
 
-  // Raffle logic
   const startRaffle = () => {
-    setRaffleStep('config');
-    setRaffleQty(1);
-    setRaffleAmount(30);
-    setCustomAmount('30,00');
-    setWinners([]);
-    setSendingIndex(0);
-    setShowRaffle(true);
+    setRaffleStep('config'); setRaffleQty(1); setRaffleAmount(30);
+    setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
   };
 
   const executeRaffle = async () => {
@@ -242,11 +194,9 @@ const Influencer = () => {
     setRaffleStep('sending');
     setSendingIndex(0);
 
-    // Send prizes one by one
     for (let i = 0; i < selected.length; i++) {
       setSendingIndex(i);
       setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sending' } : w));
-
       try {
         await (supabase as any).rpc('create_prize_payment', {
           p_owner_id: session.user.id,
@@ -257,39 +207,30 @@ const Influencer = () => {
           p_amount: raffleAmount,
           p_force_auto: selected[i].user.auto_payment,
         });
-      } catch (err) {
-        console.error('Erro ao criar pagamento:', err);
-      }
-
+      } catch (err) { console.error('Erro ao criar pagamento:', err); }
       setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sent' } : w));
       await new Promise(r => setTimeout(r, 800));
     }
 
     setSendingIndex(selected.length);
-    setTimeout(() => {
-      setRaffleStep('results');
-      fetchTodayWinners(session?.user?.id);
-    }, 600);
+    setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); }, 600);
   };
 
-  const closeRaffle = () => {
-    setShowRaffle(false);
-    setRaffleStep('config');
-  };
+  const closeRaffle = () => { setShowRaffle(false); setRaffleStep('config'); };
 
   const baseUrl = window.location.origin;
   const gorjetaUrl = gorjetaRef ? `${baseUrl}/gorjeta?ref=${gorjetaRef}` : '';
   const prizesRemaining = Math.max(0, dailyLimit - sentToday);
   const progressPercent = dailyLimit > 0 ? Math.round((sentToday / dailyLimit) * 100) : 0;
 
-  const accentColor = influencerConfig.accentColor || '#2dd4bf';
+  const accent = influencerConfig.accentColor || '#2dd4bf';
   const bgColor = influencerConfig.bgColor || '#0a0e1a';
-  const cardBgColor = influencerConfig.cardBgColor || 'rgba(20, 30, 50, 0.95)';
+  const cardBg = influencerConfig.cardBgColor || 'rgba(15, 23, 42, 0.95)';
   const textColor = influencerConfig.textColor || '#ffffff';
-  const btnBgColor = influencerConfig.btnBgColor || accentColor;
-  const btnTextColor = influencerConfig.btnTextColor || '#000000';
+  const btnBg = influencerConfig.btnBgColor || accent;
+  const btnText = influencerConfig.btnTextColor || '#000000';
 
-  // Login screen
+  // Login
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${bgColor}, #1a0a2e)` }}>
@@ -299,7 +240,7 @@ const Influencer = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <input type="email" placeholder="Email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white text-sm placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/40" />
             <input type="password" placeholder="Senha" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white text-sm placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/40" />
-            <button type="submit" disabled={loginLoading} className="w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50" style={{ background: accentColor, color: btnTextColor }}>
+            <button type="submit" disabled={loginLoading} className="w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50" style={{ background: accent, color: btnText }}>
               {loginLoading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
@@ -311,140 +252,141 @@ const Influencer = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: bgColor }}>
-        <div className="animate-spin w-8 h-8 border-2 border-t-transparent rounded-full" style={{ borderColor: `${accentColor} transparent ${accentColor} ${accentColor}` }} />
+        <div className="animate-spin w-8 h-8 border-2 border-t-transparent rounded-full" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen" style={{ background: bgColor, color: textColor }}>
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/[0.06]" style={{ background: 'rgba(10, 14, 26, 0.85)' }}>
-        <div className="max-w-4xl mx-auto flex items-center justify-between px-4 py-3">
-          <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white transition">
-            <LogOut size={16} /> Sair
-          </button>
-          <div className="flex items-center gap-2">
-            <Star size={14} style={{ color: accentColor }} />
-            <span className="text-sm font-bold" style={{ color: accentColor }}>{session?.user?.email?.split('@')[0] || 'Influencer'}</span>
-          </div>
-        </div>
-      </header>
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-36 space-y-4">
 
-      <div className="max-w-4xl mx-auto px-4 py-4 pb-32 space-y-4">
-        {/* Title card */}
-        <div className="rounded-2xl border border-white/[0.08] p-4" style={{ background: cardBgColor }}>
-          <div className="flex items-start justify-between">
+        {/* ─── Top card: Title + Counter + Progress ─── */}
+        <div className="rounded-2xl border border-white/[0.08] p-5" style={{ background: cardBg }}>
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Trophy size={24} style={{ color: accentColor }} />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${accent}20`, border: `2px solid ${accent}` }}>
+                <Trophy size={18} style={{ color: accent }} />
+              </div>
               <div>
-                <h1 className="text-lg font-black tracking-wide uppercase" style={{ color: textColor }}>{linkLabel || gorjetaRef || 'SORTEIO'}</h1>
-                <p className="text-xs text-white/40">{prizesRemaining} prêmio(s) restante(s)</p>
+                <h1 className="text-base font-black tracking-wide uppercase" style={{ color: textColor }}>
+                  {linkLabel || gorjetaRef || 'TROPA DO FAZ MIL E DORME!'}
+                </h1>
+                <p className="text-[11px] text-white/40">{prizesRemaining} prêmio(s) restante(s)</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-white/40">{sentToday}</span>
+              <span className="text-sm font-bold" style={{ color: accent }}>{sentToday}</span>
               <span className="text-xs text-white/30">/{dailyLimit}</span>
-              <span className="px-2 py-1 rounded-lg text-xs font-mono font-bold" style={{ background: accentColor, color: btnTextColor }}>{timer}</span>
+              <span className="ml-1 px-3 py-1.5 rounded-lg text-xs font-mono font-bold border" style={{ borderColor: accent, color: accent }}>
+                {timer}
+              </span>
             </div>
           </div>
 
-          {/* Progress */}
-          <div className="mt-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-white/40">Progresso diário</span>
-              <span className="text-[10px] font-bold" style={{ color: accentColor }}>{progressPercent}%</span>
+          {/* Progress bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] text-white/40">Progresso diário</span>
+              <span className="text-[11px] font-bold" style={{ color: accent }}>{progressPercent}%</span>
             </div>
-            <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progressPercent}%`, background: accentColor }} />
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progressPercent}%`, background: `linear-gradient(90deg, ${accent}, ${accent}cc)` }} />
             </div>
           </div>
 
-          <div className="flex justify-end mt-2">
-            <button onClick={handleResetDayCounter} className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/60 transition">
-              <RefreshCw size={10} /> Reiniciar contador do dia
+          <div className="flex justify-end mt-3">
+            <button onClick={handleResetDayCounter} className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-lg border transition hover:bg-white/[0.04]" style={{ borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}>
+              <RotateCcw size={12} /> Reiniciar contador do dia
             </button>
           </div>
         </div>
 
-        {/* Link */}
+        {/* ─── Link bar ─── */}
         {gorjetaUrl && (
-          <div className="rounded-xl border border-white/[0.06] p-3 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <span className="text-[10px] text-white/40 shrink-0">🔗 LINK:</span>
-            <input readOnly value={gorjetaUrl} className="flex-1 bg-transparent text-xs text-white/60 font-mono truncate outline-none" />
-            <button onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }} className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold border transition" style={{ borderColor: `${accentColor}33`, color: accentColor }}>
+          <div className="rounded-xl border border-white/[0.06] p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <LinkIcon size={12} style={{ color: accent }} />
+              <span className="text-[11px] font-semibold text-white/50">LINK:</span>
+            </div>
+            <input readOnly value={gorjetaUrl} className="flex-1 bg-transparent text-xs text-white/50 font-mono truncate outline-none" />
+            <button onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+              style={{ borderColor: `${accent}40`, color: accent }}>
               <Copy size={12} /> Copiar
             </button>
           </div>
         )}
 
-        {/* Refresh + Timer */}
+        {/* ─── Refresh + Clock ─── */}
         <div className="flex items-center justify-between">
-          <button onClick={handleRefresh} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition" style={{ borderColor: `${accentColor}33`, color: accentColor }}>
-            <RefreshCw size={14} /> Atualizar
+          <button onClick={handleRefresh}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+            style={{ borderColor: `${accent}40`, color: accent }}>
+            <RefreshCw size={13} /> Atualizar
           </button>
           <span className="text-xs text-white/30 font-mono">{timer}</span>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-white/[0.06]">
+        {/* ─── Tabs ─── */}
+        <div className="flex border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           {([
-            { key: 'participants' as const, label: 'Participantes', count: users.length, icon: Users },
-            { key: 'winners' as const, label: 'Ganhadores Hoje', count: todayWinners.length, icon: Award },
-            { key: 'history' as const, label: 'Histórico', icon: History },
-          ]).map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium transition-all border-b-2 ${
-                activeTab === tab.key
-                  ? 'border-current'
-                  : 'border-transparent text-white/40 hover:text-white/60'
-              }`}
-              style={activeTab === tab.key ? { color: accentColor } : undefined}
-            >
-              <tab.icon size={14} />
-              {tab.label}
-              {tab.count !== undefined && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={activeTab === tab.key ? { background: `${accentColor}20`, color: accentColor } : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
+            { key: 'participants' as const, label: 'Participantes', count: users.length, prefix: '≡' },
+            { key: 'winners' as const, label: 'Ganhadores Hoje', prefix: '★' },
+            { key: 'history' as const, label: 'Histórico', prefix: '↻' },
+          ]).map(tab => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-[12px] font-medium transition-all border-b-2 ${isActive ? '' : 'border-transparent text-white/35 hover:text-white/55'}`}
+                style={isActive ? { color: accent, borderColor: accent } : undefined}
+              >
+                <span className="text-sm">{tab.prefix}</span>
+                {tab.label}
+                {tab.count !== undefined && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                    style={isActive ? { background: `${accent}20`, color: accent } : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Tab content */}
+        {/* ─── Participants ─── */}
         {activeTab === 'participants' && (
           <div className="space-y-3">
-            {/* Search + CSV */}
             <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                <Search size={14} className="text-white/30" />
-                <input
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+              <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
+                <Search size={14} className="text-white/25" />
+                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                   placeholder="Buscar por nome ou credencial..."
-                  className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30"
-                />
+                  className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/25" />
               </div>
-              <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.04] transition">
+              <button onClick={handleExportCSV}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+                style={{ borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
                 <FileDown size={14} /> CSV
               </button>
             </div>
 
-            {/* Participants grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {filteredUsers.map(u => {
                 const winsToday = todayWinsForUser(u.account_id);
                 return (
-                  <div key={u.id} className="flex items-center justify-between p-3 rounded-xl border border-white/[0.06] transition hover:border-white/[0.12]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:border-white/[0.15]"
+                    style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold truncate" style={{ color: textColor }}>{u.name}</p>
-                      <p className="text-[10px] text-white/40">Hoje: {winsToday}/1 vitória(s)</p>
-                      <p className="text-[10px] text-white/30 font-mono">{maskAccountId(u.account_id)}</p>
+                      <p className="text-[13px] font-bold truncate" style={{ color: textColor }}>{u.name}</p>
+                      <p className="text-[10px] text-white/35 mt-0.5">Hoje: {winsToday}/1 vitória(s)</p>
+                      <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
-                    <Trophy size={18} style={{ color: `${accentColor}40` }} />
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
+                      <Trophy size={14} style={{ color: accent }} />
+                    </div>
                   </div>
                 );
               })}
@@ -452,79 +394,82 @@ const Influencer = () => {
 
             {usersLoading && (
               <div className="flex justify-center py-8">
-                <div className="animate-spin w-6 h-6 border-2 border-t-transparent rounded-full" style={{ borderColor: `${accentColor} transparent ${accentColor} ${accentColor}` }} />
+                <div className="animate-spin w-6 h-6 border-2 border-t-transparent rounded-full" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
               </div>
             )}
-
             {!usersLoading && filteredUsers.length === 0 && (
               <p className="text-center text-sm text-white/30 py-8">Nenhum participante encontrado</p>
             )}
           </div>
         )}
 
+        {/* ─── Winners Today ─── */}
         {activeTab === 'winners' && (
           <div className="space-y-2">
-            {todayWinners.length === 0 && (
-              <p className="text-center text-sm text-white/30 py-8">Nenhum ganhador hoje</p>
-            )}
+            {todayWinners.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum ganhador hoje</p>}
             {todayWinners.map((w, i) => (
-              <div key={w.id} className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06]" style={{ background: i === 0 ? `${accentColor}10` : 'rgba(255,255,255,0.02)' }}>
-                <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: accentColor, color: btnTextColor }}>{i + 1}</span>
+              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.06)', background: i === 0 ? `${accent}10` : 'rgba(255,255,255,0.02)' }}>
+                <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: accent, color: btnText }}>{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold uppercase truncate">{w.user_name}</p>
                   <p className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)} · {new Date(w.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
                 </div>
-                <span className="text-sm font-bold" style={{ color: accentColor }}>{formatCurrency(w.amount)}</span>
+                <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(w.amount)}</span>
               </div>
             ))}
             {todayWinners.length > 0 && (
-              <div className="rounded-xl border border-white/[0.06] p-4 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="rounded-xl border p-4 text-center" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <p className="text-xs text-white/40">Total distribuído hoje</p>
-                <p className="text-lg font-black" style={{ color: accentColor }}>{formatCurrency(todayWinners.reduce((s, w) => s + (w.amount || 0), 0))}</p>
+                <p className="text-lg font-black" style={{ color: accent }}>{formatCurrency(todayWinners.reduce((s, w) => s + (w.amount || 0), 0))}</p>
               </div>
             )}
           </div>
         )}
 
+        {/* ─── History ─── */}
         {activeTab === 'history' && (
           <div className="space-y-2">
-            {historyWinners.length === 0 && (
-              <p className="text-center text-sm text-white/30 py-8">Nenhum histórico encontrado</p>
-            )}
+            {historyWinners.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum histórico encontrado</p>}
             {historyWinners.map((w, i) => (
-              <div key={w.id} className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <span className="w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-bold bg-white/[0.06] text-white/40">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold uppercase truncate">{w.user_name}</p>
                   <p className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)} · {new Date(w.created_at).toLocaleString('pt-BR')}</p>
                 </div>
-                <span className="text-sm font-bold" style={{ color: accentColor }}>{formatCurrency(w.amount)}</span>
+                <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(w.amount)}</span>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Bottom sticky button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4" style={{ background: `linear-gradient(to top, ${bgColor}, transparent)` }}>
-        <div className="max-w-4xl mx-auto space-y-2">
+      {/* ─── Bottom CTA ─── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 pb-4 pt-8 px-4" style={{ background: `linear-gradient(to top, ${bgColor} 60%, transparent)` }}>
+        <div className="max-w-2xl mx-auto space-y-2">
           <button
             onClick={startRaffle}
-            className="w-full py-4 rounded-2xl text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all hover:brightness-110 active:scale-[0.98]"
-            style={{ background: accentColor, color: btnTextColor, boxShadow: `0 8px 32px ${accentColor}40` }}
+            className="w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-[0.98]"
+            style={{ background: accent, color: btnText, boxShadow: `0 0 40px ${accent}50` }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <Play size={18} fill="currentColor" />
             REALIZAR SORTEIO
           </button>
-          <p className="text-center text-[10px] text-white/30">Você pode enviar mais <strong style={{ color: accentColor }}>{prizesRemaining}</strong> prêmios hoje</p>
+          <p className="text-center text-[11px] text-white/30">
+            Você pode enviar mais <strong style={{ color: accent }}>{prizesRemaining}</strong> prêmios hoje
+          </p>
         </div>
       </div>
 
-      {/* Raffle Dialog */}
+      {/* ─── Logout floating ─── */}
+      <button onClick={handleLogout} className="fixed top-4 right-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-white/40 hover:text-white/70 transition bg-black/30 backdrop-blur-sm border border-white/[0.06]">
+        <LogOut size={12} /> Sair
+      </button>
+
+      {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
         <DialogContent className="max-w-md p-0 border-none bg-transparent shadow-none [&>button]:hidden">
-          <div className="rounded-2xl border border-white/[0.1] overflow-hidden" style={{ background: cardBgColor }}>
-            {/* Header */}
+          <div className="rounded-2xl border border-white/[0.1] overflow-hidden" style={{ background: cardBg }}>
             <div className="p-5 flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -543,48 +488,35 @@ const Influencer = () => {
             <div className="px-5 pb-5 space-y-4">
               {raffleStep === 'config' && (
                 <>
-                  {/* Prizes remaining bar */}
                   <div className="rounded-xl border border-white/[0.08] p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-white/50">Prêmios restantes hoje</span>
-                      <span className="text-sm font-bold" style={{ color: accentColor }}>{prizesRemaining}/{dailyLimit}</span>
+                      <span className="text-sm font-bold" style={{ color: accent }}>{prizesRemaining}/{dailyLimit}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${(prizesRemaining / dailyLimit) * 100}%`, background: accentColor }} />
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(prizesRemaining / dailyLimit) * 100}%`, background: accent }} />
                     </div>
                   </div>
 
-                  {/* Quantity */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <Users size={14} style={{ color: accentColor }} />
+                      <Users size={14} style={{ color: accent }} />
                       <span className="text-xs font-bold uppercase tracking-wider text-white/60">Quantas pessoas sortear?</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 rounded-xl border border-white/[0.08] p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <input
-                          type="number"
-                          value={raffleQty}
+                        <input type="number" value={raffleQty}
                           onChange={e => setRaffleQty(Math.max(1, Math.min(users.length, parseInt(e.target.value) || 1)))}
-                          className="w-full bg-transparent text-center text-2xl font-black outline-none"
-                          style={{ color: accentColor }}
-                          min={1}
-                          max={users.length}
-                        />
+                          className="w-full bg-transparent text-center text-2xl font-black outline-none" style={{ color: accent }} min={1} max={users.length} />
                       </div>
                       <div className="flex flex-col gap-1">
-                        <button onClick={() => setRaffleQty(q => Math.min(users.length, q + 1))} className="w-8 h-8 rounded-lg border border-white/[0.08] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accentColor}33` }}>
-                          <Plus size={14} />
-                        </button>
-                        <button onClick={() => setRaffleQty(q => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg border border-white/[0.08] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accentColor}33` }}>
-                          <Minus size={14} />
-                        </button>
+                        <button onClick={() => setRaffleQty(q => Math.min(users.length, q + 1))} className="w-8 h-8 rounded-lg border flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accent}33` }}><Plus size={14} /></button>
+                        <button onClick={() => setRaffleQty(q => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg border flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accent}33` }}><Minus size={14} /></button>
                       </div>
                     </div>
                     <p className="text-[10px] text-white/30 mt-1">Máx. hoje: {users.length}</p>
                   </div>
 
-                  {/* Prize amount */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs">$</span>
@@ -592,43 +524,28 @@ const Influencer = () => {
                     </div>
                     <div className="flex gap-2 mb-2">
                       {[10, 20, 30, 50].map(v => (
-                        <button
-                          key={v}
+                        <button key={v}
                           onClick={() => { setRaffleAmount(v); setCustomAmount(v.toFixed(2).replace('.', ',')); }}
                           className="flex-1 py-2 rounded-xl text-xs font-semibold border transition"
                           style={raffleAmount === v
-                            ? { background: `${accentColor}15`, borderColor: accentColor, color: accentColor }
+                            ? { background: `${accent}15`, borderColor: accent, color: accent }
                             : { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }
-                          }
-                        >
-                          R$ {v},00
-                        </button>
+                          }>R$ {v},00</button>
                       ))}
                     </div>
-                    <input
-                      type="text"
-                      value={`R$ ${customAmount}`}
-                      onChange={e => {
-                        const raw = e.target.value.replace(/[^0-9,]/g, '');
-                        setCustomAmount(raw);
-                        const num = parseFloat(raw.replace(',', '.'));
-                        if (!isNaN(num) && num > 0) setRaffleAmount(num);
-                      }}
-                      className="w-full px-4 py-2.5 rounded-xl text-sm border border-white/[0.08] bg-white/[0.03] text-white outline-none focus:ring-2 focus:ring-primary/30"
-                    />
+                    <input type="text" value={`R$ ${customAmount}`}
+                      onChange={e => { const raw = e.target.value.replace(/[^0-9,]/g, ''); setCustomAmount(raw); const num = parseFloat(raw.replace(',', '.')); if (!isNaN(num) && num > 0) setRaffleAmount(num); }}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm border border-white/[0.08] bg-white/[0.03] text-white outline-none focus:ring-2 focus:ring-primary/30" />
                   </div>
 
-                  {/* Total */}
                   <div className="rounded-xl border border-white/[0.08] p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
                     <p className="text-xs text-white/40 mb-1">Total a distribuir</p>
-                    <p className="text-xl font-black" style={{ color: accentColor }}>{formatCurrency(raffleQty * raffleAmount)}</p>
+                    <p className="text-xl font-black" style={{ color: accent }}>{formatCurrency(raffleQty * raffleAmount)}</p>
                   </div>
 
-                  <button
-                    onClick={executeRaffle}
+                  <button onClick={executeRaffle}
                     className="w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:brightness-110"
-                    style={{ background: accentColor, color: btnTextColor }}
-                  >
+                    style={{ background: accent, color: btnText }}>
                     <Star size={16} /> REALIZAR SORTEIO
                   </button>
                 </>
@@ -637,32 +554,29 @@ const Influencer = () => {
               {raffleStep === 'sending' && (
                 <>
                   <div className="text-center py-2">
-                    <p className="text-base font-black" style={{ color: accentColor }}>💰 ENVIANDO PRÊMIOS 💸</p>
+                    <p className="text-base font-black" style={{ color: accent }}>💰 ENVIANDO PRÊMIOS 💸</p>
                   </div>
-
                   <div>
-                    <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-1">
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(winners.filter(w => w.status === 'sent').length / winners.length) * 100}%`, background: `linear-gradient(90deg, ${accentColor}, #3b82f6)` }} />
+                    <div className="h-2 rounded-full overflow-hidden mb-1" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(winners.filter(w => w.status === 'sent').length / winners.length) * 100}%`, background: `linear-gradient(90deg, ${accent}, #3b82f6)` }} />
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[10px] text-white/40">Progresso</span>
                       <span className="text-[10px] font-bold text-white/60">{winners.filter(w => w.status === 'sent').length}/{winners.length}</span>
                     </div>
                   </div>
-
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {winners.filter(w => w.status !== 'pending').map((w, i) => (
                       <div key={i} className="flex items-center gap-2 p-2.5 rounded-xl border border-white/[0.06] animate-fade-in" style={{ background: 'rgba(0,180,100,0.08)' }}>
                         <span className="text-sm">💵</span>
                         <span className="text-xs text-white/80 flex-1">{formatCurrency(w.amount)} → {w.user.name}</span>
                         {w.status === 'sent' && <span className="text-sm" style={{ color: '#4ade80' }}>✓</span>}
-                        {w.status === 'sending' && <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin" style={{ borderColor: `${accentColor} transparent ${accentColor} ${accentColor}` }} />}
+                        {w.status === 'sending' && <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />}
                       </div>
                     ))}
                   </div>
-
-                  <button disabled className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 opacity-80" style={{ background: accentColor, color: btnTextColor }}>
-                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${btnTextColor} transparent ${btnTextColor} ${btnTextColor}` }} />
+                  <button disabled className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 opacity-80" style={{ background: accent, color: btnText }}>
+                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${btnText} transparent ${btnText} ${btnText}` }} />
                     AGUARDE...
                   </button>
                 </>
@@ -672,35 +586,28 @@ const Influencer = () => {
                 <>
                   <div className="text-center py-4">
                     <div className="text-5xl mb-3 animate-bounce">🏆</div>
-                    <p className="text-base font-black" style={{ color: accentColor }}>🎉 Parabéns aos Ganhadores! 🎉</p>
+                    <p className="text-base font-black" style={{ color: accent }}>🎉 Parabéns aos Ganhadores! 🎉</p>
                     <p className="text-xs text-white/50 mt-1">Cada ganhador recebe {formatCurrency(raffleAmount)}</p>
                   </div>
-
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {winners.map((w, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06]" style={{ background: i === 0 ? `${accentColor}10` : 'rgba(255,255,255,0.02)' }}>
-                        <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: accentColor, color: btnTextColor }}>{i + 1}º</span>
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.06)', background: i === 0 ? `${accent}10` : 'rgba(255,255,255,0.02)' }}>
+                        <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: accent, color: btnText }}>{i + 1}º</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold uppercase truncate">{w.user.name}</p>
                           <p className="text-[10px] text-white/30 font-mono">{maskAccountId(w.user.account_id)}</p>
                         </div>
-                        <span className="text-sm font-bold" style={{ color: accentColor }}>{formatCurrency(w.amount)}</span>
+                        <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(w.amount)}</span>
                       </div>
                     ))}
                   </div>
-
-                  <div className="rounded-xl border border-white/[0.06] p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <div className="rounded-xl border p-4 text-center" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
                     <p className="text-xs text-white/40 mb-1">Total distribuído</p>
-                    <p className="text-xl font-black" style={{ color: accentColor }}>{formatCurrency(winners.length * raffleAmount)}</p>
+                    <p className="text-xl font-black" style={{ color: accent }}>{formatCurrency(winners.length * raffleAmount)}</p>
                   </div>
-
-                  <button
-                    onClick={closeRaffle}
+                  <button onClick={closeRaffle}
                     className="w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-wider transition-all hover:brightness-110"
-                    style={{ background: accentColor, color: btnTextColor }}
-                  >
-                    FECHAR
-                  </button>
+                    style={{ background: accent, color: btnText }}>FECHAR</button>
                 </>
               )}
             </div>
