@@ -2274,7 +2274,7 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {filteredUsers.map((user, index) => (
-                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''}`}>
+                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''} ${user.blacklisted ? 'bg-red-500/[0.04]' : ''} ${user.guaranteed_next_win ? 'bg-emerald-500/[0.04]' : ''}`}>
                           <td className="px-2 py-2">
                             <input
                               type="checkbox"
@@ -2288,7 +2288,14 @@ const Dashboard = () => {
                             />
                           </td>
                           <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
-                          <td className="px-2 py-2 text-foreground font-medium text-xs whitespace-nowrap">{user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}{user.name}</td>
+                          <td className="px-2 py-2 font-medium text-xs whitespace-nowrap">
+                            <span className={`${user.blacklisted ? 'line-through opacity-50 text-destructive' : 'text-foreground'}`}>
+                              {user.blacklisted && <Ban size={11} className="inline mr-1 text-destructive" />}
+                              {user.guaranteed_next_win && <Star size={11} className="inline mr-1 text-emerald-400 fill-emerald-400" />}
+                              {user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}
+                              {user.name}
+                            </span>
+                          </td>
                           <td className="px-2 py-2 text-muted-foreground text-[10px] truncate max-w-[120px]">{user.email}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.phone}</td>
                           <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{user.account_id}</td>
@@ -2307,12 +2314,26 @@ const Dashboard = () => {
                             </td>
                           )}
                           <td className="px-1 py-3 align-middle">
-                            <div className="flex items-center justify-center gap-1.5 min-h-[40px]">
+                            <div className="flex items-center justify-center gap-1 min-h-[40px]">
                               <button
                                 onClick={() => handleGrantSpin(user)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
                               >
                                 {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
+                              </button>
+                              <button
+                                onClick={() => handleToggleBlacklist(user)}
+                                className={`p-1.5 rounded-lg transition border ${user.blacklisted ? 'bg-destructive/15 text-destructive border-destructive/30 hover:bg-white/[0.06] hover:text-muted-foreground hover:border-white/[0.06]' : 'bg-white/[0.06] text-muted-foreground hover:bg-destructive/15 hover:text-destructive border-white/[0.06] hover:border-destructive/30'}`}
+                                title={user.blacklisted ? 'Remover da blacklist' : 'Blacklist (shadowban)'}
+                              >
+                                <Ban size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleToggleGuaranteedWin(user)}
+                                className={`p-1.5 rounded-lg transition border ${user.guaranteed_next_win ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-white/[0.06] hover:text-muted-foreground hover:border-white/[0.06]' : 'bg-white/[0.06] text-muted-foreground hover:bg-emerald-500/15 hover:text-emerald-400 border-white/[0.06] hover:border-emerald-500/30'}`}
+                                title={user.guaranteed_next_win ? 'Remover sorteio garantido' : 'Sorteio 100% garantido'}
+                              >
+                                <Star size={13} fill={user.guaranteed_next_win ? 'currentColor' : 'none'} />
                               </button>
                               <button
                                 onClick={() => handleToggleQualified(user)}
