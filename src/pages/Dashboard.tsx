@@ -5046,6 +5046,24 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Título do Influencer */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Pencil size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Título da Página</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Texto exibido no topo da página do Influencer, ao lado do ícone.
+                </p>
+                <input
+                  type="text"
+                  placeholder="Ex: LUCASBSB"
+                  value={(wheelConfig as any).influencerLabel ?? ''}
+                  onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, influencerLabel: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                />
+              </div>
+
               {/* Limite diário de sorteios */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
