@@ -36,6 +36,7 @@ const Registration = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [spinsGranted, setSpinsGranted] = useState(0);
+  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     const fetchLink = async () => {
@@ -367,7 +368,7 @@ const Registration = () => {
                 {acceptTerms && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <span className="text-xs" style={{ color: subtitleColor }}>
-                {cfg.termsText || <>Aceito os <a href="#" className="font-semibold underline" style={{ color: accentColor }} onClick={e => e.preventDefault()}>Termos de Uso</a>.</>}
+                Aceito os <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTerms(true); }} className="font-semibold underline cursor-pointer" style={{ color: accentColor }}>Termos de Uso</button>.
               </span>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer group">
