@@ -731,6 +731,7 @@ const Dashboard = () => {
 
     if (!latest) return;
     if (!force && lastConfigUpdatedAtRef.current && latest.updated_at === lastConfigUpdatedAtRef.current) return;
+    if (savingInFlightRef.current) return;
 
     configHydratedRef.current = false;
     hydrateDashboardConfig(latest);
