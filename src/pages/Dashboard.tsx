@@ -4585,6 +4585,7 @@ const Dashboard = () => {
           )}
 
 
+          {activeTab === 'financeiro' && (
             <div className="w-full max-w-2xl min-w-0 space-y-5">
               {/* Sub-tabs with scroll arrows */}
               <div className="relative flex items-center gap-1">
