@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
-import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save, Gift } from 'lucide-react';
+import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save, Gift, Eye } from 'lucide-react';
 
 export interface GorjetaPageConfig {
   bgColor: string;
