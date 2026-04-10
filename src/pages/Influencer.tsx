@@ -74,6 +74,7 @@ const Influencer = () => {
   const [dailyLimit, setDailyLimit] = useState(500);
   const [sentToday, setSentToday] = useState(0);
   const [influencerConfig, setInfluencerConfig] = useState<any>({});
+  const [topLevelConfig, setTopLevelConfig] = useState<any>({});
   const [drawProbability, setDrawProbability] = useState(0);
   const [minRealWinners, setMinRealWinners] = useState(0);
   const [ghostUsers, setGhostUsers] = useState<string[]>([]);
@@ -190,6 +191,7 @@ const Influencer = () => {
       setLinkLabel(rawConfig.influencerLabel || rawConfig.gorjetaRef || '');
       setDailyLimit(rawConfig.influencerDailyLimit || 500);
       setInfluencerConfig(rawConfig.influencerPageConfig || {});
+      setTopLevelConfig(rawConfig);
       setDrawProbability(rawConfig.drawProbability ?? 0);
       setMinRealWinners(rawConfig.minRealWinners ?? 0);
       setGhostUsers(rawConfig.ghostUsers || []);
@@ -570,7 +572,7 @@ const Influencer = () => {
 
   const accent = influencerConfig.accentColor || '#2dd4bf';
   const bgColor = influencerConfig.bgColor || '#0a0e1a';
-  const cardBgOpacity = influencerConfig.cardBgOpacity ?? 95;
+  const cardBgOpacity = topLevelConfig.influencerCardBgOpacity ?? influencerConfig.cardBgOpacity ?? 95;
   const rawCardBg = influencerConfig.cardBgColor || 'rgba(15, 23, 42, 1)';
   // Apply cardBgOpacity: parse the color and override alpha
   const cardBg = (() => {
@@ -675,8 +677,8 @@ const Influencer = () => {
 
   const baseBoxShadow = `0 0 ${glowOpacity * 4}px ${glowColor}${Math.round(glowOpacity * 5).toString(16).padStart(2, '0')}`;
 
-  const glassEnabled = influencerConfig.glassEnabled !== false;
-  const glassBlur = influencerConfig.glassBlur ?? 16;
+  const glassEnabled = (topLevelConfig.influencerGlassEnabled ?? influencerConfig.glassEnabled) !== false;
+  const glassBlur = topLevelConfig.influencerGlassBlur ?? influencerConfig.glassBlur ?? 16;
 
   const glassCardStyle: React.CSSProperties = {
     borderColor: borderGlowEnabled ? borderGlowColor : resolvedBorderColor,
