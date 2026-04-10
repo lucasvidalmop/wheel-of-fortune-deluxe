@@ -4571,38 +4571,58 @@ const Dashboard = () => {
                   };
                   return (
                     <div className="space-y-5">
-                      {/* SEO */}
+                      {/* Configuração da Página */}
                       <GlassCard className="p-5 space-y-4">
                         <div className="flex items-center gap-2 mb-1">
-                          <Globe size={20} className="text-primary" />
-                          <h3 className="text-sm font-bold text-foreground">SEO — Metatags</h3>
+                          <FileText size={20} className="text-emerald-400" />
+                          <h3 className="text-sm font-bold text-foreground">Configuração da Página</h3>
                         </div>
-                        <p className="text-xs text-muted-foreground">Configure as metatags da sua página de gorjeta para melhorar o compartilhamento em redes sociais.</p>
+                        <p className="text-xs text-muted-foreground">Defina o nome, ícone e descrição que aparecem na aba do navegador e nos resultados de busca.</p>
 
                         <div>
-                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título da Página (og:title)</label>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nome da Página (título da aba)</label>
                           <input
                             type="text"
-                            value={seoConfig.ogTitle || ''}
-                            onChange={e => updateSeo('ogTitle', e.target.value)}
-                            placeholder="Ex: Ganhe prêmios incríveis!"
+                            value={seoConfig.pageTitle || ''}
+                            onChange={e => updateSeo('pageTitle', e.target.value)}
+                            placeholder="Ex: Roleta de Prêmios"
                             className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                           />
+                          <p className="text-[10px] text-muted-foreground mt-1">Aparece na aba do navegador</p>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição (og:description)</label>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Favicon (URL do ícone)</label>
+                          <input
+                            type="text"
+                            value={seoConfig.faviconUrl || ''}
+                            onChange={e => updateSeo('faviconUrl', e.target.value)}
+                            placeholder="https://exemplo.com/favicon.ico"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono text-xs"
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1">Ícone pequeno que aparece na aba do navegador. Use .ico, .png ou .svg</p>
+                          {seoConfig.faviconUrl && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <img src={seoConfig.faviconUrl} alt="Favicon preview" className="w-6 h-6 rounded object-contain bg-white/10 p-0.5" onError={e => (e.currentTarget.style.display = 'none')} />
+                              <span className="text-[10px] text-muted-foreground">Preview</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição da Página (meta description)</label>
                           <textarea
-                            value={seoConfig.ogDescription || ''}
-                            onChange={e => updateSeo('ogDescription', e.target.value)}
+                            value={seoConfig.pageDescription || ''}
+                            onChange={e => updateSeo('pageDescription', e.target.value)}
                             placeholder="Ex: Participe e concorra a prêmios em dinheiro via PIX!"
                             rows={3}
                             className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
                           />
+                          <p className="text-[10px] text-muted-foreground mt-1">Aparece nos resultados de busca do Google</p>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Imagem de Compartilhamento (og:image URL)</label>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Imagem Social (og:image)</label>
                           <input
                             type="text"
                             value={seoConfig.ogImage || ''}
@@ -4610,7 +4630,12 @@ const Dashboard = () => {
                             placeholder="https://exemplo.com/imagem.jpg"
                             className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono text-xs"
                           />
-                          <p className="text-[10px] text-muted-foreground mt-1">Tamanho recomendado: 1200×630px</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">Imagem exibida ao compartilhar no WhatsApp, Facebook, etc. Tamanho recomendado: 1200×630px</p>
+                          {seoConfig.ogImage && (
+                            <div className="mt-2 rounded-xl overflow-hidden border border-white/[0.08] max-w-xs">
+                              <img src={seoConfig.ogImage} alt="OG image preview" className="w-full h-auto object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                            </div>
+                          )}
                         </div>
 
                         <div>
