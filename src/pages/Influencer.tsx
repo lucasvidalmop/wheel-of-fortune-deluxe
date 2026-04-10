@@ -664,20 +664,36 @@ const Influencer = () => {
 
             {/* Sending / Sent state */}
             {prizeSending && (
-              <div className="p-10 flex flex-col items-center justify-center gap-4">
+              <div className="p-8 flex flex-col items-center justify-center gap-5">
                 {!prizeSent ? (
                   <>
-                    <div className="w-14 h-14 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
-                    <p className="text-sm font-bold text-white/80">Registrando prêmio...</p>
-                    <p className="text-xs text-white/40">{prizeUser?.name}</p>
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ border: `3px solid ${accent}40` }}>
+                      <div className="w-10 h-10 border-3 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}`, borderWidth: '3px' }} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-white/80">Registrando prêmio...</p>
+                      <p className="text-xs text-white/40 mt-1">{prizeUser?.name}</p>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center animate-scale-in" style={{ background: '#22c55e' }}>
-                      <span className="text-2xl text-white">✓</span>
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center animate-scale-in" style={{ border: `3px solid ${accent}` }}>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                     </div>
-                    <p className="text-sm font-bold text-white/80">Prêmio registrado!</p>
-                    <p className="text-xs text-white/40">{formatCurrency(prizeAmount)} → {prizeUser?.name}</p>
+                    <div className="text-center">
+                      <p className="text-base font-black" style={{ color: accent }}>Prêmio confirmado!</p>
+                      <p className="text-sm font-bold text-white/80 mt-1">{prizeUser?.name}</p>
+                      <p className="text-lg font-black mt-1" style={{ color: accent }}>{formatCurrency(prizeAmount)}</p>
+                      <p className="text-[11px] text-white/40 mt-3">O registro já aparece na aba <span className="font-bold text-white/70">Ganhadores Hoje</span>.</p>
+                    </div>
+                    <button
+                      onClick={() => { setShowPrizeDialog(false); setActiveTab('winners'); }}
+                      className="w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-wider transition-all hover:brightness-110 mt-2"
+                      style={{ background: accent, color: btnText }}>
+                      OK — VER GANHADORES
+                    </button>
                   </>
                 )}
               </div>
