@@ -7,7 +7,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -4592,19 +4592,30 @@ const Dashboard = () => {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Favicon (URL do ícone)</label>
-                          <input
-                            type="text"
-                            value={seoConfig.faviconUrl || ''}
-                            onChange={e => updateSeo('faviconUrl', e.target.value)}
-                            placeholder="https://exemplo.com/favicon.ico"
-                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono text-xs"
-                          />
-                          <p className="text-[10px] text-muted-foreground mt-1">Ícone pequeno que aparece na aba do navegador. Use .ico, .png ou .svg</p>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Favicon (ícone da aba)</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={seoConfig.faviconUrl || ''}
+                              onChange={e => updateSeo('faviconUrl', e.target.value)}
+                              placeholder="https://exemplo.com/favicon.ico"
+                              className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono text-xs"
+                            />
+                            <label className="shrink-0 cursor-pointer rounded-xl border border-white/[0.08] bg-white/[0.06] hover:bg-white/[0.12] px-3 py-2.5 text-xs font-semibold text-foreground transition-all flex items-center gap-1.5">
+                              <Upload size={14} /> Upload
+                              <input type="file" accept="image/*,.ico,.svg" className="hidden" onChange={async (e) => {
+                                const file = e.target.files?.[0]; if (!file) return;
+                                try { const { publicUrl } = await uploadAppAsset(file, 'favicon'); updateSeo('faviconUrl', publicUrl); toast.success('Favicon enviado!'); } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+                                e.target.value = '';
+                              }} />
+                            </label>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1">Ícone pequeno na aba do navegador. Use .ico, .png ou .svg</p>
                           {seoConfig.faviconUrl && (
                             <div className="mt-2 flex items-center gap-2">
                               <img src={seoConfig.faviconUrl} alt="Favicon preview" className="w-6 h-6 rounded object-contain bg-white/10 p-0.5" onError={e => (e.currentTarget.style.display = 'none')} />
                               <span className="text-[10px] text-muted-foreground">Preview</span>
+                              <button type="button" onClick={() => updateSeo('faviconUrl', '')} className="text-xs text-destructive hover:text-destructive/80 ml-1"><Trash2 size={12} /></button>
                             </div>
                           )}
                         </div>
@@ -4623,17 +4634,28 @@ const Dashboard = () => {
 
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Imagem Social (og:image)</label>
-                          <input
-                            type="text"
-                            value={seoConfig.ogImage || ''}
-                            onChange={e => updateSeo('ogImage', e.target.value)}
-                            placeholder="https://exemplo.com/imagem.jpg"
-                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono text-xs"
-                          />
-                          <p className="text-[10px] text-muted-foreground mt-1">Imagem exibida ao compartilhar no WhatsApp, Facebook, etc. Tamanho recomendado: 1200×630px</p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={seoConfig.ogImage || ''}
+                              onChange={e => updateSeo('ogImage', e.target.value)}
+                              placeholder="https://exemplo.com/imagem.jpg"
+                              className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono text-xs"
+                            />
+                            <label className="shrink-0 cursor-pointer rounded-xl border border-white/[0.08] bg-white/[0.06] hover:bg-white/[0.12] px-3 py-2.5 text-xs font-semibold text-foreground transition-all flex items-center gap-1.5">
+                              <Upload size={14} /> Upload
+                              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                const file = e.target.files?.[0]; if (!file) return;
+                                try { const { publicUrl } = await uploadAppAsset(file, 'og-images'); updateSeo('ogImage', publicUrl); toast.success('Imagem enviada!'); } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+                                e.target.value = '';
+                              }} />
+                            </label>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1">Imagem ao compartilhar no WhatsApp, Facebook, etc. Tamanho recomendado: 1200×630px</p>
                           {seoConfig.ogImage && (
-                            <div className="mt-2 rounded-xl overflow-hidden border border-white/[0.08] max-w-xs">
+                            <div className="mt-2 rounded-xl overflow-hidden border border-white/[0.08] max-w-xs relative">
                               <img src={seoConfig.ogImage} alt="OG image preview" className="w-full h-auto object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                              <button type="button" onClick={() => updateSeo('ogImage', '')} className="absolute top-1 right-1 bg-black/60 rounded-full p-1 text-destructive hover:text-destructive/80"><Trash2 size={12} /></button>
                             </div>
                           )}
                         </div>
