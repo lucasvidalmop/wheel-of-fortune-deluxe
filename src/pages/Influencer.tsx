@@ -367,8 +367,8 @@ const Influencer = () => {
         </div>
 
         {/* ─── Tabs ─── */}
-      <div className="rounded-2xl border overflow-hidden" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.01)' }}>
-        <div className="flex border-b" style={{ borderColor: `${accent}20` }}>
+      <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.01)' }}>
+        <div className="flex border-b shrink-0" style={{ borderColor: `${accent}20` }}>
           {([
             { key: 'participants' as const, label: 'Participantes', count: users.length, prefix: '≡' },
             { key: 'winners' as const, label: 'Ganhadores Hoje', prefix: '★' },
@@ -395,7 +395,7 @@ const Influencer = () => {
           })}
         </div>
 
-        <div className="p-3">
+        <div className="p-3 overflow-y-auto flex-1 min-h-0">
         {/* ─── Participants ─── */}
         {activeTab === 'participants' && (
           <div className="space-y-3">
