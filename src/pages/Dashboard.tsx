@@ -74,6 +74,8 @@ interface PersistedDashboardSettings {
   receiptBgColor: string;
   receiptAccentColor: string;
   receiptOperatorName: string;
+  hideReceiptSection: boolean;
+  hideEdpaySection: boolean;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
