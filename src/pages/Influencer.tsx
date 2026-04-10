@@ -661,12 +661,15 @@ const Influencer = () => {
 
   const baseBoxShadow = `0 0 ${glowOpacity * 4}px ${glowColor}${Math.round(glowOpacity * 5).toString(16).padStart(2, '0')}`;
 
+  const glassEnabled = influencerConfig.glassEnabled !== false;
+  const glassBlur = influencerConfig.glassBlur ?? 16;
+
   const glassCardStyle: React.CSSProperties = {
     borderColor: borderGlowEnabled ? borderGlowColor : resolvedBorderColor,
     borderWidth: `${borderWidth}px`,
     borderStyle: 'solid',
     background: cardBg,
-    backdropFilter: 'blur(16px)',
+    ...(glassEnabled ? { backdropFilter: `blur(${glassBlur}px)`, WebkitBackdropFilter: `blur(${glassBlur}px)` } : {}),
     boxShadow: [baseBoxShadow, borderGlowShadow].filter(Boolean).join(', '),
   };
 
