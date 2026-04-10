@@ -5682,15 +5682,12 @@ const Dashboard = () => {
 
                       <button
                         disabled={manualPaySending || manualPaySelectedIds.size === 0 || !manualPayAmount || Number(manualPayAmount) <= 0}
-                        onClick={() => {
+                        onClick={async () => {
                           const count = manualPaySelectedIds.size;
                           const amt = Number(manualPayAmount).toFixed(2);
                           const total = (count * Number(manualPayAmount)).toFixed(2);
-                          setConfirmModal({
-                            title: '💳 Confirmar Pagamento Manual',
-                            message: `Enviar ${count} pagamento(s) de R$ ${amt} cada?\nTotal: R$ ${total}`,
-                            onConfirm: async () => {
-                              setConfirmModal(null);
+                          if (!await confirmDialog({ title: '💳 Confirmar Pagamento', message: `Enviar ${count} pagamento(s) de R$ ${amt} cada?
+Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                           setManualPaySending(true);
                           let success = 0;
                           let failed = 0;
@@ -5717,21 +5714,13 @@ const Dashboard = () => {
                               const { data, error } = await supabase.functions.invoke('edpay-pix-transfer', {
                                 body: { paymentId: ppData.id, edpayPublicKey, edpaySecretKey },
                               });
-                              if (error || data?.error) {
-                                failed++;
-                              } else {
-                                success++;
-                              }
-                            } catch {
-                              failed++;
-                            }
+                              if (error || data?.error) { failed++; } else { success++; }
+                            } catch { failed++; }
                           }
                           setManualPaySending(false);
                           if (success > 0) toast.success(`${success} pagamento(s) enviado(s) com sucesso!`);
                           if (failed > 0) toast.error(`${failed} pagamento(s) falharam`);
                           setManualPaySelectedIds(new Set());
-                            },
-                          });
                         }}
                         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
