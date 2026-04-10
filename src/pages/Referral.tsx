@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import SlotMachineSuccess from '@/components/casino/SlotMachineSuccess';
 import { ReferralPageConfig, defaultPageConfig } from '@/components/casino/ReferralPageEditor';
 
 
@@ -247,31 +248,24 @@ const Referral = () => {
   }
 
   if (success) {
+    const accent = cfg.btnBgColor || '#00e5ff';
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
-        {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
-        <div className="relative z-10 text-center space-y-6 max-w-sm mx-4 rounded-2xl p-8 border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]" style={cardStyle}>
-          <div className="text-6xl animate-bounce">🎉</div>
-          <h1 className="text-2xl font-bold text-foreground" style={titleStyle}>{cfg.successTitle || 'Giro Liberado!'}</h1>
-          <p className="text-muted-foreground" style={subtitleStyle}>
-            {cfg.successSubtitle || <>Você recebeu <span className="font-bold" style={{ color: cfg.btnBgColor || undefined }}>{spinsGranted} giro(s)</span> na roleta!</>}
-          </p>
-          {wheelSlug ? (
-            <button
-              onClick={() => navigate(`/${wheelSlug}`)}
-              className={`w-full py-3 rounded-xl font-bold text-sm hover:brightness-110 transition ${!cfg.successBtnBgColor && !cfg.btnBgColor ? 'bg-primary text-primary-foreground' : ''}`}
-              style={{
-                ...(cfg.successBtnBgColor ? { backgroundColor: cfg.successBtnBgColor } : cfg.btnBgColor ? { backgroundColor: cfg.btnBgColor } : {}),
-                ...(cfg.successBtnTextColor ? { color: cfg.successBtnTextColor } : cfg.btnTextColor ? { color: cfg.btnTextColor } : {}),
-              }}
-            >
-              {cfg.successBtnText || '🎰 Ir para a Roleta'}
-            </button>
-          ) : (
-            <p className="text-xs text-muted-foreground">Acesse a roleta para girar agora.</p>
-          )}
-        </div>
-      </div>
+      <SlotMachineSuccess
+        accentColor={accent}
+        titleColor={cfg.titleColor || '#ffffff'}
+        subtitleColor={cfg.subtitleColor || 'rgba(255,255,255,0.7)'}
+        btnBgColor={cfg.successBtnBgColor || cfg.btnBgColor || accent}
+        btnTextColor={cfg.successBtnTextColor || cfg.btnTextColor || '#000000'}
+        successTitle={cfg.successTitle || 'Giro Liberado!'}
+        successSubtitle={cfg.successSubtitle || `Você recebeu ${spinsGranted} giro(s) na roleta!`}
+        successBtnText={cfg.successBtnText || '🎰 Ir para a Roleta'}
+        successBgColor={cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
+        slotMatchIcon="🎉"
+        slotLuckyText="🎰 BOA SORTE! 🎰"
+        ctaUrl={wheelSlug ? undefined : undefined}
+        onCtaClick={wheelSlug ? () => navigate(`/${wheelSlug}`) : undefined}
+        showCta={!!wheelSlug}
+      />
     );
   }
 
