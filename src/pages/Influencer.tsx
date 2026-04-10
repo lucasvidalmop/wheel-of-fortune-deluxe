@@ -435,7 +435,13 @@ const Influencer = () => {
             p_amount: raffleAmount,
             p_force_auto: finalSelected[i].user.auto_payment,
           });
-          if (result?.data?.id) sessionCreatedIds.current.add(result.data.id);
+          if (result?.data?.id) {
+            sessionCreatedIds.current.add(result.data.id);
+            // Auto-pay via PIX if auto_payment is enabled
+            if (result?.data?.auto_payment || finalSelected[i].user.auto_payment) {
+              triggerAutoPay(result.data.id).catch(console.error);
+            }
+          }
         } catch (err) { console.error('Erro ao criar pagamento:', err); }
       }
 
