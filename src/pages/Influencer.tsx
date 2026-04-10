@@ -258,6 +258,7 @@ const Influencer = () => {
     setWinners(selected);
     setRaffleStep('sending');
     setSendingIndex(0);
+    playRaffleSound();
 
     for (let i = 0; i < selected.length; i++) {
       setSendingIndex(i);
