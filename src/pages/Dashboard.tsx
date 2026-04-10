@@ -1904,6 +1904,8 @@ const Dashboard = () => {
                   { value: 'auto_pay' as const, label: '💰 Auto Pay' },
                   { value: 'qualified' as const, label: '✅ Qualificados' },
                   { value: 'duplicados' as const, label: '🔁 Duplicados' },
+                  { value: 'blacklist' as const, label: '🚫 Blacklist' },
+                  { value: 'guaranteed' as const, label: '⭐ Sorteio 100%' },
                 ]).map(opt => (
                   <button
                     key={opt.value}
