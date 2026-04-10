@@ -333,7 +333,11 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
                 successBtnText={config.successBtnText}
                 slotMatchIcon={config.slotMatchIcon}
                 slotLuckyText={config.slotLuckyText}
-                ctaUrl={config.ctaBtnUrl}
+                slotReelBgColor={config.slotReelBgColor}
+                slotFrameBgColor={config.slotFrameBgColor}
+                slotFrameBorderColor={config.slotFrameBorderColor}
+                successBgColor={config.successBgColor}
+                ctaUrl={config.successCtaUrl || config.ctaBtnUrl}
                 showCta={config.ctaBtnShow}
                 inline
               />
