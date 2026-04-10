@@ -5,6 +5,7 @@ import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, 
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 interface WheelUser {
   id: string;
