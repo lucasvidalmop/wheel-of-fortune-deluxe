@@ -792,13 +792,13 @@ const Influencer = () => {
           <div className="space-y-2">
             {todayWinners.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum ganhador hoje</p>}
             {todayWinners.map((w, i) => (
-              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.06)', background: i === 0 ? `${accent}10` : 'rgba(255,255,255,0.02)' }}>
-                <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: accent, color: btnText }}>{i + 1}</span>
+              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300" style={{ borderColor: i === 0 ? `${accent}30` : 'rgba(255,255,255,0.06)', background: i === 0 ? `${accent}10` : 'rgba(255,255,255,0.02)', boxShadow: i === 0 ? `0 0 20px ${accent}15, inset 0 0 20px ${accent}05` : 'none' }}>
+                <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold shadow-lg" style={{ background: accent, color: btnText, boxShadow: `0 0 12px ${accent}60` }}>{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold uppercase truncate">{w.user_name}</p>
-                  <p className="text-[10px] text-white/30 font-mono">{maskAccountId(w.account_id)} · {new Date(w.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
+                  <p className="text-sm font-black uppercase truncate tracking-wide" style={{ color: textColor, textShadow: `0 0 8px ${accent}40` }}>{w.user_name}</p>
+                  <p className="text-[10px] font-mono" style={{ color: `${accent}90` }}>{maskAccountId(w.account_id)} &middot; {new Date(w.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
                 </div>
-                <span className="text-sm font-bold" style={{ color: accent }}>{formatCurrency(w.amount)}</span>
+                <span className="text-sm font-black tracking-wide" style={{ color: accent, textShadow: `0 0 10px ${accent}80, 0 0 20px ${accent}40` }}>{formatCurrency(w.amount)}</span>
               </div>
             ))}
             {todayWinners.length > 0 && (
