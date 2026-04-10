@@ -4228,7 +4228,6 @@ const Dashboard = () => {
             const gorjetaRef = (wheelConfig as any).gorjetaRef || '';
             const gorjetaUrl = gorjetaRef ? `${baseUrl}/gorjeta?ref=${gorjetaRef}` : '';
             const showQr = (wheelConfig as any).gorjetaShowQr !== false;
-            const showQr = (wheelConfig as any).gorjetaShowQr !== false;
             return (
               <div className="max-w-2xl space-y-5">
                 {/* Sub-tabs */}
