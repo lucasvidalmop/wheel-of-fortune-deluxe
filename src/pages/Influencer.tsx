@@ -427,11 +427,12 @@ const Influencer = () => {
     setWinners(finalSelected);
     setRaffleStep('sending');
     setSendingIndex(0);
-    playRaffleSound();
+    
 
     for (let i = 0; i < finalSelected.length; i++) {
       setSendingIndex(i);
       setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sending' } : w));
+      playRaffleSound();
 
       // Only create payment for real users (not ghosts)
       if (!(finalSelected[i].user as any)._isGhost) {
