@@ -19,7 +19,7 @@ const Referral = () => {
   const [spinsGranted, setSpinsGranted] = useState(0);
   const [wheelSlug, setWheelSlug] = useState('');
   const [cfg, setCfg] = useState<ReferralPageConfig>(defaultPageConfig);
-
+  const [slotCfg, setSlotCfg] = useState<any>({});
   useEffect(() => {
     const fetchLink = async () => {
       if (!code) { setLoading(false); return; }
@@ -40,6 +40,10 @@ const Referral = () => {
           .eq('user_id', data.owner_id)
           .maybeSingle();
         if (wcData?.slug) setWheelSlug(wcData.slug);
+
+        // Load shared slot machine config from gorjetaPageConfig
+        const gorjetaSlot = wcData?.config?.gorjetaPageConfig || {};
+        setSlotCfg(gorjetaSlot);
 
         const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
         const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
@@ -259,10 +263,13 @@ const Referral = () => {
         successTitle={cfg.successTitle || 'Giro Liberado!'}
         successSubtitle={cfg.successSubtitle || `Você recebeu ${spinsGranted} giro(s) na roleta!`}
         successBtnText={cfg.successBtnText || '🎰 Ir para a Roleta'}
-        successBgColor={cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
-        slotMatchIcon="🎉"
-        slotLuckyText="🎰 BOA SORTE! 🎰"
-        ctaUrl={wheelSlug ? undefined : undefined}
+        successBgColor={slotCfg.successBgColor || cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
+        slotMatchIcon={slotCfg.slotMatchIcon || '🎉'}
+        slotLuckyText={slotCfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
+        slotReelBgColor={slotCfg.slotReelBgColor}
+        slotFrameBgColor={slotCfg.slotFrameBgColor}
+        slotFrameBorderColor={slotCfg.slotFrameBorderColor}
+        ctaUrl={undefined}
         onCtaClick={wheelSlug ? () => navigate(`/${wheelSlug}`) : undefined}
         showCta={!!wheelSlug}
       />
