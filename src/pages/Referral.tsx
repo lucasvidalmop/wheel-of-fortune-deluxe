@@ -41,6 +41,10 @@ const Referral = () => {
           .maybeSingle();
         if (wcData?.slug) setWheelSlug(wcData.slug);
 
+        // Load shared slot machine config from gorjetaPageConfig
+        const gorjetaSlot = wcData?.config?.gorjetaPageConfig || {};
+        setSlotCfg(gorjetaSlot);
+
         const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
         const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
         setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
