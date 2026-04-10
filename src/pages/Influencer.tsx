@@ -264,26 +264,23 @@ const Influencer = () => {
   };
 
   const handleResetDayCounter = async () => {
-    if (sessionCreatedIds.current.size === 0) {
-      setSentToday(0);
-      toast.success('Contador reiniciado!');
-      return;
-    }
+    const uid = session?.user?.id;
+    if (!uid) return;
 
-    const idsToRemove = new Set(sessionCreatedIds.current);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-    // Delete real prize_payments created in this session
-    const realIds = [...idsToRemove].filter(id => !id.startsWith('ghost_'));
-    if (realIds.length > 0) {
-      await (supabase as any).from('prize_payments').delete().in('id', realIds);
-    }
+    // Hide all today's prize_payments from influencer view
+    await (supabase as any)
+      .from('prize_payments')
+      .update({ hidden_from_influencer: true })
+      .eq('owner_id', uid)
+      .eq('hidden_from_influencer', false)
+      .gte('created_at', todayStart.toISOString());
 
-    // Remove ghost entries from localStorage
-    const ghostIdsToRemove = [...idsToRemove].filter(id => id.startsWith('ghost_'));
-    if (ghostIdsToRemove.length > 0) {
-      const ghosts = loadGhostWinners().filter(g => !ghostIdsToRemove.includes(g.id));
-      saveGhostWinners(ghosts);
-    }
+    // Clear all ghost winners from today
+    const ghosts = loadGhostWinners().filter(g => new Date(g.created_at) < todayStart);
+    saveGhostWinners(ghosts);
 
     // Clear session tracking and timers
     sessionCreatedIds.current.clear();
@@ -292,8 +289,8 @@ const Influencer = () => {
     setResetCountdown(0);
 
     // Refresh lists
-    await fetchTodayWinners(session?.user?.id);
-    await fetchHistory(session?.user?.id);
+    await fetchTodayWinners(uid);
+    await fetchHistory(uid);
     toast.success('Contador reiniciado e últimos sorteios removidos!');
   };
 
