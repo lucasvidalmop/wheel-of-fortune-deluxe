@@ -4581,6 +4581,14 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
+
+              {/* Save button */}
+              <button
+                onClick={handleSaveConfig}
+                className="w-full py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all"
+              >
+                {savingConfig ? 'Salvando...' : '💾 Salvar Configurações'}
+              </button>
             </div>
           )}
 
