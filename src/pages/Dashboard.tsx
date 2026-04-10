@@ -4423,6 +4423,7 @@ const Dashboard = () => {
                     { key: 'link' as const, label: '🔗 Link', icon: Link2 },
                     { key: 'visual' as const, label: '🎨 Visual', icon: Palette },
                     { key: 'influencer' as const, label: '🎯 Visual Influencer', icon: Target },
+                    { key: 'seo' as const, label: '📊 SEO & Pixel', icon: Globe },
                   ] as const).map(tab => (
                     <button
                       key={tab.key}
@@ -4559,6 +4560,146 @@ const Dashboard = () => {
                     onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
                   />
                 )}
+
+                {gorjetaSubTab === 'seo' && (() => {
+                  const seoConfig = (wheelConfig as any).gorjetaSeo || {};
+                  const updateSeo = (field: string, value: string) => {
+                    setWheelConfig((prev: any) => ({
+                      ...prev,
+                      gorjetaSeo: { ...(prev.gorjetaSeo || {}), [field]: value },
+                    }));
+                  };
+                  return (
+                    <div className="space-y-5">
+                      {/* SEO */}
+                      <GlassCard className="p-5 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Globe size={20} className="text-primary" />
+                          <h3 className="text-sm font-bold text-foreground">SEO — Metatags</h3>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Configure as metatags da sua página de gorjeta para melhorar o compartilhamento em redes sociais.</p>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Título da Página (og:title)</label>
+                          <input
+                            type="text"
+                            value={seoConfig.ogTitle || ''}
+                            onChange={e => updateSeo('ogTitle', e.target.value)}
+                            placeholder="Ex: Ganhe prêmios incríveis!"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição (og:description)</label>
+                          <textarea
+                            value={seoConfig.ogDescription || ''}
+                            onChange={e => updateSeo('ogDescription', e.target.value)}
+                            placeholder="Ex: Participe e concorra a prêmios em dinheiro via PIX!"
+                            rows={3}
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Imagem de Compartilhamento (og:image URL)</label>
+                          <input
+                            type="text"
+                            value={seoConfig.ogImage || ''}
+                            onChange={e => updateSeo('ogImage', e.target.value)}
+                            placeholder="https://exemplo.com/imagem.jpg"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono text-xs"
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1">Tamanho recomendado: 1200×630px</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Palavras-chave (meta keywords)</label>
+                          <input
+                            type="text"
+                            value={seoConfig.keywords || ''}
+                            onChange={e => updateSeo('keywords', e.target.value)}
+                            placeholder="gorjeta, pix, prêmio, sorteio"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                          />
+                        </div>
+                      </GlassCard>
+
+                      {/* Pixels */}
+                      <GlassCard className="p-5 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <BarChart3 size={20} className="text-amber-400" />
+                          <h3 className="text-sm font-bold text-foreground">Pixels de Rastreamento</h3>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Insira os IDs dos pixels para rastrear conversões e eventos na sua página de gorjeta.</p>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Facebook Pixel ID</label>
+                          <input
+                            type="text"
+                            value={seoConfig.facebookPixelId || ''}
+                            onChange={e => updateSeo('facebookPixelId', e.target.value)}
+                            placeholder="Ex: 123456789012345"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Google Analytics ID (GA4)</label>
+                          <input
+                            type="text"
+                            value={seoConfig.googleAnalyticsId || ''}
+                            onChange={e => updateSeo('googleAnalyticsId', e.target.value)}
+                            placeholder="Ex: G-XXXXXXXXXX"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Google Tag Manager ID</label>
+                          <input
+                            type="text"
+                            value={seoConfig.gtmId || ''}
+                            onChange={e => updateSeo('gtmId', e.target.value)}
+                            placeholder="Ex: GTM-XXXXXXX"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">TikTok Pixel ID</label>
+                          <input
+                            type="text"
+                            value={seoConfig.tiktokPixelId || ''}
+                            onChange={e => updateSeo('tiktokPixelId', e.target.value)}
+                            placeholder="Ex: CXXXXXXXXXXXXXXXXX"
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Script Personalizado (head)</label>
+                          <textarea
+                            value={seoConfig.customHeadScript || ''}
+                            onChange={e => updateSeo('customHeadScript', e.target.value)}
+                            placeholder={"<!-- Cole aqui qualquer script personalizado -->"}
+                            rows={4}
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none font-mono text-xs"
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1">⚠️ Cuidado: scripts incorretos podem quebrar a página.</p>
+                        </div>
+                      </GlassCard>
+
+                      <button
+                        onClick={handleSaveConfig}
+                        disabled={savingConfig}
+                        className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20"
+                      >
+                        {savingConfig ? 'Salvando...' : '💾 Salvar Configuração SEO & Pixel'}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}
