@@ -7,7 +7,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -140,7 +140,7 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta'>('inscritos');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
@@ -1612,6 +1612,7 @@ const Dashboard = () => {
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro' },
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
+    { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
   ];
 
   const tabTitles: Record<string, string> = {
@@ -1626,6 +1627,7 @@ const Dashboard = () => {
     financeiro: 'Financeiro',
     notificacoes: 'Notificações',
     referral: 'Links de Referência',
+    gorjeta: 'Página de Gorjeta',
   };
 
   return (
@@ -4218,6 +4220,79 @@ const Dashboard = () => {
               onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
             />
           )}
+
+          {/* ══════ GORJETA TAB ══════ */}
+          {activeTab === 'gorjeta' && (() => {
+            const gorjetaRef = (wheelConfig as any).gorjetaRef || '';
+            const gorjetaUrl = gorjetaRef ? `${baseUrl}/gorjeta?ref=${gorjetaRef}` : '';
+            return (
+              <div className="max-w-2xl space-y-5">
+                <GlassCard className="p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Gift size={20} className="text-primary" />
+                    <h3 className="text-sm font-bold text-foreground">Configurar Página de Gorjeta</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Defina o código de referência que será usado na sua página de gorjeta. O link final será: <span className="font-mono text-primary">{baseUrl}/gorjeta?ref=SEU_CODIGO</span>
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Código de Referência (ref)</label>
+                    <input
+                      type="text"
+                      value={gorjetaRef}
+                      onChange={e => {
+                        const val = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+                        setWheelConfig((prev: any) => ({ ...prev, gorjetaRef: val }));
+                      }}
+                      placeholder="Ex: MEUCAFE"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Use letras, números, - ou _. O código será convertido para maiúsculas.</p>
+                  </div>
+
+                  {gorjetaUrl && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Seu Link de Gorjeta</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={gorjetaUrl}
+                            className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono text-xs"
+                          />
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
+                            className="shrink-0 px-3 py-2.5 rounded-xl text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-all flex items-center gap-1.5"
+                          >
+                            <Copy size={14} /> Copiar
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => window.open(gorjetaUrl, '_blank')}
+                          className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-all flex items-center gap-1.5"
+                        >
+                          <ExternalLink size={14} /> Abrir Página
+                        </button>
+                      </div>
+
+                      <div className="flex justify-center p-4 bg-white rounded-xl">
+                        <QRCodeSVG value={gorjetaUrl} size={160} />
+                      </div>
+                    </div>
+                  )}
+                </GlassCard>
+
+                <p className="text-[10px] text-center text-muted-foreground">
+                  💡 O código deve corresponder a um link de referral ativo na aba "Links Ref." para que a inscrição funcione.
+                </p>
+              </div>
+            );
+          })()}
 
 
           {activeTab === 'financeiro' && (
