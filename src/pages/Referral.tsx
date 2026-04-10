@@ -265,6 +265,7 @@ const Referral = () => {
         successBtnText={cfg.successBtnText || '🎰 Ir para a Roleta'}
         successBgColor={slotCfg.successBgColor || cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
         slotMatchIcon={slotCfg.slotMatchIcon || '🎉'}
+        slotMatchImageUrl={slotCfg.slotMatchImageUrl}
         slotLuckyText={slotCfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
         slotReelBgColor={slotCfg.slotReelBgColor}
         slotFrameBgColor={slotCfg.slotFrameBgColor}
