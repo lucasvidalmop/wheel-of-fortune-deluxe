@@ -646,7 +646,10 @@ const Influencer = () => {
               {raffleStep === 'results' && (
                 <>
                   <div className="text-center py-4">
-                    <div className="text-5xl mb-3 animate-bounce">🏆</div>
+                    <div className="relative inline-block mb-3">
+                      <div className="text-5xl animate-bounce" style={{ filter: `drop-shadow(0 0 12px ${accent}) drop-shadow(0 0 30px ${accent}80) drop-shadow(0 0 60px ${accent}40)` }}>🏆</div>
+                      <div className="absolute inset-0 text-5xl animate-pulse opacity-50 blur-sm" style={{ animationDuration: '1.5s' }}>🏆</div>
+                    </div>
                     <p className="text-base font-black" style={{ color: accent }}>🎉 Parabéns aos Ganhadores! 🎉</p>
                     <p className="text-xs text-white/50 mt-1">Cada ganhador recebe {formatCurrency(raffleAmount)}</p>
                   </div>
