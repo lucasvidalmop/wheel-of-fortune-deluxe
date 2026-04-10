@@ -355,7 +355,7 @@ const Registration = () => {
               <div className="relative w-[130px] shrink-0">
                 <select
                   value={pixKeyType}
-                  onChange={e => setPixKeyType(e.target.value)}
+                  onChange={e => { setPixKeyType(e.target.value); setPixKey(''); }}
                   className="w-full py-3 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer"
                   style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
                 >
@@ -367,8 +367,22 @@ const Registration = () => {
               </div>
               <div className="relative flex-1">
                 <input
-                  type="text" value={pixKey} onChange={e => setPixKey(e.target.value)}
-                  placeholder="Chave aleatória (ex: ..."
+                  type={pixKeyType === 'email' ? 'email' : 'text'}
+                  value={pixKey}
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (pixKeyType === 'cpf') setPixKey(maskCpf(v));
+                    else if (pixKeyType === 'cnpj') setPixKey(maskCnpj(v));
+                    else if (pixKeyType === 'phone') setPixKey(maskPhone(v));
+                    else setPixKey(v);
+                  }}
+                  placeholder={
+                    pixKeyType === 'cpf' ? '000.000.000-00' :
+                    pixKeyType === 'cnpj' ? '00.000.000/0000-00' :
+                    pixKeyType === 'phone' ? '(DD) 9XXXX-XXXX' :
+                    pixKeyType === 'email' ? 'email@exemplo.com' :
+                    'Chave aleatória'
+                  }
                   className="w-full px-3.5 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
                   style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
                 />
