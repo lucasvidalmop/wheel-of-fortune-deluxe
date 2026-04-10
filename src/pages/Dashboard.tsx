@@ -4579,6 +4579,79 @@ const Dashboard = () => {
           })()}
 
 
+          {/* ══════ HISTÓRICO GORJETA TAB ══════ */}
+          {activeTab === 'hist_gorjeta' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock size={20} className="text-primary" />
+                  <h3 className="text-sm font-bold text-foreground">Resgates de Gorjeta</h3>
+                </div>
+                <button
+                  onClick={fetchGorjetaHistory}
+                  disabled={gorjetaHistoryLoading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/20 text-xs font-semibold hover:bg-primary/25 transition"
+                >
+                  <RotateCcw size={14} className={gorjetaHistoryLoading ? 'animate-spin' : ''} /> Atualizar
+                </button>
+              </div>
+
+              {gorjetaHistoryLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : gorjetaHistory.length === 0 ? (
+                <GlassCard className="p-8 text-center">
+                  <Gift size={32} className="mx-auto text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">Nenhum resgate de gorjeta encontrado.</p>
+                </GlassCard>
+              ) : (
+                <GlassCard className="p-0 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">ID Conta</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">CPF</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Link</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Data</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gorjetaHistory.map((item: any) => (
+                          <tr key={item.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                            <td className="px-4 py-2.5 text-xs text-foreground">{item.email}</td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground font-mono">
+                              <div className="flex items-center gap-1">
+                                <span className="truncate max-w-[120px]">{item.account_id}</span>
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(item.account_id); toast.success('ID copiado!'); }}
+                                  className="shrink-0 p-0.5 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"
+                                >
+                                  <Copy size={12} />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground">{item.cpf || '—'}</td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground">{item.referral_links?.code || '—'}</td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                              {new Date(item.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-4 py-3 border-t border-white/[0.06] text-xs text-muted-foreground">
+                    Total: <span className="font-semibold text-foreground">{gorjetaHistory.length}</span> resgates
+                  </div>
+                </GlassCard>
+              )}
+            </div>
+          )}
+
+
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
               {/* Probabilidade do Sorteio */}
