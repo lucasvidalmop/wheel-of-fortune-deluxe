@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Palette, Type, Save, RotateCcw, Volume2, Upload, X, Sliders } from 'lucide-react';
+import { Palette, Type, Save, RotateCcw, Volume2, Upload, X, Sliders, Image as ImageIcon, Monitor } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 export interface InfluencerPageConfig {
