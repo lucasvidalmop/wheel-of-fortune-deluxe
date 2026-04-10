@@ -1722,12 +1722,12 @@ const Dashboard = () => {
               <LogOut size={18} />
             </button>
           </div>
-          <div className="flex gap-1 px-3 pb-2.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-1 px-3 pb-2.5 overflow-x-auto [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
             {menuItems.map(item => (
               <button
                 key={item.key}
                 onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                   activeTab === item.key
                     ? 'bg-primary/15 text-primary border border-primary/20'
                     : 'text-muted-foreground hover:bg-white/[0.04] border border-transparent'
@@ -1742,8 +1742,8 @@ const Dashboard = () => {
       </div>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div className={`flex-1 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
-        <div className="max-w-6xl mx-auto lg:py-6 space-y-5">
+      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
+        <div className="w-full max-w-6xl min-w-0 mx-auto lg:py-6 space-y-5">
 
           {/* Page title bar */}
           <div className="flex items-center justify-between">
@@ -2492,42 +2492,44 @@ const Dashboard = () => {
                 </GlassCard>
               ) : (
                 <GlassCard className="overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/[0.06]">
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Account ID</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Prêmio</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Data</th>
-                        <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Ação</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {spinResults.map((r: any, i: number) => (
-                        <tr key={r.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors">
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{i + 1}</td>
-                          <td className="px-4 py-3 text-foreground font-medium">{r.user_name}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{r.user_email}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{r.account_id}</td>
-                          <td className="px-4 py-3">
-                            <span className="px-2 py-1 rounded-lg bg-primary/15 text-primary text-xs font-bold border border-primary/20">{r.prize}</span>
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(r.spun_at).toLocaleString('pt-BR')}</td>
-                          <td className="px-4 py-3">
-                            <button
-                              onClick={() => handleViewUserData(r.account_id)}
-                              className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-primary hover:bg-primary/10 transition border border-white/[0.06]"
-                              title="Ver dados"
-                            >
-                              <Eye size={14} />
-                            </button>
-                          </td>
+                  <div className="overflow-x-auto [touch-action:pan-x]">
+                    <table className="w-full min-w-[760px] text-sm">
+                      <thead>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Account ID</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Prêmio</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Data</th>
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Ação</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {spinResults.map((r: any, i: number) => (
+                          <tr key={r.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors">
+                            <td className="px-4 py-3 text-muted-foreground text-xs">{i + 1}</td>
+                            <td className="px-4 py-3 text-foreground font-medium">{r.user_name}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{r.user_email}</td>
+                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{r.account_id}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-1 rounded-lg bg-primary/15 text-primary text-xs font-bold border border-primary/20">{r.prize}</span>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(r.spun_at).toLocaleString('pt-BR')}</td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => handleViewUserData(r.account_id)}
+                                className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-primary hover:bg-primary/10 transition border border-white/[0.06]"
+                                title="Ver dados"
+                              >
+                                <Eye size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </GlassCard>
               )}
               <p className="text-xs text-muted-foreground">{spinResults.length} resultado(s)</p>
@@ -3892,7 +3894,7 @@ const Dashboard = () => {
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
               {/* Sub-tabs */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
                 {([
                   { key: 'links' as const, label: '🔗 Links', icon: Link2 },
                   { key: 'default_style' as const, label: '🎨 Visual Padrão', icon: Palette },
@@ -3900,7 +3902,7 @@ const Dashboard = () => {
                   <button
                     key={tab.key}
                     onClick={() => setReferralSubTab(tab.key)}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                       referralSubTab === tab.key
                         ? 'bg-primary/15 text-primary border border-primary/20'
                         : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] border border-transparent'
@@ -4219,9 +4221,9 @@ const Dashboard = () => {
 
 
           {activeTab === 'financeiro' && (
-            <div className="max-w-2xl space-y-5">
+            <div className="w-full max-w-2xl min-w-0 space-y-5">
               {/* Sub-tabs */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
                 {[
                   { key: 'credenciais' as const, label: '🔑 Credenciais' },
                   { key: 'saldo' as const, label: '💲 Saldo' },
@@ -4235,7 +4237,7 @@ const Dashboard = () => {
                   <button
                     key={tab.key}
                     onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); if (tab.key === 'historico') fetchPaidHistory(); if (tab.key === 'pagamento_manual') fetchUsers(); }}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                       financeiroSubTab === tab.key
                         ? 'bg-primary/15 text-primary border border-primary/20'
                         : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] border border-transparent'
