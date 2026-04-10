@@ -780,7 +780,7 @@ const Influencer = () => {
 
           {/* Row 4: Link bar */}
           {gorjetaUrl && (
-            <div className="rounded-xl border p-2.5 flex items-center gap-2.5" style={innerGlassStyle}>
+            <div className="rounded-xl border p-2.5 flex items-center gap-2.5" style={{ ...innerGlassStyle, background: glassEnabled ? `${cardBg}` : innerGlassStyle.background }}>
               <div className="flex items-center gap-1.5 shrink-0">
                 <LinkIcon size={11} style={{ color: accent }} />
                 <span className="text-[10px] font-semibold text-white/40">LINK:</span>
@@ -839,7 +839,7 @@ const Influencer = () => {
         {activeTab === 'participants' && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={innerGlassStyle}>
+              <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ ...innerGlassStyle, background: glassEnabled ? `${cardBg}` : innerGlassStyle.background }}>
                 <Search size={14} className="text-white/25" />
                 <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                   placeholder="Buscar por nome ou credencial..."
@@ -858,7 +858,7 @@ const Influencer = () => {
                 const isMaxed = winsToday >= maxWinsPerDay;
                 return (
                   <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:brightness-110"
-                    style={isMaxed ? { borderColor: 'rgba(239,68,68,0.6)', background: 'rgba(239,68,68,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.20)' } : innerGlassStyle}>
+                    style={isMaxed ? { borderColor: 'rgba(239,68,68,0.6)', background: 'rgba(239,68,68,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.20)' } : { ...innerGlassStyle, background: glassEnabled ? `${cardBg}` : innerGlassStyle.background }}>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-bold truncate" style={{ color: isMaxed ? '#ef4444' : textColor }}>{u.name}</p>
                       <p className="text-[10px] mt-0.5" style={{ color: isMaxed ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.35)' }}>Hoje: {winsToday}/{maxWinsPerDay} vitória(s)</p>
@@ -888,7 +888,7 @@ const Influencer = () => {
           <div className="space-y-2">
             {todayWinners.length === 0 && <p className="text-center text-sm text-white/30 py-8">Nenhum ganhador hoje</p>}
             {todayWinners.map((w, i) => (
-              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300" style={i === 0 ? { ...innerGlassStyle, borderColor: `${accent}30`, background: `${accent}14`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 0 20px ${accent}15, inset 0 0 20px ${accent}05` } : innerGlassStyle}>
+              <div key={w.id} className="flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300" style={i === 0 ? { ...innerGlassStyle, borderColor: `${accent}30`, background: `${accent}14`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 0 20px ${accent}15, inset 0 0 20px ${accent}05` } : { ...innerGlassStyle, background: glassEnabled ? `${cardBg}` : innerGlassStyle.background }}>
                 <span className="w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold" style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}30`, boxShadow: `0 0 10px ${accent}20` }}>{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-black uppercase truncate tracking-wide" style={{ color: textColor, textShadow: `0 0 8px ${accent}40` }}>{w.user_name}</p>
@@ -898,7 +898,7 @@ const Influencer = () => {
               </div>
             ))}
             {todayWinners.length > 0 && (
-              <div className="rounded-xl border p-4 text-center" style={innerGlassStyle}>
+              <div className="rounded-xl border p-4 text-center" style={{ ...innerGlassStyle, background: glassEnabled ? `${cardBg}` : innerGlassStyle.background }}>
                 <p className="text-xs text-white/40">Total distribuído hoje</p>
                 <p className="text-lg font-black" style={{ color: accent }}>{formatCurrency(todayWinners.reduce((s, w) => s + (w.amount || 0), 0))}</p>
               </div>
@@ -913,7 +913,7 @@ const Influencer = () => {
             {historyGroups.map((g) => {
               const isExpanded = expandedGroups.has(g.key);
               return (
-                <div key={g.key} className="rounded-xl border overflow-hidden" style={innerGlassStyle}>
+                <div key={g.key} className="rounded-xl border overflow-hidden" style={{ ...innerGlassStyle, background: glassEnabled ? `${cardBg}` : innerGlassStyle.background }}>
                   <button onClick={() => toggleGroup(g.key)} className="w-full flex items-center justify-between p-3.5 text-left hover:bg-white/[0.02] transition">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-white/80">
