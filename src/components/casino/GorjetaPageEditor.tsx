@@ -50,6 +50,9 @@ export interface GorjetaPageConfig {
   // Terms modal
   termsTitle: string;
   termsContent: string;
+  // Slot machine animation
+  slotMatchIcon: string;
+  slotLuckyText: string;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
@@ -113,6 +116,9 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
 
 3.1. Para estar apto a participar dos sorteios, o usuário deverá ser considerado usuário ativo.
 3.2. Considera-se usuário ativo aquele que realizou ao menos um depósito na plataforma.`,
+  slotMatchIcon: '⚡',
+  slotLuckyText: '🎰 BOA SORTE! 🎰',
+  
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
@@ -272,6 +278,15 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="Inscrição Confirmada!" />
         <TextField label="Botão de sucesso" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="Ir para a Roleta" />
         <TextField label="Rodapé" value={config.footerText} onChange={v => update({ footerText: v })} placeholder="© 2025 Todos os direitos reservados." />
+      </Section>
+
+      <Section icon={<Gift size={14} className="text-primary" />} title="Animação de Conclusão (Slot Machine)">
+        <TextField label="Emoji do slot (ícone que aparece)" value={config.slotMatchIcon} onChange={v => update({ slotMatchIcon: v })} placeholder="⚡" />
+        <TextField label="Texto de sorte" value={config.slotLuckyText} onChange={v => update({ slotLuckyText: v })} placeholder="🎰 BOA SORTE! 🎰" />
+        <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="CADASTRO EFETUADO!" />
+        <TextField label="Subtítulo de sucesso" value={config.successSubtitle} onChange={v => update({ successSubtitle: v })} placeholder="Agora é só aguardar o sorteio..." />
+        <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
+        <p className="text-[10px] text-muted-foreground">A animação mostra um caça-níquel girando → resultado → tela de sucesso com partículas flutuantes.</p>
       </Section>
 
       <Section icon={<Type size={14} className="text-primary" />} title="Termos de Uso (Modal)">

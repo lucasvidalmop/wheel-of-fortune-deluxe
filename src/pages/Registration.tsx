@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GorjetaPageConfig, defaultGorjetaConfig } from '@/components/casino/GorjetaPageEditor';
 import { Gift, User, Mail, Phone, MapPin, Key, AlertCircle, Shield, CheckSquare } from 'lucide-react';
+import SlotMachineSuccess from '@/components/casino/SlotMachineSuccess';
 
 const PIX_TYPES = [
   { value: '', label: 'Tipo' },
@@ -206,27 +207,20 @@ const Registration = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
-        <div className="relative z-10 text-center space-y-6 max-w-sm mx-4 rounded-2xl p-8 border backdrop-blur-xl shadow-2xl"
-          style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-          <div className="text-6xl animate-bounce">🎉</div>
-          <h1 className="text-2xl font-bold" style={{ color: titleColor }}>{cfg.successTitle || 'Inscrição Confirmada!'}</h1>
-          <p style={{ color: subtitleColor }}>
-            Você recebeu <span className="font-bold" style={{ color: accentColor }}>{spinsGranted} giro(s)</span> na roleta!
-          </p>
-          {wheelSlug ? (
-            <button
-              onClick={() => navigate(`/${wheelSlug}`)}
-              className="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider hover:brightness-110 transition flex items-center justify-center gap-2"
-              style={{ backgroundColor: accentColor, color: cfg.btnTextColor || '#000000' }}
-            >
-              <Gift size={18} /> Ir para a Roleta
-            </button>
-          ) : (
-            <p className="text-xs" style={{ color: subtitleColor }}>Acesse a roleta para girar agora.</p>
-          )}
-        </div>
-      </div>
+      <SlotMachineSuccess
+        accentColor={accentColor}
+        titleColor={titleColor}
+        subtitleColor={subtitleColor}
+        btnBgColor={accentColor}
+        btnTextColor={cfg.btnTextColor || '#000000'}
+        successTitle={cfg.successTitle || 'CADASTRO EFETUADO!'}
+        successSubtitle={cfg.successSubtitle || 'Agora é só aguardar o sorteio...'}
+        successBtnText={cfg.successBtnText || 'VOCÊ PODE SER O PRÓXIMO GANHADOR!'}
+        slotMatchIcon={cfg.slotMatchIcon || '⚡'}
+        slotLuckyText={cfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
+        onCtaClick={() => wheelSlug ? navigate(`/${wheelSlug}`) : undefined}
+        showCta={!!wheelSlug}
+      />
     );
   }
 
