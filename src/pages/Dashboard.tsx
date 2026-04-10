@@ -2240,8 +2240,8 @@ const Dashboard = () => {
                       </button>
                     </div>
                   )}
-                  <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-sm table-auto">
+                  <div className="hidden lg:block">
+                  <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="px-2 py-3 w-8">
@@ -2258,7 +2258,6 @@ const Dashboard = () => {
                             className="rounded border-white/20 bg-white/[0.05]"
                           />
                         </th>
-                        <th className="text-left px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-6">#</th>
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Nome</th>
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Email</th>
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Celular</th>
@@ -2267,14 +2266,14 @@ const Dashboard = () => {
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Chave</th>
                         <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Data</th>
                         {spinsFilter === 'with' && (
-                          <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-[110px]">Prêmio</th>
+                          <th className="text-left px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Prêmio</th>
                         )}
-                        <th className="text-center px-1 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Ações</th>
+                        <th className="text-center px-2 py-3 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredUsers.map((user, index) => (
-                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''} ${user.blacklisted ? 'bg-red-500/[0.04]' : ''} ${user.guaranteed_next_win ? 'bg-emerald-500/[0.04]' : ''}`}>
+                        <tr key={user.id} className={`border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedUserIds.has(user.id) ? 'bg-primary/[0.04]' : ''} ${user.blacklisted ? 'bg-red-500/[0.06]' : ''} ${user.guaranteed_next_win ? 'bg-emerald-500/[0.06]' : ''}`}>
                           <td className="px-2 py-2">
                             <input
                               type="checkbox"
@@ -2287,23 +2286,26 @@ const Dashboard = () => {
                               className="rounded border-white/20 bg-white/[0.05]"
                             />
                           </td>
-                          <td className="px-1 py-2 text-muted-foreground text-[11px]">{index + 1}</td>
                           <td className="px-2 py-2 font-medium text-xs whitespace-nowrap">
-                            <span className={`${user.blacklisted ? 'line-through opacity-50 text-destructive' : 'text-foreground'}`}>
-                              {user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}
-                              {user.name}
-                            </span>
+                            <div className="flex items-center gap-1">
+                              {user.blacklisted && <Ban size={12} className="text-destructive flex-shrink-0" />}
+                              {user.guaranteed_next_win && <Star size={12} className="text-emerald-400 flex-shrink-0" />}
+                              <span className={`truncate max-w-[140px] ${user.blacklisted ? 'line-through opacity-50 text-destructive' : 'text-foreground'}`}>
+                                {user.user_type === 'qualified' && <span title="Qualificado">✅ </span>}
+                                {user.name}
+                              </span>
+                            </div>
                           </td>
-                          <td className="px-2 py-2 text-muted-foreground text-[10px] truncate max-w-[120px]">{user.email}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate max-w-[160px]">{user.email}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.phone}</td>
                           <td className="px-2 py-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{user.account_id}</td>
                           <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.pix_key_type || '—'}</td>
-                          <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.pix_key || '—'}</td>
-                          <td className="px-2 py-2 text-muted-foreground text-[11px]">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] truncate max-w-[140px]">{user.pix_key || '—'}</td>
+                          <td className="px-2 py-2 text-muted-foreground text-[11px] whitespace-nowrap">{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                           {spinsFilter === 'with' && (
                             <td className="px-2 py-2">
                               {user.fixed_prize_enabled && user.fixed_prize_segment != null && wheelConfig.segments[user.fixed_prize_segment] ? (
-                                <span className="text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md inline-block truncate max-w-full">
+                                <span className="text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md inline-block truncate max-w-[100px]">
                                   🎯 {wheelConfig.segments[user.fixed_prize_segment].title}
                                 </span>
                               ) : (
@@ -2311,33 +2313,54 @@ const Dashboard = () => {
                               )}
                             </td>
                           )}
-                          <td className="px-1 py-2 align-middle">
-                            <div className="flex items-center justify-center gap-1 flex-wrap">
-                              <button
-                                onClick={() => handleGrantSpin(user)}
-                                className={`px-2 py-1 rounded text-[10px] font-semibold transition-all whitespace-nowrap ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08] hover:bg-primary/15 hover:text-primary'}`}
-                              >
-                                {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
-                              </button>
-                              <button onClick={() => openEdit(user)} className="px-2 py-1 rounded text-[10px] font-semibold bg-primary/15 text-primary border border-primary/20 hover:brightness-125 transition whitespace-nowrap">
-                                Editar
-                              </button>
-                              <button
-                                onClick={() => handleToggleBlacklist(user)}
-                                className={`px-2 py-1 rounded text-[10px] font-semibold transition whitespace-nowrap ${user.blacklisted ? 'bg-destructive/20 text-destructive border border-destructive/30' : 'bg-white/[0.06] text-muted-foreground border border-white/[0.08] hover:bg-destructive/15 hover:text-destructive'}`}
-                              >
-                                Blacklist
-                              </button>
-                              <button
-                                onClick={() => handleToggleGuaranteedWin(user)}
-                                className={`px-2 py-1 rounded text-[10px] font-semibold transition whitespace-nowrap ${user.guaranteed_next_win ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.06] text-muted-foreground border border-white/[0.08] hover:bg-emerald-500/15 hover:text-emerald-400'}`}
-                              >
-                                Próx. rodada
-                              </button>
-                              <button onClick={() => handleDeleteUser(user.id)} className="px-2 py-1 rounded text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition whitespace-nowrap">
-                                Excluir
-                              </button>
-                            </div>
+                          <td className="px-2 py-2 text-center">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="p-1.5 rounded-md hover:bg-white/[0.08] transition text-muted-foreground hover:text-foreground">
+                                  <Settings size={14} />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="w-44 p-1.5 bg-card border border-white/[0.08] shadow-xl" sideOffset={4}>
+                                <div className="flex flex-col gap-0.5">
+                                  <button
+                                    onClick={() => handleGrantSpin(user)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full"
+                                  >
+                                    <RotateCcw size={13} className="text-primary" />
+                                    <span>{user.spins_available >= 1 ? `Giros: ${user.spins_available}` : 'Dar giro'}</span>
+                                  </button>
+                                  <button
+                                    onClick={() => openEdit(user)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full"
+                                  >
+                                    <Pencil size={13} className="text-primary" />
+                                    <span>Editar</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleToggleBlacklist(user)}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full ${user.blacklisted ? 'text-destructive' : ''}`}
+                                  >
+                                    <Ban size={13} className={user.blacklisted ? 'text-destructive' : 'text-muted-foreground'} />
+                                    <span>{user.blacklisted ? 'Remover blacklist' : 'Blacklist'}</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleToggleGuaranteedWin(user)}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full ${user.guaranteed_next_win ? 'text-emerald-400' : ''}`}
+                                  >
+                                    <Star size={13} className={user.guaranteed_next_win ? 'text-emerald-400' : 'text-muted-foreground'} />
+                                    <span>{user.guaranteed_next_win ? 'Remover garantido' : 'Próx. rodada'}</span>
+                                  </button>
+                                  <div className="border-t border-white/[0.06] my-0.5" />
+                                  <button
+                                    onClick={() => handleDeleteUser(user.id)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-destructive/10 transition text-left w-full text-destructive"
+                                  >
+                                    <Trash2 size={13} />
+                                    <span>Excluir</span>
+                                  </button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </td>
                         </tr>
                       ))}
