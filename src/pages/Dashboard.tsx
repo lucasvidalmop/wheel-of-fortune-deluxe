@@ -162,7 +162,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified'>('all');
+  const [spinsFilter, setSpinsFilter] = useState<'all' | 'with' | 'without' | 'auto_pay' | 'qualified' | 'duplicados'>('all');
 
   const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -1574,6 +1574,11 @@ const Dashboard = () => {
       : spinsFilter === 'without' ? u.spins_available < 1
       : spinsFilter === 'auto_pay' ? !!u.auto_payment
       : spinsFilter === 'qualified' ? u.user_type === 'qualified'
+      : spinsFilter === 'duplicados' ? (() => {
+          const emailCount = users.filter(o => o.email && o.email.toLowerCase() === u.email.toLowerCase()).length;
+          const idCount = users.filter(o => o.account_id === u.account_id).length;
+          return emailCount > 1 || idCount > 1;
+        })()
       : true;
     return matchesSearch && matchesSpins;
   });
@@ -1877,6 +1882,7 @@ const Dashboard = () => {
                   { value: 'without' as const, label: 'Sem giros' },
                   { value: 'auto_pay' as const, label: '💰 Auto Pay' },
                   { value: 'qualified' as const, label: '✅ Qualificados' },
+                  { value: 'duplicados' as const, label: '🔁 Duplicados' },
                 ]).map(opt => (
                   <button
                     key={opt.value}
@@ -1892,6 +1898,15 @@ const Dashboard = () => {
                     {opt.value === 'without' && ` (${users.filter(u => u.spins_available < 1).length})`}
                     {opt.value === 'auto_pay' && ` (${users.filter(u => u.auto_payment).length})`}
                     {opt.value === 'qualified' && ` (${users.filter(u => u.user_type === 'qualified').length})`}
+                    {opt.value === 'duplicados' && ` (${(() => {
+                      const emailMap = new Map<string, number>();
+                      const idMap = new Map<string, number>();
+                      users.forEach(u => {
+                        if (u.email) emailMap.set(u.email.toLowerCase(), (emailMap.get(u.email.toLowerCase()) || 0) + 1);
+                        idMap.set(u.account_id, (idMap.get(u.account_id) || 0) + 1);
+                      });
+                      return users.filter(u => (emailMap.get(u.email.toLowerCase()) || 0) > 1 || (idMap.get(u.account_id) || 0) > 1).length;
+                    })()})`}
                   </button>
                 ))}
                 {spinsFilter === 'auto_pay' && users.filter(u => u.auto_payment).length > 0 && (
