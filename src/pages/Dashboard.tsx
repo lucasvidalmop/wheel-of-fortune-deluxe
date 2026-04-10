@@ -389,7 +389,12 @@ const Dashboard = () => {
     if (whatsappMediaInputRef.current) whatsappMediaInputRef.current.value = '';
   };
 
-  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico'>('credenciais');
+  const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico' | 'pagamento_manual'>('credenciais');
+  const [manualPaySelectedIds, setManualPaySelectedIds] = useState<Set<string>>(new Set());
+  const [manualPayAmount, setManualPayAmount] = useState('');
+  const [manualPayPrize, setManualPayPrize] = useState('');
+  const [manualPaySearch, setManualPaySearch] = useState('');
+  const [manualPaySending, setManualPaySending] = useState(false);
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
