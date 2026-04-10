@@ -309,6 +309,8 @@ const Influencer = () => {
     pix_key: '',
     pix_key_type: '',
     auto_payment: false,
+    blacklisted: false,
+    guaranteed_next_win: false,
   })), [ghostUsers]);
 
   const allParticipants = useMemo(() => {
