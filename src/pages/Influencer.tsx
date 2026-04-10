@@ -484,11 +484,11 @@ const Influencer = () => {
         )}
         </div>
       </div>
+      </div>
 
       {/* ─── Bottom CTA ─── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 pb-4 px-4" style={{ background: `linear-gradient(to top, ${bgColor} 60%, transparent)` }}>
         <div className="max-w-2xl mx-auto space-y-2 border-t pt-4" style={{ borderColor: `${accent}25` }}>
-        <div className="max-w-2xl mx-auto space-y-2">
           <button
             onClick={startRaffle}
             className="w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-[0.98]"
