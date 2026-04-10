@@ -2313,40 +2313,31 @@ const Dashboard = () => {
                               )}
                             </td>
                           )}
-                          <td className="px-1 py-3 align-middle">
-                            <div className="flex items-center justify-center gap-1 min-h-[40px]">
+                          <td className="px-1 py-2 align-middle">
+                            <div className="flex items-center justify-center gap-1 flex-wrap">
                               <button
                                 onClick={() => handleGrantSpin(user)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}
+                                className={`px-2 py-1 rounded text-[10px] font-semibold transition-all whitespace-nowrap ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.06] text-foreground border border-white/[0.08] hover:bg-primary/15 hover:text-primary'}`}
                               >
                                 {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
                               </button>
+                              <button onClick={() => openEdit(user)} className="px-2 py-1 rounded text-[10px] font-semibold bg-primary/15 text-primary border border-primary/20 hover:brightness-125 transition whitespace-nowrap">
+                                Editar
+                              </button>
                               <button
                                 onClick={() => handleToggleBlacklist(user)}
-                                className={`p-1.5 rounded-lg transition border ${user.blacklisted ? 'bg-destructive/15 text-destructive border-destructive/30 hover:bg-white/[0.06] hover:text-muted-foreground hover:border-white/[0.06]' : 'bg-white/[0.06] text-muted-foreground hover:bg-destructive/15 hover:text-destructive border-white/[0.06] hover:border-destructive/30'}`}
-                                title={user.blacklisted ? 'Remover da blacklist' : 'Blacklist (shadowban)'}
+                                className={`px-2 py-1 rounded text-[10px] font-semibold transition whitespace-nowrap ${user.blacklisted ? 'bg-destructive/20 text-destructive border border-destructive/30' : 'bg-white/[0.06] text-muted-foreground border border-white/[0.08] hover:bg-destructive/15 hover:text-destructive'}`}
                               >
-                                <Ban size={13} />
+                                Blacklist
                               </button>
                               <button
                                 onClick={() => handleToggleGuaranteedWin(user)}
-                                className={`p-1.5 rounded-lg transition border ${user.guaranteed_next_win ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-white/[0.06] hover:text-muted-foreground hover:border-white/[0.06]' : 'bg-white/[0.06] text-muted-foreground hover:bg-emerald-500/15 hover:text-emerald-400 border-white/[0.06] hover:border-emerald-500/30'}`}
-                                title={user.guaranteed_next_win ? 'Remover sorteio garantido' : 'Sorteio 100% garantido'}
+                                className={`px-2 py-1 rounded text-[10px] font-semibold transition whitespace-nowrap ${user.guaranteed_next_win ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/[0.06] text-muted-foreground border border-white/[0.08] hover:bg-emerald-500/15 hover:text-emerald-400'}`}
                               >
-                                <Star size={13} fill={user.guaranteed_next_win ? 'currentColor' : 'none'} />
+                                Próx. rodada
                               </button>
-                              <button
-                                onClick={() => handleToggleQualified(user)}
-                                className={`p-1.5 rounded-lg transition border ${user.user_type === 'qualified' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30' : 'bg-white/[0.06] text-muted-foreground hover:bg-emerald-500/15 hover:text-emerald-400 border-white/[0.06]'}`}
-                                title={user.user_type === 'qualified' ? 'Remover qualificação' : 'Marcar como qualificado'}
-                              >
-                                <span className="text-[13px]">✅</span>
-                              </button>
-                              <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar">
-                                <Pencil size={13} />
-                              </button>
-                              <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir">
-                                <Trash2 size={13} />
+                              <button onClick={() => handleDeleteUser(user.id)} className="px-2 py-1 rounded text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition whitespace-nowrap">
+                                Excluir
                               </button>
                             </div>
                           </td>
