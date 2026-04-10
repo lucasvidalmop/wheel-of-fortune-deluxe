@@ -138,7 +138,7 @@ const SlotMachineSuccess = ({
   }, [stoppedCount, phase]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+    <div className={`${inline ? 'absolute' : 'fixed'} inset-0 ${inline ? 'z-0' : 'z-50'} flex items-center justify-center overflow-hidden`}
       style={{ background: 'rgba(0,0,0,0.92)' }}>
       <Particles accentColor={accentColor} />
 
