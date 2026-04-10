@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ReferralPageConfig, defaultPageConfig } from '@/components/casino/ReferralPageEditor';
+import { GorjetaPageConfig, defaultGorjetaConfig } from '@/components/casino/GorjetaPageEditor';
 import { Gift, User, Mail, Phone, MapPin, Key, AlertCircle, Shield, CheckSquare } from 'lucide-react';
 
 const PIX_TYPES = [
@@ -20,7 +20,7 @@ const Registration = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [linkData, setLinkData] = useState<any>(null);
-  const [cfg, setCfg] = useState<ReferralPageConfig>(defaultPageConfig);
+  const [cfg, setCfg] = useState<GorjetaPageConfig>(defaultGorjetaConfig);
   const [wheelSlug, setWheelSlug] = useState('');
 
   // Form fields
@@ -56,9 +56,8 @@ const Registration = () => {
           .eq('user_id', data.owner_id)
           .maybeSingle();
         if (wcData?.slug) setWheelSlug(wcData.slug);
-        const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
-        const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
-        setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
+        const gorjetaCfg = wcData?.config?.gorjetaPageConfig || {};
+        setCfg({ ...defaultGorjetaConfig, ...gorjetaCfg });
       }
       setLoading(false);
     };
