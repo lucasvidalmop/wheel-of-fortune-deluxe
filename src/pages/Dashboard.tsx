@@ -15,6 +15,7 @@ import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
+import InfluencerPageEditor from '@/components/casino/InfluencerPageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
