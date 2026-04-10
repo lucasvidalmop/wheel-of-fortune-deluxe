@@ -432,7 +432,7 @@ const Influencer = () => {
 
         {/* ─── Tabs ─── */}
       <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4" style={{ borderColor: `${accent}25`, background: cardBg }}>
-        <div className="flex items-center border-b shrink-0" style={{ borderColor: `${accent}20` }}>
+        <div className="flex items-center border-b shrink-0" style={{ borderColor: `${accent}20`, background: tabBgColor || undefined }}>
           <div className="flex flex-1">
           {([
             { key: 'participants' as const, label: 'Participantes', count: users.length, prefix: '≡' },
@@ -444,14 +444,17 @@ const Influencer = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold transition-all border-b-2 ${isActive ? '' : 'border-transparent text-white/35 hover:text-white/55'}`}
-                style={isActive ? { color: accent, borderColor: accent } : undefined}
+                className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold transition-all ${isActive ? '' : 'border-transparent hover:opacity-80'}`}
+                style={{
+                  color: isActive ? tabActiveColor : tabInactiveColor,
+                  borderBottom: `${tabBorderWidth}px solid ${isActive ? tabActiveColor : 'transparent'}`,
+                }}
               >
                 <span className="text-base">{tab.prefix}</span>
                 {tab.label}
                 {tab.count !== undefined && (
                   <span className="ml-1 px-2 py-0.5 rounded text-xs font-bold"
-                    style={isActive ? { background: `${accent}20`, color: accent } : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
+                    style={isActive ? { background: `${tabActiveColor}20`, color: tabActiveColor } : { background: 'rgba(255,255,255,0.06)', color: tabInactiveColor }}>
                     {tab.count}
                   </span>
                 )}
