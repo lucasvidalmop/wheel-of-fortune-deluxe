@@ -118,7 +118,7 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
 3.2. Considera-se usuário ativo aquele que realizou ao menos um depósito na plataforma.`,
   slotMatchIcon: '⚡',
   slotLuckyText: '🎰 BOA SORTE! 🎰',
-  successSubtitle: 'Agora é só aguardar o sorteio...',
+  
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
