@@ -59,10 +59,12 @@ const SlotReel = ({
   targetIcon,
   delay,
   onStop,
+  reelBgColor,
 }: {
   targetIcon: string;
   delay: number;
   onStop: () => void;
+  reelBgColor?: string;
 }) => {
   const [spinning, setSpinning] = useState(true);
   const [currentIcon, setCurrentIcon] = useState('⚡');
@@ -89,7 +91,7 @@ const SlotReel = ({
     <div
       className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center text-2xl sm:text-3xl transition-all duration-200"
       style={{
-        backgroundColor: 'rgba(100, 40, 20, 0.9)',
+        backgroundColor: reelBgColor || 'rgba(100, 40, 20, 0.9)',
         boxShadow: spinning
           ? 'inset 0 0 15px rgba(0,0,0,0.5)'
           : 'inset 0 0 15px rgba(0,0,0,0.3), 0 0 20px rgba(255,180,0,0.3)',
