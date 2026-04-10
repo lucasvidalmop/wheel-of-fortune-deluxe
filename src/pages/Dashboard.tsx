@@ -4900,7 +4900,7 @@ const Dashboard = () => {
                   <h3 className="text-base font-bold text-foreground">Limpar Dados da Gorjeta</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Remova os dados de sorteios/gorjetas. <strong className="text-destructive">Estas ações são irreversíveis.</strong>
+                  Gerencie os dados de sorteios/gorjetas. O botão de limpar ganhadores de hoje <strong className="text-destructive">é irreversível</strong>. O botão de ocultar apenas esconde os dados na página do Influencer.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
