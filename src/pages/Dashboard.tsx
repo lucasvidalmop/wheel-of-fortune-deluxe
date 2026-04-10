@@ -4396,31 +4396,47 @@ const Dashboard = () => {
 
           {activeTab === 'financeiro' && (
             <div className="w-full max-w-2xl min-w-0 space-y-5">
-              {/* Sub-tabs */}
-              <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
-                {[
-                  { key: 'credenciais' as const, label: '🔑 Credenciais' },
-                  { key: 'saldo' as const, label: '💲 Saldo' },
-                  { key: 'deposito' as const, label: '💰 Depósito PIX' },
-                  { key: 'crypto' as const, label: '🪙 Depósito USDT' },
-                  { key: 'withdraw' as const, label: '📤 Saque USDT' },
-                  { key: 'pagamento_manual' as const, label: '💳 Pagamento Manual' },
-                  { key: 'aprovacoes' as const, label: '✅ Aprovações' },
-                  { key: 'historico' as const, label: '📜 Histórico' },
-                ].map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); if (tab.key === 'historico') fetchPaidHistory(); if (tab.key === 'pagamento_manual') fetchUsers(); }}
-                    className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      financeiroSubTab === tab.key
-                        ? 'bg-primary/15 text-primary border border-primary/20'
-                        : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] border border-transparent'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+              {/* Sub-tabs with scroll arrows */}
+              {(() => {
+                const finTabsRef = React.createRef<HTMLDivElement>();
+                const scrollFinTabs = (dir: 'left' | 'right') => {
+                  finTabsRef.current?.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
+                };
+                return (
+                  <div className="relative flex items-center gap-1">
+                    <button onClick={() => scrollFinTabs('left')} className="shrink-0 w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+                      <ChevronLeft size={16} />
+                    </button>
+                    <div ref={finTabsRef} className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x] flex-1" style={{ scrollbarWidth: 'none' }}>
+                      {[
+                        { key: 'credenciais' as const, label: '🔑 Credenciais' },
+                        { key: 'saldo' as const, label: '💲 Saldo' },
+                        { key: 'deposito' as const, label: '💰 Depósito PIX' },
+                        { key: 'crypto' as const, label: '🪙 Depósito USDT' },
+                        { key: 'withdraw' as const, label: '📤 Saque USDT' },
+                        { key: 'pagamento_manual' as const, label: '💳 Pagamento Manual' },
+                        { key: 'aprovacoes' as const, label: '✅ Aprovações' },
+                        { key: 'historico' as const, label: '📜 Histórico' },
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          onClick={() => { setFinanceiroSubTab(tab.key); if (tab.key === 'aprovacoes') fetchPrizePayments(); if (tab.key === 'historico') fetchPaidHistory(); if (tab.key === 'pagamento_manual') fetchUsers(); }}
+                          className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                            financeiroSubTab === tab.key
+                              ? 'bg-primary/15 text-primary border border-primary/20'
+                              : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] border border-transparent'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={() => scrollFinTabs('right')} className="shrink-0 w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* Credenciais Sub-tab */}
               {financeiroSubTab === 'credenciais' && (
