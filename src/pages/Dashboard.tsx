@@ -4892,6 +4892,45 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Limpar Dados da Gorjeta */}
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Trash2 size={20} className="text-destructive" />
+                  <h3 className="text-base font-bold text-foreground">Limpar Dados da Gorjeta</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Remova os dados de sorteios/gorjetas. <strong className="text-destructive">Estas ações são irreversíveis.</strong>
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Tem certeza que deseja limpar os ganhadores de HOJE?')) return;
+                      const uid = session?.user?.id;
+                      if (!uid) return;
+                      const todayStart = new Date();
+                      todayStart.setHours(0, 0, 0, 0);
+                      await (supabase as any).from('prize_payments').delete().eq('owner_id', uid).gte('created_at', todayStart.toISOString());
+                      toast.success('Ganhadores de hoje limpos!');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all"
+                  >
+                    <Trash2 size={14} /> Limpar ganhadores de hoje
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Tem certeza que deseja limpar TODO o histórico de gorjeta? Esta ação NÃO pode ser desfeita.')) return;
+                      const uid = session?.user?.id;
+                      if (!uid) return;
+                      await (supabase as any).from('prize_payments').delete().eq('owner_id', uid);
+                      toast.success('Histórico completo limpo!');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all"
+                  >
+                    <Trash2 size={14} /> Limpar histórico completo
+                  </button>
+                </div>
+              </div>
+
               {/* Save button */}
               <button
                 onClick={handleSaveConfig}
