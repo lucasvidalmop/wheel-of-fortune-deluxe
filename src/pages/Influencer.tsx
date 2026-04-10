@@ -570,7 +570,21 @@ const Influencer = () => {
 
   const accent = influencerConfig.accentColor || '#2dd4bf';
   const bgColor = influencerConfig.bgColor || '#0a0e1a';
-  const cardBg = influencerConfig.cardBgColor || 'rgba(15, 23, 42, 0.95)';
+  const cardBgOpacity = influencerConfig.cardBgOpacity ?? 95;
+  const rawCardBg = influencerConfig.cardBgColor || 'rgba(15, 23, 42, 1)';
+  // Apply cardBgOpacity: parse the color and override alpha
+  const cardBg = (() => {
+    const op = cardBgOpacity / 100;
+    const m = rawCardBg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (m) return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${op})`;
+    // hex
+    const h = rawCardBg.replace('#', '');
+    if (h.length >= 6) {
+      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${op})`;
+    }
+    return rawCardBg;
+  })();
   const textColor = influencerConfig.textColor || '#ffffff';
   const btnBg = influencerConfig.btnBgColor || accent;
   const btnText = influencerConfig.btnTextColor || '#000000';
