@@ -1179,6 +1179,7 @@ const Admin = () => {
 
         </div>
       </div>
+      {ConfirmDialog}
     </div>
   );
 };
