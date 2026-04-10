@@ -59,6 +59,7 @@ export interface GorjetaPageConfig {
   slotFrameBorderColor: string;
   successBgColor: string;
   successCtaUrl: string;
+  successCtaShow: boolean;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
