@@ -685,8 +685,20 @@ const Influencer = () => {
     borderWidth: `${borderWidth}px`,
     borderStyle: 'solid',
     background: cardBg,
-    ...(glassEnabled ? { backdropFilter: `blur(${glassBlur}px)`, WebkitBackdropFilter: `blur(${glassBlur}px)` } : {}),
-    boxShadow: [baseBoxShadow, borderGlowShadow].filter(Boolean).join(', '),
+    ...(glassEnabled ? { backdropFilter: `blur(${glassBlur}px) saturate(180%)`, WebkitBackdropFilter: `blur(${glassBlur}px) saturate(180%)` } : {}),
+    boxShadow: [
+      `inset 0 1px 0 rgba(255,255,255,0.08)`,
+      `0 18px 60px rgba(0,0,0,0.32)`,
+      baseBoxShadow,
+      borderGlowShadow,
+    ].filter(Boolean).join(', '),
+  };
+
+  const innerGlassStyle: React.CSSProperties = {
+    borderColor: `rgba(255,255,255,0.10)`,
+    background: glassEnabled ? `rgba(255,255,255,0.05)` : `rgba(255,255,255,0.02)`,
+    ...(glassEnabled ? { backdropFilter: `blur(${Math.max(8, glassBlur * 0.75)}px) saturate(160%)`, WebkitBackdropFilter: `blur(${Math.max(8, glassBlur * 0.75)}px) saturate(160%)` } : {}),
+    boxShadow: glassEnabled ? `inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.20)` : 'none',
   };
 
   // Login
