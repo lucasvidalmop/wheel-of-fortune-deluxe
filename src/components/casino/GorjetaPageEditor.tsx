@@ -288,6 +288,8 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
         <p className="text-[10px] text-muted-foreground">A animação mostra um caça-níquel girando → resultado → tela de sucesso com partículas flutuantes.</p>
       </Section>
+
+      <Section icon={<Type size={14} className="text-primary" />} title="Termos de Uso (Modal)">
         <TextField label="Título do modal" value={config.termsTitle} onChange={v => update({ termsTitle: v })} placeholder="Termos de Uso – Gorjeta" />
         <div>
           <label className="text-[10px] text-muted-foreground block mb-1">Conteúdo dos termos</label>
