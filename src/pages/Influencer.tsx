@@ -603,8 +603,7 @@ const Influencer = () => {
             )}
             <button
               onClick={handleResetDayCounter}
-              disabled={sessionCreatedIds.current.size === 0}
-              className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]"
               style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
             >
               <RotateCcw size={11} /> Reiniciar contador do dia
