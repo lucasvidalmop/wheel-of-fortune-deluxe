@@ -595,11 +595,14 @@ export type Database = {
       wheel_users: {
         Row: {
           account_id: string
+          archived: boolean
           auto_payment: boolean
+          blacklisted: boolean
           created_at: string | null
           email: string
           fixed_prize_enabled: boolean
           fixed_prize_segment: number | null
+          guaranteed_next_win: boolean
           id: string
           name: string
           owner_id: string | null
@@ -614,11 +617,14 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          archived?: boolean
           auto_payment?: boolean
+          blacklisted?: boolean
           created_at?: string | null
           email: string
           fixed_prize_enabled?: boolean
           fixed_prize_segment?: number | null
+          guaranteed_next_win?: boolean
           id?: string
           name: string
           owner_id?: string | null
@@ -633,11 +639,14 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          archived?: boolean
           auto_payment?: boolean
+          blacklisted?: boolean
           created_at?: string | null
           email?: string
           fixed_prize_enabled?: boolean
           fixed_prize_segment?: number | null
+          guaranteed_next_win?: boolean
           id?: string
           name?: string
           owner_id?: string | null

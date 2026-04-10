@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon } from 'lucide-react';
+import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon, Ban } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface WheelUser {
@@ -17,6 +17,8 @@ interface WheelUser {
   pix_key: string;
   pix_key_type: string;
   auto_payment: boolean;
+  blacklisted: boolean;
+  guaranteed_next_win: boolean;
 }
 
 interface Winner {
@@ -307,6 +309,8 @@ const Influencer = () => {
     pix_key: '',
     pix_key_type: '',
     auto_payment: false,
+    blacklisted: false,
+    guaranteed_next_win: false,
   })), [ghostUsers]);
 
   const allParticipants = useMemo(() => {
@@ -325,6 +329,20 @@ const Influencer = () => {
   });
 
   const todayWinsForUser = (accountId: string) => todayWinners.filter(w => w.account_id === accountId).length;
+
+  const toggleBlacklist = async (user: WheelUser) => {
+    const newVal = !user.blacklisted;
+    await (supabase as any).from('wheel_users').update({ blacklisted: newVal }).eq('id', user.id);
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, blacklisted: newVal } : u));
+    toast.success(newVal ? 'Usuário na blacklist' : 'Blacklist removida');
+  };
+
+  const toggleGuaranteedWin = async (user: WheelUser) => {
+    const newVal = !user.guaranteed_next_win;
+    await (supabase as any).from('wheel_users').update({ guaranteed_next_win: newVal }).eq('id', user.id);
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, guaranteed_next_win: newVal } : u));
+    toast.success(newVal ? 'Usuário será sorteado 100%' : 'Sorteio garantido removido');
+  };
 
   const handleExportCSV = () => {
     const csv = ['Nome,ID,Email,Telefone,Vitórias Hoje']
@@ -346,9 +364,13 @@ const Influencer = () => {
     if (users.length === 0 && ghostUsers.length === 0) { toast.error('Sem participantes'); return; }
     const qty = raffleQty;
 
-    // Build pool of real users (shuffled), excluding those who hit daily limit
-    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay);
-    const shuffledReal = [...eligibleUsers].sort(() => Math.random() - 0.5);
+    // Build pool of real users (shuffled), excluding those who hit daily limit AND blacklisted
+    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay && !u.blacklisted);
+    
+    // Separate guaranteed winners from regular eligible
+    const guaranteedUsers = eligibleUsers.filter(u => u.guaranteed_next_win);
+    const regularUsers = eligibleUsers.filter(u => !u.guaranteed_next_win);
+    const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
 
     // Build ghost user objects (they won't create payments)
     const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
@@ -362,34 +384,42 @@ const Influencer = () => {
       pix_key: '',
       pix_key_type: '',
       auto_payment: false,
+      blacklisted: false,
+      guaranteed_next_win: false,
       _isGhost: true,
     }));
 
-    // Determine how many real winners (minimum + probability-based for remaining slots)
-    const realMin = Math.min(minRealWinners, shuffledReal.length, qty);
     const selected: { user: WheelUser & { _isGhost?: boolean }; amount: number; status: 'pending' | 'sending' | 'sent' }[] = [];
 
-    // 1. First, guarantee minimum real winners
-    for (let i = 0; i < realMin && i < shuffledReal.length; i++) {
-      selected.push({ user: shuffledReal[i], amount: raffleAmount, status: 'pending' });
+    // 1. First, add ALL guaranteed winners (they always get in)
+    const guaranteedCount = Math.min(guaranteedUsers.length, qty);
+    for (let i = 0; i < guaranteedCount; i++) {
+      selected.push({ user: guaranteedUsers[i], amount: raffleAmount, status: 'pending' });
+    }
+
+    // 2. Then, guarantee minimum real winners from regular pool
+    const remainingAfterGuaranteed = qty - selected.length;
+    const realMin = Math.min(minRealWinners, shuffledRegular.length, remainingAfterGuaranteed);
+
+    for (let i = 0; i < realMin && i < shuffledRegular.length; i++) {
+      selected.push({ user: shuffledRegular[i], amount: raffleAmount, status: 'pending' });
     }
     const usedRealIdx = realMin;
 
-    // 2. Fill remaining slots using probability
+    // 3. Fill remaining slots using probability
     let realIdx = usedRealIdx;
     let ghostIdx = 0;
     const remaining = qty - selected.length;
-    const prob = drawProbability / 100; // 0 = all ghosts, 1 = all real
+    const prob = drawProbability / 100;
 
     for (let i = 0; i < remaining; i++) {
       const pickReal = Math.random() < prob;
-      if (pickReal && realIdx < shuffledReal.length) {
-        selected.push({ user: shuffledReal[realIdx++], amount: raffleAmount, status: 'pending' });
+      if (pickReal && realIdx < shuffledRegular.length) {
+        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
       } else if (ghostIdx < ghostPool.length) {
         selected.push({ user: ghostPool[ghostIdx++] as any, amount: raffleAmount, status: 'pending' });
-      } else if (realIdx < shuffledReal.length) {
-        // Fallback to real if no more ghosts
-        selected.push({ user: shuffledReal[realIdx++], amount: raffleAmount, status: 'pending' });
+      } else if (realIdx < shuffledRegular.length) {
+        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
       }
     }
 
@@ -462,6 +492,16 @@ const Influencer = () => {
     }, 60_000);
 
     setSendingIndex(finalSelected.length);
+
+    // Reset guaranteed_next_win for real users that were selected
+    const guaranteedWinnerIds = finalSelected
+      .filter(w => !(w.user as any)._isGhost && w.user.guaranteed_next_win)
+      .map(w => w.user.id);
+    if (guaranteedWinnerIds.length > 0) {
+      await (supabase as any).from('wheel_users').update({ guaranteed_next_win: false }).in('id', guaranteedWinnerIds);
+      setUsers(prev => prev.map(u => guaranteedWinnerIds.includes(u.id) ? { ...u, guaranteed_next_win: false } : u));
+    }
+
     setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); fetchHistory(session?.user?.id); }, 600);
   };
 
@@ -712,17 +752,68 @@ const Influencer = () => {
               {filteredUsers.map(u => {
                 const winsToday = todayWinsForUser(u.account_id);
                 const isMaxed = winsToday >= maxWinsPerDay;
+                const isGhost = u.id.startsWith('ghost_participant_');
+                const isBlacklisted = u.blacklisted;
+                const isGuaranteed = u.guaranteed_next_win;
+                
+                let cardBorderColor = `${accent}30`;
+                let cardBgColor = 'rgba(255,255,255,0.02)';
+                let nameColor = textColor;
+                
+                if (isBlacklisted) {
+                  cardBorderColor = 'rgba(239,68,68,0.4)';
+                  cardBgColor = 'rgba(239,68,68,0.06)';
+                  nameColor = 'rgba(239,68,68,0.6)';
+                } else if (isGuaranteed) {
+                  cardBorderColor = `rgba(34,197,94,0.5)`;
+                  cardBgColor = 'rgba(34,197,94,0.06)';
+                } else if (isMaxed) {
+                  cardBorderColor = 'rgba(239,68,68,0.6)';
+                  cardBgColor = 'rgba(239,68,68,0.05)';
+                  nameColor = '#ef4444';
+                }
+                
                 return (
                   <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:brightness-110"
-                    style={{ borderColor: isMaxed ? 'rgba(239,68,68,0.6)' : `${accent}30`, background: isMaxed ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)' }}>
+                    style={{ borderColor: cardBorderColor, background: cardBgColor }}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-bold truncate" style={{ color: isMaxed ? '#ef4444' : textColor }}>{u.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        {isBlacklisted && <Ban size={11} className="text-red-400 shrink-0" />}
+                        {isGuaranteed && <Star size={11} className="text-green-400 shrink-0 fill-green-400" />}
+                        <p className="text-[13px] font-bold truncate" style={{ color: nameColor, textDecoration: isBlacklisted ? 'line-through' : 'none', opacity: isBlacklisted ? 0.5 : 1 }}>{u.name}</p>
+                      </div>
                       <p className="text-[10px] mt-0.5" style={{ color: isMaxed ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.35)' }}>Hoje: {winsToday}/{maxWinsPerDay} vitória(s)</p>
                       <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
-                    <button onClick={() => openPrizeDialog(u)} className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
-                      <Trophy size={14} style={{ color: accent }} />
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      {!isGhost && (
+                        <>
+                          <button
+                            onClick={() => toggleBlacklist(u)}
+                            title={isBlacklisted ? 'Remover da blacklist' : 'Adicionar à blacklist'}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90"
+                            style={{
+                              background: isBlacklisted ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.04)',
+                              border: `1px solid ${isBlacklisted ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                            }}>
+                            <Ban size={12} style={{ color: isBlacklisted ? '#ef4444' : 'rgba(255,255,255,0.3)' }} />
+                          </button>
+                          <button
+                            onClick={() => toggleGuaranteedWin(u)}
+                            title={isGuaranteed ? 'Remover sorteio garantido' : 'Garantir próximo sorteio'}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90"
+                            style={{
+                              background: isGuaranteed ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.04)',
+                              border: `1px solid ${isGuaranteed ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                            }}>
+                            <Star size={12} style={{ color: isGuaranteed ? '#22c55e' : 'rgba(255,255,255,0.3)' }} fill={isGuaranteed ? '#22c55e' : 'none'} />
+                          </button>
+                        </>
+                      )}
+                      <button onClick={() => openPrizeDialog(u)} className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
+                        <Trophy size={12} style={{ color: accent }} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
