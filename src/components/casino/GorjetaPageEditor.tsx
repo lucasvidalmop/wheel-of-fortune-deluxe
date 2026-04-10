@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
-import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save, Gift, Eye } from 'lucide-react';
+import { Palette, Image, Type, MousePointer, Upload, RotateCcw, Save, Gift, Eye, RefreshCw } from 'lucide-react';
+import SlotMachineSuccess from './SlotMachineSuccess';
 
 export interface GorjetaPageConfig {
   bgColor: string;
