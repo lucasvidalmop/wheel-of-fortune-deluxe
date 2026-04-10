@@ -361,8 +361,24 @@ const Influencer = () => {
       await new Promise(r => setTimeout(r, 800));
     }
 
+    // Save ghost winners to localStorage for social proof
+    const ghostEntries: TodayWinner[] = finalSelected
+      .filter(w => (w.user as any)._isGhost)
+      .map(w => ({
+        id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
+        user_name: w.user.name,
+        account_id: generateFakeAccountId(),
+        amount: w.amount,
+        created_at: new Date().toISOString(),
+        prize: `Sorteio R$ ${w.amount.toFixed(2)}`,
+      }));
+    if (ghostEntries.length > 0) {
+      const existing = loadGhostWinners();
+      saveGhostWinners([...ghostEntries, ...existing]);
+    }
+
     setSendingIndex(finalSelected.length);
-    setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); }, 600);
+    setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); fetchHistory(session?.user?.id); }, 600);
   };
 
   const closeRaffle = () => { setShowRaffle(false); setRaffleStep('config'); };
