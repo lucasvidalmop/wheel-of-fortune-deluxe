@@ -5041,6 +5041,8 @@ const Dashboard = () => {
                           if (success > 0) toast.success(`${success} pagamento(s) enviado(s) com sucesso!`);
                           if (failed > 0) toast.error(`${failed} pagamento(s) falharam`);
                           setManualPaySelectedIds(new Set());
+                            },
+                          });
                         }}
                         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
