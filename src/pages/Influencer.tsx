@@ -485,7 +485,7 @@ const Influencer = () => {
         </div>
 
         {/* ─── Bottom CTA inside bordered container ─── */}
-        <div className="border-t px-3 py-3 space-y-2" style={{ borderColor: `${accent}25` }}>
+        <div className="border-t px-3 py-3 space-y-2 shrink-0" style={{ borderColor: `${accent}25` }}>
           <button
             onClick={startRaffle}
             className="w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-[0.98]"
