@@ -1076,7 +1076,23 @@ const Dashboard = () => {
     fetchUsers();
   };
 
-  const fetchPaidHistory = async () => {
+  const handleToggleBlacklist = async (user: WheelUser) => {
+    const newVal = !user.blacklisted;
+    const { error } = await (supabase as any).from('wheel_users').update({ blacklisted: newVal }).eq('id', user.id);
+    if (error) { toast.error('Erro ao atualizar blacklist'); return; }
+    toast.success(newVal ? '🚫 Usuário na blacklist (shadowban)' : 'Blacklist removida');
+    fetchUsers();
+  };
+
+  const handleToggleGuaranteedWin = async (user: WheelUser) => {
+    const newVal = !user.guaranteed_next_win;
+    const { error } = await (supabase as any).from('wheel_users').update({ guaranteed_next_win: newVal }).eq('id', user.id);
+    if (error) { toast.error('Erro ao atualizar sorteio garantido'); return; }
+    toast.success(newVal ? '⭐ Usuário será sorteado 100% no próximo sorteio' : 'Sorteio garantido removido');
+    fetchUsers();
+  };
+
+
     if (!session?.user?.id) return;
     setPaidHistoryLoading(true);
     const { data } = await (supabase as any)
