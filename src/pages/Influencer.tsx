@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -93,6 +93,7 @@ const Influencer = () => {
   const [customAmount, setCustomAmount] = useState('30,00');
   const [winners, setWinners] = useState<Winner[]>([]);
   const [sendingIndex, setSendingIndex] = useState(0);
+  const sessionCreatedIds = useRef<Set<string>>(new Set());
 
   // Individual prize dialog
   const [showPrizeDialog, setShowPrizeDialog] = useState(false);
@@ -255,7 +256,36 @@ const Influencer = () => {
     toast.success('Atualizado!');
   };
 
-  const handleResetDayCounter = () => { setSentToday(0); toast.success('Contador reiniciado!'); };
+  const handleResetDayCounter = async () => {
+    if (sessionCreatedIds.current.size === 0) {
+      setSentToday(0);
+      toast.success('Contador reiniciado!');
+      return;
+    }
+
+    const idsToRemove = new Set(sessionCreatedIds.current);
+
+    // Delete real prize_payments created in this session
+    const realIds = [...idsToRemove].filter(id => !id.startsWith('ghost_'));
+    if (realIds.length > 0) {
+      await (supabase as any).from('prize_payments').delete().in('id', realIds);
+    }
+
+    // Remove ghost entries from localStorage
+    const ghostIdsToRemove = [...idsToRemove].filter(id => id.startsWith('ghost_'));
+    if (ghostIdsToRemove.length > 0) {
+      const ghosts = loadGhostWinners().filter(g => !ghostIdsToRemove.includes(g.id));
+      saveGhostWinners(ghosts);
+    }
+
+    // Clear session tracking
+    sessionCreatedIds.current.clear();
+
+    // Refresh lists
+    await fetchTodayWinners(session?.user?.id);
+    await fetchHistory(session?.user?.id);
+    toast.success('Contador reiniciado e últimos sorteios removidos!');
+  };
 
   const filteredUsers = users.filter(u => {
     const term = searchTerm.toLowerCase();
@@ -345,7 +375,7 @@ const Influencer = () => {
       // Only create payment for real users (not ghosts)
       if (!(finalSelected[i].user as any)._isGhost) {
         try {
-          await (supabase as any).rpc('create_prize_payment', {
+          const result = await (supabase as any).rpc('create_prize_payment', {
             p_owner_id: session.user.id,
             p_account_id: finalSelected[i].user.account_id,
             p_user_name: finalSelected[i].user.name,
@@ -354,6 +384,7 @@ const Influencer = () => {
             p_amount: raffleAmount,
             p_force_auto: finalSelected[i].user.auto_payment,
           });
+          if (result?.data?.id) sessionCreatedIds.current.add(result.data.id);
         } catch (err) { console.error('Erro ao criar pagamento:', err); }
       }
 
@@ -367,11 +398,13 @@ const Influencer = () => {
       .map(w => ({
         id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
         user_name: w.user.name,
-        account_id: generateFakeAccountId(),
+        account_id: w.user.account_id,
         amount: w.amount,
         created_at: new Date().toISOString(),
         prize: `Sorteio R$ ${w.amount.toFixed(2)}`,
       }));
+    // Track ghost IDs in session
+    ghostEntries.forEach(g => sessionCreatedIds.current.add(g.id));
     if (ghostEntries.length > 0) {
       const existing = loadGhostWinners();
       saveGhostWinners([...ghostEntries, ...existing]);
