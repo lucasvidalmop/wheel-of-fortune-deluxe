@@ -5067,6 +5067,60 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Efeito Glass dos Cards */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Monitor size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Efeito Glass dos Cards</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Controle o efeito de vidro (glassmorphism) aplicado nos cards da página do Influencer.
+                </p>
+
+                {/* Glass toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Ativar efeito glass</span>
+                  <button
+                    onClick={() => setWheelConfig((prev: any) => ({ ...prev, influencerGlassEnabled: !(prev.influencerGlassEnabled ?? true) }))}
+                    className={`w-11 h-6 rounded-full transition-all relative ${(wheelConfig as any).influencerGlassEnabled !== false ? 'bg-primary' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${(wheelConfig as any).influencerGlassEnabled !== false ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                {(wheelConfig as any).influencerGlassEnabled !== false && (
+                  <>
+                    {/* Blur intensity */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Intensidade do blur</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range" min="0" max="40"
+                          value={(wheelConfig as any).influencerGlassBlur ?? 16}
+                          onChange={e => setWheelConfig((prev: any) => ({ ...prev, influencerGlassBlur: parseInt(e.target.value) }))}
+                          className="w-28 accent-primary h-1.5"
+                        />
+                        <span className="text-xs font-mono text-muted-foreground w-10 text-right">{(wheelConfig as any).influencerGlassBlur ?? 16}px</span>
+                      </div>
+                    </div>
+
+                    {/* Card background opacity */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Opacidade do fundo</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range" min="0" max="100"
+                          value={(wheelConfig as any).influencerCardBgOpacity ?? 95}
+                          onChange={e => setWheelConfig((prev: any) => ({ ...prev, influencerCardBgOpacity: parseInt(e.target.value) }))}
+                          className="w-28 accent-primary h-1.5"
+                        />
+                        <span className="text-xs font-mono text-muted-foreground w-10 text-right">{(wheelConfig as any).influencerCardBgOpacity ?? 95}%</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Users size={20} className="text-muted-foreground" />
