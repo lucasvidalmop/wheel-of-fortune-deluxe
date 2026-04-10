@@ -330,19 +330,7 @@ const Influencer = () => {
 
   const todayWinsForUser = (accountId: string) => todayWinners.filter(w => w.account_id === accountId).length;
 
-  const toggleBlacklist = async (user: WheelUser) => {
-    const newVal = !user.blacklisted;
-    await (supabase as any).from('wheel_users').update({ blacklisted: newVal }).eq('id', user.id);
-    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, blacklisted: newVal } : u));
-    toast.success(newVal ? 'Usuário na blacklist' : 'Blacklist removida');
-  };
 
-  const toggleGuaranteedWin = async (user: WheelUser) => {
-    const newVal = !user.guaranteed_next_win;
-    await (supabase as any).from('wheel_users').update({ guaranteed_next_win: newVal }).eq('id', user.id);
-    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, guaranteed_next_win: newVal } : u));
-    toast.success(newVal ? 'Usuário será sorteado 100%' : 'Sorteio garantido removido');
-  };
 
   const handleExportCSV = () => {
     const csv = ['Nome,ID,Email,Telefone,Vitórias Hoje']
