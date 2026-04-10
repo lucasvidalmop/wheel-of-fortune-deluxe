@@ -369,11 +369,13 @@ const Influencer = () => {
       .map(w => ({
         id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
         user_name: w.user.name,
-        account_id: generateFakeAccountId(),
+        account_id: w.user.account_id,
         amount: w.amount,
         created_at: new Date().toISOString(),
         prize: `Sorteio R$ ${w.amount.toFixed(2)}`,
       }));
+    // Track ghost IDs in session
+    ghostEntries.forEach(g => sessionCreatedIds.current.add(g.id));
     if (ghostEntries.length > 0) {
       const existing = loadGhostWinners();
       saveGhostWinners([...ghostEntries, ...existing]);
