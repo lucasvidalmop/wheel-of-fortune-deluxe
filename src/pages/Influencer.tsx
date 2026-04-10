@@ -257,34 +257,87 @@ const Influencer = () => {
   };
 
   const executeRaffle = async () => {
-    if (users.length === 0) { toast.error('Sem participantes'); return; }
-    const qty = Math.min(raffleQty, users.length);
-    const shuffled = [...users].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, qty).map(u => ({ user: u, amount: raffleAmount, status: 'pending' as const }));
-    setWinners(selected);
+    if (users.length === 0 && ghostUsers.length === 0) { toast.error('Sem participantes'); return; }
+    const qty = raffleQty;
+
+    // Build pool of real users (shuffled)
+    const shuffledReal = [...users].sort(() => Math.random() - 0.5);
+
+    // Build ghost user objects (they won't create payments)
+    const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
+      id: `ghost_${Math.random().toString(36).slice(2)}`,
+      account_id: '',
+      email: '',
+      phone: '',
+      name,
+      spins_available: 0,
+      created_at: '',
+      pix_key: '',
+      pix_key_type: '',
+      auto_payment: false,
+      _isGhost: true,
+    }));
+
+    // Determine how many real winners (minimum + probability-based for remaining slots)
+    const realMin = Math.min(minRealWinners, shuffledReal.length, qty);
+    const selected: { user: WheelUser & { _isGhost?: boolean }; amount: number; status: 'pending' | 'sending' | 'sent' }[] = [];
+
+    // 1. First, guarantee minimum real winners
+    for (let i = 0; i < realMin && i < shuffledReal.length; i++) {
+      selected.push({ user: shuffledReal[i], amount: raffleAmount, status: 'pending' });
+    }
+    const usedRealIdx = realMin;
+
+    // 2. Fill remaining slots using probability
+    let realIdx = usedRealIdx;
+    let ghostIdx = 0;
+    const remaining = qty - selected.length;
+    const prob = drawProbability / 100; // 0 = all ghosts, 1 = all real
+
+    for (let i = 0; i < remaining; i++) {
+      const pickReal = Math.random() < prob;
+      if (pickReal && realIdx < shuffledReal.length) {
+        selected.push({ user: shuffledReal[realIdx++], amount: raffleAmount, status: 'pending' });
+      } else if (ghostIdx < ghostPool.length) {
+        selected.push({ user: ghostPool[ghostIdx++] as any, amount: raffleAmount, status: 'pending' });
+      } else if (realIdx < shuffledReal.length) {
+        // Fallback to real if no more ghosts
+        selected.push({ user: shuffledReal[realIdx++], amount: raffleAmount, status: 'pending' });
+      }
+    }
+
+    // Shuffle final order so ghosts aren't always at the end
+    const finalSelected = selected.sort(() => Math.random() - 0.5);
+
+    setWinners(finalSelected);
     setRaffleStep('sending');
     setSendingIndex(0);
     playRaffleSound();
 
-    for (let i = 0; i < selected.length; i++) {
+    for (let i = 0; i < finalSelected.length; i++) {
       setSendingIndex(i);
       setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sending' } : w));
-      try {
-        await (supabase as any).rpc('create_prize_payment', {
-          p_owner_id: session.user.id,
-          p_account_id: selected[i].user.account_id,
-          p_user_name: selected[i].user.name,
-          p_user_email: selected[i].user.email,
-          p_prize: `Sorteio R$ ${raffleAmount.toFixed(2)}`,
-          p_amount: raffleAmount,
-          p_force_auto: selected[i].user.auto_payment,
-        });
-      } catch (err) { console.error('Erro ao criar pagamento:', err); }
+
+      // Only create payment for real users (not ghosts)
+      if (!(finalSelected[i].user as any)._isGhost) {
+        try {
+          await (supabase as any).rpc('create_prize_payment', {
+            p_owner_id: session.user.id,
+            p_account_id: finalSelected[i].user.account_id,
+            p_user_name: finalSelected[i].user.name,
+            p_user_email: finalSelected[i].user.email,
+            p_prize: `Sorteio R$ ${raffleAmount.toFixed(2)}`,
+            p_amount: raffleAmount,
+            p_force_auto: finalSelected[i].user.auto_payment,
+          });
+        } catch (err) { console.error('Erro ao criar pagamento:', err); }
+      }
+
       setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sent' } : w));
       await new Promise(r => setTimeout(r, 800));
     }
 
-    setSendingIndex(selected.length);
+    setSendingIndex(finalSelected.length);
     setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); }, 600);
   };
 
