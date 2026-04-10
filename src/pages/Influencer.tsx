@@ -75,6 +75,14 @@ const Influencer = () => {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [sendingIndex, setSendingIndex] = useState(0);
 
+  // Individual prize dialog
+  const [showPrizeDialog, setShowPrizeDialog] = useState(false);
+  const [prizeUser, setPrizeUser] = useState<WheelUser | null>(null);
+  const [prizeAmount, setPrizeAmount] = useState(30);
+  const [prizeCustomAmount, setPrizeCustomAmount] = useState('30,00');
+  const [prizeSending, setPrizeSending] = useState(false);
+  const [prizeSent, setPrizeSent] = useState(false);
+
   useEffect(() => {
     const update = () => {
       const now = new Date();
