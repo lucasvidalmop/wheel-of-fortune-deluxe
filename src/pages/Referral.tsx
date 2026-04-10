@@ -106,6 +106,9 @@ const Referral = () => {
         p_account_id: accountId.trim(),
         p_name: '',
         p_cpf: '',
+        p_phone: '',
+        p_pix_key: '',
+        p_pix_key_type: '',
       });
       if (error) throw error;
       const result = typeof data === 'string' ? JSON.parse(data) : data;
