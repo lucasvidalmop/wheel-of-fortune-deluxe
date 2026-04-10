@@ -17,6 +17,8 @@ interface WheelUser {
   pix_key: string;
   pix_key_type: string;
   auto_payment: boolean;
+  blacklisted: boolean;
+  guaranteed_next_win: boolean;
 }
 
 interface Winner {
