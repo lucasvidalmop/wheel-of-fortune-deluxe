@@ -4816,7 +4816,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2 pt-2">
                   <button
                     onClick={async () => {
-                      if (!confirm('Tem certeza? Isso irá limpar o histórico de vitórias de hoje para todos os participantes.')) return;
+                      if (!await confirmDialog({ title: 'Reiniciar Contadores', message: 'Isso irá limpar o histórico de vitórias de hoje para todos os participantes.', variant: 'warning', confirmLabel: 'Reiniciar' })) return;
                       const todayStart = new Date();
                       todayStart.setHours(0, 0, 0, 0);
                       await (supabase as any).from('prize_payments').delete().eq('owner_id', session?.user?.id).gte('created_at', todayStart.toISOString());
@@ -4905,7 +4905,7 @@ const Dashboard = () => {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={async () => {
-                      if (!confirm('Tem certeza que deseja limpar os ganhadores de HOJE?')) return;
+                      if (!await confirmDialog({ title: 'Limpar Ganhadores de Hoje', message: 'Tem certeza que deseja limpar os ganhadores de hoje?', variant: 'danger', confirmLabel: 'Limpar' })) return;
                       const uid = session?.user?.id;
                       if (!uid) return;
                       const todayStart = new Date();
@@ -4919,7 +4919,7 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={async () => {
-                      if (!confirm('Tem certeza que deseja limpar TODO o histórico de gorjeta? Esta ação NÃO pode ser desfeita.')) return;
+                      if (!await confirmDialog({ title: 'Limpar Histórico Completo', message: 'Tem certeza que deseja limpar TODO o histórico de gorjeta? Esta ação NÃO pode ser desfeita.', variant: 'danger', confirmLabel: 'Limpar tudo' })) return;
                       const uid = session?.user?.id;
                       if (!uid) return;
                       await (supabase as any).from('prize_payments').delete().eq('owner_id', uid);
@@ -6361,29 +6361,7 @@ const Dashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Custom Confirm Modal */}
-      {confirmModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setConfirmModal(null)}>
-          <div className="w-full max-w-sm mx-4 rounded-2xl border border-white/[0.08] bg-[#1a1a2e] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-3">{confirmModal.title}</h3>
-            <p className="text-sm text-muted-foreground whitespace-pre-line mb-6">{confirmModal.message}</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmModal(null)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => confirmModal.onConfirm()}
-                className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {ConfirmDialog}
     </div>
   );
 };
