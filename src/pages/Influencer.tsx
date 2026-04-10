@@ -75,6 +75,14 @@ const Influencer = () => {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [sendingIndex, setSendingIndex] = useState(0);
 
+  // Individual prize dialog
+  const [showPrizeDialog, setShowPrizeDialog] = useState(false);
+  const [prizeUser, setPrizeUser] = useState<WheelUser | null>(null);
+  const [prizeAmount, setPrizeAmount] = useState(30);
+  const [prizeCustomAmount, setPrizeCustomAmount] = useState('30,00');
+  const [prizeSending, setPrizeSending] = useState(false);
+  const [prizeSent, setPrizeSent] = useState(false);
+
   useEffect(() => {
     const update = () => {
       const now = new Date();
@@ -217,6 +225,40 @@ const Influencer = () => {
   };
 
   const closeRaffle = () => { setShowRaffle(false); setRaffleStep('config'); };
+
+  const openPrizeDialog = (user: WheelUser) => {
+    setPrizeUser(user);
+    setPrizeAmount(30);
+    setPrizeCustomAmount('30,00');
+    setPrizeSending(false);
+    setPrizeSent(false);
+    setShowPrizeDialog(true);
+  };
+
+  const executeSinglePrize = async () => {
+    if (!prizeUser || !session?.user?.id) return;
+    setPrizeSending(true);
+    try {
+      await (supabase as any).rpc('create_prize_payment', {
+        p_owner_id: session.user.id,
+        p_account_id: prizeUser.account_id,
+        p_user_name: prizeUser.name,
+        p_user_email: prizeUser.email,
+        p_prize: `Prêmio R$ ${prizeAmount.toFixed(2)}`,
+        p_amount: prizeAmount,
+        p_force_auto: prizeUser.auto_payment,
+      });
+      setPrizeSent(true);
+      fetchTodayWinners(session.user.id);
+      setTimeout(() => {
+        setShowPrizeDialog(false);
+        toast.success(`Prêmio de ${formatCurrency(prizeAmount)} enviado para ${prizeUser.name}!`);
+      }, 1500);
+    } catch (err: any) {
+      toast.error('Erro ao enviar prêmio: ' + (err.message || ''));
+      setPrizeSending(false);
+    }
+  };
 
   const baseUrl = window.location.origin;
   const gorjetaUrl = gorjetaRef ? `${baseUrl}/gorjeta?ref=${gorjetaRef}` : '';
@@ -384,9 +426,9 @@ const Influencer = () => {
                       <p className="text-[10px] text-white/35 mt-0.5">Hoje: {winsToday}/1 vitória(s)</p>
                       <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
+                    <button onClick={() => openPrizeDialog(u)} className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
                       <Trophy size={14} style={{ color: accent }} />
-                    </div>
+                    </button>
                   </div>
                 );
               })}
@@ -611,6 +653,93 @@ const Influencer = () => {
                 </>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Individual Prize Dialog ─── */}
+      <Dialog open={showPrizeDialog} onOpenChange={(open) => { if (!open && !prizeSending) setShowPrizeDialog(false); }}>
+        <DialogContent className="max-w-md p-0 border-none bg-transparent shadow-none [&>button]:hidden">
+          <div className="rounded-2xl border border-white/[0.1] overflow-hidden" style={{ background: cardBg }}>
+
+            {/* Sending / Sent state */}
+            {prizeSending && (
+              <div className="p-10 flex flex-col items-center justify-center gap-4">
+                {!prizeSent ? (
+                  <>
+                    <div className="w-14 h-14 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                    <p className="text-sm font-bold text-white/80">Registrando prêmio...</p>
+                    <p className="text-xs text-white/40">{prizeUser?.name}</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center animate-scale-in" style={{ background: '#22c55e' }}>
+                      <span className="text-2xl text-white">✓</span>
+                    </div>
+                    <p className="text-sm font-bold text-white/80">Prêmio registrado!</p>
+                    <p className="text-xs text-white/40">{formatCurrency(prizeAmount)} → {prizeUser?.name}</p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Config state */}
+            {!prizeSending && (
+              <>
+                <div className="p-5 flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Trophy size={18} style={{ color: accent }} />
+                      <h2 className="text-base font-bold" style={{ color: textColor }}>Enviar Prêmio</h2>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowPrizeDialog(false)} className="p-1 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="px-5 pb-5 space-y-4">
+                  {/* Participant info */}
+                  <div className="rounded-xl border border-white/[0.08] p-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <p className="text-[10px] uppercase tracking-wider text-white/40 mb-1">Participante</p>
+                    <p className="text-sm font-bold" style={{ color: textColor }}>{prizeUser?.name}</p>
+                    <p className="text-[11px] font-mono mt-1" style={{ color: accent }}>{maskAccountId(prizeUser?.account_id || '')}</p>
+                  </div>
+
+                  {/* Amount selection */}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-2">Valor do prêmio (R$)</p>
+                    <div className="flex gap-2 mb-2">
+                      {[10, 20, 30, 50].map(v => (
+                        <button key={v}
+                          onClick={() => { setPrizeAmount(v); setPrizeCustomAmount(v.toFixed(2).replace('.', ',')); }}
+                          className="flex-1 py-2.5 rounded-xl text-xs font-semibold border transition"
+                          style={prizeAmount === v
+                            ? { background: `${accent}15`, borderColor: accent, color: accent }
+                            : { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }
+                          }>R$ {v},00</button>
+                      ))}
+                    </div>
+                    <input type="text" value={`R$ ${prizeCustomAmount}`}
+                      onChange={e => { const raw = e.target.value.replace(/[^0-9,]/g, ''); setPrizeCustomAmount(raw); const num = parseFloat(raw.replace(',', '.')); if (!isNaN(num) && num > 0) setPrizeAmount(num); }}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm border border-white/[0.08] bg-white/[0.03] text-white outline-none focus:ring-2 focus:ring-primary/30" />
+                  </div>
+
+                  {/* Total */}
+                  <div className="rounded-xl border border-white/[0.08] p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <p className="text-xs text-white/40 mb-1">Total deste prêmio</p>
+                    <p className="text-xl font-black" style={{ color: accent }}>{formatCurrency(prizeAmount)}</p>
+                  </div>
+
+                  {/* Confirm button */}
+                  <button onClick={executeSinglePrize}
+                    className="w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:brightness-110"
+                    style={{ background: accent, color: btnText }}>
+                    <Trophy size={16} /> ENVIAR PRÊMIO
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
