@@ -118,25 +118,6 @@ const Registration = () => {
         if (result.slug) setWheelSlug(result.slug);
         setSuccess(true);
 
-        try {
-          if (result.owner_id) {
-            await supabase.functions.invoke('send-owner-notification', {
-              body: {
-                ownerId: result.owner_id,
-                type: 'referral_redeemed',
-                payload: {
-                  code: code?.toUpperCase() || '',
-                  email: email.trim(),
-                  accountId: accountId.trim(),
-                  name: name.trim(),
-                  phone: phone.trim(),
-                  spins: result.spins || 1,
-                  label: result.label || '',
-                },
-              },
-            });
-          }
-        } catch {}
 
         toast.success('Inscrição realizada com sucesso!');
       } else {
