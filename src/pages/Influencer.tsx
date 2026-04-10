@@ -671,14 +671,52 @@ const Influencer = () => {
             </div>
           </div>
 
-          {/* Row 3: Reset button */}
-          <div className="flex justify-end items-center gap-2">
+          {/* Row 3: Reset buttons */}
+          <div className="flex flex-wrap justify-end items-center gap-2">
+            <button
+              onClick={async () => {
+                if (!confirm('Tem certeza que deseja limpar todos os ganhadores de hoje?')) return;
+                const uid = session?.user?.id;
+                if (!uid) return;
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                await (supabase as any).from('prize_payments').delete().eq('owner_id', uid).gte('created_at', todayStart.toISOString());
+                saveGhostWinners([]);
+                sessionCreatedIds.current.clear();
+                await fetchTodayWinners(uid);
+                await fetchHistory(uid);
+                setSentToday(0);
+                toast.success('Ganhadores de hoje limpos!');
+              }}
+              className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]"
+              style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
+            >
+              <X size={11} /> Limpar ganhadores de hoje
+            </button>
+            <button
+              onClick={async () => {
+                if (!confirm('Tem certeza que deseja limpar TODO o histórico de gorjeta? Esta ação não pode ser desfeita.')) return;
+                const uid = session?.user?.id;
+                if (!uid) return;
+                await (supabase as any).from('prize_payments').delete().eq('owner_id', uid);
+                saveGhostWinners([]);
+                sessionCreatedIds.current.clear();
+                await fetchTodayWinners(uid);
+                await fetchHistory(uid);
+                setSentToday(0);
+                toast.success('Histórico completo limpo!');
+              }}
+              className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]"
+              style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
+            >
+              <X size={11} /> Limpar histórico completo
+            </button>
             <button
               onClick={handleResetDayCounter}
               className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]"
               style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
             >
-              <RotateCcw size={11} /> Reiniciar contador do dia
+              <RotateCcw size={11} /> Reiniciar contador
             </button>
           </div>
 
