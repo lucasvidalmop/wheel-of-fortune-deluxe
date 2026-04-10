@@ -96,7 +96,7 @@ const Influencer = () => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Group history by time proximity (within 2 min) + same amount = raffle batch
-  const historyGroups: RaffleGroup[] = React.useMemo(() => {
+  const historyGroups: RaffleGroup[] = useMemo(() => {
     if (historyWinners.length === 0) return [];
     const groups: RaffleGroup[] = [];
     let current: TodayWinner[] = [historyWinners[0]];
