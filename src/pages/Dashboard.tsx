@@ -5046,7 +5046,27 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Usuários Fantasmas */}
+              {/* Limite diário de sorteios */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Target size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Limite Diário de Sorteios</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Define o número máximo de prêmios que o operador pode enviar por dia na página do Influencer. Quando atingido, o botão de sorteio fica bloqueado.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    value={(wheelConfig as any).influencerDailyLimit ?? 500}
+                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, influencerDailyLimit: Math.max(1, Number(e.target.value)) }))}
+                    className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <span className="text-sm text-muted-foreground">prêmios por dia</span>
+                </div>
+              </div>
+
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Users size={20} className="text-muted-foreground" />
