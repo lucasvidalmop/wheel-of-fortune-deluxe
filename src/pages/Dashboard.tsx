@@ -4225,6 +4225,7 @@ const Dashboard = () => {
           {activeTab === 'gorjeta' && (() => {
             const gorjetaRef = (wheelConfig as any).gorjetaRef || '';
             const gorjetaUrl = gorjetaRef ? `${baseUrl}/gorjeta?ref=${gorjetaRef}` : '';
+            const showQr = (wheelConfig as any).gorjetaShowQr !== false;
             return (
               <div className="max-w-2xl space-y-5">
                 <GlassCard className="p-5 space-y-4">
@@ -4278,13 +4279,29 @@ const Dashboard = () => {
                         >
                           <ExternalLink size={14} /> Abrir Página
                         </button>
+                        <button
+                          onClick={() => setWheelConfig((prev: any) => ({ ...prev, gorjetaShowQr: !showQr }))}
+                          className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-all flex items-center gap-1.5"
+                        >
+                          <Eye size={14} /> {showQr ? 'Esconder QR Code' : 'Mostrar QR Code'}
+                        </button>
                       </div>
 
-                      <div className="flex justify-center p-4 bg-white rounded-xl">
-                        <QRCodeSVG value={gorjetaUrl} size={160} />
-                      </div>
+                      {showQr && (
+                        <div className="flex justify-center p-4 bg-white rounded-xl">
+                          <QRCodeSVG value={gorjetaUrl} size={160} />
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  <button
+                    onClick={handleSaveConfig}
+                    disabled={savingConfig}
+                    className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20"
+                  >
+                    {savingConfig ? 'Salvando...' : '💾 Salvar Configuração'}
+                  </button>
                 </GlassCard>
 
                 <p className="text-[10px] text-center text-muted-foreground">
