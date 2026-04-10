@@ -157,7 +157,7 @@ const Influencer = () => {
   const fetchHistory = async (userId?: string) => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
-    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).order('created_at', { ascending: false }).limit(200);
+    const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at, prize').eq('owner_id', uid).order('created_at', { ascending: false }).limit(500);
     setHistoryWinners(data || []);
   };
 
