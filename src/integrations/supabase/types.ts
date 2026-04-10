@@ -201,6 +201,7 @@ export type Database = {
           auto_payment: boolean
           created_at: string
           edpay_transaction_id: string | null
+          hidden_from_influencer: boolean
           id: string
           notes: string | null
           owner_id: string
@@ -221,6 +222,7 @@ export type Database = {
           auto_payment?: boolean
           created_at?: string
           edpay_transaction_id?: string | null
+          hidden_from_influencer?: boolean
           id?: string
           notes?: string | null
           owner_id: string
@@ -241,6 +243,7 @@ export type Database = {
           auto_payment?: boolean
           created_at?: string
           edpay_transaction_id?: string | null
+          hidden_from_influencer?: boolean
           id?: string
           notes?: string | null
           owner_id?: string

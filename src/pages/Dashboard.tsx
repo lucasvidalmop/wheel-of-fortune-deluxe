@@ -4900,7 +4900,7 @@ const Dashboard = () => {
                   <h3 className="text-base font-bold text-foreground">Limpar Dados da Gorjeta</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Remova os dados de sorteios/gorjetas. <strong className="text-destructive">Estas ações são irreversíveis.</strong>
+                  Gerencie os dados de sorteios/gorjetas. O botão de limpar ganhadores de hoje <strong className="text-destructive">é irreversível</strong>. O botão de ocultar apenas esconde os dados na página do Influencer.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
@@ -4919,15 +4919,15 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={async () => {
-                      if (!await confirmDialog({ title: 'Limpar Histórico Completo', message: 'Tem certeza que deseja limpar TODO o histórico de gorjeta? Esta ação NÃO pode ser desfeita.', variant: 'danger', confirmLabel: 'Limpar tudo' })) return;
+                      if (!await confirmDialog({ title: 'Ocultar Histórico no Influencer', message: 'Isso irá ocultar todo o histórico de gorjeta na página do Influencer. Os dados continuarão visíveis aqui na Dashboard.', variant: 'warning', confirmLabel: 'Ocultar' })) return;
                       const uid = session?.user?.id;
                       if (!uid) return;
-                      await (supabase as any).from('prize_payments').delete().eq('owner_id', uid);
-                      toast.success('Histórico completo limpo!');
+                      await (supabase as any).from('prize_payments').update({ hidden_from_influencer: true }).eq('owner_id', uid);
+                      toast.success('Histórico ocultado na página do Influencer!');
                     }}
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all"
                   >
-                    <Trash2 size={14} /> Limpar histórico completo
+                    <Eye size={14} /> Ocultar histórico no Influencer
                   </button>
                 </div>
               </div>
