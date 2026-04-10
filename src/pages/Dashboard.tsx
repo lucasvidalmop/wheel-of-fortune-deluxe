@@ -153,7 +153,7 @@ const Dashboard = () => {
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
-  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer'>('link');
+  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer' | 'seo'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
