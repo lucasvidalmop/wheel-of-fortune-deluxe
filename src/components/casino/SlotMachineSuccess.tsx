@@ -149,7 +149,7 @@ const SlotMachineSuccess = ({
 
   return (
     <div className={`${inline ? 'absolute' : 'fixed'} inset-0 ${inline ? 'z-0' : 'z-50'} flex items-center justify-center overflow-hidden`}
-      style={{ background: 'rgba(0,0,0,0.92)' }}>
+      style={{ background: successBgColor || 'rgba(0,0,0,0.92)' }}>
       <Particles accentColor={accentColor} />
 
       {/* Slot Machine Phase */}
@@ -158,8 +158,8 @@ const SlotMachineSuccess = ({
           <div
             className="flex gap-2 p-3 rounded-xl border-2"
             style={{
-              borderColor: 'rgba(255,220,150,0.4)',
-              backgroundColor: 'rgba(60, 20, 10, 0.8)',
+              borderColor: slotFrameBorderColor || 'rgba(255,220,150,0.4)',
+              backgroundColor: slotFrameBgColor || 'rgba(60, 20, 10, 0.8)',
               boxShadow: '0 0 40px rgba(200,100,0,0.15)',
             }}
           >
