@@ -409,12 +409,7 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <ColorField label="Texto dos inputs" value={config.inputTextColor} onChange={v => update({ inputTextColor: v })} />
       </Section>
 
-      <Section icon={<Type size={14} className="text-primary" />} title="Tela Expirado / Esgotado">
-        <TextField label="Título expirado" value={config.expiredTitle} onChange={v => update({ expiredTitle: v })} placeholder="Promoção Encerrada" />
-        <TextField label="Subtítulo expirado" value={config.expiredSubtitle} onChange={v => update({ expiredSubtitle: v })} placeholder="O prazo desta promoção expirou." />
-        <TextField label="Título esgotado" value={config.limitTitle} onChange={v => update({ limitTitle: v })} placeholder="Inscrições Esgotadas" />
-        <TextField label="Subtítulo esgotado" value={config.limitSubtitle} onChange={v => update({ limitSubtitle: v })} placeholder="Este link atingiu o limite..." />
-      </Section>
+
 
       <div className="flex gap-3">
         <button onClick={handleReset} className="flex-1 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2">
