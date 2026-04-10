@@ -140,7 +140,7 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta'>('inscritos');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
@@ -1612,6 +1612,7 @@ const Dashboard = () => {
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro' },
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
+    { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
   ];
 
   const tabTitles: Record<string, string> = {
@@ -1626,6 +1627,7 @@ const Dashboard = () => {
     financeiro: 'Financeiro',
     notificacoes: 'Notificações',
     referral: 'Links de Referência',
+    gorjeta: 'Página de Gorjeta',
   };
 
   return (
