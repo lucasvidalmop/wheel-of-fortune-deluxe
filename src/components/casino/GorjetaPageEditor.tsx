@@ -303,11 +303,14 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             </button>
           </div>
           <div
-            className="relative rounded-xl overflow-hidden border border-white/[0.08]"
+            className="relative rounded-xl overflow-hidden border border-white/[0.08] preview-container"
             style={{ height: 340 }}
           >
-            <div key={previewKey} className="absolute inset-0">
-              <SlotMachineSuccess
+            <style>{`.preview-container > div[key], .preview-container > div { position: absolute !important; z-index: 0 !important; }`}</style>
+            <div key={previewKey} className="absolute inset-0" style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: 0, transform: 'scale(1)', transformOrigin: 'center' }}>
+                  <SlotMachineSuccess
                 accentColor={config.accentColor}
                 titleColor={config.titleColor}
                 subtitleColor={config.subtitleColor}
