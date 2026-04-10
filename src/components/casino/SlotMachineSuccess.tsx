@@ -12,6 +12,7 @@ interface SlotMachineSuccessProps {
   successSubtitle: string;
   successBtnText: string;
   slotMatchIcon?: string;
+  slotMatchImageUrl?: string;
   slotLuckyText?: string;
   slotReelBgColor?: string;
   slotFrameBgColor?: string;
@@ -57,17 +58,20 @@ const Particles = ({ accentColor }: { accentColor: string }) => {
 // Single slot reel
 const SlotReel = ({
   targetIcon,
+  targetImageUrl,
   delay,
   onStop,
   reelBgColor,
 }: {
   targetIcon: string;
+  targetImageUrl?: string;
   delay: number;
   onStop: () => void;
   reelBgColor?: string;
 }) => {
   const [spinning, setSpinning] = useState(true);
   const [currentIcon, setCurrentIcon] = useState('⚡');
+  const [showFinalImage, setShowFinalImage] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
@@ -78,14 +82,18 @@ const SlotReel = ({
       setCurrentIcon(SLOT_ICONS[Math.floor(Math.random() * SLOT_ICONS.length)]);
       if (spinCount >= maxSpins) {
         clearInterval(intervalRef.current!);
-        setCurrentIcon(targetIcon);
+        if (targetImageUrl) {
+          setShowFinalImage(true);
+        } else {
+          setCurrentIcon(targetIcon);
+        }
         setSpinning(false);
         onStop();
       }
     }, 80 + delay * 15);
 
     return () => clearInterval(intervalRef.current!);
-  }, [targetIcon, delay, onStop]);
+  }, [targetIcon, targetImageUrl, delay, onStop]);
 
   return (
     <div
@@ -98,15 +106,19 @@ const SlotReel = ({
         transform: spinning ? 'scale(0.95)' : 'scale(1)',
       }}
     >
-      <span
-        className="transition-transform duration-150"
-        style={{
-          filter: spinning ? 'blur(1px)' : 'none',
-          transform: spinning ? `translateY(${Math.random() > 0.5 ? 2 : -2}px)` : 'none',
-        }}
-      >
-        {currentIcon}
-      </span>
+      {showFinalImage && targetImageUrl ? (
+        <img src={targetImageUrl} alt="slot" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+      ) : (
+        <span
+          className="transition-transform duration-150"
+          style={{
+            filter: spinning ? 'blur(1px)' : 'none',
+            transform: spinning ? `translateY(${Math.random() > 0.5 ? 2 : -2}px)` : 'none',
+          }}
+        >
+          {currentIcon}
+        </span>
+      )}
     </div>
   );
 };
@@ -121,6 +133,7 @@ const SlotMachineSuccess = ({
   successSubtitle,
   successBtnText,
   slotMatchIcon = '⚡',
+  slotMatchImageUrl,
   slotLuckyText = '🎰 BOA SORTE! 🎰',
   slotReelBgColor,
   slotFrameBgColor,
@@ -163,9 +176,9 @@ const SlotMachineSuccess = ({
               boxShadow: '0 0 40px rgba(200,100,0,0.15)',
             }}
           >
-            <SlotReel targetIcon={slotMatchIcon} delay={0} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
-            <SlotReel targetIcon={slotMatchIcon} delay={2} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
-            <SlotReel targetIcon={slotMatchIcon} delay={4} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
+            <SlotReel targetIcon={slotMatchIcon} targetImageUrl={slotMatchImageUrl} delay={0} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
+            <SlotReel targetIcon={slotMatchIcon} targetImageUrl={slotMatchImageUrl} delay={2} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
+            <SlotReel targetIcon={slotMatchIcon} targetImageUrl={slotMatchImageUrl} delay={4} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
           </div>
           {showLuckyText && (
             <div
@@ -188,7 +201,7 @@ const SlotMachineSuccess = ({
               boxShadow: `0 0 60px ${accentColor}40, 0 0 120px ${accentColor}20`,
             }}
           >
-            {slotMatchIcon}
+            {slotMatchImageUrl ? <img src={slotMatchImageUrl} alt="slot" className="w-12 h-12 object-contain" /> : slotMatchIcon}
           </div>
         </div>
       )}
@@ -205,7 +218,7 @@ const SlotMachineSuccess = ({
                 boxShadow: `0 0 40px ${accentColor}30`,
               }}
             >
-              {slotMatchIcon}
+              {slotMatchImageUrl ? <img src={slotMatchImageUrl} alt="slot" className="w-10 h-10 object-contain" /> : slotMatchIcon}
             </div>
           </div>
 
