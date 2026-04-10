@@ -50,6 +50,11 @@ const maskAccountId = (id: string) => {
   return id.slice(0, 4) + '*'.repeat(Math.min(id.length - 4, 8));
 };
 
+const generateFakeAccountId = () => {
+  const digits = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
+  return digits;
+};
+
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
 const Influencer = () => {
@@ -197,21 +202,40 @@ const Influencer = () => {
     setUsersLoading(false);
   };
 
+  const getGhostWinnersKey = () => `ghost_winners_${session?.user?.id || 'anon'}`;
+
+  const loadGhostWinners = (): TodayWinner[] => {
+    try {
+      return JSON.parse(localStorage.getItem(getGhostWinnersKey()) || '[]');
+    } catch { return []; }
+  };
+
+  const saveGhostWinners = (ghosts: TodayWinner[]) => {
+    localStorage.setItem(getGhostWinnersKey(), JSON.stringify(ghosts));
+  };
+
   const fetchTodayWinners = async (userId?: string) => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).gte('created_at', todayStart.toISOString()).order('created_at', { ascending: false });
-    setTodayWinners(data || []);
-    setSentToday((data || []).length);
+    const realWinners: TodayWinner[] = data || [];
+    // Merge ghost winners from today
+    const ghostWinners = loadGhostWinners().filter(g => new Date(g.created_at) >= todayStart);
+    const merged = [...realWinners, ...ghostWinners].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setTodayWinners(merged);
+    setSentToday(merged.length);
   };
 
   const fetchHistory = async (userId?: string) => {
     const uid = userId || session?.user?.id;
     if (!uid) return;
     const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at, prize').eq('owner_id', uid).order('created_at', { ascending: false }).limit(500);
-    setHistoryWinners(data || []);
+    const realHistory: TodayWinner[] = data || [];
+    const ghostWinners = loadGhostWinners();
+    const merged = [...realHistory, ...ghostWinners].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setHistoryWinners(merged);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -266,7 +290,7 @@ const Influencer = () => {
     // Build ghost user objects (they won't create payments)
     const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
       id: `ghost_${Math.random().toString(36).slice(2)}`,
-      account_id: '',
+      account_id: generateFakeAccountId(),
       email: '',
       phone: '',
       name,
@@ -337,8 +361,24 @@ const Influencer = () => {
       await new Promise(r => setTimeout(r, 800));
     }
 
+    // Save ghost winners to localStorage for social proof
+    const ghostEntries: TodayWinner[] = finalSelected
+      .filter(w => (w.user as any)._isGhost)
+      .map(w => ({
+        id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
+        user_name: w.user.name,
+        account_id: generateFakeAccountId(),
+        amount: w.amount,
+        created_at: new Date().toISOString(),
+        prize: `Sorteio R$ ${w.amount.toFixed(2)}`,
+      }));
+    if (ghostEntries.length > 0) {
+      const existing = loadGhostWinners();
+      saveGhostWinners([...ghostEntries, ...existing]);
+    }
+
     setSendingIndex(finalSelected.length);
-    setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); }, 600);
+    setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); fetchHistory(session?.user?.id); }, 600);
   };
 
   const closeRaffle = () => { setShowRaffle(false); setRaffleStep('config'); };
