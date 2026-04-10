@@ -575,12 +575,41 @@ const Influencer = () => {
   const borderGlowSpread = influencerConfig.borderGlowSpread ?? 12;
 
   const playRaffleSound = () => {
+    // Custom audio
     if (raffleSoundEnabled && raffleSoundUrl) {
       try {
         const audio = new Audio(raffleSoundUrl);
         audio.play().catch(() => {});
       } catch {}
+      return;
     }
+    // Built-in "cha-ching" coin sound via Web Audio API
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const now = ctx.currentTime;
+      // High-pitched coin hit
+      const osc1 = ctx.createOscillator();
+      const g1 = ctx.createGain();
+      osc1.connect(g1); g1.connect(ctx.destination);
+      osc1.frequency.setValueAtTime(2400, now);
+      osc1.frequency.exponentialRampToValueAtTime(3200, now + 0.02);
+      osc1.type = 'sine';
+      g1.gain.setValueAtTime(0.18, now);
+      g1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc1.start(now); osc1.stop(now + 0.15);
+      // Second ring
+      const osc2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc2.connect(g2); g2.connect(ctx.destination);
+      osc2.frequency.setValueAtTime(3800, now + 0.04);
+      osc2.type = 'sine';
+      g2.gain.setValueAtTime(0, now);
+      g2.gain.linearRampToValueAtTime(0.12, now + 0.05);
+      g2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc2.start(now + 0.04); osc2.stop(now + 0.25);
+      // Close context after sound ends
+      setTimeout(() => ctx.close().catch(() => {}), 400);
+    } catch {}
   };
 
   const pageBgStyle: React.CSSProperties = {
