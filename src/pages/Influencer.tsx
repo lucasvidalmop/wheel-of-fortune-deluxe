@@ -413,6 +413,24 @@ const Influencer = () => {
       saveGhostWinners([...ghostEntries, ...existing]);
     }
 
+    // Start 60s countdown — after that, these entries become permanent
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setResetCountdown(60);
+    countdownRef.current = setInterval(() => {
+      setResetCountdown(prev => {
+        if (prev <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    resetTimerRef.current = setTimeout(() => {
+      sessionCreatedIds.current.clear();
+      setResetCountdown(0);
+    }, 60_000);
+
     setSendingIndex(finalSelected.length);
     setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); fetchHistory(session?.user?.id); }, 600);
   };
