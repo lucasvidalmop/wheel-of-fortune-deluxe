@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ReferralPageConfig, defaultPageConfig } from '@/components/casino/ReferralPageEditor';
@@ -15,7 +15,8 @@ const PIX_TYPES = [
 ];
 
 const Registration = () => {
-  const { code } = useParams();
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get('ref') || '';
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [linkData, setLinkData] = useState<any>(null);
