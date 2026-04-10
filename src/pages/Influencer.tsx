@@ -75,6 +75,7 @@ const Influencer = () => {
   const [drawProbability, setDrawProbability] = useState(0);
   const [minRealWinners, setMinRealWinners] = useState(0);
   const [ghostUsers, setGhostUsers] = useState<string[]>([]);
+  const [maxWinsPerDay, setMaxWinsPerDay] = useState(1);
 
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
