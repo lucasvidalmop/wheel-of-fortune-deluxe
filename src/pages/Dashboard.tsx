@@ -7,7 +7,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -34,6 +34,8 @@ interface WheelUser {
   user_type: string;
   responsible: string;
   auto_payment: boolean;
+  blacklisted: boolean;
+  guaranteed_next_win: boolean;
 }
 
 interface PersistedDashboardSettings {
