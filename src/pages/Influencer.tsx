@@ -300,56 +300,59 @@ const Influencer = () => {
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-6 flex flex-col" style={{ height: 'calc(100vh)' }}>
 
         {/* ─── Top card: Title + Counter + Progress ─── */}
-        <div className="rounded-2xl border border-white/[0.08] p-5" style={{ background: cardBg }}>
+        <div className="rounded-2xl border p-4 space-y-3" style={{ borderColor: `${accent}25`, background: cardBg }}>
+          {/* Row 1: Icon + Title + Counter */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${accent}20`, border: `2px solid ${accent}` }}>
-                <Trophy size={18} style={{ color: accent }} />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: `${accent}15`, border: `1.5px solid ${accent}40` }}>
+                <Trophy size={14} style={{ color: accent }} />
               </div>
               <div>
-                <h1 className="text-base font-black tracking-wide uppercase" style={{ color: textColor }}>
+                <h1 className="text-sm font-black tracking-wide uppercase" style={{ color: textColor }}>
                   {linkLabel || gorjetaRef || 'TROPA DO FAZ MIL E DORME!'}
                 </h1>
-                <p className="text-[11px] text-white/40">{prizesRemaining} prêmio(s) restante(s)</p>
+                <p className="text-[10px] text-white/35">{prizesRemaining} prêmio(s) restante(s)</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold" style={{ color: accent }}>{sentToday}</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-base font-black" style={{ color: accent }}>{sentToday}</span>
               <span className="text-xs text-white/30">/{dailyLimit}</span>
-              <span className="ml-1 px-3 py-1.5 rounded-lg text-xs font-mono font-bold border" style={{ borderColor: accent, color: accent }}>
+              <span className="ml-1 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold border" style={{ borderColor: accent, color: accent, background: `${accent}10` }}>
                 {timer}
               </span>
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] text-white/40">Progresso diário</span>
-              <span className="text-[11px] font-bold" style={{ color: accent }}>{progressPercent}%</span>
+          {/* Row 2: Progress bar */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-white/35">Progresso diário</span>
+              <span className="text-[10px] font-bold" style={{ color: accent }}>{progressPercent}%</span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
               <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progressPercent}%`, background: `linear-gradient(90deg, ${accent}, ${accent}cc)` }} />
             </div>
           </div>
 
-          <div className="flex justify-end mt-3">
-            <button onClick={handleResetDayCounter} className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-lg border transition hover:bg-white/[0.04]" style={{ borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}>
-              <RotateCcw size={12} /> Reiniciar contador do dia
+          {/* Row 3: Reset button */}
+          <div className="flex justify-end">
+            <button onClick={handleResetDayCounter} className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]" style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}>
+              <RotateCcw size={11} /> Reiniciar contador do dia
             </button>
           </div>
-          {/* ─── Link bar inside top card ─── */}
+
+          {/* Row 4: Link bar */}
           {gorjetaUrl && (
-            <div className="mt-4 rounded-xl border border-white/[0.06] p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="rounded-xl border p-2.5 flex items-center gap-2.5" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
               <div className="flex items-center gap-1.5 shrink-0">
-                <LinkIcon size={12} style={{ color: accent }} />
-                <span className="text-[11px] font-semibold text-white/50">LINK:</span>
+                <LinkIcon size={11} style={{ color: accent }} />
+                <span className="text-[10px] font-semibold text-white/40">LINK:</span>
               </div>
-              <input readOnly value={gorjetaUrl} className="flex-1 bg-transparent text-xs text-white/50 font-mono truncate outline-none" />
+              <input readOnly value={gorjetaUrl} className="flex-1 bg-transparent text-[11px] text-white/45 font-mono truncate outline-none" />
               <button onClick={() => { navigator.clipboard.writeText(gorjetaUrl); toast.success('Link copiado!'); }}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition hover:bg-white/[0.04]"
+                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition hover:bg-white/[0.04]"
                 style={{ borderColor: `${accent}40`, color: accent }}>
-                <Copy size={12} /> Copiar
+                <Copy size={11} /> Copiar
               </button>
             </div>
           )}
