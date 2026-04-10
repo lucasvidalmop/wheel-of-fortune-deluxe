@@ -163,9 +163,9 @@ const SlotMachineSuccess = ({
               boxShadow: '0 0 40px rgba(200,100,0,0.15)',
             }}
           >
-            <SlotReel targetIcon={slotMatchIcon} delay={0} onStop={handleReelStop} />
-            <SlotReel targetIcon={slotMatchIcon} delay={2} onStop={handleReelStop} />
-            <SlotReel targetIcon={slotMatchIcon} delay={4} onStop={handleReelStop} />
+            <SlotReel targetIcon={slotMatchIcon} delay={0} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
+            <SlotReel targetIcon={slotMatchIcon} delay={2} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
+            <SlotReel targetIcon={slotMatchIcon} delay={4} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
           </div>
           {showLuckyText && (
             <div
