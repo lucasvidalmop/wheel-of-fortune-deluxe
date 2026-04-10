@@ -335,6 +335,7 @@ const Influencer = () => {
   const glowColor = influencerConfig.glowColor || accent;
   const glowOpacity = influencerConfig.glowOpacity ?? 3;
   const borderOpacity = influencerConfig.borderOpacity ?? 8;
+  const borderColor = influencerConfig.borderColor || '';
 
   const playRaffleSound = () => {
     if (raffleSoundEnabled && raffleSoundUrl) {
@@ -351,8 +352,10 @@ const Influencer = () => {
     ...(bgImageUrl ? { backgroundImage: `url(${bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}),
   };
 
+  const resolvedBorderColor = borderColor || `rgba(255,255,255,${borderOpacity / 100})`;
+
   const glassCardStyle: React.CSSProperties = {
-    borderColor: `rgba(255,255,255,${borderOpacity / 100})`,
+    borderColor: resolvedBorderColor,
     background: cardBg,
     backdropFilter: 'blur(16px)',
     boxShadow: `0 0 ${glowOpacity * 4}px ${glowColor}${Math.round(glowOpacity * 5).toString(16).padStart(2, '0')}`,
