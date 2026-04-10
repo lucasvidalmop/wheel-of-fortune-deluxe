@@ -508,9 +508,9 @@ const Influencer = () => {
       setSendingIndex(i);
       setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sending' } : w));
       playRaffleSound();
-      await delay(150);
+      await delay(300);
       setWinners(prev => prev.map((w, idx) => idx === i ? { ...w, status: 'sent' } : w));
-      await delay(250);
+      await delay(500);
     }
 
     setSendingIndex(finalSelected.length);
