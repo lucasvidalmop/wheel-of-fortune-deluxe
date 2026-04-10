@@ -742,17 +742,68 @@ const Influencer = () => {
               {filteredUsers.map(u => {
                 const winsToday = todayWinsForUser(u.account_id);
                 const isMaxed = winsToday >= maxWinsPerDay;
+                const isGhost = u.id.startsWith('ghost_participant_');
+                const isBlacklisted = u.blacklisted;
+                const isGuaranteed = u.guaranteed_next_win;
+                
+                let cardBorderColor = `${accent}30`;
+                let cardBgColor = 'rgba(255,255,255,0.02)';
+                let nameColor = textColor;
+                
+                if (isBlacklisted) {
+                  cardBorderColor = 'rgba(239,68,68,0.4)';
+                  cardBgColor = 'rgba(239,68,68,0.06)';
+                  nameColor = 'rgba(239,68,68,0.6)';
+                } else if (isGuaranteed) {
+                  cardBorderColor = `rgba(34,197,94,0.5)`;
+                  cardBgColor = 'rgba(34,197,94,0.06)';
+                } else if (isMaxed) {
+                  cardBorderColor = 'rgba(239,68,68,0.6)';
+                  cardBgColor = 'rgba(239,68,68,0.05)';
+                  nameColor = '#ef4444';
+                }
+                
                 return (
                   <div key={u.id} className="flex items-center justify-between p-3.5 rounded-xl border transition hover:brightness-110"
-                    style={{ borderColor: isMaxed ? 'rgba(239,68,68,0.6)' : `${accent}30`, background: isMaxed ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)' }}>
+                    style={{ borderColor: cardBorderColor, background: cardBgColor }}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-bold truncate" style={{ color: isMaxed ? '#ef4444' : textColor }}>{u.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        {isBlacklisted && <Ban size={11} className="text-red-400 shrink-0" />}
+                        {isGuaranteed && <Star size={11} className="text-green-400 shrink-0 fill-green-400" />}
+                        <p className="text-[13px] font-bold truncate" style={{ color: nameColor, textDecoration: isBlacklisted ? 'line-through' : 'none', opacity: isBlacklisted ? 0.5 : 1 }}>{u.name}</p>
+                      </div>
                       <p className="text-[10px] mt-0.5" style={{ color: isMaxed ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.35)' }}>Hoje: {winsToday}/{maxWinsPerDay} vitória(s)</p>
                       <p className="text-[10px] text-white/25 font-mono mt-0.5">{maskAccountId(u.account_id)}</p>
                     </div>
-                    <button onClick={() => openPrizeDialog(u)} className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-2 transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
-                      <Trophy size={14} style={{ color: accent }} />
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      {!isGhost && (
+                        <>
+                          <button
+                            onClick={() => toggleBlacklist(u)}
+                            title={isBlacklisted ? 'Remover da blacklist' : 'Adicionar à blacklist'}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90"
+                            style={{
+                              background: isBlacklisted ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.04)',
+                              border: `1px solid ${isBlacklisted ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                            }}>
+                            <Ban size={12} style={{ color: isBlacklisted ? '#ef4444' : 'rgba(255,255,255,0.3)' }} />
+                          </button>
+                          <button
+                            onClick={() => toggleGuaranteedWin(u)}
+                            title={isGuaranteed ? 'Remover sorteio garantido' : 'Garantir próximo sorteio'}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90"
+                            style={{
+                              background: isGuaranteed ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.04)',
+                              border: `1px solid ${isGuaranteed ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                            }}>
+                            <Star size={12} style={{ color: isGuaranteed ? '#22c55e' : 'rgba(255,255,255,0.3)' }} fill={isGuaranteed ? '#22c55e' : 'none'} />
+                          </button>
+                        </>
+                      )}
+                      <button onClick={() => openPrizeDialog(u)} className="w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125 active:scale-90 cursor-pointer" style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}>
+                        <Trophy size={12} style={{ color: accent }} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
