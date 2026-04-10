@@ -325,6 +325,7 @@ const Roleta = () => {
           owner_id: row.user_id,
           referrer: document.referrer || null,
           page_url: window.location.href,
+          page_type: 'roleta',
         },
       }).catch(() => {});
 

@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
-    const { session_id, slug, owner_id, referrer, page_url, duration_seconds, action } = body;
+    const { session_id, slug, owner_id, referrer, page_url, duration_seconds, action, page_type } = body;
 
     if (!session_id) {
       return new Response(JSON.stringify({ error: "session_id required" }), {
@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
       browser,
       referrer: referrer || null,
       page_url: page_url || null,
+      page_type: page_type || 'roleta',
     });
 
     if (error) throw error;

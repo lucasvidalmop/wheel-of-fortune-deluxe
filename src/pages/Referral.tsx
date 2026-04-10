@@ -49,6 +49,49 @@ const Referral = () => {
     fetchLink();
   }, [code]);
 
+  // Track pageview
+  useEffect(() => {
+    if (!linkData) return;
+    const sessionId = (() => {
+      let sid = sessionStorage.getItem('pv_session_ref');
+      if (!sid) { sid = crypto.randomUUID(); sessionStorage.setItem('pv_session_ref', sid); }
+      return sid;
+    })();
+    const startTime = Date.now();
+
+    supabase.functions.invoke('track-pageview', {
+      body: {
+        session_id: sessionId,
+        slug: code || null,
+        owner_id: linkData.owner_id,
+        referrer: document.referrer || null,
+        page_url: window.location.href,
+        page_type: 'referral',
+      },
+    }).catch(() => {});
+
+    const durationInterval = setInterval(() => {
+      const seconds = Math.round((Date.now() - startTime) / 1000);
+      supabase.functions.invoke('track-pageview', {
+        body: { session_id: sessionId, action: 'update_duration', duration_seconds: seconds },
+      }).catch(() => {});
+    }, 30000);
+
+    const handleUnload = () => {
+      const seconds = Math.round((Date.now() - startTime) / 1000);
+      navigator.sendBeacon?.(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-pageview`,
+        JSON.stringify({ session_id: sessionId, action: 'update_duration', duration_seconds: seconds })
+      );
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      clearInterval(durationInterval);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [linkData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !accountId.trim()) {

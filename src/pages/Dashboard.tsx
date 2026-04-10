@@ -165,6 +165,7 @@ const Dashboard = () => {
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'roleta' | 'referral' | 'gorjeta'>('all');
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -2734,29 +2735,30 @@ const Dashboard = () => {
 
           {/* ══════ ANALYTICS TAB ══════ */}
           {activeTab === 'analytics' && (() => {
-            const total = pageViews.length;
-            const uniqueIPs = new Set(pageViews.map((v: any) => v.ip_address)).size;
-            const avgDuration = total > 0 ? Math.round(pageViews.reduce((s: number, v: any) => s + (v.duration_seconds || 0), 0) / total) : 0;
+            const filtered = analyticsFilter === 'all' ? pageViews : pageViews.filter((v: any) => (v.page_type || 'roleta') === analyticsFilter);
+            const total = filtered.length;
+            const uniqueIPs = new Set(filtered.map((v: any) => v.ip_address)).size;
+            const avgDuration = total > 0 ? Math.round(filtered.reduce((s: number, v: any) => s + (v.duration_seconds || 0), 0) / total) : 0;
             const formatDuration = (s: number) => s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
 
             // Device breakdown
             const devices: Record<string, number> = {};
-            pageViews.forEach((v: any) => { devices[v.device_type || 'Desconhecido'] = (devices[v.device_type || 'Desconhecido'] || 0) + 1; });
+            filtered.forEach((v: any) => { devices[v.device_type || 'Desconhecido'] = (devices[v.device_type || 'Desconhecido'] || 0) + 1; });
             const deviceEntries = Object.entries(devices).sort((a, b) => b[1] - a[1]);
 
             // Browser breakdown
             const browsers: Record<string, number> = {};
-            pageViews.forEach((v: any) => { browsers[v.browser || 'Desconhecido'] = (browsers[v.browser || 'Desconhecido'] || 0) + 1; });
+            filtered.forEach((v: any) => { browsers[v.browser || 'Desconhecido'] = (browsers[v.browser || 'Desconhecido'] || 0) + 1; });
             const browserEntries = Object.entries(browsers).sort((a, b) => b[1] - a[1]);
 
             // OS breakdown
             const osStat: Record<string, number> = {};
-            pageViews.forEach((v: any) => { osStat[v.os || 'Desconhecido'] = (osStat[v.os || 'Desconhecido'] || 0) + 1; });
+            filtered.forEach((v: any) => { osStat[v.os || 'Desconhecido'] = (osStat[v.os || 'Desconhecido'] || 0) + 1; });
             const osEntries = Object.entries(osStat).sort((a, b) => b[1] - a[1]);
 
             // Country/City breakdown
             const locations: Record<string, number> = {};
-            pageViews.forEach((v: any) => {
+            filtered.forEach((v: any) => {
               const loc = [v.city, v.country].filter(Boolean).join(', ') || 'Desconhecido';
               locations[loc] = (locations[loc] || 0) + 1;
             });
@@ -2770,7 +2772,7 @@ const Dashboard = () => {
             });
             const visitsPerDay: Record<string, number> = {};
             last7.forEach(d => { visitsPerDay[d] = 0; });
-            pageViews.forEach((v: any) => {
+            filtered.forEach((v: any) => {
               const day = new Date(v.created_at).toISOString().split('T')[0];
               if (visitsPerDay[day] !== undefined) visitsPerDay[day]++;
             });
@@ -2788,13 +2790,34 @@ const Dashboard = () => {
 
             return (
             <div className="space-y-4">
+              {/* Filter buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {([
+                  { key: 'all', label: 'Todos' },
+                  { key: 'roleta', label: 'Roleta' },
+                  { key: 'referral', label: 'Referral' },
+                  { key: 'gorjeta', label: 'Gorjeta' },
+                ] as const).map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setAnalyticsFilter(f.key)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${analyticsFilter === f.key ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]'}`}
+                  >
+                    {f.label}
+                    <span className="ml-1.5 text-xs opacity-70">
+                      ({f.key === 'all' ? pageViews.length : pageViews.filter((v: any) => (v.page_type || 'roleta') === f.key).length})
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               {/* Top stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   { label: 'Total de Acessos', value: total, icon: <Globe size={18} />, color: 'text-primary', bg: 'bg-primary/10' },
                   { label: 'IPs Únicos', value: uniqueIPs, icon: <MapPin size={18} />, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
                   { label: 'Tempo Médio', value: formatDuration(avgDuration), icon: <Clock size={18} />, color: 'text-sky-400', bg: 'bg-sky-400/10' },
-                  { label: 'Hoje', value: pageViews.filter((v: any) => new Date(v.created_at).toISOString().split('T')[0] === todayStr).length, icon: <BarChart3 size={18} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+                  { label: 'Hoje', value: filtered.filter((v: any) => new Date(v.created_at).toISOString().split('T')[0] === todayStr).length, icon: <BarChart3 size={18} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
                 ].map(card => (
                   <GlassCard key={card.label} className="p-4 space-y-2">
                     <div className={`p-2 rounded-xl ${card.bg} w-fit`}>
@@ -2922,7 +2945,7 @@ const Dashboard = () => {
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                   Carregando...
                 </div>
-              ) : pageViews.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <GlassCard className="text-center py-16">
                   <BarChart3 size={40} className="text-muted-foreground/30 mx-auto mb-3" />
                   <p className="text-muted-foreground">Nenhum acesso registrado ainda</p>
@@ -2934,6 +2957,7 @@ const Dashboard = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-white/[0.06]">
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Tipo</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">IP</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Localização</th>
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Dispositivo</th>
@@ -2944,8 +2968,13 @@ const Dashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {pageViews.slice(0, 50).map((v: any) => (
+                        {filtered.slice(0, 50).map((v: any) => (
                           <tr key={v.id} className="border-t border-white/[0.04] hover:bg-white/[0.03] transition-colors">
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold uppercase ${(v.page_type || 'roleta') === 'roleta' ? 'bg-primary/10 text-primary' : (v.page_type) === 'gorjeta' ? 'bg-amber-400/10 text-amber-400' : 'bg-emerald-400/10 text-emerald-400'}`}>
+                                {v.page_type || 'roleta'}
+                              </span>
+                            </td>
                             <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{v.ip_address || '—'}</td>
                             <td className="px-4 py-3 text-xs text-foreground">{[v.city, v.country].filter(Boolean).join(', ') || '—'}</td>
                             <td className="px-4 py-3">
