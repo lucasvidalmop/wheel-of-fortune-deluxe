@@ -719,7 +719,7 @@ const Influencer = () => {
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-6 flex flex-col" style={{ height: 'calc(100vh)' }}>
 
         {/* ─── Top card: Title + Counter + Progress ─── */}
-        <div className="rounded-2xl border p-4 space-y-3 backdrop-blur-xl" style={glassCardStyle}>
+        <div className="rounded-2xl border p-4 space-y-3" style={glassCardStyle}>
           {/* Row 1: Icon + Title + Counter */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -782,7 +782,7 @@ const Influencer = () => {
         </div>
 
         {/* ─── Tabs ─── */}
-      <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4 backdrop-blur-xl" style={glassCardStyle}>
+      <div className="rounded-2xl border overflow-hidden flex flex-col min-h-0 flex-1 mt-4" style={glassCardStyle}>
         <div className="flex items-center border-b shrink-0" style={{ borderColor: `${accent}20`, background: tabBgColor || undefined }}>
           <div className="flex flex-1">
           {([
@@ -957,7 +957,7 @@ const Influencer = () => {
       {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
         <DialogContent className="max-w-md p-0 border-none bg-transparent shadow-none [&>button]:hidden">
-          <div className="rounded-2xl border border-white/[0.1] overflow-hidden" style={{ background: cardBg }}>
+          <div className="rounded-2xl border border-white/[0.1] overflow-hidden" style={glassCardStyle}>
             <div className="p-5 flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -1131,7 +1131,7 @@ const Influencer = () => {
       {/* ─── Individual Prize Dialog ─── */}
       <Dialog open={showPrizeDialog} onOpenChange={(open) => { if (!open && !prizeSending) setShowPrizeDialog(false); }}>
         <DialogContent className="max-w-md p-0 border-none bg-transparent shadow-none [&>button]:hidden">
-          <div className="rounded-2xl border border-white/[0.1] overflow-hidden" style={{ background: cardBg }}>
+          <div className="rounded-2xl border border-white/[0.1] overflow-hidden" style={glassCardStyle}>
 
             {/* Sending / Sent state */}
             {prizeSending && (
