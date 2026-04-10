@@ -148,7 +148,9 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'configuracoes'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes'>('inscritos');
+  const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
+  const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
@@ -1689,6 +1691,7 @@ const Dashboard = () => {
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
+    { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
   ];
 
@@ -1705,6 +1708,7 @@ const Dashboard = () => {
     notificacoes: 'Notificações',
     referral: 'Links de Referência',
     gorjeta: 'Página de Gorjeta',
+    hist_gorjeta: 'Histórico de Gorjetas',
     configuracoes: 'Configurações',
   };
 
