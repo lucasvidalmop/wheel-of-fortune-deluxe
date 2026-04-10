@@ -116,6 +116,8 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   receiptBgColor: '#ffffff',
   receiptAccentColor: '#3b82f6',
   receiptOperatorName: '',
+  hideReceiptSection: false,
+  hideEdpaySection: false,
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
