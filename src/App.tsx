@@ -9,6 +9,7 @@ import Admin from "./pages/Admin.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import Referral from "./pages/Referral.tsx";
+import Registration from "./pages/Registration.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/ref/:code" element={<Referral />} />
+          <Route path="/i/:code" element={<Registration />} />
           <Route path="/:slug" element={<Roleta />} />
         </Routes>
       </BrowserRouter>
