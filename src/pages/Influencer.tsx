@@ -492,6 +492,16 @@ const Influencer = () => {
     }, 60_000);
 
     setSendingIndex(finalSelected.length);
+
+    // Reset guaranteed_next_win for real users that were selected
+    const guaranteedWinnerIds = finalSelected
+      .filter(w => !(w.user as any)._isGhost && w.user.guaranteed_next_win)
+      .map(w => w.user.id);
+    if (guaranteedWinnerIds.length > 0) {
+      await (supabase as any).from('wheel_users').update({ guaranteed_next_win: false }).in('id', guaranteedWinnerIds);
+      setUsers(prev => prev.map(u => guaranteedWinnerIds.includes(u.id) ? { ...u, guaranteed_next_win: false } : u));
+    }
+
     setTimeout(() => { setRaffleStep('results'); fetchTodayWinners(session?.user?.id); fetchHistory(session?.user?.id); }, 600);
   };
 
