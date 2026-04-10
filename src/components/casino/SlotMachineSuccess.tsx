@@ -13,6 +13,10 @@ interface SlotMachineSuccessProps {
   successBtnText: string;
   slotMatchIcon?: string;
   slotLuckyText?: string;
+  slotReelBgColor?: string;
+  slotFrameBgColor?: string;
+  slotFrameBorderColor?: string;
+  successBgColor?: string;
   ctaUrl?: string;
   onCtaClick?: () => void;
   showCta: boolean;
