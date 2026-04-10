@@ -5619,6 +5619,30 @@ const Dashboard = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Custom Confirm Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setConfirmModal(null)}>
+          <div className="w-full max-w-sm mx-4 rounded-2xl border border-white/[0.08] bg-[#1a1a2e] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-foreground mb-3">{confirmModal.title}</h3>
+            <p className="text-sm text-muted-foreground whitespace-pre-line mb-6">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => confirmModal.onConfirm()}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
