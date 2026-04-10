@@ -370,7 +370,7 @@ const Registration = () => {
 
           {/* Checkboxes */}
           <div className="space-y-2.5">
-            <label className="flex items-center gap-2.5 cursor-pointer group">
+            <div className="flex items-center gap-2.5">
               <div
                 onClick={() => setAcceptTerms(!acceptTerms)}
                 className="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0 cursor-pointer"
@@ -381,10 +381,10 @@ const Registration = () => {
               >
                 {acceptTerms && <svg className="w-3 h-3" fill="none" stroke="#000" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
-              <span className="text-xs" style={{ color: subtitleColor }}>
-                Aceito os <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTerms(true); }} className="font-semibold underline cursor-pointer" style={{ color: accentColor }}>Termos de Uso</button>.
+              <span className="text-xs cursor-pointer" onClick={() => setAcceptTerms(!acceptTerms)} style={{ color: subtitleColor }}>
+                Aceito os <button type="button" onClick={(e) => { e.stopPropagation(); setShowTerms(true); }} className="font-semibold underline cursor-pointer" style={{ color: accentColor }}>Termos de Uso</button>.
               </span>
-            </label>
+            </div>
             <label className="flex items-center gap-2.5 cursor-pointer group">
               <div
                 onClick={() => setConfirmData(!confirmData)}
