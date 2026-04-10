@@ -4236,6 +4236,7 @@ const Dashboard = () => {
                   {([
                     { key: 'link' as const, label: '🔗 Link', icon: Link2 },
                     { key: 'visual' as const, label: '🎨 Visual', icon: Palette },
+                    { key: 'influencer' as const, label: '🎯 Visual Influencer', icon: Target },
                   ] as const).map(tab => (
                     <button
                       key={tab.key}
