@@ -140,7 +140,7 @@ const Influencer = () => {
   };
 
 
-    const update = () => {
+    useEffect(() => {
       const now = new Date();
       setTimer(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`);
     };
