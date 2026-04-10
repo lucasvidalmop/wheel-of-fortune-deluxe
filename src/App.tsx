@@ -28,6 +28,7 @@ const App = () => (
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/ref/:code" element={<Referral />} />
           <Route path="/gorjeta" element={<Registration />} />
+          <Route path="/influencer" element={<Influencer />} />
           <Route path="/:slug" element={<Roleta />} />
         </Routes>
       </BrowserRouter>
