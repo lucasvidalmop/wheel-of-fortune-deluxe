@@ -322,8 +322,9 @@ const Influencer = () => {
     if (users.length === 0 && ghostUsers.length === 0) { toast.error('Sem participantes'); return; }
     const qty = raffleQty;
 
-    // Build pool of real users (shuffled)
-    const shuffledReal = [...users].sort(() => Math.random() - 0.5);
+    // Build pool of real users (shuffled), excluding those who hit daily limit
+    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay);
+    const shuffledReal = [...eligibleUsers].sort(() => Math.random() - 0.5);
 
     // Build ghost user objects (they won't create payments)
     const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
