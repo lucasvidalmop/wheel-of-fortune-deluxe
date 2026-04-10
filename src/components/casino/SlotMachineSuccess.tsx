@@ -199,7 +199,7 @@ const SlotMachineSuccess = ({
           {/* Glowing icon */}
           <div className="flex justify-center">
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl animate-[pulseGlow_2s_ease-in-out_infinite]"
+              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl animate-[emojiPulse_1.5s_ease-in-out_infinite]"
               style={{
                 backgroundColor: `${accentColor}20`,
                 boxShadow: `0 0 40px ${accentColor}30`,
@@ -295,6 +295,12 @@ const SlotMachineSuccess = ({
         @keyframes pulseGlow {
           0%, 100% { transform: scale(1); opacity: 0.8; }
           50% { transform: scale(1.1); opacity: 1; }
+        }
+        @keyframes emojiPulse {
+          0%, 100% { transform: scale(1); }
+          25% { transform: scale(1.35); }
+          50% { transform: scale(0.9); }
+          75% { transform: scale(1.2); }
         }
         @keyframes dotPulse {
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
