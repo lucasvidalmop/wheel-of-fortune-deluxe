@@ -5049,7 +5049,7 @@ const Dashboard = () => {
               {/* Título do Influencer */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Type size={20} className="text-primary" />
+                  <Pencil size={20} className="text-primary" />
                   <h3 className="text-base font-bold text-foreground">Título da Página</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
