@@ -13,6 +13,10 @@ interface SlotMachineSuccessProps {
   successBtnText: string;
   slotMatchIcon?: string;
   slotLuckyText?: string;
+  slotReelBgColor?: string;
+  slotFrameBgColor?: string;
+  slotFrameBorderColor?: string;
+  successBgColor?: string;
   ctaUrl?: string;
   onCtaClick?: () => void;
   showCta: boolean;
@@ -55,10 +59,12 @@ const SlotReel = ({
   targetIcon,
   delay,
   onStop,
+  reelBgColor,
 }: {
   targetIcon: string;
   delay: number;
   onStop: () => void;
+  reelBgColor?: string;
 }) => {
   const [spinning, setSpinning] = useState(true);
   const [currentIcon, setCurrentIcon] = useState('⚡');
@@ -85,7 +91,7 @@ const SlotReel = ({
     <div
       className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center text-2xl sm:text-3xl transition-all duration-200"
       style={{
-        backgroundColor: 'rgba(100, 40, 20, 0.9)',
+        backgroundColor: reelBgColor || 'rgba(100, 40, 20, 0.9)',
         boxShadow: spinning
           ? 'inset 0 0 15px rgba(0,0,0,0.5)'
           : 'inset 0 0 15px rgba(0,0,0,0.3), 0 0 20px rgba(255,180,0,0.3)',
@@ -116,6 +122,10 @@ const SlotMachineSuccess = ({
   successBtnText,
   slotMatchIcon = '⚡',
   slotLuckyText = '🎰 BOA SORTE! 🎰',
+  slotReelBgColor,
+  slotFrameBgColor,
+  slotFrameBorderColor,
+  successBgColor,
   ctaUrl,
   onCtaClick,
   showCta,
@@ -139,7 +149,7 @@ const SlotMachineSuccess = ({
 
   return (
     <div className={`${inline ? 'absolute' : 'fixed'} inset-0 ${inline ? 'z-0' : 'z-50'} flex items-center justify-center overflow-hidden`}
-      style={{ background: 'rgba(0,0,0,0.92)' }}>
+      style={{ background: successBgColor || 'rgba(0,0,0,0.92)' }}>
       <Particles accentColor={accentColor} />
 
       {/* Slot Machine Phase */}
@@ -148,14 +158,14 @@ const SlotMachineSuccess = ({
           <div
             className="flex gap-2 p-3 rounded-xl border-2"
             style={{
-              borderColor: 'rgba(255,220,150,0.4)',
-              backgroundColor: 'rgba(60, 20, 10, 0.8)',
+              borderColor: slotFrameBorderColor || 'rgba(255,220,150,0.4)',
+              backgroundColor: slotFrameBgColor || 'rgba(60, 20, 10, 0.8)',
               boxShadow: '0 0 40px rgba(200,100,0,0.15)',
             }}
           >
-            <SlotReel targetIcon={slotMatchIcon} delay={0} onStop={handleReelStop} />
-            <SlotReel targetIcon={slotMatchIcon} delay={2} onStop={handleReelStop} />
-            <SlotReel targetIcon={slotMatchIcon} delay={4} onStop={handleReelStop} />
+            <SlotReel targetIcon={slotMatchIcon} delay={0} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
+            <SlotReel targetIcon={slotMatchIcon} delay={2} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
+            <SlotReel targetIcon={slotMatchIcon} delay={4} onStop={handleReelStop} reelBgColor={slotReelBgColor} />
           </div>
           {showLuckyText && (
             <div

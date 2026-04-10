@@ -54,6 +54,11 @@ export interface GorjetaPageConfig {
   // Slot machine animation
   slotMatchIcon: string;
   slotLuckyText: string;
+  slotReelBgColor: string;
+  slotFrameBgColor: string;
+  slotFrameBorderColor: string;
+  successBgColor: string;
+  successCtaUrl: string;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
@@ -119,6 +124,11 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
 3.2. Considera-se usuário ativo aquele que realizou ao menos um depósito na plataforma.`,
   slotMatchIcon: '⚡',
   slotLuckyText: '🎰 BOA SORTE! 🎰',
+  slotReelBgColor: 'rgba(100, 40, 20, 0.9)',
+  slotFrameBgColor: 'rgba(60, 20, 10, 0.8)',
+  slotFrameBorderColor: 'rgba(255,220,150,0.4)',
+  successBgColor: 'rgba(0,0,0,0.92)',
+  successCtaUrl: '',
   
 };
 
@@ -288,6 +298,11 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <TextField label="Título de sucesso" value={config.successTitle} onChange={v => update({ successTitle: v })} placeholder="CADASTRO EFETUADO!" />
         <TextField label="Subtítulo de sucesso" value={config.successSubtitle} onChange={v => update({ successSubtitle: v })} placeholder="Agora é só aguardar o sorteio..." />
         <TextField label="Texto do botão CTA" value={config.successBtnText} onChange={v => update({ successBtnText: v })} placeholder="VOCÊ PODE SER O PRÓXIMO GANHADOR!" />
+        <TextField label="Link do botão CTA (sucesso)" value={config.successCtaUrl} onChange={v => update({ successCtaUrl: v })} placeholder="https://exemplo.com" />
+        <ColorField label="Cor de fundo da página" value={config.successBgColor} onChange={v => update({ successBgColor: v })} />
+        <ColorField label="Cor dos rolos (reel)" value={config.slotReelBgColor} onChange={v => update({ slotReelBgColor: v })} />
+        <ColorField label="Cor do fundo do caça-níquel" value={config.slotFrameBgColor} onChange={v => update({ slotFrameBgColor: v })} />
+        <ColorField label="Cor da borda do caça-níquel" value={config.slotFrameBorderColor} onChange={v => update({ slotFrameBorderColor: v })} />
         <p className="text-[10px] text-muted-foreground">A animação mostra um caça-níquel girando → resultado → tela de sucesso com partículas flutuantes.</p>
 
         {/* Inline Full Animation Preview */}
@@ -318,7 +333,11 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
                 successBtnText={config.successBtnText}
                 slotMatchIcon={config.slotMatchIcon}
                 slotLuckyText={config.slotLuckyText}
-                ctaUrl={config.ctaBtnUrl}
+                slotReelBgColor={config.slotReelBgColor}
+                slotFrameBgColor={config.slotFrameBgColor}
+                slotFrameBorderColor={config.slotFrameBorderColor}
+                successBgColor={config.successBgColor}
+                ctaUrl={config.successCtaUrl || config.ctaBtnUrl}
                 showCta={config.ctaBtnShow}
                 inline
               />

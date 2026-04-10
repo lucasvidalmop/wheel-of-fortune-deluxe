@@ -187,7 +187,7 @@ const Registration = () => {
   }
 
   if (success) {
-    const successCtaUrl = cfg.ctaBtnUrl || '';
+    const successCtaUrl = cfg.successCtaUrl || cfg.ctaBtnUrl || '';
     return (
       <SlotMachineSuccess
         accentColor={accentColor}
@@ -200,6 +200,10 @@ const Registration = () => {
         successBtnText={cfg.successBtnText || 'VOCÊ PODE SER O PRÓXIMO GANHADOR!'}
         slotMatchIcon={cfg.slotMatchIcon || '⚡'}
         slotLuckyText={cfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
+        slotReelBgColor={cfg.slotReelBgColor}
+        slotFrameBgColor={cfg.slotFrameBgColor}
+        slotFrameBorderColor={cfg.slotFrameBorderColor}
+        successBgColor={cfg.successBgColor}
         ctaUrl={successCtaUrl}
         showCta={!!successCtaUrl}
       />
