@@ -13,6 +13,7 @@ interface SlotMachineSuccessProps {
   successBtnText: string;
   slotMatchIcon?: string;
   slotLuckyText?: string;
+  ctaUrl?: string;
   onCtaClick?: () => void;
   showCta: boolean;
 }
@@ -114,6 +115,7 @@ const SlotMachineSuccess = ({
   successBtnText,
   slotMatchIcon = '⚡',
   slotLuckyText = '🎰 BOA SORTE! 🎰',
+  ctaUrl,
   onCtaClick,
   showCta,
 }: SlotMachineSuccessProps) => {
@@ -218,7 +220,21 @@ const SlotMachineSuccess = ({
           )}
 
           {/* CTA Button */}
-          {showCta && (
+          {showCta && ctaUrl ? (
+            <a
+              href={ctaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-lg animate-[fadeInUp_0.5s_0.3s_ease-out_both] no-underline"
+              style={{
+                backgroundColor: btnBgColor,
+                color: btnTextColor,
+                boxShadow: `0 8px 25px ${btnBgColor}30`,
+              }}
+            >
+              🎰 {successBtnText}
+            </a>
+          ) : showCta && onCtaClick ? (
             <button
               onClick={onCtaClick}
               className="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-lg animate-[fadeInUp_0.5s_0.3s_ease-out_both]"
@@ -230,7 +246,7 @@ const SlotMachineSuccess = ({
             >
               🎰 {successBtnText}
             </button>
-          )}
+          ) : null}
 
           {/* Dots */}
           <div className="flex justify-center gap-1.5 pt-2">
