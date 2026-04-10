@@ -148,7 +148,9 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'configuracoes'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes'>('inscritos');
+  const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
+  const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
@@ -447,6 +449,40 @@ const Dashboard = () => {
       .order('created_at', { ascending: false });
     setReferralLinks(data || []);
     setReferralLoading(false);
+  };
+
+  const fetchGorjetaHistory = async () => {
+    if (!session?.user?.id) return;
+    setGorjetaHistoryLoading(true);
+    try {
+      // Get gorjeta referral link IDs for this owner
+      const gorjetaRef = (wheelConfig as any).gorjetaRef || '';
+      const { data: links } = await (supabase as any)
+        .from('referral_links')
+        .select('id, code, label')
+        .eq('owner_id', session.user.id);
+      
+      const gorjetaLinkIds = (links || [])
+        .filter((l: any) => l.label === 'Gorjeta' || l.code === gorjetaRef)
+        .map((l: any) => l.id);
+
+      if (gorjetaLinkIds.length === 0) {
+        setGorjetaHistory([]);
+        setGorjetaHistoryLoading(false);
+        return;
+      }
+
+      const { data: redemptions } = await (supabase as any)
+        .from('referral_redemptions')
+        .select('*, referral_links!inner(code, label)')
+        .in('referral_link_id', gorjetaLinkIds)
+        .order('created_at', { ascending: false });
+
+      setGorjetaHistory(redemptions || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setGorjetaHistoryLoading(false);
   };
 
   const handleSaveReferral = async () => {
@@ -1689,6 +1725,7 @@ const Dashboard = () => {
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
+    { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
   ];
 
@@ -1705,6 +1742,7 @@ const Dashboard = () => {
     notificacoes: 'Notificações',
     referral: 'Links de Referência',
     gorjeta: 'Página de Gorjeta',
+    hist_gorjeta: 'Histórico de Gorjetas',
     configuracoes: 'Configurações',
   };
 
@@ -1750,7 +1788,7 @@ const Dashboard = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); if (item.key === 'hist_gorjeta') fetchGorjetaHistory(); }}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
                   activeTab === item.key
@@ -1806,7 +1844,7 @@ const Dashboard = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); if (item.key === 'hist_gorjeta') fetchGorjetaHistory(); }}
                 className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                   activeTab === item.key
                     ? 'bg-primary/15 text-primary border border-primary/20'
@@ -4539,6 +4577,79 @@ const Dashboard = () => {
               </div>
             );
           })()}
+
+
+          {/* ══════ HISTÓRICO GORJETA TAB ══════ */}
+          {activeTab === 'hist_gorjeta' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock size={20} className="text-primary" />
+                  <h3 className="text-sm font-bold text-foreground">Resgates de Gorjeta</h3>
+                </div>
+                <button
+                  onClick={fetchGorjetaHistory}
+                  disabled={gorjetaHistoryLoading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/20 text-xs font-semibold hover:bg-primary/25 transition"
+                >
+                  <RotateCcw size={14} className={gorjetaHistoryLoading ? 'animate-spin' : ''} /> Atualizar
+                </button>
+              </div>
+
+              {gorjetaHistoryLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : gorjetaHistory.length === 0 ? (
+                <GlassCard className="p-8 text-center">
+                  <Gift size={32} className="mx-auto text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">Nenhum resgate de gorjeta encontrado.</p>
+                </GlassCard>
+              ) : (
+                <GlassCard className="p-0 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">ID Conta</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">CPF</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Link</th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Data</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gorjetaHistory.map((item: any) => (
+                          <tr key={item.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                            <td className="px-4 py-2.5 text-xs text-foreground">{item.email}</td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground font-mono">
+                              <div className="flex items-center gap-1">
+                                <span className="truncate max-w-[120px]">{item.account_id}</span>
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(item.account_id); toast.success('ID copiado!'); }}
+                                  className="shrink-0 p-0.5 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"
+                                >
+                                  <Copy size={12} />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground">{item.cpf || '—'}</td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground">{item.referral_links?.code || '—'}</td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                              {new Date(item.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-4 py-3 border-t border-white/[0.06] text-xs text-muted-foreground">
+                    Total: <span className="font-semibold text-foreground">{gorjetaHistory.length}</span> resgates
+                  </div>
+                </GlassCard>
+              )}
+            </div>
+          )}
 
 
           {activeTab === 'configuracoes' && (
