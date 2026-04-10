@@ -133,7 +133,7 @@ const SlotMachineSuccess = ({
   successSubtitle,
   successBtnText,
   slotMatchIcon = '⚡',
-  slotMatchImageUrl,
+  slotReelImages,
   slotLuckyText = '🎰 BOA SORTE! 🎰',
   slotReelBgColor,
   slotFrameBgColor,
