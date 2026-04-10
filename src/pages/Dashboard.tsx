@@ -798,10 +798,15 @@ const Dashboard = () => {
 
     if (serialized === lastPersistedSettingsRef.current) return;
 
+    savingInFlightRef.current = true;
+
     const timeoutId = window.setTimeout(async () => {
       const latestSettings = buildPersistedDashboardSettings();
       const latestSerialized = JSON.stringify(latestSettings);
-      if (latestSerialized === lastPersistedSettingsRef.current) return;
+      if (latestSerialized === lastPersistedSettingsRef.current) {
+        savingInFlightRef.current = false;
+        return;
+      }
 
       const { data: dbRow } = await (supabase as any)
         .from('wheel_configs')
@@ -823,9 +828,13 @@ const Dashboard = () => {
         lastPersistedSettingsRef.current = latestSerialized;
         lastConfigUpdatedAtRef.current = newUpdatedAt;
       }
+      savingInFlightRef.current = false;
     }, 400);
 
-    return () => window.clearTimeout(timeoutId);
+    return () => {
+      window.clearTimeout(timeoutId);
+      savingInFlightRef.current = false;
+    };
   }, [
     session?.user?.id,
     configId,
