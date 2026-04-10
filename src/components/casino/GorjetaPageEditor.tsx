@@ -130,6 +130,7 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
   slotFrameBorderColor: 'rgba(255,220,150,0.4)',
   successBgColor: 'rgba(0,0,0,0.92)',
   successCtaUrl: '',
+  successCtaShow: true,
   
 };
 
