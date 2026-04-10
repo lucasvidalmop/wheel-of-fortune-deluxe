@@ -53,7 +53,6 @@ export interface GorjetaPageConfig {
   // Slot machine animation
   slotMatchIcon: string;
   slotLuckyText: string;
-  successSubtitle: string;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
