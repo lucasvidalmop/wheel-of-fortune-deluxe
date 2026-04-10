@@ -5396,7 +5396,6 @@ const Dashboard = () => {
                   )}
                 </GlassCard>
               )}
-              )}
 
               {/* Histórico de prêmios pagos / rejeitados */}
               {financeiroSubTab === 'historico' && (
