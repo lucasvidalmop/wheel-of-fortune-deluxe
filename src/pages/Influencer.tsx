@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -93,6 +93,7 @@ const Influencer = () => {
   const [customAmount, setCustomAmount] = useState('30,00');
   const [winners, setWinners] = useState<Winner[]>([]);
   const [sendingIndex, setSendingIndex] = useState(0);
+  const sessionCreatedIds = useRef<Set<string>>(new Set());
 
   // Individual prize dialog
   const [showPrizeDialog, setShowPrizeDialog] = useState(false);
