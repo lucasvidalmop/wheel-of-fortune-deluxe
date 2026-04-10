@@ -3699,10 +3699,42 @@ const Dashboard = () => {
                         <div className="space-y-1">
                           <label className="text-[10px] text-muted-foreground font-medium">Destinatário</label>
                           {schedForm.recipientType === 'individual' ? (
-                            <select value={schedForm.recipientValue} onChange={e => { const u = users.find(u => u.phone === e.target.value); setSchedForm(f => ({ ...f, recipientValue: e.target.value, recipientLabel: u?.name || '' })); }} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
-                              <option value="">Selecione...</option>
-                              {users.filter(u => u.phone).map(u => <option key={u.id} value={u.phone}>{u.name} ({u.phone})</option>)}
-                            </select>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left truncate">
+                                  {schedForm.recipientValue ? `${schedForm.recipientLabel || schedForm.recipientValue}` : 'Selecione...'}
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-72 p-2 space-y-1" align="start">
+                                <input
+                                  type="text"
+                                  placeholder="Buscar por nome, telefone ou email..."
+                                  className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-xs mb-1 outline-none focus:ring-1 focus:ring-primary"
+                                  onChange={e => {
+                                    const el = e.target;
+                                    el.setAttribute('data-search', el.value.toLowerCase());
+                                    const items = el.parentElement?.querySelectorAll('[data-sched-user]');
+                                    items?.forEach((item: any) => {
+                                      const text = item.getAttribute('data-sched-user') || '';
+                                      item.style.display = text.includes(el.value.toLowerCase()) ? '' : 'none';
+                                    });
+                                  }}
+                                />
+                                <div className="max-h-48 overflow-y-auto space-y-0.5">
+                                  {users.filter(u => u.phone).map(u => (
+                                    <button
+                                      key={u.id}
+                                      data-sched-user={`${u.name} ${u.phone} ${u.email}`.toLowerCase()}
+                                      className={`w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-white/[0.06] cursor-pointer truncate ${schedForm.recipientValue === u.phone ? 'bg-primary/20 text-primary' : 'text-foreground'}`}
+                                      onClick={() => setSchedForm(f => ({ ...f, recipientValue: u.phone, recipientLabel: u.name }))}
+                                    >
+                                      <span className="font-medium">{u.name}</span>
+                                      <span className="text-muted-foreground ml-1">({u.phone})</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           ) : (
                             <Popover>
                               <PopoverTrigger asChild>
