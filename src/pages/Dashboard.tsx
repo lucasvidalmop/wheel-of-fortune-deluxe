@@ -1299,13 +1299,16 @@ const Dashboard = () => {
     if (!grantSpinUser) return;
     const count = Math.max(1, grantSpinCount);
     const isFixed = grantSpinMode === 'fixed';
+    const expMinutes = (wheelConfig as any).spinExpirationMinutes ?? 0;
+    const expireAt = expMinutes > 0 ? new Date(Date.now() + expMinutes * 60000).toISOString() : null;
     const { error } = await (supabase as any).from('wheel_users').update({
       spins_available: count,
       fixed_prize_enabled: isFixed,
       fixed_prize_segment: isFixed ? grantSpinSegment : null,
+      spins_expire_at: expireAt,
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
-    toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
+    toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!${expMinutes > 0 ? ` Expira em ${expMinutes}min.` : ''}`);
     if (spinWhatsappEnabled) {
       sendSpinWhatsapp(grantSpinUser, count, spinWhatsappTemplate, spinWhatsappCustomMsg);
       toast.info(`📱 WhatsApp enviado para ${grantSpinUser.name}`);
@@ -1318,6 +1321,8 @@ const Dashboard = () => {
     if (selectedUserIds.size === 0) return;
     const count = Math.max(1, batchGrantSpinCount);
     const isFixed = batchGrantMode === 'fixed';
+    const expMinutes = (wheelConfig as any).spinExpirationMinutes ?? 0;
+    const expireAt = expMinutes > 0 ? new Date(Date.now() + expMinutes * 60000).toISOString() : null;
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let success = 0;
     for (const user of selectedUsers) {
@@ -1325,6 +1330,7 @@ const Dashboard = () => {
         spins_available: count,
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
+        spins_expire_at: expireAt,
       }).eq('id', user.id);
       if (!error) {
         success++;
@@ -1333,7 +1339,7 @@ const Dashboard = () => {
         }
       }
     }
-    toast.success(`${success} inscrito(s) receberam ${count} giro(s)!`);
+    toast.success(`${success} inscrito(s) receberam ${count} giro(s)!${expMinutes > 0 ? ` Expira em ${expMinutes}min.` : ''}`);
     if (batchWhatsappEnabled) toast.info(`📱 WhatsApp enviado para ${success} inscrito(s)`);
     setShowBatchGrantModal(false);
     setSelectedUserIds(new Set());
@@ -5120,6 +5126,33 @@ const Dashboard = () => {
                     <RotateCcw size={14} /> Reiniciar contadores do dia
                   </button>
                 </div>
+              </div>
+
+              {/* Expiração de Giros */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Expiração de Giros</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Define o tempo (em minutos) que o giro ficará disponível após ser concedido (via link de referral ou manualmente). Se o usuário não girar dentro deste prazo, o giro será removido automaticamente. Deixe <strong className="text-foreground">0</strong> para desativar.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={(wheelConfig as any).spinExpirationMinutes ?? 0}
+                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, spinExpirationMinutes: Math.max(0, Number(e.target.value)) }))}
+                    className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <span className="text-sm text-muted-foreground">minutos (0 = sem expiração)</span>
+                </div>
+                {((wheelConfig as any).spinExpirationMinutes ?? 0) > 0 && (
+                  <p className="text-xs text-amber-400/80">
+                    ⏰ Giros expiram em {(wheelConfig as any).spinExpirationMinutes} minuto(s) após serem concedidos.
+                    {(wheelConfig as any).spinExpirationMinutes >= 60 && ` (≈ ${Math.round((wheelConfig as any).spinExpirationMinutes / 60 * 10) / 10}h)`}
+                  </p>
+                )}
               </div>
 
               {/* Título do Influencer */}
