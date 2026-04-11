@@ -5239,7 +5239,48 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* Título do Influencer */}
+              {/* Blacklist - Segmento Fixo */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Ban size={20} className="text-destructive" />
+                    <h3 className="text-base font-bold text-foreground">Prêmio da Blacklist</h3>
+                  </div>
+                  <button
+                    onClick={() => setWheelConfig((prev: any) => ({ ...prev, blacklistFixedSegmentEnabled: !(prev.blacklistFixedSegmentEnabled ?? false) }))}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition ${(wheelConfig as any).blacklistFixedSegmentEnabled ? 'bg-destructive/20 text-destructive' : 'bg-white/[0.06] text-muted-foreground'}`}
+                  >
+                    {(wheelConfig as any).blacklistFixedSegmentEnabled ? '🔴 Ativo' : 'Desativado'}
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Quando ativado, usuários na blacklist sempre cairão no segmento definido abaixo.
+                </p>
+                {(wheelConfig as any).blacklistFixedSegmentEnabled && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Segmento fixo para blacklist</label>
+                    <select
+                      value={(wheelConfig as any).blacklistFixedSegment ?? ''}
+                      onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, blacklistFixedSegment: e.target.value === '' ? null : Number(e.target.value) }))}
+                      className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                    >
+                      <option value="">Selecione um segmento</option>
+                      {(wheelConfig as any).segments?.map((seg: any, idx: number) => (
+                        <option key={idx} value={idx}>
+                          {idx + 1}. {seg.title || seg.reward || `Segmento ${idx + 1}`}
+                        </option>
+                      ))}
+                    </select>
+                    {(wheelConfig as any).blacklistFixedSegment != null && (
+                      <p className="text-xs text-destructive/80">
+                        🚫 Blacklistados sempre ganharão: <strong>{((wheelConfig as any).segments?.[(wheelConfig as any).blacklistFixedSegment]?.title) || `Segmento ${(wheelConfig as any).blacklistFixedSegment + 1}`}</strong>
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Pencil size={20} className="text-primary" />
