@@ -618,7 +618,6 @@ export type Database = {
           referral_link_id: string | null
           responsible: string | null
           spins_available: number
-          spins_expire_at: string | null
           updated_at: string | null
           user_type: string | null
         }
@@ -641,7 +640,6 @@ export type Database = {
           referral_link_id?: string | null
           responsible?: string | null
           spins_available?: number
-          spins_expire_at?: string | null
           updated_at?: string | null
           user_type?: string | null
         }
@@ -664,7 +662,6 @@ export type Database = {
           referral_link_id?: string | null
           responsible?: string | null
           spins_available?: number
-          spins_expire_at?: string | null
           updated_at?: string | null
           user_type?: string | null
         }
