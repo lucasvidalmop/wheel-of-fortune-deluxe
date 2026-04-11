@@ -28,6 +28,7 @@ const Roleta = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [fixedPrizeEnabled, setFixedPrizeEnabled] = useState(false);
   const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
+  const [isBlacklisted, setIsBlacklisted] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   const [showPostLoginDialog, setShowPostLoginDialog] = useState(false);
   const [showPrizeHistory, setShowPrizeHistory] = useState(false);
