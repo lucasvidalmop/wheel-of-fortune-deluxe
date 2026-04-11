@@ -2481,6 +2481,15 @@ const Dashboard = () => {
                             >
                               {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
                             </button>
+                            {user.spins_available >= 1 && (
+                              <button
+                                onClick={() => handleRemoveSpins(user)}
+                                className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition"
+                                title="Tirar giros"
+                              >
+                                <Minus size={13} />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleToggleQualified(user)}
                               className={`p-1.5 rounded-lg transition border ${user.user_type === 'qualified' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-white/[0.06] text-muted-foreground border-white/[0.06]'}`}
