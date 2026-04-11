@@ -5141,16 +5141,46 @@ const Dashboard = () => {
                   <input
                     type="number"
                     min={0}
-                    value={(wheelConfig as any).spinExpirationMinutes ?? 0}
-                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, spinExpirationMinutes: Math.max(0, Number(e.target.value)) }))}
+                    value={(() => {
+                      const unit = (wheelConfig as any).spinExpirationUnit ?? 'minutes';
+                      const mins = (wheelConfig as any).spinExpirationMinutes ?? 0;
+                      if (unit === 'days') return Math.round(mins / 1440);
+                      if (unit === 'hours') return Math.round(mins / 60);
+                      return mins;
+                    })()}
+                    onChange={(e) => {
+                      const val = Math.max(0, Number(e.target.value));
+                      const unit = (wheelConfig as any).spinExpirationUnit ?? 'minutes';
+                      const mins = unit === 'days' ? val * 1440 : unit === 'hours' ? val * 60 : val;
+                      setWheelConfig((prev: any) => ({ ...prev, spinExpirationMinutes: mins }));
+                    }}
                     className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                   />
-                  <span className="text-sm text-muted-foreground">minutos (0 = sem expiração)</span>
+                  <select
+                    value={(wheelConfig as any).spinExpirationUnit ?? 'minutes'}
+                    onChange={(e) => {
+                      const oldUnit = (wheelConfig as any).spinExpirationUnit ?? 'minutes';
+                      const newUnit = e.target.value;
+                      const mins = (wheelConfig as any).spinExpirationMinutes ?? 0;
+                      // Keep the same total minutes, just change display unit
+                      setWheelConfig((prev: any) => ({ ...prev, spinExpirationUnit: newUnit }));
+                    }}
+                    className="px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  >
+                    <option value="minutes">Minutos</option>
+                    <option value="hours">Horas</option>
+                    <option value="days">Dias</option>
+                  </select>
+                  <span className="text-sm text-muted-foreground">(0 = sem expiração)</span>
                 </div>
                 {((wheelConfig as any).spinExpirationMinutes ?? 0) > 0 && (
                   <p className="text-xs text-amber-400/80">
-                    ⏰ Giros expiram em {(wheelConfig as any).spinExpirationMinutes} minuto(s) após serem concedidos.
-                    {(wheelConfig as any).spinExpirationMinutes >= 60 && ` (≈ ${Math.round((wheelConfig as any).spinExpirationMinutes / 60 * 10) / 10}h)`}
+                    ⏰ Giros expiram em {(() => {
+                      const mins = (wheelConfig as any).spinExpirationMinutes;
+                      if (mins >= 1440) return `${Math.round(mins / 1440 * 10) / 10} dia(s)`;
+                      if (mins >= 60) return `${Math.round(mins / 60 * 10) / 10} hora(s)`;
+                      return `${mins} minuto(s)`;
+                    })()} após serem concedidos.
                   </p>
                 )}
               </div>
