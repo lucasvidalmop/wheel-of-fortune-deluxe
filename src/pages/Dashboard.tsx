@@ -5122,6 +5122,33 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Expiração de Giros */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Expiração de Giros</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Define o tempo (em minutos) que o giro ficará disponível após ser concedido (via link de referral ou manualmente). Se o usuário não girar dentro deste prazo, o giro será removido automaticamente. Deixe <strong className="text-foreground">0</strong> para desativar.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={(wheelConfig as any).spinExpirationMinutes ?? 0}
+                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, spinExpirationMinutes: Math.max(0, Number(e.target.value)) }))}
+                    className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <span className="text-sm text-muted-foreground">minutos (0 = sem expiração)</span>
+                </div>
+                {((wheelConfig as any).spinExpirationMinutes ?? 0) > 0 && (
+                  <p className="text-xs text-amber-400/80">
+                    ⏰ Giros expiram em {(wheelConfig as any).spinExpirationMinutes} minuto(s) após serem concedidos.
+                    {(wheelConfig as any).spinExpirationMinutes >= 60 && ` (≈ ${Math.round((wheelConfig as any).spinExpirationMinutes / 60 * 10) / 10}h)`}
+                  </p>
+                )}
+              </div>
+
               {/* Título do Influencer */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
