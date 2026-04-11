@@ -1372,8 +1372,19 @@ const Dashboard = () => {
     setSelectedUserIds(new Set());
     fetchUsers();
   };
+  const handleRemoveSpinsSelected = async () => {
+    if (selectedUserIds.size === 0) return;
+    const withSpins = users.filter(u => selectedUserIds.has(u.id) && u.spins_available >= 1);
+    if (withSpins.length === 0) { toast.error('Nenhum selecionado possui giros'); return; }
+    if (!await confirmDialog({ title: 'Tirar Giros', message: `Remover todos os giros de ${withSpins.length} inscrito(s)?`, variant: 'danger', confirmLabel: 'Remover' })) return;
+    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).in('id', withSpins.map(u => u.id));
+    if (error) { toast.error('Erro ao remover giros'); return; }
+    toast.success(`Giros removidos de ${withSpins.length} inscrito(s)!`);
+    setSelectedUserIds(new Set());
+    fetchUsers();
+  };
 
-  const handleExportCSV = () => {
+
     const escapeCsvValue = (value: string) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const header = '#,"Nome","E-mail","Celular","ID da Conta","Tipo Chave PIX","Chave PIX","Data de Inscrição","Tipo","Responsável",\n';
     const rows = filteredUsers.map((u, i) =>
