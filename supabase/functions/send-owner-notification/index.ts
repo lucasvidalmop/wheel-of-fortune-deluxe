@@ -125,9 +125,9 @@ Deno.serve(async (req) => {
     const messageText = buildMessage(type, payload);
     const results: { target: string; ok: boolean; error?: string }[] = [];
 
-    // Send to individual phone number
-    if (notifyPhone) {
-      let cleanPhone = String(notifyPhone).replace(/\D/g, "");
+    // Send to all phone numbers
+    for (const phone of validPhones) {
+      let cleanPhone = phone;
       if (!cleanPhone.startsWith("55")) cleanPhone = `55${cleanPhone}`;
 
       try {
@@ -137,9 +137,9 @@ Deno.serve(async (req) => {
           body: JSON.stringify({ number: cleanPhone, text: messageText }),
         });
         const responseText = await response.text();
-        results.push({ target: "phone", ok: response.ok, error: response.ok ? undefined : responseText });
+        results.push({ target: `phone:${cleanPhone}`, ok: response.ok, error: response.ok ? undefined : responseText });
       } catch (e) {
-        results.push({ target: "phone", ok: false, error: e instanceof Error ? e.message : "Erro" });
+        results.push({ target: `phone:${cleanPhone}`, ok: false, error: e instanceof Error ? e.message : "Erro" });
       }
     }
 
