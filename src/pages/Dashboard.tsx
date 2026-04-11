@@ -871,6 +871,7 @@ const Dashboard = () => {
     notifyEvolutionApiKey,
     notifyEvolutionInstance,
     notifyWhatsappPhone,
+    notifyWhatsappPhones,
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
