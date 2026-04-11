@@ -28,6 +28,7 @@ const Roleta = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [fixedPrizeEnabled, setFixedPrizeEnabled] = useState(false);
   const [fixedPrizeSegment, setFixedPrizeSegment] = useState<number | null>(null);
+  const [isBlacklisted, setIsBlacklisted] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   const [showPostLoginDialog, setShowPostLoginDialog] = useState(false);
   const [showPrizeHistory, setShowPrizeHistory] = useState(false);
@@ -422,6 +423,7 @@ const Roleta = () => {
           setCanSpin(row.spins_available >= 1);
           setFixedPrizeEnabled(row.fixed_prize_enabled ?? false);
           setFixedPrizeSegment(row.fixed_prize_segment ?? null);
+          setIsBlacklisted(row.blacklisted ?? false);
           if (!ownerId && row.owner_id) setOwnerId(row.owner_id);
           if (row.spins_available < 1) setMessage('Sem giros disponíveis');
         }
@@ -455,6 +457,7 @@ const Roleta = () => {
     setCanSpin(data.spins_available >= 1);
     setFixedPrizeEnabled(data.fixed_prize_enabled ?? false);
     setFixedPrizeSegment(data.fixed_prize_segment ?? null);
+    setIsBlacklisted(data.blacklisted ?? false);
     if (data.owner_id) setOwnerId(data.owner_id);
     if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
@@ -796,7 +799,12 @@ const Roleta = () => {
             config={config}
             onSpinEnd={handleSpinEnd}
             disabled={accountId ? !canSpin : false}
-            forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
+            forcedSegment={
+              fixedPrizeEnabled ? fixedPrizeSegment
+              : (isBlacklisted && (config as any).blacklistFixedSegmentEnabled && (config as any).blacklistFixedSegment != null)
+                ? (config as any).blacklistFixedSegment
+                : null
+            }
             isMobile={isMobile}
             onShare={handleShare}
           />
