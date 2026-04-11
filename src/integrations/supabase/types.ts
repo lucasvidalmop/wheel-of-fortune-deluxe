@@ -687,6 +687,7 @@ export type Database = {
         Args: { p_account_id: string; p_email: string; p_owner_id?: string }
         Returns: {
           account_id: string
+          blacklisted: boolean
           fixed_prize_enabled: boolean
           fixed_prize_segment: number
           id: string
@@ -754,6 +755,7 @@ export type Database = {
       get_wheel_user_spins: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
+          blacklisted: boolean
           fixed_prize_enabled: boolean
           fixed_prize_segment: number
           name: string
