@@ -1231,19 +1231,29 @@ const Dashboard = () => {
 
 
   const handleGrantSpin = async (user: WheelUser) => {
-    if (user.spins_available >= 1) {
-      // Remove spin
-      const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).eq('id', user.id);
-      if (error) { toast.error('Erro ao remover giro'); return; }
-      toast.success(`Giro removido de ${user.name}`);
-      fetchUsers();
-      return;
-    }
     // Open modal to choose prize
     setGrantSpinUser(user);
     setGrantSpinMode('random');
     setGrantSpinSegment(0);
     setGrantSpinCount(1);
+  };
+
+  const handleRemoveSpins = async (user: WheelUser) => {
+    if (user.spins_available < 1) {
+      toast.error(`${user.name} não possui giros para remover`);
+      return;
+    }
+    const ok = await confirm({
+      title: 'Remover giros',
+      message: `Remover todos os ${user.spins_available} giro(s) de ${user.name}?`,
+      confirmLabel: 'Remover',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).eq('id', user.id);
+    if (error) { toast.error('Erro ao remover giros'); return; }
+    toast.success(`Giros removidos de ${user.name}`);
+    fetchUsers();
   };
 
   const sendSpinWhatsapp = async (user: WheelUser, count: number, templateId: string, customMsg: string) => {
