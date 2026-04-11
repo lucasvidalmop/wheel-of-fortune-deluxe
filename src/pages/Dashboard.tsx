@@ -67,6 +67,7 @@ interface PersistedDashboardSettings {
   notifyEvolutionApiKey: string;
   notifyEvolutionInstance: string;
   notifyWhatsappPhone: string;
+  notifyWhatsappPhones: string[];
   notifyAutoPaymentEnabled: boolean;
   notifyReferralEnabled: boolean;
   notifyPendingPaymentEnabled: boolean;
