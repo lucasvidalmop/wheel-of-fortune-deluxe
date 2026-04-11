@@ -1384,7 +1384,7 @@ const Dashboard = () => {
     fetchUsers();
   };
 
-
+  const handleExportCSV = () => {
     const escapeCsvValue = (value: string) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const header = '#,"Nome","E-mail","Celular","ID da Conta","Tipo Chave PIX","Chave PIX","Data de Inscrição","Tipo","Responsável",\n';
     const rows = filteredUsers.map((u, i) =>
