@@ -1372,6 +1372,17 @@ const Dashboard = () => {
     setSelectedUserIds(new Set());
     fetchUsers();
   };
+  const handleRemoveSpinsSelected = async () => {
+    if (selectedUserIds.size === 0) return;
+    const withSpins = users.filter(u => selectedUserIds.has(u.id) && u.spins_available >= 1);
+    if (withSpins.length === 0) { toast.error('Nenhum selecionado possui giros'); return; }
+    if (!await confirmDialog({ title: 'Tirar Giros', message: `Remover todos os giros de ${withSpins.length} inscrito(s)?`, variant: 'danger', confirmLabel: 'Remover' })) return;
+    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).in('id', withSpins.map(u => u.id));
+    if (error) { toast.error('Erro ao remover giros'); return; }
+    toast.success(`Giros removidos de ${withSpins.length} inscrito(s)!`);
+    setSelectedUserIds(new Set());
+    fetchUsers();
+  };
 
   const handleExportCSV = () => {
     const escapeCsvValue = (value: string) => `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -2276,6 +2287,13 @@ const Dashboard = () => {
                         className="px-3 py-1.5 rounded-lg bg-destructive/20 text-destructive border border-destructive/30 text-xs font-semibold hover:bg-destructive/30 transition"
                       >
                         🗑️ Excluir Selecionados
+                      </button>
+                      <button
+                        onClick={handleRemoveSpinsSelected}
+                        className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-semibold hover:bg-amber-500/30 transition"
+                      >
+                        <Minus size={12} className="inline mr-1" />
+                        Tirar Giros
                       </button>
                       <button
                         onClick={() => setSelectedUserIds(new Set())}
