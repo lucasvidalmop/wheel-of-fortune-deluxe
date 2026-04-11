@@ -1243,7 +1243,7 @@ const Dashboard = () => {
       toast.error(`${user.name} não possui giros para remover`);
       return;
     }
-    const ok = await confirm({
+    const ok = await confirmDialog({
       title: 'Remover giros',
       message: `Remover todos os ${user.spins_available} giro(s) de ${user.name}?`,
       confirmLabel: 'Remover',
