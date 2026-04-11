@@ -2289,6 +2289,13 @@ const Dashboard = () => {
                         🗑️ Excluir Selecionados
                       </button>
                       <button
+                        onClick={handleRemoveSpinsSelected}
+                        className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-semibold hover:bg-amber-500/30 transition"
+                      >
+                        <Minus size={12} className="inline mr-1" />
+                        Tirar Giros
+                      </button>
+                      <button
                         onClick={() => setSelectedUserIds(new Set())}
                         className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground text-xs hover:bg-white/[0.08] transition"
                       >
