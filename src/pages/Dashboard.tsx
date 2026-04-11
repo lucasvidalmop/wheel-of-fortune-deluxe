@@ -229,6 +229,7 @@ const Dashboard = () => {
   const [notifyEvolutionApiKey, setNotifyEvolutionApiKey] = useState('');
   const [notifyEvolutionInstance, setNotifyEvolutionInstance] = useState('');
   const [notifyWhatsappPhone, setNotifyWhatsappPhone] = useState('');
+  const [notifyWhatsappPhones, setNotifyWhatsappPhones] = useState<string[]>([]);
   const [notifyAutoPaymentEnabled, setNotifyAutoPaymentEnabled] = useState(false);
   const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
