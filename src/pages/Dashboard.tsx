@@ -5110,6 +5110,75 @@ const Dashboard = () => {
                 )}
               </div>
 
+              {/* Cooldown de Pagamento Automático */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Wallet size={20} className="text-green-400" />
+                  <h3 className="text-base font-bold text-foreground">Cooldown de Pagamento Automático</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Define o tempo mínimo entre pagamentos automáticos para o mesmo usuário. Se um usuário ganhar novamente dentro desse período, o pagamento será criado como <strong className="text-foreground">manual</strong> (pendente). Deixe em 0 para desativar.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Tempo</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={(() => {
+                        const mins = (wheelConfig as any).autoPaymentCooldownMinutes || 0;
+                        const unit = (wheelConfig as any).autoPaymentCooldownUnit || 'minutes';
+                        if (unit === 'hours') return Math.round(mins / 60);
+                        if (unit === 'days') return Math.round(mins / 1440);
+                        return mins;
+                      })()}
+                      onChange={(e) => {
+                        const val = Math.max(0, Number(e.target.value));
+                        const unit = (wheelConfig as any).autoPaymentCooldownUnit || 'minutes';
+                        let mins = val;
+                        if (unit === 'hours') mins = val * 60;
+                        if (unit === 'days') mins = val * 1440;
+                        setWheelConfig((prev: any) => ({ ...prev, autoPaymentCooldownMinutes: mins }));
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:border-green-400/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Unidade</label>
+                    <select
+                      value={(wheelConfig as any).autoPaymentCooldownUnit || 'minutes'}
+                      onChange={(e) => {
+                        const newUnit = e.target.value;
+                        const oldUnit = (wheelConfig as any).autoPaymentCooldownUnit || 'minutes';
+                        const oldMins = (wheelConfig as any).autoPaymentCooldownMinutes || 0;
+                        let displayVal = oldMins;
+                        if (oldUnit === 'hours') displayVal = Math.round(oldMins / 60);
+                        if (oldUnit === 'days') displayVal = Math.round(oldMins / 1440);
+                        let newMins = displayVal;
+                        if (newUnit === 'hours') newMins = displayVal * 60;
+                        if (newUnit === 'days') newMins = displayVal * 1440;
+                        setWheelConfig((prev: any) => ({ ...prev, autoPaymentCooldownUnit: newUnit, autoPaymentCooldownMinutes: newMins }));
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:border-green-400/40 appearance-none"
+                    >
+                      <option value="minutes" className="bg-[#1a1a2e]">Minutos</option>
+                      <option value="hours" className="bg-[#1a1a2e]">Horas</option>
+                      <option value="days" className="bg-[#1a1a2e]">Dias</option>
+                    </select>
+                  </div>
+                </div>
+                {((wheelConfig as any).autoPaymentCooldownMinutes || 0) > 0 && (
+                  <p className="text-xs text-green-400">
+                    💰 Usuário só poderá receber outro pagamento automático após {(() => {
+                      const mins = (wheelConfig as any).autoPaymentCooldownMinutes;
+                      if (mins >= 1440) return `${Math.round(mins / 1440)} dia(s)`;
+                      if (mins >= 60) return `${Math.round(mins / 60)} hora(s)`;
+                      return `${mins} minuto(s)`;
+                    })()}
+                  </p>
+                )}
+              </div>
+
               {/* Probabilidade do Sorteio */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
