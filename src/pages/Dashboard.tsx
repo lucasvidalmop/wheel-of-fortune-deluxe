@@ -690,6 +690,7 @@ const Dashboard = () => {
     setNotifyEvolutionApiKey(settings.notifyEvolutionApiKey || '');
     setNotifyEvolutionInstance(settings.notifyEvolutionInstance || '');
     setNotifyWhatsappPhone(settings.notifyWhatsappPhone || '');
+    setNotifyWhatsappPhones(Array.isArray(settings.notifyWhatsappPhones) ? settings.notifyWhatsappPhones : (settings.notifyWhatsappPhone ? [settings.notifyWhatsappPhone] : []));
     setNotifyAutoPaymentEnabled(!!settings.notifyAutoPaymentEnabled);
     setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
