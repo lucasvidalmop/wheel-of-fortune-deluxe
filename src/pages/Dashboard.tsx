@@ -1255,7 +1255,7 @@ const Dashboard = () => {
       variant: 'danger',
     });
     if (!ok) return;
-    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).eq('id', user.id);
+    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null, spins_expire_at: null }).eq('id', user.id);
     if (error) { toast.error('Erro ao remover giros'); return; }
     toast.success(`Giros removidos de ${user.name}`);
     fetchUsers();
@@ -1295,6 +1295,14 @@ const Dashboard = () => {
     } catch (e) { /* silent */ }
   };
 
+  const getSpinExpireAt = () => {
+    const mins = (wheelConfig as any).spinExpirationMinutes;
+    if (mins && Number(mins) > 0) {
+      return new Date(Date.now() + Number(mins) * 60000).toISOString();
+    }
+    return null;
+  };
+
   const confirmGrantSpin = async () => {
     if (!grantSpinUser) return;
     const count = Math.max(1, grantSpinCount);
@@ -1303,6 +1311,7 @@ const Dashboard = () => {
       spins_available: count,
       fixed_prize_enabled: isFixed,
       fixed_prize_segment: isFixed ? grantSpinSegment : null,
+      spins_expire_at: getSpinExpireAt(),
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
     toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
@@ -1325,6 +1334,7 @@ const Dashboard = () => {
         spins_available: count,
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
+        spins_expire_at: getSpinExpireAt(),
       }).eq('id', user.id);
       if (!error) {
         success++;
@@ -1382,7 +1392,7 @@ const Dashboard = () => {
     const withSpins = users.filter(u => selectedUserIds.has(u.id) && u.spins_available >= 1);
     if (withSpins.length === 0) { toast.error('Nenhum selecionado possui giros'); return; }
     if (!await confirmDialog({ title: 'Tirar Giros', message: `Remover todos os giros de ${withSpins.length} inscrito(s)?`, variant: 'danger', confirmLabel: 'Remover' })) return;
-    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).in('id', withSpins.map(u => u.id));
+    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null, spins_expire_at: null }).in('id', withSpins.map(u => u.id));
     if (error) { toast.error('Erro ao remover giros'); return; }
     toast.success(`Giros removidos de ${withSpins.length} inscrito(s)!`);
     setSelectedUserIds(new Set());
@@ -5030,6 +5040,76 @@ const Dashboard = () => {
 
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
+              {/* Expiração de Giros */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={20} className="text-amber-400" />
+                  <h3 className="text-base font-bold text-foreground">Expiração de Giros</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Define o tempo de expiração dos giros após serem liberados (manualmente ou via link de referência). Deixe em 0 para desativar.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Tempo</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={(() => {
+                        const mins = (wheelConfig as any).spinExpirationMinutes || 0;
+                        const unit = (wheelConfig as any).spinExpirationUnit || 'minutes';
+                        if (unit === 'hours') return Math.round(mins / 60);
+                        if (unit === 'days') return Math.round(mins / 1440);
+                        return mins;
+                      })()}
+                      onChange={(e) => {
+                        const val = Math.max(0, Number(e.target.value));
+                        const unit = (wheelConfig as any).spinExpirationUnit || 'minutes';
+                        let mins = val;
+                        if (unit === 'hours') mins = val * 60;
+                        if (unit === 'days') mins = val * 1440;
+                        setWheelConfig((prev: any) => ({ ...prev, spinExpirationMinutes: mins }));
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:border-amber-400/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Unidade</label>
+                    <select
+                      value={(wheelConfig as any).spinExpirationUnit || 'minutes'}
+                      onChange={(e) => {
+                        const newUnit = e.target.value;
+                        const oldUnit = (wheelConfig as any).spinExpirationUnit || 'minutes';
+                        const oldMins = (wheelConfig as any).spinExpirationMinutes || 0;
+                        // Convert display value to new unit
+                        let displayVal = oldMins;
+                        if (oldUnit === 'hours') displayVal = Math.round(oldMins / 60);
+                        if (oldUnit === 'days') displayVal = Math.round(oldMins / 1440);
+                        let newMins = displayVal;
+                        if (newUnit === 'hours') newMins = displayVal * 60;
+                        if (newUnit === 'days') newMins = displayVal * 1440;
+                        setWheelConfig((prev: any) => ({ ...prev, spinExpirationUnit: newUnit, spinExpirationMinutes: newMins }));
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:border-amber-400/40 appearance-none"
+                    >
+                      <option value="minutes" className="bg-[#1a1a2e]">Minutos</option>
+                      <option value="hours" className="bg-[#1a1a2e]">Horas</option>
+                      <option value="days" className="bg-[#1a1a2e]">Dias</option>
+                    </select>
+                  </div>
+                </div>
+                {((wheelConfig as any).spinExpirationMinutes || 0) > 0 && (
+                  <p className="text-xs text-amber-400">
+                    ⏱️ Giros expirarão após {(() => {
+                      const mins = (wheelConfig as any).spinExpirationMinutes;
+                      if (mins >= 1440) return `${Math.round(mins / 1440)} dia(s)`;
+                      if (mins >= 60) return `${Math.round(mins / 60)} hora(s)`;
+                      return `${mins} minuto(s)`;
+                    })()} de serem liberados
+                  </p>
+                )}
+              </div>
+
               {/* Probabilidade do Sorteio */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
