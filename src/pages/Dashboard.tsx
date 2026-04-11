@@ -4161,7 +4161,7 @@ const Dashboard = () => {
                       <input type="text" value={notifyEvolutionInstance} onChange={e => setNotifyEvolutionInstance(e.target.value)} placeholder="minha-instancia-notif" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
 
-                    {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhone ? (
+                    {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhones.some(p => p.trim()) ? (
                       <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                         <span className="text-xs font-medium text-emerald-400">Notificações configuradas e ativas</span>
