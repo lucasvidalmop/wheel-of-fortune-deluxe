@@ -5040,12 +5040,6 @@ const Dashboard = () => {
 
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
-              {/* Probabilidade do Sorteio */}
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Target size={20} className="text-primary" />
-                  <h3 className="text-base font-bold text-foreground">Probabilidade do Sorteio</h3>
-                </div>
               {/* Expiração de Giros */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
