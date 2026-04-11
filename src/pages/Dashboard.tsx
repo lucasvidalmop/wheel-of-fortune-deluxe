@@ -320,10 +320,14 @@ const Dashboard = () => {
     if (schedForm.recipientType === 'individual' && !schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
     if (schedForm.recipientType === 'group' && schedForm.selectedGroups.length === 0) { toast.error('Selecione ao menos um grupo'); return; }
     if (!schedForm.date) { toast.error('Selecione a data'); return; }
-    setSchedSaving(true);
     const [hours, minutes] = schedForm.time.split(':').map(Number);
     const scheduledAt = new Date(schedForm.date);
     scheduledAt.setHours(hours, minutes, 0, 0);
+    if (scheduledAt.getTime() <= Date.now() + 60000) {
+      toast.error('A data/hora do agendamento deve ser no futuro (pelo menos 1 minuto à frente)');
+      return;
+    }
+    setSchedSaving(true);
     const isoDate = scheduledAt.toISOString();
 
     const baseRow = {
