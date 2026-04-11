@@ -92,12 +92,12 @@ Deno.serve(async (req) => {
     }
 
     const notifyPhone = ds.notifyWhatsappPhone;
+    const notifyPhones: string[] = Array.isArray(ds.notifyWhatsappPhones) ? ds.notifyWhatsappPhones : (notifyPhone ? [notifyPhone] : []);
     const notifyUrl = ds.notifyEvolutionApiUrl;
     const notifyKey = ds.notifyEvolutionApiKey;
     const notifyInstance = ds.notifyEvolutionInstance;
     const notifyGroupJid = ds.notifyGroupJid || "";
     const notifySelectedGroups: {id: string; subject: string}[] = Array.isArray(ds.notifySelectedGroups) ? ds.notifySelectedGroups : [];
-    // Build list of group JIDs (from new multi-select or legacy single)
     const groupJids: string[] = notifySelectedGroups.length > 0
       ? notifySelectedGroups.map((g: any) => g.id)
       : notifyGroupJid ? [notifyGroupJid] : [];
@@ -109,7 +109,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!notifyPhone && groupJids.length === 0) {
+    const validPhones = notifyPhones.map(p => String(p).replace(/\D/g, "")).filter(p => p.length >= 10);
+
+    if (validPhones.length === 0 && groupJids.length === 0) {
       return new Response(JSON.stringify({ success: false, skipped: true, reason: "missing_notification_config" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
