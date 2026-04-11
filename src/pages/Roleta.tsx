@@ -423,6 +423,7 @@ const Roleta = () => {
           setCanSpin(row.spins_available >= 1);
           setFixedPrizeEnabled(row.fixed_prize_enabled ?? false);
           setFixedPrizeSegment(row.fixed_prize_segment ?? null);
+          setIsBlacklisted(row.blacklisted ?? false);
           if (!ownerId && row.owner_id) setOwnerId(row.owner_id);
           if (row.spins_available < 1) setMessage('Sem giros disponíveis');
         }
