@@ -2385,7 +2385,16 @@ const Dashboard = () => {
                                 <PopoverTrigger asChild>
                                   <button className="p-1.5 rounded-md hover:bg-white/[0.08] transition text-muted-foreground hover:text-foreground">
                                     <Settings size={14} />
-                                  </button>
+                                    </button>
+                                    {user.spins_available >= 1 && (
+                                      <button
+                                        onClick={() => handleRemoveSpins(user)}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full text-red-400"
+                                      >
+                                        <Minus size={13} className="text-red-400" />
+                                        <span>Tirar giros ({user.spins_available})</span>
+                                      </button>
+                                    )}
                                 </PopoverTrigger>
                                 <PopoverContent align="end" className="w-44 p-1.5 bg-card border border-white/[0.08] shadow-xl" sideOffset={4}>
                                   <div className="flex flex-col gap-0.5">
