@@ -1295,6 +1295,14 @@ const Dashboard = () => {
     } catch (e) { /* silent */ }
   };
 
+  const getSpinExpireAt = () => {
+    const mins = (wheelConfig as any).spinExpirationMinutes;
+    if (mins && Number(mins) > 0) {
+      return new Date(Date.now() + Number(mins) * 60000).toISOString();
+    }
+    return null;
+  };
+
   const confirmGrantSpin = async () => {
     if (!grantSpinUser) return;
     const count = Math.max(1, grantSpinCount);
@@ -1303,6 +1311,7 @@ const Dashboard = () => {
       spins_available: count,
       fixed_prize_enabled: isFixed,
       fixed_prize_segment: isFixed ? grantSpinSegment : null,
+      spins_expire_at: getSpinExpireAt(),
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
     toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
@@ -1325,6 +1334,7 @@ const Dashboard = () => {
         spins_available: count,
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
+        spins_expire_at: getSpinExpireAt(),
       }).eq('id', user.id);
       if (!error) {
         success++;
@@ -1382,7 +1392,7 @@ const Dashboard = () => {
     const withSpins = users.filter(u => selectedUserIds.has(u.id) && u.spins_available >= 1);
     if (withSpins.length === 0) { toast.error('Nenhum selecionado possui giros'); return; }
     if (!await confirmDialog({ title: 'Tirar Giros', message: `Remover todos os giros de ${withSpins.length} inscrito(s)?`, variant: 'danger', confirmLabel: 'Remover' })) return;
-    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).in('id', withSpins.map(u => u.id));
+    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null, spins_expire_at: null }).in('id', withSpins.map(u => u.id));
     if (error) { toast.error('Erro ao remover giros'); return; }
     toast.success(`Giros removidos de ${withSpins.length} inscrito(s)!`);
     setSelectedUserIds(new Set());
