@@ -1321,6 +1321,8 @@ const Dashboard = () => {
     if (selectedUserIds.size === 0) return;
     const count = Math.max(1, batchGrantSpinCount);
     const isFixed = batchGrantMode === 'fixed';
+    const expMinutes = (wheelConfig as any).spinExpirationMinutes ?? 0;
+    const expireAt = expMinutes > 0 ? new Date(Date.now() + expMinutes * 60000).toISOString() : null;
     const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
     let success = 0;
     for (const user of selectedUsers) {
@@ -1328,6 +1330,7 @@ const Dashboard = () => {
         spins_available: count,
         fixed_prize_enabled: isFixed,
         fixed_prize_segment: isFixed ? batchGrantSegment : null,
+        spins_expire_at: expireAt,
       }).eq('id', user.id);
       if (!error) {
         success++;
@@ -1336,7 +1339,7 @@ const Dashboard = () => {
         }
       }
     }
-    toast.success(`${success} inscrito(s) receberam ${count} giro(s)!`);
+    toast.success(`${success} inscrito(s) receberam ${count} giro(s)!${expMinutes > 0 ? ` Expira em ${expMinutes}min.` : ''}`);
     if (batchWhatsappEnabled) toast.info(`📱 WhatsApp enviado para ${success} inscrito(s)`);
     setShowBatchGrantModal(false);
     setSelectedUserIds(new Set());
