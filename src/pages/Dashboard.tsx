@@ -1299,13 +1299,16 @@ const Dashboard = () => {
     if (!grantSpinUser) return;
     const count = Math.max(1, grantSpinCount);
     const isFixed = grantSpinMode === 'fixed';
+    const expMinutes = (wheelConfig as any).spinExpirationMinutes ?? 0;
+    const expireAt = expMinutes > 0 ? new Date(Date.now() + expMinutes * 60000).toISOString() : null;
     const { error } = await (supabase as any).from('wheel_users').update({
       spins_available: count,
       fixed_prize_enabled: isFixed,
       fixed_prize_segment: isFixed ? grantSpinSegment : null,
+      spins_expire_at: expireAt,
     }).eq('id', grantSpinUser.id);
     if (error) { toast.error('Erro ao liberar giro'); return; }
-    toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!`);
+    toast.success(`${count} giro(s) liberado(s) para ${grantSpinUser.name}!${expMinutes > 0 ? ` Expira em ${expMinutes}min.` : ''}`);
     if (spinWhatsappEnabled) {
       sendSpinWhatsapp(grantSpinUser, count, spinWhatsappTemplate, spinWhatsappCustomMsg);
       toast.info(`📱 WhatsApp enviado para ${grantSpinUser.name}`);
