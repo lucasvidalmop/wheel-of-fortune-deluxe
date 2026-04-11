@@ -110,6 +110,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyEvolutionApiKey: '',
   notifyEvolutionInstance: '',
   notifyWhatsappPhone: '',
+  notifyWhatsappPhones: [],
   notifyAutoPaymentEnabled: false,
   notifyReferralEnabled: false,
   notifyPendingPaymentEnabled: false,
