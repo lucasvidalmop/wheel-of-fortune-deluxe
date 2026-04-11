@@ -7,7 +7,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -1231,19 +1231,29 @@ const Dashboard = () => {
 
 
   const handleGrantSpin = async (user: WheelUser) => {
-    if (user.spins_available >= 1) {
-      // Remove spin
-      const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).eq('id', user.id);
-      if (error) { toast.error('Erro ao remover giro'); return; }
-      toast.success(`Giro removido de ${user.name}`);
-      fetchUsers();
-      return;
-    }
     // Open modal to choose prize
     setGrantSpinUser(user);
     setGrantSpinMode('random');
     setGrantSpinSegment(0);
     setGrantSpinCount(1);
+  };
+
+  const handleRemoveSpins = async (user: WheelUser) => {
+    if (user.spins_available < 1) {
+      toast.error(`${user.name} não possui giros para remover`);
+      return;
+    }
+    const ok = await confirmDialog({
+      title: 'Remover giros',
+      message: `Remover todos os ${user.spins_available} giro(s) de ${user.name}?`,
+      confirmLabel: 'Remover',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    const { error } = await (supabase as any).from('wheel_users').update({ spins_available: 0, fixed_prize_enabled: false, fixed_prize_segment: null }).eq('id', user.id);
+    if (error) { toast.error('Erro ao remover giros'); return; }
+    toast.success(`Giros removidos de ${user.name}`);
+    fetchUsers();
   };
 
   const sendSpinWhatsapp = async (user: WheelUser, count: number, templateId: string, customMsg: string) => {
@@ -2375,7 +2385,16 @@ const Dashboard = () => {
                                 <PopoverTrigger asChild>
                                   <button className="p-1.5 rounded-md hover:bg-white/[0.08] transition text-muted-foreground hover:text-foreground">
                                     <Settings size={14} />
-                                  </button>
+                                    </button>
+                                    {user.spins_available >= 1 && (
+                                      <button
+                                        onClick={() => handleRemoveSpins(user)}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-md text-xs hover:bg-white/[0.06] transition text-left w-full text-red-400"
+                                      >
+                                        <Minus size={13} className="text-red-400" />
+                                        <span>Tirar giros ({user.spins_available})</span>
+                                      </button>
+                                    )}
                                 </PopoverTrigger>
                                 <PopoverContent align="end" className="w-44 p-1.5 bg-card border border-white/[0.08] shadow-xl" sideOffset={4}>
                                   <div className="flex flex-col gap-0.5">
@@ -2462,6 +2481,15 @@ const Dashboard = () => {
                             >
                               {user.spins_available >= 1 ? `${user.spins_available} ✓` : 'Giro'}
                             </button>
+                            {user.spins_available >= 1 && (
+                              <button
+                                onClick={() => handleRemoveSpins(user)}
+                                className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition"
+                                title="Tirar giros"
+                              >
+                                <Minus size={13} />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleToggleQualified(user)}
                               className={`p-1.5 rounded-lg transition border ${user.user_type === 'qualified' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-white/[0.06] text-muted-foreground border-white/[0.06]'}`}
