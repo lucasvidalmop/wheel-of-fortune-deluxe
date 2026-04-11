@@ -799,7 +799,12 @@ const Roleta = () => {
             config={config}
             onSpinEnd={handleSpinEnd}
             disabled={accountId ? !canSpin : false}
-            forcedSegment={fixedPrizeEnabled ? fixedPrizeSegment : null}
+            forcedSegment={
+              fixedPrizeEnabled ? fixedPrizeSegment
+              : (isBlacklisted && (config as any).blacklistFixedSegmentEnabled && (config as any).blacklistFixedSegment != null)
+                ? (config as any).blacklistFixedSegment
+                : null
+            }
             isMobile={isMobile}
             onShare={handleShare}
           />
