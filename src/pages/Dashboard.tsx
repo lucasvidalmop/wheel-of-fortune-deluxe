@@ -67,6 +67,7 @@ interface PersistedDashboardSettings {
   notifyEvolutionApiKey: string;
   notifyEvolutionInstance: string;
   notifyWhatsappPhone: string;
+  notifyWhatsappPhones: string[];
   notifyAutoPaymentEnabled: boolean;
   notifyReferralEnabled: boolean;
   notifyPendingPaymentEnabled: boolean;
@@ -109,6 +110,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyEvolutionApiKey: '',
   notifyEvolutionInstance: '',
   notifyWhatsappPhone: '',
+  notifyWhatsappPhones: [],
   notifyAutoPaymentEnabled: false,
   notifyReferralEnabled: false,
   notifyPendingPaymentEnabled: false,
@@ -227,6 +229,7 @@ const Dashboard = () => {
   const [notifyEvolutionApiKey, setNotifyEvolutionApiKey] = useState('');
   const [notifyEvolutionInstance, setNotifyEvolutionInstance] = useState('');
   const [notifyWhatsappPhone, setNotifyWhatsappPhone] = useState('');
+  const [notifyWhatsappPhones, setNotifyWhatsappPhones] = useState<string[]>([]);
   const [notifyAutoPaymentEnabled, setNotifyAutoPaymentEnabled] = useState(false);
   const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
@@ -633,6 +636,7 @@ const Dashboard = () => {
     notifyEvolutionApiKey,
     notifyEvolutionInstance,
     notifyWhatsappPhone,
+    notifyWhatsappPhones,
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
@@ -686,6 +690,7 @@ const Dashboard = () => {
     setNotifyEvolutionApiKey(settings.notifyEvolutionApiKey || '');
     setNotifyEvolutionInstance(settings.notifyEvolutionInstance || '');
     setNotifyWhatsappPhone(settings.notifyWhatsappPhone || '');
+    setNotifyWhatsappPhones(Array.isArray(settings.notifyWhatsappPhones) ? settings.notifyWhatsappPhones : (settings.notifyWhatsappPhone ? [settings.notifyWhatsappPhone] : []));
     setNotifyAutoPaymentEnabled(!!settings.notifyAutoPaymentEnabled);
     setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
@@ -4131,7 +4136,14 @@ const Dashboard = () => {
                   <div className="space-y-3 pt-2 border-t border-white/[0.06]">
                     <div className="space-y-1">
                       <label className="text-xs text-muted-foreground">Seu número WhatsApp</label>
-                      <input type="text" value={notifyWhatsappPhone} onChange={e => setNotifyWhatsappPhone(e.target.value)} placeholder="5511999999999" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      <label className="text-xs text-muted-foreground">Números WhatsApp para notificação</label>
+                      {notifyWhatsappPhones.map((phone, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input type="text" value={phone} onChange={e => { const arr = [...notifyWhatsappPhones]; arr[idx] = e.target.value; setNotifyWhatsappPhones(arr); setNotifyWhatsappPhone(arr[0] || ''); }} placeholder="5511999999999" className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                          <button type="button" onClick={() => { const arr = notifyWhatsappPhones.filter((_, i) => i !== idx); setNotifyWhatsappPhones(arr); setNotifyWhatsappPhone(arr[0] || ''); }} className="px-2 text-red-400 hover:text-red-300 transition-colors text-lg font-bold">✕</button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => setNotifyWhatsappPhones([...notifyWhatsappPhones, ''])} className="w-full py-2 rounded-xl text-xs font-medium bg-white/[0.04] border border-dashed border-white/[0.12] text-muted-foreground hover:text-foreground hover:border-white/[0.2] transition-all">+ Adicionar número</button>
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs text-muted-foreground">URL da API Evolution</label>
@@ -4149,7 +4161,7 @@ const Dashboard = () => {
                       <input type="text" value={notifyEvolutionInstance} onChange={e => setNotifyEvolutionInstance(e.target.value)} placeholder="minha-instancia-notif" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
 
-                    {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhone ? (
+                    {notifyEvolutionApiUrl && notifyEvolutionApiKey && notifyEvolutionInstance && notifyWhatsappPhones.some(p => p.trim()) ? (
                       <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                         <span className="text-xs font-medium text-emerald-400">Notificações configuradas e ativas</span>
