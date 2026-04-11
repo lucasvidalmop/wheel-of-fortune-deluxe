@@ -5155,6 +5155,33 @@ const Dashboard = () => {
                 )}
               </div>
 
+              {/* Cooldown de Auto-Pagamento */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Cooldown Auto-Pagamento</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Tempo mínimo entre pagamentos automáticos para o mesmo usuário. Enquanto estiver em cooldown, o pagamento vai para aprovação manual.
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={0}
+                    value={(wheelConfig as any).autoPaymentCooldownMinutes ?? 0}
+                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, autoPaymentCooldownMinutes: Math.max(0, Number(e.target.value)) }))}
+                    className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <span className="text-sm text-muted-foreground">minutos (0 = sem cooldown)</span>
+                </div>
+                {((wheelConfig as any).autoPaymentCooldownMinutes ?? 0) > 0 && (
+                  <p className="text-xs text-amber-400/80">
+                    ⏱️ Após um auto-pagamento, o próximo só será automático após {(wheelConfig as any).autoPaymentCooldownMinutes} minuto(s).
+                    {(wheelConfig as any).autoPaymentCooldownMinutes >= 60 && ` (≈ ${Math.round((wheelConfig as any).autoPaymentCooldownMinutes / 60 * 10) / 10}h)`}
+                  </p>
+                )}
+              </div>
+
               {/* Título do Influencer */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
