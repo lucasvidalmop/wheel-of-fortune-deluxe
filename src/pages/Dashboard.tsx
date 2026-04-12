@@ -3954,10 +3954,15 @@ const Dashboard = () => {
                           {schedMediaUploading ? <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
                           Anexar mídia
                         </button>
+                        <input type="file" ref={schedPttInputRef} className="hidden" accept=".ogg,.mp3,.wav,.m4a,.aac,audio/*" onChange={handleSchedPttUpload} />
+                        <button type="button" onClick={() => schedPttInputRef.current?.click()} disabled={schedMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5 text-green-400 hover:text-green-300 text-xs transition">
+                          <Mic size={14} />
+                          Áudio de voz
+                        </button>
                         {schedMedia && (
-                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary">
-                            {schedMedia.mediatype === 'image' ? <ImageIcon size={12} /> : schedMedia.mediatype === 'video' ? <Video size={12} /> : <FileAudio size={12} />}
-                            <span className="truncate max-w-[120px]">{schedMedia.fileName}</span>
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs ${schedMedia.ptt ? 'bg-green-500/10 border border-green-500/20 text-green-400' : 'bg-primary/10 border border-primary/20 text-primary'}`}>
+                            {schedMedia.ptt ? <Mic size={12} /> : schedMedia.mediatype === 'image' ? <ImageIcon size={12} /> : schedMedia.mediatype === 'video' ? <Video size={12} /> : <FileAudio size={12} />}
+                            <span className="truncate max-w-[120px]">{schedMedia.ptt ? '🎤 Voz' : ''} {schedMedia.fileName}</span>
                             <button onClick={() => setSchedMedia(null)} className="ml-1 text-red-400 hover:text-red-300"><X size={12} /></button>
                           </div>
                         )}
