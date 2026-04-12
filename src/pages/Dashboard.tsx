@@ -489,6 +489,23 @@ const Dashboard = () => {
       if (error) { toast.error('Erro ao atualizar'); return; }
       toast.success('Link atualizado!');
     } else {
+      // Build confirmation message with link details
+      const confirmLines = [
+        `📌 Nome: ${referralForm.label}`,
+        `🎰 Giros por resgate: ${referralForm.spins_per_registration}`,
+        referralForm.max_registrations ? `👥 Limite de resgates: ${referralForm.max_registrations}` : '👥 Limite de resgates: Ilimitado',
+        referralForm.expires_at ? `📅 Expira em: ${new Date(referralForm.expires_at).toLocaleString('pt-BR')}` : '📅 Expiração: Sem prazo',
+        referralForm.fixed_prize_segments.length > 0 ? `🎯 Segmentos fixos: ${referralForm.fixed_prize_segments.length} definido(s)` : '🎯 Segmentos fixos: Nenhum',
+        `💸 Auto-pagamento: ${referralForm.auto_payment ? 'Sim' : 'Não'}`,
+      ];
+      const confirmed = await confirmDialog({
+        title: 'Confirmar Criação do Link',
+        message: confirmLines.join('\n'),
+        variant: 'info',
+        confirmLabel: 'Criar Link',
+      });
+      if (!confirmed) return;
+
       const { error } = await (supabase as any)
         .from('referral_links')
         .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null });
