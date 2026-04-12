@@ -209,7 +209,7 @@ const Registration = () => {
     }
     setSubmitting(true);
     try {
-      const { data, error } = await (supabase as any).rpc('register_via_referral', {
+      const { data, error } = await (supabase as any).rpc('register_via_gorjeta', {
         p_code: code || '',
         p_email: email.trim(),
         p_account_id: accountId.trim(),
@@ -222,7 +222,7 @@ const Registration = () => {
       if (error) throw error;
       const result = typeof data === 'string' ? JSON.parse(data) : data;
       if (result?.success) {
-        setSpinsGranted(result.spins || 1);
+        setSpinsGranted(0);
         if (result.slug) setWheelSlug(result.slug);
         setSuccess(true);
 
