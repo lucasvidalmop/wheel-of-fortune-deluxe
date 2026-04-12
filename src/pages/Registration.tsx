@@ -436,7 +436,7 @@ const Registration = () => {
 
           {/* Chave PIX */}
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>Chave PIX</label>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>Chave PIX <span style={{ color: accentColor }}>*</span></label>
             <div className="flex gap-2">
               <div className="relative w-[130px] shrink-0">
                 <select
