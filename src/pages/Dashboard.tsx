@@ -495,7 +495,7 @@ const Dashboard = () => {
         `🎰 Giros por resgate: ${referralForm.spins_per_registration}`,
         referralForm.max_registrations ? `👥 Limite de resgates: ${referralForm.max_registrations}` : '👥 Limite de resgates: Ilimitado',
         referralForm.expires_at ? `📅 Expira em: ${new Date(referralForm.expires_at).toLocaleString('pt-BR')}` : '📅 Expiração: Sem prazo',
-        referralForm.fixed_prize_segments.length > 0 ? `🎯 Segmentos fixos: ${referralForm.fixed_prize_segments.length} definido(s)` : '🎯 Segmentos fixos: Nenhum',
+        referralForm.fixed_prize_segments.length > 0 ? `🎯 Segmentos fixos:\n${referralForm.fixed_prize_segments.map(i => `   • ${wheelConfig?.segments?.[i]?.label || `Segmento ${i + 1}`}`).join('\n')}` : '🎯 Segmentos fixos: Nenhum',
         `💸 Auto-pagamento: ${referralForm.auto_payment ? 'Sim' : 'Não'}`,
       ];
       const confirmed = await confirmDialog({
