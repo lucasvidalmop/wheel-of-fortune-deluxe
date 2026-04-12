@@ -6548,6 +6548,18 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                                 ) : '💸'} Pagar via PIX
                               </button>
                             )}
+                            {p.status === 'processing' && (
+                              <div className="flex gap-2 pt-1">
+                                <span className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold bg-yellow-500/10 text-yellow-400">
+                                  <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" /> Aguardando confirmação
+                                </span>
+                                <button
+                                  onClick={() => handleRejectPrize(p.id)}
+                                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-all"
+                                >
+                                  ❌ Cancelar
+                                </button>
+                              </div>
                             {p.edpay_transaction_id && (
                               <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
                             )}
