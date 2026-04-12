@@ -1224,7 +1224,7 @@ const Dashboard = () => {
       .from('prize_payments')
       .select('*')
       .eq('owner_id', session.user.id)
-      .in('status', ['paid', 'rejected'])
+      .in('status', ['paid', 'rejected', 'processing'])
       .order('created_at', { ascending: false });
     setPaidHistory(data || []);
     setPaidHistoryLoading(false);
