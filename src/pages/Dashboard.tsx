@@ -253,9 +253,10 @@ const Dashboard = () => {
   const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[] });
   const [schedSaving, setSchedSaving] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
-  const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
   const [schedMediaUploading, setSchedMediaUploading] = useState(false);
   const schedMediaInputRef = useRef<HTMLInputElement>(null);
+  const schedPttInputRef = useRef<HTMLInputElement>(null);
 
   const handleSchedMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -279,6 +280,25 @@ const Dashboard = () => {
     }
     setSchedMediaUploading(false);
     if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
+  };
+
+  const handleSchedPttUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSchedMediaUploading(true);
+    try {
+      const safeName = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'audio.ogg';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setSchedMedia({ url: urlData.publicUrl, mediatype: 'ptt', mimetype: 'audio/ogg; codecs=opus', fileName: file.name, ptt: true });
+      toast.success('🎤 Áudio de voz anexado ao agendamento!');
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setSchedMediaUploading(false);
+    if (schedPttInputRef.current) schedPttInputRef.current.value = '';
   };
 
   const fetchScheduledMessages = async () => {
