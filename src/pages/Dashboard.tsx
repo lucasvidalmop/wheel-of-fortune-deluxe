@@ -267,7 +267,8 @@ const Dashboard = () => {
       if (['jpg','jpeg','png','gif','webp'].includes(ext)) mediatype = 'image';
       else if (['mp4','avi','mov','mkv','3gp'].includes(ext)) mediatype = 'video';
       else if (['mp3','ogg','opus','wav','m4a','aac'].includes(ext)) mediatype = 'audio';
-      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${file.name}`;
+      const safeName = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'arquivo';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${safeName}`;
       const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
@@ -401,7 +402,8 @@ const Dashboard = () => {
       else if (['mp4','avi','mov','mkv','3gp'].includes(ext)) mediatype = 'video';
       else if (['mp3','ogg','opus','wav','m4a','aac'].includes(ext)) mediatype = 'audio';
 
-      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${file.name}`;
+      const safeName2 = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'arquivo';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${safeName2}`;
       const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
