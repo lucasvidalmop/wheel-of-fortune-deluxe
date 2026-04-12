@@ -6560,6 +6560,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                                   ❌ Cancelar
                                 </button>
                               </div>
+                            )}
                             {p.edpay_transaction_id && (
                               <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
                             )}
