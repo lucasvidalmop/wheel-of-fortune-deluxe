@@ -203,6 +203,10 @@ const Registration = () => {
       toast.error('Preencha os campos obrigatórios');
       return;
     }
+    if (!pixKeyType || !pixKey.trim()) {
+      toast.error('Preencha a chave PIX e o tipo de chave');
+      return;
+    }
     if (!acceptTerms || !confirmData) {
       toast.error('Você precisa aceitar os termos e confirmar os dados');
       return;
