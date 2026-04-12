@@ -156,8 +156,23 @@ Deno.serve(async (req) => {
     });
 
     const transferData = await transferResponse.json();
+    console.log("EdPay transfer response:", JSON.stringify(transferData));
 
-    if (!transferResponse.ok) {
+    // Check both HTTP status AND response body for failure indicators
+    const transferStatus = (transferData.status || "").toString().toLowerCase();
+    const transferError = transferData.error || transferData.message || transferData.msg || "";
+    const isInsufficient = transferStatus === "insufficient_funds" ||
+      transferStatus === "failed" ||
+      transferStatus === "error" ||
+      transferStatus === "rejected" ||
+      transferStatus === "declined" ||
+      transferStatus === false ||
+      transferData.status === false ||
+      (typeof transferError === "string" && transferError.toLowerCase().includes("saldo")) ||
+      (typeof transferError === "string" && transferError.toLowerCase().includes("insufficient")) ||
+      (typeof transferError === "string" && transferError.toLowerCase().includes("balance"));
+
+    if (!transferResponse.ok || isInsufficient) {
       console.error("EdPay transfer failed:", JSON.stringify(transferData));
       // Revert to pending so it appears in approvals for manual retry
       await supabaseAdmin
@@ -176,14 +191,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Step 3: Update payment as paid
+    // Step 3: Update payment as processing (not paid yet - wait for webhook confirmation)
     const transactionId = transferData.id || transferData.transaction_id || transferData.data?.id || "";
     await supabaseAdmin
       .from("prize_payments")
       .update({
-        status: "paid",
+        status: "processing",
         edpay_transaction_id: String(transactionId),
-        paid_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", paymentId);
