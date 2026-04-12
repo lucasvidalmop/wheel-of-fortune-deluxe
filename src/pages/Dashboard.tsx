@@ -386,10 +386,11 @@ const Dashboard = () => {
   };
 
   // Media attachment state
-  const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
   const [whatsappMediaUploading, setWhatsappMediaUploading] = useState(false);
   const [whatsappMentionAll, setWhatsappMentionAll] = useState(false);
   const whatsappMediaInputRef = useRef<HTMLInputElement>(null);
+  const whatsappPttInputRef = useRef<HTMLInputElement>(null);
 
   const handleWhatsappMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -414,6 +415,25 @@ const Dashboard = () => {
     }
     setWhatsappMediaUploading(false);
     if (whatsappMediaInputRef.current) whatsappMediaInputRef.current.value = '';
+  };
+
+  const handleWhatsappPttUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setWhatsappMediaUploading(true);
+    try {
+      const safeName = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'audio.ogg';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setWhatsappMedia({ url: urlData.publicUrl, mediatype: 'audio', mimetype: 'audio/ogg; codecs=opus', fileName: file.name, ptt: true });
+      toast.success('🎤 Áudio de voz anexado! Será enviado como mensagem de voz.');
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setWhatsappMediaUploading(false);
+    if (whatsappPttInputRef.current) whatsappPttInputRef.current.value = '';
   };
 
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico' | 'pagamento_manual'>('credenciais');
