@@ -6426,17 +6426,17 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={selectedPrizeIds.size === prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').length && selectedPrizeIds.size > 0}
+                          checked={selectedPrizeIds.size === prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed' || p.status === 'processing').length && selectedPrizeIds.size > 0}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedPrizeIds(new Set(prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').map((p: any) => p.id)));
+                              setSelectedPrizeIds(new Set(prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed' || p.status === 'processing').map((p: any) => p.id)));
                             } else {
                               setSelectedPrizeIds(new Set());
                             }
                           }}
                           className="w-4 h-4 rounded accent-primary"
                         />
-                        <span className="text-xs text-muted-foreground">Selecionar todos ({prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').length})</span>
+                        <span className="text-xs text-muted-foreground">Selecionar todos ({prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed' || p.status === 'processing').length})</span>
                       </label>
                       {selectedPrizeIds.size > 0 && (
                         <div className="flex gap-2">
@@ -6463,6 +6463,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                           pending: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
                           auto_pending: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
                           approved: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+                          processing: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20',
                           paid: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
                           rejected: 'bg-red-500/15 text-red-400 border-red-500/20',
                           failed: 'bg-red-500/15 text-red-400 border-red-500/20',
@@ -6471,11 +6472,12 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                           pending: '⏳ Pendente',
                           auto_pending: '🤖 Auto (Pendente)',
                           approved: '✅ Aprovado',
+                          processing: '⏳ Processando',
                           paid: '💰 Pago',
                           rejected: '❌ Rejeitado',
                           failed: '⚠️ Falhou',
                         };
-                        const isActionable = p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed';
+                        const isActionable = p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed' || p.status === 'processing';
                         return (
                           <div key={p.id} className={`p-3 rounded-xl bg-white/[0.04] border ${selectedPrizeIds.has(p.id) ? 'border-primary/40' : 'border-white/[0.06]'} space-y-2`}>
                             <div className="flex items-center gap-2">
@@ -6545,6 +6547,19 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                                   <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
                                 ) : '💸'} Pagar via PIX
                               </button>
+                            )}
+                            {p.status === 'processing' && (
+                              <div className="flex gap-2 pt-1">
+                                <span className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold bg-yellow-500/10 text-yellow-400">
+                                  <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" /> Aguardando confirmação
+                                </span>
+                                <button
+                                  onClick={() => handleRejectPrize(p.id)}
+                                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-all"
+                                >
+                                  ❌ Cancelar
+                                </button>
+                              </div>
                             )}
                             {p.edpay_transaction_id && (
                               <p className="text-[10px] text-muted-foreground">TX: {p.edpay_transaction_id}</p>
