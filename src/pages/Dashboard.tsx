@@ -6426,17 +6426,17 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={selectedPrizeIds.size === prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').length && selectedPrizeIds.size > 0}
+                          checked={selectedPrizeIds.size === prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed' || p.status === 'processing').length && selectedPrizeIds.size > 0}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedPrizeIds(new Set(prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').map((p: any) => p.id)));
+                              setSelectedPrizeIds(new Set(prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed' || p.status === 'processing').map((p: any) => p.id)));
                             } else {
                               setSelectedPrizeIds(new Set());
                             }
                           }}
                           className="w-4 h-4 rounded accent-primary"
                         />
-                        <span className="text-xs text-muted-foreground">Selecionar todos ({prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed').length})</span>
+                        <span className="text-xs text-muted-foreground">Selecionar todos ({prizePayments.filter((p: any) => p.status === 'pending' || p.status === 'auto_pending' || p.status === 'approved' || p.status === 'failed' || p.status === 'processing').length})</span>
                       </label>
                       {selectedPrizeIds.size > 0 && (
                         <div className="flex gap-2">
