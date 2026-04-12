@@ -3815,10 +3815,15 @@ const Dashboard = () => {
                       {whatsappMediaUploading ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
                       {whatsappMediaUploading ? 'Enviando...' : 'Anexar mídia'}
                     </button>
+                    <input ref={whatsappPttInputRef} type="file" accept=".ogg,.mp3,.wav,.m4a,.aac,audio/*" className="hidden" onChange={handleWhatsappPttUpload} />
+                    <button onClick={() => whatsappPttInputRef.current?.click()} disabled={whatsappMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5 text-green-400 hover:text-green-300 text-xs transition">
+                      <Mic size={14} />
+                      Áudio de voz
+                    </button>
                     {whatsappMedia && (
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-xs text-primary">
-                        {whatsappMedia.mediatype === 'image' ? <Image size={14} /> : whatsappMedia.mediatype === 'video' ? <Film size={14} /> : whatsappMedia.mediatype === 'audio' ? <Mic size={14} /> : <Paperclip size={14} />}
-                        <span className="truncate max-w-[150px]">{whatsappMedia.fileName}</span>
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs ${whatsappMedia.ptt ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-primary/20 bg-primary/5 text-primary'}`}>
+                        {whatsappMedia.ptt ? <Mic size={14} /> : whatsappMedia.mediatype === 'image' ? <Image size={14} /> : whatsappMedia.mediatype === 'video' ? <Film size={14} /> : whatsappMedia.mediatype === 'audio' ? <Mic size={14} /> : <Paperclip size={14} />}
+                        <span className="truncate max-w-[150px]">{whatsappMedia.ptt ? '🎤 Voz' : ''} {whatsappMedia.fileName}</span>
                         <button onClick={() => setWhatsappMedia(null)} className="text-red-400 hover:text-red-300"><X size={14} /></button>
                       </div>
                     )}
