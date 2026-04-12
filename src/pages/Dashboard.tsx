@@ -829,6 +829,29 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Realtime subscription for prize_payments updates
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const channel = supabase
+      .channel('prize-payments-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'prize_payments',
+          filter: `owner_id=eq.${session.user.id}`,
+        },
+        () => {
+          fetchPrizePayments();
+          fetchPaidHistory();
+          fetchGorjetaHistory();
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [session?.user?.id]);
+
   const loadData = async (userId: string) => {
     configHydratedRef.current = false;
     setLoading(true);
@@ -1201,7 +1224,7 @@ const Dashboard = () => {
       .from('prize_payments')
       .select('*')
       .eq('owner_id', session.user.id)
-      .in('status', ['paid', 'rejected'])
+      .in('status', ['paid', 'rejected', 'processing'])
       .order('created_at', { ascending: false });
     setPaidHistory(data || []);
     setPaidHistoryLoading(false);
@@ -1229,7 +1252,7 @@ const Dashboard = () => {
       .from('prize_payments')
       .select('*')
       .eq('owner_id', session.user.id)
-      .in('status', ['pending', 'auto_pending', 'approved', 'failed'])
+      .in('status', ['pending', 'auto_pending', 'approved', 'failed', 'processing'])
       .order('created_at', { ascending: false });
     setPrizePayments(data || []);
     setPrizePaymentsLoading(false);
