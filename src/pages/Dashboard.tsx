@@ -253,9 +253,10 @@ const Dashboard = () => {
   const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[] });
   const [schedSaving, setSchedSaving] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
-  const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
   const [schedMediaUploading, setSchedMediaUploading] = useState(false);
   const schedMediaInputRef = useRef<HTMLInputElement>(null);
+  const schedPttInputRef = useRef<HTMLInputElement>(null);
 
   const handleSchedMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -279,6 +280,25 @@ const Dashboard = () => {
     }
     setSchedMediaUploading(false);
     if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
+  };
+
+  const handleSchedPttUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSchedMediaUploading(true);
+    try {
+      const safeName = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'audio.ogg';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setSchedMedia({ url: urlData.publicUrl, mediatype: 'ptt', mimetype: 'audio/ogg; codecs=opus', fileName: file.name, ptt: true });
+      toast.success('🎤 Áudio de voz anexado ao agendamento!');
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setSchedMediaUploading(false);
+    if (schedPttInputRef.current) schedPttInputRef.current.value = '';
   };
 
   const fetchScheduledMessages = async () => {
@@ -386,10 +406,11 @@ const Dashboard = () => {
   };
 
   // Media attachment state
-  const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string } | null>(null);
+  const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
   const [whatsappMediaUploading, setWhatsappMediaUploading] = useState(false);
   const [whatsappMentionAll, setWhatsappMentionAll] = useState(false);
   const whatsappMediaInputRef = useRef<HTMLInputElement>(null);
+  const whatsappPttInputRef = useRef<HTMLInputElement>(null);
 
   const handleWhatsappMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -414,6 +435,25 @@ const Dashboard = () => {
     }
     setWhatsappMediaUploading(false);
     if (whatsappMediaInputRef.current) whatsappMediaInputRef.current.value = '';
+  };
+
+  const handleWhatsappPttUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setWhatsappMediaUploading(true);
+    try {
+      const safeName = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'audio.ogg';
+      const path = `whatsapp-media/${session.user.id}/${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('app-assets').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('app-assets').getPublicUrl(path);
+      setWhatsappMedia({ url: urlData.publicUrl, mediatype: 'audio', mimetype: 'audio/ogg; codecs=opus', fileName: file.name, ptt: true });
+      toast.success('🎤 Áudio de voz anexado! Será enviado como mensagem de voz.');
+    } catch (err: any) {
+      toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    }
+    setWhatsappMediaUploading(false);
+    if (whatsappPttInputRef.current) whatsappPttInputRef.current.value = '';
   };
 
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico' | 'pagamento_manual'>('credenciais');
@@ -3775,10 +3815,15 @@ const Dashboard = () => {
                       {whatsappMediaUploading ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
                       {whatsappMediaUploading ? 'Enviando...' : 'Anexar mídia'}
                     </button>
+                    <input ref={whatsappPttInputRef} type="file" accept=".ogg,.mp3,.wav,.m4a,.aac,audio/*" className="hidden" onChange={handleWhatsappPttUpload} />
+                    <button onClick={() => whatsappPttInputRef.current?.click()} disabled={whatsappMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5 text-green-400 hover:text-green-300 text-xs transition">
+                      <Mic size={14} />
+                      Áudio de voz
+                    </button>
                     {whatsappMedia && (
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-xs text-primary">
-                        {whatsappMedia.mediatype === 'image' ? <Image size={14} /> : whatsappMedia.mediatype === 'video' ? <Film size={14} /> : whatsappMedia.mediatype === 'audio' ? <Mic size={14} /> : <Paperclip size={14} />}
-                        <span className="truncate max-w-[150px]">{whatsappMedia.fileName}</span>
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs ${whatsappMedia.ptt ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-primary/20 bg-primary/5 text-primary'}`}>
+                        {whatsappMedia.ptt ? <Mic size={14} /> : whatsappMedia.mediatype === 'image' ? <Image size={14} /> : whatsappMedia.mediatype === 'video' ? <Film size={14} /> : whatsappMedia.mediatype === 'audio' ? <Mic size={14} /> : <Paperclip size={14} />}
+                        <span className="truncate max-w-[150px]">{whatsappMedia.ptt ? '🎤 Voz' : ''} {whatsappMedia.fileName}</span>
                         <button onClick={() => setWhatsappMedia(null)} className="text-red-400 hover:text-red-300"><X size={14} /></button>
                       </div>
                     )}
@@ -3909,10 +3954,15 @@ const Dashboard = () => {
                           {schedMediaUploading ? <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
                           Anexar mídia
                         </button>
+                        <input type="file" ref={schedPttInputRef} className="hidden" accept=".ogg,.mp3,.wav,.m4a,.aac,audio/*" onChange={handleSchedPttUpload} />
+                        <button type="button" onClick={() => schedPttInputRef.current?.click()} disabled={schedMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5 text-green-400 hover:text-green-300 text-xs transition">
+                          <Mic size={14} />
+                          Áudio de voz
+                        </button>
                         {schedMedia && (
-                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary">
-                            {schedMedia.mediatype === 'image' ? <ImageIcon size={12} /> : schedMedia.mediatype === 'video' ? <Video size={12} /> : <FileAudio size={12} />}
-                            <span className="truncate max-w-[120px]">{schedMedia.fileName}</span>
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs ${schedMedia.ptt ? 'bg-green-500/10 border border-green-500/20 text-green-400' : 'bg-primary/10 border border-primary/20 text-primary'}`}>
+                            {schedMedia.ptt ? <Mic size={12} /> : schedMedia.mediatype === 'image' ? <ImageIcon size={12} /> : schedMedia.mediatype === 'video' ? <Video size={12} /> : <FileAudio size={12} />}
+                            <span className="truncate max-w-[120px]">{schedMedia.ptt ? '🎤 Voz' : ''} {schedMedia.fileName}</span>
                             <button onClick={() => setSchedMedia(null)} className="ml-1 text-red-400 hover:text-red-300"><X size={12} /></button>
                           </div>
                         )}

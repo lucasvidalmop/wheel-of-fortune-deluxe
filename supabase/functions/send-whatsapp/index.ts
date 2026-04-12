@@ -54,12 +54,23 @@ serve(async (req) => {
     let url: string;
     let body: Record<string, any>;
 
-    if (media && media.url) {
+    if (media && media.url && media.ptt) {
+      // Send as voice message (PTT - push to talk) using sendWhatsAppAudio
+      url = `${apiUrl}/message/sendWhatsAppAudio/${evolutionInstance}`;
+      body = {
+        number: cleanPhone,
+        audio: media.url,
+        encoding: true,
+      };
+      if (mentionsEveryOne && cleanPhone.includes("@g.us")) {
+        body.mentionsEveryOne = true;
+      }
+    } else if (media && media.url) {
       // Send media message (image, video, audio, document)
       url = `${apiUrl}/message/sendMedia/${evolutionInstance}`;
       body = {
         number: cleanPhone,
-        mediatype: media.mediatype || "image", // image, video, audio, document
+        mediatype: media.mediatype || "image",
         mimetype: media.mimetype || "image/jpeg",
         caption: message || "",
         media: media.url,

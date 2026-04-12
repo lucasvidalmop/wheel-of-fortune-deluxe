@@ -77,7 +77,15 @@ Deno.serve(async (req) => {
         let url: string;
         let body: Record<string, any>;
 
-        if (msg.media_url) {
+        if (msg.media_url && msg.media_type === 'ptt') {
+          // Send as voice message (PTT)
+          url = `${baseUrl}/message/sendWhatsAppAudio/${evolutionInstance}`;
+          body = {
+            number,
+            audio: msg.media_url,
+            encoding: true,
+          };
+        } else if (msg.media_url) {
           url = `${baseUrl}/message/sendMedia/${evolutionInstance}`;
           body = {
             number,
