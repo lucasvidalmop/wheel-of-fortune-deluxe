@@ -211,7 +211,8 @@ const Dashboard = () => {
   const [smsSending, setSmsSending] = useState(false);
   const [smsTarget, setSmsTarget] = useState<'all' | 'selected'>('all');
   const [selectedPhones, setSelectedPhones] = useState<string[]>([]);
-  const [showSmsConfig, setShowSmsConfig] = useState(false);
+   const [showSmsConfig, setShowSmsConfig] = useState(false);
+  const [smsSearchTerm, setSmsSearchTerm] = useState('');
   const [twilioAccountSid, setTwilioAccountSid] = useState(() => localStorage.getItem('twilio_account_sid') || '');
   const [twilioAuthToken, setTwilioAuthToken] = useState(() => localStorage.getItem('twilio_auth_token') || '');
   const [twilioPhoneNumber, setTwilioPhoneNumber] = useState(() => localStorage.getItem('twilio_phone_number') || '');
