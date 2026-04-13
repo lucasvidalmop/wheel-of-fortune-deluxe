@@ -5665,26 +5665,6 @@ const Dashboard = () => {
             )}
           </div>
 
-          {false && activeTab === 'painel_casa' && (
-            <div>
-              {resolvedPanelCasaUrl ? (
-                <iframe
-                  src={resolvedPanelCasaUrl}
-                  className="w-full h-full rounded-2xl border border-white/[0.08]"
-                  allow="fullscreen"
-                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-presentation"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  title="Painel da Casa"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
-                  <Monitor size={48} className="opacity-40" />
-                  <p className="text-sm">Nenhuma URL configurada. Vá em <strong className="text-foreground">Configurações</strong> para definir a URL do painel.</p>
-                </div>
-              )}
-            </div>
-          )}
-
 
           {activeTab === 'financeiro' && (
             <div className="w-full max-w-2xl min-w-0 space-y-5">
