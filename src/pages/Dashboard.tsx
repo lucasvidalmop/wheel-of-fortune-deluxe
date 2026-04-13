@@ -5592,6 +5592,24 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Painel da Casa - URL do iframe */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Monitor size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Painel da Casa (iframe)</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Cole a URL do painel externo que deseja embutir na aba <strong className="text-foreground">Painel da Casa</strong>.
+                </p>
+                <input
+                  type="url"
+                  placeholder="https://exemplo.com/painel"
+                  value={panelCasaUrl}
+                  onChange={(e) => setPanelCasaUrl(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                />
+              </div>
+
               {/* Save button */}
               <button
                 onClick={handleSaveConfig}
@@ -5599,6 +5617,24 @@ const Dashboard = () => {
               >
                 {savingConfig ? 'Salvando...' : '💾 Salvar Configurações'}
               </button>
+            </div>
+          )}
+
+          {activeTab === 'painel_casa' && (
+            <div className="w-full min-w-0" style={{ height: 'calc(100vh - 80px)' }}>
+              {panelCasaUrl ? (
+                <iframe
+                  src={panelCasaUrl}
+                  className="w-full h-full rounded-2xl border border-white/[0.08]"
+                  allow="fullscreen"
+                  title="Painel da Casa"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+                  <Monitor size={48} className="opacity-40" />
+                  <p className="text-sm">Nenhuma URL configurada. Vá em <strong className="text-foreground">Configurações</strong> para definir a URL do painel.</p>
+                </div>
+              )}
             </div>
           )}
 
