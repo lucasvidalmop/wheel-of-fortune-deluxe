@@ -620,7 +620,7 @@ const Dashboard = () => {
   };
 
   const deleteSmsLog = async (id: string) => {
-    const ok = await confirm({ title: 'Excluir registro?', message: 'Deseja remover este SMS do histórico?', variant: 'danger', confirmLabel: 'Excluir' });
+    const ok = await confirmDialog({ title: 'Excluir registro?', message: 'Deseja remover este SMS do histórico?', variant: 'danger', confirmLabel: 'Excluir' });
     if (!ok) return;
     await (supabase as any).from('sms_message_log').delete().eq('id', id);
     setSmsLogs(prev => prev.filter(l => l.id !== id));
