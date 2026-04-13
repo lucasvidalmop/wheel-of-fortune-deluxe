@@ -3456,13 +3456,33 @@ const Dashboard = () => {
                   if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setSmsSending(true);
                   let sent = 0, errors = 0;
-                  for (const phone of phones) {
-                    const { error } = await supabase.functions.invoke('send-sms', { body: { recipientPhone: phone, message: smsMessage, twilioAccountSid, twilioAuthToken, twilioPhoneNumber } });
-                    if (error) errors++; else sent++;
+                  const BATCH_SIZE = 5;
+                  const TIMEOUT_MS = 15000;
+                  try {
+                    for (let i = 0; i < phones.length; i += BATCH_SIZE) {
+                      const batch = phones.slice(i, i + BATCH_SIZE);
+                      const results = await Promise.allSettled(
+                        batch.map(phone => {
+                          const controller = new AbortController();
+                          const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+                          return supabase.functions.invoke('send-sms', {
+                            body: { recipientPhone: phone, message: smsMessage, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
+                          }).then(res => { clearTimeout(timer); return res; })
+                            .catch(err => { clearTimeout(timer); throw err; });
+                        })
+                      );
+                      for (const r of results) {
+                        if (r.status === 'fulfilled' && !r.value.error) sent++;
+                        else errors++;
+                      }
+                    }
+                  } catch (e) {
+                    console.error('SMS batch error:', e);
                   }
                   setSmsSending(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
-                  else toast.success(`${sent} SMS enviado(s)!`);
+                  else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
+                  else toast.error('Nenhum SMS enviado');
                 }}
                 disabled={smsSending}
                 className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
