@@ -1848,6 +1848,7 @@ const Dashboard = () => {
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
     { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
+    { key: 'painel_casa', icon: <Monitor size={20} />, label: 'Painel da Casa' },
   ];
 
   const tabTitles: Record<string, string> = {
@@ -1865,6 +1866,7 @@ const Dashboard = () => {
     gorjeta: 'Página de Gorjeta',
     hist_gorjeta: 'Histórico de Gorjetas',
     configuracoes: 'Configurações',
+    painel_casa: 'Painel da Casa',
   };
 
   return (
