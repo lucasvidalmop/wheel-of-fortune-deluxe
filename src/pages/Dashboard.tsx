@@ -216,6 +216,9 @@ const Dashboard = () => {
   const [selectedPhones, setSelectedPhones] = useState<string[]>([]);
    const [showSmsConfig, setShowSmsConfig] = useState(false);
   const [smsSearchTerm, setSmsSearchTerm] = useState('');
+  const [smsLogs, setSmsLogs] = useState<any[]>([]);
+  const [smsLogsLoading, setSmsLogsLoading] = useState(false);
+  const [showSmsHistory, setShowSmsHistory] = useState(false);
   const [twilioAccountSid, setTwilioAccountSid] = useState(() => localStorage.getItem('twilio_account_sid') || '');
   const [twilioAuthToken, setTwilioAuthToken] = useState(() => localStorage.getItem('twilio_auth_token') || '');
   const [twilioPhoneNumber, setTwilioPhoneNumber] = useState(() => localStorage.getItem('twilio_phone_number') || '');
@@ -601,6 +604,45 @@ const Dashboard = () => {
       .limit(100);
     setWhatsappLogs(data || []);
     setWhatsappLogsLoading(false);
+  };
+
+  const fetchSmsLogs = async () => {
+    if (!session?.user?.id) return;
+    setSmsLogsLoading(true);
+    const { data } = await (supabase as any)
+      .from('sms_message_log')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setSmsLogs(data || []);
+    setSmsLogsLoading(false);
+  };
+
+  const deleteSmsLog = async (id: string) => {
+    const ok = await confirm({ title: 'Excluir registro?', message: 'Deseja remover este SMS do histórico?', variant: 'danger', confirmLabel: 'Excluir' });
+    if (!ok) return;
+    await (supabase as any).from('sms_message_log').delete().eq('id', id);
+    setSmsLogs(prev => prev.filter(l => l.id !== id));
+    toast.success('Registro excluído');
+  };
+
+  const resendSms = async (log: any) => {
+    if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
+    const { error } = await supabase.functions.invoke('send-sms', {
+      body: { recipientPhone: log.recipient_phone, message: log.message, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
+    });
+    if (error) { toast.error('Erro ao reenviar SMS'); return; }
+    // Log the resend
+    await (supabase as any).from('sms_message_log').insert({
+      owner_id: session?.user?.id,
+      recipient_phone: log.recipient_phone,
+      recipient_name: log.recipient_name || '',
+      message: log.message,
+      status: 'sent',
+    });
+    toast.success('SMS reenviado!');
+    fetchSmsLogs();
   };
 
   const fetchBulkSentPhones = async () => {
@@ -3369,11 +3411,57 @@ const Dashboard = () => {
           {/* ══════ SMS TAB ══════ */}
           {activeTab === 'sms' && (
             <div className="max-w-2xl space-y-5">
-              <div className="flex items-center justify-end">
-                <button onClick={() => setShowSmsConfig(!showSmsConfig)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition text-sm" title="Configurações">
+              <div className="flex items-center gap-2 justify-end">
+                <button onClick={() => { setShowSmsHistory(!showSmsHistory); if (!showSmsHistory) fetchSmsLogs(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsHistory ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Clock size={15} /> Histórico
+                </button>
+                <button onClick={() => setShowSmsConfig(!showSmsConfig)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsConfig ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`} title="Configurações">
                   <Settings size={15} /> Configurar API
                 </button>
               </div>
+
+              {showSmsHistory && (
+                <GlassCard className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} className="text-primary" /> Histórico de SMS</h3>
+                    <button onClick={fetchSmsLogs} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                  </div>
+                  {smsLogsLoading ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm animate-pulse">Carregando histórico...</div>
+                  ) : smsLogs.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">Nenhum SMS enviado ainda.</div>
+                  ) : (
+                    <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.1] [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {smsLogs.map((log: any) => (
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition group">
+                          <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${log.status === 'sent' ? 'bg-green-400' : 'bg-red-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold text-foreground truncate">{log.recipient_name || 'Sem nome'}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{log.recipient_phone}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{log.message}</p>
+                            {log.error_message && <p className="text-[10px] text-red-400 mt-1">Erro: {log.error_message}</p>}
+                          </div>
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                              {new Date(log.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => resendSms(log)} className="p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Reenviar">
+                                <RotateCcw size={12} />
+                              </button>
+                              <button onClick={() => deleteSmsLog(log.id)} className="p-1 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition" title="Excluir">
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
 
               {showSmsConfig && (
                 <GlassCard className="p-5 space-y-3">
@@ -3473,6 +3561,7 @@ const Dashboard = () => {
                   let sent = 0, errors = 0;
                   const BATCH_SIZE = 5;
                   const TIMEOUT_MS = 15000;
+                  const smsLogEntries: any[] = [];
                   try {
                     for (let i = 0; i < phones.length; i += BATCH_SIZE) {
                       const batch = phones.slice(i, i + BATCH_SIZE);
@@ -3482,22 +3571,36 @@ const Dashboard = () => {
                           const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
                           return supabase.functions.invoke('send-sms', {
                             body: { recipientPhone: phone, message: smsMessage, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
-                          }).then(res => { clearTimeout(timer); return res; })
+                          }).then(res => { clearTimeout(timer); return { ...res, phone }; })
                             .catch(err => { clearTimeout(timer); throw err; });
                         })
                       );
-                      for (const r of results) {
-                        if (r.status === 'fulfilled' && !r.value.error) sent++;
-                        else errors++;
+                      for (let j = 0; j < results.length; j++) {
+                        const r = results[j];
+                        const phone = batch[j];
+                        const user = users.find(u => u.phone === phone);
+                        if (r.status === 'fulfilled' && !r.value.error) {
+                          sent++;
+                          smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent' });
+                        } else {
+                          errors++;
+                          const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
+                          smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: errMsg });
+                        }
                       }
                     }
                   } catch (e) {
                     console.error('SMS batch error:', e);
                   }
+                  // Log all SMS sends
+                  if (smsLogEntries.length > 0) {
+                    await (supabase as any).from('sms_message_log').insert(smsLogEntries);
+                  }
                   setSmsSending(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
                   else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
                   else toast.error('Nenhum SMS enviado');
+                  if (showSmsHistory) fetchSmsLogs();
                 }}
                 disabled={smsSending}
                 className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
