@@ -141,6 +141,8 @@ Deno.serve(async (req) => {
     };
     const pixType = pixTypeMap[(payment.pix_key_type || "cpf").toLowerCase()] || "CPF";
 
+    const webhookUrl = `${supabaseUrl}/functions/v1/edpay/webhook`;
+
     const transferResponse = await fetch("https://api.edpay.me/transfer", {
       method: "POST",
       headers: {
@@ -151,7 +153,7 @@ Deno.serve(async (req) => {
         amount: Number(payment.amount),
         pix_type: pixType,
         pix_key: payment.pix_key,
-        callback: "https://api.tipspayroleta.com/api/edpay/webhook",
+        callback: webhookUrl,
       }),
     });
 
@@ -174,33 +176,51 @@ Deno.serve(async (req) => {
 
     if (!transferResponse.ok || isInsufficient) {
       console.error("EdPay transfer failed:", JSON.stringify(transferData));
-      // Revert to pending so it appears in approvals for manual retry
       await supabaseAdmin
         .from("prize_payments")
         .update({
-          status: "pending",
+          status: "failed",
           auto_payment: false,
-          notes: `Falha auto-pagamento EdPay: ${JSON.stringify(transferData)}. Aguardando aprovação manual.`,
+          notes: `Falha EdPay: ${JSON.stringify(transferData)}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", paymentId);
 
-      return new Response(JSON.stringify({ error: "Falha na transferência PIX - enviado para aprovação manual", details: transferData }), {
+      return new Response(JSON.stringify({ error: "Falha na transferência PIX", details: transferData }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Step 3: Update payment as processing (not paid yet - wait for webhook confirmation)
+    // Step 3: Check if EdPay already confirmed the transfer immediately
     const transactionId = transferData.id || transferData.transaction_id || transferData.data?.id || "";
-    await supabaseAdmin
-      .from("prize_payments")
-      .update({
-        status: "processing",
-        edpay_transaction_id: String(transactionId),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", paymentId);
+    const isAlreadyConfirmed = transferStatus === "confirmed" ||
+      transferStatus === "completed" ||
+      transferStatus === "approved" ||
+      transferStatus === "success" ||
+      transferStatus === "paid";
+
+    if (isAlreadyConfirmed) {
+      await supabaseAdmin
+        .from("prize_payments")
+        .update({
+          status: "paid",
+          edpay_transaction_id: String(transactionId),
+          paid_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", paymentId);
+    } else {
+      // Set as processing and wait for webhook confirmation
+      await supabaseAdmin
+        .from("prize_payments")
+        .update({
+          status: "processing",
+          edpay_transaction_id: String(transactionId),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", paymentId);
+    }
 
     // Step 4: Send auto-payment notification if configured
     try {
