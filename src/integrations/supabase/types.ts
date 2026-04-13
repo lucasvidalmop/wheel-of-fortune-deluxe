@@ -463,6 +463,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_message_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          owner_id: string
+          recipient_name: string
+          recipient_phone: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          owner_id: string
+          recipient_name?: string
+          recipient_phone: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          owner_id?: string
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
       spin_results: {
         Row: {
           account_id: string
