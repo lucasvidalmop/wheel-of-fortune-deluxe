@@ -145,7 +145,7 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
 
   const update = (partial: Partial<ReferralPageConfig>) => setConfig(c => ({ ...c, ...partial }));
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'bgImage' | 'iconUrl') => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'bgImage' | 'iconUrl' | 'seoFaviconUrl' | 'seoOgImageUrl') => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(field);
