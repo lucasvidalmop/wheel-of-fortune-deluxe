@@ -770,6 +770,7 @@ const Dashboard = () => {
     setReceiptOperatorName(settings.receiptOperatorName || '');
     setHideReceiptSection(!!settings.hideReceiptSection);
     setHideEdpaySection(!!settings.hideEdpaySection);
+    setPanelCasaUrl(settings.panelCasaUrl || '');
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
