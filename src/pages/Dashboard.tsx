@@ -975,6 +975,7 @@ const Dashboard = () => {
     receiptOperatorName,
     hideReceiptSection,
     hideEdpaySection,
+    panelCasaUrl,
   ]);
 
   useEffect(() => {
