@@ -124,6 +124,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   receiptOperatorName: '',
   hideReceiptSection: false,
   hideEdpaySection: false,
+  panelCasaUrl: '',
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -714,6 +715,7 @@ const Dashboard = () => {
     receiptOperatorName,
     hideReceiptSection,
     hideEdpaySection,
+    panelCasaUrl,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
