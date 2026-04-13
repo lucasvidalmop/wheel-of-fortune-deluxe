@@ -319,6 +319,70 @@ const ReferralPageEditor = ({ linkId, linkLabel, currentConfig, onClose, onSaved
             <ColorField label="Borda do card" value={config.expiredCardBorderColor} onChange={v => update({ expiredCardBorderColor: v })} />
           </Section>
 
+          {/* ═══ SEO ═══ */}
+          <Section icon={<Globe size={14} className="text-primary" />} title="SEO / Meta Tags">
+            <TextField label="Título da página (tab do navegador)" value={config.seoTitle} onChange={v => update({ seoTitle: v })} placeholder="Ex: Ganhe giros grátis!" />
+            <TextField label="Descrição (meta description)" value={config.seoDescription} onChange={v => update({ seoDescription: v })} placeholder="Ex: Cadastre-se e ganhe giros na roleta" />
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-1">Favicon</label>
+              {config.seoFaviconUrl ? (
+                <div className="flex items-center gap-3">
+                  <img src={config.seoFaviconUrl} alt="Favicon" className="w-8 h-8 rounded object-cover border border-white/[0.1]" />
+                  <div className="flex gap-2">
+                    <label className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-foreground text-xs cursor-pointer hover:bg-white/[0.1] transition">
+                      Trocar <input type="file" accept="image/*" onChange={e => handleUpload(e, 'seoFaviconUrl')} className="hidden" />
+                    </label>
+                    <button onClick={() => update({ seoFaviconUrl: '' })} className="px-3 py-1.5 rounded-lg border border-destructive/20 text-destructive text-xs hover:bg-destructive/10 transition">Remover</button>
+                  </div>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-white/[0.1] hover:border-primary/30 cursor-pointer transition">
+                  <Upload size={14} className="text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{uploading === 'seoFaviconUrl' ? 'Enviando...' : 'Upload de favicon'}</span>
+                  <input type="file" accept="image/*" onChange={e => handleUpload(e, 'seoFaviconUrl')} className="hidden" disabled={uploading === 'seoFaviconUrl'} />
+                </label>
+              )}
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-1">Imagem social (OG Image)</label>
+              {config.seoOgImageUrl ? (
+                <div className="space-y-2">
+                  <img src={config.seoOgImageUrl} alt="OG" className="w-full h-24 rounded-xl object-cover border border-white/[0.08]" />
+                  <div className="flex gap-2">
+                    <label className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs cursor-pointer hover:bg-white/[0.08] transition">
+                      <Upload size={14} /> Trocar
+                      <input type="file" accept="image/*" onChange={e => handleUpload(e, 'seoOgImageUrl')} className="hidden" />
+                    </label>
+                    <button onClick={() => update({ seoOgImageUrl: '' })} className="flex-1 py-2 rounded-xl border border-destructive/20 text-destructive text-xs hover:bg-destructive/10 transition">Remover</button>
+                  </div>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 py-4 rounded-xl border-2 border-dashed border-white/[0.1] hover:border-primary/30 cursor-pointer transition">
+                  <Upload size={16} className="text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{uploading === 'seoOgImageUrl' ? 'Enviando...' : 'Upload de imagem social'}</span>
+                  <input type="file" accept="image/*" onChange={e => handleUpload(e, 'seoOgImageUrl')} className="hidden" disabled={uploading === 'seoOgImageUrl'} />
+                </label>
+              )}
+            </div>
+          </Section>
+
+          {/* ═══ PIXEL / TRACKING ═══ */}
+          <Section icon={<Code size={14} className="text-primary" />} title="Pixel / Tracking">
+            <TextField label="Facebook Pixel ID" value={config.pixelFacebook} onChange={v => update({ pixelFacebook: v })} placeholder="Ex: 123456789012345" />
+            <TextField label="Google Analytics / GTM ID" value={config.pixelGoogle} onChange={v => update({ pixelGoogle: v })} placeholder="Ex: G-XXXXXXX ou GTM-XXXXXXX" />
+            <TextField label="TikTok Pixel ID" value={config.pixelTikTok} onChange={v => update({ pixelTikTok: v })} placeholder="Ex: CXXXXXXXXXXXXXXX" />
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-1">Script personalizado (head)</label>
+              <textarea
+                value={config.pixelCustomHead}
+                onChange={e => update({ pixelCustomHead: e.target.value })}
+                placeholder="<!-- Cole aqui scripts de tracking -->"
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-xs font-mono focus:outline-none focus:border-primary/50 resize-none"
+              />
+            </div>
+          </Section>
+
           <ReferralPagePreview config={config} linkLabel={linkLabel} />
           <div className="flex gap-3">
             <button onClick={handleReset} className="flex-1 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-medium hover:bg-white/[0.08] transition flex items-center justify-center gap-2">
