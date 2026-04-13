@@ -80,6 +80,7 @@ interface PersistedDashboardSettings {
   receiptOperatorName: string;
   hideReceiptSection: boolean;
   hideEdpaySection: boolean;
+  panelCasaUrl: string;
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -123,6 +124,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   receiptOperatorName: '',
   hideReceiptSection: false,
   hideEdpaySection: false,
+  panelCasaUrl: '',
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -152,7 +154,7 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
@@ -242,6 +244,7 @@ const Dashboard = () => {
   const [receiptOperatorName, setReceiptOperatorName] = useState('');
   const [hideReceiptSection, setHideReceiptSection] = useState(false);
   const [hideEdpaySection, setHideEdpaySection] = useState(false);
+  const [panelCasaUrl, setPanelCasaUrl] = useState('');
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
@@ -712,6 +715,7 @@ const Dashboard = () => {
     receiptOperatorName,
     hideReceiptSection,
     hideEdpaySection,
+    panelCasaUrl,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -766,6 +770,7 @@ const Dashboard = () => {
     setReceiptOperatorName(settings.receiptOperatorName || '');
     setHideReceiptSection(!!settings.hideReceiptSection);
     setHideEdpaySection(!!settings.hideEdpaySection);
+    setPanelCasaUrl(settings.panelCasaUrl || '');
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -1843,6 +1848,7 @@ const Dashboard = () => {
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
     { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
+    { key: 'painel_casa', icon: <Monitor size={20} />, label: 'Painel da Casa' },
   ];
 
   const tabTitles: Record<string, string> = {
@@ -1860,6 +1866,7 @@ const Dashboard = () => {
     gorjeta: 'Página de Gorjeta',
     hist_gorjeta: 'Histórico de Gorjetas',
     configuracoes: 'Configurações',
+    painel_casa: 'Painel da Casa',
   };
 
   return (
@@ -5585,6 +5592,24 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Painel da Casa - URL do iframe */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Monitor size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Painel da Casa (iframe)</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Cole a URL do painel externo que deseja embutir na aba <strong className="text-foreground">Painel da Casa</strong>.
+                </p>
+                <input
+                  type="url"
+                  placeholder="https://exemplo.com/painel"
+                  value={panelCasaUrl}
+                  onChange={(e) => setPanelCasaUrl(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                />
+              </div>
+
               {/* Save button */}
               <button
                 onClick={handleSaveConfig}
@@ -5592,6 +5617,24 @@ const Dashboard = () => {
               >
                 {savingConfig ? 'Salvando...' : '💾 Salvar Configurações'}
               </button>
+            </div>
+          )}
+
+          {activeTab === 'painel_casa' && (
+            <div className="w-full min-w-0" style={{ height: 'calc(100vh - 80px)' }}>
+              {panelCasaUrl ? (
+                <iframe
+                  src={panelCasaUrl}
+                  className="w-full h-full rounded-2xl border border-white/[0.08]"
+                  allow="fullscreen"
+                  title="Painel da Casa"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+                  <Monitor size={48} className="opacity-40" />
+                  <p className="text-sm">Nenhuma URL configurada. Vá em <strong className="text-foreground">Configurações</strong> para definir a URL do painel.</p>
+                </div>
+              )}
             </div>
           )}
 
