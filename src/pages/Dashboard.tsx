@@ -3300,7 +3300,7 @@ const Dashboard = () => {
                   <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Email do Remetente</label>
                   <div className="flex items-center gap-0">
                     <input value={emailSenderEmail} onChange={e => setEmailSenderEmail(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ''))} placeholder="noreply" className="flex-1 px-3 py-2.5 rounded-l-xl border border-r-0 border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                    <span className="px-3 py-2.5 rounded-r-xl border border-white/[0.08] bg-white/[0.06] text-muted-foreground text-sm select-none">@notify.gorjetabsb.com.br</span>
+                    <span className="px-3 py-2.5 rounded-r-xl border border-white/[0.08] bg-white/[0.06] text-muted-foreground text-sm select-none">@tipspayroleta.com</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground">Ex: contato, noreply, suporte</p>
                 </div>
