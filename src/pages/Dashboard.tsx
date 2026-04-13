@@ -4149,6 +4149,17 @@ const Dashboard = () => {
                                     <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
                                   </div>
                                 )}
+                                {(m.status === 'failed' || m.status === 'cancelled') && (
+                                  <div className="flex items-center gap-2">
+                                    <button onClick={async () => {
+                                      const nextRun = new Date();
+                                      nextRun.setMinutes(nextRun.getMinutes() + 1);
+                                      await supabase.from('scheduled_messages').update({ status: 'pending', next_run_at: nextRun.toISOString(), updated_at: new Date().toISOString() } as any).eq('id', m.id);
+                                      toast.success('Mensagem reagendada para reenvio');
+                                      fetchScheduledMessages();
+                                    }} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><RefreshCw size={12} /> Reenviar</button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))}
