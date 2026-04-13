@@ -7,7 +7,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -4147,6 +4147,17 @@ const Dashboard = () => {
                                   <div className="flex items-center gap-2">
                                     <button onClick={() => startEditSchedule(m)} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><Pencil size={12} /> Editar</button>
                                     <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
+                                  </div>
+                                )}
+                                {(m.status === 'failed' || m.status === 'cancelled') && (
+                                  <div className="flex items-center gap-2">
+                                    <button onClick={async () => {
+                                      const nextRun = new Date();
+                                      nextRun.setMinutes(nextRun.getMinutes() + 1);
+                                      await supabase.from('scheduled_messages').update({ status: 'pending', next_run_at: nextRun.toISOString(), updated_at: new Date().toISOString() } as any).eq('id', m.id);
+                                      toast.success('Mensagem reagendada para reenvio');
+                                      fetchScheduledMessages();
+                                    }} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><RefreshCw size={12} /> Reenviar</button>
                                   </div>
                                 )}
                               </div>
