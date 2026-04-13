@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Upload, RotateCcw, Palette, Image, Type, MousePointer, Clock } from 'lucide-react';
+import { X, Upload, RotateCcw, Palette, Image, Type, MousePointer, Clock, Globe, Code } from 'lucide-react';
 import ReferralPagePreview from './ReferralPagePreview';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,6 +49,16 @@ export interface ReferralPageConfig {
   expiredSubtitleColor: string;
   expiredCardBgColor: string;
   expiredCardBorderColor: string;
+  // SEO
+  seoTitle: string;
+  seoDescription: string;
+  seoFaviconUrl: string;
+  seoOgImageUrl: string;
+  // Pixel
+  pixelFacebook: string;
+  pixelGoogle: string;
+  pixelTikTok: string;
+  pixelCustomHead: string;
 }
 
 export const defaultPageConfig: ReferralPageConfig = {
@@ -93,6 +103,14 @@ export const defaultPageConfig: ReferralPageConfig = {
   expiredSubtitleColor: '',
   expiredCardBgColor: '',
   expiredCardBorderColor: '',
+  seoTitle: '',
+  seoDescription: '',
+  seoFaviconUrl: '',
+  seoOgImageUrl: '',
+  pixelFacebook: '',
+  pixelGoogle: '',
+  pixelTikTok: '',
+  pixelCustomHead: '',
 };
 
 interface Props {
