@@ -183,7 +183,7 @@ const Referral = () => {
     ? <img src={cfg.iconUrl} alt="icon" className="max-w-[180px] max-h-[100px] rounded-xl object-contain mx-auto" />
     : <div className="text-4xl">{cfg.iconEmoji || '🎰'}</div>;
 
-  const titleText = cfg.titleText || 'Resgatar Giro';
+  const titleText = cfg.titleText || linkData?.label || 'Resgatar Giro';
   const displayTitle = cfg.titlePrefix ? `${cfg.titlePrefix} ${titleText}` : titleText;
 
   if (loading) {
