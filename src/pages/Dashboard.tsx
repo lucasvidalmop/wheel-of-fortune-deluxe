@@ -5646,8 +5646,27 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'painel_casa' && (
-            <div className="w-full min-w-0" style={{ height: 'calc(100vh - 80px)' }}>
+          {/* Painel da Casa: always mounted to preserve iframe session */}
+          <div className="w-full min-w-0" style={{ height: 'calc(100vh - 80px)', display: activeTab === 'painel_casa' ? 'block' : 'none' }}>
+            {resolvedPanelCasaUrl ? (
+              <iframe
+                src={resolvedPanelCasaUrl}
+                className="w-full h-full rounded-2xl border border-white/[0.08]"
+                allow="fullscreen"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-presentation allow-storage-access-by-user-activation"
+                referrerPolicy="strict-origin-when-cross-origin"
+                title="Painel da Casa"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+                <Monitor size={48} className="opacity-40" />
+                <p className="text-sm">Nenhuma URL configurada. Vá em <strong className="text-foreground">Configurações</strong> para definir a URL do painel.</p>
+              </div>
+            )}
+          </div>
+
+          {false && activeTab === 'painel_casa' && (
+            <div>
               {resolvedPanelCasaUrl ? (
                 <iframe
                   src={resolvedPanelCasaUrl}
