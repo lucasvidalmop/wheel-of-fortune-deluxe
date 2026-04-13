@@ -3391,17 +3391,53 @@ const Dashboard = () => {
                     Selecionar ({selectedPhones.length})
                   </button>
                 </div>
-                {smsTarget === 'selected' && (
-                  <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
-                    {users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).map(u => (
-                      <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                        <input type="checkbox" checked={selectedPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedPhones([...selectedPhones, u.phone]); else setSelectedPhones(selectedPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
-                        <span className="text-sm text-foreground">{u.name}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                {smsTarget === 'selected' && (() => {
+                  const smsUsersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                  const smsFilteredUsers = smsSearchTerm
+                    ? smsUsersWithPhone.filter(u => u.name.toLowerCase().includes(smsSearchTerm.toLowerCase()) || u.phone.includes(smsSearchTerm))
+                    : smsUsersWithPhone;
+                  const allFilteredSelected = smsFilteredUsers.length > 0 && smsFilteredUsers.every(u => selectedPhones.includes(u.phone));
+                  return (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={smsSearchTerm}
+                        onChange={e => setSmsSearchTerm(e.target.value)}
+                        placeholder="Pesquisar por nome ou telefone..."
+                        className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                      />
+                      <div className="flex items-center gap-2 px-1">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition">
+                          <input
+                            type="checkbox"
+                            checked={allFilteredSelected}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                const newPhones = new Set([...selectedPhones, ...smsFilteredUsers.map(u => u.phone)]);
+                                setSelectedPhones(Array.from(newPhones));
+                              } else {
+                                const removeSet = new Set(smsFilteredUsers.map(u => u.phone));
+                                setSelectedPhones(selectedPhones.filter(p => !removeSet.has(p)));
+                              }
+                            }}
+                            className="rounded border-white/20"
+                          />
+                          Selecionar todos ({smsFilteredUsers.length})
+                        </label>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
+                        {smsFilteredUsers.map(u => (
+                          <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                            <input type="checkbox" checked={selectedPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedPhones([...selectedPhones, u.phone]); else setSelectedPhones(selectedPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                            <span className="text-sm text-foreground">{u.name}</span>
+                            <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                          </label>
+                        ))}
+                        {smsFilteredUsers.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">Nenhum resultado</p>}
+                      </div>
+                    </div>
+                  );
+                })()}
               </GlassCard>
 
               <GlassCard className="p-5 space-y-3">
