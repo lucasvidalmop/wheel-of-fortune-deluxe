@@ -3343,6 +3343,7 @@ const Dashboard = () => {
                           body: emailBody,
                           roletaLink,
                           senderName: emailSenderName || undefined,
+                          senderEmail: emailSenderEmail || undefined,
                           ...(emailTemplate === 'custom' && emailBannerUrl ? { bannerImageUrl: emailBannerUrl } : {}),
                         },
                       },
