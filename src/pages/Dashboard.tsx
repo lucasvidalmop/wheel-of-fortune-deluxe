@@ -45,6 +45,7 @@ interface PersistedDashboardSettings {
   emailTemplate: 'original' | 'custom';
   emailBannerUrl: string;
   emailSenderName: string;
+  emailSenderEmail: string;
   smsMessage: string;
   twilioAccountSid: string;
   twilioAuthToken: string;
@@ -89,6 +90,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   emailTemplate: 'original',
   emailBannerUrl: '',
   emailSenderName: 'Royal Spin Wheel',
+  emailSenderEmail: 'noreply',
   smsMessage: '',
   twilioAccountSid: '',
   twilioAuthToken: '',
@@ -205,6 +207,7 @@ const Dashboard = () => {
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
   const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
+  const [emailSenderEmail, setEmailSenderEmail] = useState('noreply');
 
   // SMS state
   const [smsMessage, setSmsMessage] = useState('');
@@ -693,6 +696,7 @@ const Dashboard = () => {
     emailTemplate,
     emailBannerUrl,
     emailSenderName,
+    emailSenderEmail,
     smsMessage,
     twilioAccountSid,
     twilioAuthToken,
@@ -749,6 +753,7 @@ const Dashboard = () => {
     setEmailTemplate(settings.emailTemplate === 'custom' ? 'custom' : 'original');
     setEmailBannerUrl(settings.emailBannerUrl || '');
     setEmailSenderName(settings.emailSenderName || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderName);
+    setEmailSenderEmail(settings.emailSenderEmail || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderEmail);
     setSmsMessage(settings.smsMessage || '');
     setTwilioAccountSid(settings.twilioAccountSid || '');
     setTwilioAuthToken(settings.twilioAuthToken || '');
@@ -954,6 +959,7 @@ const Dashboard = () => {
     emailTemplate,
     emailBannerUrl,
     emailSenderName,
+    emailSenderEmail,
     smsMessage,
     twilioAccountSid,
     twilioAuthToken,
