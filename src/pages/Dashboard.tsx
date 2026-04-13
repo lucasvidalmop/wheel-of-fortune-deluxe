@@ -127,6 +127,16 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   panelCasaUrl: '',
 };
 
+const PANEL_CASA_STORAGE_KEY = 'dashboard_panel_casa_url';
+
+const normalizePanelCasaUrl = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmed)) return trimmed;
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  return `https://${trimmed}`;
+};
+
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
     {children}
@@ -245,6 +255,7 @@ const Dashboard = () => {
   const [hideReceiptSection, setHideReceiptSection] = useState(false);
   const [hideEdpaySection, setHideEdpaySection] = useState(false);
   const [panelCasaUrl, setPanelCasaUrl] = useState('');
+  const resolvedPanelCasaUrl = normalizePanelCasaUrl(panelCasaUrl);
   const [notifyGroups, setNotifyGroups] = useState<{id: string; subject: string}[]>([]);
   const [notifyGroupsLoading, setNotifyGroupsLoading] = useState(false);
   const [showNotifySecret, setShowNotifySecret] = useState(false);
@@ -666,6 +677,7 @@ const Dashboard = () => {
       ['evolution_api_url', settings.evolutionApiUrl],
       ['evolution_api_key', settings.evolutionApiKey],
       ['evolution_instance', settings.evolutionInstance],
+      [PANEL_CASA_STORAGE_KEY, normalizePanelCasaUrl(settings.panelCasaUrl)],
     ];
 
     legacyEntries.forEach(([key, value]) => {
@@ -715,7 +727,7 @@ const Dashboard = () => {
     receiptOperatorName,
     hideReceiptSection,
     hideEdpaySection,
-    panelCasaUrl,
+    panelCasaUrl: normalizePanelCasaUrl(panelCasaUrl),
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -727,6 +739,7 @@ const Dashboard = () => {
       evolutionApiUrl: localStorage.getItem('evolution_api_url') || '',
       evolutionApiKey: localStorage.getItem('evolution_api_key') || '',
       evolutionInstance: localStorage.getItem('evolution_instance') || '',
+      panelCasaUrl: localStorage.getItem(PANEL_CASA_STORAGE_KEY) || '',
       ...(rawSettings || {}),
     };
 
@@ -770,7 +783,7 @@ const Dashboard = () => {
     setReceiptOperatorName(settings.receiptOperatorName || '');
     setHideReceiptSection(!!settings.hideReceiptSection);
     setHideEdpaySection(!!settings.hideEdpaySection);
-    setPanelCasaUrl(settings.panelCasaUrl || '');
+    setPanelCasaUrl(normalizePanelCasaUrl(settings.panelCasaUrl || ''));
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -5618,6 +5631,7 @@ const Dashboard = () => {
                   placeholder="https://exemplo.com/painel"
                   value={panelCasaUrl}
                   onChange={(e) => setPanelCasaUrl(e.target.value)}
+                  onBlur={(e) => setPanelCasaUrl(normalizePanelCasaUrl(e.target.value))}
                   className="w-full px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
@@ -5634,11 +5648,13 @@ const Dashboard = () => {
 
           {activeTab === 'painel_casa' && (
             <div className="w-full min-w-0" style={{ height: 'calc(100vh - 80px)' }}>
-              {panelCasaUrl ? (
+              {resolvedPanelCasaUrl ? (
                 <iframe
-                  src={panelCasaUrl}
+                  src={resolvedPanelCasaUrl}
                   className="w-full h-full rounded-2xl border border-white/[0.08]"
                   allow="fullscreen"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-presentation"
+                  referrerPolicy="strict-origin-when-cross-origin"
                   title="Painel da Casa"
                 />
               ) : (
