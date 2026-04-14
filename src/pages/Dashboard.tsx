@@ -5613,6 +5613,18 @@ function Dashboard() {
                       {dc.confirmationLogoUrl && <button onClick={() => updateDc({ confirmationLogoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Link do botão pós-pagamento</label>
+                    <input value={dc.confirmationButtonUrl || ''} onChange={e => updateDc({ confirmationButtonUrl: e.target.value })} placeholder="https://exemplo.com" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <p className="text-[10px] text-muted-foreground/60">Deixe vazio para não exibir o botão.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Cor do botão pós-pagamento</label>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={dc.confirmationButtonColor || dc.accentColor || '#10b981'} onChange={e => updateDc({ confirmationButtonColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                      <input value={dc.confirmationButtonColor || ''} onChange={e => updateDc({ confirmationButtonColor: e.target.value })} placeholder="Usa cor de destaque padrão" className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Comprovante de Recebimento */}

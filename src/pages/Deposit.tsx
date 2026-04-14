@@ -29,6 +29,8 @@ interface DepositConfig {
   confirmationTitle: string;
   confirmationMessage: string;
   confirmationLogoUrl: string;
+  confirmationButtonUrl: string;
+  confirmationButtonColor: string;
 }
 
 const defaultDepositConfig: DepositConfig = {
@@ -55,6 +57,8 @@ const defaultDepositConfig: DepositConfig = {
   confirmationTitle: 'Pagamento Confirmado!',
   confirmationMessage: 'Seu depósito foi recebido com sucesso.',
   confirmationLogoUrl: '',
+  confirmationButtonUrl: '',
+  confirmationButtonColor: '',
 };
 
 const Deposit = ({ tag: tagProp }: { tag?: string }) => {
@@ -480,7 +484,12 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
               </div>
             </div>
 
-            <button onClick={resetForm} className="w-full py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg" style={{ background: accent, color: '#fff', boxShadow: `0 10px 25px -5px ${accent}33` }}>
+            {config.confirmationButtonUrl && (
+              <a href={config.confirmationButtonUrl} target="_blank" rel="noopener noreferrer" className="block w-full py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg text-center" style={{ background: config.confirmationButtonColor || accent, color: '#fff', boxShadow: `0 10px 25px -5px ${(config.confirmationButtonColor || accent)}33` }}>
+                Acessar →
+              </a>
+            )}
+            <button onClick={resetForm} className="w-full py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg" style={{ background: config.confirmationButtonUrl ? `${txt}0a` : accent, color: config.confirmationButtonUrl ? txtMuted : '#fff', border: config.confirmationButtonUrl ? `1px solid ${txt}14` : 'none', boxShadow: config.confirmationButtonUrl ? 'none' : `0 10px 25px -5px ${accent}33` }}>
               Novo depósito
             </button>
           </div>
