@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     }
 
     // Update prize_payments if confirmed
-    if (status === "confirmed" || status === "completed" || status === "approved") {
+    if (status === "paid") {
       const { data: payment } = await supabase
         .from("prize_payments")
         .select("id")
