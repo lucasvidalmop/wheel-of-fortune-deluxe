@@ -154,6 +154,25 @@ const WHATSAPP_SPIN_TEMPLATES = [
   { id: 'custom', label: '✏️ Personalizado', message: '' },
 ];
 
+function openPrintReceipt(elementId: string, fontColor: string, bgColor: string, accentColor: string) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const w = window.open('', '_blank');
+  if (!w) return;
+  const css = '*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}' +
+    'body{padding:40px;color:' + fontColor + ';background:' + bgColor + ';max-width:500px;margin:0 auto}' +
+    '.section{border-top:1px solid #e5e7eb;padding:16px 0}' +
+    '.row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}' +
+    '.row .label{color:#888}.row .val{font-weight:600;text-align:right;max-width:60%}' +
+    '.label-sm{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}' +
+    '.amount-box{border:2px solid ' + accentColor + ';border-radius:12px;text-align:center;padding:16px;margin:16px 0}' +
+    '.footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}';
+  const head = '<html><head><title>Comprovante<' + '/title><style>' + css + '<' + '/style><' + '/head>';
+  w.document.write(head + '<body>' + el.innerHTML + '<' + '/body><' + '/html>');
+  w.document.close();
+  w.print();
+}
+
 const Dashboard = () => {
   useSiteSettings();
   const configHydratedRef = useRef(false);
@@ -5915,7 +5934,7 @@ const Dashboard = () => {
                     </select>
                     {(wheelConfig as any).blacklistFixedSegment != null && (
                       <p className="text-xs text-destructive/80">
-                        🚫 Blacklistados sempre ganharão: <strong>{((wheelConfig as any).segments?.[(wheelConfig as any).blacklistFixedSegment]?.title) || `Segmento ${(wheelConfig as any).blacklistFixedSegment + 1}`}</strong>
+                        🚫 Blacklistados sempre ganharão: <strong>{((wheelConfig as any).segments?.[(wheelConfig as any).blacklistFixedSegment]?.title) || ('Segmento ' + ((wheelConfig as any).blacklistFixedSegment + 1))}</strong>
                       </p>
                     )}
                   </div>
@@ -7487,25 +7506,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                 <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
                   <span className="text-sm font-semibold text-foreground">Comprovante de Pagamento</span>
                   <button
-                    onClick={() => {
-                      const el = document.getElementById('receipt-print-area');
-                      if (!el) return;
-                      const w = window.open('', '_blank');
-                      if (!w) return;
-                      w.document.write(`<html><head><title>Comprovante</title><style>
-                        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-                        body{padding:40px;color:${rFont};background:${rBg};max-width:500px;margin:0 auto}
-                        .section{border-top:1px solid #e5e7eb;padding:16px 0}
-                        .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
-                        .row .label{color:#888}
-                        .row .val{font-weight:600;text-align:right;max-width:60%}
-                        .label-sm{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
-                        .amount-box{border:2px solid ${rAccent};border-radius:12px;text-align:center;padding:16px;margin:16px 0}
-                        .footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}
-                      </style></head><body>${el.innerHTML}</body></html>`);
-                      w.document.close();
-                      w.print();
-                    }}
+                    onClick={() => openPrintReceipt('receipt-print-area', rFont, rBg, rAccent)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition-all"
                   >
                     🖨 Imprimir / PDF
@@ -7617,15 +7618,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                 <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
                   <span className="text-sm font-semibold text-foreground">Comprovante de Recebimento</span>
                   <button
-                    onClick={() => {
-                      const el = document.getElementById('deposit-receipt-print');
-                      if (!el) return;
-                      const w = window.open('', '_blank');
-                      if (!w) return;
-                      w.document.write(`<html><head><title>Comprovante</title><style>*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}body{padding:40px;color:${rFont};background:${rBg};max-width:500px;margin:0 auto}.row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}.row .label{color:#888}.row .val{font-weight:600;text-align:right;max-width:60%}.amount-box{border:2px solid ${rAccent};border-radius:12px;text-align:center;padding:16px;margin:16px 0}.footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}</style></head><body>${el.innerHTML}</body></html>`);
-                      w.document.close();
-                      w.print();
-                    }}
+                    onClick={() => openPrintReceipt('deposit-receipt-print', rFont, rBg, rAccent)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition-all"
                   >
                     🖨 Imprimir / PDF
