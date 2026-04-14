@@ -62,6 +62,43 @@ Deno.serve(async (req) => {
         .eq("edpay_id", edpayId);
 
       console.log(`Updated transaction ${edpayId} to status: ${status}`);
+
+      // Send deposit notification when confirmed
+      if (status === "paid" && (existing as any).metadata) {
+        const meta = existingMeta as Record<string, any>;
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        try {
+          // Fetch owner_id from the transaction
+          const { data: txData } = await supabase
+            .from("edpay_transactions")
+            .select("owner_id, amount")
+            .eq("edpay_id", edpayId)
+            .maybeSingle();
+
+          if (txData?.owner_id) {
+            await fetch(`${supabaseUrl}/functions/v1/send-owner-notification`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                ownerId: txData.owner_id,
+                type: "deposit_confirmed",
+                payload: {
+                  userName: meta.userName || "Anônimo",
+                  userPhone: meta.userPhone || "-",
+                  userAccountId: meta.userAccountId || "-",
+                  amount: txData.amount || 0,
+                },
+              }),
+            });
+            console.log("Deposit notification sent for", edpayId);
+          }
+        } catch (notifErr) {
+          console.error("Failed to send deposit notification:", notifErr);
+        }
+      }
     } else {
       console.log(`No matching transaction found for edpay_id: ${edpayId}`);
     }

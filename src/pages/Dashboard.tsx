@@ -72,6 +72,7 @@ interface PersistedDashboardSettings {
   notifyAutoPaymentEnabled: boolean;
   notifyReferralEnabled: boolean;
   notifyPendingPaymentEnabled: boolean;
+  notifyDepositEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
@@ -117,6 +118,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyAutoPaymentEnabled: false,
   notifyReferralEnabled: false,
   notifyPendingPaymentEnabled: false,
+  notifyDepositEnabled: false,
   notifyGroupJid: '',
   notifyGroupName: '',
   notifySelectedGroups: [],
@@ -272,6 +274,7 @@ function Dashboard() {
   const [notifyAutoPaymentEnabled, setNotifyAutoPaymentEnabled] = useState(false);
   const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
+  const [notifyDepositEnabled, setNotifyDepositEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
@@ -790,6 +793,7 @@ function Dashboard() {
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
+    notifyDepositEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
@@ -847,6 +851,7 @@ function Dashboard() {
     setNotifyAutoPaymentEnabled(!!settings.notifyAutoPaymentEnabled);
     setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
+    setNotifyDepositEnabled(!!settings.notifyDepositEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
@@ -1053,6 +1058,7 @@ function Dashboard() {
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
+    notifyDepositEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
@@ -4473,8 +4479,30 @@ function Dashboard() {
                 </div>
               </GlassCard>
 
+              {/* Toggle: Depósito confirmado */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                      <Wallet size={20} className="text-cyan-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Depósito Confirmado</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um depósito PIX for confirmado</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyDepositEnabled(!notifyDepositEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyDepositEnabled ? 'bg-cyan-500 shadow-lg shadow-cyan-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyDepositEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
               {/* Configuração WhatsApp para Notificações */}
-              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled) && (
+              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled || notifyDepositEnabled) && (
                 <GlassCard className="p-5 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
@@ -4530,7 +4558,7 @@ function Dashboard() {
               )}
 
               {/* Empty state */}
-              {!notifyReferralEnabled && !notifyPendingPaymentEnabled && !notifyAutoPaymentEnabled && (
+              {!notifyReferralEnabled && !notifyPendingPaymentEnabled && !notifyAutoPaymentEnabled && !notifyDepositEnabled && (
                 <div className="text-center py-8">
                   <Bell size={40} className="mx-auto text-muted-foreground/30 mb-3" />
                   <p className="text-sm text-muted-foreground">Ative pelo menos uma notificação acima para configurar o canal de envio</p>
