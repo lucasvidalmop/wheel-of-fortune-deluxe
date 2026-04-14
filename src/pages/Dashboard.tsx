@@ -5340,12 +5340,23 @@ const Dashboard = () => {
           )}
 
           {activeTab === 'deposito' && (() => {
-            const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito' };
+            const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '' };
             const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
             const depositUrl = dc.tag ? `${baseUrl}/dep=${dc.tag}` : '';
+
+            const handleDepositUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+              const file = e.target.files?.[0]; if (!file) return;
+              try {
+                const { publicUrl } = await uploadAppAsset(file, 'deposit');
+                updateDc({ [field]: publicUrl });
+                toast.success('Imagem enviada!');
+              } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+              e.target.value = '';
+            };
+
             return (
               <div className="w-full max-w-2xl min-w-0 space-y-6">
-                {/* Ativar */}
+                {/* Ativar + Tag */}
                 <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -5354,7 +5365,7 @@ const Dashboard = () => {
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <span className="text-xs text-muted-foreground">{dc.enabled ? 'Ativa' : 'Inativa'}</span>
-                      <div className={`relative w-10 h-5 rounded-full transition-all ${dc.enabled ? 'bg-primary' : 'bg-white/[0.1]'}`} onClick={() => updateDc({ enabled: !dc.enabled })}>
+                      <div className={`relative w-10 h-5 rounded-full transition-all cursor-pointer ${dc.enabled ? 'bg-primary' : 'bg-white/[0.1]'}`} onClick={() => updateDc({ enabled: !dc.enabled })}>
                         <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${dc.enabled ? 'left-[22px]' : 'left-0.5'}`} />
                       </div>
                     </label>
@@ -5362,21 +5373,12 @@ const Dashboard = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Tag da rota (URL)</label>
-                    <input
-                      value={dc.tag || ''}
-                      onChange={e => updateDc({ tag: e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase() })}
-                      placeholder="ex: meudeposito"
-                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    />
+                    <input value={dc.tag || ''} onChange={e => updateDc({ tag: e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase() })} placeholder="ex: meudeposito" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     {depositUrl && (
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-muted-foreground truncate">{depositUrl}</span>
-                        <button onClick={() => { navigator.clipboard.writeText(depositUrl); toast.success('Link copiado!'); }} className="text-xs text-primary hover:text-primary/80 shrink-0">
-                          <Copy size={12} />
-                        </button>
-                        <a href={depositUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:text-primary/80 shrink-0">
-                          <ExternalLink size={12} />
-                        </a>
+                        <button onClick={() => { navigator.clipboard.writeText(depositUrl); toast.success('Link copiado!'); }} className="text-xs text-primary hover:text-primary/80 shrink-0"><Copy size={12} /></button>
+                        <a href={depositUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:text-primary/80 shrink-0"><ExternalLink size={12} /></a>
                       </div>
                     )}
                   </div>
@@ -5386,27 +5388,15 @@ const Dashboard = () => {
                 <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-1">
                     <Settings size={18} className="text-primary" />
-                    <h3 className="text-base font-bold text-foreground">Configurações</h3>
+                    <h3 className="text-base font-bold text-foreground">Configurações do Formulário</h3>
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Label do campo de ID</label>
-                    <input
-                      value={dc.accountIdLabel || ''}
-                      onChange={e => updateDc({ accountIdLabel: e.target.value })}
-                      placeholder="Ex: ID da Conta, Matrícula, CPF..."
-                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    />
+                    <input value={dc.accountIdLabel || ''} onChange={e => updateDc({ accountIdLabel: e.target.value })} placeholder="Ex: ID da Conta, Matrícula, CPF..." className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Descrição da página</label>
-                    <input
-                      value={dc.description || ''}
-                      onChange={e => updateDc({ description: e.target.value })}
-                      placeholder="Texto exibido no topo da página"
-                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    />
+                    <input value={dc.description || ''} onChange={e => updateDc({ description: e.target.value })} placeholder="Texto exibido no topo" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                 </div>
 
@@ -5416,65 +5406,154 @@ const Dashboard = () => {
                     <Wallet size={18} className="text-primary" />
                     <h3 className="text-base font-bold text-foreground">Valores</h3>
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Valor mínimo (R$)</label>
-                    <input
-                      type="number"
-                      min={1}
-                      step="0.01"
-                      value={dc.minimumValue ?? 10}
-                      onChange={e => updateDc({ minimumValue: Math.max(1, Number(e.target.value)) })}
-                      className="w-32 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                    />
+                    <input type="number" min={1} step="0.01" value={dc.minimumValue ?? 10} onChange={e => updateDc({ minimumValue: Math.max(1, Number(e.target.value)) })} className="w-32 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
-
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-muted-foreground">Valores pré-definidos</label>
                     <div className="flex flex-wrap gap-2">
                       {(dc.presetValues || []).map((val: number, idx: number) => (
                         <div key={idx} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08]">
                           <span className="text-xs text-foreground">R$ {val.toFixed(2)}</span>
-                          <button onClick={() => {
-                            const newVals = [...(dc.presetValues || [])];
-                            newVals.splice(idx, 1);
-                            updateDc({ presetValues: newVals });
-                          }} className="text-destructive hover:text-destructive/80 ml-1">
-                            <X size={12} />
-                          </button>
+                          <button onClick={() => { const nv = [...(dc.presetValues || [])]; nv.splice(idx, 1); updateDc({ presetValues: nv }); }} className="text-destructive hover:text-destructive/80 ml-1"><X size={12} /></button>
                         </div>
                       ))}
                     </div>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={1}
-                        step="0.01"
-                        placeholder="Novo valor"
-                        id="deposit-new-preset"
-                        className="w-32 px-3 py-2 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                      />
-                      <button onClick={() => {
-                        const inp = document.getElementById('deposit-new-preset') as HTMLInputElement;
-                        const val = Number(inp?.value);
-                        if (val >= 1) {
-                          updateDc({ presetValues: [...(dc.presetValues || []), val] });
-                          if (inp) inp.value = '';
-                        }
-                      }} className="px-3 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:brightness-110 transition-all">
-                        <Plus size={14} />
-                      </button>
+                      <input type="number" min={1} step="0.01" placeholder="Novo valor" id="deposit-new-preset" className="w-32 px-3 py-2 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      <button onClick={() => { const inp = document.getElementById('deposit-new-preset') as HTMLInputElement; const val = Number(inp?.value); if (val >= 1) { updateDc({ presetValues: [...(dc.presetValues || []), val] }); if (inp) inp.value = ''; } }} className="px-3 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:brightness-110 transition-all"><Plus size={14} /></button>
                     </div>
                   </div>
-
                   <label className="flex items-center gap-2 cursor-pointer pt-2">
-                    <Checkbox
-                      checked={dc.allowCustomValue !== false}
-                      onCheckedChange={(v) => updateDc({ allowCustomValue: !!v })}
-                    />
+                    <Checkbox checked={dc.allowCustomValue !== false} onCheckedChange={(v) => updateDc({ allowCustomValue: !!v })} />
                     <span className="text-sm text-foreground">Permitir valor personalizado</span>
                   </label>
                 </div>
+
+                {/* Visual */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Palette size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Visual da Página</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground">Fundo</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={dc.bgColor || '#0a0a0f'} onChange={e => updateDc({ bgColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dc.bgColor || '#0a0a0f'}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground">Destaque</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={dc.accentColor || '#10b981'} onChange={e => updateDc({ accentColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dc.accentColor || '#10b981'}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground">Texto</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={dc.textColor || '#ffffff'} onChange={e => updateDc({ textColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dc.textColor || '#ffffff'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Logo</label>
+                    <div className="flex items-center gap-3">
+                      {dc.logoUrl && <img src={dc.logoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
+                      <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
+                        {dc.logoUrl ? '🔄 Trocar' : '📤 Enviar'} Logo
+                        <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'logoUrl')} className="hidden" />
+                      </label>
+                      {dc.logoUrl && <button onClick={() => updateDc({ logoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Imagem de fundo</label>
+                    <div className="flex items-center gap-3">
+                      {dc.bgImageUrl && <img src={dc.bgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
+                      <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
+                        {dc.bgImageUrl ? '🔄 Trocar' : '📤 Enviar'} Fundo
+                        <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'bgImageUrl')} className="hidden" />
+                      </label>
+                      {dc.bgImageUrl && <button onClick={() => updateDc({ bgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SEO */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Globe size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">SEO / Meta Tags</h3>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Título da página</label>
+                    <input value={dc.seoTitle || ''} onChange={e => updateDc({ seoTitle: e.target.value })} placeholder="Título exibido na aba do navegador" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Meta descrição</label>
+                    <textarea value={dc.seoDescription || ''} onChange={e => updateDc({ seoDescription: e.target.value })} placeholder="Descrição para SEO e compartilhamento" rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Favicon</label>
+                    <div className="flex items-center gap-3">
+                      {dc.seoFaviconUrl && <img src={dc.seoFaviconUrl} alt="" className="h-8 w-8 rounded border border-white/[0.08] object-contain" />}
+                      <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
+                        {dc.seoFaviconUrl ? '🔄 Trocar' : '📤 Enviar'} Favicon
+                        <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'seoFaviconUrl')} className="hidden" />
+                      </label>
+                      {dc.seoFaviconUrl && <button onClick={() => updateDc({ seoFaviconUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Imagem social (OG Image)</label>
+                    <div className="flex items-center gap-3">
+                      {dc.seoOgImageUrl && <img src={dc.seoOgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
+                      <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
+                        {dc.seoOgImageUrl ? '🔄 Trocar' : '📤 Enviar'} OG Image
+                        <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'seoOgImageUrl')} className="hidden" />
+                      </label>
+                      {dc.seoOgImageUrl && <button onClick={() => updateDc({ seoOgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pixel / Tracking */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BarChart3 size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Pixel / Tracking</h3>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Facebook Pixel ID</label>
+                    <input value={dc.pixelFacebook || ''} onChange={e => updateDc({ pixelFacebook: e.target.value })} placeholder="Ex: 123456789" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Google Analytics / GTM ID</label>
+                    <input value={dc.pixelGoogle || ''} onChange={e => updateDc({ pixelGoogle: e.target.value })} placeholder="Ex: G-XXXXXXX ou GTM-XXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">TikTok Pixel ID</label>
+                    <input value={dc.pixelTiktok || ''} onChange={e => updateDc({ pixelTiktok: e.target.value })} placeholder="Ex: CXXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Script customizado (Head)</label>
+                    <textarea value={dc.customHeadScript || ''} onChange={e => updateDc({ customHeadScript: e.target.value })} placeholder="<script>...</script>" rows={3} className="w-full px-4 py-2.5 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                  </div>
+                </div>
+
+                {/* Save button */}
+                <button
+                  onClick={handleSaveConfig}
+                  disabled={savingConfig}
+                  className="w-full py-3 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                >
+                  {savingConfig ? '⏳ Salvando...' : '💾 Salvar Configurações'}
+                </button>
               </div>
             );
           })()}
