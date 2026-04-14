@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -26,6 +26,9 @@ interface DepositConfig {
   pixelGoogle: string;
   pixelTiktok: string;
   customHeadScript: string;
+  confirmationTitle: string;
+  confirmationMessage: string;
+  confirmationLogoUrl: string;
 }
 
 const defaultDepositConfig: DepositConfig = {
@@ -49,6 +52,9 @@ const defaultDepositConfig: DepositConfig = {
   pixelGoogle: '',
   pixelTiktok: '',
   customHeadScript: '',
+  confirmationTitle: 'Pagamento Confirmado!',
+  confirmationMessage: 'Seu depósito foi recebido com sucesso.',
+  confirmationLogoUrl: '',
 };
 
 const Deposit = ({ tag: tagProp }: { tag?: string }) => {
@@ -62,7 +68,7 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
   const [name, setName] = useState('');
   const [accountId, setAccountId] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [step, setStep] = useState<'form' | 'amount' | 'qrcode'>('form');
+  const [step, setStep] = useState<'form' | 'amount' | 'qrcode' | 'confirmed'>('form');
 
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -70,6 +76,8 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
   const [qrLoading, setQrLoading] = useState(false);
   const [qrData, setQrData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [txId, setTxId] = useState<string | null>(null);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const maskPhone = (v: string) => {
     const d = v.replace(/\D/g, '').slice(0, 11);
@@ -83,12 +91,10 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
     if (!config || !config.enabled) return;
     const cleanup: (() => void)[] = [];
 
-    // Title
     const origTitle = document.title;
     if (config.seoTitle) document.title = config.seoTitle;
     cleanup.push(() => { document.title = origTitle; });
 
-    // Favicon
     if (config.seoFaviconUrl) {
       const link = document.createElement('link');
       link.rel = 'icon';
@@ -97,7 +103,6 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
       cleanup.push(() => link.remove());
     }
 
-    // Meta tags
     const addMeta = (prop: string, content: string) => {
       if (!content) return;
       const meta = document.createElement('meta');
@@ -110,7 +115,6 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
     addMeta('og:description', config.seoDescription || '');
     addMeta('og:image', config.seoOgImageUrl || '');
 
-    // Facebook Pixel
     if (config.pixelFacebook) {
       const s = document.createElement('script');
       s.textContent = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${config.pixelFacebook}');fbq('track','PageView');`;
@@ -118,7 +122,6 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
       cleanup.push(() => s.remove());
     }
 
-    // Google Analytics / GTM
     if (config.pixelGoogle) {
       const id = config.pixelGoogle;
       if (id.startsWith('GTM-')) {
@@ -138,7 +141,6 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
       }
     }
 
-    // TikTok Pixel
     if (config.pixelTiktok) {
       const s = document.createElement('script');
       s.textContent = `!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${config.pixelTiktok}');ttq.page();}(window,document,'ttq');`;
@@ -146,7 +148,6 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
       cleanup.push(() => s.remove());
     }
 
-    // Custom head script
     if (config.customHeadScript) {
       const div = document.createElement('div');
       div.innerHTML = config.customHeadScript;
@@ -190,6 +191,28 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
     fetchConfig();
   }, [tag]);
 
+  // Poll for payment confirmation
+  useEffect(() => {
+    if (step !== 'qrcode' || !txId) return;
+
+    const poll = async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from('edpay_transactions')
+          .select('status')
+          .eq('edpay_id', txId)
+          .maybeSingle();
+        if (data?.status === 'paid') {
+          setStep('confirmed');
+          if (pollRef.current) clearInterval(pollRef.current);
+        }
+      } catch { /* ignore */ }
+    };
+
+    pollRef.current = setInterval(poll, 5000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [step, txId]);
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !accountId.trim() || !whatsapp.trim()) {
@@ -214,7 +237,13 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
       });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); }
-      else { setQrData(data?.data || data); setStep('qrcode'); toast.success('QR Code gerado!'); }
+      else {
+        const qr = data?.data || data;
+        setQrData(qr);
+        setTxId(qr?.id || null);
+        setStep('qrcode');
+        toast.success('QR Code gerado!');
+      }
     } catch (err: any) { toast.error(err?.message || 'Erro ao gerar QR Code'); }
     finally { setQrLoading(false); }
   };
@@ -224,6 +253,17 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
     setCopied(true);
     toast.success('Copiado!');
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const resetForm = () => {
+    setStep('form');
+    setQrData(null);
+    setTxId(null);
+    setSelectedAmount(null);
+    setCustomAmount('');
+    setName('');
+    setAccountId('');
+    setWhatsapp('');
   };
 
   const accent = config.accentColor || '#10b981';
@@ -257,11 +297,9 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: bg, color: txt }}>
-      {/* Background image */}
       {config.bgImageUrl && (
         <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
       )}
-      {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/3 w-[500px] h-[500px] rounded-full blur-[120px]" style={{ background: `${accent}0d` }} />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: `${accent}08` }} />
@@ -269,34 +307,38 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
 
       <div className="relative w-full max-w-md z-10">
         {/* Header */}
-        <div className="text-center mb-6">
-          {config.logoUrl && (
-            <img src={config.logoUrl} alt="" className="h-14 mx-auto mb-4 object-contain" />
-          )}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4" style={{ background: `${accent}1a`, border: `1px solid ${accent}33` }}>
-            <CreditCard size={16} style={{ color: accent }} />
-            <span className="text-sm font-semibold" style={{ color: accent }}>Depósito PIX</span>
+        {step !== 'confirmed' && (
+          <div className="text-center mb-6">
+            {config.logoUrl && (
+              <img src={config.logoUrl} alt="" className="h-14 mx-auto mb-4 object-contain" />
+            )}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4" style={{ background: `${accent}1a`, border: `1px solid ${accent}33` }}>
+              <CreditCard size={16} style={{ color: accent }} />
+              <span className="text-sm font-semibold" style={{ color: accent }}>Depósito PIX</span>
+            </div>
+            {config.description && (
+              <p className="text-sm mt-2" style={{ color: txtMuted }}>{config.description}</p>
+            )}
           </div>
-          {config.description && (
-            <p className="text-sm mt-2" style={{ color: txtMuted }}>{config.description}</p>
-          )}
-        </div>
+        )}
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          {['Dados', 'Valor', 'Pagamento'].map((label, i) => {
-            const stepIndex = step === 'form' ? 0 : step === 'amount' ? 1 : 2;
-            return (
-              <div key={label} className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all" style={{ background: i <= stepIndex ? accent : `${txt}0f`, color: i <= stepIndex ? '#fff' : txtMuted }}>
-                  {i < stepIndex ? '✓' : i + 1}
+        {step !== 'confirmed' && (
+          <div className="flex items-center justify-center gap-2 mb-6">
+            {['Dados', 'Valor', 'Pagamento'].map((label, i) => {
+              const stepIndex = step === 'form' ? 0 : step === 'amount' ? 1 : 2;
+              return (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all" style={{ background: i <= stepIndex ? accent : `${txt}0f`, color: i <= stepIndex ? '#fff' : txtMuted }}>
+                    {i < stepIndex ? '✓' : i + 1}
+                  </div>
+                  <span className="text-xs" style={{ color: i <= stepIndex ? accent : txtMuted }}>{label}</span>
+                  {i < 2 && <div className="w-8 h-0.5" style={{ background: i < stepIndex ? accent : `${txt}14` }} />}
                 </div>
-                <span className="text-xs" style={{ color: i <= stepIndex ? accent : txtMuted }}>{label}</span>
-                {i < 2 && <div className="w-8 h-0.5" style={{ background: i < stepIndex ? accent : `${txt}14` }} />}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Step 1: Form */}
         {step === 'form' && (
@@ -383,7 +425,58 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
                 </div>
               </div>
             )}
-            <button onClick={() => { setStep('form'); setQrData(null); setSelectedAmount(null); setCustomAmount(''); setName(''); setAccountId(''); setWhatsapp(''); }} className="w-full py-3 rounded-xl text-sm font-semibold transition-all mt-4" style={{ background: `${txt}0a`, color: txtMuted, border: `1px solid ${txt}14` }}>
+            <div className="flex items-center justify-center gap-2 pt-2" style={{ color: txtMuted }}>
+              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs">Aguardando pagamento...</span>
+            </div>
+            <button onClick={resetForm} className="w-full py-3 rounded-xl text-sm font-semibold transition-all mt-4" style={{ background: `${txt}0a`, color: txtMuted, border: `1px solid ${txt}14` }}>
+              Cancelar
+            </button>
+          </div>
+        )}
+
+        {/* Step 4: Confirmed */}
+        {step === 'confirmed' && (
+          <div className="space-y-6 rounded-2xl backdrop-blur-xl p-8 text-center" style={cardStyle}>
+            {config.confirmationLogoUrl ? (
+              <img src={config.confirmationLogoUrl} alt="" className="h-20 mx-auto object-contain" />
+            ) : (
+              <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center" style={{ background: `${accent}22` }}>
+                <CheckCircle2 size={40} style={{ color: accent }} />
+              </div>
+            )}
+            <div className="space-y-2">
+              <h2 className="text-2xl font-extrabold" style={{ color: accent }}>
+                {config.confirmationTitle || 'Pagamento Confirmado!'}
+              </h2>
+              <p className="text-sm" style={{ color: txtMuted }}>
+                {config.confirmationMessage || 'Seu depósito foi recebido com sucesso.'}
+              </p>
+            </div>
+
+            {/* Receipt-like card */}
+            <div className="rounded-xl p-4 space-y-3 text-left" style={{ background: `${txt}06`, border: `1px solid ${txt}10` }}>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: txtMuted }}>Nome</span>
+                <span className="font-semibold">{name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: txtMuted }}>{config.accountIdLabel}</span>
+                <span className="font-semibold">{accountId}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: txtMuted }}>WhatsApp</span>
+                <span className="font-semibold">{whatsapp}</span>
+              </div>
+              <div className="pt-2" style={{ borderTop: `1px solid ${txt}14` }}>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: accent }}>Valor Depositado</span>
+                  <span className="text-2xl font-extrabold" style={{ color: accent }}>R$ {finalAmount?.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={resetForm} className="w-full py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg" style={{ background: accent, color: '#fff', boxShadow: `0 10px 25px -5px ${accent}33` }}>
               Novo depósito
             </button>
           </div>

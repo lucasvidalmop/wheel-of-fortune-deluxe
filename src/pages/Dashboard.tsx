@@ -7,7 +7,7 @@ import CustomizationPanel from '@/components/casino/CustomizationPanel';
 import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus, RefreshCw } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -166,7 +166,7 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
@@ -509,6 +509,9 @@ const Dashboard = () => {
   const [receiptPayment, setReceiptPayment] = useState<any | null>(null);
   const [receiptMeta, setReceiptMeta] = useState<any | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
+  const [depositHistory, setDepositHistory] = useState<any[]>([]);
+  const [depositHistoryLoading, setDepositHistoryLoading] = useState(false);
+  const [depositReceipt, setDepositReceipt] = useState<any | null>(null);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
@@ -1313,7 +1316,21 @@ const Dashboard = () => {
     setReceiptLoading(false);
   };
 
-  const fetchPrizePayments = async () => {
+  const fetchDepositHistory = async () => {
+    if (!session?.user?.id) return;
+    setDepositHistoryLoading(true);
+    const { data } = await (supabase as any)
+      .from('edpay_transactions')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .eq('type', 'deposit_public')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setDepositHistory(data || []);
+    setDepositHistoryLoading(false);
+  };
+
+
     if (!session?.user?.id) return;
     setPrizePaymentsLoading(true);
     const { data } = await (supabase as any)
@@ -1911,6 +1928,7 @@ const Dashboard = () => {
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
     { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta' },
     { key: 'deposito', icon: <DollarSign size={20} />, label: 'Depósito' },
+    { key: 'hist_deposito', icon: <Clock size={20} />, label: 'Hist. Depósito' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
     { key: 'painel_casa', icon: <Monitor size={20} />, label: 'Painel da Casa' },
   ];
@@ -1931,6 +1949,7 @@ const Dashboard = () => {
     hist_gorjeta: 'Histórico de Gorjetas',
     configuracoes: 'Configurações',
     deposito: 'Página de Depósito',
+    hist_deposito: 'Histórico de Depósitos',
     painel_casa: 'Painel da Casa',
   };
 
@@ -5340,7 +5359,7 @@ const Dashboard = () => {
           )}
 
           {activeTab === 'deposito' && (() => {
-            const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '' };
+            const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '' };
             const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
             const depositUrl = dc.tag ? `${baseUrl}/dep=${dc.tag}` : '';
 
@@ -5546,6 +5565,43 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* Tela de Confirmação */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle2 size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Tela de Confirmação</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Exibida após o pagamento ser confirmado.</p>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Título da confirmação</label>
+                    <input value={dc.confirmationTitle || ''} onChange={e => updateDc({ confirmationTitle: e.target.value })} placeholder="Pagamento Confirmado!" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Mensagem de confirmação</label>
+                    <textarea value={dc.confirmationMessage || ''} onChange={e => updateDc({ confirmationMessage: e.target.value })} placeholder="Seu depósito foi recebido com sucesso." rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Logo da confirmação (opcional)</label>
+                    <div className="flex items-center gap-3">
+                      {dc.confirmationLogoUrl && <img src={dc.confirmationLogoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
+                      <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
+                        {dc.confirmationLogoUrl ? '🔄 Trocar' : '📤 Enviar'}
+                        <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'confirmationLogoUrl')} className="hidden" />
+                      </label>
+                      {dc.confirmationLogoUrl && <button onClick={() => updateDc({ confirmationLogoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comprovante de Recebimento */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileText size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Comprovante de Recebimento</h3>
+                    <p className="text-xs text-muted-foreground">(usa mesmas cores do comprovante de pagamento)</p>
+                  </div>
+                </div>
+
                 {/* Save button */}
                 <button
                   onClick={handleSaveConfig}
@@ -5554,6 +5610,68 @@ const Dashboard = () => {
                 >
                   {savingConfig ? '⏳ Salvando...' : '💾 Salvar Configurações'}
                 </button>
+              </div>
+            );
+          })()}
+
+          {activeTab === 'hist_deposito' && (() => {
+            if (depositHistory.length === 0 && !depositHistoryLoading) { fetchDepositHistory(); }
+            const dc = (wheelConfig as any).depositConfig || {};
+            const rFont = receiptFontColor || '#1a1a2e';
+            const rBg = receiptBgColor || '#ffffff';
+            const rAccent = receiptAccentColor || '#3b82f6';
+            const rOperator = receiptOperatorName || session?.user?.email || 'Operador';
+
+            return (
+              <div className="w-full max-w-4xl min-w-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-foreground">Depósitos Recebidos</h3>
+                  <button onClick={fetchDepositHistory} disabled={depositHistoryLoading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-xs text-foreground hover:bg-white/[0.1] transition-all disabled:opacity-50">
+                    <RefreshCw size={14} className={depositHistoryLoading ? 'animate-spin' : ''} /> Atualizar
+                  </button>
+                </div>
+
+                {depositHistoryLoading && depositHistory.length === 0 ? (
+                  <div className="text-center py-10"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : depositHistory.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground text-sm">Nenhum depósito registrado ainda.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {depositHistory.map((tx: any) => {
+                      const meta = tx.metadata || {};
+                      const isPaid = tx.status === 'paid';
+                      const isPending = tx.status === 'pending';
+                      return (
+                        <div key={tx.id} className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: isPaid ? '#d1fae533' : isPending ? '#fef3c733' : '#fee2e233' }}>
+                            {isPaid ? <CheckCircle2 size={20} className="text-green-400" /> : isPending ? <Clock size={20} className="text-yellow-400" /> : <Ban size={20} className="text-red-400" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-foreground truncate">{meta.userName || 'Anônimo'}</span>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isPaid ? 'bg-green-500/20 text-green-400' : isPending ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
+                                {isPaid ? 'Pago' : isPending ? 'Pendente' : tx.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                              {meta.userAccountId && <span>ID: {meta.userAccountId}</span>}
+                              {meta.userPhone && <span>📱 {meta.userPhone}</span>}
+                              <span>{new Date(tx.created_at).toLocaleString('pt-BR')}</span>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-lg font-extrabold text-primary">R$ {Number(tx.amount).toFixed(2).replace('.', ',')}</p>
+                            {isPaid && (
+                              <button onClick={() => setDepositReceipt(tx)} className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors mt-1">
+                                <FileText size={12} /> Comprovante
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })()}
@@ -7478,6 +7596,87 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                     <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
                   </div>
                 )}
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Deposit Receipt Dialog */}
+      <Dialog open={!!depositReceipt} onOpenChange={(open) => { if (!open) setDepositReceipt(null); }}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden">
+          {depositReceipt && (() => {
+            const meta = depositReceipt.metadata || {};
+            const isPaid = depositReceipt.status === 'paid';
+            const rFont = receiptFontColor || '#1a1a2e';
+            const rBg = receiptBgColor || '#ffffff';
+            const rAccent = receiptAccentColor || '#3b82f6';
+            const rOperator = receiptOperatorName || session?.user?.email || 'Operador';
+            return (
+              <>
+                <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+                  <span className="text-sm font-semibold text-foreground">Comprovante de Recebimento</span>
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById('deposit-receipt-print');
+                      if (!el) return;
+                      const w = window.open('', '_blank');
+                      if (!w) return;
+                      w.document.write(`<html><head><title>Comprovante</title><style>*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}body{padding:40px;color:${rFont};background:${rBg};max-width:500px;margin:0 auto}.row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}.row .label{color:#888}.row .val{font-weight:600;text-align:right;max-width:60%}.amount-box{border:2px solid ${rAccent};border-radius:12px;text-align:center;padding:16px;margin:16px 0}.footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}</style></head><body>${el.innerHTML}</body></html>`);
+                      w.document.close();
+                      w.print();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition-all"
+                  >
+                    🖨 Imprimir / PDF
+                  </button>
+                </div>
+                <div id="deposit-receipt-print" className="px-6 py-5 space-y-4" style={{ backgroundColor: rBg, color: rFont }}>
+                  <div className="text-center space-y-1">
+                    <div className="text-2xl">💰</div>
+                    <h2 className="text-lg font-extrabold tracking-wider uppercase" style={{ color: rFont }}>Comprovante de Recebimento</h2>
+                    <p className="text-xs" style={{ color: '#888' }}>Depósito PIX via EdPay</p>
+                    <div className="mt-3">
+                      <span style={{ display: 'inline-block', padding: '6px 20px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: isPaid ? '#d1fae5' : '#fee2e2', color: isPaid ? '#047857' : '#b91c1c', border: `1px solid ${isPaid ? '#6ee7b7' : '#fca5a5'}` }}>
+                        {isPaid ? '✓ DEPÓSITO CONFIRMADO' : '⏳ AGUARDANDO PAGAMENTO'}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    {depositReceipt.edpay_id && (
+                      <div className="flex justify-between text-sm py-1">
+                        <span style={{ color: '#888' }}>ID EdPay</span>
+                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{depositReceipt.edpay_id}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm py-1">
+                      <span style={{ color: '#888' }}>Data/Hora</span>
+                      <span className="font-semibold" style={{ color: rFont }}>{new Date(depositReceipt.created_at).toLocaleString('pt-BR')}</span>
+                    </div>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Recebido por</p>
+                    <p className="text-sm font-bold" style={{ color: rFont }}>{rOperator}</p>
+                    <p className="text-xs" style={{ color: '#888' }}>Plataforma EdPay · https://api.edpay.me/</p>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Pagador</p>
+                    <p className="text-sm font-bold" style={{ color: rFont }}>{meta.userName || 'Anônimo'}</p>
+                    <div className="flex items-center gap-3 text-xs" style={{ color: '#888' }}>
+                      {meta.userAccountId && <span>ID: {meta.userAccountId}</span>}
+                      {meta.userPhone && <span>📱 {meta.userPhone}</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-xl text-center py-4 px-4" style={{ border: `2px solid ${rAccent}` }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: rAccent }}>Valor Recebido</p>
+                    <p className="text-3xl font-extrabold mt-1" style={{ color: rAccent }}>R$ {Number(depositReceipt.amount).toFixed(2).replace('.', ',')}</p>
+                    <p className="text-[10px] mt-1" style={{ color: '#888' }}>via PIX instantâneo</p>
+                  </div>
+                  <div className="text-center pt-3 space-y-0.5" style={{ borderTop: '1px solid #e5e7eb' }}>
+                    <p className="text-[10px]" style={{ color: '#999' }}>Documento gerado em {new Date().toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px]" style={{ color: '#999' }}>Este comprovante é válido como prova de recebimento.</p>
+                  </div>
+                </div>
               </>
             );
           })()}
