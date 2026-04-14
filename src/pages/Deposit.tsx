@@ -51,8 +51,9 @@ const defaultDepositConfig: DepositConfig = {
   customHeadScript: '',
 };
 
-const Deposit = () => {
-  const { tag } = useParams<{ tag: string }>();
+const Deposit = ({ tag: tagProp }: { tag?: string }) => {
+  const params = useParams<{ tag: string }>();
+  const tag = tagProp || params.tag || '';
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
