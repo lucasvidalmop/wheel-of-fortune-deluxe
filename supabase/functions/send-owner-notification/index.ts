@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   ownerId: z.string().uuid(),
-  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto"]),
+  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed"]),
   payload: z.record(z.any()).default({}),
 });
 
@@ -25,7 +25,12 @@ const buildMessage = (type: z.infer<typeof BodySchema>["type"], payload: Record<
     return `⏳ *Pagamento aguardando aprovação*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🎁 *Prêmio:* ${payload.prize || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🕐 *Data:* ${now}`;
   }
 
-  return `💰 *Pagamento automático realizado*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🎁 *Prêmio:* ${payload.prize || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🔑 *PIX:* ${payload.pixKey || "-"}\n🕐 *Data:* ${now}`;
+  if (type === "payment_auto") {
+    return `💰 *Pagamento automático realizado*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🎁 *Prêmio:* ${payload.prize || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🔑 *PIX:* ${payload.pixKey || "-"}\n🕐 *Data:* ${now}`;
+  }
+
+  // deposit_confirmed
+  return `✅ *Depósito PIX confirmado*\n\n👤 *Nome:* ${payload.userName || "-"}\n📱 *WhatsApp:* ${payload.userPhone || "-"}\n🆔 *ID da conta:* ${payload.userAccountId || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🕐 *Data:* ${now}`;
 };
 
 Deno.serve(async (req) => {
@@ -82,6 +87,7 @@ Deno.serve(async (req) => {
       referral_redeemed: !!ds.notifyReferralEnabled,
       payment_pending: !!ds.notifyPendingPaymentEnabled,
       payment_auto: !!ds.notifyAutoPaymentEnabled,
+      deposit_confirmed: !!ds.notifyDepositEnabled,
     } as const;
 
     if (!enabledMap[type]) {
