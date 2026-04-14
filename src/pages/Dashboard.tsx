@@ -1316,7 +1316,21 @@ const Dashboard = () => {
     setReceiptLoading(false);
   };
 
-  const fetchPrizePayments = async () => {
+  const fetchDepositHistory = async () => {
+    if (!session?.user?.id) return;
+    setDepositHistoryLoading(true);
+    const { data } = await (supabase as any)
+      .from('edpay_transactions')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .eq('type', 'deposit_public')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setDepositHistory(data || []);
+    setDepositHistoryLoading(false);
+  };
+
+
     if (!session?.user?.id) return;
     setPrizePaymentsLoading(true);
     const { data } = await (supabase as any)
