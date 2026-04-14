@@ -5565,6 +5565,43 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* Tela de Confirmação */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle2 size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Tela de Confirmação</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Exibida após o pagamento ser confirmado.</p>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Título da confirmação</label>
+                    <input value={dc.confirmationTitle || ''} onChange={e => updateDc({ confirmationTitle: e.target.value })} placeholder="Pagamento Confirmado!" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Mensagem de confirmação</label>
+                    <textarea value={dc.confirmationMessage || ''} onChange={e => updateDc({ confirmationMessage: e.target.value })} placeholder="Seu depósito foi recebido com sucesso." rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Logo da confirmação (opcional)</label>
+                    <div className="flex items-center gap-3">
+                      {dc.confirmationLogoUrl && <img src={dc.confirmationLogoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
+                      <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
+                        {dc.confirmationLogoUrl ? '🔄 Trocar' : '📤 Enviar'}
+                        <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'confirmationLogoUrl')} className="hidden" />
+                      </label>
+                      {dc.confirmationLogoUrl && <button onClick={() => updateDc({ confirmationLogoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comprovante de Recebimento */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileText size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Comprovante de Recebimento</h3>
+                    <p className="text-xs text-muted-foreground">(usa mesmas cores do comprovante de pagamento)</p>
+                  </div>
+                </div>
+
                 {/* Save button */}
                 <button
                   onClick={handleSaveConfig}
@@ -5573,6 +5610,68 @@ const Dashboard = () => {
                 >
                   {savingConfig ? '⏳ Salvando...' : '💾 Salvar Configurações'}
                 </button>
+              </div>
+            );
+          })()}
+
+          {activeTab === 'hist_deposito' && (() => {
+            if (depositHistory.length === 0 && !depositHistoryLoading) { fetchDepositHistory(); }
+            const dc = (wheelConfig as any).depositConfig || {};
+            const rFont = receiptFontColor || '#1a1a2e';
+            const rBg = receiptBgColor || '#ffffff';
+            const rAccent = receiptAccentColor || '#3b82f6';
+            const rOperator = receiptOperatorName || session?.user?.email || 'Operador';
+
+            return (
+              <div className="w-full max-w-4xl min-w-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-foreground">Depósitos Recebidos</h3>
+                  <button onClick={fetchDepositHistory} disabled={depositHistoryLoading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-xs text-foreground hover:bg-white/[0.1] transition-all disabled:opacity-50">
+                    <RefreshCw size={14} className={depositHistoryLoading ? 'animate-spin' : ''} /> Atualizar
+                  </button>
+                </div>
+
+                {depositHistoryLoading && depositHistory.length === 0 ? (
+                  <div className="text-center py-10"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : depositHistory.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground text-sm">Nenhum depósito registrado ainda.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {depositHistory.map((tx: any) => {
+                      const meta = tx.metadata || {};
+                      const isPaid = tx.status === 'paid';
+                      const isPending = tx.status === 'pending';
+                      return (
+                        <div key={tx.id} className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: isPaid ? '#d1fae533' : isPending ? '#fef3c733' : '#fee2e233' }}>
+                            {isPaid ? <CheckCircle2 size={20} className="text-green-400" /> : isPending ? <Clock size={20} className="text-yellow-400" /> : <Ban size={20} className="text-red-400" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-foreground truncate">{meta.userName || 'Anônimo'}</span>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isPaid ? 'bg-green-500/20 text-green-400' : isPending ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
+                                {isPaid ? 'Pago' : isPending ? 'Pendente' : tx.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                              {meta.userAccountId && <span>ID: {meta.userAccountId}</span>}
+                              {meta.userPhone && <span>📱 {meta.userPhone}</span>}
+                              <span>{new Date(tx.created_at).toLocaleString('pt-BR')}</span>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-lg font-extrabold text-primary">R$ {Number(tx.amount).toFixed(2).replace('.', ',')}</p>
+                            {isPaid && (
+                              <button onClick={() => setDepositReceipt(tx)} className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors mt-1">
+                                <FileText size={12} /> Comprovante
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })()}
