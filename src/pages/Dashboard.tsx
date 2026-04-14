@@ -7602,6 +7602,87 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
         </DialogContent>
       </Dialog>
 
+      {/* Deposit Receipt Dialog */}
+      <Dialog open={!!depositReceipt} onOpenChange={(open) => { if (!open) setDepositReceipt(null); }}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden">
+          {depositReceipt && (() => {
+            const meta = depositReceipt.metadata || {};
+            const isPaid = depositReceipt.status === 'paid';
+            const rFont = receiptFontColor || '#1a1a2e';
+            const rBg = receiptBgColor || '#ffffff';
+            const rAccent = receiptAccentColor || '#3b82f6';
+            const rOperator = receiptOperatorName || session?.user?.email || 'Operador';
+            return (
+              <>
+                <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+                  <span className="text-sm font-semibold text-foreground">Comprovante de Recebimento</span>
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById('deposit-receipt-print');
+                      if (!el) return;
+                      const w = window.open('', '_blank');
+                      if (!w) return;
+                      w.document.write(`<html><head><title>Comprovante</title><style>*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}body{padding:40px;color:${rFont};background:${rBg};max-width:500px;margin:0 auto}.row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}.row .label{color:#888}.row .val{font-weight:600;text-align:right;max-width:60%}.amount-box{border:2px solid ${rAccent};border-radius:12px;text-align:center;padding:16px;margin:16px 0}.footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}</style></head><body>${el.innerHTML}</body></html>`);
+                      w.document.close();
+                      w.print();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition-all"
+                  >
+                    🖨 Imprimir / PDF
+                  </button>
+                </div>
+                <div id="deposit-receipt-print" className="px-6 py-5 space-y-4" style={{ backgroundColor: rBg, color: rFont }}>
+                  <div className="text-center space-y-1">
+                    <div className="text-2xl">💰</div>
+                    <h2 className="text-lg font-extrabold tracking-wider uppercase" style={{ color: rFont }}>Comprovante de Recebimento</h2>
+                    <p className="text-xs" style={{ color: '#888' }}>Depósito PIX via EdPay</p>
+                    <div className="mt-3">
+                      <span style={{ display: 'inline-block', padding: '6px 20px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: isPaid ? '#d1fae5' : '#fee2e2', color: isPaid ? '#047857' : '#b91c1c', border: `1px solid ${isPaid ? '#6ee7b7' : '#fca5a5'}` }}>
+                        {isPaid ? '✓ DEPÓSITO CONFIRMADO' : '⏳ AGUARDANDO PAGAMENTO'}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    {depositReceipt.edpay_id && (
+                      <div className="flex justify-between text-sm py-1">
+                        <span style={{ color: '#888' }}>ID EdPay</span>
+                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{depositReceipt.edpay_id}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm py-1">
+                      <span style={{ color: '#888' }}>Data/Hora</span>
+                      <span className="font-semibold" style={{ color: rFont }}>{new Date(depositReceipt.created_at).toLocaleString('pt-BR')}</span>
+                    </div>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Recebido por</p>
+                    <p className="text-sm font-bold" style={{ color: rFont }}>{rOperator}</p>
+                    <p className="text-xs" style={{ color: '#888' }}>Plataforma EdPay · https://api.edpay.me/</p>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Pagador</p>
+                    <p className="text-sm font-bold" style={{ color: rFont }}>{meta.userName || 'Anônimo'}</p>
+                    <div className="flex items-center gap-3 text-xs" style={{ color: '#888' }}>
+                      {meta.userAccountId && <span>ID: {meta.userAccountId}</span>}
+                      {meta.userPhone && <span>📱 {meta.userPhone}</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-xl text-center py-4 px-4" style={{ border: `2px solid ${rAccent}` }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: rAccent }}>Valor Recebido</p>
+                    <p className="text-3xl font-extrabold mt-1" style={{ color: rAccent }}>R$ {Number(depositReceipt.amount).toFixed(2).replace('.', ',')}</p>
+                    <p className="text-[10px] mt-1" style={{ color: '#888' }}>via PIX instantâneo</p>
+                  </div>
+                  <div className="text-center pt-3 space-y-0.5" style={{ borderTop: '1px solid #e5e7eb' }}>
+                    <p className="text-[10px]" style={{ color: '#999' }}>Documento gerado em {new Date().toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px]" style={{ color: '#999' }}>Este comprovante é válido como prova de recebimento.</p>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       {ConfirmDialog}
     </div>
   );
