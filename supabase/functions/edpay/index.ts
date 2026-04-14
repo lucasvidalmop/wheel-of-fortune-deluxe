@@ -43,16 +43,20 @@ Deno.serve(async (req) => {
     // Update existing transaction by edpay_id
     const { data: existing } = await supabase
       .from("edpay_transactions")
-      .select("id")
+      .select("id, metadata")
       .eq("edpay_id", edpayId)
       .maybeSingle();
 
     if (existing) {
+      // Merge webhook payload into existing metadata to preserve userName, userPhone, etc.
+      const existingMeta = (typeof existing.metadata === "object" && existing.metadata) ? existing.metadata : {};
+      const mergedMetadata = { ...existingMeta, webhook: body };
+
       await supabase
         .from("edpay_transactions")
         .update({
           status,
-          metadata: body,
+          metadata: mergedMetadata,
           updated_at: new Date().toISOString(),
         })
         .eq("edpay_id", edpayId);
