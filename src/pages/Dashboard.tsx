@@ -532,6 +532,7 @@ function Dashboard() {
   const [receiptLoading, setReceiptLoading] = useState(false);
   const [depositHistory, setDepositHistory] = useState<any[]>([]);
   const [depositHistoryLoading, setDepositHistoryLoading] = useState(false);
+  const [depositStatusFilter, setDepositStatusFilter] = useState<'all' | 'paid' | 'cancelled' | 'pending'>('all');
   const [depositReceipt, setDepositReceipt] = useState<any | null>(null);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
@@ -5645,23 +5646,41 @@ function Dashboard() {
 
             return (
               <div className="w-full max-w-4xl min-w-0 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-base font-bold text-foreground">Depósitos Recebidos</h3>
                   <button onClick={fetchDepositHistory} disabled={depositHistoryLoading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-xs text-foreground hover:bg-white/[0.1] transition-all disabled:opacity-50">
                     <RefreshCw size={14} className={depositHistoryLoading ? 'animate-spin' : ''} /> Atualizar
                   </button>
                 </div>
 
+                <div className="flex gap-2 flex-wrap">
+                  {([['all', 'Todos'], ['paid', 'Pagos'], ['pending', 'Pendentes'], ['cancelled', 'Cancelados']] as const).map(([val, label]) => (
+                    <button key={val} onClick={() => setDepositStatusFilter(val as any)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${depositStatusFilter === val ? 'bg-primary text-primary-foreground' : 'bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1]'}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
                 {depositHistoryLoading && depositHistory.length === 0 ? (
                   <div className="text-center py-10"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
                 ) : depositHistory.length === 0 ? (
                   <div className="text-center py-10 text-muted-foreground text-sm">Nenhum depósito registrado ainda.</div>
-                ) : (
+                ) : (() => {
+                  const filtered = depositHistory.filter((tx: any) => {
+                    if (depositStatusFilter === 'all') return true;
+                    if (depositStatusFilter === 'paid') return tx.status === 'paid';
+                    if (depositStatusFilter === 'cancelled') return tx.status === 'cancelled' || tx.status === 'expired';
+                    if (depositStatusFilter === 'pending') return tx.status === 'pending';
+                    return true;
+                  });
+                  if (filtered.length === 0) return <div className="text-center py-10 text-muted-foreground text-sm">Nenhum depósito com este status.</div>;
+                  return (
                   <div className="space-y-2">
-                    {depositHistory.map((tx: any) => {
+                    {filtered.map((tx: any) => {
                       const meta = tx.metadata || {};
                       const isPaid = tx.status === 'paid';
                       const isPending = tx.status === 'pending';
+                      const isCancelled = tx.status === 'cancelled' || tx.status === 'expired';
                       return (
                         <div key={tx.id} className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center gap-4">
                           <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: isPaid ? '#d1fae533' : isPending ? '#fef3c733' : '#fee2e233' }}>
@@ -5671,7 +5690,7 @@ function Dashboard() {
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-foreground truncate">{meta.userName || 'Anônimo'}</span>
                               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isPaid ? 'bg-green-500/20 text-green-400' : isPending ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
-                                {isPaid ? 'Pago' : isPending ? 'Pendente' : tx.status}
+                                {isPaid ? 'Pago' : isPending ? 'Pendente' : isCancelled ? 'Cancelado' : tx.status}
                               </span>
                             </div>
                             <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
@@ -5692,7 +5711,8 @@ function Dashboard() {
                       );
                     })}
                   </div>
-                )}
+                  );
+                })()}
               </div>
             );
           })()}
