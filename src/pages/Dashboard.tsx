@@ -5339,6 +5339,146 @@ const Dashboard = () => {
             </div>
           )}
 
+          {activeTab === 'deposito' && (() => {
+            const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito' };
+            const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
+            const depositUrl = dc.tag ? `${baseUrl}/deposito/${dc.tag}` : '';
+            return (
+              <div className="w-full max-w-2xl min-w-0 space-y-6">
+                {/* Ativar */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign size={20} className="text-primary" />
+                      <h3 className="text-base font-bold text-foreground">Página de Depósito</h3>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-xs text-muted-foreground">{dc.enabled ? 'Ativa' : 'Inativa'}</span>
+                      <div className={`relative w-10 h-5 rounded-full transition-all ${dc.enabled ? 'bg-primary' : 'bg-white/[0.1]'}`} onClick={() => updateDc({ enabled: !dc.enabled })}>
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${dc.enabled ? 'left-[22px]' : 'left-0.5'}`} />
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Tag da rota (URL)</label>
+                    <input
+                      value={dc.tag || ''}
+                      onChange={e => updateDc({ tag: e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase() })}
+                      placeholder="ex: meudeposito"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    />
+                    {depositUrl && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground truncate">{depositUrl}</span>
+                        <button onClick={() => { navigator.clipboard.writeText(depositUrl); toast.success('Link copiado!'); }} className="text-xs text-primary hover:text-primary/80 shrink-0">
+                          <Copy size={12} />
+                        </button>
+                        <a href={depositUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:text-primary/80 shrink-0">
+                          <ExternalLink size={12} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Configuração do formulário */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Settings size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Configurações</h3>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Label do campo de ID</label>
+                    <input
+                      value={dc.accountIdLabel || ''}
+                      onChange={e => updateDc({ accountIdLabel: e.target.value })}
+                      placeholder="Ex: ID da Conta, Matrícula, CPF..."
+                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Descrição da página</label>
+                    <input
+                      value={dc.description || ''}
+                      onChange={e => updateDc({ description: e.target.value })}
+                      placeholder="Texto exibido no topo da página"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Valores */}
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Wallet size={18} className="text-primary" />
+                    <h3 className="text-base font-bold text-foreground">Valores</h3>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Valor mínimo (R$)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      step="0.01"
+                      value={dc.minimumValue ?? 10}
+                      onChange={e => updateDc({ minimumValue: Math.max(1, Number(e.target.value)) })}
+                      className="w-32 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground">Valores pré-definidos</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(dc.presetValues || []).map((val: number, idx: number) => (
+                        <div key={idx} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08]">
+                          <span className="text-xs text-foreground">R$ {val.toFixed(2)}</span>
+                          <button onClick={() => {
+                            const newVals = [...(dc.presetValues || [])];
+                            newVals.splice(idx, 1);
+                            updateDc({ presetValues: newVals });
+                          }} className="text-destructive hover:text-destructive/80 ml-1">
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        step="0.01"
+                        placeholder="Novo valor"
+                        id="deposit-new-preset"
+                        className="w-32 px-3 py-2 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                      />
+                      <button onClick={() => {
+                        const inp = document.getElementById('deposit-new-preset') as HTMLInputElement;
+                        const val = Number(inp?.value);
+                        if (val >= 1) {
+                          updateDc({ presetValues: [...(dc.presetValues || []), val] });
+                          if (inp) inp.value = '';
+                        }
+                      }} className="px-3 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:brightness-110 transition-all">
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2 cursor-pointer pt-2">
+                    <Checkbox
+                      checked={dc.allowCustomValue !== false}
+                      onCheckedChange={(v) => updateDc({ allowCustomValue: !!v })}
+                    />
+                    <span className="text-sm text-foreground">Permitir valor personalizado</span>
+                  </label>
+                </div>
+              </div>
+            );
+          })()}
+
 
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
