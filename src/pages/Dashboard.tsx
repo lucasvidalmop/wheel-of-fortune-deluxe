@@ -793,6 +793,7 @@ function Dashboard() {
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
+    notifyDepositEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
@@ -850,6 +851,7 @@ function Dashboard() {
     setNotifyAutoPaymentEnabled(!!settings.notifyAutoPaymentEnabled);
     setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
+    setNotifyDepositEnabled(!!settings.notifyDepositEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
@@ -1056,6 +1058,7 @@ function Dashboard() {
     notifyAutoPaymentEnabled,
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
+    notifyDepositEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
