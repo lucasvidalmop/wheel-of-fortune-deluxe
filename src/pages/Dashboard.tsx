@@ -317,9 +317,10 @@ const Dashboard = () => {
       toast.success('Mídia anexada ao agendamento!');
     } catch (err: any) {
       toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    } finally {
+      setSchedMediaUploading(false);
+      if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
     }
-    setSchedMediaUploading(false);
-    if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
   };
 
   const handleSchedPttUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
