@@ -72,6 +72,7 @@ interface PersistedDashboardSettings {
   notifyAutoPaymentEnabled: boolean;
   notifyReferralEnabled: boolean;
   notifyPendingPaymentEnabled: boolean;
+  notifyDepositEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
@@ -117,6 +118,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyAutoPaymentEnabled: false,
   notifyReferralEnabled: false,
   notifyPendingPaymentEnabled: false,
+  notifyDepositEnabled: false,
   notifyGroupJid: '',
   notifyGroupName: '',
   notifySelectedGroups: [],
@@ -272,6 +274,7 @@ function Dashboard() {
   const [notifyAutoPaymentEnabled, setNotifyAutoPaymentEnabled] = useState(false);
   const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
+  const [notifyDepositEnabled, setNotifyDepositEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
