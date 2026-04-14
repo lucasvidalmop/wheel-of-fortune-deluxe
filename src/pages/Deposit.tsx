@@ -26,8 +26,7 @@ const defaultDepositConfig: DepositConfig = {
 };
 
 const Deposit = () => {
-  const [searchParams] = useSearchParams();
-  const tag = searchParams.get('dep') || '';
+  const { tag } = useParams<{ tag: string }>();
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
