@@ -13,6 +13,19 @@ interface DepositConfig {
   minimumValue: number;
   allowCustomValue: boolean;
   description: string;
+  bgColor: string;
+  accentColor: string;
+  textColor: string;
+  logoUrl: string;
+  bgImageUrl: string;
+  seoTitle: string;
+  seoDescription: string;
+  seoFaviconUrl: string;
+  seoOgImageUrl: string;
+  pixelFacebook: string;
+  pixelGoogle: string;
+  pixelTiktok: string;
+  customHeadScript: string;
 }
 
 const defaultDepositConfig: DepositConfig = {
@@ -23,6 +36,19 @@ const defaultDepositConfig: DepositConfig = {
   minimumValue: 10,
   allowCustomValue: true,
   description: 'Selecione um valor para depósito',
+  bgColor: '#0a0a0f',
+  accentColor: '#10b981',
+  textColor: '#ffffff',
+  logoUrl: '',
+  bgImageUrl: '',
+  seoTitle: '',
+  seoDescription: '',
+  seoFaviconUrl: '',
+  seoOgImageUrl: '',
+  pixelFacebook: '',
+  pixelGoogle: '',
+  pixelTiktok: '',
+  customHeadScript: '',
 };
 
 const Deposit = () => {
@@ -32,17 +58,14 @@ const Deposit = () => {
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
   const [notFound, setNotFound] = useState(false);
 
-  // Form
   const [name, setName] = useState('');
   const [accountId, setAccountId] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [step, setStep] = useState<'form' | 'amount' | 'qrcode' | 'success'>('form');
+  const [step, setStep] = useState<'form' | 'amount' | 'qrcode'>('form');
 
-  // Amount
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
 
-  // QR
   const [qrLoading, setQrLoading] = useState(false);
   const [qrData, setQrData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
@@ -54,19 +77,97 @@ const Deposit = () => {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
+  // Inject SEO + Pixels
+  useEffect(() => {
+    if (!config || !config.enabled) return;
+    const cleanup: (() => void)[] = [];
+
+    // Title
+    const origTitle = document.title;
+    if (config.seoTitle) document.title = config.seoTitle;
+    cleanup.push(() => { document.title = origTitle; });
+
+    // Favicon
+    if (config.seoFaviconUrl) {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = config.seoFaviconUrl;
+      document.head.appendChild(link);
+      cleanup.push(() => link.remove());
+    }
+
+    // Meta tags
+    const addMeta = (prop: string, content: string) => {
+      if (!content) return;
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', prop);
+      meta.content = content;
+      document.head.appendChild(meta);
+      cleanup.push(() => meta.remove());
+    };
+    addMeta('og:title', config.seoTitle || 'Depósito PIX');
+    addMeta('og:description', config.seoDescription || '');
+    addMeta('og:image', config.seoOgImageUrl || '');
+
+    // Facebook Pixel
+    if (config.pixelFacebook) {
+      const s = document.createElement('script');
+      s.textContent = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${config.pixelFacebook}');fbq('track','PageView');`;
+      document.head.appendChild(s);
+      cleanup.push(() => s.remove());
+    }
+
+    // Google Analytics / GTM
+    if (config.pixelGoogle) {
+      const id = config.pixelGoogle;
+      if (id.startsWith('GTM-')) {
+        const s = document.createElement('script');
+        s.textContent = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${id}');`;
+        document.head.appendChild(s);
+        cleanup.push(() => s.remove());
+      } else {
+        const s1 = document.createElement('script');
+        s1.async = true;
+        s1.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+        document.head.appendChild(s1);
+        const s2 = document.createElement('script');
+        s2.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${id}');`;
+        document.head.appendChild(s2);
+        cleanup.push(() => { s1.remove(); s2.remove(); });
+      }
+    }
+
+    // TikTok Pixel
+    if (config.pixelTiktok) {
+      const s = document.createElement('script');
+      s.textContent = `!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${config.pixelTiktok}');ttq.page();}(window,document,'ttq');`;
+      document.head.appendChild(s);
+      cleanup.push(() => s.remove());
+    }
+
+    // Custom head script
+    if (config.customHeadScript) {
+      const div = document.createElement('div');
+      div.innerHTML = config.customHeadScript;
+      Array.from(div.children).forEach(el => {
+        document.head.appendChild(el);
+        cleanup.push(() => el.remove());
+      });
+    }
+
+    return () => cleanup.forEach(fn => fn());
+  }, [config]);
+
   useEffect(() => {
     const fetchConfig = async () => {
       if (!tag) { setNotFound(true); setLoading(false); return; }
 
-      // Search all wheel_configs for matching deposit tag
       const { data: configs } = await (supabase as any)
         .from('wheel_configs')
         .select('user_id, config');
 
       if (!configs || configs.length === 0) {
-        setNotFound(true);
-        setLoading(false);
-        return;
+        setNotFound(true); setLoading(false); return;
       }
 
       const match = configs.find((c: any) => {
@@ -76,9 +177,7 @@ const Deposit = () => {
       });
 
       if (!match) {
-        setNotFound(true);
-        setLoading(false);
-        return;
+        setNotFound(true); setLoading(false); return;
       }
 
       const cfg = typeof match.config === 'string' ? JSON.parse(match.config) : match.config;
@@ -106,33 +205,17 @@ const Deposit = () => {
       toast.error(`Valor mínimo: R$ ${config.minimumValue.toFixed(2)}`);
       return;
     }
-
     setQrLoading(true);
     setQrData(null);
     try {
       const { data, error } = await supabase.functions.invoke('edpay-public-qrcode', {
-        body: {
-          ownerId,
-          amount: finalAmount,
-          userName: name,
-          userPhone: whatsapp.replace(/\D/g, ''),
-          userAccountId: accountId,
-        },
+        body: { ownerId, amount: finalAmount, userName: name, userPhone: whatsapp.replace(/\D/g, ''), userAccountId: accountId },
       });
-
       if (error) throw error;
-      if (data?.error) {
-        toast.error(data.error);
-      } else {
-        setQrData(data?.data || data);
-        setStep('qrcode');
-        toast.success('QR Code gerado!');
-      }
-    } catch (err: any) {
-      toast.error(err?.message || 'Erro ao gerar QR Code');
-    } finally {
-      setQrLoading(false);
-    }
+      if (data?.error) { toast.error(data.error); }
+      else { setQrData(data?.data || data); setStep('qrcode'); toast.success('QR Code gerado!'); }
+    } catch (err: any) { toast.error(err?.message || 'Erro ao gerar QR Code'); }
+    finally { setQrLoading(false); }
   };
 
   const handleCopy = (text: string) => {
@@ -142,43 +225,59 @@ const Deposit = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const accent = config.accentColor || '#10b981';
+  const bg = config.bgColor || '#0a0a0f';
+  const txt = config.textColor || '#ffffff';
+  const txtMuted = txt + '99';
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
-        <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: bg }}>
+        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
       </div>
     );
   }
 
   if (notFound) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f] p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg, color: txt }}>
         <div className="text-center space-y-3">
           <div className="text-5xl">🚫</div>
-          <h1 className="text-xl font-bold text-white">Página não encontrada</h1>
-          <p className="text-sm text-gray-400">Este link de depósito não existe ou está desativado.</p>
+          <h1 className="text-xl font-bold">Página não encontrada</h1>
+          <p className="text-sm" style={{ color: txtMuted }}>Este link de depósito não existe ou está desativado.</p>
         </div>
       </div>
     );
   }
 
+  const cardStyle = { background: `${txt}08`, border: `1px solid ${txt}14` };
+  const inputStyle = { background: `${txt}0a`, border: `1px solid ${txt}14`, color: txt };
+  const inputFocusClass = 'focus:outline-none focus:ring-2 transition-all';
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
-      {/* Background effects */}
+    <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: bg, color: txt }}>
+      {/* Background image */}
+      {config.bgImageUrl && (
+        <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
+      )}
+      {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] rounded-full bg-emerald-500/[0.05] blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-500/[0.04] blur-[100px]" />
+        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] rounded-full blur-[120px]" style={{ background: `${accent}0d` }} />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: `${accent}08` }} />
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md z-10">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4">
-            <CreditCard size={16} className="text-emerald-400" />
-            <span className="text-sm font-semibold text-emerald-400">Depósito PIX</span>
+          {config.logoUrl && (
+            <img src={config.logoUrl} alt="" className="h-14 mx-auto mb-4 object-contain" />
+          )}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4" style={{ background: `${accent}1a`, border: `1px solid ${accent}33` }}>
+            <CreditCard size={16} style={{ color: accent }} />
+            <span className="text-sm font-semibold" style={{ color: accent }}>Depósito PIX</span>
           </div>
           {config.description && (
-            <p className="text-sm text-gray-400 mt-2">{config.description}</p>
+            <p className="text-sm mt-2" style={{ color: txtMuted }}>{config.description}</p>
           )}
         </div>
 
@@ -188,13 +287,11 @@ const Deposit = () => {
             const stepIndex = step === 'form' ? 0 : step === 'amount' ? 1 : 2;
             return (
               <div key={label} className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  i <= stepIndex ? 'bg-emerald-500 text-white' : 'bg-white/[0.06] text-gray-500'
-                }`}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all" style={{ background: i <= stepIndex ? accent : `${txt}0f`, color: i <= stepIndex ? '#fff' : txtMuted }}>
                   {i < stepIndex ? '✓' : i + 1}
                 </div>
-                <span className={`text-xs ${i <= stepIndex ? 'text-emerald-400' : 'text-gray-500'}`}>{label}</span>
-                {i < 2 && <div className={`w-8 h-0.5 ${i < stepIndex ? 'bg-emerald-500' : 'bg-white/[0.08]'}`} />}
+                <span className="text-xs" style={{ color: i <= stepIndex ? accent : txtMuted }}>{label}</span>
+                {i < 2 && <div className="w-8 h-0.5" style={{ background: i < stepIndex ? accent : `${txt}14` }} />}
               </div>
             );
           })}
@@ -202,53 +299,26 @@ const Deposit = () => {
 
         {/* Step 1: Form */}
         {step === 'form' && (
-          <form onSubmit={handleFormSubmit} className="space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl p-6">
+          <form onSubmit={handleFormSubmit} className="space-y-4 rounded-2xl backdrop-blur-xl p-6" style={cardStyle}>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
+              <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: txtMuted }}>
                 <User size={12} /> Nome completo
               </label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Seu nome"
-                required
-                className="w-full px-4 py-3 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
-              />
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
             </div>
-
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
+              <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: txtMuted }}>
                 <CreditCard size={12} /> {config.accountIdLabel}
               </label>
-              <input
-                type="text"
-                value={accountId}
-                onChange={e => setAccountId(e.target.value)}
-                placeholder={config.accountIdLabel}
-                required
-                className="w-full px-4 py-3 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
-              />
+              <input type="text" value={accountId} onChange={e => setAccountId(e.target.value)} placeholder={config.accountIdLabel} required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
             </div>
-
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
+              <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: txtMuted }}>
                 <Smartphone size={12} /> WhatsApp
               </label>
-              <input
-                type="text"
-                value={whatsapp}
-                onChange={e => setWhatsapp(maskPhone(e.target.value))}
-                placeholder="(00) 00000-0000"
-                required
-                className="w-full px-4 py-3 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
-              />
+              <input type="text" value={whatsapp} onChange={e => setWhatsapp(maskPhone(e.target.value))} placeholder="(00) 00000-0000" required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
             </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20"
-            >
+            <button type="submit" className="w-full py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg" style={{ background: accent, color: '#fff', boxShadow: `0 10px 25px -5px ${accent}33` }}>
               Continuar →
             </button>
           </form>
@@ -256,66 +326,31 @@ const Deposit = () => {
 
         {/* Step 2: Amount Selection */}
         {step === 'amount' && (
-          <div className="space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl p-6">
-            <p className="text-sm text-gray-300 text-center">Selecione o valor do depósito</p>
-
-            {/* Preset values */}
+          <div className="space-y-4 rounded-2xl backdrop-blur-xl p-6" style={cardStyle}>
+            <p className="text-sm text-center" style={{ color: txtMuted }}>Selecione o valor do depósito</p>
             <div className="grid grid-cols-2 gap-3">
               {config.presetValues.map(val => (
-                <button
-                  key={val}
-                  onClick={() => { setSelectedAmount(val); setCustomAmount(''); }}
-                  className={`py-3.5 rounded-xl text-sm font-bold transition-all border ${
-                    selectedAmount === val
-                      ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20'
-                      : 'bg-white/[0.04] text-white border-white/[0.08] hover:bg-white/[0.08]'
-                  }`}
-                >
+                <button key={val} onClick={() => { setSelectedAmount(val); setCustomAmount(''); }} className="py-3.5 rounded-xl text-sm font-bold transition-all" style={{ background: selectedAmount === val ? accent : `${txt}08`, color: selectedAmount === val ? '#fff' : txt, border: `1px solid ${selectedAmount === val ? accent : `${txt}14`}`, boxShadow: selectedAmount === val ? `0 8px 20px -5px ${accent}33` : 'none' }}>
                   R$ {val.toFixed(2)}
                 </button>
               ))}
             </div>
-
-            {/* Custom value */}
             {config.allowCustomValue && (
               <div className="space-y-1.5 pt-2">
-                <label className="text-xs text-gray-400">Ou digite um valor personalizado:</label>
+                <label className="text-xs" style={{ color: txtMuted }}>Ou digite um valor personalizado:</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">R$</span>
-                  <input
-                    type="number"
-                    value={customAmount}
-                    onChange={e => { setCustomAmount(e.target.value); setSelectedAmount(null); }}
-                    placeholder={`Mínimo ${config.minimumValue.toFixed(2)}`}
-                    min={config.minimumValue}
-                    step="0.01"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
-                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm" style={{ color: txtMuted }}>R$</span>
+                  <input type="number" value={customAmount} onChange={e => { setCustomAmount(e.target.value); setSelectedAmount(null); }} placeholder={`Mínimo ${config.minimumValue.toFixed(2)}`} min={config.minimumValue} step="0.01" className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={inputStyle} />
                 </div>
-                <p className="text-xs text-gray-500">Valor mínimo: R$ {config.minimumValue.toFixed(2)}</p>
+                <p className="text-xs" style={{ color: txtMuted }}>Valor mínimo: R$ {config.minimumValue.toFixed(2)}</p>
               </div>
             )}
-
             <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setStep('form')}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white/[0.06] text-gray-300 border border-white/[0.08] hover:bg-white/[0.1] transition-all"
-              >
+              <button onClick={() => setStep('form')} className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all" style={{ background: `${txt}0a`, color: txtMuted, border: `1px solid ${txt}14` }}>
                 ← Voltar
               </button>
-              <button
-                onClick={handleGenerateQr}
-                disabled={qrLoading || (!selectedAmount && !customAmount)}
-                className="flex-1 py-3 rounded-xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {qrLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Gerando...
-                  </span>
-                ) : (
-                  `Pagar R$ ${finalAmount ? finalAmount.toFixed(2) : '0.00'}`
-                )}
+              <button onClick={handleGenerateQr} disabled={qrLoading || (!selectedAmount && !customAmount)} className="flex-1 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: accent, color: '#fff', boxShadow: `0 10px 25px -5px ${accent}33` }}>
+                {qrLoading ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Gerando...</span> : `Pagar R$ ${finalAmount ? finalAmount.toFixed(2) : '0.00'}`}
               </button>
             </div>
           </div>
@@ -323,56 +358,31 @@ const Deposit = () => {
 
         {/* Step 3: QR Code */}
         {step === 'qrcode' && qrData && (
-          <div className="space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl p-6 text-center">
+          <div className="space-y-4 rounded-2xl backdrop-blur-xl p-6 text-center" style={cardStyle}>
             <div className="text-4xl">📱</div>
-            <h3 className="text-lg font-bold text-white">Escaneie o QR Code</h3>
-            <p className="text-sm text-gray-400">
-              Valor: <span className="text-emerald-400 font-bold">R$ {finalAmount?.toFixed(2)}</span>
+            <h3 className="text-lg font-bold">Escaneie o QR Code</h3>
+            <p className="text-sm" style={{ color: txtMuted }}>
+              Valor: <span className="font-bold" style={{ color: accent }}>R$ {finalAmount?.toFixed(2)}</span>
             </p>
-
             {(qrData.qrcode || qrData.copiacola) && (
               <div className="flex justify-center">
                 <div className="bg-white p-4 rounded-xl">
-                  <QRCodeSVG
-                    value={qrData.copiacola || qrData.qrcode}
-                    size={200}
-                    level="M"
-                  />
+                  <QRCodeSVG value={qrData.copiacola || qrData.qrcode} size={200} level="M" />
                 </div>
               </div>
             )}
-
             {(qrData.copiacola || qrData.qrcode) && (
               <div className="space-y-2">
-                <p className="text-xs text-gray-400">PIX Copia e Cola:</p>
+                <p className="text-xs" style={{ color: txtMuted }}>PIX Copia e Cola:</p>
                 <div className="flex gap-2">
-                  <input
-                    readOnly
-                    value={qrData.copiacola || qrData.qrcode}
-                    className="flex-1 px-3 py-2 rounded-lg text-xs bg-white/[0.06] border border-white/[0.08] text-gray-300 truncate"
-                  />
-                  <button
-                    onClick={() => handleCopy(qrData.copiacola || qrData.qrcode)}
-                    className="px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all"
-                  >
+                  <input readOnly value={qrData.copiacola || qrData.qrcode} className="flex-1 px-3 py-2 rounded-lg text-xs truncate" style={inputStyle} />
+                  <button onClick={() => handleCopy(qrData.copiacola || qrData.qrcode)} className="px-3 py-2 rounded-lg transition-all" style={{ background: `${accent}33`, color: accent }}>
                     {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
                   </button>
                 </div>
               </div>
             )}
-
-            <button
-              onClick={() => {
-                setStep('form');
-                setQrData(null);
-                setSelectedAmount(null);
-                setCustomAmount('');
-                setName('');
-                setAccountId('');
-                setWhatsapp('');
-              }}
-              className="w-full py-3 rounded-xl text-sm font-semibold bg-white/[0.06] text-gray-300 border border-white/[0.08] hover:bg-white/[0.1] transition-all mt-4"
-            >
+            <button onClick={() => { setStep('form'); setQrData(null); setSelectedAmount(null); setCustomAmount(''); setName(''); setAccountId(''); setWhatsapp(''); }} className="w-full py-3 rounded-xl text-sm font-semibold transition-all mt-4" style={{ background: `${txt}0a`, color: txtMuted, border: `1px solid ${txt}14` }}>
               Novo depósito
             </button>
           </div>
