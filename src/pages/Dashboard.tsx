@@ -5342,7 +5342,7 @@ const Dashboard = () => {
           {activeTab === 'deposito' && (() => {
             const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito' };
             const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
-            const depositUrl = dc.tag ? `${baseUrl}/dep?dep=${dc.tag}` : '';
+            const depositUrl = dc.tag ? `${baseUrl}/dep=${dc.tag}` : '';
             return (
               <div className="w-full max-w-2xl min-w-0 space-y-6">
                 {/* Ativar */}
