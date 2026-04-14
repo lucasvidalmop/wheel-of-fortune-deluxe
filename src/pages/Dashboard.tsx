@@ -131,14 +131,11 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
 
 const PANEL_CASA_STORAGE_KEY = 'dashboard_panel_casa_url';
 
-function normalizePanelCasaUrl(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) return '';
-  const schemeRe = new RegExp('^[a-zA-Z][a-zA-Z\\d+\\-.]*:');
-  if (schemeRe.test(trimmed)) return trimmed;
-  if (trimmed.startsWith('//')) return 'https:' + trimmed;
-  return 'https://' + trimmed;
-}
+const normalizePanelCasaUrl = (value: string): string =>
+  !value.trim() ? '' :
+  new RegExp('^[a-zA-Z][a-zA-Z\\d+\\-.]*:').test(value.trim()) ? value.trim() :
+  value.trim().startsWith('//') ? 'https:' + value.trim() :
+  'https://' + value.trim();
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
