@@ -11,6 +11,7 @@ import Unsubscribe from "./pages/Unsubscribe.tsx";
 import Referral from "./pages/Referral.tsx";
 import Registration from "./pages/Registration.tsx";
 import Influencer from "./pages/Influencer.tsx";
+import Deposit from "./pages/Deposit.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
