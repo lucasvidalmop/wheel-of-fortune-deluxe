@@ -7492,17 +7492,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                       if (!el) return;
                       const w = window.open('', '_blank');
                       if (!w) return;
-                      w.document.write(`<html><head><title>Comprovante</title><style>
-                        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-                        body{padding:40px;color:${rFont};background:${rBg};max-width:500px;margin:0 auto}
-                        .section{border-top:1px solid #e5e7eb;padding:16px 0}
-                        .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
-                        .row .label{color:#888}
-                        .row .val{font-weight:600;text-align:right;max-width:60%}
-                        .label-sm{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
-                        .amount-box{border:2px solid ${rAccent};border-radius:12px;text-align:center;padding:16px;margin:16px 0}
-                        .footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}
-                      </style></head><body>${el.innerHTML}</body></html>`);
+                      w.document.write('<html><head><title>Comprovante<\/title><style>*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}body{padding:40px;color:' + rFont + ';background:' + rBg + ';max-width:500px;margin:0 auto}.section{border-top:1px solid #e5e7eb;padding:16px 0}.row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}.row .label{color:#888}.row .val{font-weight:600;text-align:right;max-width:60%}.label-sm{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}.amount-box{border:2px solid ' + rAccent + ';border-radius:12px;text-align:center;padding:16px;margin:16px 0}.footer{text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px}<\/style><\/head><body>' + el.innerHTML + '<\/body><\/html>');
                       w.document.close();
                       w.print();
                     }}
