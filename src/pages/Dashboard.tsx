@@ -131,12 +131,13 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
 
 const PANEL_CASA_STORAGE_KEY = 'dashboard_panel_casa_url';
 
-const normalizePanelCasaUrl = (value: string) => {
+const normalizePanelCasaUrl = (value: string): string => {
   const trimmed = value.trim();
   if (!trimmed) return '';
-  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmed)) return trimmed;
-  if (trimmed.startsWith('//')) return `https:${trimmed}`;
-  return `https://${trimmed}`;
+  const schemeRe = new RegExp('^[a-zA-Z][a-zA-Z\\d+\\-.]*:');
+  if (schemeRe.test(trimmed)) return trimmed;
+  if (trimmed.startsWith('//')) return 'https:' + trimmed;
+  return 'https://' + trimmed;
 };
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -173,7 +174,7 @@ function openPrintReceipt(elementId: string, fontColor: string, bgColor: string,
   w.print();
 }
 
-const Dashboard = () => {
+function Dashboard() {
   useSiteSettings();
   const configHydratedRef = useRef(false);
   const lastPersistedSettingsRef = useRef('');
@@ -317,9 +318,10 @@ const Dashboard = () => {
       toast.success('Mídia anexada ao agendamento!');
     } catch (err: any) {
       toast.error('Erro no upload: ' + (err.message || 'Erro'));
+    } finally {
+      setSchedMediaUploading(false);
+      if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
     }
-    setSchedMediaUploading(false);
-    if (schedMediaInputRef.current) schedMediaInputRef.current.value = '';
   };
 
   const handleSchedPttUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
