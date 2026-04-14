@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +15,15 @@ import Deposit from "./pages/Deposit.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
+
+const SlugRouter = () => {
+  const { slug } = useParams<{ slug: string }>();
+  if (slug && slug.startsWith('dep=')) {
+    const tag = slug.substring(4);
+    return <Deposit tag={tag} />;
+  }
+  return <Roleta />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
