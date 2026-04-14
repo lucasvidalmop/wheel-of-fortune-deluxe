@@ -174,7 +174,7 @@ function openPrintReceipt(elementId: string, fontColor: string, bgColor: string,
   w.print();
 }
 
-const Dashboard = () => {
+const Dashboard = () => { {
   useSiteSettings();
   const configHydratedRef = useRef(false);
   const lastPersistedSettingsRef = useRef('');
