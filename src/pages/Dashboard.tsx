@@ -5713,6 +5713,12 @@ function Dashboard() {
                   </div>
                   );
                 })()}
+              </div>
+            );
+          })()}
+
+          {activeTab === 'configuracoes' && (
+            <div className="w-full max-w-2xl min-w-0 space-y-6">
                 <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] min-h-[80px] p-3">
                   {((wheelConfig as any).ghostUsers || []).length === 0 ? (
                     <div className="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground">
