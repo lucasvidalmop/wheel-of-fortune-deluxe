@@ -200,7 +200,16 @@ Deno.serve(async (req) => {
       transferStatus === "success" ||
       transferStatus === "paid";
 
-    if (isAlreadyConfirmed) {
+    // If response is successful (HTTP 200) and has a transaction ID but no explicit pending/processing status,
+    // treat it as confirmed — EdPay returns just {id} for successful transfers
+    const isImplicitlyConfirmed = !isAlreadyConfirmed &&
+      transferResponse.ok &&
+      transactionId &&
+      transferStatus !== "pending" &&
+      transferStatus !== "processing" &&
+      transferStatus !== "waiting";
+
+    if (isAlreadyConfirmed || isImplicitlyConfirmed) {
       await supabaseAdmin
         .from("prize_payments")
         .update({
