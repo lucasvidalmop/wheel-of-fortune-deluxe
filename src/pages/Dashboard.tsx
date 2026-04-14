@@ -1351,7 +1351,7 @@ function Dashboard() {
     setDepositHistoryLoading(false);
   };
 
-
+  const fetchPrizePayments = async () => {
     if (!session?.user?.id) return;
     setPrizePaymentsLoading(true);
     const { data } = await (supabase as any)
