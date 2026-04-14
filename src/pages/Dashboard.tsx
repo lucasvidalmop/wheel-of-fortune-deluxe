@@ -532,6 +532,7 @@ function Dashboard() {
   const [receiptLoading, setReceiptLoading] = useState(false);
   const [depositHistory, setDepositHistory] = useState<any[]>([]);
   const [depositHistoryLoading, setDepositHistoryLoading] = useState(false);
+  const [depositStatusFilter, setDepositStatusFilter] = useState<'all' | 'paid' | 'cancelled' | 'pending'>('all');
   const [depositReceipt, setDepositReceipt] = useState<any | null>(null);
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
