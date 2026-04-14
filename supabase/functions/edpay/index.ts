@@ -28,8 +28,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("EdPay webhook received:", JSON.stringify(body));
 
-    const edpayId = String(body.id || body.track_id || body.transaction_id || "");
-    const status = body.status || "confirmed";
+    const edpayId = String(body.txid || body.id || body.track_id || body.transaction_id || "");
+    const rawStatus = body.status || (body.object === "in" ? "paid" : "confirmed");
+    const status = rawStatus === "confirmed" || rawStatus === "completed" || rawStatus === "approved" ? "paid" : rawStatus;
 
     if (!edpayId) {
       console.error("Webhook missing transaction ID");

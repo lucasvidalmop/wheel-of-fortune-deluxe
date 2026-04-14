@@ -202,7 +202,7 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
           .select('status')
           .eq('edpay_id', txId)
           .maybeSingle();
-        if (data?.status === 'paid') {
+        if (data?.status === 'paid' || data?.status === 'confirmed' || data?.status === 'completed') {
           setStep('confirmed');
           if (pollRef.current) clearInterval(pollRef.current);
         }
