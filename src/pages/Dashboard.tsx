@@ -5689,7 +5689,7 @@ function Dashboard() {
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-foreground truncate">{meta.userName || 'Anônimo'}</span>
                               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isPaid ? 'bg-green-500/20 text-green-400' : isPending ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
-                                {isPaid ? 'Pago' : isPending ? 'Pendente' : tx.status}
+                                {isPaid ? 'Pago' : isPending ? 'Pendente' : isCancelled ? 'Cancelado' : tx.status}
                               </span>
                             </div>
                             <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
