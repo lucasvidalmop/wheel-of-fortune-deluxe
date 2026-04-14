@@ -131,10 +131,12 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
 
 const PANEL_CASA_STORAGE_KEY = 'dashboard_panel_casa_url';
 
+const SCHEME_RE = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
+
 const normalizePanelCasaUrl = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return '';
-  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmed)) return trimmed;
+  if (SCHEME_RE.test(trimmed)) return trimmed;
   if (trimmed.startsWith('//')) return `https:${trimmed}`;
   return `https://${trimmed}`;
 };
