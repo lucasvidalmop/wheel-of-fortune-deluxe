@@ -205,6 +205,10 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
         if (data?.status === 'paid' || data?.status === 'confirmed' || data?.status === 'completed') {
           setStep('confirmed');
           if (pollRef.current) clearInterval(pollRef.current);
+        } else if (data?.status === 'cancelled' || data?.status === 'expired') {
+          toast.error('Pagamento expirado. Gere um novo QR Code.');
+          resetForm();
+          if (pollRef.current) clearInterval(pollRef.current);
         }
       } catch { /* ignore */ }
     };
