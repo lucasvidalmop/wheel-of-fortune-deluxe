@@ -5915,7 +5915,7 @@ const Dashboard = () => {
                     </select>
                     {(wheelConfig as any).blacklistFixedSegment != null && (
                       <p className="text-xs text-destructive/80">
-                        🚫 Blacklistados sempre ganharão: <strong>{((wheelConfig as any).segments?.[(wheelConfig as any).blacklistFixedSegment]?.title) || `Segmento ${(wheelConfig as any).blacklistFixedSegment + 1}`}</strong>
+                        🚫 Blacklistados sempre ganharão: <strong>{((wheelConfig as any).segments?.[(wheelConfig as any).blacklistFixedSegment]?.title) || ('Segmento ' + ((wheelConfig as any).blacklistFixedSegment + 1))}</strong>
                       </p>
                     )}
                   </div>
