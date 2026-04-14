@@ -166,7 +166,7 @@ const Dashboard = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
@@ -1911,6 +1911,7 @@ const Dashboard = () => {
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
     { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta' },
     { key: 'deposito', icon: <DollarSign size={20} />, label: 'Depósito' },
+    { key: 'hist_deposito', icon: <Clock size={20} />, label: 'Hist. Depósito' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
     { key: 'painel_casa', icon: <Monitor size={20} />, label: 'Painel da Casa' },
   ];
@@ -1931,6 +1932,7 @@ const Dashboard = () => {
     hist_gorjeta: 'Histórico de Gorjetas',
     configuracoes: 'Configurações',
     deposito: 'Página de Depósito',
+    hist_deposito: 'Histórico de Depósitos',
     painel_casa: 'Painel da Casa',
   };
 
