@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -26,7 +26,8 @@ const defaultDepositConfig: DepositConfig = {
 };
 
 const Deposit = () => {
-  const { tag } = useParams<{ tag: string }>();
+  const [searchParams] = useSearchParams();
+  const tag = searchParams.get('dep') || '';
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
