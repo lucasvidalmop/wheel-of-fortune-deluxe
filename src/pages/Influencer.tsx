@@ -232,7 +232,7 @@ const Influencer = () => {
     const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).eq('hidden_from_influencer', false).gte('created_at', todayStart.toISOString()).order('created_at', { ascending: false });
     const realWinners: TodayWinner[] = data || [];
     // Merge ghost winners from today
-    const ghostWinners = loadGhostWinners().filter(g => new Date(g.created_at) >= todayStart);
+    const ghostWinners = loadGhostWinners(uid).filter(g => new Date(g.created_at) >= todayStart);
     const merged = [...realWinners, ...ghostWinners].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setTodayWinners(merged);
     setSentToday(merged.length);
