@@ -1,0 +1,1 @@
+ALTER TABLE public.scheduled_messages ADD COLUMN IF NOT EXISTS channel text NOT NULL DEFAULT 'whatsapp';
