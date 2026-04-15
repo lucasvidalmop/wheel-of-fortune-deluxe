@@ -3652,61 +3652,84 @@ function Dashboard() {
 
               <GlassCard className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
+                {/* Source mode toggle */}
                 <div className="flex gap-2">
-                  <button onClick={() => { setSmsTarget('all'); setSelectedPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length})
+                  <button onClick={() => setSmsSourceMode('base')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsSourceMode === 'base' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    📋 Base
                   </button>
-                  <button onClick={() => setSmsTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Selecionar ({selectedPhones.length})
+                  <button onClick={() => setSmsSourceMode('csv')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsSourceMode === 'csv' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    <span className="flex items-center justify-center gap-1.5"><Upload size={14} /> CSV Externo</span>
                   </button>
                 </div>
-                {smsTarget === 'selected' && (() => {
-                  const smsUsersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-                  const smsFilteredUsers = smsSearchTerm
-                    ? smsUsersWithPhone.filter(u => u.name.toLowerCase().includes(smsSearchTerm.toLowerCase()) || u.phone.includes(smsSearchTerm))
-                    : smsUsersWithPhone;
-                  const allFilteredSelected = smsFilteredUsers.length > 0 && smsFilteredUsers.every(u => selectedPhones.includes(u.phone));
-                  return (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={smsSearchTerm}
-                        onChange={e => setSmsSearchTerm(e.target.value)}
-                        placeholder="Pesquisar por nome ou telefone..."
-                        className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
-                      />
-                      <div className="flex items-center gap-2 px-1">
-                        <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition">
-                          <input
-                            type="checkbox"
-                            checked={allFilteredSelected}
-                            onChange={e => {
-                              if (e.target.checked) {
-                                const newPhones = new Set([...selectedPhones, ...smsFilteredUsers.map(u => u.phone)]);
-                                setSelectedPhones(Array.from(newPhones));
-                              } else {
-                                const removeSet = new Set(smsFilteredUsers.map(u => u.phone));
-                                setSelectedPhones(selectedPhones.filter(p => !removeSet.has(p)));
-                              }
-                            }}
-                            className="rounded border-white/20"
-                          />
-                          Selecionar todos ({smsFilteredUsers.length})
-                        </label>
-                      </div>
-                      <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
-                        {smsFilteredUsers.map(u => (
-                          <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                            <input type="checkbox" checked={selectedPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedPhones([...selectedPhones, u.phone]); else setSelectedPhones(selectedPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
-                            <span className="text-sm text-foreground">{u.name}</span>
-                            <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
-                          </label>
-                        ))}
-                        {smsFilteredUsers.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">Nenhum resultado</p>}
-                      </div>
+
+                {smsSourceMode === 'base' ? (
+                  <>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setSmsTarget('all'); setSelectedPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length})
+                      </button>
+                      <button onClick={() => setSmsTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Selecionar ({selectedPhones.length})
+                      </button>
                     </div>
-                  );
-                })()}
+                    {smsTarget === 'selected' && (() => {
+                      const smsUsersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                      const smsFilteredUsers = smsSearchTerm
+                        ? smsUsersWithPhone.filter(u => u.name.toLowerCase().includes(smsSearchTerm.toLowerCase()) || u.phone.includes(smsSearchTerm))
+                        : smsUsersWithPhone;
+                      const allFilteredSelected = smsFilteredUsers.length > 0 && smsFilteredUsers.every(u => selectedPhones.includes(u.phone));
+                      return (
+                        <div className="space-y-2">
+                          <input type="text" value={smsSearchTerm} onChange={e => setSmsSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou telefone..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                          <div className="flex items-center gap-2 px-1">
+                            <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition">
+                              <input type="checkbox" checked={allFilteredSelected} onChange={e => { if (e.target.checked) { const newPhones = new Set([...selectedPhones, ...smsFilteredUsers.map(u => u.phone)]); setSelectedPhones(Array.from(newPhones)); } else { const removeSet = new Set(smsFilteredUsers.map(u => u.phone)); setSelectedPhones(selectedPhones.filter(p => !removeSet.has(p))); } }} className="rounded border-white/20" />
+                              Selecionar todos ({smsFilteredUsers.length})
+                            </label>
+                          </div>
+                          <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
+                            {smsFilteredUsers.map(u => (
+                              <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                <input type="checkbox" checked={selectedPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedPhones([...selectedPhones, u.phone]); else setSelectedPhones(selectedPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                                <span className="text-sm text-foreground">{u.name}</span>
+                                <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                              </label>
+                            ))}
+                            {smsFilteredUsers.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">Nenhum resultado</p>}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input ref={smsCsvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleSmsCsvUpload} />
+                      <button onClick={() => smsCsvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
+                        <Upload size={14} /> Importar CSV
+                      </button>
+                      {smsCsvContacts.length > 0 && (
+                        <button onClick={() => setSmsCsvContacts([])} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition">
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Formato: CSV com colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code></p>
+                    {smsCsvContacts.length > 0 && (
+                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                        <div className="px-3 py-2 border-b border-white/[0.08] bg-white/[0.04] text-xs font-medium text-foreground">{smsCsvContacts.length} contato(s) importado(s)</div>
+                        <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                          {smsCsvContacts.map((c, i) => (
+                            <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
+                              <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </GlassCard>
 
               <GlassCard className="p-5 space-y-3">
