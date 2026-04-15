@@ -3517,6 +3517,9 @@ function Dashboard() {
                 <button onClick={() => { setShowSmsHistory(!showSmsHistory); if (!showSmsHistory) fetchSmsLogs(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsHistory ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
                   <Clock size={15} /> Histórico
                 </button>
+                <button onClick={() => { setShowSmsScheduledList(!showSmsScheduledList); if (!showSmsScheduledList) fetchSmsScheduled(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsScheduledList ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <CalendarIcon size={15} /> Agendados
+                </button>
                 <button onClick={() => setShowSmsConfig(!showSmsConfig)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsConfig ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`} title="Configurações">
                   <Settings size={15} /> Configurar API
                 </button>
