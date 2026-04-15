@@ -468,6 +468,7 @@ export type Database = {
       }
       sms_message_log: {
         Row: {
+          batch_id: string | null
           created_at: string
           error_message: string | null
           id: string
@@ -478,6 +479,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          batch_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
@@ -488,6 +490,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          batch_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
