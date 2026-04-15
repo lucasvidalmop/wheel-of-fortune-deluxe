@@ -3827,7 +3827,7 @@ function Dashboard() {
                       for (let j = 0; j < results.length; j++) {
                         const r = results[j];
                         const phone = batch[j];
-                        const user = users.find(u => u.phone === phone);
+                        const user = users.find(u => u.phone === phone) || phoneList.find(p => p.phone === phone);
                         if (r.status === 'fulfilled' && !r.value.error) {
                           sent++;
                           smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent' });
