@@ -212,16 +212,16 @@ const Influencer = () => {
     setUsersLoading(false);
   };
 
-  const getGhostWinnersKey = () => `ghost_winners_${session?.user?.id || 'anon'}`;
+  const getGhostWinnersKey = (uid?: string) => `ghost_winners_${uid || session?.user?.id || 'anon'}`;
 
-  const loadGhostWinners = (): TodayWinner[] => {
+  const loadGhostWinners = (uid?: string): TodayWinner[] => {
     try {
-      return JSON.parse(localStorage.getItem(getGhostWinnersKey()) || '[]');
+      return JSON.parse(localStorage.getItem(getGhostWinnersKey(uid)) || '[]');
     } catch { return []; }
   };
 
-  const saveGhostWinners = (ghosts: TodayWinner[]) => {
-    localStorage.setItem(getGhostWinnersKey(), JSON.stringify(ghosts));
+  const saveGhostWinners = (ghosts: TodayWinner[], uid?: string) => {
+    localStorage.setItem(getGhostWinnersKey(uid), JSON.stringify(ghosts));
   };
 
   const fetchTodayWinners = async (userId?: string) => {
