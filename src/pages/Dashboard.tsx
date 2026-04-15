@@ -1295,10 +1295,23 @@ function Dashboard() {
   // CSV external contacts state (shared between SMS & WhatsApp)
   const [smsSourceMode, setSmsSourceMode] = useState<'base' | 'csv'>('base');
   const [whatsappSourceMode, setWhatsappSourceMode] = useState<'base' | 'csv'>('base');
-  const [csvContacts, setCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const [csvContacts, setCsvContacts] = useState<{ lead: string; numero: string; group_name: string }[]>([]);
   const [selectedCsvContacts, setSelectedCsvContacts] = useState<string[]>([]);
   const [csvSearchTerm, setCsvSearchTerm] = useState('');
   const csvInputRef = useRef<HTMLInputElement>(null);
+
+  // Group management
+  const [contactGroups, setContactGroups] = useState<string[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>('__all__');
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [importTargetGroup, setImportTargetGroup] = useState('');
+
+  // Derive groups from contacts
+  useEffect(() => {
+    const groups = [...new Set(csvContacts.map(c => c.group_name).filter(g => g))];
+    setContactGroups(groups);
+  }, [csvContacts]);
 
   // WhatsApp contacts from Evolution API
   const [waContacts, setWaContacts] = useState<{ lead: string; numero: string }[]>([]);
@@ -1340,38 +1353,63 @@ function Dashboard() {
     try {
       const contacts = await parseCsvContacts(file);
       if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
-      // Merge with existing persisted contacts (avoid duplicates)
+      const groupName = importTargetGroup || '';
       setCsvContacts(prev => {
-        const existingNums = new Set(prev.map(c => c.numero));
-        const newOnes = contacts.filter(c => !existingNums.has(c.numero));
+        const existingKeys = new Set(prev.map(c => `${c.numero}__${c.group_name}`));
+        const newOnes = contacts.filter(c => !existingKeys.has(`${c.numero}__${groupName}`)).map(c => ({ ...c, group_name: groupName }));
         return [...prev, ...newOnes];
       });
       setSelectedCsvContacts(prev => [...new Set([...prev, ...contacts.map(c => c.numero)])]);
-      // Persist to DB
       if (session?.user?.id) {
-        const rows = contacts.map(c => ({ owner_id: session.user.id, lead: c.lead, numero: c.numero }));
-        await (supabase as any).from('imported_contacts').upsert(rows, { onConflict: 'owner_id,numero', ignoreDuplicates: true });
+        const rows = contacts.map(c => ({ owner_id: session.user.id, lead: c.lead, numero: c.numero, group_name: groupName }));
+        await (supabase as any).from('imported_contacts').upsert(rows, { onConflict: 'owner_id,numero,group_name', ignoreDuplicates: true });
       }
-      toast.success(`${contacts.length} contato(s) importado(s) e salvo(s)`);
+      if (groupName) setSelectedGroup(groupName);
+      toast.success(`${contacts.length} contato(s) importado(s)${groupName ? ` no grupo "${groupName}"` : ''}`);
     } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
     if (csvInputRef.current) csvInputRef.current.value = '';
   };
 
   const loadPersistedCsvContacts = async (userId: string) => {
-    const { data } = await (supabase as any).from('imported_contacts').select('lead, numero').eq('owner_id', userId).order('created_at', { ascending: true });
+    const { data } = await (supabase as any).from('imported_contacts').select('lead, numero, group_name').eq('owner_id', userId).order('created_at', { ascending: true });
     if (data && data.length > 0) {
-      setCsvContacts(data);
+      setCsvContacts(data.map((c: any) => ({ lead: c.lead, numero: c.numero, group_name: c.group_name || '' })));
       setSelectedCsvContacts(data.map((c: any) => c.numero));
     }
   };
 
-  const clearPersistedCsvContacts = async () => {
-    setCsvContacts([]);
-    setSelectedCsvContacts([]);
-    if (session?.user?.id) {
-      await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id);
+  const clearPersistedCsvContacts = async (groupToClear?: string) => {
+    if (groupToClear && groupToClear !== '__all__') {
+      setCsvContacts(prev => prev.filter(c => c.group_name !== groupToClear));
+      setSelectedCsvContacts(prev => {
+        const numsInGroup = new Set(csvContacts.filter(c => c.group_name === groupToClear).map(c => c.numero));
+        return prev.filter(n => !numsInGroup.has(n));
+      });
+      if (session?.user?.id) {
+        await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id).eq('group_name', groupToClear);
+      }
+      if (selectedGroup === groupToClear) setSelectedGroup('__all__');
+      toast.success(`Grupo "${groupToClear}" removido`);
+    } else {
+      setCsvContacts([]);
+      setSelectedCsvContacts([]);
+      if (session?.user?.id) {
+        await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id);
+      }
+      toast.success('Todos os contatos importados removidos');
     }
-    toast.success('Contatos importados removidos');
+  };
+
+  const handleCreateGroup = () => {
+    const name = newGroupName.trim();
+    if (!name) { toast.error('Digite um nome para o grupo'); return; }
+    if (contactGroups.includes(name)) { toast.error('Grupo já existe'); return; }
+    setContactGroups(prev => [...prev, name]);
+    setImportTargetGroup(name);
+    setSelectedGroup(name);
+    setNewGroupName('');
+    setShowCreateGroup(false);
+    toast.success(`Grupo "${name}" criado. Importe um CSV para adicionar contatos.`);
   };
 
   const fetchWaContacts = async () => {
