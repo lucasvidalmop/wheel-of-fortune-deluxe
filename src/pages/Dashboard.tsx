@@ -1339,11 +1339,38 @@ function Dashboard() {
     try {
       const contacts = await parseCsvContacts(file);
       if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
-      setCsvContacts(contacts);
-      setSelectedCsvContacts(contacts.map(c => c.numero));
-      toast.success(`${contacts.length} contato(s) importado(s) — disponível no SMS e WhatsApp`);
+      // Merge with existing persisted contacts (avoid duplicates)
+      setCsvContacts(prev => {
+        const existingNums = new Set(prev.map(c => c.numero));
+        const newOnes = contacts.filter(c => !existingNums.has(c.numero));
+        return [...prev, ...newOnes];
+      });
+      setSelectedCsvContacts(prev => [...new Set([...prev, ...contacts.map(c => c.numero)])]);
+      // Persist to DB
+      if (session?.user?.id) {
+        const rows = contacts.map(c => ({ owner_id: session.user.id, lead: c.lead, numero: c.numero }));
+        await (supabase as any).from('imported_contacts').upsert(rows, { onConflict: 'owner_id,numero', ignoreDuplicates: true });
+      }
+      toast.success(`${contacts.length} contato(s) importado(s) e salvo(s)`);
     } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
     if (csvInputRef.current) csvInputRef.current.value = '';
+  };
+
+  const loadPersistedCsvContacts = async (userId: string) => {
+    const { data } = await (supabase as any).from('imported_contacts').select('lead, numero').eq('owner_id', userId).order('created_at', { ascending: true });
+    if (data && data.length > 0) {
+      setCsvContacts(data);
+      setSelectedCsvContacts(data.map((c: any) => c.numero));
+    }
+  };
+
+  const clearPersistedCsvContacts = async () => {
+    setCsvContacts([]);
+    setSelectedCsvContacts([]);
+    if (session?.user?.id) {
+      await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id);
+    }
+    toast.success('Contatos importados removidos');
   };
 
   const fetchWaContacts = async () => {
