@@ -400,8 +400,9 @@ const Influencer = () => {
 
     ghostEntries.forEach(g => sessionCreatedIds.current.add(g.id));
     if (ghostEntries.length > 0) {
-      const existing = loadGhostWinners();
-      saveGhostWinners([...ghostEntries, ...existing]);
+      const uid = session?.user?.id;
+      const existing = loadGhostWinners(uid);
+      saveGhostWinners([...ghostEntries, ...existing], uid);
     }
 
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
