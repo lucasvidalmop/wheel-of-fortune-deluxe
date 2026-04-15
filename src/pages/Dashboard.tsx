@@ -241,6 +241,13 @@ function Dashboard() {
   const [smsLogs, setSmsLogs] = useState<any[]>([]);
   const [smsLogsLoading, setSmsLogsLoading] = useState(false);
   const [showSmsHistory, setShowSmsHistory] = useState(false);
+  const [smsScheduleMode, setSmsScheduleMode] = useState(false);
+  const [smsSchedDate, setSmsSchedDate] = useState<Date | undefined>(undefined);
+  const [smsSchedTime, setSmsSchedTime] = useState('12:00');
+  const [smsSchedRecurrence, setSmsSchedRecurrence] = useState<'none' | 'daily' | 'weekly' | 'monthly'>('none');
+  const [smsSchedSaving, setSmsSchedSaving] = useState(false);
+  const [smsScheduledList, setSmsScheduledList] = useState<any[]>([]);
+  const [showSmsScheduledList, setShowSmsScheduledList] = useState(false);
   const [twilioAccountSid, setTwilioAccountSid] = useState(() => localStorage.getItem('twilio_account_sid') || '');
   const [twilioAuthToken, setTwilioAuthToken] = useState(() => localStorage.getItem('twilio_auth_token') || '');
   const [twilioPhoneNumber, setTwilioPhoneNumber] = useState(() => localStorage.getItem('twilio_phone_number') || '');
