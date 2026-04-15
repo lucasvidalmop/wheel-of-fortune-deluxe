@@ -312,16 +312,27 @@ export default function MessagingAnalytics({ ownerId }: Props) {
             const total = d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail;
             const sentH = ((d.sms_sent + d.wa_sent) / maxDaily) * 100;
             const failH = ((d.sms_fail + d.wa_fail) / maxDaily) * 100;
+            const isSelected = selectedDate && d.date === selectedDate.toISOString().split('T')[0];
             return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+              <div key={i} className={cn(
+                "flex-1 flex flex-col items-center gap-1 group relative cursor-pointer transition-all",
+                isSelected && "ring-1 ring-primary/40 rounded-lg bg-primary/[0.06]"
+              )} onClick={() => {
+                const clickDate = new Date(d.date + 'T12:00:00');
+                if (selectedDate && d.date === selectedDate.toISOString().split('T')[0]) {
+                  setSelectedDate(undefined);
+                } else {
+                  setSelectedDate(clickDate);
+                }
+              }}>
                 <div className="w-full flex flex-col justify-end" style={{ height: 120 }}>
                   {failH > 0 && <div className="w-full rounded-t bg-red-400/60 transition-all" style={{ height: `${failH}%`, minHeight: failH > 0 ? 2 : 0 }} />}
                   {sentH > 0 && <div className={`w-full ${failH > 0 ? '' : 'rounded-t'} rounded-b bg-primary/70 transition-all`} style={{ height: `${sentH}%`, minHeight: sentH > 0 ? 2 : 0 }} />}
                 </div>
-                <span className="text-[8px] text-muted-foreground/60 leading-none">{d.label}</span>
+                <span className={cn("text-[8px] leading-none", isSelected ? "text-primary font-bold" : "text-muted-foreground/60")}>{d.label}</span>
                 {total > 0 && (
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-background border border-white/[0.12] rounded-lg px-2 py-1 text-[10px] text-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-                    {total} msg{total > 1 ? 's' : ''}
+                    {total} msg{total > 1 ? 's' : ''} — clique para filtrar
                   </div>
                 )}
               </div>
