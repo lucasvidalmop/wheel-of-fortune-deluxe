@@ -3796,8 +3796,14 @@ function Dashboard() {
               <button
                 onClick={async () => {
                   if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
-                  const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-                  const phones = smsTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedPhones;
+                  let phoneList: { phone: string; name: string }[] = [];
+                  if (smsSourceMode === 'csv') {
+                    phoneList = smsCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                  } else {
+                    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                    phoneList = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+                  }
+                  const phones = phoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setSmsSending(true);
