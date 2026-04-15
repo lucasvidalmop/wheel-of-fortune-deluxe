@@ -1291,13 +1291,19 @@ function Dashboard() {
     setSavingConfig(false);
   };
 
-  // CSV external contacts state
+  // CSV external contacts state (shared between SMS & WhatsApp)
   const [smsSourceMode, setSmsSourceMode] = useState<'base' | 'csv'>('base');
-  const [smsCsvContacts, setSmsCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
-  const smsCsvInputRef = useRef<HTMLInputElement>(null);
   const [whatsappSourceMode, setWhatsappSourceMode] = useState<'base' | 'csv'>('base');
-  const [whatsappCsvContacts, setWhatsappCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
-  const whatsappCsvInputRef = useRef<HTMLInputElement>(null);
+  const [csvContacts, setCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const [selectedCsvContacts, setSelectedCsvContacts] = useState<string[]>([]);
+  const [csvSearchTerm, setCsvSearchTerm] = useState('');
+  const csvInputRef = useRef<HTMLInputElement>(null);
+
+  // WhatsApp contacts from Evolution API
+  const [waContacts, setWaContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const [waContactsLoading, setWaContactsLoading] = useState(false);
+  const [selectedWaContacts, setSelectedWaContacts] = useState<string[]>([]);
+  const [waContactSearch, setWaContactSearch] = useState('');
 
   const parseCsvContacts = (file: File): Promise<{ lead: string; numero: string }[]> => {
     return new Promise((resolve, reject) => {
@@ -1327,28 +1333,46 @@ function Dashboard() {
     });
   };
 
-  const handleSmsCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       const contacts = await parseCsvContacts(file);
       if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
-      setSmsCsvContacts(contacts);
-      toast.success(`${contacts.length} contato(s) importado(s)`);
+      setCsvContacts(contacts);
+      setSelectedCsvContacts(contacts.map(c => c.numero));
+      toast.success(`${contacts.length} contato(s) importado(s) — disponível no SMS e WhatsApp`);
     } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
-    if (smsCsvInputRef.current) smsCsvInputRef.current.value = '';
+    if (csvInputRef.current) csvInputRef.current.value = '';
   };
 
-  const handleWhatsappCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const fetchWaContacts = async () => {
+    if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure a Evolution API primeiro'); return; }
+    setWaContactsLoading(true);
     try {
-      const contacts = await parseCsvContacts(file);
-      if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
-      setWhatsappCsvContacts(contacts);
-      toast.success(`${contacts.length} contato(s) importado(s)`);
-    } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
-    if (whatsappCsvInputRef.current) whatsappCsvInputRef.current.value = '';
+      const baseUrl = evolutionApiUrl.replace(/\/+$/, '').replace(/\/manager$/i, '');
+      const res = await fetch(`${baseUrl}/chat/findContacts/${evolutionInstance}`, {
+        method: 'POST',
+        headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ where: {} }),
+      });
+      if (!res.ok) throw new Error('Erro ao buscar contatos');
+      const data = await res.json();
+      const contacts: { lead: string; numero: string }[] = [];
+      for (const c of (Array.isArray(data) ? data : [])) {
+        const jid = c.id || c.remoteJid || '';
+        if (!jid || jid.includes('@g.us') || jid.includes('@broadcast')) continue;
+        const numero = jid.replace('@s.whatsapp.net', '').replace(/\D/g, '');
+        if (numero.length >= 10) {
+          contacts.push({ lead: c.pushName || c.name || c.notify || '', numero });
+        }
+      }
+      setWaContacts(contacts);
+      toast.success(`${contacts.length} contato(s) encontrado(s) no WhatsApp`);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao buscar contatos');
+    }
+    setWaContactsLoading(false);
   };
 
 
