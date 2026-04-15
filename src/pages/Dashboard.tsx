@@ -690,9 +690,13 @@ function Dashboard() {
     if (!session?.user?.id) return;
     if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
     if (!smsSchedDate) { toast.error('Selecione a data'); return; }
-    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-    const phones = smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone));
-    const targetPhones = smsTarget === 'all' ? usersWithPhone.map(u => ({ phone: u.phone, name: u.name })) : users.filter(u => selectedPhones.includes(u.phone)).map(u => ({ phone: u.phone, name: u.name }));
+    let targetPhones: { phone: string; name: string }[] = [];
+    if (smsSourceMode === 'csv') {
+      targetPhones = smsCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+    } else {
+      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+      targetPhones = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+    }
     if (targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
     setSmsSchedSaving(true);
     const [h, m] = smsSchedTime.split(':').map(Number);
