@@ -3863,6 +3863,7 @@ function Dashboard() {
                   const BATCH_SIZE = 5;
                   const TIMEOUT_MS = 15000;
                   const smsLogEntries: any[] = [];
+                  const batchId = phones.length > 1 ? `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : null;
                   try {
                     for (let i = 0; i < phones.length; i += BATCH_SIZE) {
                       const batch = phones.slice(i, i + BATCH_SIZE);
@@ -3884,15 +3885,15 @@ function Dashboard() {
                           const payload = r.value.data as any;
                           if (payload?.skipped) {
                             skipped++;
-                            smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: payload?.error || 'Número inválido' });
+                            smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId });
                           } else {
                             sent++;
-                            smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent' });
+                            smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent', batch_id: batchId });
                           }
                         } else {
                           errors++;
                           const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
-                          smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: errMsg });
+                          smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: errMsg, batch_id: batchId });
                         }
                       }
                     }
