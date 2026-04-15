@@ -1032,6 +1032,7 @@ function Dashboard() {
     setLoading(false);
     fetchUsers(userId);
     fetchHistory(userId);
+    loadPersistedCsvContacts(userId);
   };
 
   useEffect(() => {
@@ -1339,11 +1340,38 @@ function Dashboard() {
     try {
       const contacts = await parseCsvContacts(file);
       if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
-      setCsvContacts(contacts);
-      setSelectedCsvContacts(contacts.map(c => c.numero));
-      toast.success(`${contacts.length} contato(s) importado(s) — disponível no SMS e WhatsApp`);
+      // Merge with existing persisted contacts (avoid duplicates)
+      setCsvContacts(prev => {
+        const existingNums = new Set(prev.map(c => c.numero));
+        const newOnes = contacts.filter(c => !existingNums.has(c.numero));
+        return [...prev, ...newOnes];
+      });
+      setSelectedCsvContacts(prev => [...new Set([...prev, ...contacts.map(c => c.numero)])]);
+      // Persist to DB
+      if (session?.user?.id) {
+        const rows = contacts.map(c => ({ owner_id: session.user.id, lead: c.lead, numero: c.numero }));
+        await (supabase as any).from('imported_contacts').upsert(rows, { onConflict: 'owner_id,numero', ignoreDuplicates: true });
+      }
+      toast.success(`${contacts.length} contato(s) importado(s) e salvo(s)`);
     } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
     if (csvInputRef.current) csvInputRef.current.value = '';
+  };
+
+  const loadPersistedCsvContacts = async (userId: string) => {
+    const { data } = await (supabase as any).from('imported_contacts').select('lead, numero').eq('owner_id', userId).order('created_at', { ascending: true });
+    if (data && data.length > 0) {
+      setCsvContacts(data);
+      setSelectedCsvContacts(data.map((c: any) => c.numero));
+    }
+  };
+
+  const clearPersistedCsvContacts = async () => {
+    setCsvContacts([]);
+    setSelectedCsvContacts([]);
+    if (session?.user?.id) {
+      await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id);
+    }
+    toast.success('Contatos importados removidos');
   };
 
   const fetchWaContacts = async () => {
@@ -3740,7 +3768,7 @@ function Dashboard() {
                         {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
                       </button>
                       {csvContacts.length > 0 && (
-                        <button onClick={() => { setCsvContacts([]); setSelectedCsvContacts([]); }} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
+                        <button onClick={clearPersistedCsvContacts} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
                           <X size={14} />
                         </button>
                       )}
@@ -4382,7 +4410,7 @@ function Dashboard() {
                         {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
                       </button>
                       {csvContacts.length > 0 && (
-                        <button onClick={() => { setCsvContacts([]); setSelectedCsvContacts([]); }} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
+                        <button onClick={clearPersistedCsvContacts} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
                           <X size={14} />
                         </button>
                       )}
