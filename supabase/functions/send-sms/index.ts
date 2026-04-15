@@ -31,13 +31,27 @@ serve(async (req) => {
 
     // Clean phone number - ensure E.164 format for Brazil
     let cleanPhone = recipientPhone.replace(/\D/g, "");
-    if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) {
+    // Remove leading country code if already present
+    if (cleanPhone.startsWith("55") && cleanPhone.length >= 12) {
+      cleanPhone = cleanPhone.slice(2);
+    }
+    // Remove leading zero
+    if (cleanPhone.startsWith("0")) {
       cleanPhone = cleanPhone.slice(1);
     }
-    if (!cleanPhone.startsWith("55")) {
-      cleanPhone = "55" + cleanPhone;
+    // Brazilian mobile: DDD (2 digits) + 9 + 8 digits = 11 digits
+    // If we have 10 digits (DDD + 8 digits), insert the "9" after DDD
+    if (cleanPhone.length === 10) {
+      cleanPhone = cleanPhone.slice(0, 2) + "9" + cleanPhone.slice(2);
     }
-    cleanPhone = "+" + cleanPhone;
+    // Skip numbers that are clearly invalid (too short/long or landline prefixes like 0800)
+    if (cleanPhone.length !== 11) {
+      return new Response(
+        JSON.stringify({ error: `Número inválido: formato inesperado (${cleanPhone.length} dígitos)` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    cleanPhone = "+55" + cleanPhone;
 
     // Call Twilio API directly
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
