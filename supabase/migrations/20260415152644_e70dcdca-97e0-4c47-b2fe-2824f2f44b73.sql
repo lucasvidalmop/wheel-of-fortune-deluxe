@@ -1,0 +1,1 @@
+ALTER TABLE public.sms_message_log ADD COLUMN IF NOT EXISTS batch_id text DEFAULT NULL;
