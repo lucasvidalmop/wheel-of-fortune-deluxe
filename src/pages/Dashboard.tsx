@@ -1306,12 +1306,8 @@ function Dashboard() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [importTargetGroup, setImportTargetGroup] = useState('');
-
-  // Derive groups from contacts
-  useEffect(() => {
-    const groups = [...new Set(csvContacts.map(c => c.group_name).filter(g => g))];
-    setContactGroups(groups);
-  }, [csvContacts]);
+  const [editingGroup, setEditingGroup] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
 
   // WhatsApp contacts from Evolution API
   const [waContacts, setWaContacts] = useState<{ lead: string; numero: string }[]>([]);
@@ -1412,6 +1408,34 @@ function Dashboard() {
     toast.success(`Grupo "${name}" criado. Importe um CSV para adicionar contatos.`);
   };
 
+  const handleRenameGroup = async (oldName: string) => {
+    const newName = editingGroupName.trim();
+    if (!newName) { toast.error('Digite um nome'); return; }
+    if (newName === oldName) { setEditingGroup(null); return; }
+    if (contactGroups.includes(newName)) { toast.error('Grupo já existe'); return; }
+    setCsvContacts(prev => prev.map(c => c.group_name === oldName ? { ...c, group_name: newName } : c));
+    if (selectedGroup === oldName) setSelectedGroup(newName);
+    if (importTargetGroup === oldName) setImportTargetGroup(newName);
+    if (session?.user?.id) {
+      await (supabase as any).from('imported_contacts').update({ group_name: newName }).eq('owner_id', session.user.id).eq('group_name', oldName);
+    }
+    setEditingGroup(null);
+    toast.success(`Grupo renomeado para "${newName}"`);
+  };
+
+  const handleDeleteGroup = async (groupName: string) => {
+    setCsvContacts(prev => prev.filter(c => c.group_name !== groupName));
+    setSelectedCsvContacts(prev => {
+      const numsInGroup = new Set(csvContacts.filter(c => c.group_name === groupName).map(c => c.numero));
+      return prev.filter(n => !numsInGroup.has(n));
+    });
+    if (session?.user?.id) {
+      await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id).eq('group_name', groupName);
+    }
+    if (selectedGroup === groupName) setSelectedGroup('__all__');
+    toast.success(`Grupo "${groupName}" removido`);
+  };
+
   const fetchWaContacts = async () => {
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure a Evolution API primeiro'); return; }
     setWaContactsLoading(true);
@@ -1441,6 +1465,11 @@ function Dashboard() {
     setWaContactsLoading(false);
   };
 
+  // Derive groups from contacts
+  useEffect(() => {
+    const groups = [...new Set(csvContacts.map(c => c.group_name).filter(g => g))];
+    setContactGroups(groups);
+  }, [csvContacts]);
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3823,9 +3852,25 @@ function Dashboard() {
                             Todos ({csvContacts.length})
                           </button>
                           {contactGroups.map(g => (
-                            <button key={g} onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                              {g} ({csvContacts.filter(c => c.group_name === g).length})
-                            </button>
+                            <div key={g} className="relative group/grp flex items-center">
+                              {editingGroup === g ? (
+                                <div className="flex items-center gap-1">
+                                  <input type="text" value={editingGroupName} onChange={e => setEditingGroupName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleRenameGroup(g); if (e.key === 'Escape') setEditingGroup(null); }} className="px-2 py-1 rounded-lg border border-primary/30 bg-white/[0.06] text-foreground text-xs w-24 focus:outline-none focus:ring-1 focus:ring-primary/40" autoFocus />
+                                  <button onClick={() => handleRenameGroup(g)} className="p-1 rounded text-primary hover:bg-primary/10 transition"><CheckCircle2 size={12} /></button>
+                                  <button onClick={() => setEditingGroup(null)} className="p-1 rounded text-muted-foreground hover:text-foreground transition"><X size={12} /></button>
+                                </div>
+                              ) : (
+                                <button onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                                  {g} ({csvContacts.filter(c => c.group_name === g).length})
+                                </button>
+                              )}
+                              {editingGroup !== g && (
+                                <div className="hidden group-hover/grp:flex items-center gap-0.5 ml-0.5">
+                                  <button onClick={(e) => { e.stopPropagation(); setEditingGroup(g); setEditingGroupName(g); }} className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Renomear"><Pencil size={10} /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g); }} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition" title="Remover grupo"><Trash2 size={10} /></button>
+                                </div>
+                              )}
+                            </div>
                           ))}
                           {csvContacts.filter(c => !c.group_name).length > 0 && (
                             <button onClick={() => setSelectedGroup('')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === '' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
@@ -4512,9 +4557,25 @@ function Dashboard() {
                             Todos ({csvContacts.length})
                           </button>
                           {contactGroups.map(g => (
-                            <button key={g} onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                              {g} ({csvContacts.filter(c => c.group_name === g).length})
-                            </button>
+                            <div key={g} className="relative group/grp flex items-center">
+                              {editingGroup === g ? (
+                                <div className="flex items-center gap-1">
+                                  <input type="text" value={editingGroupName} onChange={e => setEditingGroupName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleRenameGroup(g); if (e.key === 'Escape') setEditingGroup(null); }} className="px-2 py-1 rounded-lg border border-primary/30 bg-white/[0.06] text-foreground text-xs w-24 focus:outline-none focus:ring-1 focus:ring-primary/40" autoFocus />
+                                  <button onClick={() => handleRenameGroup(g)} className="p-1 rounded text-primary hover:bg-primary/10 transition"><CheckCircle2 size={12} /></button>
+                                  <button onClick={() => setEditingGroup(null)} className="p-1 rounded text-muted-foreground hover:text-foreground transition"><X size={12} /></button>
+                                </div>
+                              ) : (
+                                <button onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                                  {g} ({csvContacts.filter(c => c.group_name === g).length})
+                                </button>
+                              )}
+                              {editingGroup !== g && (
+                                <div className="hidden group-hover/grp:flex items-center gap-0.5 ml-0.5">
+                                  <button onClick={(e) => { e.stopPropagation(); setEditingGroup(g); setEditingGroupName(g); }} className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Renomear"><Pencil size={10} /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g); }} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition" title="Remover grupo"><Trash2 size={10} /></button>
+                                </div>
+                              )}
+                            </div>
                           ))}
                           {csvContacts.filter(c => !c.group_name).length > 0 && (
                             <button onClick={() => setSelectedGroup('')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === '' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
