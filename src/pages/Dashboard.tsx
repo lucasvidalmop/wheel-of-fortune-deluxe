@@ -664,11 +664,11 @@ function Dashboard() {
 
   const resendSms = async (log: any) => {
     if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
-    const { error } = await supabase.functions.invoke('send-sms', {
+    const { data, error } = await supabase.functions.invoke('send-sms', {
       body: { recipientPhone: log.recipient_phone, message: log.message, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
     });
     if (error) { toast.error('Erro ao reenviar SMS'); return; }
-    // Log the resend
+    if ((data as any)?.skipped) { toast.error((data as any)?.error || 'Número inválido'); return; }
     await (supabase as any).from('sms_message_log').insert({
       owner_id: session?.user?.id,
       recipient_phone: log.recipient_phone,
