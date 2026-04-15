@@ -1437,6 +1437,11 @@ function Dashboard() {
     setWaContactsLoading(false);
   };
 
+  // Derive groups from contacts
+  useEffect(() => {
+    const groups = [...new Set(csvContacts.map(c => c.group_name).filter(g => g))];
+    setContactGroups(groups);
+  }, [csvContacts]);
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
