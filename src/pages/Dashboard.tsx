@@ -1032,6 +1032,7 @@ function Dashboard() {
     setLoading(false);
     fetchUsers(userId);
     fetchHistory(userId);
+    loadPersistedCsvContacts(userId);
   };
 
   useEffect(() => {
