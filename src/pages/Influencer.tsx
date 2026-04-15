@@ -212,16 +212,16 @@ const Influencer = () => {
     setUsersLoading(false);
   };
 
-  const getGhostWinnersKey = () => `ghost_winners_${session?.user?.id || 'anon'}`;
+  const getGhostWinnersKey = (uid?: string) => `ghost_winners_${uid || session?.user?.id || 'anon'}`;
 
-  const loadGhostWinners = (): TodayWinner[] => {
+  const loadGhostWinners = (uid?: string): TodayWinner[] => {
     try {
-      return JSON.parse(localStorage.getItem(getGhostWinnersKey()) || '[]');
+      return JSON.parse(localStorage.getItem(getGhostWinnersKey(uid)) || '[]');
     } catch { return []; }
   };
 
-  const saveGhostWinners = (ghosts: TodayWinner[]) => {
-    localStorage.setItem(getGhostWinnersKey(), JSON.stringify(ghosts));
+  const saveGhostWinners = (ghosts: TodayWinner[], uid?: string) => {
+    localStorage.setItem(getGhostWinnersKey(uid), JSON.stringify(ghosts));
   };
 
   const fetchTodayWinners = async (userId?: string) => {
@@ -232,7 +232,7 @@ const Influencer = () => {
     const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at').eq('owner_id', uid).eq('hidden_from_influencer', false).gte('created_at', todayStart.toISOString()).order('created_at', { ascending: false });
     const realWinners: TodayWinner[] = data || [];
     // Merge ghost winners from today
-    const ghostWinners = loadGhostWinners().filter(g => new Date(g.created_at) >= todayStart);
+    const ghostWinners = loadGhostWinners(uid).filter(g => new Date(g.created_at) >= todayStart);
     const merged = [...realWinners, ...ghostWinners].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setTodayWinners(merged);
     setSentToday(merged.length);
@@ -243,7 +243,7 @@ const Influencer = () => {
     if (!uid) return;
     const { data } = await (supabase as any).from('prize_payments').select('id, user_name, account_id, amount, created_at, prize').eq('owner_id', uid).eq('hidden_from_influencer', false).order('created_at', { ascending: false }).limit(500);
     const realHistory: TodayWinner[] = data || [];
-    const ghostWinners = loadGhostWinners();
+    const ghostWinners = loadGhostWinners(uid);
     const merged = [...realHistory, ...ghostWinners].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setHistoryWinners(merged);
   };
@@ -281,8 +281,8 @@ const Influencer = () => {
       .gte('created_at', todayStart.toISOString());
 
     // Clear all ghost winners from today
-    const ghosts = loadGhostWinners().filter(g => new Date(g.created_at) < todayStart);
-    saveGhostWinners(ghosts);
+    const ghosts = loadGhostWinners(uid).filter(g => new Date(g.created_at) < todayStart);
+    saveGhostWinners(ghosts, uid);
 
     // Clear session tracking and timers
     sessionCreatedIds.current.clear();
@@ -400,8 +400,9 @@ const Influencer = () => {
 
     ghostEntries.forEach(g => sessionCreatedIds.current.add(g.id));
     if (ghostEntries.length > 0) {
-      const existing = loadGhostWinners();
-      saveGhostWinners([...ghostEntries, ...existing]);
+      const uid = session?.user?.id;
+      const existing = loadGhostWinners(uid);
+      saveGhostWinners([...ghostEntries, ...existing], uid);
     }
 
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
