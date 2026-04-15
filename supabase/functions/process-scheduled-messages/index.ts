@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     for (const msg of messages) {
       try {
-        // Get owner's Evolution API config
+        // Get owner's config
         const { data: configData } = await supabase
           .from("wheel_configs")
           .select("config")
@@ -55,72 +55,100 @@ Deno.serve(async (req) => {
         const cfg = typeof configData?.config === "string" ? JSON.parse(configData.config) : configData?.config;
         const ds = cfg?.dashboardSettings || {};
 
-        const evolutionApiUrl = ds.evolutionApiUrl;
-        const evolutionApiKey = ds.evolutionApiKey;
-        const evolutionInstance = ds.evolutionInstance;
+        const channel = msg.channel || "whatsapp";
+        let ok = false;
 
-        if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) {
-          await supabase.from("scheduled_messages").update({ status: "failed", updated_at: now }).eq("id", msg.id);
-          results.push({ id: msg.id, ok: false, error: "Evolution API not configured" });
-          continue;
-        }
+        if (channel === "sms") {
+          // ── SMS via Twilio ──
+          const twilioAccountSid = ds.twilioAccountSid;
+          const twilioAuthToken = ds.twilioAuthToken;
+          const twilioPhoneNumber = ds.twilioPhoneNumber;
 
-        const baseUrl = String(evolutionApiUrl).replace(/\/+$/, "").replace(/\/manager$/i, "");
+          if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
+            await supabase.from("scheduled_messages").update({ status: "failed", updated_at: now }).eq("id", msg.id);
+            results.push({ id: msg.id, ok: false, error: "Twilio not configured" });
+            continue;
+          }
 
-        // Determine recipient number
-        let number = msg.recipient_value;
-        if (!number.includes("@g.us")) {
-          number = number.replace(/\D/g, "");
-          if (!number.startsWith("55")) number = "55" + number;
-        }
+          let cleanPhone = msg.recipient_value.replace(/\D/g, "");
+          if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) cleanPhone = cleanPhone.slice(1);
+          if (!cleanPhone.startsWith("55")) cleanPhone = "55" + cleanPhone;
+          cleanPhone = "+" + cleanPhone;
 
-        let url: string;
-        let body: Record<string, any>;
+          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+          const auth = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
 
-        if (msg.media_url && msg.media_type === 'ptt') {
-          // Send as voice message (PTT)
-          url = `${baseUrl}/message/sendWhatsAppAudio/${evolutionInstance}`;
-          body = {
-            number,
-            audio: msg.media_url,
-            encoding: true,
-          };
-        } else if (msg.media_url) {
-          url = `${baseUrl}/message/sendMedia/${evolutionInstance}`;
-          body = {
-            number,
-            mediatype: msg.media_type || "image",
-            mimetype: msg.media_mimetype || "image/jpeg",
-            caption: msg.message || "",
-            media: msg.media_url,
-            fileName: msg.media_filename || "file",
-          };
+          const response = await fetch(twilioUrl, {
+            method: "POST",
+            headers: { "Authorization": `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ To: cleanPhone, From: twilioPhoneNumber, Body: msg.message }),
+          });
+
+          ok = response.ok;
+
+          await supabase.from("sms_message_log").insert({
+            owner_id: msg.owner_id,
+            recipient_phone: msg.recipient_value,
+            recipient_name: msg.recipient_label || "",
+            message: msg.message,
+            status: ok ? "sent" : "failed",
+            error_message: ok ? null : "Twilio API error",
+          });
         } else {
-          url = `${baseUrl}/message/sendText/${evolutionInstance}`;
-          body = { number, text: msg.message };
+          // ── WhatsApp via Evolution API ──
+          const evolutionApiUrl = ds.evolutionApiUrl;
+          const evolutionApiKey = ds.evolutionApiKey;
+          const evolutionInstance = ds.evolutionInstance;
+
+          if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) {
+            await supabase.from("scheduled_messages").update({ status: "failed", updated_at: now }).eq("id", msg.id);
+            results.push({ id: msg.id, ok: false, error: "Evolution API not configured" });
+            continue;
+          }
+
+          const baseUrl = String(evolutionApiUrl).replace(/\/+$/, "").replace(/\/manager$/i, "");
+
+          let number = msg.recipient_value;
+          if (!number.includes("@g.us")) {
+            number = number.replace(/\D/g, "");
+            if (!number.startsWith("55")) number = "55" + number;
+          }
+
+          let url: string;
+          let body: Record<string, any>;
+
+          if (msg.media_url && msg.media_type === 'ptt') {
+            url = `${baseUrl}/message/sendWhatsAppAudio/${evolutionInstance}`;
+            body = { number, audio: msg.media_url, encoding: true };
+          } else if (msg.media_url) {
+            url = `${baseUrl}/message/sendMedia/${evolutionInstance}`;
+            body = { number, mediatype: msg.media_type || "image", mimetype: msg.media_mimetype || "image/jpeg", caption: msg.message || "", media: msg.media_url, fileName: msg.media_filename || "file" };
+          } else {
+            url = `${baseUrl}/message/sendText/${evolutionInstance}`;
+            body = { number, text: msg.message };
+          }
+
+          if (msg.mention_all && number.includes("@g.us")) {
+            body.mentionsEveryOne = true;
+          }
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "apikey": evolutionApiKey, "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          ok = response.ok;
+
+          await supabase.from("whatsapp_message_log").insert({
+            owner_id: msg.owner_id,
+            recipient_phone: msg.recipient_value,
+            recipient_name: msg.recipient_label || "",
+            message: msg.message,
+            status: ok ? "sent" : "failed",
+            error_message: ok ? null : "API error",
+          });
         }
-
-        if (msg.mention_all && number.includes("@g.us")) {
-          body.mentionsEveryOne = true;
-        }
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "apikey": evolutionApiKey, "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-
-        const ok = response.ok;
-
-        // Log in whatsapp_message_log
-        await supabase.from("whatsapp_message_log").insert({
-          owner_id: msg.owner_id,
-          recipient_phone: msg.recipient_value,
-          recipient_name: msg.recipient_label || "",
-          message: msg.message,
-          status: ok ? "sent" : "failed",
-          error_message: ok ? null : "API error",
-        });
 
         // Calculate next_run_at for recurrent messages
         if (msg.recurrence !== "none" && ok) {
