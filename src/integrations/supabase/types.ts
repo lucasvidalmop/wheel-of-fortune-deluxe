@@ -137,6 +137,30 @@ export type Database = {
         }
         Relationships: []
       }
+      imported_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          lead: string
+          numero: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead?: string
+          numero: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead?: string
+          numero?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
       page_views: {
         Row: {
           browser: string | null
