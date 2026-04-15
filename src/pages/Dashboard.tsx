@@ -692,7 +692,7 @@ function Dashboard() {
     if (!smsSchedDate) { toast.error('Selecione a data'); return; }
     let targetPhones: { phone: string; name: string }[] = [];
     if (smsSourceMode === 'csv') {
-      targetPhones = csvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+      targetPhones = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
     } else {
       const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
       targetPhones = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -3850,7 +3850,7 @@ function Dashboard() {
                   if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
                   let phoneList: { phone: string; name: string }[] = [];
                   if (smsSourceMode === 'csv') {
-                    phoneList = csvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                    phoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
                   } else {
                     const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                     phoneList = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -4470,7 +4470,7 @@ function Dashboard() {
                   if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
                   let waPhoneList: { phone: string; name: string }[] = [];
                   if (whatsappSourceMode === 'csv') {
-                    waPhoneList = csvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                    waPhoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
                   } else {
                     const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
                     waPhoneList = (whatsappTarget === 'all' ? usersWithPhone : usersWithPhone.filter(u => selectedWhatsappPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
