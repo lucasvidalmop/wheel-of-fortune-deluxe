@@ -3768,7 +3768,7 @@ function Dashboard() {
                         {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
                       </button>
                       {csvContacts.length > 0 && (
-                        <button onClick={() => { setCsvContacts([]); setSelectedCsvContacts([]); }} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
+                        <button onClick={clearPersistedCsvContacts} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
                           <X size={14} />
                         </button>
                       )}
@@ -4410,7 +4410,7 @@ function Dashboard() {
                         {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
                       </button>
                       {csvContacts.length > 0 && (
-                        <button onClick={() => { setCsvContacts([]); setSelectedCsvContacts([]); }} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
+                        <button onClick={clearPersistedCsvContacts} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
                           <X size={14} />
                         </button>
                       )}
