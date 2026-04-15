@@ -692,7 +692,7 @@ function Dashboard() {
     if (!smsSchedDate) { toast.error('Selecione a data'); return; }
     let targetPhones: { phone: string; name: string }[] = [];
     if (smsSourceMode === 'csv') {
-      targetPhones = smsCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+      targetPhones = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
     } else {
       const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
       targetPhones = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -1291,13 +1291,19 @@ function Dashboard() {
     setSavingConfig(false);
   };
 
-  // CSV external contacts state
+  // CSV external contacts state (shared between SMS & WhatsApp)
   const [smsSourceMode, setSmsSourceMode] = useState<'base' | 'csv'>('base');
-  const [smsCsvContacts, setSmsCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
-  const smsCsvInputRef = useRef<HTMLInputElement>(null);
   const [whatsappSourceMode, setWhatsappSourceMode] = useState<'base' | 'csv'>('base');
-  const [whatsappCsvContacts, setWhatsappCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
-  const whatsappCsvInputRef = useRef<HTMLInputElement>(null);
+  const [csvContacts, setCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const [selectedCsvContacts, setSelectedCsvContacts] = useState<string[]>([]);
+  const [csvSearchTerm, setCsvSearchTerm] = useState('');
+  const csvInputRef = useRef<HTMLInputElement>(null);
+
+  // WhatsApp contacts from Evolution API
+  const [waContacts, setWaContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const [waContactsLoading, setWaContactsLoading] = useState(false);
+  const [selectedWaContacts, setSelectedWaContacts] = useState<string[]>([]);
+  const [waContactSearch, setWaContactSearch] = useState('');
 
   const parseCsvContacts = (file: File): Promise<{ lead: string; numero: string }[]> => {
     return new Promise((resolve, reject) => {
@@ -1327,28 +1333,46 @@ function Dashboard() {
     });
   };
 
-  const handleSmsCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       const contacts = await parseCsvContacts(file);
       if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
-      setSmsCsvContacts(contacts);
-      toast.success(`${contacts.length} contato(s) importado(s)`);
+      setCsvContacts(contacts);
+      setSelectedCsvContacts(contacts.map(c => c.numero));
+      toast.success(`${contacts.length} contato(s) importado(s) — disponível no SMS e WhatsApp`);
     } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
-    if (smsCsvInputRef.current) smsCsvInputRef.current.value = '';
+    if (csvInputRef.current) csvInputRef.current.value = '';
   };
 
-  const handleWhatsappCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const fetchWaContacts = async () => {
+    if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure a Evolution API primeiro'); return; }
+    setWaContactsLoading(true);
     try {
-      const contacts = await parseCsvContacts(file);
-      if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
-      setWhatsappCsvContacts(contacts);
-      toast.success(`${contacts.length} contato(s) importado(s)`);
-    } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
-    if (whatsappCsvInputRef.current) whatsappCsvInputRef.current.value = '';
+      const baseUrl = evolutionApiUrl.replace(/\/+$/, '').replace(/\/manager$/i, '');
+      const res = await fetch(`${baseUrl}/chat/findContacts/${evolutionInstance}`, {
+        method: 'POST',
+        headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ where: {} }),
+      });
+      if (!res.ok) throw new Error('Erro ao buscar contatos');
+      const data = await res.json();
+      const contacts: { lead: string; numero: string }[] = [];
+      for (const c of (Array.isArray(data) ? data : [])) {
+        const jid = c.id || c.remoteJid || '';
+        if (!jid || jid.includes('@g.us') || jid.includes('@broadcast')) continue;
+        const numero = jid.replace('@s.whatsapp.net', '').replace(/\D/g, '');
+        if (numero.length >= 10) {
+          contacts.push({ lead: c.pushName || c.name || c.notify || '', numero });
+        }
+      }
+      setWaContacts(contacts);
+      toast.success(`${contacts.length} contato(s) encontrado(s) no WhatsApp`);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao buscar contatos');
+    }
+    setWaContactsLoading(false);
   };
 
 
@@ -3707,31 +3731,55 @@ function Dashboard() {
                   </>
                 ) : (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <input ref={smsCsvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleSmsCsvUpload} />
-                      <button onClick={() => smsCsvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input ref={csvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvUpload} />
+                      <button onClick={() => csvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
                         <Upload size={14} /> Importar CSV
                       </button>
-                      {smsCsvContacts.length > 0 && (
-                        <button onClick={() => setSmsCsvContacts([])} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition">
+                      <button onClick={fetchWaContacts} disabled={waContactsLoading} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-green-500/30 bg-green-500/5 text-sm text-green-400 hover:text-green-300 hover:border-green-400/40 transition disabled:opacity-50">
+                        {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
+                      </button>
+                      {csvContacts.length > 0 && (
+                        <button onClick={() => { setCsvContacts([]); setSelectedCsvContacts([]); }} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
                           <X size={14} />
                         </button>
                       )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Formato: CSV com colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code></p>
-                    {smsCsvContacts.length > 0 && (
-                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
-                        <div className="px-3 py-2 border-b border-white/[0.08] bg-white/[0.04] text-xs font-medium text-foreground">{smsCsvContacts.length} contato(s) importado(s)</div>
-                        <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
-                          {smsCsvContacts.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
-                              <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
-                              <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                    <p className="text-[10px] text-muted-foreground">CSV: colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code> · Contatos sincronizados entre SMS e WhatsApp</p>
+
+                    {/* Merged list: CSV + WhatsApp contacts */}
+                    {(() => {
+                      const merged = [...csvContacts];
+                      const existingNums = new Set(csvContacts.map(c => c.numero));
+                      for (const wc of waContacts) { if (!existingNums.has(wc.numero)) merged.push(wc); }
+                      const filtered = csvSearchTerm ? merged.filter(c => c.lead.toLowerCase().includes(csvSearchTerm.toLowerCase()) || c.numero.includes(csvSearchTerm)) : merged;
+                      const allSelected = filtered.length > 0 && filtered.every(c => selectedCsvContacts.includes(c.numero));
+                      if (merged.length === 0) return null;
+                      return (
+                        <div className="space-y-2">
+                          <input type="text" value={csvSearchTerm} onChange={e => setCsvSearchTerm(e.target.value)} placeholder="Buscar por nome ou número..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                            <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
+                              <input type="checkbox" checked={allSelected} onChange={e => {
+                                if (e.target.checked) setSelectedCsvContacts(prev => [...new Set([...prev, ...filtered.map(c => c.numero)])]);
+                                else setSelectedCsvContacts(prev => prev.filter(n => !filtered.some(c => c.numero === n)));
+                              }} className="rounded border-white/20" />
+                              <span className="text-sm font-medium text-foreground">Selecionar todos</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{selectedCsvContacts.length}/{merged.length}</span>
+                            </label>
+                            <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                              {filtered.map((c, i) => (
+                                <label key={`${c.numero}-${i}`} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                  <input type="checkbox" checked={selectedCsvContacts.includes(c.numero)} onChange={e => { if (e.target.checked) setSelectedCsvContacts(prev => [...prev, c.numero]); else setSelectedCsvContacts(prev => prev.filter(n => n !== c.numero)); }} className="rounded border-white/20" />
+                                  <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
+                                  <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                                </label>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
               </GlassCard>
@@ -3802,7 +3850,7 @@ function Dashboard() {
                   if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
                   let phoneList: { phone: string; name: string }[] = [];
                   if (smsSourceMode === 'csv') {
-                    phoneList = smsCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                    phoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
                   } else {
                     const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                     phoneList = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -4318,31 +4366,54 @@ function Dashboard() {
                   </>
                 ) : (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <input ref={whatsappCsvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleWhatsappCsvUpload} />
-                      <button onClick={() => whatsappCsvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input ref={csvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvUpload} />
+                      <button onClick={() => csvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
                         <Upload size={14} /> Importar CSV
                       </button>
-                      {whatsappCsvContacts.length > 0 && (
-                        <button onClick={() => setWhatsappCsvContacts([])} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition">
+                      <button onClick={fetchWaContacts} disabled={waContactsLoading} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-green-500/30 bg-green-500/5 text-sm text-green-400 hover:text-green-300 hover:border-green-400/40 transition disabled:opacity-50">
+                        {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
+                      </button>
+                      {csvContacts.length > 0 && (
+                        <button onClick={() => { setCsvContacts([]); setSelectedCsvContacts([]); }} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
                           <X size={14} />
                         </button>
                       )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Formato: CSV com colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code></p>
-                    {whatsappCsvContacts.length > 0 && (
-                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
-                        <div className="px-3 py-2 border-b border-white/[0.08] bg-white/[0.04] text-xs font-medium text-foreground">{whatsappCsvContacts.length} contato(s) importado(s)</div>
-                        <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
-                          {whatsappCsvContacts.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
-                              <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
-                              <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                    <p className="text-[10px] text-muted-foreground">CSV: colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code> · Contatos sincronizados entre SMS e WhatsApp</p>
+
+                    {(() => {
+                      const merged = [...csvContacts];
+                      const existingNums = new Set(csvContacts.map(c => c.numero));
+                      for (const wc of waContacts) { if (!existingNums.has(wc.numero)) merged.push(wc); }
+                      const filtered = csvSearchTerm ? merged.filter(c => c.lead.toLowerCase().includes(csvSearchTerm.toLowerCase()) || c.numero.includes(csvSearchTerm)) : merged;
+                      const allSelected = filtered.length > 0 && filtered.every(c => selectedCsvContacts.includes(c.numero));
+                      if (merged.length === 0) return null;
+                      return (
+                        <div className="space-y-2">
+                          <input type="text" value={csvSearchTerm} onChange={e => setCsvSearchTerm(e.target.value)} placeholder="Buscar por nome ou número..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                            <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
+                              <input type="checkbox" checked={allSelected} onChange={e => {
+                                if (e.target.checked) setSelectedCsvContacts(prev => [...new Set([...prev, ...filtered.map(c => c.numero)])]);
+                                else setSelectedCsvContacts(prev => prev.filter(n => !filtered.some(c => c.numero === n)));
+                              }} className="rounded border-white/20" />
+                              <span className="text-sm font-medium text-foreground">Selecionar todos</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{selectedCsvContacts.length}/{merged.length}</span>
+                            </label>
+                            <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                              {filtered.map((c, i) => (
+                                <label key={`${c.numero}-${i}`} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                  <input type="checkbox" checked={selectedCsvContacts.includes(c.numero)} onChange={e => { if (e.target.checked) setSelectedCsvContacts(prev => [...prev, c.numero]); else setSelectedCsvContacts(prev => prev.filter(n => n !== c.numero)); }} className="rounded border-white/20" />
+                                  <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
+                                  <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                                </label>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
               </GlassCard>
@@ -4399,7 +4470,7 @@ function Dashboard() {
                   if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
                   let waPhoneList: { phone: string; name: string }[] = [];
                   if (whatsappSourceMode === 'csv') {
-                    waPhoneList = whatsappCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                    waPhoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
                   } else {
                     const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
                     waPhoneList = (whatsappTarget === 'all' ? usersWithPhone : usersWithPhone.filter(u => selectedWhatsappPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
