@@ -6855,6 +6855,11 @@ function Dashboard() {
             )}
           </div>
 
+          {activeTab === 'msg_analytics' && (
+            <div className="w-full max-w-[1200px] min-w-0">
+              <MessagingAnalytics ownerId={session?.user?.id || ''} />
+            </div>
+          )}
 
           {activeTab === 'financeiro' && (
             <div className="w-full max-w-2xl min-w-0 space-y-5">
