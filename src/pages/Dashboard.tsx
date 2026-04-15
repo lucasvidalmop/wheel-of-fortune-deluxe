@@ -4495,18 +4495,63 @@ function Dashboard() {
                       <button onClick={fetchWaContacts} disabled={waContactsLoading} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-green-500/30 bg-green-500/5 text-sm text-green-400 hover:text-green-300 hover:border-green-400/40 transition disabled:opacity-50">
                         {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
                       </button>
+                      <button onClick={() => setShowCreateGroup(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-primary/30 bg-primary/5 text-sm text-primary hover:text-primary/80 transition">
+                        <Plus size={14} /> Criar Grupo
+                      </button>
                       {csvContacts.length > 0 && (
-                        <button onClick={clearPersistedCsvContacts} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
-                          <X size={14} />
+                        <button onClick={() => clearPersistedCsvContacts(selectedGroup !== '__all__' ? selectedGroup : undefined)} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title={selectedGroup !== '__all__' ? `Remover grupo "${selectedGroup}"` : 'Limpar todos'}>
+                          <Trash2 size={14} />
                         </button>
                       )}
                     </div>
+
+                    {contactGroups.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button onClick={() => setSelectedGroup('__all__')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === '__all__' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                            Todos ({csvContacts.length})
+                          </button>
+                          {contactGroups.map(g => (
+                            <button key={g} onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                              {g} ({csvContacts.filter(c => c.group_name === g).length})
+                            </button>
+                          ))}
+                          {csvContacts.filter(c => !c.group_name).length > 0 && (
+                            <button onClick={() => setSelectedGroup('')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === '' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                              Sem grupo ({csvContacts.filter(c => !c.group_name).length})
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground">Importar para:</span>
+                          <select value={importTargetGroup} onChange={e => setImportTargetGroup(e.target.value)} className="px-2 py-1 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary/40">
+                            <option value="">Sem grupo</option>
+                            {contactGroups.map(g => <option key={g} value={g}>{g}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {showCreateGroup && (
+                      <div className="flex items-center gap-2 p-3 rounded-xl border border-primary/20 bg-primary/5">
+                        <input type="text" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreateGroup()} placeholder="Nome do grupo..." className="flex-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" autoFocus />
+                        <button onClick={handleCreateGroup} className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition">Criar</button>
+                        <button onClick={() => { setShowCreateGroup(false); setNewGroupName(''); }} className="px-2 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground transition"><X size={14} /></button>
+                      </div>
+                    )}
+
                     <p className="text-[10px] text-muted-foreground">CSV: colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code> · Contatos sincronizados entre SMS e WhatsApp</p>
 
                     {(() => {
-                      const merged = [...csvContacts];
-                      const existingNums = new Set(csvContacts.map(c => c.numero));
-                      for (const wc of waContacts) { if (!existingNums.has(wc.numero)) merged.push(wc); }
+                      let groupFiltered = csvContacts;
+                      if (selectedGroup !== '__all__') {
+                        groupFiltered = csvContacts.filter(c => c.group_name === selectedGroup);
+                      }
+                      const merged: { lead: string; numero: string; group_name: string }[] = [...groupFiltered];
+                      if (selectedGroup === '__all__') {
+                        const existingNums = new Set(csvContacts.map(c => c.numero));
+                        for (const wc of waContacts) { if (!existingNums.has(wc.numero)) merged.push({ ...wc, group_name: '' }); }
+                      }
                       const filtered = csvSearchTerm ? merged.filter(c => c.lead.toLowerCase().includes(csvSearchTerm.toLowerCase()) || c.numero.includes(csvSearchTerm)) : merged;
                       const allSelected = filtered.length > 0 && filtered.every(c => selectedCsvContacts.includes(c.numero));
                       if (merged.length === 0) return null;
@@ -4520,13 +4565,14 @@ function Dashboard() {
                                 else setSelectedCsvContacts(prev => prev.filter(n => !filtered.some(c => c.numero === n)));
                               }} className="rounded border-white/20" />
                               <span className="text-sm font-medium text-foreground">Selecionar todos</span>
-                              <span className="text-xs text-muted-foreground ml-auto">{selectedCsvContacts.length}/{merged.length}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{selectedCsvContacts.filter(n => filtered.some(c => c.numero === n)).length}/{merged.length}</span>
                             </label>
                             <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
                               {filtered.map((c, i) => (
                                 <label key={`${c.numero}-${i}`} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
                                   <input type="checkbox" checked={selectedCsvContacts.includes(c.numero)} onChange={e => { if (e.target.checked) setSelectedCsvContacts(prev => [...prev, c.numero]); else setSelectedCsvContacts(prev => prev.filter(n => n !== c.numero)); }} className="rounded border-white/20" />
                                   <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
+                                  {c.group_name && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{c.group_name}</span>}
                                   <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
                                 </label>
                               ))}
