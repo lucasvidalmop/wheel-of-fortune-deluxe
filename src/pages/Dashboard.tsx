@@ -1436,7 +1436,7 @@ function Dashboard() {
     toast.success(`Grupo "${groupName}" removido`);
   };
 
-
+  const fetchWaContacts = async () => {
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure a Evolution API primeiro'); return; }
     setWaContactsLoading(true);
     try {
