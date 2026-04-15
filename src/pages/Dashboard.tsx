@@ -1306,12 +1306,8 @@ function Dashboard() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [importTargetGroup, setImportTargetGroup] = useState('');
-
-  // Derive groups from contacts
-  useEffect(() => {
-    const groups = [...new Set(csvContacts.map(c => c.group_name).filter(g => g))];
-    setContactGroups(groups);
-  }, [csvContacts]);
+  const [editingGroup, setEditingGroup] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
 
   // WhatsApp contacts from Evolution API
   const [waContacts, setWaContacts] = useState<{ lead: string; numero: string }[]>([]);
