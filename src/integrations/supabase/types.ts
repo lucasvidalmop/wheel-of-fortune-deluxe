@@ -140,6 +140,7 @@ export type Database = {
       imported_contacts: {
         Row: {
           created_at: string
+          group_name: string
           id: string
           lead: string
           numero: string
@@ -147,6 +148,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          group_name?: string
           id?: string
           lead?: string
           numero: string
@@ -154,6 +156,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          group_name?: string
           id?: string
           lead?: string
           numero?: string
