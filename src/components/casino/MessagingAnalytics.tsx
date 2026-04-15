@@ -1,6 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar } from 'lucide-react';
+import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
@@ -33,6 +38,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
   const [channel, setChannel] = useState<ChannelFilter>('all');
   const [period, setPeriod] = useState<PeriodFilter>('30d');
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -68,21 +74,26 @@ export default function MessagingAnalytics({ ownerId }: Props) {
   useEffect(() => { if (ownerId) fetchAll(); }, [ownerId]);
 
   const cutoffDate = useMemo(() => {
+    if (selectedDate) return null; // selectedDate overrides period
     if (period === 'all') return null;
     const d = new Date();
     d.setDate(d.getDate() - (period === '7d' ? 7 : period === '30d' ? 30 : 90));
     return d;
-  }, [period]);
+  }, [period, selectedDate]);
 
-  const filteredSms = useMemo(() => {
-    if (!cutoffDate) return smsLogs;
-    return smsLogs.filter(l => new Date(l.created_at) >= cutoffDate);
-  }, [smsLogs, cutoffDate]);
+  const filterByDate = (logs: LogEntry[]) => {
+    let result = logs;
+    if (selectedDate) {
+      const dayStr = selectedDate.toISOString().split('T')[0];
+      result = result.filter(l => new Date(l.created_at).toISOString().split('T')[0] === dayStr);
+    } else if (cutoffDate) {
+      result = result.filter(l => new Date(l.created_at) >= cutoffDate);
+    }
+    return result;
+  };
 
-  const filteredWa = useMemo(() => {
-    if (!cutoffDate) return waLogs;
-    return waLogs.filter(l => new Date(l.created_at) >= cutoffDate);
-  }, [waLogs, cutoffDate]);
+  const filteredSms = useMemo(() => filterByDate(smsLogs), [smsLogs, cutoffDate, selectedDate]);
+  const filteredWa = useMemo(() => filterByDate(waLogs), [waLogs, cutoffDate, selectedDate]);
 
   const allFiltered = useMemo(() => {
     const arr = [
@@ -203,11 +214,40 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           { key: '90d', label: '90 dias' },
           { key: 'all', label: 'Tudo' },
         ] as const).map(p => (
-          <button key={p.key} onClick={() => setPeriod(p.key)}
-            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${period === p.key ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.08]'}`}>
+          <button key={p.key} onClick={() => { setPeriod(p.key); setSelectedDate(undefined); }}
+            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${period === p.key && !selectedDate ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.08]'}`}>
             {p.label}
           </button>
         ))}
+        {/* Calendar picker */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className={cn(
+              'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border',
+              selectedDate
+                ? 'bg-primary/15 text-primary border-primary/20'
+                : 'bg-white/[0.04] border-white/[0.08] text-muted-foreground hover:bg-white/[0.08]'
+            )}>
+              <CalendarIcon size={12} />
+              {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'Dia específico'}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => { setSelectedDate(d); }}
+              disabled={(date) => date > new Date()}
+              locale={ptBR}
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+        {selectedDate && (
+          <button onClick={() => setSelectedDate(undefined)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition" title="Limpar filtro de data">
+            <X size={14} />
+          </button>
+        )}
         <button onClick={fetchAll} className="ml-auto p-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition" title="Atualizar">
           <RotateCcw size={14} />
         </button>
@@ -264,23 +304,35 @@ export default function MessagingAnalytics({ ownerId }: Props) {
       {/* Daily bar chart */}
       <GlassCard className="p-5 space-y-3">
         <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <Calendar size={16} className="text-primary" /> Envios por Dia
+         <CalendarIcon size={16} className="text-primary" /> Envios por Dia
+         {selectedDate && <span className="text-[10px] text-primary font-normal ml-1">— {format(selectedDate, 'dd/MM/yyyy')}</span>}
         </h3>
         <div className="flex items-end gap-1 h-[140px]">
           {dailyData.map((d, i) => {
             const total = d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail;
             const sentH = ((d.sms_sent + d.wa_sent) / maxDaily) * 100;
             const failH = ((d.sms_fail + d.wa_fail) / maxDaily) * 100;
+            const isSelected = selectedDate && d.date === selectedDate.toISOString().split('T')[0];
             return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+              <div key={i} className={cn(
+                "flex-1 flex flex-col items-center gap-1 group relative cursor-pointer transition-all",
+                isSelected && "ring-1 ring-primary/40 rounded-lg bg-primary/[0.06]"
+              )} onClick={() => {
+                const clickDate = new Date(d.date + 'T12:00:00');
+                if (selectedDate && d.date === selectedDate.toISOString().split('T')[0]) {
+                  setSelectedDate(undefined);
+                } else {
+                  setSelectedDate(clickDate);
+                }
+              }}>
                 <div className="w-full flex flex-col justify-end" style={{ height: 120 }}>
                   {failH > 0 && <div className="w-full rounded-t bg-red-400/60 transition-all" style={{ height: `${failH}%`, minHeight: failH > 0 ? 2 : 0 }} />}
                   {sentH > 0 && <div className={`w-full ${failH > 0 ? '' : 'rounded-t'} rounded-b bg-primary/70 transition-all`} style={{ height: `${sentH}%`, minHeight: sentH > 0 ? 2 : 0 }} />}
                 </div>
-                <span className="text-[8px] text-muted-foreground/60 leading-none">{d.label}</span>
+                <span className={cn("text-[8px] leading-none", isSelected ? "text-primary font-bold" : "text-muted-foreground/60")}>{d.label}</span>
                 {total > 0 && (
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-background border border-white/[0.12] rounded-lg px-2 py-1 text-[10px] text-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-                    {total} msg{total > 1 ? 's' : ''}
+                    {total} msg{total > 1 ? 's' : ''} — clique para filtrar
                   </div>
                 )}
               </div>
