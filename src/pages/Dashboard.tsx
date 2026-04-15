@@ -680,7 +680,53 @@ function Dashboard() {
     fetchSmsLogs();
   };
 
-  const fetchBulkSentPhones = async () => {
+  const fetchSmsScheduled = async () => {
+    if (!session?.user?.id) return;
+    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).eq('channel', 'sms' as any).order('next_run_at', { ascending: true });
+    setSmsScheduledList(data || []);
+  };
+
+  const saveSmsSchedule = async () => {
+    if (!session?.user?.id) return;
+    if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
+    if (!smsSchedDate) { toast.error('Selecione a data'); return; }
+    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+    const phones = smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone));
+    const targetPhones = smsTarget === 'all' ? usersWithPhone.map(u => ({ phone: u.phone, name: u.name })) : users.filter(u => selectedPhones.includes(u.phone)).map(u => ({ phone: u.phone, name: u.name }));
+    if (targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
+    setSmsSchedSaving(true);
+    const [h, m] = smsSchedTime.split(':').map(Number);
+    const scheduledAt = new Date(smsSchedDate);
+    scheduledAt.setHours(h, m, 0, 0);
+    const rows = targetPhones.map(t => ({
+      owner_id: session.user.id,
+      message: smsMessage,
+      recipient_type: 'individual',
+      recipient_value: t.phone,
+      recipient_label: t.name,
+      scheduled_at: scheduledAt.toISOString(),
+      next_run_at: scheduledAt.toISOString(),
+      recurrence: smsSchedRecurrence,
+      channel: 'sms',
+    }));
+    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    setSmsSchedSaving(false);
+    if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
+    toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    setSmsScheduleMode(false);
+    setSmsSchedDate(undefined);
+    setSmsSchedTime('12:00');
+    setSmsSchedRecurrence('none');
+    fetchSmsScheduled();
+  };
+
+  const cancelSmsSchedule = async (id: string) => {
+    await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).eq('id', id);
+    toast.success('Agendamento cancelado');
+    fetchSmsScheduled();
+  };
+
+
     if (!session?.user?.id) return;
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data } = await (supabase as any)
