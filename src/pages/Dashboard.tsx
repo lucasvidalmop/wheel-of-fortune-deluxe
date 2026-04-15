@@ -4393,16 +4393,21 @@ function Dashboard() {
               <button
                 onClick={async () => {
                   if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
-                  const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
-                  const phones = whatsappTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedWhatsappPhones.filter(p => !excludeBulkSent || !bulkSentPhones.has(p));
+                  let waPhoneList: { phone: string; name: string }[] = [];
+                  if (whatsappSourceMode === 'csv') {
+                    waPhoneList = whatsappCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                  } else {
+                    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
+                    waPhoneList = (whatsappTarget === 'all' ? usersWithPhone : usersWithPhone.filter(u => selectedWhatsappPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+                  }
+                  const phones = waPhoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                   setWhatsappSending(true);
                   let sent = 0, errors = 0;
-                  const allUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                   for (let i = 0; i < phones.length; i++) {
                     const phone = phones[i];
-                    const matchedUser = allUsers.find(u => u.phone === phone);
+                    const matchedUser = waPhoneList.find(p => p.phone === phone);
                     try {
                       const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined } });
                       const hasError = !!error || !!respData?.error;
