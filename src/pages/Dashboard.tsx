@@ -690,9 +690,13 @@ function Dashboard() {
     if (!session?.user?.id) return;
     if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
     if (!smsSchedDate) { toast.error('Selecione a data'); return; }
-    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-    const phones = smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone));
-    const targetPhones = smsTarget === 'all' ? usersWithPhone.map(u => ({ phone: u.phone, name: u.name })) : users.filter(u => selectedPhones.includes(u.phone)).map(u => ({ phone: u.phone, name: u.name }));
+    let targetPhones: { phone: string; name: string }[] = [];
+    if (smsSourceMode === 'csv') {
+      targetPhones = smsCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+    } else {
+      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+      targetPhones = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+    }
     if (targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
     setSmsSchedSaving(true);
     const [h, m] = smsSchedTime.split(':').map(Number);
@@ -1285,6 +1289,66 @@ function Dashboard() {
       toast.error('Erro ao salvar: ' + (err?.message || 'desconhecido'));
     }
     setSavingConfig(false);
+  };
+
+  // CSV external contacts state
+  const [smsSourceMode, setSmsSourceMode] = useState<'base' | 'csv'>('base');
+  const [smsCsvContacts, setSmsCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const smsCsvInputRef = useRef<HTMLInputElement>(null);
+  const [whatsappSourceMode, setWhatsappSourceMode] = useState<'base' | 'csv'>('base');
+  const [whatsappCsvContacts, setWhatsappCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const whatsappCsvInputRef = useRef<HTMLInputElement>(null);
+
+  const parseCsvContacts = (file: File): Promise<{ lead: string; numero: string }[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (lines.length < 2) { reject(new Error('CSV vazio')); return; }
+          const header = lines[0].toLowerCase().split(/[;,\t]/).map(h => h.trim());
+          const leadIdx = header.findIndex(h => h === 'lead' || h === 'nome' || h === 'name');
+          const numIdx = header.findIndex(h => h === 'numero' || h === 'telefone' || h === 'phone' || h === 'number');
+          if (numIdx === -1) { reject(new Error('Coluna "numero" não encontrada no CSV')); return; }
+          const contacts: { lead: string; numero: string }[] = [];
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(/[;,\t]/).map(c => c.trim());
+            const numero = cols[numIdx]?.replace(/\D/g, '') || '';
+            if (numero.length >= 10) {
+              contacts.push({ lead: leadIdx >= 0 ? (cols[leadIdx] || '') : '', numero });
+            }
+          }
+          resolve(contacts);
+        } catch (err) { reject(err); }
+      };
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsText(file);
+    });
+  };
+
+  const handleSmsCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const contacts = await parseCsvContacts(file);
+      if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
+      setSmsCsvContacts(contacts);
+      toast.success(`${contacts.length} contato(s) importado(s)`);
+    } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
+    if (smsCsvInputRef.current) smsCsvInputRef.current.value = '';
+  };
+
+  const handleWhatsappCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const contacts = await parseCsvContacts(file);
+      if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
+      setWhatsappCsvContacts(contacts);
+      toast.success(`${contacts.length} contato(s) importado(s)`);
+    } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
+    if (whatsappCsvInputRef.current) whatsappCsvInputRef.current.value = '';
   };
 
 
@@ -3592,61 +3656,84 @@ function Dashboard() {
 
               <GlassCard className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
+                {/* Source mode toggle */}
                 <div className="flex gap-2">
-                  <button onClick={() => { setSmsTarget('all'); setSelectedPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length})
+                  <button onClick={() => setSmsSourceMode('base')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsSourceMode === 'base' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    📋 Base
                   </button>
-                  <button onClick={() => setSmsTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Selecionar ({selectedPhones.length})
+                  <button onClick={() => setSmsSourceMode('csv')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsSourceMode === 'csv' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    <span className="flex items-center justify-center gap-1.5"><Upload size={14} /> CSV Externo</span>
                   </button>
                 </div>
-                {smsTarget === 'selected' && (() => {
-                  const smsUsersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-                  const smsFilteredUsers = smsSearchTerm
-                    ? smsUsersWithPhone.filter(u => u.name.toLowerCase().includes(smsSearchTerm.toLowerCase()) || u.phone.includes(smsSearchTerm))
-                    : smsUsersWithPhone;
-                  const allFilteredSelected = smsFilteredUsers.length > 0 && smsFilteredUsers.every(u => selectedPhones.includes(u.phone));
-                  return (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={smsSearchTerm}
-                        onChange={e => setSmsSearchTerm(e.target.value)}
-                        placeholder="Pesquisar por nome ou telefone..."
-                        className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
-                      />
-                      <div className="flex items-center gap-2 px-1">
-                        <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition">
-                          <input
-                            type="checkbox"
-                            checked={allFilteredSelected}
-                            onChange={e => {
-                              if (e.target.checked) {
-                                const newPhones = new Set([...selectedPhones, ...smsFilteredUsers.map(u => u.phone)]);
-                                setSelectedPhones(Array.from(newPhones));
-                              } else {
-                                const removeSet = new Set(smsFilteredUsers.map(u => u.phone));
-                                setSelectedPhones(selectedPhones.filter(p => !removeSet.has(p)));
-                              }
-                            }}
-                            className="rounded border-white/20"
-                          />
-                          Selecionar todos ({smsFilteredUsers.length})
-                        </label>
-                      </div>
-                      <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
-                        {smsFilteredUsers.map(u => (
-                          <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                            <input type="checkbox" checked={selectedPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedPhones([...selectedPhones, u.phone]); else setSelectedPhones(selectedPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
-                            <span className="text-sm text-foreground">{u.name}</span>
-                            <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
-                          </label>
-                        ))}
-                        {smsFilteredUsers.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">Nenhum resultado</p>}
-                      </div>
+
+                {smsSourceMode === 'base' ? (
+                  <>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setSmsTarget('all'); setSelectedPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length})
+                      </button>
+                      <button onClick={() => setSmsTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Selecionar ({selectedPhones.length})
+                      </button>
                     </div>
-                  );
-                })()}
+                    {smsTarget === 'selected' && (() => {
+                      const smsUsersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                      const smsFilteredUsers = smsSearchTerm
+                        ? smsUsersWithPhone.filter(u => u.name.toLowerCase().includes(smsSearchTerm.toLowerCase()) || u.phone.includes(smsSearchTerm))
+                        : smsUsersWithPhone;
+                      const allFilteredSelected = smsFilteredUsers.length > 0 && smsFilteredUsers.every(u => selectedPhones.includes(u.phone));
+                      return (
+                        <div className="space-y-2">
+                          <input type="text" value={smsSearchTerm} onChange={e => setSmsSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou telefone..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                          <div className="flex items-center gap-2 px-1">
+                            <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition">
+                              <input type="checkbox" checked={allFilteredSelected} onChange={e => { if (e.target.checked) { const newPhones = new Set([...selectedPhones, ...smsFilteredUsers.map(u => u.phone)]); setSelectedPhones(Array.from(newPhones)); } else { const removeSet = new Set(smsFilteredUsers.map(u => u.phone)); setSelectedPhones(selectedPhones.filter(p => !removeSet.has(p))); } }} className="rounded border-white/20" />
+                              Selecionar todos ({smsFilteredUsers.length})
+                            </label>
+                          </div>
+                          <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
+                            {smsFilteredUsers.map(u => (
+                              <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                <input type="checkbox" checked={selectedPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedPhones([...selectedPhones, u.phone]); else setSelectedPhones(selectedPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                                <span className="text-sm text-foreground">{u.name}</span>
+                                <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                              </label>
+                            ))}
+                            {smsFilteredUsers.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">Nenhum resultado</p>}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input ref={smsCsvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleSmsCsvUpload} />
+                      <button onClick={() => smsCsvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
+                        <Upload size={14} /> Importar CSV
+                      </button>
+                      {smsCsvContacts.length > 0 && (
+                        <button onClick={() => setSmsCsvContacts([])} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition">
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Formato: CSV com colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code></p>
+                    {smsCsvContacts.length > 0 && (
+                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                        <div className="px-3 py-2 border-b border-white/[0.08] bg-white/[0.04] text-xs font-medium text-foreground">{smsCsvContacts.length} contato(s) importado(s)</div>
+                        <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                          {smsCsvContacts.map((c, i) => (
+                            <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
+                              <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </GlassCard>
 
               <GlassCard className="p-5 space-y-3">
@@ -3713,8 +3800,14 @@ function Dashboard() {
               <button
                 onClick={async () => {
                   if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
-                  const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-                  const phones = smsTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedPhones;
+                  let phoneList: { phone: string; name: string }[] = [];
+                  if (smsSourceMode === 'csv') {
+                    phoneList = smsCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                  } else {
+                    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                    phoneList = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+                  }
+                  const phones = phoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setSmsSending(true);
@@ -3738,7 +3831,7 @@ function Dashboard() {
                       for (let j = 0; j < results.length; j++) {
                         const r = results[j];
                         const phone = batch[j];
-                        const user = users.find(u => u.phone === phone);
+                        const user = users.find(u => u.phone === phone) || phoneList.find(p => p.phone === phone);
                         if (r.status === 'fulfilled' && !r.value.error) {
                           sent++;
                           smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent' });
@@ -4156,67 +4249,100 @@ function Dashboard() {
 
               <GlassCard className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={excludeBulkSent} onChange={e => { setExcludeBulkSent(e.target.checked); if (e.target.checked) fetchBulkSentPhones(); }} className="rounded border-white/20" />
-                  <span className="text-xs text-muted-foreground">Excluir quem já recebeu disparo (24h)</span>
-                  {excludeBulkSent && bulkSentPhones.size > 0 && <span className="text-xs text-yellow-400">({bulkSentPhones.size} excluídos)</span>}
-                  {excludeBulkSent && bulkSentCountdown && (
-                    <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">⏱ {bulkSentCountdown}</span>
-                  )}
-                </label>
+                {/* Source mode toggle */}
                 <div className="flex gap-2">
-                  <button onClick={() => { setWhatsappTarget('all'); setSelectedWhatsappPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone))).length})
+                  <button onClick={() => setWhatsappSourceMode('base')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappSourceMode === 'base' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    📋 Base
                   </button>
-                  <button onClick={() => setWhatsappTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Selecionar ({selectedWhatsappPhones.length})
+                  <button onClick={() => setWhatsappSourceMode('csv')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappSourceMode === 'csv' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    <span className="flex items-center justify-center gap-1.5"><Upload size={14} /> CSV Externo</span>
                   </button>
                 </div>
-                {whatsappTarget === 'selected' && (
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        type="text"
-                        value={whatsappSearch}
-                        onChange={e => setWhatsappSearch(e.target.value)}
-                        placeholder="Buscar por nome ou telefone..."
-                        className="w-full pl-8 pr-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 placeholder:text-muted-foreground"
-                      />
+
+                {whatsappSourceMode === 'base' ? (
+                  <>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={excludeBulkSent} onChange={e => { setExcludeBulkSent(e.target.checked); if (e.target.checked) fetchBulkSentPhones(); }} className="rounded border-white/20" />
+                      <span className="text-xs text-muted-foreground">Excluir quem já recebeu disparo (24h)</span>
+                      {excludeBulkSent && bulkSentPhones.size > 0 && <span className="text-xs text-yellow-400">({bulkSentPhones.size} excluídos)</span>}
+                      {excludeBulkSent && bulkSentCountdown && (
+                        <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">⏱ {bulkSentCountdown}</span>
+                      )}
+                    </label>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setWhatsappTarget('all'); setSelectedWhatsappPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone))).length})
+                      </button>
+                      <button onClick={() => setWhatsappTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Selecionar ({selectedWhatsappPhones.length})
+                      </button>
                     </div>
-                    {(() => {
-                      const filteredWhatsappUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone))).filter(u => {
-                        if (!whatsappSearch.trim()) return true;
-                        const q = whatsappSearch.toLowerCase();
-                        return u.name.toLowerCase().includes(q) || u.phone.includes(q);
-                      });
-                      const filteredPhones = filteredWhatsappUsers.map(u => u.phone);
-                      const allFilteredSelected = filteredPhones.length > 0 && filteredPhones.every(p => selectedWhatsappPhones.includes(p));
-                      return (
-                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
-                          <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
-                            <input type="checkbox" checked={allFilteredSelected} onChange={e => {
-                              if (e.target.checked) {
-                                setSelectedWhatsappPhones(prev => [...new Set([...prev, ...filteredPhones])]);
-                              } else {
-                                setSelectedWhatsappPhones(prev => prev.filter(p => !filteredPhones.includes(p)));
-                              }
-                            }} className="rounded border-white/20" />
-                            <span className="text-sm font-medium text-foreground">Selecionar todos</span>
-                            <span className="text-xs text-muted-foreground ml-auto">{filteredPhones.length} contatos</span>
-                          </label>
-                          <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
-                            {filteredWhatsappUsers.map(u => (
-                              <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                                <input type="checkbox" checked={selectedWhatsappPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]); else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
-                                <span className="text-sm text-foreground">{u.name}</span>
-                                <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
-                              </label>
-                            ))}
-                          </div>
+                    {whatsappTarget === 'selected' && (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <input type="text" value={whatsappSearch} onChange={e => setWhatsappSearch(e.target.value)} placeholder="Buscar por nome ou telefone..." className="w-full pl-8 pr-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 placeholder:text-muted-foreground" />
                         </div>
-                      );
-                    })()}
+                        {(() => {
+                          const filteredWhatsappUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone))).filter(u => {
+                            if (!whatsappSearch.trim()) return true;
+                            const q = whatsappSearch.toLowerCase();
+                            return u.name.toLowerCase().includes(q) || u.phone.includes(q);
+                          });
+                          const filteredPhones = filteredWhatsappUsers.map(u => u.phone);
+                          const allFilteredSelected = filteredPhones.length > 0 && filteredPhones.every(p => selectedWhatsappPhones.includes(p));
+                          return (
+                            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                              <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
+                                <input type="checkbox" checked={allFilteredSelected} onChange={e => {
+                                  if (e.target.checked) { setSelectedWhatsappPhones(prev => [...new Set([...prev, ...filteredPhones])]); }
+                                  else { setSelectedWhatsappPhones(prev => prev.filter(p => !filteredPhones.includes(p))); }
+                                }} className="rounded border-white/20" />
+                                <span className="text-sm font-medium text-foreground">Selecionar todos</span>
+                                <span className="text-xs text-muted-foreground ml-auto">{filteredPhones.length} contatos</span>
+                              </label>
+                              <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                                {filteredWhatsappUsers.map(u => (
+                                  <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                    <input type="checkbox" checked={selectedWhatsappPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]); else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                                    <span className="text-sm text-foreground">{u.name}</span>
+                                    <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input ref={whatsappCsvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleWhatsappCsvUpload} />
+                      <button onClick={() => whatsappCsvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
+                        <Upload size={14} /> Importar CSV
+                      </button>
+                      {whatsappCsvContacts.length > 0 && (
+                        <button onClick={() => setWhatsappCsvContacts([])} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition">
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Formato: CSV com colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code></p>
+                    {whatsappCsvContacts.length > 0 && (
+                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                        <div className="px-3 py-2 border-b border-white/[0.08] bg-white/[0.04] text-xs font-medium text-foreground">{whatsappCsvContacts.length} contato(s) importado(s)</div>
+                        <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                          {whatsappCsvContacts.map((c, i) => (
+                            <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
+                              <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </GlassCard>
@@ -4271,16 +4397,21 @@ function Dashboard() {
               <button
                 onClick={async () => {
                   if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
-                  const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
-                  const phones = whatsappTarget === 'all' ? usersWithPhone.map(u => u.phone) : selectedWhatsappPhones.filter(p => !excludeBulkSent || !bulkSentPhones.has(p));
+                  let waPhoneList: { phone: string; name: string }[] = [];
+                  if (whatsappSourceMode === 'csv') {
+                    waPhoneList = whatsappCsvContacts.map(c => ({ phone: c.numero, name: c.lead }));
+                  } else {
+                    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
+                    waPhoneList = (whatsappTarget === 'all' ? usersWithPhone : usersWithPhone.filter(u => selectedWhatsappPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+                  }
+                  const phones = waPhoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                   setWhatsappSending(true);
                   let sent = 0, errors = 0;
-                  const allUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                   for (let i = 0; i < phones.length; i++) {
                     const phone = phones[i];
-                    const matchedUser = allUsers.find(u => u.phone === phone);
+                    const matchedUser = waPhoneList.find(p => p.phone === phone);
                     try {
                       const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined } });
                       const hasError = !!error || !!respData?.error;
