@@ -369,6 +369,7 @@ export type Database = {
       }
       scheduled_messages: {
         Row: {
+          channel: string
           created_at: string
           id: string
           last_sent_at: string | null
@@ -389,6 +390,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          channel?: string
           created_at?: string
           id?: string
           last_sent_at?: string | null
@@ -409,6 +411,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          channel?: string
           created_at?: string
           id?: string
           last_sent_at?: string | null
