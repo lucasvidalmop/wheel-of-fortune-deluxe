@@ -3655,6 +3655,61 @@ function Dashboard() {
                 <p className="text-[10px] text-muted-foreground">{smsMessage.length}/160 caracteres</p>
               </GlassCard>
 
+              {/* Schedule toggle */}
+              <GlassCard className="p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><CalendarIcon size={16} className="text-primary" /> Agendar envio</h3>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-xs text-muted-foreground">{smsScheduleMode ? 'Agendado' : 'Enviar agora'}</span>
+                    <button onClick={() => setSmsScheduleMode(!smsScheduleMode)} className={`relative w-10 h-5 rounded-full transition-colors ${smsScheduleMode ? 'bg-primary' : 'bg-white/[0.12]'}`}>
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${smsScheduleMode ? 'translate-x-5' : ''}`} />
+                    </button>
+                  </label>
+                </div>
+                {smsScheduleMode && (
+                  <div className="space-y-3 pt-2">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Data</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left flex items-center gap-2">
+                              <CalendarIcon size={14} className="text-muted-foreground" />
+                              {smsSchedDate ? smsSchedDate.toLocaleDateString('pt-BR') : 'Selecionar'}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={smsSchedDate} onSelect={setSmsSchedDate} initialFocus className="p-3 pointer-events-auto" />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Hora</label>
+                        <input type="time" value={smsSchedTime} onChange={e => setSmsSchedTime(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Recorrência</label>
+                      <select value={smsSchedRecurrence} onChange={e => setSmsSchedRecurrence(e.target.value as any)} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40">
+                        <option value="none">Sem recorrência</option>
+                        <option value="daily">Diário</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensal</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </GlassCard>
+
+              {smsScheduleMode ? (
+                <button
+                  onClick={saveSmsSchedule}
+                  disabled={smsSchedSaving}
+                  className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                >
+                  {smsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
+                </button>
+              ) : (
               <button
                 onClick={async () => {
                   if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
@@ -3697,7 +3752,6 @@ function Dashboard() {
                   } catch (e) {
                     console.error('SMS batch error:', e);
                   }
-                  // Log all SMS sends
                   if (smsLogEntries.length > 0) {
                     await (supabase as any).from('sms_message_log').insert(smsLogEntries);
                   }
@@ -3712,6 +3766,46 @@ function Dashboard() {
               >
                 {smsSending ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar SMS</>}
               </button>
+              )}
+
+              {showSmsScheduledList && (
+                <GlassCard className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><CalendarIcon size={16} className="text-primary" /> SMS Agendados</h3>
+                    <button onClick={fetchSmsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                  </div>
+                  {smsScheduledList.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">Nenhum SMS agendado</p>
+                  ) : (
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                      {smsScheduledList.map((m: any) => (
+                        <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-foreground truncate">{m.recipient_label || m.recipient_value}</p>
+                              <p className="text-muted-foreground line-clamp-2 mt-0.5">{m.message}</p>
+                            </div>
+                            <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${m.status === 'pending' ? 'bg-primary/20 text-primary' : m.status === 'sent' ? 'bg-green-500/20 text-green-400' : m.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' : 'bg-red-500/20 text-red-400'}`}>
+                                {m.status === 'pending' ? 'Pendente' : m.status === 'sent' ? 'Enviado' : m.status === 'cancelled' ? 'Cancelado' : 'Falhou'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center pt-1">
+                            <span className="text-muted-foreground">
+                              📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleDateString('pt-BR')} {new Date(m.next_run_at || m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              {m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}
+                            </span>
+                            {m.status === 'pending' && (
+                              <button onClick={() => cancelSmsSchedule(m.id)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
             </div>
           )}
 
