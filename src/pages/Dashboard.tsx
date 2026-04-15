@@ -3731,31 +3731,55 @@ function Dashboard() {
                   </>
                 ) : (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <input ref={csvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvUpload} />
                       <button onClick={() => csvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
                         <Upload size={14} /> Importar CSV
                       </button>
+                      <button onClick={fetchWaContacts} disabled={waContactsLoading} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-green-500/30 bg-green-500/5 text-sm text-green-400 hover:text-green-300 hover:border-green-400/40 transition disabled:opacity-50">
+                        {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
+                      </button>
                       {csvContacts.length > 0 && (
-                        <button onClick={() => setCsvContacts([])} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition">
+                        <button onClick={() => { setCsvContacts([]); setSelectedCsvContacts([]); }} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title="Limpar contatos">
                           <X size={14} />
                         </button>
                       )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Formato: CSV com colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code></p>
-                    {csvContacts.length > 0 && (
-                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
-                        <div className="px-3 py-2 border-b border-white/[0.08] bg-white/[0.04] text-xs font-medium text-foreground">{csvContacts.length} contato(s) importado(s)</div>
-                        <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
-                          {csvContacts.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
-                              <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
-                              <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                    <p className="text-[10px] text-muted-foreground">CSV: colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code> · Contatos sincronizados entre SMS e WhatsApp</p>
+
+                    {/* Merged list: CSV + WhatsApp contacts */}
+                    {(() => {
+                      const merged = [...csvContacts];
+                      const existingNums = new Set(csvContacts.map(c => c.numero));
+                      for (const wc of waContacts) { if (!existingNums.has(wc.numero)) merged.push(wc); }
+                      const filtered = csvSearchTerm ? merged.filter(c => c.lead.toLowerCase().includes(csvSearchTerm.toLowerCase()) || c.numero.includes(csvSearchTerm)) : merged;
+                      const allSelected = filtered.length > 0 && filtered.every(c => selectedCsvContacts.includes(c.numero));
+                      if (merged.length === 0) return null;
+                      return (
+                        <div className="space-y-2">
+                          <input type="text" value={csvSearchTerm} onChange={e => setCsvSearchTerm(e.target.value)} placeholder="Buscar por nome ou número..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                            <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
+                              <input type="checkbox" checked={allSelected} onChange={e => {
+                                if (e.target.checked) setSelectedCsvContacts(prev => [...new Set([...prev, ...filtered.map(c => c.numero)])]);
+                                else setSelectedCsvContacts(prev => prev.filter(n => !filtered.some(c => c.numero === n)));
+                              }} className="rounded border-white/20" />
+                              <span className="text-sm font-medium text-foreground">Selecionar todos</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{selectedCsvContacts.length}/{merged.length}</span>
+                            </label>
+                            <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                              {filtered.map((c, i) => (
+                                <label key={`${c.numero}-${i}`} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                  <input type="checkbox" checked={selectedCsvContacts.includes(c.numero)} onChange={e => { if (e.target.checked) setSelectedCsvContacts(prev => [...prev, c.numero]); else setSelectedCsvContacts(prev => prev.filter(n => n !== c.numero)); }} className="rounded border-white/20" />
+                                  <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
+                                  <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                                </label>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
               </GlassCard>
