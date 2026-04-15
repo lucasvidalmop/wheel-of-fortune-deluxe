@@ -1408,7 +1408,35 @@ function Dashboard() {
     toast.success(`Grupo "${name}" criado. Importe um CSV para adicionar contatos.`);
   };
 
-  const fetchWaContacts = async () => {
+  const handleRenameGroup = async (oldName: string) => {
+    const newName = editingGroupName.trim();
+    if (!newName) { toast.error('Digite um nome'); return; }
+    if (newName === oldName) { setEditingGroup(null); return; }
+    if (contactGroups.includes(newName)) { toast.error('Grupo já existe'); return; }
+    setCsvContacts(prev => prev.map(c => c.group_name === oldName ? { ...c, group_name: newName } : c));
+    if (selectedGroup === oldName) setSelectedGroup(newName);
+    if (importTargetGroup === oldName) setImportTargetGroup(newName);
+    if (session?.user?.id) {
+      await (supabase as any).from('imported_contacts').update({ group_name: newName }).eq('owner_id', session.user.id).eq('group_name', oldName);
+    }
+    setEditingGroup(null);
+    toast.success(`Grupo renomeado para "${newName}"`);
+  };
+
+  const handleDeleteGroup = async (groupName: string) => {
+    setCsvContacts(prev => prev.filter(c => c.group_name !== groupName));
+    setSelectedCsvContacts(prev => {
+      const numsInGroup = new Set(csvContacts.filter(c => c.group_name === groupName).map(c => c.numero));
+      return prev.filter(n => !numsInGroup.has(n));
+    });
+    if (session?.user?.id) {
+      await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id).eq('group_name', groupName);
+    }
+    if (selectedGroup === groupName) setSelectedGroup('__all__');
+    toast.success(`Grupo "${groupName}" removido`);
+  };
+
+
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure a Evolution API primeiro'); return; }
     setWaContactsLoading(true);
     try {
