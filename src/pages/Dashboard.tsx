@@ -1287,6 +1287,66 @@ function Dashboard() {
     setSavingConfig(false);
   };
 
+  // CSV external contacts state
+  const [smsSourceMode, setSmsSourceMode] = useState<'base' | 'csv'>('base');
+  const [smsCsvContacts, setSmsCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const smsCsvInputRef = useRef<HTMLInputElement>(null);
+  const [whatsappSourceMode, setWhatsappSourceMode] = useState<'base' | 'csv'>('base');
+  const [whatsappCsvContacts, setWhatsappCsvContacts] = useState<{ lead: string; numero: string }[]>([]);
+  const whatsappCsvInputRef = useRef<HTMLInputElement>(null);
+
+  const parseCsvContacts = (file: File): Promise<{ lead: string; numero: string }[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (lines.length < 2) { reject(new Error('CSV vazio')); return; }
+          const header = lines[0].toLowerCase().split(/[;,\t]/).map(h => h.trim());
+          const leadIdx = header.findIndex(h => h === 'lead' || h === 'nome' || h === 'name');
+          const numIdx = header.findIndex(h => h === 'numero' || h === 'telefone' || h === 'phone' || h === 'number');
+          if (numIdx === -1) { reject(new Error('Coluna "numero" não encontrada no CSV')); return; }
+          const contacts: { lead: string; numero: string }[] = [];
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(/[;,\t]/).map(c => c.trim());
+            const numero = cols[numIdx]?.replace(/\D/g, '') || '';
+            if (numero.length >= 10) {
+              contacts.push({ lead: leadIdx >= 0 ? (cols[leadIdx] || '') : '', numero });
+            }
+          }
+          resolve(contacts);
+        } catch (err) { reject(err); }
+      };
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsText(file);
+    });
+  };
+
+  const handleSmsCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const contacts = await parseCsvContacts(file);
+      if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
+      setSmsCsvContacts(contacts);
+      toast.success(`${contacts.length} contato(s) importado(s)`);
+    } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
+    if (smsCsvInputRef.current) smsCsvInputRef.current.value = '';
+  };
+
+  const handleWhatsappCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const contacts = await parseCsvContacts(file);
+      if (contacts.length === 0) { toast.error('Nenhum contato válido encontrado no CSV'); return; }
+      setWhatsappCsvContacts(contacts);
+      toast.success(`${contacts.length} contato(s) importado(s)`);
+    } catch (err: any) { toast.error(err.message || 'Erro ao importar CSV'); }
+    if (whatsappCsvInputRef.current) whatsappCsvInputRef.current.value = '';
+  };
+
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
