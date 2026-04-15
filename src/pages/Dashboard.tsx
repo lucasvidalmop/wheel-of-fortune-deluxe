@@ -3859,7 +3859,7 @@ function Dashboard() {
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setSmsSending(true);
-                  let sent = 0, errors = 0;
+                  let sent = 0, errors = 0, skipped = 0;
                   const BATCH_SIZE = 5;
                   const TIMEOUT_MS = 15000;
                   const smsLogEntries: any[] = [];
@@ -3881,8 +3881,14 @@ function Dashboard() {
                         const phone = batch[j];
                         const user = users.find(u => u.phone === phone) || phoneList.find(p => p.phone === phone);
                         if (r.status === 'fulfilled' && !r.value.error) {
-                          sent++;
-                          smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent' });
+                          const payload = r.value.data as any;
+                          if (payload?.skipped) {
+                            skipped++;
+                            smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: payload?.error || 'Número inválido' });
+                          } else {
+                            sent++;
+                            smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent' });
+                          }
                         } else {
                           errors++;
                           const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
@@ -3897,7 +3903,7 @@ function Dashboard() {
                     await (supabase as any).from('sms_message_log').insert(smsLogEntries);
                   }
                   setSmsSending(false);
-                  if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
+                  if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
                   else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
                   else toast.error('Nenhum SMS enviado');
                   if (showSmsHistory) fetchSmsLogs();
