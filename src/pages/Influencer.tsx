@@ -281,8 +281,8 @@ const Influencer = () => {
       .gte('created_at', todayStart.toISOString());
 
     // Clear all ghost winners from today
-    const ghosts = loadGhostWinners().filter(g => new Date(g.created_at) < todayStart);
-    saveGhostWinners(ghosts);
+    const ghosts = loadGhostWinners(uid).filter(g => new Date(g.created_at) < todayStart);
+    saveGhostWinners(ghosts, uid);
 
     // Clear session tracking and timers
     sessionCreatedIds.current.clear();
