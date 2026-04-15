@@ -4557,9 +4557,25 @@ function Dashboard() {
                             Todos ({csvContacts.length})
                           </button>
                           {contactGroups.map(g => (
-                            <button key={g} onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                              {g} ({csvContacts.filter(c => c.group_name === g).length})
-                            </button>
+                            <div key={g} className="relative group/grp flex items-center">
+                              {editingGroup === g ? (
+                                <div className="flex items-center gap-1">
+                                  <input type="text" value={editingGroupName} onChange={e => setEditingGroupName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleRenameGroup(g); if (e.key === 'Escape') setEditingGroup(null); }} className="px-2 py-1 rounded-lg border border-primary/30 bg-white/[0.06] text-foreground text-xs w-24 focus:outline-none focus:ring-1 focus:ring-primary/40" autoFocus />
+                                  <button onClick={() => handleRenameGroup(g)} className="p-1 rounded text-primary hover:bg-primary/10 transition"><CheckCircle2 size={12} /></button>
+                                  <button onClick={() => setEditingGroup(null)} className="p-1 rounded text-muted-foreground hover:text-foreground transition"><X size={12} /></button>
+                                </div>
+                              ) : (
+                                <button onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                                  {g} ({csvContacts.filter(c => c.group_name === g).length})
+                                </button>
+                              )}
+                              {editingGroup !== g && (
+                                <div className="hidden group-hover/grp:flex items-center gap-0.5 ml-0.5">
+                                  <button onClick={(e) => { e.stopPropagation(); setEditingGroup(g); setEditingGroupName(g); }} className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Renomear"><Pencil size={10} /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g); }} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition" title="Remover grupo"><Trash2 size={10} /></button>
+                                </div>
+                              )}
+                            </div>
                           ))}
                           {csvContacts.filter(c => !c.group_name).length > 0 && (
                             <button onClick={() => setSelectedGroup('')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === '' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
