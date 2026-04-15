@@ -1358,7 +1358,10 @@ function Dashboard() {
       setSelectedCsvContacts(prev => [...new Set([...prev, ...contacts.map(c => c.numero)])]);
       if (session?.user?.id) {
         const rows = contacts.map(c => ({ owner_id: session.user.id, lead: c.lead, numero: c.numero, group_name: groupName }));
-        await (supabase as any).from('imported_contacts').upsert(rows, { onConflict: 'owner_id,numero,group_name', ignoreDuplicates: true });
+        const BATCH = 500;
+        for (let i = 0; i < rows.length; i += BATCH) {
+          await (supabase as any).from('imported_contacts').upsert(rows.slice(i, i + BATCH), { onConflict: 'owner_id,numero,group_name', ignoreDuplicates: true });
+        }
       }
       if (groupName) setSelectedGroup(groupName);
       toast.success(`${contacts.length} contato(s) importado(s)${groupName ? ` no grupo "${groupName}"` : ''}`);
@@ -1367,10 +1370,19 @@ function Dashboard() {
   };
 
   const loadPersistedCsvContacts = async (userId: string) => {
-    const { data } = await (supabase as any).from('imported_contacts').select('lead, numero, group_name').eq('owner_id', userId).order('created_at', { ascending: true });
-    if (data && data.length > 0) {
-      setCsvContacts(data.map((c: any) => ({ lead: c.lead, numero: c.numero, group_name: c.group_name || '' })));
-      setSelectedCsvContacts(data.map((c: any) => c.numero));
+    let allData: any[] = [];
+    const PAGE = 1000;
+    let from = 0;
+    while (true) {
+      const { data } = await (supabase as any).from('imported_contacts').select('lead, numero, group_name').eq('owner_id', userId).order('created_at', { ascending: true }).range(from, from + PAGE - 1);
+      if (!data || data.length === 0) break;
+      allData = allData.concat(data);
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+    if (allData.length > 0) {
+      setCsvContacts(allData.map((c: any) => ({ lead: c.lead, numero: c.numero, group_name: c.group_name || '' })));
+      setSelectedCsvContacts(allData.map((c: any) => c.numero));
     }
   };
 
