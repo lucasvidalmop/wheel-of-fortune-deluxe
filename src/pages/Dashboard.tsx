@@ -19,6 +19,7 @@ import InfluencerPageEditor from '@/components/casino/InfluencerPageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
+import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
 
 interface WheelUser {
   id: string;
@@ -2198,6 +2199,7 @@ function Dashboard() {
     { key: 'email', icon: <Mail size={20} />, label: 'Email' },
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp' },
+    { key: 'msg_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Msg' },
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro' },
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
@@ -2227,6 +2229,7 @@ function Dashboard() {
     deposito: 'Página de Depósito',
     hist_deposito: 'Histórico de Depósitos',
     painel_casa: 'Painel da Casa',
+    msg_analytics: 'Analytics de Mensagens',
   };
 
   return (
