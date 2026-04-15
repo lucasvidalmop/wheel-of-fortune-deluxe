@@ -38,6 +38,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
   const [channel, setChannel] = useState<ChannelFilter>('all');
   const [period, setPeriod] = useState<PeriodFilter>('30d');
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   const fetchAll = async () => {
     setLoading(true);
