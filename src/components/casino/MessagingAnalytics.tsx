@@ -1,6 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar } from 'lucide-react';
+import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
