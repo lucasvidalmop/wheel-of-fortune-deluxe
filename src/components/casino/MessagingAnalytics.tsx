@@ -74,21 +74,26 @@ export default function MessagingAnalytics({ ownerId }: Props) {
   useEffect(() => { if (ownerId) fetchAll(); }, [ownerId]);
 
   const cutoffDate = useMemo(() => {
+    if (selectedDate) return null; // selectedDate overrides period
     if (period === 'all') return null;
     const d = new Date();
     d.setDate(d.getDate() - (period === '7d' ? 7 : period === '30d' ? 30 : 90));
     return d;
-  }, [period]);
+  }, [period, selectedDate]);
 
-  const filteredSms = useMemo(() => {
-    if (!cutoffDate) return smsLogs;
-    return smsLogs.filter(l => new Date(l.created_at) >= cutoffDate);
-  }, [smsLogs, cutoffDate]);
+  const filterByDate = (logs: LogEntry[]) => {
+    let result = logs;
+    if (selectedDate) {
+      const dayStr = selectedDate.toISOString().split('T')[0];
+      result = result.filter(l => new Date(l.created_at).toISOString().split('T')[0] === dayStr);
+    } else if (cutoffDate) {
+      result = result.filter(l => new Date(l.created_at) >= cutoffDate);
+    }
+    return result;
+  };
 
-  const filteredWa = useMemo(() => {
-    if (!cutoffDate) return waLogs;
-    return waLogs.filter(l => new Date(l.created_at) >= cutoffDate);
-  }, [waLogs, cutoffDate]);
+  const filteredSms = useMemo(() => filterByDate(smsLogs), [smsLogs, cutoffDate, selectedDate]);
+  const filteredWa = useMemo(() => filterByDate(waLogs), [waLogs, cutoffDate, selectedDate]);
 
   const allFiltered = useMemo(() => {
     const arr = [
@@ -209,11 +214,40 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           { key: '90d', label: '90 dias' },
           { key: 'all', label: 'Tudo' },
         ] as const).map(p => (
-          <button key={p.key} onClick={() => setPeriod(p.key)}
-            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${period === p.key ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.08]'}`}>
+          <button key={p.key} onClick={() => { setPeriod(p.key); setSelectedDate(undefined); }}
+            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${period === p.key && !selectedDate ? 'bg-primary/15 text-primary border border-primary/20' : 'bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.08]'}`}>
             {p.label}
           </button>
         ))}
+        {/* Calendar picker */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className={cn(
+              'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border',
+              selectedDate
+                ? 'bg-primary/15 text-primary border-primary/20'
+                : 'bg-white/[0.04] border-white/[0.08] text-muted-foreground hover:bg-white/[0.08]'
+            )}>
+              <CalendarIcon size={12} />
+              {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'Dia específico'}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => { setSelectedDate(d); }}
+              disabled={(date) => date > new Date()}
+              locale={ptBR}
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+        {selectedDate && (
+          <button onClick={() => setSelectedDate(undefined)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition" title="Limpar filtro de data">
+            <X size={14} />
+          </button>
+        )}
         <button onClick={fetchAll} className="ml-auto p-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition" title="Atualizar">
           <RotateCcw size={14} />
         </button>
@@ -270,7 +304,8 @@ export default function MessagingAnalytics({ ownerId }: Props) {
       {/* Daily bar chart */}
       <GlassCard className="p-5 space-y-3">
         <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <Calendar size={16} className="text-primary" /> Envios por Dia
+         <CalendarIcon size={16} className="text-primary" /> Envios por Dia
+         {selectedDate && <span className="text-[10px] text-primary font-normal ml-1">— {format(selectedDate, 'dd/MM/yyyy')}</span>}
         </h3>
         <div className="flex items-end gap-1 h-[140px]">
           {dailyData.map((d, i) => {
