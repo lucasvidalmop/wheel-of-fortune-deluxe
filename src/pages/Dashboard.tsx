@@ -3663,9 +3663,11 @@ function Dashboard() {
                   <button onClick={() => setEmailTemplate('custom')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'custom' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
                     🖼️ Personalizado
                   </button>
-                  <button onClick={() => setEmailTemplate('lucas')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'lucas' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    🏆 Lucas BSB
-                  </button>
+                   {session?.user?.email === 'lucasvidalmop@gmail.com' && (
+                     <button onClick={() => setEmailTemplate('lucas')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'lucas' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                       🏆 Lucas BSB
+                     </button>
+                   )}
                 </div>
 
                 {/* Banner */}
