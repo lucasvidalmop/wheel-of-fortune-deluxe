@@ -6,8 +6,8 @@ import {
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = "Lucas BSB"
-const HERO_IMAGE = "https://zrijrsntmmzyykuqjbno.supabase.co/storage/v1/object/public/app-assets/email/wheel-invite-hero.png"
-const ROLETA_LINK = "https://gorjetabsb.com.br/roleta/roletabsb"
+const HERO_IMAGE = "https://zrijrsntmmzyykuqjbno.supabase.co/storage/v1/object/public/app-assets/email%2Fwheel-invite-hero.png"
+const ROLETA_LINK = "https://tipspayroleta.com/roletabsb"
 const WHATSAPP_PHONE = "5561996110278"
 
 interface WheelInviteLucasProps {
