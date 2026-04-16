@@ -231,6 +231,9 @@ function Dashboard() {
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
   const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
   const [emailSenderEmail, setEmailSenderEmail] = useState('noreply');
+  const [showEmailHistory, setShowEmailHistory] = useState(false);
+  const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [emailLogsLoading, setEmailLogsLoading] = useState(false);
 
   // SMS state
   const [smsMessage, setSmsMessage] = useState('');
