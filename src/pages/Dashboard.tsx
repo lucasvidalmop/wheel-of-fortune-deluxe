@@ -3772,6 +3772,7 @@ function Dashboard() {
                   setEmailSending(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
                   else toast.success(`${sent} email(s) enviado(s) com sucesso!`);
+                  if (showEmailHistory) fetchEmailLogs();
                 }}
                 disabled={emailSending}
                 className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
