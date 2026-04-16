@@ -43,7 +43,7 @@ interface WheelUser {
 interface PersistedDashboardSettings {
   emailSubject: string;
   emailBody: string;
-  emailTemplate: 'original' | 'custom';
+  emailTemplate: 'original' | 'custom' | 'lucas';
   emailBannerUrl: string;
   emailSenderName: string;
   emailSenderEmail: string;
@@ -226,7 +226,7 @@ function Dashboard() {
   const [emailTarget, setEmailTarget] = useState<'all' | 'selected'>('all');
   const [emailSearchTerm, setEmailSearchTerm] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
-  const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom'>('original');
+  const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom' | 'lucas'>('original');
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
   const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
@@ -879,7 +879,7 @@ function Dashboard() {
 
     setEmailSubject(settings.emailSubject);
     setEmailBody(settings.emailBody);
-    setEmailTemplate(settings.emailTemplate === 'custom' ? 'custom' : 'original');
+    setEmailTemplate(settings.emailTemplate === 'custom' ? 'custom' : settings.emailTemplate === 'lucas' ? 'lucas' : 'original');
     setEmailBannerUrl(settings.emailBannerUrl || '');
     setEmailSenderName(settings.emailSenderName || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderName);
     setEmailSenderEmail(settings.emailSenderEmail || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderEmail);
@@ -3582,12 +3582,15 @@ function Dashboard() {
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Mail size={16} className="text-primary" /> Conteúdo</h3>
 
                 {/* Template */}
-                <div className="flex gap-2">
-                  <button onClick={() => setEmailTemplate('original')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'original' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={() => setEmailTemplate('original')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'original' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
                     🎰 Original
                   </button>
-                  <button onClick={() => setEmailTemplate('custom')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'custom' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                  <button onClick={() => setEmailTemplate('custom')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'custom' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
                     🖼️ Personalizado
+                  </button>
+                  <button onClick={() => setEmailTemplate('lucas')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'lucas' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    🏆 Lucas BSB
                   </button>
                 </div>
 
@@ -3673,7 +3676,7 @@ function Dashboard() {
                   let sent = 0, errors = 0;
                   for (const email of recipients) {
                     const user = users.find(u => u.email === email);
-                    const templateName = emailTemplate === 'custom' ? 'wheel-invite-custom' : 'wheel-invite';
+                    const templateName = emailTemplate === 'custom' ? 'wheel-invite-custom' : emailTemplate === 'lucas' ? 'wheel-invite-lucas' : 'wheel-invite';
                     const { error } = await supabase.functions.invoke('send-transactional-email', {
                       body: {
                         templateName,
