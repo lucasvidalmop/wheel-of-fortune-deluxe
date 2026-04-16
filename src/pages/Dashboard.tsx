@@ -658,6 +658,36 @@ function Dashboard() {
     setSmsLogsLoading(false);
   };
 
+  const fetchEmailLogs = async () => {
+    if (!session?.user?.id) return;
+    setEmailLogsLoading(true);
+    try {
+      let allData: any[] = [];
+      const PAGE = 1000;
+      let from = 0;
+      while (true) {
+        const { data } = await (supabase as any)
+          .from('email_send_log')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        allData = allData.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      const seen = new Map<string, any>();
+      for (const row of allData) {
+        const key = row.message_id || row.id;
+        if (!seen.has(key)) seen.set(key, row);
+      }
+      setEmailLogs(Array.from(seen.values()));
+    } catch (e) {
+      console.error('Failed to fetch email logs', e);
+    }
+    setEmailLogsLoading(false);
+  };
+
   const deleteSmsLog = async (id: string) => {
     const ok = await confirmDialog({ title: 'Excluir registro?', message: 'Deseja remover este SMS do histórico?', variant: 'danger', confirmLabel: 'Excluir' });
     if (!ok) return;
