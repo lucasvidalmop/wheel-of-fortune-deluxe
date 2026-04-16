@@ -3565,6 +3565,47 @@ function Dashboard() {
           {/* ══════ EMAIL TAB ══════ */}
           {activeTab === 'email' && (
             <div className="max-w-2xl space-y-5">
+              <div className="flex items-center gap-2 justify-end">
+                <button onClick={() => { setShowEmailHistory(!showEmailHistory); if (!showEmailHistory) fetchEmailLogs(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showEmailHistory ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Clock size={15} /> Histórico
+                </button>
+              </div>
+
+              {showEmailHistory && (
+                <GlassCard className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} className="text-primary" /> Histórico de Emails</h3>
+                    <button onClick={fetchEmailLogs} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                  </div>
+                  {emailLogsLoading ? (
+                    <div className="flex items-center justify-center py-8"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+                  ) : emailLogs.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum email enviado ainda.</p>
+                  ) : (
+                    <div className="max-h-96 overflow-y-auto space-y-2">
+                      {emailLogs.map(log => (
+                        <div key={log.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`shrink-0 w-2 h-2 rounded-full ${log.status === 'sent' ? 'bg-emerald-400' : log.status === 'pending' ? 'bg-amber-400' : log.status === 'suppressed' ? 'bg-yellow-500' : 'bg-red-400'}`} />
+                              <span className="truncate text-foreground">{log.recipient_email}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                              <span className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] uppercase font-medium">{log.template_name}</span>
+                              <span>{new Date(log.created_at).toLocaleString('pt-BR')}</span>
+                            </div>
+                            {log.error_message && <p className="text-xs text-red-400 mt-1 truncate">{log.error_message}</p>}
+                          </div>
+                          <span className={`shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase ${log.status === 'sent' ? 'bg-emerald-400/10 text-emerald-400' : log.status === 'pending' ? 'bg-amber-400/10 text-amber-400' : log.status === 'suppressed' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-red-400/10 text-red-400'}`}>
+                            {log.status === 'sent' ? 'Enviado' : log.status === 'pending' ? 'Pendente' : log.status === 'suppressed' ? 'Suprimido' : log.status === 'dlq' ? 'Falhou' : log.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
               <GlassCard className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
                 <div className="flex gap-2">
