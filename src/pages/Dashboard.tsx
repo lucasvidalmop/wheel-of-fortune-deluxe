@@ -1685,9 +1685,6 @@ function Dashboard() {
     setBulkPaying(false);
     fetchPrizePayments();
   };
-  const [showEmailHistory, setShowEmailHistory] = useState(false);
-  const [emailLogs, setEmailLogs] = useState<any[]>([]);
-  const [emailLogsLoading, setEmailLogsLoading] = useState(false);
 
 
   const handleGrantSpin = async (user: WheelUser) => {
