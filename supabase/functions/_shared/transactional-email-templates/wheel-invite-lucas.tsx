@@ -92,7 +92,7 @@ export const template = {
   component: WheelInviteLucasEmail,
   subject: (data: Record<string, any>) => data.subject || '🎰 Seu giro está disponível!',
   displayName: 'Convite Roleta - Lucas BSB',
-  to: 'lucasvidalmop@gmail.com',
+  
   previewData: {
     name: 'João',
     body: 'Seu giro já está disponível! Entre agora na roleta e veja o que você pode ganhar antes que expire.',
