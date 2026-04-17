@@ -28,12 +28,13 @@ interface Props {
   ownerId: string;
 }
 
-type ChannelFilter = 'all' | 'sms' | 'whatsapp';
+type ChannelFilter = 'all' | 'sms' | 'whatsapp' | 'email';
 type PeriodFilter = '7d' | '30d' | '90d' | 'all';
 
 export default function MessagingAnalytics({ ownerId }: Props) {
   const [smsLogs, setSmsLogs] = useState<LogEntry[]>([]);
   const [waLogs, setWaLogs] = useState<LogEntry[]>([]);
+  const [emailLogs, setEmailLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [channel, setChannel] = useState<ChannelFilter>('all');
   const [period, setPeriod] = useState<PeriodFilter>('30d');
@@ -44,16 +45,17 @@ export default function MessagingAnalytics({ ownerId }: Props) {
     setLoading(true);
     const PAGE = 1000;
 
-    const fetchPaginated = async (table: string) => {
+    const fetchPaginated = async (table: string, filterByOwner: boolean) => {
       let all: any[] = [];
       let from = 0;
       while (true) {
-        const { data } = await (supabase as any)
+        let q = (supabase as any)
           .from(table)
           .select('*')
-          .eq('owner_id', ownerId)
           .order('created_at', { ascending: false })
           .range(from, from + PAGE - 1);
+        if (filterByOwner) q = q.eq('owner_id', ownerId);
+        const { data } = await q;
         if (!data || data.length === 0) break;
         all = all.concat(data);
         if (data.length < PAGE) break;
@@ -62,12 +64,33 @@ export default function MessagingAnalytics({ ownerId }: Props) {
       return all;
     };
 
-    const [sms, wa] = await Promise.all([
-      fetchPaginated('sms_message_log'),
-      fetchPaginated('whatsapp_message_log'),
+    const [sms, wa, emails] = await Promise.all([
+      fetchPaginated('sms_message_log', true),
+      fetchPaginated('whatsapp_message_log', true),
+      fetchPaginated('email_send_log', false),
     ]);
+
+    // Deduplicate emails by message_id (latest status per message wins; data is ordered DESC)
+    const emailDedupMap = new Map<string, any>();
+    for (const e of emails) {
+      const key = e.message_id || e.id;
+      if (!emailDedupMap.has(key)) emailDedupMap.set(key, e);
+    }
+    const emailsMapped: LogEntry[] = Array.from(emailDedupMap.values()).map((e: any) => ({
+      id: e.id,
+      created_at: e.created_at,
+      // Treat 'sent' as success; everything else (pending/failed/dlq/suppressed/bounced) as not-sent for the success rate
+      status: e.status === 'sent' ? 'sent' : 'failed',
+      recipient_phone: e.recipient_email,
+      recipient_name: e.template_name || '',
+      message: e.template_name || '',
+      error_message: e.error_message || undefined,
+      batch_id: undefined,
+    }));
+
     setSmsLogs(sms);
     setWaLogs(wa);
+    setEmailLogs(emailsMapped);
     setLoading(false);
   };
 
