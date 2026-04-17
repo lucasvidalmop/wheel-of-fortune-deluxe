@@ -6,6 +6,7 @@ import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 export type EmailBlock =
   | { type: 'hero'; imageUrl: string; alt?: string }
+  | { type: 'image'; imageUrl: string; alt?: string; width?: number; align?: 'left' | 'center' | 'right'; linkUrl?: string }
   | { type: 'bullets'; items: { bold?: string; text?: string }[]; align?: 'left' | 'center' }
   | { type: 'divider' }
   | { type: 'heading'; text: string; align?: 'left' | 'center'; color?: string }
@@ -29,6 +30,7 @@ interface Props {
 
 const NEW_BLOCK_DEFAULTS: Record<EmailBlock['type'], EmailBlock> = {
   hero: { type: 'hero', imageUrl: '' },
+  image: { type: 'image', imageUrl: '', align: 'center', width: 480 },
   bullets: { type: 'bullets', items: [{ bold: 'Destaque', text: 'descrição' }], align: 'center' },
   divider: { type: 'divider' },
   heading: { type: 'heading', text: 'Título principal', align: 'center', color: '#0e1b10' },
@@ -118,6 +120,7 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
       <div className="flex flex-wrap gap-1.5">
         {([
           ['hero', ImageIcon, 'Hero'],
+          ['image', ImageIcon, 'Imagem'],
           ['heading', HeadingIcon, 'Título'],
           ['text', Type, 'Texto'],
           ['bullets', List, 'Lista'],
@@ -162,6 +165,25 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, idx); }} />
                 </label>
                 {block.imageUrl && <img src={block.imageUrl} alt="" className="w-full max-h-32 object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display = 'none')} />}
+              </>
+            )}
+
+            {block.type === 'image' && (
+              <>
+                <input value={block.imageUrl} onChange={(e) => updateBlock(idx, { imageUrl: e.target.value })} placeholder="URL da imagem" className="w-full px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs text-foreground focus:outline-none" />
+                <label className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-dashed border-white/[0.15] bg-white/[0.02] text-muted-foreground text-xs hover:bg-white/[0.05] transition cursor-pointer">
+                  {uploadingIdx === idx ? '⏳ Enviando...' : '📤 Enviar imagem'}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, idx); }} />
+                </label>
+                <input value={block.linkUrl || ''} onChange={(e) => updateBlock(idx, { linkUrl: e.target.value })} placeholder="Link ao clicar (opcional)" className="w-full px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs text-foreground focus:outline-none" />
+                <div className="flex gap-2 items-center text-xs text-muted-foreground">
+                  <span>Largura</span>
+                  <input type="number" min={100} max={600} value={block.width || 480} onChange={(e) => updateBlock(idx, { width: parseInt(e.target.value) || 480 })} className="w-20 px-2 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs text-foreground" />
+                  <select value={block.align || 'center'} onChange={(e) => updateBlock(idx, { align: e.target.value })} className="px-2 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs text-foreground">
+                    <option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option>
+                  </select>
+                </div>
+                {block.imageUrl && <img src={block.imageUrl} alt="" className="w-full max-h-32 object-contain rounded-lg" onError={(e) => (e.currentTarget.style.display = 'none')} />}
               </>
             )}
 
