@@ -372,10 +372,32 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
             <textarea
               value={importHtml}
               onChange={(e) => setImportHtml(e.target.value)}
-              rows={12}
+              rows={10}
               placeholder='<table width="600" align="center">...</table>'
               className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-foreground focus:outline-none resize-y"
             />
+            {importHtml.trim() && (
+              <div className="max-h-56 overflow-auto pr-1 border-t border-white/[0.06] pt-3">
+                <HtmlImageReplacer
+                  html={importHtml}
+                  uploading={uploadingHtmlImg}
+                  onReplace={async (oldUrl, file) => {
+                    if (file.size > 5 * 1024 * 1024) { toast.error('Imagem máx 5MB'); return; }
+                    setUploadingHtmlImg(true);
+                    try {
+                      const { publicUrl } = await uploadAppAsset(file, 'email-blocks');
+                      setImportHtml((prev) => prev.split(oldUrl).join(publicUrl));
+                      toast.success('Imagem enviada e URL substituída!');
+                    } catch (e: any) {
+                      console.error('[EmailTemplate] HTML image upload failed', e);
+                      toast.error('Falha no upload: ' + (e?.message || 'erro desconhecido'));
+                    } finally {
+                      setUploadingHtmlImg(false);
+                    }
+                  }}
+                />
+              </div>
+            )}
             <div className="flex gap-2 justify-end">
               <button onClick={() => setShowImport(false)} className="px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08]">Cancelar</button>
               <button onClick={handleImportHtml} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2"><Upload size={14} /> Importar</button>
