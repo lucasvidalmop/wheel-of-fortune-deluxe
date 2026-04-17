@@ -3797,9 +3797,14 @@ function Dashboard() {
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
                   if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
                   let sent = 0, errors = 0;
+                  const customTpl = customTemplates.find(t => t.id === emailTemplate);
                   for (const email of recipients) {
                     const user = users.find(u => u.email === email);
-                    const templateName = emailTemplate === 'custom' ? 'wheel-invite-custom' : emailTemplate === 'lucas' ? 'wheel-invite-lucas' : 'wheel-invite';
+                    const templateName = customTpl
+                      ? 'wheel-invite-blocks'
+                      : emailTemplate === 'custom' ? 'wheel-invite-custom'
+                      : emailTemplate === 'lucas' ? 'wheel-invite-lucas'
+                      : 'wheel-invite';
                     const { error } = await supabase.functions.invoke('send-transactional-email', {
                       body: {
                         templateName,
@@ -3812,6 +3817,7 @@ function Dashboard() {
                           roletaLink,
                           senderName: emailSenderName || undefined,
                           senderEmail: emailSenderEmail || undefined,
+                          ...(customTpl ? { blocks: customTpl.blocks } : {}),
                           ...(emailTemplate === 'custom' && emailBannerUrl ? { bannerImageUrl: emailBannerUrl } : {}),
                         },
                       },
