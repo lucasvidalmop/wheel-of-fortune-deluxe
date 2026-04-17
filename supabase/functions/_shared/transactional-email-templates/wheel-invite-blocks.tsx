@@ -19,8 +19,9 @@ interface DividerBlock extends BlockBase { type: 'divider' }
 interface HeadingBlock extends BlockBase { type: 'heading'; text: string; align?: 'left' | 'center'; color?: string }
 interface TextBlock extends BlockBase { type: 'text'; text: string; align?: 'left' | 'center'; color?: string }
 interface CTABlock extends BlockBase { type: 'cta'; label: string; backgroundColor?: string; textColor?: string }
+interface HtmlBlock extends BlockBase { type: 'html'; html: string }
 interface FooterBlock extends BlockBase { type: 'footer'; heading?: string; text?: string; copyright?: string; backgroundColor?: string; textColor?: string }
-type Block = HeroBlock | ImageBlock | BulletsBlock | DividerBlock | HeadingBlock | TextBlock | CTABlock | FooterBlock
+type Block = HeroBlock | ImageBlock | BulletsBlock | DividerBlock | HeadingBlock | TextBlock | CTABlock | HtmlBlock | FooterBlock
 
 interface WheelInviteBlocksProps {
   name?: string
@@ -116,6 +117,10 @@ const WheelInviteBlocksEmail = ({ name, body, roletaLink, blocks, backgroundColo
                     </Button>
                   </Section>
                 )
+              case 'html': {
+                const rawHtml = replaceVars(block.html || '').replaceAll('{roletaLink}', link)
+                return <div key={idx} dangerouslySetInnerHTML={{ __html: rawHtml }} />
+              }
               case 'footer':
                 return (
                   <Section key={idx} style={{ backgroundColor: block.backgroundColor || '#070300', padding: '30px 30px 20px' }}>
