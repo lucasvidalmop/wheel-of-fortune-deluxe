@@ -476,8 +476,8 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           <div className="max-h-[400px] overflow-y-auto space-y-1.5 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.1] [&::-webkit-scrollbar-thumb]:rounded-full">
             {allFiltered.slice(0, 200).map(l => (
               <div key={l.id} className="flex items-start gap-2.5 p-2.5 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] transition">
-                <div className={`mt-0.5 p-1 rounded-md ${l._channel === 'sms' ? 'bg-blue-400/10' : 'bg-green-400/10'}`}>
-                  {l._channel === 'sms' ? <Smartphone size={10} className="text-blue-400" /> : <MessageCircle size={10} className="text-green-400" />}
+                <div className={`mt-0.5 p-1 rounded-md ${l._channel === 'sms' ? 'bg-blue-400/10' : l._channel === 'email' ? 'bg-purple-400/10' : 'bg-green-400/10'}`}>
+                  {l._channel === 'sms' ? <Smartphone size={10} className="text-blue-400" /> : l._channel === 'email' ? <Mail size={10} className="text-purple-400" /> : <MessageCircle size={10} className="text-green-400" />}
                 </div>
                 <div className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${l.status === 'sent' ? 'bg-green-400' : 'bg-red-400'}`} />
                 <div className="flex-1 min-w-0">
