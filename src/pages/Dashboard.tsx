@@ -20,6 +20,7 @@ import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
+import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
 
 interface WheelUser {
   id: string;
@@ -226,7 +227,9 @@ function Dashboard() {
   const [emailTarget, setEmailTarget] = useState<'all' | 'selected'>('all');
   const [emailSearchTerm, setEmailSearchTerm] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
-  const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom' | 'lucas'>('original');
+  const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom' | 'lucas' | string>('original');
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<EmailTemplateRow | null>(null);
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
   const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
