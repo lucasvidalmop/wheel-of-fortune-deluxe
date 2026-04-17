@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, X, Pencil, Image as ImageIcon, Type, Heading as HeadingIcon, List, MousePointerClick, Minus, Layout } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown, Save, X, Pencil, Image as ImageIcon, Type, Heading as HeadingIcon, List, MousePointerClick, Minus, Layout, Code2, Eye, Upload, FileCode } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 export type EmailBlock =
@@ -12,6 +12,7 @@ export type EmailBlock =
   | { type: 'heading'; text: string; align?: 'left' | 'center'; color?: string }
   | { type: 'text'; text: string; align?: 'left' | 'center'; color?: string }
   | { type: 'cta'; label: string; backgroundColor?: string; textColor?: string }
+  | { type: 'html'; html: string }
   | { type: 'footer'; heading?: string; text?: string; copyright?: string; backgroundColor?: string; textColor?: string };
 
 export interface EmailTemplateRow {
@@ -36,6 +37,7 @@ const NEW_BLOCK_DEFAULTS: Record<EmailBlock['type'], EmailBlock> = {
   heading: { type: 'heading', text: 'Título principal', align: 'center', color: '#0e1b10' },
   text: { type: 'text', text: 'Seu texto aqui. Use {name} para o nome do destinatário e {body} para a mensagem.', align: 'center', color: '#0e1b10' },
   cta: { type: 'cta', label: 'Girar agora →', backgroundColor: '#00c4cc', textColor: '#ffffff' },
+  html: { type: 'html', html: '<div style="padding:20px;text-align:center;">Cole seu HTML aqui</div>' },
   footer: { type: 'footer', heading: 'Precisa de ajuda?', text: 'Fale com o suporte.', copyright: 'Equipe - 2026', backgroundColor: '#070300', textColor: '#f6f5f1' },
 };
 
