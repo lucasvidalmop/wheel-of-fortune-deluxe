@@ -13,13 +13,14 @@ import type { TemplateEntry } from './registry.ts'
 
 interface BlockBase { type: string; id?: string }
 interface HeroBlock extends BlockBase { type: 'hero'; imageUrl: string; alt?: string }
+interface ImageBlock extends BlockBase { type: 'image'; imageUrl: string; alt?: string; width?: number; align?: 'left' | 'center' | 'right'; linkUrl?: string }
 interface BulletsBlock extends BlockBase { type: 'bullets'; items: { bold?: string; text?: string }[]; align?: 'left' | 'center' }
 interface DividerBlock extends BlockBase { type: 'divider' }
 interface HeadingBlock extends BlockBase { type: 'heading'; text: string; align?: 'left' | 'center'; color?: string }
 interface TextBlock extends BlockBase { type: 'text'; text: string; align?: 'left' | 'center'; color?: string }
 interface CTABlock extends BlockBase { type: 'cta'; label: string; backgroundColor?: string; textColor?: string }
 interface FooterBlock extends BlockBase { type: 'footer'; heading?: string; text?: string; copyright?: string; backgroundColor?: string; textColor?: string }
-type Block = HeroBlock | BulletsBlock | DividerBlock | HeadingBlock | TextBlock | CTABlock | FooterBlock
+type Block = HeroBlock | ImageBlock | BulletsBlock | DividerBlock | HeadingBlock | TextBlock | CTABlock | FooterBlock
 
 interface WheelInviteBlocksProps {
   name?: string
@@ -60,6 +61,15 @@ const WheelInviteBlocksEmail = ({ name, body, roletaLink, blocks, backgroundColo
                     <Img src={block.imageUrl} alt={block.alt || ''} width="560" style={{ display: 'block', width: '100%', height: 'auto', maxWidth: '560px' }} />
                   </Section>
                 )
+              case 'image': {
+                const w = Math.min(Math.max(block.width || 480, 100), 600)
+                const img = <Img src={block.imageUrl} alt={block.alt || ''} width={String(w)} style={{ display: 'inline-block', width: '100%', height: 'auto', maxWidth: `${w}px` }} />
+                return (
+                  <Section key={idx} style={{ padding: '12px 20px', textAlign: block.align || 'center' }}>
+                    {block.linkUrl ? <a href={block.linkUrl} style={{ display: 'inline-block' }}>{img}</a> : img}
+                  </Section>
+                )
+              }
               case 'bullets':
                 return (
                   <Section key={idx} style={{ padding: '16px 20px 0', textAlign: block.align || 'center' }}>
