@@ -117,6 +117,10 @@ const WheelInviteBlocksEmail = ({ name, body, roletaLink, blocks, backgroundColo
                     </Button>
                   </Section>
                 )
+              case 'html': {
+                const rawHtml = replaceVars(block.html || '').replaceAll('{roletaLink}', link)
+                return <div key={idx} dangerouslySetInnerHTML={{ __html: rawHtml }} />
+              }
               case 'footer':
                 return (
                   <Section key={idx} style={{ backgroundColor: block.backgroundColor || '#070300', padding: '30px 30px 20px' }}>
