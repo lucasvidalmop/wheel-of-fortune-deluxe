@@ -3902,12 +3902,14 @@ function Dashboard() {
                     await Promise.all(chunk.map(sendOne));
                   }
                   setEmailSending(false);
+                  const skipMsg = skipped > 0 ? ` (${skipped} excluído${skipped > 1 ? 's' : ''} por já ter recebido)` : '';
                   if (errors > 0) {
-                    toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}`);
+                    toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}${skipMsg}`);
                   } else {
-                    toast.success(`${sent} email(s) enviado(s) com sucesso!`);
+                    toast.success(`${sent} email(s) enviado(s) com sucesso!${skipMsg}`);
                   }
                   if (showEmailHistory) fetchEmailLogs();
+                  if (excludeRecentEmail) fetchRecentEmailRecipients();
                 }}
                 disabled={emailSending}
                 className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
