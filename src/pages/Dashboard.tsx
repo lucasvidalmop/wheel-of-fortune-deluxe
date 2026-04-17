@@ -238,7 +238,7 @@ function Dashboard() {
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [emailLogsLoading, setEmailLogsLoading] = useState(false);
 
-  // SMS state
+  const { templates: customTemplates, refresh: refreshCustomTemplates } = useEmailTemplates(session?.user?.id || null);
   const [smsMessage, setSmsMessage] = useState('');
   const [smsSending, setSmsSending] = useState(false);
   const [smsTarget, setSmsTarget] = useState<'all' | 'selected'>('all');
