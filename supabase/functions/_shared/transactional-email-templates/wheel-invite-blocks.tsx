@@ -53,7 +53,7 @@ const WheelInviteBlocksEmail = ({ name, body, roletaLink, blocks, backgroundColo
       <Head />
       <Preview>{name ? `${name}, seu giro está disponível!` : 'Seu giro está disponível!'}</Preview>
       <Body style={{ backgroundColor: backgroundColor || '#f0f1f5', fontFamily: 'Arial, Helvetica, sans-serif' }}>
-        <Container style={container}>
+        <Container style={{ backgroundColor: '#ffffff', margin: '0 auto', maxWidth: '600px', width: '100%' }}>
           {list.map((block, idx) => {
             switch (block.type) {
               case 'hero':
