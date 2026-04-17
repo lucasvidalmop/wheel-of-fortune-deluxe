@@ -554,6 +554,10 @@ function Dashboard() {
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
+  const [excludeRecentEmail, setExcludeRecentEmail] = useState(false);
+  const [recentEmailRecipients, setRecentEmailRecipients] = useState<Set<string>>(new Set());
+  const [recentEmailOldestTime, setRecentEmailOldestTime] = useState<Date | null>(null);
+  const [recentEmailCountdown, setRecentEmailCountdown] = useState('');
 
   const fetchReferralLinks = async () => {
     if (!session?.user?.id) return;
