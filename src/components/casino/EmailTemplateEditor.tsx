@@ -394,7 +394,7 @@ function HtmlImageReplacer({ html, uploading, onReplace }: { html: string; uploa
 // Render blocks as HTML for live preview (mirrors server template visually)
 function renderBlocksToHtml(blocks: EmailBlock[], bg: string): string {
   const esc = (s: string = '') => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-  const replaceVars = (s: string = '') => s.replaceAll('{name}', 'João').replaceAll('{body}', 'Sua mensagem aqui').replaceAll('{roletaLink}', 'https://tipspayroleta.com');
+  const replaceVars = (s: string = '') => s.split('{name}').join('João').split('{body}').join('Sua mensagem aqui').split('{roletaLink}').join('https://tipspayroleta.com');
   const parts = blocks.map(b => {
     switch (b.type) {
       case 'hero':
