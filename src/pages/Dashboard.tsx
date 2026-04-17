@@ -554,6 +554,10 @@ function Dashboard() {
   const [bulkSentPhones, setBulkSentPhones] = useState<Set<string>>(new Set());
   const [bulkSentOldestTime, setBulkSentOldestTime] = useState<Date | null>(null);
   const [bulkSentCountdown, setBulkSentCountdown] = useState('');
+  const [excludeRecentEmail, setExcludeRecentEmail] = useState(false);
+  const [recentEmailRecipients, setRecentEmailRecipients] = useState<Set<string>>(new Set());
+  const [recentEmailOldestTime, setRecentEmailOldestTime] = useState<Date | null>(null);
+  const [recentEmailCountdown, setRecentEmailCountdown] = useState('');
 
   const fetchReferralLinks = async () => {
     if (!session?.user?.id) return;
@@ -806,6 +810,46 @@ function Dashboard() {
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [excludeBulkSent, bulkSentOldestTime]);
+
+  const fetchRecentEmailRecipients = async () => {
+    if (!session?.user?.id) return;
+    const since2h = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const { data } = await (supabase as any)
+      .from('email_send_log')
+      .select('recipient_email, created_at, status')
+      .gte('created_at', since2h)
+      .in('status', ['sent', 'pending']);
+    const rows = data || [];
+    const emails = new Set<string>(rows.map((d: any) => (d.recipient_email || '').toLowerCase()));
+    setRecentEmailRecipients(emails);
+    if (rows.length > 0) {
+      const oldest = rows.reduce((min: string, d: any) => d.created_at < min ? d.created_at : min, rows[0].created_at);
+      setRecentEmailOldestTime(new Date(oldest));
+    } else {
+      setRecentEmailOldestTime(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!excludeRecentEmail || !recentEmailOldestTime) { setRecentEmailCountdown(''); return; }
+    const update = () => {
+      const expiresAt = recentEmailOldestTime.getTime() + 2 * 60 * 60 * 1000;
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        setRecentEmailCountdown('');
+        fetchRecentEmailRecipients();
+        return;
+      }
+      const h = Math.floor(remaining / 3600000);
+      const m = Math.floor((remaining % 3600000) / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      setRecentEmailCountdown(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [excludeRecentEmail, recentEmailOldestTime]);
+
 
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -3611,9 +3655,17 @@ function Dashboard() {
 
               <GlassCard className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
+                <label className="flex items-center gap-2 cursor-pointer flex-wrap">
+                  <input type="checkbox" checked={excludeRecentEmail} onChange={e => { setExcludeRecentEmail(e.target.checked); if (e.target.checked) fetchRecentEmailRecipients(); }} className="rounded border-white/20" />
+                  <span className="text-xs text-muted-foreground">Excluir quem já recebeu email (2h)</span>
+                  {excludeRecentEmail && recentEmailRecipients.size > 0 && <span className="text-xs text-yellow-400">({recentEmailRecipients.size} excluídos)</span>}
+                  {excludeRecentEmail && recentEmailCountdown && (
+                    <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">⏱ {recentEmailCountdown}</span>
+                  )}
+                </label>
                 <div className="flex gap-2">
                   <button onClick={() => { setEmailTarget('all'); setSelectedEmails([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Todos ({users.length})
+                    Todos ({users.filter(u => u.email && (!excludeRecentEmail || !recentEmailRecipients.has(u.email.toLowerCase()))).length})
                   </button>
                   <button onClick={() => setEmailTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
                     Selecionar ({selectedEmails.length})
@@ -3788,8 +3840,12 @@ function Dashboard() {
 
               <button
                 onClick={async () => {
-                  const recipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
-                  if (recipients.length === 0) { toast.error('Nenhum destinatário selecionado'); return; }
+                  const baseRecipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
+                  const recipients = excludeRecentEmail
+                    ? baseRecipients.filter(e => e && !recentEmailRecipients.has(e.toLowerCase()))
+                    : baseRecipients.filter(e => !!e);
+                  const skipped = baseRecipients.length - recipients.length;
+                  if (recipients.length === 0) { toast.error(skipped > 0 ? `Todos os ${skipped} destinatários foram excluídos (email recente)` : 'Nenhum destinatário selecionado'); return; }
                   if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
                   setEmailSending(true);
                    const publishedUrl = 'https://tipspayroleta.com';
@@ -3846,12 +3902,14 @@ function Dashboard() {
                     await Promise.all(chunk.map(sendOne));
                   }
                   setEmailSending(false);
+                  const skipMsg = skipped > 0 ? ` (${skipped} excluído${skipped > 1 ? 's' : ''} por já ter recebido)` : '';
                   if (errors > 0) {
-                    toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}`);
+                    toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}${skipMsg}`);
                   } else {
-                    toast.success(`${sent} email(s) enviado(s) com sucesso!`);
+                    toast.success(`${sent} email(s) enviado(s) com sucesso!${skipMsg}`);
                   }
                   if (showEmailHistory) fetchEmailLogs();
+                  if (excludeRecentEmail) fetchRecentEmailRecipients();
                 }}
                 disabled={emailSending}
                 className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
