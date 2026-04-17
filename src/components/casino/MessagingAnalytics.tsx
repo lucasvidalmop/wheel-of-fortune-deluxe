@@ -318,7 +318,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
 
       {/* Channel breakdown */}
       {channel === 'all' && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <GlassCard className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-xl bg-blue-500/10"><Smartphone size={16} className="text-blue-400" /></div>
             <div>
@@ -336,6 +336,16 @@ export default function MessagingAnalytics({ ownerId }: Props) {
               <p className="text-lg font-bold text-foreground">{filteredWa.length}</p>
               <p className="text-[10px] text-muted-foreground">
                 {filteredWa.filter(l => l.status === 'sent').length} ✓ / {filteredWa.filter(l => l.status !== 'sent').length} ✗
+              </p>
+            </div>
+          </GlassCard>
+          <GlassCard className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-purple-500/10"><Mail size={16} className="text-purple-400" /></div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Email</p>
+              <p className="text-lg font-bold text-foreground">{filteredEmail.length}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {filteredEmail.filter(l => l.status === 'sent').length} ✓ / {filteredEmail.filter(l => l.status !== 'sent').length} ✗
               </p>
             </div>
           </GlassCard>
