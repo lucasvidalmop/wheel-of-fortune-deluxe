@@ -3655,9 +3655,17 @@ function Dashboard() {
 
               <GlassCard className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
+                <label className="flex items-center gap-2 cursor-pointer flex-wrap">
+                  <input type="checkbox" checked={excludeRecentEmail} onChange={e => { setExcludeRecentEmail(e.target.checked); if (e.target.checked) fetchRecentEmailRecipients(); }} className="rounded border-white/20" />
+                  <span className="text-xs text-muted-foreground">Excluir quem já recebeu email (2h)</span>
+                  {excludeRecentEmail && recentEmailRecipients.size > 0 && <span className="text-xs text-yellow-400">({recentEmailRecipients.size} excluídos)</span>}
+                  {excludeRecentEmail && recentEmailCountdown && (
+                    <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">⏱ {recentEmailCountdown}</span>
+                  )}
+                </label>
                 <div className="flex gap-2">
                   <button onClick={() => { setEmailTarget('all'); setSelectedEmails([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    Todos ({users.length})
+                    Todos ({users.filter(u => u.email && (!excludeRecentEmail || !recentEmailRecipients.has(u.email.toLowerCase()))).length})
                   </button>
                   <button onClick={() => setEmailTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
                     Selecionar ({selectedEmails.length})
