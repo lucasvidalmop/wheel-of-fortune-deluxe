@@ -811,6 +811,46 @@ function Dashboard() {
     return () => clearInterval(interval);
   }, [excludeBulkSent, bulkSentOldestTime]);
 
+  const fetchRecentEmailRecipients = async () => {
+    if (!session?.user?.id) return;
+    const since2h = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const { data } = await (supabase as any)
+      .from('email_send_log')
+      .select('recipient_email, created_at, status')
+      .gte('created_at', since2h)
+      .in('status', ['sent', 'pending']);
+    const rows = data || [];
+    const emails = new Set<string>(rows.map((d: any) => (d.recipient_email || '').toLowerCase()));
+    setRecentEmailRecipients(emails);
+    if (rows.length > 0) {
+      const oldest = rows.reduce((min: string, d: any) => d.created_at < min ? d.created_at : min, rows[0].created_at);
+      setRecentEmailOldestTime(new Date(oldest));
+    } else {
+      setRecentEmailOldestTime(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!excludeRecentEmail || !recentEmailOldestTime) { setRecentEmailCountdown(''); return; }
+    const update = () => {
+      const expiresAt = recentEmailOldestTime.getTime() + 2 * 60 * 60 * 1000;
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        setRecentEmailCountdown('');
+        fetchRecentEmailRecipients();
+        return;
+      }
+      const h = Math.floor(remaining / 3600000);
+      const m = Math.floor((remaining % 3600000) / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      setRecentEmailCountdown(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [excludeRecentEmail, recentEmailOldestTime]);
+
+
   const [slug, setSlug] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [editingSlug, setEditingSlug] = useState(false);
