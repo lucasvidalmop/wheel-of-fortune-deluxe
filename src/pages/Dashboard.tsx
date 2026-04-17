@@ -3840,8 +3840,12 @@ function Dashboard() {
 
               <button
                 onClick={async () => {
-                  const recipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
-                  if (recipients.length === 0) { toast.error('Nenhum destinatário selecionado'); return; }
+                  const baseRecipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
+                  const recipients = excludeRecentEmail
+                    ? baseRecipients.filter(e => e && !recentEmailRecipients.has(e.toLowerCase()))
+                    : baseRecipients.filter(e => !!e);
+                  const skipped = baseRecipients.length - recipients.length;
+                  if (recipients.length === 0) { toast.error(skipped > 0 ? `Todos os ${skipped} destinatários foram excluídos (email recente)` : 'Nenhum destinatário selecionado'); return; }
                   if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
                   setEmailSending(true);
                    const publishedUrl = 'https://tipspayroleta.com';
