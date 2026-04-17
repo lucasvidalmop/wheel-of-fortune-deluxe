@@ -3796,16 +3796,22 @@ function Dashboard() {
                    const roletaLink = `${publishedUrl}/${slug}`;
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
                   if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
-                  let sent = 0, errors = 0;
+                  let sent = 0, errors = 0, timedOut = 0;
                   const customTpl = customTemplates.find(t => t.id === emailTemplate);
-                  for (const email of recipients) {
+                  const templateName = customTpl
+                    ? 'wheel-invite-blocks'
+                    : emailTemplate === 'custom' ? 'wheel-invite-custom'
+                    : emailTemplate === 'lucas' ? 'wheel-invite-lucas'
+                    : 'wheel-invite';
+
+                  // Per-request timeout to prevent the loop from hanging on a stuck call
+                  const PER_REQUEST_TIMEOUT_MS = 20000;
+                  // Concurrency: send several in parallel to avoid serial blocking
+                  const CONCURRENCY = 5;
+
+                  const sendOne = async (email: string) => {
                     const user = users.find(u => u.email === email);
-                    const templateName = customTpl
-                      ? 'wheel-invite-blocks'
-                      : emailTemplate === 'custom' ? 'wheel-invite-custom'
-                      : emailTemplate === 'lucas' ? 'wheel-invite-lucas'
-                      : 'wheel-invite';
-                    const { error } = await supabase.functions.invoke('send-transactional-email', {
+                    const invocation = supabase.functions.invoke('send-transactional-email', {
                       body: {
                         templateName,
                         recipientEmail: email,
@@ -3822,11 +3828,29 @@ function Dashboard() {
                         },
                       },
                     });
-                    if (error) errors++; else sent++;
+                    try {
+                      const result: any = await Promise.race([
+                        invocation,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), PER_REQUEST_TIMEOUT_MS)),
+                      ]);
+                      if (result?.error) errors++; else sent++;
+                    } catch (e: any) {
+                      if (e?.message === 'timeout') timedOut++;
+                      errors++;
+                    }
+                  };
+
+                  // Process in chunks of CONCURRENCY, never blocking forever on a single request
+                  for (let i = 0; i < recipients.length; i += CONCURRENCY) {
+                    const chunk = recipients.slice(i, i + CONCURRENCY);
+                    await Promise.all(chunk.map(sendOne));
                   }
                   setEmailSending(false);
-                  if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
-                  else toast.success(`${sent} email(s) enviado(s) com sucesso!`);
+                  if (errors > 0) {
+                    toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}`);
+                  } else {
+                    toast.success(`${sent} email(s) enviado(s) com sucesso!`);
+                  }
                   if (showEmailHistory) fetchEmailLogs();
                 }}
                 disabled={emailSending}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar as CalendarIcon } from 'lucide-react';
+import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar as CalendarIcon, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -28,12 +28,13 @@ interface Props {
   ownerId: string;
 }
 
-type ChannelFilter = 'all' | 'sms' | 'whatsapp';
+type ChannelFilter = 'all' | 'sms' | 'whatsapp' | 'email';
 type PeriodFilter = '7d' | '30d' | '90d' | 'all';
 
 export default function MessagingAnalytics({ ownerId }: Props) {
   const [smsLogs, setSmsLogs] = useState<LogEntry[]>([]);
   const [waLogs, setWaLogs] = useState<LogEntry[]>([]);
+  const [emailLogs, setEmailLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [channel, setChannel] = useState<ChannelFilter>('all');
   const [period, setPeriod] = useState<PeriodFilter>('30d');
@@ -44,16 +45,17 @@ export default function MessagingAnalytics({ ownerId }: Props) {
     setLoading(true);
     const PAGE = 1000;
 
-    const fetchPaginated = async (table: string) => {
+    const fetchPaginated = async (table: string, filterByOwner: boolean) => {
       let all: any[] = [];
       let from = 0;
       while (true) {
-        const { data } = await (supabase as any)
+        let q = (supabase as any)
           .from(table)
           .select('*')
-          .eq('owner_id', ownerId)
           .order('created_at', { ascending: false })
           .range(from, from + PAGE - 1);
+        if (filterByOwner) q = q.eq('owner_id', ownerId);
+        const { data } = await q;
         if (!data || data.length === 0) break;
         all = all.concat(data);
         if (data.length < PAGE) break;
@@ -62,12 +64,33 @@ export default function MessagingAnalytics({ ownerId }: Props) {
       return all;
     };
 
-    const [sms, wa] = await Promise.all([
-      fetchPaginated('sms_message_log'),
-      fetchPaginated('whatsapp_message_log'),
+    const [sms, wa, emails] = await Promise.all([
+      fetchPaginated('sms_message_log', true),
+      fetchPaginated('whatsapp_message_log', true),
+      fetchPaginated('email_send_log', false),
     ]);
+
+    // Deduplicate emails by message_id (latest status per message wins; data is ordered DESC)
+    const emailDedupMap = new Map<string, any>();
+    for (const e of emails) {
+      const key = e.message_id || e.id;
+      if (!emailDedupMap.has(key)) emailDedupMap.set(key, e);
+    }
+    const emailsMapped: LogEntry[] = Array.from(emailDedupMap.values()).map((e: any) => ({
+      id: e.id,
+      created_at: e.created_at,
+      // Treat 'sent' as success; everything else (pending/failed/dlq/suppressed/bounced) as not-sent for the success rate
+      status: e.status === 'sent' ? 'sent' : 'failed',
+      recipient_phone: e.recipient_email,
+      recipient_name: e.template_name || '',
+      message: e.template_name || '',
+      error_message: e.error_message || undefined,
+      batch_id: undefined,
+    }));
+
     setSmsLogs(sms);
     setWaLogs(wa);
+    setEmailLogs(emailsMapped);
     setLoading(false);
   };
 
@@ -94,40 +117,47 @@ export default function MessagingAnalytics({ ownerId }: Props) {
 
   const filteredSms = useMemo(() => filterByDate(smsLogs), [smsLogs, cutoffDate, selectedDate]);
   const filteredWa = useMemo(() => filterByDate(waLogs), [waLogs, cutoffDate, selectedDate]);
+  const filteredEmail = useMemo(() => filterByDate(emailLogs), [emailLogs, cutoffDate, selectedDate]);
+
+  const showSms = channel === 'all' || channel === 'sms';
+  const showWa = channel === 'all' || channel === 'whatsapp';
+  const showEmail = channel === 'all' || channel === 'email';
 
   const allFiltered = useMemo(() => {
     const arr = [
-      ...(channel !== 'whatsapp' ? filteredSms.map(l => ({ ...l, _channel: 'sms' as const })) : []),
-      ...(channel !== 'sms' ? filteredWa.map(l => ({ ...l, _channel: 'whatsapp' as const })) : []),
+      ...(showSms ? filteredSms.map(l => ({ ...l, _channel: 'sms' as const })) : []),
+      ...(showWa ? filteredWa.map(l => ({ ...l, _channel: 'whatsapp' as const })) : []),
+      ...(showEmail ? filteredEmail.map(l => ({ ...l, _channel: 'email' as const })) : []),
     ];
     arr.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return arr;
-  }, [filteredSms, filteredWa, channel]);
+  }, [filteredSms, filteredWa, filteredEmail, showSms, showWa, showEmail]);
 
   const stats = useMemo(() => {
     const total = allFiltered.length;
     const sent = allFiltered.filter(l => l.status === 'sent').length;
     const failed = total - sent;
     const rate = total > 0 ? ((sent / total) * 100).toFixed(1) : '0';
-    const smsTotal = channel !== 'whatsapp' ? filteredSms.length : 0;
-    const waTotal = channel !== 'sms' ? filteredWa.length : 0;
-    return { total, sent, failed, rate, smsTotal, waTotal };
-  }, [allFiltered, filteredSms, filteredWa, channel]);
+    const smsTotal = showSms ? filteredSms.length : 0;
+    const waTotal = showWa ? filteredWa.length : 0;
+    const emailTotal = showEmail ? filteredEmail.length : 0;
+    return { total, sent, failed, rate, smsTotal, waTotal, emailTotal };
+  }, [allFiltered, filteredSms, filteredWa, filteredEmail, showSms, showWa, showEmail]);
 
   // Daily chart data (last 14 days or period)
   const dailyData = useMemo(() => {
     const days = period === '7d' ? 7 : period === '30d' ? 14 : period === '90d' ? 30 : 14;
-    const result: { date: string; label: string; sms_sent: number; sms_fail: number; wa_sent: number; wa_fail: number }[] = [];
+    const result: { date: string; label: string; sms_sent: number; sms_fail: number; wa_sent: number; wa_fail: number; email_sent: number; email_fail: number }[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-      result.push({ date: dateStr, label, sms_sent: 0, sms_fail: 0, wa_sent: 0, wa_fail: 0 });
+      result.push({ date: dateStr, label, sms_sent: 0, sms_fail: 0, wa_sent: 0, wa_fail: 0, email_sent: 0, email_fail: 0 });
     }
     const dateMap = new Map(result.map((r, i) => [r.date, i]));
 
-    if (channel !== 'whatsapp') {
+    if (showSms) {
       filteredSms.forEach(l => {
         const d = new Date(l.created_at).toISOString().split('T')[0];
         const idx = dateMap.get(d);
@@ -137,7 +167,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
         }
       });
     }
-    if (channel !== 'sms') {
+    if (showWa) {
       filteredWa.forEach(l => {
         const d = new Date(l.created_at).toISOString().split('T')[0];
         const idx = dateMap.get(d);
@@ -147,11 +177,21 @@ export default function MessagingAnalytics({ ownerId }: Props) {
         }
       });
     }
+    if (showEmail) {
+      filteredEmail.forEach(l => {
+        const d = new Date(l.created_at).toISOString().split('T')[0];
+        const idx = dateMap.get(d);
+        if (idx !== undefined) {
+          if (l.status === 'sent') result[idx].email_sent++;
+          else result[idx].email_fail++;
+        }
+      });
+    }
     return result;
-  }, [filteredSms, filteredWa, channel, period]);
+  }, [filteredSms, filteredWa, filteredEmail, showSms, showWa, showEmail, period]);
 
   const maxDaily = useMemo(() => {
-    return Math.max(1, ...dailyData.map(d => d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail));
+    return Math.max(1, ...dailyData.map(d => d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail + d.email_sent + d.email_fail));
   }, [dailyData]);
 
   // Batch grouping
@@ -201,6 +241,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           { key: 'all', label: 'Todos', icon: <BarChart3 size={14} /> },
           { key: 'sms', label: 'SMS', icon: <Smartphone size={14} /> },
           { key: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={14} /> },
+          { key: 'email', label: 'Email', icon: <Mail size={14} /> },
         ] as const).map(f => (
           <button key={f.key} onClick={() => setChannel(f.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${channel === f.key ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]'}`}>
@@ -277,7 +318,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
 
       {/* Channel breakdown */}
       {channel === 'all' && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <GlassCard className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-xl bg-blue-500/10"><Smartphone size={16} className="text-blue-400" /></div>
             <div>
@@ -298,6 +339,16 @@ export default function MessagingAnalytics({ ownerId }: Props) {
               </p>
             </div>
           </GlassCard>
+          <GlassCard className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-purple-500/10"><Mail size={16} className="text-purple-400" /></div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Email</p>
+              <p className="text-lg font-bold text-foreground">{filteredEmail.length}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {filteredEmail.filter(l => l.status === 'sent').length} ✓ / {filteredEmail.filter(l => l.status !== 'sent').length} ✗
+              </p>
+            </div>
+          </GlassCard>
         </div>
       )}
 
@@ -309,9 +360,9 @@ export default function MessagingAnalytics({ ownerId }: Props) {
         </h3>
         <div className="flex items-end gap-1 h-[140px]">
           {dailyData.map((d, i) => {
-            const total = d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail;
-            const sentH = ((d.sms_sent + d.wa_sent) / maxDaily) * 100;
-            const failH = ((d.sms_fail + d.wa_fail) / maxDaily) * 100;
+            const total = d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail + d.email_sent + d.email_fail;
+            const sentH = ((d.sms_sent + d.wa_sent + d.email_sent) / maxDaily) * 100;
+            const failH = ((d.sms_fail + d.wa_fail + d.email_fail) / maxDaily) * 100;
             const isSelected = selectedDate && d.date === selectedDate.toISOString().split('T')[0];
             return (
               <div key={i} className={cn(
@@ -425,8 +476,8 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           <div className="max-h-[400px] overflow-y-auto space-y-1.5 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.1] [&::-webkit-scrollbar-thumb]:rounded-full">
             {allFiltered.slice(0, 200).map(l => (
               <div key={l.id} className="flex items-start gap-2.5 p-2.5 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] transition">
-                <div className={`mt-0.5 p-1 rounded-md ${l._channel === 'sms' ? 'bg-blue-400/10' : 'bg-green-400/10'}`}>
-                  {l._channel === 'sms' ? <Smartphone size={10} className="text-blue-400" /> : <MessageCircle size={10} className="text-green-400" />}
+                <div className={`mt-0.5 p-1 rounded-md ${l._channel === 'sms' ? 'bg-blue-400/10' : l._channel === 'email' ? 'bg-purple-400/10' : 'bg-green-400/10'}`}>
+                  {l._channel === 'sms' ? <Smartphone size={10} className="text-blue-400" /> : l._channel === 'email' ? <Mail size={10} className="text-purple-400" /> : <MessageCircle size={10} className="text-green-400" />}
                 </div>
                 <div className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${l.status === 'sent' ? 'bg-green-400' : 'bg-red-400'}`} />
                 <div className="flex-1 min-w-0">
