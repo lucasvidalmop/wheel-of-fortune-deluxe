@@ -915,7 +915,7 @@ function Dashboard() {
 
     setEmailSubject(settings.emailSubject);
     setEmailBody(settings.emailBody);
-    setEmailTemplate(settings.emailTemplate === 'custom' ? 'custom' : settings.emailTemplate === 'lucas' ? 'lucas' : 'original');
+    setEmailTemplate(settings.emailTemplate || 'original');
     setEmailBannerUrl(settings.emailBannerUrl || '');
     setEmailSenderName(settings.emailSenderName || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderName);
     setEmailSenderEmail(settings.emailSenderEmail || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderEmail);
