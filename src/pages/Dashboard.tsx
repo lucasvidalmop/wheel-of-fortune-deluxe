@@ -3659,18 +3659,61 @@ function Dashboard() {
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Mail size={16} className="text-primary" /> Conteúdo</h3>
 
                 {/* Template */}
-                <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => setEmailTemplate('original')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'original' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    🎰 Original
-                  </button>
-                  <button onClick={() => setEmailTemplate('custom')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'custom' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    🖼️ Personalizado
-                  </button>
-                   {session?.user?.email === 'lucasvidalmop@gmail.com' && (
-                     <button onClick={() => setEmailTemplate('lucas')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'lucas' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                       🏆 Lucas BSB
-                     </button>
-                   )}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Template</label>
+                    <button
+                      onClick={() => { setEditingTemplate(null); setShowTemplateEditor(true); }}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <Plus size={12} /> Criar template
+                    </button>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => setEmailTemplate('original')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'original' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                      🎰 Original
+                    </button>
+                    <button onClick={() => setEmailTemplate('custom')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'custom' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                      🖼️ Personalizado
+                    </button>
+                    {session?.user?.email === 'lucasvidalmop@gmail.com' && (
+                      <button onClick={() => setEmailTemplate('lucas')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'lucas' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        🏆 Lucas BSB
+                      </button>
+                    )}
+                    {customTemplates.map(t => (
+                      <div key={t.id} className={`group relative flex items-center rounded-xl border transition-all ${emailTemplate === t.id ? 'bg-primary/15 border-primary/20' : 'border-white/[0.08] bg-white/[0.04]'}`}>
+                        <button
+                          onClick={() => setEmailTemplate(t.id)}
+                          className={`pl-4 pr-2 py-2.5 text-sm font-medium ${emailTemplate === t.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          ✨ {t.name}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingTemplate(t); setShowTemplateEditor(true); }}
+                          className="px-1.5 py-2.5 text-muted-foreground hover:text-foreground"
+                          title="Editar"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm(`Excluir template "${t.name}"?`)) return;
+                            const { error } = await supabase.from('email_templates').delete().eq('id', t.id);
+                            if (error) { toast.error('Erro ao excluir'); return; }
+                            toast.success('Template excluído');
+                            if (emailTemplate === t.id) setEmailTemplate('original');
+                            refreshCustomTemplates();
+                          }}
+                          className="px-1.5 pr-3 py-2.5 text-muted-foreground hover:text-destructive"
+                          title="Excluir"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Banner */}
