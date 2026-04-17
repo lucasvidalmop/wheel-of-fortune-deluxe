@@ -47,6 +47,10 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
   const [backgroundColor, setBackgroundColor] = useState(initial?.backgroundColor || '#f0f1f5');
   const [saving, setSaving] = useState(false);
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
+  const [showImport, setShowImport] = useState(false);
+  const [importHtml, setImportHtml] = useState('');
+  const [uploadingHtmlImg, setUploadingHtmlImg] = useState(false);
 
   const addBlock = (type: EmailBlock['type']) => {
     setBlocks([...blocks, JSON.parse(JSON.stringify(NEW_BLOCK_DEFAULTS[type]))]);
@@ -102,6 +106,34 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
       setUploadingIdx(null);
     }
   };
+
+  const handleImportHtml = () => {
+    if (!importHtml.trim()) { toast.error('Cole o HTML antes de importar'); return; }
+    setBlocks([...blocks, { type: 'html', html: importHtml.trim() }]);
+    setImportHtml('');
+    setShowImport(false);
+    toast.success('HTML importado como bloco. Use "Trocar imagens" para fazer upload e substituir URLs.');
+  };
+
+  const handleHtmlImageReplace = async (idx: number, oldUrl: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) { toast.error('Imagem máx 5MB'); return; }
+    setUploadingHtmlImg(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'email-blocks');
+      const block = blocks[idx];
+      if (block.type !== 'html') return;
+      const newHtml = block.html.split(oldUrl).join(publicUrl);
+      updateBlock(idx, { html: newHtml });
+      toast.success('Imagem substituída!');
+    } catch (e: any) {
+      toast.error('Erro: ' + (e.message || ''));
+    } finally {
+      setUploadingHtmlImg(false);
+    }
+  };
+
+  // Render preview HTML for each block (mirrors the email server-side template visually)
+  const previewHtml = useMemo(() => renderBlocksToHtml(blocks, backgroundColor), [blocks, backgroundColor]);
 
   return (
     <div className="space-y-4">
