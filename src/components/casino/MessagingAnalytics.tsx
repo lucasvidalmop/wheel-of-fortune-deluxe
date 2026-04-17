@@ -117,40 +117,47 @@ export default function MessagingAnalytics({ ownerId }: Props) {
 
   const filteredSms = useMemo(() => filterByDate(smsLogs), [smsLogs, cutoffDate, selectedDate]);
   const filteredWa = useMemo(() => filterByDate(waLogs), [waLogs, cutoffDate, selectedDate]);
+  const filteredEmail = useMemo(() => filterByDate(emailLogs), [emailLogs, cutoffDate, selectedDate]);
+
+  const showSms = channel === 'all' || channel === 'sms';
+  const showWa = channel === 'all' || channel === 'whatsapp';
+  const showEmail = channel === 'all' || channel === 'email';
 
   const allFiltered = useMemo(() => {
     const arr = [
-      ...(channel !== 'whatsapp' ? filteredSms.map(l => ({ ...l, _channel: 'sms' as const })) : []),
-      ...(channel !== 'sms' ? filteredWa.map(l => ({ ...l, _channel: 'whatsapp' as const })) : []),
+      ...(showSms ? filteredSms.map(l => ({ ...l, _channel: 'sms' as const })) : []),
+      ...(showWa ? filteredWa.map(l => ({ ...l, _channel: 'whatsapp' as const })) : []),
+      ...(showEmail ? filteredEmail.map(l => ({ ...l, _channel: 'email' as const })) : []),
     ];
     arr.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return arr;
-  }, [filteredSms, filteredWa, channel]);
+  }, [filteredSms, filteredWa, filteredEmail, showSms, showWa, showEmail]);
 
   const stats = useMemo(() => {
     const total = allFiltered.length;
     const sent = allFiltered.filter(l => l.status === 'sent').length;
     const failed = total - sent;
     const rate = total > 0 ? ((sent / total) * 100).toFixed(1) : '0';
-    const smsTotal = channel !== 'whatsapp' ? filteredSms.length : 0;
-    const waTotal = channel !== 'sms' ? filteredWa.length : 0;
-    return { total, sent, failed, rate, smsTotal, waTotal };
-  }, [allFiltered, filteredSms, filteredWa, channel]);
+    const smsTotal = showSms ? filteredSms.length : 0;
+    const waTotal = showWa ? filteredWa.length : 0;
+    const emailTotal = showEmail ? filteredEmail.length : 0;
+    return { total, sent, failed, rate, smsTotal, waTotal, emailTotal };
+  }, [allFiltered, filteredSms, filteredWa, filteredEmail, showSms, showWa, showEmail]);
 
   // Daily chart data (last 14 days or period)
   const dailyData = useMemo(() => {
     const days = period === '7d' ? 7 : period === '30d' ? 14 : period === '90d' ? 30 : 14;
-    const result: { date: string; label: string; sms_sent: number; sms_fail: number; wa_sent: number; wa_fail: number }[] = [];
+    const result: { date: string; label: string; sms_sent: number; sms_fail: number; wa_sent: number; wa_fail: number; email_sent: number; email_fail: number }[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-      result.push({ date: dateStr, label, sms_sent: 0, sms_fail: 0, wa_sent: 0, wa_fail: 0 });
+      result.push({ date: dateStr, label, sms_sent: 0, sms_fail: 0, wa_sent: 0, wa_fail: 0, email_sent: 0, email_fail: 0 });
     }
     const dateMap = new Map(result.map((r, i) => [r.date, i]));
 
-    if (channel !== 'whatsapp') {
+    if (showSms) {
       filteredSms.forEach(l => {
         const d = new Date(l.created_at).toISOString().split('T')[0];
         const idx = dateMap.get(d);
@@ -160,7 +167,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
         }
       });
     }
-    if (channel !== 'sms') {
+    if (showWa) {
       filteredWa.forEach(l => {
         const d = new Date(l.created_at).toISOString().split('T')[0];
         const idx = dateMap.get(d);
@@ -170,11 +177,21 @@ export default function MessagingAnalytics({ ownerId }: Props) {
         }
       });
     }
+    if (showEmail) {
+      filteredEmail.forEach(l => {
+        const d = new Date(l.created_at).toISOString().split('T')[0];
+        const idx = dateMap.get(d);
+        if (idx !== undefined) {
+          if (l.status === 'sent') result[idx].email_sent++;
+          else result[idx].email_fail++;
+        }
+      });
+    }
     return result;
-  }, [filteredSms, filteredWa, channel, period]);
+  }, [filteredSms, filteredWa, filteredEmail, showSms, showWa, showEmail, period]);
 
   const maxDaily = useMemo(() => {
-    return Math.max(1, ...dailyData.map(d => d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail));
+    return Math.max(1, ...dailyData.map(d => d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail + d.email_sent + d.email_fail));
   }, [dailyData]);
 
   // Batch grouping
