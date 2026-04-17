@@ -360,9 +360,9 @@ export default function MessagingAnalytics({ ownerId }: Props) {
         </h3>
         <div className="flex items-end gap-1 h-[140px]">
           {dailyData.map((d, i) => {
-            const total = d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail;
-            const sentH = ((d.sms_sent + d.wa_sent) / maxDaily) * 100;
-            const failH = ((d.sms_fail + d.wa_fail) / maxDaily) * 100;
+            const total = d.sms_sent + d.sms_fail + d.wa_sent + d.wa_fail + d.email_sent + d.email_fail;
+            const sentH = ((d.sms_sent + d.wa_sent + d.email_sent) / maxDaily) * 100;
+            const failH = ((d.sms_fail + d.wa_fail + d.email_fail) / maxDaily) * 100;
             const isSelected = selectedDate && d.date === selectedDate.toISOString().split('T')[0];
             return (
               <div key={i} className={cn(
