@@ -44,7 +44,7 @@ interface WheelUser {
 interface PersistedDashboardSettings {
   emailSubject: string;
   emailBody: string;
-  emailTemplate: 'original' | 'custom' | 'lucas';
+  emailTemplate: 'original' | 'custom' | 'lucas' | string;
   emailBannerUrl: string;
   emailSenderName: string;
   emailSenderEmail: string;
