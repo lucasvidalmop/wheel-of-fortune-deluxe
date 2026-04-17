@@ -343,7 +343,32 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
               <FileCode size={16} className="text-primary" />
               <h3 className="text-sm font-bold text-foreground">Importar template HTML</h3>
             </div>
-            <p className="text-xs text-muted-foreground">Cole o HTML completo do seu e-mail. Será adicionado como um bloco HTML. Depois você pode subir as imagens locais para substituir as URLs no markup.</p>
+            <p className="text-xs text-muted-foreground">Envie um arquivo <code className="text-primary">.html</code> ou cole o HTML completo do seu e-mail. Será adicionado como um bloco HTML. Depois você pode subir as imagens locais para substituir as URLs no markup.</p>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition cursor-pointer">
+                <Upload size={12} /> Enviar arquivo HTML
+                <input
+                  type="file"
+                  accept=".html,.htm,text/html"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (f.size > 2 * 1024 * 1024) { toast.error('Arquivo muito grande (máx 2MB)'); return; }
+                    try {
+                      const text = await f.text();
+                      setImportHtml(text);
+                      toast.success(`Arquivo "${f.name}" carregado. Revise e clique em Importar.`);
+                    } catch {
+                      toast.error('Não foi possível ler o arquivo');
+                    } finally {
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </label>
+              <span className="text-xs text-muted-foreground">ou cole abaixo</span>
+            </div>
             <textarea
               value={importHtml}
               onChange={(e) => setImportHtml(e.target.value)}
