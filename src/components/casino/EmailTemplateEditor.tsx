@@ -136,18 +136,25 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
   const previewHtml = useMemo(() => renderBlocksToHtml(blocks, backgroundColor), [blocks, backgroundColor]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr,420px] gap-4">
+      <div className="space-y-4 min-w-0">
+      <div className="flex items-center gap-2 flex-wrap">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome do template (ex: Promo Sexta)"
-          className="flex-1 px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+          className="flex-1 min-w-[180px] px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
         />
         <div className="flex items-center gap-1.5">
           <label className="text-[10px] uppercase text-muted-foreground">BG</label>
           <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} className="w-9 h-9 rounded-lg border border-white/[0.08] bg-transparent cursor-pointer" />
         </div>
+        <button type="button" onClick={() => setShowImport(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition">
+          <Upload size={12} /> Importar HTML
+        </button>
+        <button type="button" onClick={() => setShowPreview(p => !p)} className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-foreground hover:bg-white/[0.08] transition">
+          <Eye size={12} /> {showPreview ? 'Ocultar' : 'Ver'} preview
+        </button>
       </div>
 
       {/* Add block toolbar */}
@@ -159,6 +166,7 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
           ['text', Type, 'Texto'],
           ['bullets', List, 'Lista'],
           ['cta', MousePointerClick, 'Botão'],
+          ['html', Code2, 'HTML'],
           ['divider', Minus, 'Divisor'],
           ['footer', Layout, 'Rodapé'],
         ] as const).map(([type, Icon, label]) => (
