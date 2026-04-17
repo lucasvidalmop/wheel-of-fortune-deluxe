@@ -289,6 +289,24 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
               </>
             )}
 
+            {block.type === 'html' && (
+              <>
+                <textarea
+                  value={block.html}
+                  onChange={(e) => updateBlock(idx, { html: e.target.value })}
+                  rows={6}
+                  placeholder="<table>...</table>"
+                  className="w-full px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono text-foreground focus:outline-none resize-y"
+                />
+                <HtmlImageReplacer
+                  html={block.html}
+                  uploading={uploadingHtmlImg}
+                  onReplace={(oldUrl, file) => handleHtmlImageReplace(idx, oldUrl, file)}
+                />
+                <p className="text-[10px] text-muted-foreground">Use {'{name}'}, {'{body}'} e {'{roletaLink}'} como variáveis. O HTML é renderizado bruto no e-mail.</p>
+              </>
+            )}
+
             {block.type === 'divider' && <p className="text-[10px] text-muted-foreground italic">Linha divisória</p>}
           </div>
         ))}
@@ -300,8 +318,112 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
           <Save size={14} /> {saving ? 'Salvando...' : 'Salvar template'}
         </button>
       </div>
+      </div>
+
+      {/* Live preview pane */}
+      {showPreview && (
+        <div className="hidden lg:flex flex-col rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden sticky top-0 self-start max-h-[80vh]">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] text-[10px] uppercase tracking-wider text-muted-foreground">
+            <Eye size={12} /> Pré-visualização
+          </div>
+          <iframe
+            title="preview"
+            srcDoc={previewHtml}
+            className="flex-1 w-full bg-white"
+            sandbox=""
+          />
+        </div>
+      )}
+
+      {/* Import HTML modal */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowImport(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-background border border-white/[0.08] rounded-2xl p-5 max-w-2xl w-full space-y-3">
+            <div className="flex items-center gap-2">
+              <FileCode size={16} className="text-primary" />
+              <h3 className="text-sm font-bold text-foreground">Importar template HTML</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">Cole o HTML completo do seu e-mail. Será adicionado como um bloco HTML. Depois você pode subir as imagens locais para substituir as URLs no markup.</p>
+            <textarea
+              value={importHtml}
+              onChange={(e) => setImportHtml(e.target.value)}
+              rows={12}
+              placeholder='<table width="600" align="center">...</table>'
+              className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-foreground focus:outline-none resize-y"
+            />
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowImport(false)} className="px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08]">Cancelar</button>
+              <button onClick={handleImportHtml} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2"><Upload size={14} /> Importar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+// Helper component: lists <img src> from HTML and lets user upload a replacement
+function HtmlImageReplacer({ html, uploading, onReplace }: { html: string; uploading: boolean; onReplace: (oldUrl: string, file: File) => void }) {
+  const urls = useMemo(() => {
+    const out = new Set<string>();
+    const re = /<img[^>]+src=["']([^"']+)["']/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) !== null) out.add(m[1]);
+    return Array.from(out);
+  }, [html]);
+
+  if (urls.length === 0) return <p className="text-[10px] text-muted-foreground italic">Nenhuma imagem detectada no HTML.</p>;
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Trocar imagens ({urls.length})</p>
+      {urls.map((url, i) => (
+        <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <img src={url} alt="" className="w-10 h-10 rounded object-cover bg-black/20" onError={(e) => (e.currentTarget.style.opacity = '0.3')} />
+          <span className="flex-1 text-[10px] text-muted-foreground truncate font-mono">{url}</span>
+          <label className={`px-2 py-1 rounded-md border border-white/[0.08] bg-white/[0.04] text-[10px] text-foreground cursor-pointer hover:bg-white/[0.08] ${uploading ? 'opacity-50' : ''}`}>
+            {uploading ? '⏳' : '📤 Trocar'}
+            <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) onReplace(url, f); }} />
+          </label>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Render blocks as HTML for live preview (mirrors server template visually)
+function renderBlocksToHtml(blocks: EmailBlock[], bg: string): string {
+  const esc = (s: string = '') => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  const replaceVars = (s: string = '') => s.replaceAll('{name}', 'João').replaceAll('{body}', 'Sua mensagem aqui').replaceAll('{roletaLink}', 'https://tipspayroleta.com');
+  const parts = blocks.map(b => {
+    switch (b.type) {
+      case 'hero':
+        return b.imageUrl ? `<div style="padding:10px 20px 0"><img src="${esc(b.imageUrl)}" style="display:block;width:100%;height:auto;max-width:560px"/></div>` : '';
+      case 'image': {
+        const w = Math.min(Math.max(b.width || 480, 100), 600);
+        const img = b.imageUrl ? `<img src="${esc(b.imageUrl)}" style="display:inline-block;width:100%;height:auto;max-width:${w}px"/>` : '<div style="color:#999;font-size:12px">[imagem vazia]</div>';
+        const wrapped = b.linkUrl ? `<a href="${esc(b.linkUrl)}">${img}</a>` : img;
+        return `<div style="padding:12px 20px;text-align:${b.align || 'center'}">${wrapped}</div>`;
+      }
+      case 'bullets':
+        return `<div style="padding:16px 20px 0;text-align:${b.align || 'center'}">${(b.items || []).map(it => `<p style="color:#0e1b10;font-size:18px;line-height:1.2;margin:0 0 16px;text-align:${b.align || 'center'}"><strong>${esc(replaceVars(it.bold || ''))} </strong>${esc(replaceVars(it.text || ''))}</p>`).join('')}</div>`;
+      case 'divider':
+        return `<hr style="border:0;border-top:1px solid #bfc3c8;margin:16px 20px"/>`;
+      case 'heading':
+        return `<p style="color:${b.color || '#0e1b10'};font-size:28px;font-weight:700;letter-spacing:-0.04em;line-height:1;text-align:${b.align || 'center'};margin:16px 20px">${esc(replaceVars(b.text))}</p>`;
+      case 'text':
+        return `<p style="color:${b.color || '#0e1b10'};font-size:14px;line-height:1.4;text-align:${b.align || 'center'};margin:0 40px 24px;white-space:pre-line">${esc(replaceVars(b.text))}</p>`;
+      case 'cta':
+        return `<div style="text-align:center;padding:0 20px 24px"><a href="https://tipspayroleta.com" style="background:${b.backgroundColor || '#00c4cc'};color:${b.textColor || '#fff'};font-size:18px;font-weight:700;border-radius:100px;padding:18px 48px;text-decoration:none;display:inline-block">${esc(replaceVars(b.label))}</a></div>`;
+      case 'html':
+        return `<div>${replaceVars(b.html)}</div>`;
+      case 'footer':
+        return `<div style="background:${b.backgroundColor || '#070300'};padding:30px 30px 20px">${b.heading ? `<p style="color:${b.textColor || '#f6f5f1'};font-size:24px;font-weight:700;line-height:1.2;margin:0 0 16px">${esc(replaceVars(b.heading))}</p>` : ''}${b.text ? `<p style="color:${b.textColor || '#f6f5f1'};font-size:17px;line-height:1.4;margin:0 0 16px;white-space:pre-line">${esc(replaceVars(b.text))}</p>` : ''}${b.copyright ? `<p style="color:#bfc3c8;font-size:13px;margin:16px 0 0">${esc(replaceVars(b.copyright))}</p>` : ''}</div>`;
+      default:
+        return '';
+    }
+  }).join('');
+  return `<!doctype html><html><body style="margin:0;background:${bg};font-family:Arial,sans-serif"><div style="max-width:600px;margin:0 auto;background:#fff">${parts}</div></body></html>`;
 }
 
 export function useEmailTemplates(ownerId: string | null) {
