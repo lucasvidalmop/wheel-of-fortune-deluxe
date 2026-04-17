@@ -8471,6 +8471,23 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
         </DialogContent>
       </Dialog>
 
+      {/* Email template editor */}
+      <Dialog open={showTemplateEditor} onOpenChange={setShowTemplateEditor}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingTemplate ? `Editar: ${editingTemplate.name}` : 'Novo template de email'}</DialogTitle>
+          </DialogHeader>
+          {session?.user?.id && (
+            <EmailTemplateEditor
+              ownerId={session.user.id}
+              initial={editingTemplate}
+              onClose={() => setShowTemplateEditor(false)}
+              onSaved={refreshCustomTemplates}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {ConfirmDialog}
     </div>
   );
