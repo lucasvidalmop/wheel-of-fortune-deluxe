@@ -20,6 +20,7 @@ import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
+import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
 
 interface WheelUser {
   id: string;
@@ -43,7 +44,7 @@ interface WheelUser {
 interface PersistedDashboardSettings {
   emailSubject: string;
   emailBody: string;
-  emailTemplate: 'original' | 'custom' | 'lucas';
+  emailTemplate: 'original' | 'custom' | 'lucas' | string;
   emailBannerUrl: string;
   emailSenderName: string;
   emailSenderEmail: string;
@@ -226,7 +227,9 @@ function Dashboard() {
   const [emailTarget, setEmailTarget] = useState<'all' | 'selected'>('all');
   const [emailSearchTerm, setEmailSearchTerm] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
-  const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom' | 'lucas'>('original');
+  const [emailTemplate, setEmailTemplate] = useState<'original' | 'custom' | 'lucas' | string>('original');
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<EmailTemplateRow | null>(null);
   const [emailBannerUrl, setEmailBannerUrl] = useState('');
   const [emailBannerUploading, setEmailBannerUploading] = useState(false);
   const [emailSenderName, setEmailSenderName] = useState('Royal Spin Wheel');
@@ -235,7 +238,7 @@ function Dashboard() {
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [emailLogsLoading, setEmailLogsLoading] = useState(false);
 
-  // SMS state
+  const { templates: customTemplates, refresh: refreshCustomTemplates } = useEmailTemplates(session?.user?.id || null);
   const [smsMessage, setSmsMessage] = useState('');
   const [smsSending, setSmsSending] = useState(false);
   const [smsTarget, setSmsTarget] = useState<'all' | 'selected'>('all');
@@ -912,7 +915,7 @@ function Dashboard() {
 
     setEmailSubject(settings.emailSubject);
     setEmailBody(settings.emailBody);
-    setEmailTemplate(settings.emailTemplate === 'custom' ? 'custom' : settings.emailTemplate === 'lucas' ? 'lucas' : 'original');
+    setEmailTemplate(settings.emailTemplate || 'original');
     setEmailBannerUrl(settings.emailBannerUrl || '');
     setEmailSenderName(settings.emailSenderName || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderName);
     setEmailSenderEmail(settings.emailSenderEmail || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderEmail);
@@ -3656,18 +3659,61 @@ function Dashboard() {
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Mail size={16} className="text-primary" /> Conteúdo</h3>
 
                 {/* Template */}
-                <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => setEmailTemplate('original')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'original' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    🎰 Original
-                  </button>
-                  <button onClick={() => setEmailTemplate('custom')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'custom' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                    🖼️ Personalizado
-                  </button>
-                   {session?.user?.email === 'lucasvidalmop@gmail.com' && (
-                     <button onClick={() => setEmailTemplate('lucas')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'lucas' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
-                       🏆 Lucas BSB
-                     </button>
-                   )}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Template</label>
+                    <button
+                      onClick={() => { setEditingTemplate(null); setShowTemplateEditor(true); }}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <Plus size={12} /> Criar template
+                    </button>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => setEmailTemplate('original')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'original' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                      🎰 Original
+                    </button>
+                    <button onClick={() => setEmailTemplate('custom')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'custom' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                      🖼️ Personalizado
+                    </button>
+                    {session?.user?.email === 'lucasvidalmop@gmail.com' && (
+                      <button onClick={() => setEmailTemplate('lucas')} className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${emailTemplate === 'lucas' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        🏆 Lucas BSB
+                      </button>
+                    )}
+                    {customTemplates.map(t => (
+                      <div key={t.id} className={`group relative flex items-center rounded-xl border transition-all ${emailTemplate === t.id ? 'bg-primary/15 border-primary/20' : 'border-white/[0.08] bg-white/[0.04]'}`}>
+                        <button
+                          onClick={() => setEmailTemplate(t.id)}
+                          className={`pl-4 pr-2 py-2.5 text-sm font-medium ${emailTemplate === t.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          ✨ {t.name}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingTemplate(t); setShowTemplateEditor(true); }}
+                          className="px-1.5 py-2.5 text-muted-foreground hover:text-foreground"
+                          title="Editar"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm(`Excluir template "${t.name}"?`)) return;
+                            const { error } = await supabase.from('email_templates').delete().eq('id', t.id);
+                            if (error) { toast.error('Erro ao excluir'); return; }
+                            toast.success('Template excluído');
+                            if (emailTemplate === t.id) setEmailTemplate('original');
+                            refreshCustomTemplates();
+                          }}
+                          className="px-1.5 pr-3 py-2.5 text-muted-foreground hover:text-destructive"
+                          title="Excluir"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Banner */}
@@ -3751,9 +3797,14 @@ function Dashboard() {
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
                   if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
                   let sent = 0, errors = 0;
+                  const customTpl = customTemplates.find(t => t.id === emailTemplate);
                   for (const email of recipients) {
                     const user = users.find(u => u.email === email);
-                    const templateName = emailTemplate === 'custom' ? 'wheel-invite-custom' : emailTemplate === 'lucas' ? 'wheel-invite-lucas' : 'wheel-invite';
+                    const templateName = customTpl
+                      ? 'wheel-invite-blocks'
+                      : emailTemplate === 'custom' ? 'wheel-invite-custom'
+                      : emailTemplate === 'lucas' ? 'wheel-invite-lucas'
+                      : 'wheel-invite';
                     const { error } = await supabase.functions.invoke('send-transactional-email', {
                       body: {
                         templateName,
@@ -3766,6 +3817,7 @@ function Dashboard() {
                           roletaLink,
                           senderName: emailSenderName || undefined,
                           senderEmail: emailSenderEmail || undefined,
+                          ...(customTpl ? { blocks: customTpl.blocks } : {}),
                           ...(emailTemplate === 'custom' && emailBannerUrl ? { bannerImageUrl: emailBannerUrl } : {}),
                         },
                       },
@@ -8416,6 +8468,23 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
               </>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Email template editor */}
+      <Dialog open={showTemplateEditor} onOpenChange={setShowTemplateEditor}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingTemplate ? `Editar: ${editingTemplate.name}` : 'Novo template de email'}</DialogTitle>
+          </DialogHeader>
+          {session?.user?.id && (
+            <EmailTemplateEditor
+              ownerId={session.user.id}
+              initial={editingTemplate}
+              onClose={() => setShowTemplateEditor(false)}
+              onSaved={refreshCustomTemplates}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
