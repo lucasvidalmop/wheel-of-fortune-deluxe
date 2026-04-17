@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar as CalendarIcon } from 'lucide-react';
+import { BarChart3, MessageCircle, Smartphone, CheckCircle2, X, Clock, RotateCcw, ChevronDown, ChevronUp, TrendingUp, Send, AlertTriangle, Calendar as CalendarIcon, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
