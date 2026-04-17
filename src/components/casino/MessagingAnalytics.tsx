@@ -241,6 +241,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           { key: 'all', label: 'Todos', icon: <BarChart3 size={14} /> },
           { key: 'sms', label: 'SMS', icon: <Smartphone size={14} /> },
           { key: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={14} /> },
+          { key: 'email', label: 'Email', icon: <Mail size={14} /> },
         ] as const).map(f => (
           <button key={f.key} onClick={() => setChannel(f.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${channel === f.key ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]'}`}>
