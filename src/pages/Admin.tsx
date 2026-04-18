@@ -647,8 +647,8 @@ const Admin = () => {
       </div>
 
       {/* ═══ MAIN ═══ */}
-      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 overflow-x-auto ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
-        <div className="max-w-6xl mx-auto lg:py-6 space-y-5 min-w-[320px]">
+      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
+        <div className="max-w-6xl mx-auto lg:py-6 space-y-5">
 
           {/* Title bar */}
           <div>
