@@ -204,6 +204,8 @@ const Admin = () => {
     setDashFaviconUploading(false);
     e.target.value = '';
   };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
