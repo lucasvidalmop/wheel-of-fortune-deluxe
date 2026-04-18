@@ -152,14 +152,20 @@ const Registration = () => {
     // Page title (tab name)
     const pageTitle = seoConfig.pageTitle || seoConfig.ogTitle;
     if (pageTitle) { document.title = pageTitle; }
-    // Favicon
-    if (seoConfig.faviconUrl) {
-      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+    // Favicon — usa o do operador, ou cai no padrão global do sistema
+    (async () => {
+      let faviconUrl = seoConfig.faviconUrl as string | undefined;
+      if (!faviconUrl) {
+        const { getGlobalFavicon } = await import('@/lib/applyGlobalFavicon');
+        faviconUrl = await getGlobalFavicon();
+      }
+      if (!faviconUrl) return;
+      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       const oldHref = link?.getAttribute('href');
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); cleanups.push(() => link.remove()); }
-      link.href = seoConfig.faviconUrl;
-      cleanups.push(() => { if (oldHref) link.href = oldHref; });
-    }
+      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); cleanups.push(() => link?.remove()); }
+      link.href = faviconUrl;
+      cleanups.push(() => { if (oldHref && link) link.href = oldHref; });
+    })();
     // Meta description
     const pageDesc = seoConfig.pageDescription || seoConfig.ogDescription;
     if (pageDesc) { addMeta('description', pageDesc); }

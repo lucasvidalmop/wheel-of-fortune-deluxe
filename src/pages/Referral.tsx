@@ -82,18 +82,24 @@ const Referral = () => {
     addMeta('twitter:description', (cfg as any).seoDescription || '');
     if ((cfg as any).seoOgImageUrl) addMeta('twitter:image', (cfg as any).seoOgImageUrl);
 
-    // Favicon
-    if ((cfg as any).seoFaviconUrl) {
+    // Favicon — usa o do operador, ou cai no padrão global do sistema
+    (async () => {
+      let faviconUrl = (cfg as any).seoFaviconUrl as string | undefined;
+      if (!faviconUrl) {
+        const { getGlobalFavicon } = await import('@/lib/applyGlobalFavicon');
+        faviconUrl = await getGlobalFavicon();
+      }
+      if (!faviconUrl) return;
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       const hadExisting = !!link;
       const oldHref = link?.href;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = (cfg as any).seoFaviconUrl;
+      link.href = faviconUrl;
       cleanups.push(() => {
         if (!hadExisting) link?.remove();
         else if (link && oldHref) link.href = oldHref;
       });
-    }
+    })();
 
     // Facebook Pixel
     if ((cfg as any).pixelFacebook) {
