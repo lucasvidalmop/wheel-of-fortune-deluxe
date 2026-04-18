@@ -357,9 +357,6 @@ const Roleta = () => {
 
   // Apply SEO: use operator config, fallback to global site_settings
   useEffect(() => {
-    // Marca que esta página assumiu o branding — impede o helper global do App.tsx
-    // de sobrescrever o favicon/título do operador por causa de race async.
-    import('@/lib/applyGlobalFavicon').then(m => m.claimBrandingControl());
     const applyGlobalFallback = async () => {
       let title = config.seoTitle;
       let desc = config.seoDescription;

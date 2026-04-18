@@ -13,8 +13,6 @@ import Registration from "./pages/Registration.tsx";
 import Influencer from "./pages/Influencer.tsx";
 import Deposit from "./pages/Deposit.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import { useEffect } from "react";
-import { applyGlobalSiteDefaults } from "@/lib/applyGlobalFavicon";
 
 const queryClient = new QueryClient();
 
@@ -27,9 +25,7 @@ const SlugRouter = () => {
   return <Roleta />;
 };
 
-const App = () => {
-  useEffect(() => { applyGlobalSiteDefaults(); }, []);
-  return (
+const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -48,7 +44,6 @@ const App = () => {
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-  );
-};
+);
 
 export default App;

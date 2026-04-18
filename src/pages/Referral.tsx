@@ -45,21 +45,9 @@ const Referral = () => {
         const gorjetaSlot = wcData?.config?.gorjetaPageConfig || {};
         setSlotCfg(gorjetaSlot);
 
-        // SEO do OPERADOR (definido na Dashboard, raiz de wheel_configs.config) — usado
-        // como fallback quando o link individual e o defaultReferralPageConfig não definirem SEO próprio.
-        const operatorSeo: any = {
-          seoTitle: wcData?.config?.seoTitle || '',
-          seoDescription: wcData?.config?.seoDescription || '',
-          seoFaviconUrl: wcData?.config?.faviconUrl || '',
-          seoOgImageUrl: wcData?.config?.ogImageUrl || '',
-        };
-
         const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
         const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
-        // Merge order: defaults < operator SEO < operator default referral config < link individual.
-        // Como `operatorSeo` só preenche se houver valor, ele NÃO sobrescreve defaults vazios indevidamente.
-        const filteredOperatorSeo = Object.fromEntries(Object.entries(operatorSeo).filter(([, v]) => v));
-        setCfg({ ...defaultPageConfig, ...filteredOperatorSeo, ...defaultCfg, ...individualCfg });
+        setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
       }
       setLoading(false);
     };
@@ -94,25 +82,18 @@ const Referral = () => {
     addMeta('twitter:description', (cfg as any).seoDescription || '');
     if ((cfg as any).seoOgImageUrl) addMeta('twitter:image', (cfg as any).seoOgImageUrl);
 
-    // Favicon — usa o do operador, ou cai no padrão global do sistema
-    (async () => {
-      const { claimBrandingControl, getGlobalFavicon } = await import('@/lib/applyGlobalFavicon');
-      claimBrandingControl();
-      let faviconUrl = (cfg as any).seoFaviconUrl as string | undefined;
-      if (!faviconUrl) {
-        faviconUrl = await getGlobalFavicon();
-      }
-      if (!faviconUrl) return;
+    // Favicon
+    if ((cfg as any).seoFaviconUrl) {
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       const hadExisting = !!link;
       const oldHref = link?.href;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = faviconUrl;
+      link.href = (cfg as any).seoFaviconUrl;
       cleanups.push(() => {
         if (!hadExisting) link?.remove();
         else if (link && oldHref) link.href = oldHref;
       });
-    })();
+    }
 
     // Facebook Pixel
     if ((cfg as any).pixelFacebook) {
