@@ -550,7 +550,7 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex relative overflow-hidden">
+    <div className="min-h-screen bg-background flex relative overflow-x-hidden">
       <ThemeSettingsPanel storageKey="admin_theme" />
       <div id="theme-bg-layer" className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15" style={{ backgroundImage: 'var(--theme-bg-image, none)' }} />
       {/* Background glow */}
@@ -647,8 +647,8 @@ const Admin = () => {
       </div>
 
       {/* ═══ MAIN ═══ */}
-      <div className={`flex-1 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
-        <div className="max-w-6xl mx-auto lg:py-6 space-y-5">
+      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 overflow-x-auto ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
+        <div className="max-w-6xl mx-auto lg:py-6 space-y-5 min-w-[320px]">
 
           {/* Title bar */}
           <div>
