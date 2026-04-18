@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { claimBrandingControl } from '@/lib/applyGlobalFavicon';
 
 interface SiteSettings {
   site_title: string;
@@ -14,6 +15,11 @@ interface SiteSettings {
 
 export const useSiteSettings = (mode: 'site' | 'dashboard' = 'site') => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  // Quando uma Dashboard/Influencer/Admin usa este hook, ela tem seu PRÓPRIO branding
+  // (dashboard_*) e o helper global NÃO deve sobrescrever depois.
+  // Para 'site' (ex: Index), também marcamos para evitar dupla aplicação.
+  if (typeof window !== 'undefined') claimBrandingControl();
 
   useEffect(() => {
     (async () => {
