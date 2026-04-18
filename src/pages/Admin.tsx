@@ -50,7 +50,13 @@ const Admin = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', spins_available: 0 });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'users' | 'admins' | 'history' | 'site' | 'dashboards'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'admins' | 'history' | 'site' | 'dashboards' | 'permissions'>('users');
+  // Operator permissions
+  const [permDefaults, setPermDefaults] = useState<Perms>(DEFAULT_PERMS);
+  const [permRows, setPermRows] = useState<Record<string, Perms>>({});
+  const [permLoading, setPermLoading] = useState(false);
+  const [permSavingKey, setPermSavingKey] = useState<string | null>(null);
+  const [editingPermsUser, setEditingPermsUser] = useState<any>(null);
   const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text' });
   const [apiBackendUrl, setApiBackendUrl] = useState(() => localStorage.getItem('wheel_api_url') || '');
   const [siteSaving, setSiteSaving] = useState(false);
