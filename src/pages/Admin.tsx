@@ -1049,8 +1049,8 @@ const Admin = () => {
                     <p className="text-muted-foreground text-sm">Clique em "Carregar" para ver os admins</p>
                   </GlassCard>
                 ) : (
-                  <GlassCard className="overflow-hidden">
-                    <table className="w-full text-sm">
+                  <GlassCard className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[640px]">
                       <thead>
                         <tr className="border-b border-white/[0.06]">
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
@@ -1346,8 +1346,8 @@ const Admin = () => {
                   <p className="text-muted-foreground">Nenhum resultado registrado</p>
                 </GlassCard>
               ) : (
-                <GlassCard className="overflow-hidden">
-                  <table className="w-full text-sm">
+                <GlassCard className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[820px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
