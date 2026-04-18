@@ -1085,6 +1085,123 @@ const Admin = () => {
           )}
 
           {/* ══════ DASHBOARDS TAB ══════ */}
+          {activeTab === 'permissions' && (
+            <div className="space-y-6">
+              {/* Per-operator modal */}
+              {editingPermsUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><ToggleLeft size={18} /> Permissões</h2>
+                      <button onClick={() => setEditingPermsUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Operador</p>
+                      <p className="text-sm font-medium text-foreground">{editingPermsUser.name} <span className="text-muted-foreground">· {editingPermsUser.email}</span></p>
+                      {!permRows[editingPermsUser.id] && (
+                        <p className="text-[10px] text-muted-foreground italic">Usando padrão global. Alterar abaixo cria override.</p>
+                      )}
+                    </div>
+                    <div className="space-y-2.5 pt-2 border-t border-white/[0.06]">
+                      {TOOL_DEFS.map(t => {
+                        const eff = getEffectivePerms(editingPermsUser.id);
+                        return (
+                          <div key={t.key} className="flex items-center justify-between gap-3 py-1">
+                            <span className="text-sm text-foreground">{t.label}</span>
+                            <Switch checked={eff[t.key]} onCheckedChange={(v) => updateUserPerm(editingPermsUser.id, t.key, v)} disabled={permSavingKey === editingPermsUser.id} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {permRows[editingPermsUser.id] && (
+                      <button onClick={() => resetUserPerms(editingPermsUser.id)} disabled={permSavingKey === editingPermsUser.id} className="w-full py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs hover:bg-white/[0.08] transition flex items-center justify-center gap-2">
+                        <RotateCw size={13} /> Voltar ao padrão global
+                      </button>
+                    )}
+                  </GlassCard>
+                </div>
+              )}
+
+              {/* Global defaults */}
+              <GlassCard className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">Padrão Global</h3>
+                    <p className="text-[10px] text-muted-foreground">Aplica-se a todos os operadores sem override</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-white/[0.06]">
+                  {TOOL_DEFS.map(t => (
+                    <div key={t.key} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                      <span className="text-sm text-foreground">{t.label}</span>
+                      <Switch checked={permDefaults[t.key]} onCheckedChange={(v) => updateDefaultPerm(t.key, v)} disabled={permSavingKey === '__defaults__'} />
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+
+              {/* Per-operator overview */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground">Por Operador</h3>
+                  <button onClick={() => { fetchSystemUsers(); fetchPermissions(); }} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition">
+                    <RotateCcw size={14} /> Recarregar
+                  </button>
+                </div>
+                {permLoading || systemUsersLoading ? (
+                  <div className="text-center py-8"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : systemUsers.length === 0 ? (
+                  <GlassCard className="text-center py-12">
+                    <Users size={36} className="text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">Nenhum operador encontrado.</p>
+                  </GlassCard>
+                ) : (
+                  <GlassCard className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[720px]">
+                      <thead>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Operador</th>
+                          {TOOL_DEFS.map(t => (
+                            <th key={t.key} className="text-center px-2 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t.label}</th>
+                          ))}
+                          <th className="text-center px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-24">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {systemUsers.map((u: any) => {
+                          const eff = getEffectivePerms(u.id);
+                          const hasOverride = !!permRows[u.id];
+                          return (
+                            <tr key={u.id} className="border-t border-white/[0.04] hover:bg-white/[0.03]">
+                              <td className="px-4 py-3">
+                                <div className="text-foreground font-medium text-sm">{u.name}</div>
+                                <div className="text-muted-foreground text-xs">{u.email}</div>
+                                {hasOverride && <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] bg-primary/15 text-primary border border-primary/20">Override</span>}
+                              </td>
+                              {TOOL_DEFS.map(t => (
+                                <td key={t.key} className="px-2 py-3 text-center">
+                                  <Switch checked={eff[t.key]} onCheckedChange={(v) => updateUserPerm(u.id, t.key, v)} disabled={permSavingKey === u.id} />
+                                </td>
+                              ))}
+                              <td className="px-4 py-3 text-center">
+                                {hasOverride && (
+                                  <button onClick={() => resetUserPerms(u.id)} disabled={permSavingKey === u.id} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Resetar para padrão"><RotateCw size={13} /></button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </GlassCard>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'dashboards' && (
             <div className="space-y-6">
               {/* Header */}
