@@ -6091,7 +6091,15 @@ function Dashboard() {
               }).filter(Boolean)
             )).sort((a, b) => b.localeCompare(a));
 
-            const filteredHistory = gorjetaDateFilter
+            const matchesStatus = (status: string) => {
+              if (gorjetaStatusFilter === 'all') return true;
+              if (gorjetaStatusFilter === 'paid') return status === 'paid';
+              if (gorjetaStatusFilter === 'pending') return status === 'pending' || status === 'auto_pending';
+              if (gorjetaStatusFilter === 'failed') return status === 'failed' || status === 'rejected' || status === 'cancelled';
+              return true;
+            };
+
+            const dateFiltered = gorjetaDateFilter
               ? gorjetaHistory.filter((i: any) => {
                   const d = new Date(i.created_at);
                   if (isNaN(d.getTime())) return false;
@@ -6100,10 +6108,30 @@ function Dashboard() {
                 })
               : gorjetaHistory;
 
+            const filteredHistory = dateFiltered.filter((i: any) => matchesStatus(i.status));
+
+            // Counts based on date-filtered list (so status chips reflect the selected day)
+            const countPaid = dateFiltered.filter((i: any) => i.status === 'paid').length;
+            const countPending = dateFiltered.filter((i: any) => i.status === 'pending' || i.status === 'auto_pending').length;
+            const countFailed = dateFiltered.filter((i: any) => i.status === 'failed' || i.status === 'rejected' || i.status === 'cancelled').length;
+
             const formatDateLabel = (iso: string) => {
               const [y, m, d] = iso.split('-');
               return `${d}/${m}/${y.slice(2)}`;
             };
+
+            const statusChip = (key: typeof gorjetaStatusFilter, label: string, count: number, colorClass: string) => (
+              <button
+                onClick={() => setGorjetaStatusFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                  gorjetaStatusFilter === key
+                    ? `${colorClass} border-current`
+                    : 'bg-white/[0.04] border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'
+                }`}
+              >
+                {label} <span className="opacity-70">({count})</span>
+              </button>
+            );
 
             return (
             <div className="space-y-4">
@@ -6122,7 +6150,7 @@ function Dashboard() {
               </div>
 
               {/* Date filter */}
-              <GlassCard className="p-3">
+              <GlassCard className="p-3 space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                     <CalendarIcon size={14} className="text-primary" /> Filtrar por dia:
@@ -6145,9 +6173,9 @@ function Dashboard() {
                       ))}
                     </select>
                   )}
-                  {gorjetaDateFilter && (
+                  {(gorjetaDateFilter || gorjetaStatusFilter !== 'all') && (
                     <button
-                      onClick={() => setGorjetaDateFilter('')}
+                      onClick={() => { setGorjetaDateFilter(''); setGorjetaStatusFilter('all'); }}
                       className="px-2.5 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition"
                     >
                       Limpar
@@ -6156,6 +6184,15 @@ function Dashboard() {
                   <span className="text-[11px] text-muted-foreground ml-auto">
                     Exibindo: <span className="font-semibold text-foreground">{filteredHistory.length}</span> de {gorjetaHistory.length}
                   </span>
+                </div>
+
+                {/* Status filter chips */}
+                <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-white/[0.06]">
+                  <span className="text-xs font-semibold text-muted-foreground">Status:</span>
+                  {statusChip('all', 'Todos', dateFiltered.length, 'bg-primary/15 text-primary')}
+                  {statusChip('paid', 'Pagos', countPaid, 'bg-green-500/15 text-green-400')}
+                  {statusChip('pending', 'Pendentes', countPending, 'bg-yellow-500/15 text-yellow-400')}
+                  {statusChip('failed', 'Rejeitados', countFailed, 'bg-red-500/15 text-red-400')}
                 </div>
               </GlassCard>
 
@@ -6172,11 +6209,11 @@ function Dashboard() {
                   </GlassCard>
                   <GlassCard className="p-3 text-center">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pendentes</p>
-                    <p className="text-lg font-bold text-yellow-400">{filteredHistory.filter((i: any) => i.status === 'pending' || i.status === 'auto_pending').length}</p>
+                    <p className="text-lg font-bold text-yellow-400">{countPending}</p>
                   </GlassCard>
                   <GlassCard className="p-3 text-center">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pagos</p>
-                    <p className="text-lg font-bold text-green-400">{filteredHistory.filter((i: any) => i.status === 'paid').length}</p>
+                    <p className="text-lg font-bold text-green-400">{countPaid}</p>
                   </GlassCard>
                 </div>
               )}
