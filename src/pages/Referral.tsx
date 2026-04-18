@@ -45,9 +45,21 @@ const Referral = () => {
         const gorjetaSlot = wcData?.config?.gorjetaPageConfig || {};
         setSlotCfg(gorjetaSlot);
 
+        // SEO do OPERADOR (definido na Dashboard, raiz de wheel_configs.config) — usado
+        // como fallback quando o link individual e o defaultReferralPageConfig não definirem SEO próprio.
+        const operatorSeo: any = {
+          seoTitle: wcData?.config?.seoTitle || '',
+          seoDescription: wcData?.config?.seoDescription || '',
+          seoFaviconUrl: wcData?.config?.faviconUrl || '',
+          seoOgImageUrl: wcData?.config?.ogImageUrl || '',
+        };
+
         const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
         const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
-        setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
+        // Merge order: defaults < operator SEO < operator default referral config < link individual.
+        // Como `operatorSeo` só preenche se houver valor, ele NÃO sobrescreve defaults vazios indevidamente.
+        const filteredOperatorSeo = Object.fromEntries(Object.entries(operatorSeo).filter(([, v]) => v));
+        setCfg({ ...defaultPageConfig, ...filteredOperatorSeo, ...defaultCfg, ...individualCfg });
       }
       setLoading(false);
     };
