@@ -566,7 +566,7 @@ const Admin = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'admins') { fetchSystemUsers(); fetchAdminUsers(); } if (item.key === 'dashboards') fetchDashboards(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'admins') { fetchSystemUsers(); fetchAdminUsers(); } if (item.key === 'dashboards') fetchDashboards(); if (item.key === 'permissions') { fetchSystemUsers(); fetchPermissions(); } }}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                   activeTab === item.key
                     ? 'bg-primary/15 text-primary border border-primary/20'
