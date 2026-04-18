@@ -179,7 +179,7 @@ function openPrintReceipt(elementId: string, fontColor: string, bgColor: string,
 }
 
 function Dashboard() {
-  useSiteSettings();
+  useSiteSettings('dashboard');
   const configHydratedRef = useRef(false);
   const lastPersistedSettingsRef = useRef('');
   const lastConfigUpdatedAtRef = useRef<string | null>(null);
