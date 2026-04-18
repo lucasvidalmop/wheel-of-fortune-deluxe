@@ -43,13 +43,33 @@ const setMetaDescription = (content: string) => {
 };
 
 /**
+ * Sinaliza que uma página/operador já assumiu o controle do branding (favicon/título/descrição).
+ * A partir desse momento, `applyGlobalSiteDefaults` vira no-op para evitar que o padrão
+ * global sobrescreva o personalizado por causa de race condition assíncrona.
+ *
+ * Páginas que aplicam SEO próprio (Roleta, Referral, Registration, Deposit, Dashboard,
+ * Influencer, Admin) DEVEM chamar isto assim que carregarem — independente de o operador
+ * ter ou não preenchido os campos. Se não houver valor próprio, a própria página puxa o
+ * fallback global usando `getGlobalFavicon` / fetch direto em site_settings.
+ */
+export const claimBrandingControl = () => {
+  (window as any).__lovableBrandingClaimed = true;
+};
+
+export const isBrandingClaimed = () => Boolean((window as any).__lovableBrandingClaimed);
+
+/**
  * Aplica o favicon/título/descrição GLOBAL definidos pelo admin em site_settings.
- * Use como bootstrap (ex: no App.tsx) para garantir que toda página sem
- * personalização própria mostre o favicon padrão do sistema.
+ * Usado APENAS como bootstrap para páginas que não personalizam SEO (ex: Index/home,
+ * NotFound, Unsubscribe). Se outra página já tiver chamado `claimBrandingControl`,
+ * esta função não faz nada.
  */
 export const applyGlobalSiteDefaults = async () => {
+  if (isBrandingClaimed()) return;
   const settings = await fetchSiteSettings();
   if (!settings) return;
+  // Re-checa após o await — outra página pode ter assumido o controle nesse intervalo.
+  if (isBrandingClaimed()) return;
   if (settings.favicon) setFaviconHref(settings.favicon);
   if (settings.title && !document.title) document.title = settings.title;
   if (settings.description) setMetaDescription(settings.description);

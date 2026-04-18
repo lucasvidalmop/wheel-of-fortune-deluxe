@@ -154,9 +154,10 @@ const Registration = () => {
     if (pageTitle) { document.title = pageTitle; }
     // Favicon — usa o do operador, ou cai no padrão global do sistema
     (async () => {
+      const { claimBrandingControl, getGlobalFavicon } = await import('@/lib/applyGlobalFavicon');
+      claimBrandingControl();
       let faviconUrl = seoConfig.faviconUrl as string | undefined;
       if (!faviconUrl) {
-        const { getGlobalFavicon } = await import('@/lib/applyGlobalFavicon');
         faviconUrl = await getGlobalFavicon();
       }
       if (!faviconUrl) return;

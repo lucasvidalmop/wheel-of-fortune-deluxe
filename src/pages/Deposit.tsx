@@ -93,6 +93,8 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
   // Inject SEO + Pixels
   useEffect(() => {
     if (!config || !config.enabled) return;
+    // Marca que esta página tem branding próprio — bloqueia o fallback global do App.tsx.
+    import('@/lib/applyGlobalFavicon').then(m => m.claimBrandingControl());
     const cleanup: (() => void)[] = [];
 
     const origTitle = document.title;
