@@ -521,7 +521,7 @@ const Admin = () => {
             {menuItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'admins') { fetchSystemUsers(); fetchAdminUsers(); } if (item.key === 'dashboards') fetchDashboards(); }}
+                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'admins') { fetchSystemUsers(); fetchAdminUsers(); } if (item.key === 'dashboards') fetchDashboards(); if (item.key === 'permissions') { fetchSystemUsers(); fetchPermissions(); } }}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
                   activeTab === item.key
