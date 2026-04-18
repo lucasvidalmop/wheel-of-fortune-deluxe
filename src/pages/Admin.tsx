@@ -1020,6 +1020,7 @@ const Admin = () => {
                             <td className="px-4 py-3">
                               <div className="flex items-center justify-center gap-1.5">
                                 <button onClick={() => { setEditingSystemUser(u); setEditSystemForm({ email: u.email, name: u.name, password: '' }); }} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar"><Pencil size={13} /></button>
+                                <button onClick={() => { fetchPermissions(); setEditingPermsUser(u); }} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-primary hover:bg-primary/10 transition border border-white/[0.06]" title="Permissões"><ToggleLeft size={13} /></button>
                                 <button onClick={() => handleDeleteSystemUser(u.id)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition border border-white/[0.06]" title="Excluir"><Trash2 size={13} /></button>
                               </div>
                             </td>
