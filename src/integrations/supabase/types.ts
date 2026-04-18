@@ -191,6 +191,81 @@ export type Database = {
         }
         Relationships: []
       }
+      operator_permissions: {
+        Row: {
+          created_at: string
+          email: boolean
+          financeiro: boolean
+          gorjeta: boolean
+          referral: boolean
+          roleta: boolean
+          sms: boolean
+          updated_at: string
+          user_id: string
+          whatsapp: boolean
+        }
+        Insert: {
+          created_at?: string
+          email?: boolean
+          financeiro?: boolean
+          gorjeta?: boolean
+          referral?: boolean
+          roleta?: boolean
+          sms?: boolean
+          updated_at?: string
+          user_id: string
+          whatsapp?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: boolean
+          financeiro?: boolean
+          gorjeta?: boolean
+          referral?: boolean
+          roleta?: boolean
+          sms?: boolean
+          updated_at?: string
+          user_id?: string
+          whatsapp?: boolean
+        }
+        Relationships: []
+      }
+      operator_permissions_defaults: {
+        Row: {
+          email: boolean
+          financeiro: boolean
+          gorjeta: boolean
+          id: number
+          referral: boolean
+          roleta: boolean
+          sms: boolean
+          updated_at: string
+          whatsapp: boolean
+        }
+        Insert: {
+          email?: boolean
+          financeiro?: boolean
+          gorjeta?: boolean
+          id?: number
+          referral?: boolean
+          roleta?: boolean
+          sms?: boolean
+          updated_at?: string
+          whatsapp?: boolean
+        }
+        Update: {
+          email?: boolean
+          financeiro?: boolean
+          gorjeta?: boolean
+          id?: number
+          referral?: boolean
+          roleta?: boolean
+          sms?: boolean
+          updated_at?: string
+          whatsapp?: boolean
+        }
+        Relationships: []
+      }
       page_views: {
         Row: {
           browser: string | null
