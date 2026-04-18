@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
+  const callerId = claimsData.claims.sub as string
 
   // Parse request body
   let templateName: string
@@ -174,6 +175,7 @@ Deno.serve(async (req) => {
       template_name: templateName,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
+      metadata: { owner_id: callerId },
     })
 
     console.log('Email suppressed', { effectiveRecipient, templateName })
@@ -208,6 +210,7 @@ Deno.serve(async (req) => {
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to look up unsubscribe token',
+      metadata: { owner_id: callerId },
     })
     return new Response(
       JSON.stringify({ error: 'Failed to prepare email' }),
@@ -241,6 +244,7 @@ Deno.serve(async (req) => {
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to create unsubscribe token',
+        metadata: { owner_id: callerId },
       })
       return new Response(
         JSON.stringify({ error: 'Failed to prepare email' }),
@@ -270,6 +274,7 @@ Deno.serve(async (req) => {
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to confirm unsubscribe token storage',
+        metadata: { owner_id: callerId },
       })
       return new Response(
         JSON.stringify({ error: 'Failed to prepare email' }),
@@ -293,6 +298,7 @@ Deno.serve(async (req) => {
       status: 'suppressed',
       error_message:
         'Unsubscribe token used but email missing from suppressed list',
+      metadata: { owner_id: callerId },
     })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
@@ -327,6 +333,7 @@ Deno.serve(async (req) => {
     template_name: templateName,
     recipient_email: effectiveRecipient,
     status: 'pending',
+    metadata: { owner_id: callerId },
   })
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
@@ -344,6 +351,7 @@ Deno.serve(async (req) => {
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
+      owner_id: callerId,
     },
   })
 
@@ -360,6 +368,7 @@ Deno.serve(async (req) => {
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to enqueue email',
+      metadata: { owner_id: callerId },
     })
 
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {

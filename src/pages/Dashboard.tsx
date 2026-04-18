@@ -680,6 +680,7 @@ function Dashboard() {
         const { data } = await (supabase as any)
           .from('email_send_log')
           .select('*')
+          .eq('metadata->>owner_id', session.user.id)
           .order('created_at', { ascending: false })
           .range(from, from + PAGE - 1);
         if (!data || data.length === 0) break;
@@ -821,6 +822,7 @@ function Dashboard() {
     const { data } = await (supabase as any)
       .from('email_send_log')
       .select('recipient_email, created_at, status')
+      .eq('metadata->>owner_id', session.user.id)
       .gte('created_at', since2h)
       .in('status', ['sent', 'pending']);
     const rows = data || [];

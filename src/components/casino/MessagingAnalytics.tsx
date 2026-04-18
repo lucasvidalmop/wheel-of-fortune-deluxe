@@ -45,7 +45,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
     setLoading(true);
     const PAGE = 1000;
 
-    const fetchPaginated = async (table: string, filterByOwner: boolean) => {
+    const fetchPaginated = async (table: string, ownerFilter: 'owner_id' | 'metadata_owner' | 'none') => {
       let all: any[] = [];
       let from = 0;
       while (true) {
@@ -54,7 +54,12 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           .select('*')
           .order('created_at', { ascending: false })
           .range(from, from + PAGE - 1);
-        if (filterByOwner) q = q.eq('owner_id', ownerId);
+        if (ownerFilter === 'owner_id') {
+          q = q.eq('owner_id', ownerId);
+        } else if (ownerFilter === 'metadata_owner') {
+          // Filter email_send_log by owner_id stored in metadata JSON
+          q = q.eq('metadata->>owner_id', ownerId);
+        }
         const { data } = await q;
         if (!data || data.length === 0) break;
         all = all.concat(data);
@@ -65,9 +70,9 @@ export default function MessagingAnalytics({ ownerId }: Props) {
     };
 
     const [sms, wa, emails] = await Promise.all([
-      fetchPaginated('sms_message_log', true),
-      fetchPaginated('whatsapp_message_log', true),
-      fetchPaginated('email_send_log', false),
+      fetchPaginated('sms_message_log', 'owner_id'),
+      fetchPaginated('whatsapp_message_log', 'owner_id'),
+      fetchPaginated('email_send_log', 'metadata_owner'),
     ]);
 
     // Deduplicate emails by message_id (latest status per message wins; data is ordered DESC)
