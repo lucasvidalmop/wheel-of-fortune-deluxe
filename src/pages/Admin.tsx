@@ -68,11 +68,12 @@ const Admin = () => {
   const [permLoading, setPermLoading] = useState(false);
   const [permSavingKey, setPermSavingKey] = useState<string | null>(null);
   const [editingPermsUser, setEditingPermsUser] = useState<any>(null);
-  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text' });
+  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text', dashboard_title: '', dashboard_description: '', dashboard_favicon_url: '' });
   const [apiBackendUrl, setApiBackendUrl] = useState(() => localStorage.getItem('wheel_api_url') || '');
   const [siteSaving, setSiteSaving] = useState(false);
   const [siteUploading, setSiteUploading] = useState(false);
   const [siteFaviconUploading, setSiteFaviconUploading] = useState(false);
+  const [dashFaviconUploading, setDashFaviconUploading] = useState(false);
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -148,7 +149,16 @@ const Admin = () => {
 
   const fetchSiteSettings = async () => {
     const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
-    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '', home_mode: data.home_mode || 'text' });
+    if (data) setSiteSettings({
+      bg_image_url: data.bg_image_url || '',
+      site_title: data.site_title || '',
+      site_description: data.site_description || '',
+      favicon_url: data.favicon_url || '',
+      home_mode: data.home_mode || 'text',
+      dashboard_title: data.dashboard_title || '',
+      dashboard_description: data.dashboard_description || '',
+      dashboard_favicon_url: data.dashboard_favicon_url || '',
+    });
   };
 
   const handleSaveSiteSettings = async () => {
