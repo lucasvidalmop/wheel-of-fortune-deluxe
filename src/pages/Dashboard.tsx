@@ -259,9 +259,10 @@ function Dashboard() {
   const [smsSchedSaving, setSmsSchedSaving] = useState(false);
   const [smsScheduledList, setSmsScheduledList] = useState<any[]>([]);
   const [showSmsScheduledList, setShowSmsScheduledList] = useState(false);
-  const [twilioAccountSid, setTwilioAccountSid] = useState(() => localStorage.getItem('twilio_account_sid') || '');
-  const [twilioAuthToken, setTwilioAuthToken] = useState(() => localStorage.getItem('twilio_auth_token') || '');
-  const [twilioPhoneNumber, setTwilioPhoneNumber] = useState(() => localStorage.getItem('twilio_phone_number') || '');
+  // Twilio credentials are scoped per operator via wheel_configs (NEVER localStorage — would leak across operators on the same browser)
+  const [twilioAccountSid, setTwilioAccountSid] = useState('');
+  const [twilioAuthToken, setTwilioAuthToken] = useState('');
+  const [twilioPhoneNumber, setTwilioPhoneNumber] = useState('');
 
   // WhatsApp state
   const [whatsappMessage, setWhatsappMessage] = useState('');
@@ -887,20 +888,14 @@ function Dashboard() {
   const [batchWhatsappCustomMsg, setBatchWhatsappCustomMsg] = useState('');
   const [savingUser, setSavingUser] = useState(false);
 
-  const syncLegacyIntegrationStorage = (settings: PersistedDashboardSettings) => {
-    const legacyEntries: Array<[string, string]> = [
-      ['twilio_account_sid', settings.twilioAccountSid],
-      ['twilio_auth_token', settings.twilioAuthToken],
-      ['twilio_phone_number', settings.twilioPhoneNumber],
-      ['evolution_api_url', settings.evolutionApiUrl],
-      ['evolution_api_key', settings.evolutionApiKey],
-      ['evolution_instance', settings.evolutionInstance],
-      [PANEL_CASA_STORAGE_KEY, normalizePanelCasaUrl(settings.panelCasaUrl)],
-    ];
-
-    legacyEntries.forEach(([key, value]) => {
-      if (value) localStorage.setItem(key, value);
-      else localStorage.removeItem(key);
+  const syncLegacyIntegrationStorage = (_settings: PersistedDashboardSettings) => {
+    // Per-operator credentials (Twilio, Evolution, Panel Casa) are stored ONLY in wheel_configs.
+    // Writing them to localStorage previously caused leakage across operators on the same browser.
+    // Clear any legacy values left over from before the fix.
+    ['twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number',
+     'evolution_api_url', 'evolution_api_key', 'evolution_instance',
+     PANEL_CASA_STORAGE_KEY].forEach((key) => {
+      try { localStorage.removeItem(key); } catch {}
     });
   };
 
@@ -951,15 +946,11 @@ function Dashboard() {
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
+    // IMPORTANT: do NOT fall back to localStorage for per-operator API credentials —
+    // localStorage is shared across all operators on the same browser and was the root
+    // cause of credentials from one operator leaking into another's Dashboard.
     const settings: PersistedDashboardSettings = {
       ...DEFAULT_PERSISTED_DASHBOARD_SETTINGS,
-      twilioAccountSid: localStorage.getItem('twilio_account_sid') || '',
-      twilioAuthToken: localStorage.getItem('twilio_auth_token') || '',
-      twilioPhoneNumber: localStorage.getItem('twilio_phone_number') || '',
-      evolutionApiUrl: localStorage.getItem('evolution_api_url') || '',
-      evolutionApiKey: localStorage.getItem('evolution_api_key') || '',
-      evolutionInstance: localStorage.getItem('evolution_instance') || '',
-      panelCasaUrl: localStorage.getItem(PANEL_CASA_STORAGE_KEY) || '',
       ...(rawSettings || {}),
     };
 
@@ -4026,15 +4017,15 @@ function Dashboard() {
                   <p className="text-[10px] text-muted-foreground">Crie uma conta em <a href="https://www.twilio.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">twilio.com</a></p>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Account SID</label>
-                    <input type="text" value={twilioAccountSid} onChange={e => { setTwilioAccountSid(e.target.value); localStorage.setItem('twilio_account_sid', e.target.value); }} placeholder="ACxxxxxxxx" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={twilioAccountSid} onChange={e => setTwilioAccountSid(e.target.value)} placeholder="ACxxxxxxxx" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Auth Token</label>
-                    <input type="password" value={twilioAuthToken} onChange={e => { setTwilioAuthToken(e.target.value); localStorage.setItem('twilio_auth_token', e.target.value); }} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="password" value={twilioAuthToken} onChange={e => setTwilioAuthToken(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Número remetente</label>
-                    <input type="text" value={twilioPhoneNumber} onChange={e => { setTwilioPhoneNumber(e.target.value); localStorage.setItem('twilio_phone_number', e.target.value); }} placeholder="+5511999999999" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={twilioPhoneNumber} onChange={e => setTwilioPhoneNumber(e.target.value)} placeholder="+5511999999999" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className={`text-xs font-medium ${twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? 'text-green-400' : 'text-yellow-400'}`}>
                     {twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? '✅ Configurado' : '⚠️ Preencha todas as credenciais'}
