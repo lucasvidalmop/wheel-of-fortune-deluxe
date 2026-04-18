@@ -193,10 +193,18 @@ export type Database = {
       }
       operator_permissions: {
         Row: {
+          analytics: boolean
+          auth: boolean
+          configuracoes: boolean
           created_at: string
           email: boolean
           financeiro: boolean
           gorjeta: boolean
+          history: boolean
+          inscritos: boolean
+          msg_analytics: boolean
+          notificacoes: boolean
+          painel_casa: boolean
           referral: boolean
           roleta: boolean
           sms: boolean
@@ -205,10 +213,18 @@ export type Database = {
           whatsapp: boolean
         }
         Insert: {
+          analytics?: boolean
+          auth?: boolean
+          configuracoes?: boolean
           created_at?: string
           email?: boolean
           financeiro?: boolean
           gorjeta?: boolean
+          history?: boolean
+          inscritos?: boolean
+          msg_analytics?: boolean
+          notificacoes?: boolean
+          painel_casa?: boolean
           referral?: boolean
           roleta?: boolean
           sms?: boolean
@@ -217,10 +233,18 @@ export type Database = {
           whatsapp?: boolean
         }
         Update: {
+          analytics?: boolean
+          auth?: boolean
+          configuracoes?: boolean
           created_at?: string
           email?: boolean
           financeiro?: boolean
           gorjeta?: boolean
+          history?: boolean
+          inscritos?: boolean
+          msg_analytics?: boolean
+          notificacoes?: boolean
+          painel_casa?: boolean
           referral?: boolean
           roleta?: boolean
           sms?: boolean
@@ -232,10 +256,18 @@ export type Database = {
       }
       operator_permissions_defaults: {
         Row: {
+          analytics: boolean
+          auth: boolean
+          configuracoes: boolean
           email: boolean
           financeiro: boolean
           gorjeta: boolean
+          history: boolean
           id: number
+          inscritos: boolean
+          msg_analytics: boolean
+          notificacoes: boolean
+          painel_casa: boolean
           referral: boolean
           roleta: boolean
           sms: boolean
@@ -243,10 +275,18 @@ export type Database = {
           whatsapp: boolean
         }
         Insert: {
+          analytics?: boolean
+          auth?: boolean
+          configuracoes?: boolean
           email?: boolean
           financeiro?: boolean
           gorjeta?: boolean
+          history?: boolean
           id?: number
+          inscritos?: boolean
+          msg_analytics?: boolean
+          notificacoes?: boolean
+          painel_casa?: boolean
           referral?: boolean
           roleta?: boolean
           sms?: boolean
@@ -254,10 +294,18 @@ export type Database = {
           whatsapp?: boolean
         }
         Update: {
+          analytics?: boolean
+          auth?: boolean
+          configuracoes?: boolean
           email?: boolean
           financeiro?: boolean
           gorjeta?: boolean
+          history?: boolean
           id?: number
+          inscritos?: boolean
+          msg_analytics?: boolean
+          notificacoes?: boolean
+          painel_casa?: boolean
           referral?: boolean
           roleta?: boolean
           sms?: boolean
