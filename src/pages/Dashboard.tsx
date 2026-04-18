@@ -6124,7 +6124,7 @@ function Dashboard() {
               <GlassCard className="p-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                    <Calendar size={14} className="text-primary" /> Filtrar por dia:
+                    <CalendarIcon size={14} className="text-primary" /> Filtrar por dia:
                   </label>
                   <input
                     type="date"
