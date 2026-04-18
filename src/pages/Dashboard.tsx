@@ -189,6 +189,7 @@ function Dashboard() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [toolPerms, setToolPerms] = useState<Record<string, boolean>>({ roleta: true, sms: true, email: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true });
 
   const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
