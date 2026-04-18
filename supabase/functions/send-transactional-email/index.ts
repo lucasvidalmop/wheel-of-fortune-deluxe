@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
+  const callerId = claimsData.claims.sub as string
 
   // Parse request body
   let templateName: string
