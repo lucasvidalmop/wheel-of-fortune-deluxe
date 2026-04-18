@@ -437,12 +437,30 @@ const Admin = () => {
   const fetchDashboards = async () => {
     setDashboardsLoading(true);
     try {
-      const { data: configs } = await (supabase as any).from('wheel_configs').select('*').order('created_at', { ascending: false });
-      // Fetch user info for each config
-      const res = await supabase.functions.invoke('list-system-users');
-      const sysUsers = res.data?.users || [];
+      const [{ data: configs }, sysRes, permsRes] = await Promise.all([
+        (supabase as any).from('wheel_configs').select('*').order('created_at', { ascending: false }),
+        supabase.functions.invoke('list-system-users'),
+        supabase.functions.invoke('manage-operator-permissions', { body: { action: 'list' } }),
+      ]);
+      const sysUsers = sysRes.data?.users || [];
       const userMap: Record<string, any> = {};
       sysUsers.forEach((u: any) => { userMap[u.id] = u; });
+
+      // Hydrate perms (defaults + per-user) so we can hide the wheel link for ops with roleta=off
+      const d = permsRes.data?.defaults;
+      if (d) {
+        const next: Perms = { ...DEFAULT_PERMS };
+        for (const t of TOOL_DEFS) (next as any)[t.key] = d[t.key] !== false;
+        setPermDefaults(next);
+      }
+      const pmap: Record<string, Perms> = {};
+      for (const r of (permsRes.data?.permissions || [])) {
+        const p: Perms = { ...DEFAULT_PERMS };
+        for (const t of TOOL_DEFS) (p as any)[t.key] = r[t.key] !== false;
+        pmap[r.user_id] = p;
+      }
+      setPermRows(pmap);
+
       const enriched = (configs || []).map((c: any) => ({
         ...c,
         user_email: userMap[c.user_id]?.email || '—',
