@@ -2474,35 +2474,37 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Slug / link */}
-          <GlassCard className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <ExternalLink size={14} className="text-primary" />
-              <label className="text-xs text-muted-foreground font-medium">Link da sua roleta</label>
-            </div>
-            {editingSlug ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{baseUrl}/</span>
-                <input
-                  value={newSlug}
-                  onChange={e => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
-                />
-                <button onClick={handleSaveSlug} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-110 transition">Salvar</button>
-                <button onClick={() => { setEditingSlug(false); setNewSlug(slug); }} className="px-3 py-1.5 rounded-lg bg-white/[0.06] text-foreground text-sm hover:bg-white/[0.1] transition">Cancelar</button>
+          {/* Slug / link — hidden when roleta permission is disabled */}
+          {toolPerms.roleta !== false && (
+            <GlassCard className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ExternalLink size={14} className="text-primary" />
+                <label className="text-xs text-muted-foreground font-medium">Link da sua roleta</label>
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <code className="text-sm text-primary font-mono bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg">{baseUrl}/{slug}</code>
-                <button onClick={() => setEditingSlug(true)} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Editar">
-                  <Pencil size={14} />
-                </button>
-                <button onClick={() => { navigator.clipboard.writeText(`${baseUrl}/${slug}`); toast.success('Link copiado!'); }} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Copiar">
-                  <Copy size={14} />
-                </button>
-              </div>
-            )}
-          </GlassCard>
+              {editingSlug ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{baseUrl}/</span>
+                  <input
+                    value={newSlug}
+                    onChange={e => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <button onClick={handleSaveSlug} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-110 transition">Salvar</button>
+                  <button onClick={() => { setEditingSlug(false); setNewSlug(slug); }} className="px-3 py-1.5 rounded-lg bg-white/[0.06] text-foreground text-sm hover:bg-white/[0.1] transition">Cancelar</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <code className="text-sm text-primary font-mono bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg">{baseUrl}/{slug}</code>
+                  <button onClick={() => setEditingSlug(true)} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Editar">
+                    <Pencil size={14} />
+                  </button>
+                  <button onClick={() => { navigator.clipboard.writeText(`${baseUrl}/${slug}`); toast.success('Link copiado!'); }} className="p-2 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition" title="Copiar">
+                    <Copy size={14} />
+                  </button>
+                </div>
+              )}
+            </GlassCard>
+          )}
 
           {/* ══════ INSCRITOS TAB ══════ */}
           {activeTab === 'inscritos' && (
