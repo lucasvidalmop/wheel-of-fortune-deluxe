@@ -193,7 +193,17 @@ const Admin = () => {
     e.target.value = '';
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleDashFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setDashFaviconUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'dashboard-favicon');
+      setSiteSettings(s => ({ ...s, dashboard_favicon_url: publicUrl }));
+      toast.success('Favicon da Dashboard enviado!');
+    } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+    setDashFaviconUploading(false);
+    e.target.value = '';
+  };
     e.preventDefault();
     setLoginLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
