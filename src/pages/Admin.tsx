@@ -259,6 +259,72 @@ const Admin = () => {
     setAdminUsersLoading(false);
   };
 
+  // ═══ OPERATOR PERMISSIONS ═══
+  const fetchPermissions = async () => {
+    setPermLoading(true);
+    try {
+      const res = await supabase.functions.invoke('manage-operator-permissions', { body: { action: 'list' } });
+      if (res.data?.error) { toast.error(res.data.error); }
+      else {
+        const d = res.data?.defaults;
+        if (d) {
+          const next: Perms = { ...DEFAULT_PERMS };
+          for (const t of TOOL_DEFS) (next as any)[t.key] = d[t.key] !== false;
+          setPermDefaults(next);
+        }
+        const map: Record<string, Perms> = {};
+        for (const r of (res.data?.permissions || [])) {
+          const p: Perms = { ...DEFAULT_PERMS };
+          for (const t of TOOL_DEFS) (p as any)[t.key] = r[t.key] !== false;
+          map[r.user_id] = p;
+        }
+        setPermRows(map);
+      }
+    } catch (err: any) { toast.error(err.message || 'Erro ao carregar permissões'); }
+    setPermLoading(false);
+  };
+
+  const updateDefaultPerm = async (key: ToolKey, value: boolean) => {
+    const next = { ...permDefaults, [key]: value };
+    setPermDefaults(next);
+    setPermSavingKey('__defaults__');
+    try {
+      const res = await supabase.functions.invoke('manage-operator-permissions', { body: { action: 'update_defaults', permissions: { [key]: value } } });
+      if (res.data?.error) toast.error(res.data.error);
+    } catch (err: any) { toast.error(err.message); }
+    setPermSavingKey(null);
+  };
+
+  const getEffectivePerms = (userId: string): Perms => {
+    return permRows[userId] || permDefaults;
+  };
+
+  const updateUserPerm = async (userId: string, key: ToolKey, value: boolean) => {
+    const current = getEffectivePerms(userId);
+    const next: Perms = { ...current, [key]: value };
+    setPermRows(prev => ({ ...prev, [userId]: next }));
+    setPermSavingKey(userId);
+    try {
+      const res = await supabase.functions.invoke('manage-operator-permissions', { body: { action: 'update_user', user_id: userId, permissions: next } });
+      if (res.data?.error) toast.error(res.data.error);
+    } catch (err: any) { toast.error(err.message); }
+    setPermSavingKey(null);
+  };
+
+  const resetUserPerms = async (userId: string) => {
+    setPermSavingKey(userId);
+    try {
+      const res = await supabase.functions.invoke('manage-operator-permissions', { body: { action: 'reset_user', user_id: userId } });
+      if (res.data?.error) toast.error(res.data.error);
+      else {
+        setPermRows(prev => { const c = { ...prev }; delete c[userId]; return c; });
+        toast.success('Permissões resetadas para o padrão');
+      }
+    } catch (err: any) { toast.error(err.message); }
+    setPermSavingKey(null);
+  };
+
+
   const handleUpdateSystemUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSystemUser) return;
