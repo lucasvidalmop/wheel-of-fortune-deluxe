@@ -1043,11 +1043,32 @@ function Dashboard() {
 
   useEffect(() => {
     let dataLoaded = false;
+    const loadPerms = async (uid: string) => {
+      try {
+        const [{ data: row }, { data: defaults }] = await Promise.all([
+          (supabase as any).from('operator_permissions').select('*').eq('user_id', uid).maybeSingle(),
+          (supabase as any).from('operator_permissions_defaults').select('*').eq('id', 1).maybeSingle(),
+        ]);
+        const src = row || defaults;
+        if (src) {
+          setToolPerms({
+            roleta: src.roleta !== false,
+            sms: src.sms !== false,
+            email: src.email !== false,
+            whatsapp: src.whatsapp !== false,
+            financeiro: src.financeiro !== false,
+            gorjeta: src.gorjeta !== false,
+            referral: src.referral !== false,
+          });
+        }
+      } catch {}
+    };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (s?.user && !dataLoaded) {
         dataLoaded = true;
         loadData(s.user.id);
+        loadPerms(s.user.id);
       } else if (!s) {
         setLoading(false);
       }
@@ -1057,6 +1078,7 @@ function Dashboard() {
       if (s?.user && !dataLoaded) {
         dataLoaded = true;
         loadData(s.user.id);
+        loadPerms(s.user.id);
       } else if (!s) {
         setLoading(false);
       }
