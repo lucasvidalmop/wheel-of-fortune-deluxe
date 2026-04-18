@@ -2293,26 +2293,27 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const menuItems: { key: typeof activeTab; icon: React.ReactNode; label: string }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'email' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos' },
-    { key: 'wheel', icon: <Target size={20} />, label: 'Roleta' },
+    { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico' },
     { key: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
-    { key: 'email', icon: <Mail size={20} />, label: 'Email' },
-    { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS' },
-    { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp' },
+    { key: 'email', icon: <Mail size={20} />, label: 'Email', tool: 'email' },
+    { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS', tool: 'sms' },
+    { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp', tool: 'whatsapp' },
     { key: 'msg_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Msg' },
-    { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro' },
+    { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro', tool: 'financeiro' },
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações' },
-    { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.' },
-    { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta' },
-    { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta' },
-    { key: 'deposito', icon: <DollarSign size={20} />, label: 'Depósito' },
-    { key: 'hist_deposito', icon: <Clock size={20} />, label: 'Hist. Depósito' },
+    { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.', tool: 'referral' },
+    { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta', tool: 'gorjeta' },
+    { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta', tool: 'gorjeta' },
+    { key: 'deposito', icon: <DollarSign size={20} />, label: 'Depósito', tool: 'financeiro' },
+    { key: 'hist_deposito', icon: <Clock size={20} />, label: 'Hist. Depósito', tool: 'financeiro' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações' },
     { key: 'painel_casa', icon: <Monitor size={20} />, label: 'Painel da Casa' },
   ];
+  const menuItems = allMenuItems.filter(it => !it.tool || toolPerms[it.tool] !== false);
 
   const tabTitles: Record<string, string> = {
     inscritos: 'Inscritos',
