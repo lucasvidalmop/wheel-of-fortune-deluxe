@@ -198,6 +198,7 @@ function Dashboard() {
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
+  const [gorjetaDateFilter, setGorjetaDateFilter] = useState<string>(''); // YYYY-MM-DD or '' for all
   const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer' | 'seo'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
