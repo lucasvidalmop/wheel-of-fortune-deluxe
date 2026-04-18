@@ -5,7 +5,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const TOOL_KEYS = ["roleta", "sms", "email", "whatsapp", "financeiro", "gorjeta", "referral"] as const;
+const TOOL_KEYS = [
+  "roleta", "sms", "email", "whatsapp", "financeiro", "gorjeta", "referral",
+  "inscritos", "auth", "history", "analytics", "msg_analytics", "notificacoes", "configuracoes", "painel_casa"
+] as const;
 type ToolKey = typeof TOOL_KEYS[number];
 
 const json = (body: unknown, status = 200) =>
