@@ -68,11 +68,12 @@ const Admin = () => {
   const [permLoading, setPermLoading] = useState(false);
   const [permSavingKey, setPermSavingKey] = useState<string | null>(null);
   const [editingPermsUser, setEditingPermsUser] = useState<any>(null);
-  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text' });
+  const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text', dashboard_title: '', dashboard_description: '', dashboard_favicon_url: '' });
   const [apiBackendUrl, setApiBackendUrl] = useState(() => localStorage.getItem('wheel_api_url') || '');
   const [siteSaving, setSiteSaving] = useState(false);
   const [siteUploading, setSiteUploading] = useState(false);
   const [siteFaviconUploading, setSiteFaviconUploading] = useState(false);
+  const [dashFaviconUploading, setDashFaviconUploading] = useState(false);
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -148,7 +149,16 @@ const Admin = () => {
 
   const fetchSiteSettings = async () => {
     const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
-    if (data) setSiteSettings({ bg_image_url: data.bg_image_url || '', site_title: data.site_title || '', site_description: data.site_description || '', favicon_url: data.favicon_url || '', home_mode: data.home_mode || 'text' });
+    if (data) setSiteSettings({
+      bg_image_url: data.bg_image_url || '',
+      site_title: data.site_title || '',
+      site_description: data.site_description || '',
+      favicon_url: data.favicon_url || '',
+      home_mode: data.home_mode || 'text',
+      dashboard_title: data.dashboard_title || '',
+      dashboard_description: data.dashboard_description || '',
+      dashboard_favicon_url: data.dashboard_favicon_url || '',
+    });
   };
 
   const handleSaveSiteSettings = async () => {
@@ -180,6 +190,18 @@ const Admin = () => {
       toast.success('Favicon enviado!');
     } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
     setSiteFaviconUploading(false);
+    e.target.value = '';
+  };
+
+  const handleDashFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setDashFaviconUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'dashboard-favicon');
+      setSiteSettings(s => ({ ...s, dashboard_favicon_url: publicUrl }));
+      toast.success('Favicon da Dashboard enviado!');
+    } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+    setDashFaviconUploading(false);
     e.target.value = '';
   };
 
@@ -776,6 +798,43 @@ const Admin = () => {
                     <input type="file" accept="image/*" onChange={handleSiteBgUpload} className="hidden" disabled={siteUploading} />
                   </label>
                 )}
+              </div>
+
+              {/* ─── Branding da Dashboard do Operador ─── */}
+              <div className="space-y-3 pt-4 border-t border-white/[0.06]">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Dashboard do Operador</h3>
+                  <p className="text-[11px] text-muted-foreground">Estes valores aparecem na aba do navegador quando o operador acessa o painel. Se vazio, usa os valores do site.</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Título da Dashboard</label>
+                  <input type="text" value={siteSettings.dashboard_title} onChange={e => setSiteSettings(s => ({ ...s, dashboard_title: e.target.value }))} placeholder="Ex.: Painel do Operador" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrição da Dashboard</label>
+                  <textarea value={siteSettings.dashboard_description} onChange={e => setSiteSettings(s => ({ ...s, dashboard_description: e.target.value }))} placeholder="Descrição do painel..." rows={2} className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all resize-none" />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Favicon da Dashboard</label>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {siteSettings.dashboard_favicon_url && (
+                      <div className="w-12 h-12 rounded-xl border border-white/[0.08] bg-white/[0.04] flex items-center justify-center overflow-hidden">
+                        <img src={siteSettings.dashboard_favicon_url} alt="Favicon Dashboard" className="w-8 h-8 object-contain" />
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm cursor-pointer hover:bg-white/[0.08] transition">
+                      <Upload size={15} />
+                      {dashFaviconUploading ? 'Enviando...' : siteSettings.dashboard_favicon_url ? 'Trocar' : 'Enviar Favicon'}
+                      <input type="file" accept="image/*" onChange={handleDashFaviconUpload} className="hidden" disabled={dashFaviconUploading} />
+                    </label>
+                    {siteSettings.dashboard_favicon_url && (
+                      <button onClick={() => setSiteSettings(s => ({ ...s, dashboard_favicon_url: '' }))} className="px-3 py-2 rounded-xl border border-destructive/20 text-destructive text-xs hover:bg-destructive/10 transition">Remover</button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* API Backend */}

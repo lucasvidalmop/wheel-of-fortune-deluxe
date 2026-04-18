@@ -614,6 +614,9 @@ export type Database = {
         Row: {
           bg_image_url: string | null
           created_at: string
+          dashboard_description: string | null
+          dashboard_favicon_url: string | null
+          dashboard_title: string | null
           favicon_url: string | null
           home_mode: string
           id: number
@@ -624,6 +627,9 @@ export type Database = {
         Insert: {
           bg_image_url?: string | null
           created_at?: string
+          dashboard_description?: string | null
+          dashboard_favicon_url?: string | null
+          dashboard_title?: string | null
           favicon_url?: string | null
           home_mode?: string
           id?: number
@@ -634,6 +640,9 @@ export type Database = {
         Update: {
           bg_image_url?: string | null
           created_at?: string
+          dashboard_description?: string | null
+          dashboard_favicon_url?: string | null
+          dashboard_title?: string | null
           favicon_url?: string | null
           home_mode?: string
           id?: number

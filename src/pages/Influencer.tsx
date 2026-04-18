@@ -60,7 +60,7 @@ const generateFakeAccountId = () => {
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
 const Influencer = () => {
-  useSiteSettings();
+  useSiteSettings('dashboard');
 
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);

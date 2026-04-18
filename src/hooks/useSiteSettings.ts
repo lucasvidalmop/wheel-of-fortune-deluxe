@@ -7,9 +7,12 @@ interface SiteSettings {
   favicon_url: string;
   bg_image_url: string;
   home_mode: 'text' | 'image' | 'image_text';
+  dashboard_title?: string;
+  dashboard_description?: string;
+  dashboard_favicon_url?: string;
 }
 
-export const useSiteSettings = () => {
+export const useSiteSettings = (mode: 'site' | 'dashboard' = 'site') => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
@@ -25,18 +28,28 @@ export const useSiteSettings = () => {
 
   useEffect(() => {
     if (!settings) return;
-    if (settings.site_title) document.title = settings.site_title;
-    if (settings.site_description) {
+    const title = mode === 'dashboard'
+      ? (settings.dashboard_title || settings.site_title)
+      : settings.site_title;
+    const description = mode === 'dashboard'
+      ? (settings.dashboard_description || settings.site_description)
+      : settings.site_description;
+    const favicon = mode === 'dashboard'
+      ? (settings.dashboard_favicon_url || settings.favicon_url)
+      : settings.favicon_url;
+
+    if (title) document.title = title;
+    if (description) {
       let meta = document.querySelector('meta[name="description"]');
       if (!meta) { meta = document.createElement('meta'); (meta as HTMLMetaElement).name = 'description'; document.head.appendChild(meta); }
-      (meta as HTMLMetaElement).content = settings.site_description;
+      (meta as HTMLMetaElement).content = description;
     }
-    if (settings.favicon_url) {
+    if (favicon) {
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = settings.favicon_url;
+      link.href = favicon;
     }
-  }, [settings]);
+  }, [settings, mode]);
 
   return settings;
 };
