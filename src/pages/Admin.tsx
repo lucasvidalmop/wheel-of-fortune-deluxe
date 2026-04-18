@@ -837,8 +837,8 @@ const Admin = () => {
                   <p className="text-muted-foreground">{searchTerm ? 'Nenhum resultado' : 'Nenhum inscrito'}</p>
                 </GlassCard>
               ) : (
-                <GlassCard className="overflow-hidden">
-                  <table className="w-full text-sm table-fixed">
+                <GlassCard className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[760px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
@@ -855,11 +855,11 @@ const Admin = () => {
                           <td className="px-4 py-3 text-muted-foreground text-xs">{index + 1}</td>
                           <td className="px-4 py-3 text-foreground font-medium truncate">{user.name}</td>
                           <td className="px-4 py-3 text-muted-foreground truncate">{user.email}</td>
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{user.phone}</td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{user.phone}</td>
                           <td className="px-4 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-center gap-1.5">
-                              <button onClick={() => handleGrantSpin(user)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}>
+                              <button onClick={() => handleGrantSpin(user)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}>
                                 {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar'}
                               </button>
                               <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar"><Pencil size={13} /></button>
