@@ -752,9 +752,12 @@ const Admin = () => {
                 </div>
               )}
 
-              {/* Favicon */}
+              {/* Favicon padrão do sistema */}
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Favicon</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Favicon Padrão do Sistema</label>
+                <p className="text-[11px] text-muted-foreground/70 -mt-1">
+                  Usado em todas as páginas que não tiverem favicon próprio definido pelo operador.
+                </p>
                 <div className="flex items-center gap-4">
                   {siteSettings.favicon_url && (
                     <div className="w-12 h-12 rounded-xl border border-white/[0.08] bg-white/[0.04] flex items-center justify-center overflow-hidden">
