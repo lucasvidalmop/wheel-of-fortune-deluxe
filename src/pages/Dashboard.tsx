@@ -198,6 +198,7 @@ function Dashboard() {
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
+  const [gorjetaDateFilter, setGorjetaDateFilter] = useState<string>(''); // YYYY-MM-DD or '' for all
   const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer' | 'seo'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
@@ -6079,9 +6080,33 @@ function Dashboard() {
 
 
           {/* ══════ HISTÓRICO GORJETA TAB ══════ */}
-          {activeTab === 'hist_gorjeta' && (
+          {activeTab === 'hist_gorjeta' && (() => {
+            // Build list of available dates (YYYY-MM-DD) for the filter dropdown
+            const availableDates = Array.from(new Set(
+              gorjetaHistory.map((i: any) => {
+                const d = new Date(i.created_at);
+                if (isNaN(d.getTime())) return '';
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              }).filter(Boolean)
+            )).sort((a, b) => b.localeCompare(a));
+
+            const filteredHistory = gorjetaDateFilter
+              ? gorjetaHistory.filter((i: any) => {
+                  const d = new Date(i.created_at);
+                  if (isNaN(d.getTime())) return false;
+                  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                  return key === gorjetaDateFilter;
+                })
+              : gorjetaHistory;
+
+            const formatDateLabel = (iso: string) => {
+              const [y, m, d] = iso.split('-');
+              return `${d}/${m}/${y.slice(2)}`;
+            };
+
+            return (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Clock size={20} className="text-primary" />
                   <h3 className="text-sm font-bold text-foreground">Histórico de Sorteados</h3>
@@ -6095,24 +6120,62 @@ function Dashboard() {
                 </button>
               </div>
 
+              {/* Date filter */}
+              <GlassCard className="p-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <CalendarIcon size={14} className="text-primary" /> Filtrar por dia:
+                  </label>
+                  <input
+                    type="date"
+                    value={gorjetaDateFilter}
+                    onChange={(e) => setGorjetaDateFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                  {availableDates.length > 0 && (
+                    <select
+                      value={gorjetaDateFilter}
+                      onChange={(e) => setGorjetaDateFilter(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    >
+                      <option value="">Todos os dias</option>
+                      {availableDates.map((d) => (
+                        <option key={d} value={d}>{formatDateLabel(d)}</option>
+                      ))}
+                    </select>
+                  )}
+                  {gorjetaDateFilter && (
+                    <button
+                      onClick={() => setGorjetaDateFilter('')}
+                      className="px-2.5 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                  <span className="text-[11px] text-muted-foreground ml-auto">
+                    Exibindo: <span className="font-semibold text-foreground">{filteredHistory.length}</span> de {gorjetaHistory.length}
+                  </span>
+                </div>
+              </GlassCard>
+
               {/* Summary cards */}
-              {gorjetaHistory.length > 0 && (
+              {filteredHistory.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <GlassCard className="p-3 text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Sorteados</p>
-                    <p className="text-lg font-bold text-foreground">{gorjetaHistory.length}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{gorjetaDateFilter ? 'Sorteados no dia' : 'Total Sorteados'}</p>
+                    <p className="text-lg font-bold text-foreground">{filteredHistory.length}</p>
                   </GlassCard>
                   <GlassCard className="p-3 text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Pago</p>
-                    <p className="text-lg font-bold text-primary">R$ {gorjetaHistory.reduce((s: number, i: any) => s + (i.amount || 0), 0).toFixed(2).replace('.', ',')}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{gorjetaDateFilter ? 'Gasto no dia' : 'Total Gasto'}</p>
+                    <p className="text-lg font-bold text-primary">R$ {filteredHistory.reduce((s: number, i: any) => s + (i.amount || 0), 0).toFixed(2).replace('.', ',')}</p>
                   </GlassCard>
                   <GlassCard className="p-3 text-center">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pendentes</p>
-                    <p className="text-lg font-bold text-yellow-400">{gorjetaHistory.filter((i: any) => i.status === 'pending' || i.status === 'auto_pending').length}</p>
+                    <p className="text-lg font-bold text-yellow-400">{filteredHistory.filter((i: any) => i.status === 'pending' || i.status === 'auto_pending').length}</p>
                   </GlassCard>
                   <GlassCard className="p-3 text-center">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pagos</p>
-                    <p className="text-lg font-bold text-green-400">{gorjetaHistory.filter((i: any) => i.status === 'paid').length}</p>
+                    <p className="text-lg font-bold text-green-400">{filteredHistory.filter((i: any) => i.status === 'paid').length}</p>
                   </GlassCard>
                 </div>
               )}
@@ -6121,10 +6184,12 @@ function Dashboard() {
                 <div className="flex items-center justify-center py-12">
                   <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
-              ) : gorjetaHistory.length === 0 ? (
+              ) : filteredHistory.length === 0 ? (
                 <GlassCard className="p-8 text-center">
                   <Gift size={32} className="mx-auto text-muted-foreground/40 mb-3" />
-                  <p className="text-sm text-muted-foreground">Nenhum sorteado encontrado.</p>
+                  <p className="text-sm text-muted-foreground">
+                    {gorjetaDateFilter ? `Nenhum sorteado em ${formatDateLabel(gorjetaDateFilter)}.` : 'Nenhum sorteado encontrado.'}
+                  </p>
                 </GlassCard>
               ) : (
                 <GlassCard className="p-0 overflow-hidden">
@@ -6142,7 +6207,7 @@ function Dashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {gorjetaHistory.map((item: any) => {
+                        {filteredHistory.map((item: any) => {
                           const wu = item.wheel_users;
                           const statusColors: Record<string, string> = {
                             paid: 'bg-green-500/20 text-green-400',
@@ -6194,8 +6259,14 @@ function Dashboard() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="px-4 py-3 border-t border-white/[0.06] text-xs text-muted-foreground">
-                    Total: <span className="font-semibold text-foreground">{gorjetaHistory.length}</span> sorteados
+                  <div className="px-4 py-3 border-t border-white/[0.06] text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
+                    <span>
+                      Total: <span className="font-semibold text-foreground">{filteredHistory.length}</span> sorteados
+                      {gorjetaDateFilter && <span className="ml-1">em {formatDateLabel(gorjetaDateFilter)}</span>}
+                    </span>
+                    <span>
+                      Gasto: <span className="font-semibold text-primary">R$ {filteredHistory.reduce((s: number, i: any) => s + (i.amount || 0), 0).toFixed(2).replace('.', ',')}</span>
+                    </span>
                   </div>
                 </GlassCard>
               )}
@@ -6246,7 +6317,8 @@ function Dashboard() {
                 </DialogContent>
               </Dialog>
             </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'deposito' && (() => {
             const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '' };
