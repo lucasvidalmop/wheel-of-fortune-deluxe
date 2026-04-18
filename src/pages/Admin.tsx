@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload, Copy, Monitor } from 'lucide-react';
+import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload, Copy, Monitor, ToggleLeft, RotateCw } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+
+const TOOL_DEFS: { key: 'roleta' | 'sms' | 'email' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral'; label: string }[] = [
+  { key: 'roleta', label: 'Roleta' },
+  { key: 'sms', label: 'SMS' },
+  { key: 'email', label: 'E-mail' },
+  { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'financeiro', label: 'Sistema de Pagamento' },
+  { key: 'gorjeta', label: 'Gorjeta' },
+  { key: 'referral', label: 'Link de Referência' },
+];
+type ToolKey = typeof TOOL_DEFS[number]['key'];
+type Perms = Record<ToolKey, boolean>;
+const DEFAULT_PERMS: Perms = { roleta: true, sms: true, email: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true };
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
