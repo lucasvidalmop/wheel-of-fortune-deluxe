@@ -801,8 +801,8 @@ const Admin = () => {
 
               {/* Modal */}
               {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h2>
                       <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
@@ -919,8 +919,8 @@ const Admin = () => {
 
               {/* ══ Edit System User Modal ══ */}
               {editingSystemUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><KeyRound size={18} /> Editar Operador</h2>
                       <button onClick={() => setEditingSystemUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
@@ -952,8 +952,8 @@ const Admin = () => {
 
               {/* ══ Edit Admin User Modal ══ */}
               {editingAdminUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><KeyRound size={18} /> Editar Admin</h2>
                       <button onClick={() => setEditingAdminUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
@@ -1089,8 +1089,8 @@ const Admin = () => {
             <div className="space-y-6">
               {/* Per-operator modal */}
               {editingPermsUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                  <GlassCard className="w-full max-w-md p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><ToggleLeft size={18} /> Permissões</h2>
                       <button onClick={() => setEditingPermsUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
