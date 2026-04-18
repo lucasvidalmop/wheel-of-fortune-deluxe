@@ -84,9 +84,10 @@ const Referral = () => {
 
     // Favicon — usa o do operador, ou cai no padrão global do sistema
     (async () => {
+      const { claimBrandingControl, getGlobalFavicon } = await import('@/lib/applyGlobalFavicon');
+      claimBrandingControl();
       let faviconUrl = (cfg as any).seoFaviconUrl as string | undefined;
       if (!faviconUrl) {
-        const { getGlobalFavicon } = await import('@/lib/applyGlobalFavicon');
         faviconUrl = await getGlobalFavicon();
       }
       if (!faviconUrl) return;
