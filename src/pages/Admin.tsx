@@ -437,12 +437,30 @@ const Admin = () => {
   const fetchDashboards = async () => {
     setDashboardsLoading(true);
     try {
-      const { data: configs } = await (supabase as any).from('wheel_configs').select('*').order('created_at', { ascending: false });
-      // Fetch user info for each config
-      const res = await supabase.functions.invoke('list-system-users');
-      const sysUsers = res.data?.users || [];
+      const [{ data: configs }, sysRes, permsRes] = await Promise.all([
+        (supabase as any).from('wheel_configs').select('*').order('created_at', { ascending: false }),
+        supabase.functions.invoke('list-system-users'),
+        supabase.functions.invoke('manage-operator-permissions', { body: { action: 'list' } }),
+      ]);
+      const sysUsers = sysRes.data?.users || [];
       const userMap: Record<string, any> = {};
       sysUsers.forEach((u: any) => { userMap[u.id] = u; });
+
+      // Hydrate perms (defaults + per-user) so we can hide the wheel link for ops with roleta=off
+      const d = permsRes.data?.defaults;
+      if (d) {
+        const next: Perms = { ...DEFAULT_PERMS };
+        for (const t of TOOL_DEFS) (next as any)[t.key] = d[t.key] !== false;
+        setPermDefaults(next);
+      }
+      const pmap: Record<string, Perms> = {};
+      for (const r of (permsRes.data?.permissions || [])) {
+        const p: Perms = { ...DEFAULT_PERMS };
+        for (const t of TOOL_DEFS) (p as any)[t.key] = r[t.key] !== false;
+        pmap[r.user_id] = p;
+      }
+      setPermRows(pmap);
+
       const enriched = (configs || []).map((c: any) => ({
         ...c,
         user_email: userMap[c.user_id]?.email || '—',
@@ -1270,6 +1288,8 @@ const Admin = () => {
                   {dashboardConfigs.map((cfg: any) => {
                     const segments = (cfg.config as any)?.segments || [];
                     const segCount = segments.length;
+                    const ownerPerms = getEffectivePerms(cfg.user_id);
+                    const roletaEnabled = ownerPerms.roleta !== false;
                     return (
                       <GlassCard key={cfg.id} className={`p-5 space-y-4 transition-all ${cloneSource === cfg.id ? 'ring-2 ring-primary/40' : ''}`}>
                         {/* Code badge */}
@@ -1300,10 +1320,16 @@ const Admin = () => {
                           </div>
                         </div>
 
-                        {/* Slug */}
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <Globe size={10} /> <span className="truncate">/{cfg.slug}</span>
-                        </div>
+                        {/* Slug — hidden when roleta permission is disabled for this operator */}
+                        {roletaEnabled ? (
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <Globe size={10} /> <span className="truncate">/{cfg.slug}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground italic">
+                            <Globe size={10} /> <span className="truncate">Roleta desativada para este operador</span>
+                          </div>
+                        )}
 
                         {/* Info */}
                         <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
@@ -1313,14 +1339,16 @@ const Admin = () => {
 
                         {/* Actions */}
                         <div className="flex gap-2">
-                          <a
-                            href={`/roleta/${cfg.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs font-medium hover:bg-white/[0.08] transition"
-                          >
-                            <Eye size={12} /> Ver
-                          </a>
+                          {roletaEnabled && (
+                            <a
+                              href={`/roleta/${cfg.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-xs font-medium hover:bg-white/[0.08] transition"
+                            >
+                              <Eye size={12} /> Ver
+                            </a>
+                          )}
                           <button
                             onClick={() => { setCloneSource(cfg.id); setCloneTarget(''); }}
                             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition ${
