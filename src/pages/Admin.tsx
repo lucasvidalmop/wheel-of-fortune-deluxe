@@ -647,8 +647,8 @@ const Admin = () => {
       </div>
 
       {/* ═══ MAIN ═══ */}
-      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 overflow-x-auto ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
-        <div className="max-w-6xl mx-auto lg:py-6 space-y-5 min-w-[320px]">
+      <div className={`flex-1 min-w-0 pt-28 lg:pt-0 p-4 md:p-6 transition-all duration-500 relative z-10 ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}`}>
+        <div className="max-w-6xl mx-auto lg:py-6 space-y-5">
 
           {/* Title bar */}
           <div>
@@ -801,8 +801,8 @@ const Admin = () => {
 
               {/* Modal */}
               {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h2>
                       <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
@@ -837,8 +837,8 @@ const Admin = () => {
                   <p className="text-muted-foreground">{searchTerm ? 'Nenhum resultado' : 'Nenhum inscrito'}</p>
                 </GlassCard>
               ) : (
-                <GlassCard className="overflow-hidden">
-                  <table className="w-full text-sm table-fixed">
+                <GlassCard className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[760px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
@@ -855,11 +855,11 @@ const Admin = () => {
                           <td className="px-4 py-3 text-muted-foreground text-xs">{index + 1}</td>
                           <td className="px-4 py-3 text-foreground font-medium truncate">{user.name}</td>
                           <td className="px-4 py-3 text-muted-foreground truncate">{user.email}</td>
-                          <td className="px-4 py-3 text-muted-foreground text-xs">{user.phone}</td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{user.phone}</td>
                           <td className="px-4 py-3 font-mono text-xs text-muted-foreground truncate">{user.account_id}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-center gap-1.5">
-                              <button onClick={() => handleGrantSpin(user)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}>
+                              <button onClick={() => handleGrantSpin(user)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${user.spins_available >= 1 ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/20' : 'bg-white/[0.06] text-foreground hover:bg-primary/15 hover:text-primary border border-white/[0.08]'}`}>
                                 {user.spins_available >= 1 ? '1 giro ✓' : 'Liberar'}
                               </button>
                               <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg bg-white/[0.06] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition border border-white/[0.06]" title="Editar"><Pencil size={13} /></button>
@@ -919,8 +919,8 @@ const Admin = () => {
 
               {/* ══ Edit System User Modal ══ */}
               {editingSystemUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><KeyRound size={18} /> Editar Operador</h2>
                       <button onClick={() => setEditingSystemUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
@@ -952,8 +952,8 @@ const Admin = () => {
 
               {/* ══ Edit Admin User Modal ══ */}
               {editingAdminUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <GlassCard className="w-full max-w-md mx-4 p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><KeyRound size={18} /> Editar Admin</h2>
                       <button onClick={() => setEditingAdminUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
@@ -999,8 +999,8 @@ const Admin = () => {
                     <p className="text-muted-foreground text-sm">Clique em "Carregar" para ver os operadores</p>
                   </GlassCard>
                 ) : (
-                  <GlassCard className="overflow-hidden">
-                    <table className="w-full text-sm">
+                  <GlassCard className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[640px]">
                       <thead>
                         <tr className="border-b border-white/[0.06]">
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
@@ -1049,8 +1049,8 @@ const Admin = () => {
                     <p className="text-muted-foreground text-sm">Clique em "Carregar" para ver os admins</p>
                   </GlassCard>
                 ) : (
-                  <GlassCard className="overflow-hidden">
-                    <table className="w-full text-sm">
+                  <GlassCard className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[640px]">
                       <thead>
                         <tr className="border-b border-white/[0.06]">
                           <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
@@ -1089,8 +1089,8 @@ const Admin = () => {
             <div className="space-y-6">
               {/* Per-operator modal */}
               {editingPermsUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                  <GlassCard className="w-full max-w-md p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+                  <GlassCard className="w-full max-w-md p-6 space-y-4 my-auto max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><ToggleLeft size={18} /> Permissões</h2>
                       <button onClick={() => setEditingPermsUser(null)} className="p-1.5 rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition"><X size={18} /></button>
@@ -1346,8 +1346,8 @@ const Admin = () => {
                   <p className="text-muted-foreground">Nenhum resultado registrado</p>
                 </GlassCard>
               ) : (
-                <GlassCard className="overflow-hidden">
-                  <table className="w-full text-sm">
+                <GlassCard className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[820px]">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         <th className="text-left px-4 py-3.5 text-[10px] text-muted-foreground font-semibold uppercase tracking-wider w-10">#</th>
