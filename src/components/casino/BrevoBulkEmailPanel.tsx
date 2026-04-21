@@ -383,10 +383,16 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
       });
       if (error) throw error;
       setLastResult(data);
+      const skipped = data?.suppressed_skipped ?? 0;
+      const invalid = data?.invalid ?? 0;
+      const extra = [
+        skipped > 0 ? `${skipped} pulado(s) na supressão` : null,
+        invalid > 0 ? `${invalid} formato inválido` : null,
+      ].filter(Boolean).join(' • ');
       if (data?.failed > 0) {
-        toast.warning(`Enviados: ${data.sent} • Falhas: ${data.failed}`);
+        toast.warning(`Enviados: ${data.sent} • Falhas: ${data.failed}${extra ? ' • ' + extra : ''}`);
       } else {
-        toast.success(`✓ ${data?.sent ?? 0} email(s) enviados via Brevo`);
+        toast.success(`✓ ${data?.sent ?? 0} email(s) enviados${extra ? ' • ' + extra : ''}`);
       }
     } catch (e: any) {
       toast.error(`Erro: ${e?.message || 'falha desconhecida'}`);
