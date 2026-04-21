@@ -62,10 +62,10 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json()) as Payload
-    const { senderEmail, senderName, subject, htmlContent, recipients, replyTo } = body
+    const { senderEmail, senderName, subject, htmlContent, textContent, recipients, replyTo } = body
 
-    if (!senderEmail || !subject || !htmlContent || !Array.isArray(recipients) || recipients.length === 0) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+    if (!senderEmail || !subject || (!htmlContent && !textContent) || !Array.isArray(recipients) || recipients.length === 0) {
+      return new Response(JSON.stringify({ error: 'Missing required fields (need htmlContent or textContent)' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
