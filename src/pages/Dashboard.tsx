@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
-import ReferralAnalyticsModal from '@/components/casino/ReferralAnalyticsModal';
+import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
@@ -219,7 +219,7 @@ function Dashboard() {
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
-  const [referralSubTab, setReferralSubTab] = useState<'links' | 'default_style'>('links');
+  const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -5907,6 +5907,7 @@ function Dashboard() {
               <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
                 {([
                   { key: 'links' as const, label: '🔗 Links', icon: Link2 },
+                  { key: 'analytics' as const, label: '📊 Analytics', icon: BarChart3 },
                   { key: 'default_style' as const, label: '🎨 Visual Padrão', icon: Palette },
                 ] as const).map(tab => (
                   <button
