@@ -55,7 +55,6 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
       setLoading(true);
       try {
         const normalize = (value?: string | null) => (value || '').trim().toLowerCase();
-        const looksLikeCode = (value?: string | null) => /^[a-z0-9]{6,12}$/i.test((value || '').trim());
 
         const { data: links } = await (supabase as any)
           .from('referral_links')
@@ -96,13 +95,6 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           .eq('owner_id', ownerId)
           .eq('user_type', 'Real');
 
-        const gorjetaAliases = new Set<string>(gorjetaTokens);
-        (allUsers || []).forEach((u: any) => {
-          const responsible = normalize(u.responsible);
-          if (!responsible) return;
-          if (u.referral_link_id && gorjetaLinkIds.has(u.referral_link_id)) gorjetaAliases.add(responsible);
-        });
-
         const covered = new Set<string>();
         (reds || []).forEach((r: any) => {
           covered.add(`${r.account_id}|${normalize(r.email)}`);
@@ -118,13 +110,17 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           const matchedHistoricalLink = nonGorjetaByNormalized.get(responsible);
 
           const isDirectNonGorjeta = !!(u.referral_link_id && nonGorjetaLinkIds.has(u.referral_link_id));
-          const isHistoricalNonGorjeta = !!(!u.referral_link_id && responsible && !gorjetaAliases.has(responsible) && (matchedHistoricalLink || looksLikeCode(responsible)));
+          const isHistoricalNonGorjeta = !!(
+            !u.referral_link_id &&
+            responsible &&
+            !gorjetaTokens.has(responsible)
+          );
 
           if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
 
           const syntheticLinkId = isDirectNonGorjeta ? u.referral_link_id : matchedHistoricalLink?.id || null;
-          const syntheticCode = directLink?.code || matchedHistoricalLink?.code || (responsible ? u.responsible?.trim() : null);
-          const syntheticLabel = directLink?.label || matchedHistoricalLink?.label || (responsible ? 'Link antigo' : null);
+          const syntheticCode = directLink?.code || matchedHistoricalLink?.code || u.responsible?.trim() || null;
+          const syntheticLabel = directLink?.label || matchedHistoricalLink?.label || 'Link antigo';
 
           if (linkId && syntheticLinkId !== linkId) return;
 
@@ -145,9 +141,9 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
 
         const accountIds = Array.from(new Set(allReds.map((r: any) => r.account_id).filter(Boolean)));
 
-        if (accountIds.length) {
-          setUsers(allUsers || []);
+        setUsers(allUsers || []);
 
+        if (accountIds.length) {
           const { data: sp } = await (supabase as any)
             .from('spin_results')
             .select('id, account_id, user_email, prize, spun_at')
@@ -162,7 +158,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
             .in('account_id', accountIds);
           setPayments(pp || []);
         } else {
-          setUsers(allUsers || []); setSpins([]); setPayments([]);
+          setSpins([]); setPayments([]);
         }
       } catch (err: any) {
         toast.error('Erro ao carregar analytics: ' + (err.message || ''));
