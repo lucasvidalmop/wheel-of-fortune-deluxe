@@ -3,6 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode, Wrench } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Recipient = { email: string; name?: string };
 type Source = 'csv' | 'contacts' | 'wheel_users';
@@ -72,6 +82,8 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [uploadingImage, setUploadingImage] = useState(false);
   const [fixingImages, setFixingImages] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingRecipients, setPendingRecipients] = useState<Recipient[]>([]);
   const htmlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const replaceOrInsertHtmlImage = (publicUrl: string) => {
@@ -351,8 +363,11 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
       toast.error('Nenhum destinatário válido encontrado.');
       return;
     }
-    if (!confirm(`Enviar para ${recipients.length} destinatário(s) via Brevo?`)) return;
+    setPendingRecipients(recipients);
+    setConfirmOpen(true);
+  };
 
+  const performSend = async (recipients: Recipient[]) => {
     setLoading(true);
     setLastResult(null);
     try {
@@ -714,6 +729,60 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
           </div>
         </GlassCard>
       )}
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="border-white/[0.08] bg-background/95 backdrop-blur-xl">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Send size={18} className="text-primary" />
+              </div>
+              <div>
+                <AlertDialogTitle className="text-foreground">Confirmar disparo</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground">
+                  Revise antes de enviar. Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+
+          <div className="mt-2 space-y-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Destinatários</span>
+              <span className="font-semibold text-primary">{pendingRecipients.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Remetente</span>
+              <span className="font-medium text-foreground truncate ml-3 max-w-[60%] text-right">
+                {senderName.trim() || senderEmail.trim()} &lt;{senderEmail.trim()}&gt;
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Assunto</span>
+              <span className="font-medium text-foreground truncate ml-3 max-w-[60%] text-right">
+                {subject.trim() || '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Provedor</span>
+              <span className="font-medium text-foreground">Brevo</span>
+            </div>
+          </div>
+
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel className="border-white/[0.08] bg-white/[0.04] text-foreground hover:bg-white/[0.08]">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => performSend(pendingRecipients)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Send size={14} className="mr-1.5" />
+              Enviar agora
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
