@@ -5936,7 +5936,7 @@ function Dashboard() {
 
               {referralSubTab === 'analytics' && (
                 <GlassCard className="p-5">
-                  <ReferralAnalyticsPanel ownerId={session.user.id} />
+                  <ReferralAnalyticsPanel ownerId={session.user.id} gorjetaRef={(wheelConfig as any).gorjetaRef || ''} />
                 </GlassCard>
               )}
 
