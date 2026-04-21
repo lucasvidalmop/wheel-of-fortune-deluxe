@@ -209,14 +209,10 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
         || users.find(x => x.account_id === r.account_id)
         || users.find(x => x.email?.toLowerCase() === r.email?.toLowerCase());
 
-      // Filter: only REAL users
       if (!u || u.user_type !== 'Real') continue;
 
       const userPayments = payments.filter(p => p.account_id === r.account_id || p.user_email?.toLowerCase() === r.email?.toLowerCase());
       const paidPayments = userPayments.filter(p => p.status === 'paid');
-
-      // Filter: only users with at least one PAID payment
-      if (paidPayments.length === 0) continue;
 
       const existing = map.get(key);
       if (existing) {
@@ -238,7 +234,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           firstRedemption: r.created_at,
           lastRedemption: r.created_at,
           spinsTotal: userSpins.length,
-          prizesCount: paidPayments.length,
+          prizesCount: userPayments.length,
           totalAmountWon: totalAmount,
           totalAmountPaid: paidAmount,
           links: new Set(r.link_code ? [r.link_code] : []),
