@@ -215,6 +215,8 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
       setFixingImages(false);
     }
   };
+
+  const csvRecipients = useMemo<Recipient[]>(() => {
     if (!csvText.trim()) return [];
     const lines = csvText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     const out: Recipient[] = [];
