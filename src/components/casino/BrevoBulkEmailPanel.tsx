@@ -786,6 +786,3 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     </div>
   );
 }
-    </div>
-  );
-}
