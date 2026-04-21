@@ -945,6 +945,10 @@ function Dashboard() {
     twilioAccountSid,
     twilioAuthToken,
     twilioPhoneNumber,
+    smsCsMessage,
+    clicksendUsername,
+    clicksendApiKey,
+    clicksendSenderId,
     whatsappMessage,
     whatsappDelaySeconds,
     evolutionApiUrl,
@@ -999,6 +1003,10 @@ function Dashboard() {
     setTwilioAccountSid(settings.twilioAccountSid || '');
     setTwilioAuthToken(settings.twilioAuthToken || '');
     setTwilioPhoneNumber(settings.twilioPhoneNumber || '');
+    setSmsCsMessage(settings.smsCsMessage || '');
+    setClicksendUsername(settings.clicksendUsername || '');
+    setClicksendApiKey(settings.clicksendApiKey || '');
+    setClicksendSenderId(settings.clicksendSenderId || '');
     setWhatsappMessage(settings.whatsappMessage || '');
     setWhatsappDelaySeconds(Number(settings.whatsappDelaySeconds) > 0 ? Number(settings.whatsappDelaySeconds) : 2);
     setEvolutionApiUrl(settings.evolutionApiUrl || '');
