@@ -92,16 +92,27 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Dedupe + basic email validation
+    // Dedupe + sanitização rigorosa
     const seen = new Set<string>()
     const cleanRecipients: Recipient[] = []
+    const invalidRecipients: { email: string; error: string }[] = []
     for (const r of recipients) {
-      const e = (r.email || '').trim().toLowerCase()
-      if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) continue
+      const e = sanitizeEmail(r.email || '')
+      if (!e) {
+        invalidRecipients.push({ email: r.email || '(vazio)', error: 'Email inválido' })
+        continue
+      }
       if (seen.has(e)) continue
       seen.add(e)
-      cleanRecipients.push({ email: e, name: r.name?.trim() || undefined })
+      cleanRecipients.push({ email: e, name: sanitizeName(r.name) })
     }
+
+    console.log('[send-bulk-brevo] Sanitization', {
+      received: recipients.length,
+      valid: cleanRecipients.length,
+      invalid: invalidRecipients.length,
+      duplicates: recipients.length - cleanRecipients.length - invalidRecipients.length,
+    })
 
     if (cleanRecipients.length === 0) {
       return new Response(JSON.stringify({ error: 'No valid recipients' }), {
