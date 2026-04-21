@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,12 +7,67 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function isBlockedHost(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local")) return true;
+  if (h === "metadata.google.internal") return true;
+  const ipv4 = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [a, b] = [parseInt(ipv4[1]), parseInt(ipv4[2])];
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 0) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a >= 224) return true;
+  }
+  if (h === "::1" || h === "[::1]") return true;
+  if (h.startsWith("fe80:") || h.startsWith("[fe80:")) return true;
+  if (h.startsWith("fc") || h.startsWith("fd") || h.startsWith("[fc") || h.startsWith("[fd")) return true;
+  return false;
+}
+
+function validateApiUrl(rawUrl: string): { ok: true; url: URL } | { ok: false; error: string } {
+  let parsed: URL;
+  try { parsed = new URL(rawUrl); } catch { return { ok: false, error: "URL inválida" }; }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return { ok: false, error: "Protocolo inválido (use http/https)" };
+  }
+  if (isBlockedHost(parsed.hostname)) {
+    return { ok: false, error: "Host bloqueado por política de segurança" };
+  }
+  return { ok: true, url: parsed };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    // Require authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Não autenticado." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: authErr } = await supabase.auth.getClaims(token);
+    if (authErr || !claims?.claims?.sub) {
+      return new Response(
+        JSON.stringify({ error: "Sessão inválida." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { recipientPhone, message, evolutionApiUrl, evolutionApiKey, evolutionInstance, media, mentionsEveryOne } = await req.json();
 
     if (!recipientPhone) {
@@ -35,6 +91,14 @@ serve(async (req) => {
       );
     }
 
+    const validated = validateApiUrl(evolutionApiUrl);
+    if (!validated.ok) {
+      return new Response(
+        JSON.stringify({ error: validated.error }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Clean phone number - if it's a group JID (@g.us), use as-is
     let cleanPhone = recipientPhone;
     if (!recipientPhone.includes('@g.us')) {
@@ -47,7 +111,8 @@ serve(async (req) => {
       }
     }
 
-    const apiUrl = evolutionApiUrl.replace(/\/+$/, "").replace(/\/manager$/i, "");
+    const normalizedPath = validated.url.pathname.replace(/\/+$/, "").replace(/\/manager$/i, "");
+    const apiUrl = `${validated.url.origin}${normalizedPath}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
 
@@ -56,7 +121,7 @@ serve(async (req) => {
 
     if (media && media.url && media.ptt) {
       // Send as voice message (PTT - push to talk) using sendWhatsAppAudio
-      url = `${apiUrl}/message/sendWhatsAppAudio/${evolutionInstance}`;
+      url = `${apiUrl}/message/sendWhatsAppAudio/${encodeURIComponent(evolutionInstance)}`;
       body = {
         number: cleanPhone,
         audio: media.url,
@@ -67,7 +132,7 @@ serve(async (req) => {
       }
     } else if (media && media.url) {
       // Send media message (image, video, audio, document)
-      url = `${apiUrl}/message/sendMedia/${evolutionInstance}`;
+      url = `${apiUrl}/message/sendMedia/${encodeURIComponent(evolutionInstance)}`;
       body = {
         number: cleanPhone,
         mediatype: media.mediatype || "image",
@@ -81,7 +146,7 @@ serve(async (req) => {
       }
     } else {
       // Send text message
-      url = `${apiUrl}/message/sendText/${evolutionInstance}`;
+      url = `${apiUrl}/message/sendText/${encodeURIComponent(evolutionInstance)}`;
       body = {
         number: cleanPhone,
         text: message,
@@ -101,13 +166,14 @@ serve(async (req) => {
         },
         body: JSON.stringify(body),
         signal: controller.signal,
+        redirect: "manual",
       });
     } catch (fetchError) {
       clearTimeout(timeoutId);
       const isTimeout = fetchError.name === "AbortError";
       return new Response(
-        JSON.stringify({ 
-          error: isTimeout 
+        JSON.stringify({
+          error: isTimeout
             ? "Tempo limite excedido ao enviar mensagem. Verifique a Evolution API."
             : `Erro de conexão: ${fetchError.message}`
         }),

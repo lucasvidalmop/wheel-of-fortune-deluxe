@@ -983,6 +983,12 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_wheel_config_slug_only: {
+        Args: { p_user_id: string }
+        Returns: {
+          slug: string
+        }[]
+      }
       get_wheel_user_spins: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {

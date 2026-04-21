@@ -2,8 +2,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-edpay-signature",
 };
+
+// Constant-time string comparison to avoid timing attacks
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -16,6 +24,29 @@ Deno.serve(async (req) => {
   if (path !== "webhook") {
     return new Response(JSON.stringify({ error: "Not found" }), {
       status: 404,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Require webhook secret on every request
+  const webhookSecret = Deno.env.get("EDPAY_WEBHOOK_SECRET");
+  if (!webhookSecret) {
+    console.error("EDPAY_WEBHOOK_SECRET not configured");
+    return new Response(JSON.stringify({ error: "Webhook not configured" }), {
+      status: 503,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const provided =
+    req.headers.get("x-edpay-signature") ||
+    req.headers.get("x-webhook-secret") ||
+    "";
+
+  if (!provided || !safeEqual(provided, webhookSecret)) {
+    console.warn("EdPay webhook rejected: invalid or missing signature");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -66,7 +97,6 @@ Deno.serve(async (req) => {
       // Send deposit notification when confirmed
       if (status === "paid" && (existing as any).metadata) {
         const meta = existingMeta as Record<string, any>;
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         try {
           // Fetch owner_id from the transaction
           const { data: txData } = await supabase
@@ -80,7 +110,7 @@ Deno.serve(async (req) => {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                "Authorization": `Bearer ${serviceRoleKey}`,
               },
               body: JSON.stringify({
                 ownerId: txData.owner_id,
