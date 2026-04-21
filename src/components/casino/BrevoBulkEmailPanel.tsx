@@ -21,6 +21,10 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [lastResult, setLastResult] = useState<{ total: number; sent: number; failed: number } | null>(null);
+  const [availableContacts, setAvailableContacts] = useState<Recipient[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
 
   const csvRecipients = useMemo<Recipient[]>(() => {
     if (!csvText.trim()) return [];
