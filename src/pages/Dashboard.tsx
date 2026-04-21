@@ -1100,7 +1100,7 @@ function Dashboard() {
   useEffect(() => {
     if (!session?.user?.id) return;
     const channel = supabase
-      .channel('prize-payments-realtime')
+      .channel(`${session.user.id}:prize-payments-realtime`)
       .on(
         'postgres_changes',
         {
