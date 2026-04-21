@@ -486,6 +486,16 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
               </label>
               <button
                 type="button"
+                onClick={fixHtmlImages}
+                disabled={fixingImages}
+                title="Re-hospeda imagens com src inválido (data:, blob:, externas) no nosso storage para que cheguem ao destinatário"
+                className="text-[11px] text-amber-300 hover:underline flex items-center gap-1 disabled:opacity-50"
+              >
+                {fixingImages ? <Loader2 size={12} className="animate-spin" /> : <Wrench size={12} />}
+                {fixingImages ? 'Corrigindo...' : 'Corrigir imagens'}
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-[11px] text-primary hover:underline flex items-center gap-1"
               >
