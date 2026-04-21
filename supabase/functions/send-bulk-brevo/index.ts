@@ -25,10 +25,32 @@ interface Payload {
   replyTo?: string
 }
 
-// Brevo permite até 1000 destinatários por chamada via messageVersions.
-// Usamos 1000 para máxima eficiência em disparos em massa (>500).
-const CHUNK_SIZE = 1000
+// Brevo aceita até 1000 destinatários via messageVersions, mas se UM email
+// for inválido, o batch INTEIRO falha. Usamos 100 para isolar melhor falhas.
+const CHUNK_SIZE = 100
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email'
+
+// Validação estrita de email (mais rigorosa que a do Brevo)
+const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+function sanitizeEmail(raw: string): string | null {
+  if (!raw) return null
+  // remove zero-width, espaços, quebras de linha, aspas e vírgulas residuais
+  const cleaned = raw
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\s"',;<>]/g, '')
+    .trim()
+    .toLowerCase()
+  if (!cleaned) return null
+  if (cleaned.length > 254) return null
+  if (!EMAIL_RE.test(cleaned)) return null
+  return cleaned
+}
+
+function sanitizeName(raw?: string): string | undefined {
+  if (!raw) return undefined
+  const cleaned = raw.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/[\r\n\t]/g, ' ').trim()
+  return cleaned || undefined
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
