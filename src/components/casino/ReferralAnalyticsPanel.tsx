@@ -112,10 +112,16 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
 
   const scopedRedemptions = useMemo(() => {
     let base = redemptions;
-    // In general view, exclude gorjeta link redemptions
-    if (!linkId && gorjetaRef) {
-      const g = gorjetaRef.toLowerCase();
-      base = base.filter(r => (r.link_code || '').toLowerCase() !== g);
+    // In general view, exclude gorjeta link redemptions (by code OR by label)
+    if (!linkId) {
+      const g = (gorjetaRef || '').toLowerCase();
+      base = base.filter(r => {
+        const code = (r.link_code || '').toLowerCase();
+        const label = (r.link_label || '').toLowerCase();
+        if (g && code === g) return false;
+        if (label === 'gorjeta') return false;
+        return true;
+      });
     }
     if (linkId || linkFilter === '__all__') return base;
     return base.filter(r => (r.link_code || '_deleted_') === linkFilter);
