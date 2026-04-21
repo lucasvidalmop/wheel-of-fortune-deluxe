@@ -166,18 +166,61 @@ Deno.serve(async (req) => {
         })
 
         if (!resp.ok) {
-          failed += chunk.length
           const errMsg = (data?.message || data?.code || `HTTP ${resp.status}`).toString().slice(0, 500)
-          console.error('[send-bulk-brevo] Chunk failed:', errMsg, 'full:', JSON.stringify(data).slice(0, 1000))
+          console.error('[send-bulk-brevo] Chunk failed, falling back to per-recipient send:', errMsg)
+
+          // FALLBACK: tenta enviar 1 a 1 para isolar o(s) email(s) ruins.
+          // Assim, mesmo se 1 endereço for inválido, os outros 99 do chunk são enviados.
           for (const r of chunk) {
-            errors.push({ email: r.email, error: errMsg })
-            await supabase.from('email_send_log').insert({
-              template_name: 'brevo_bulk',
-              recipient_email: r.email,
-              status: 'failed',
-              error_message: errMsg,
-              metadata: { owner_id: userId, provider: 'brevo', brevo_response: data },
-            })
+            const singlePayload = {
+              sender: { email: senderEmail, name: senderName || senderEmail },
+              subject,
+              ...(htmlContent ? { htmlContent } : {}),
+              ...(textContent ? { textContent } : {}),
+              to: [{ email: r.email, name: r.name || r.email }],
+              ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+            }
+            try {
+              const singleResp = await fetch(BREVO_URL, {
+                method: 'POST',
+                headers: { 'api-key': apiKey, 'Content-Type': 'application/json', accept: 'application/json' },
+                body: JSON.stringify(singlePayload),
+              })
+              const singleData = await singleResp.json().catch(() => ({}))
+              if (!singleResp.ok) {
+                failed++
+                const sErr = (singleData?.message || singleData?.code || `HTTP ${singleResp.status}`).toString().slice(0, 500)
+                errors.push({ email: r.email, error: sErr })
+                await supabase.from('email_send_log').insert({
+                  template_name: 'brevo_bulk',
+                  recipient_email: r.email,
+                  status: 'failed',
+                  error_message: sErr,
+                  metadata: { owner_id: userId, provider: 'brevo', brevo_response: singleData, fallback: true },
+                })
+              } else {
+                sent++
+                await supabase.from('email_send_log').insert({
+                  template_name: 'brevo_bulk',
+                  recipient_email: r.email,
+                  status: 'sent',
+                  metadata: { owner_id: userId, provider: 'brevo', messageId: singleData?.messageId, fallback: true },
+                })
+              }
+            } catch (sErr) {
+              failed++
+              const m = sErr instanceof Error ? sErr.message : String(sErr)
+              errors.push({ email: r.email, error: m })
+              await supabase.from('email_send_log').insert({
+                template_name: 'brevo_bulk',
+                recipient_email: r.email,
+                status: 'failed',
+                error_message: m.slice(0, 500),
+                metadata: { owner_id: userId, provider: 'brevo', fallback: true },
+              })
+            }
+            // pequena pausa entre envios individuais
+            await new Promise((res) => setTimeout(res, 50))
           }
         } else {
           sent += chunk.length
