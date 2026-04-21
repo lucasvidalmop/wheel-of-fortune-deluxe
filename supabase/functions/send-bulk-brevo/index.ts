@@ -251,12 +251,16 @@ Deno.serve(async (req) => {
                 failed++
                 const sErr = (singleData?.message || singleData?.code || `HTTP ${singleResp.status}`).toString().slice(0, 500)
                 errors.push({ email: r.email, error: sErr })
+                const invalid = isInvalidEmailError(singleData, singleResp.status)
+                if (invalid) {
+                  await suppressEmail(r.email, 'invalid_format', { brevo_response: singleData })
+                }
                 await supabase.from('email_send_log').insert({
                   template_name: 'brevo_bulk',
                   recipient_email: r.email,
-                  status: 'failed',
+                  status: invalid ? 'suppressed' : 'failed',
                   error_message: sErr,
-                  metadata: { owner_id: userId, provider: 'brevo', brevo_response: singleData, fallback: true },
+                  metadata: { owner_id: userId, provider: 'brevo', brevo_response: singleData, fallback: true, auto_suppressed: invalid },
                 })
               } else {
                 sent++
