@@ -54,7 +54,33 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
     (async () => {
       setLoading(true);
       try {
-        // 1) Load redemptions
+        const normalize = (value?: string | null) => (value || '').trim().toLowerCase();
+
+        const { data: links } = await (supabase as any)
+          .from('referral_links')
+          .select('id, code, label')
+          .eq('owner_id', ownerId);
+
+        const linkMap = new Map<string, { code: string; label: string }>();
+        const nonGorjetaLinkIds = new Set<string>();
+        const nonGorjetaByNormalized = new Map<string, { id: string; code: string; label: string }>();
+        const gorjetaLinkIds = new Set<string>();
+        const gorjetaTokens = new Set<string>();
+
+        (links || []).forEach((l: any) => {
+          linkMap.set(l.id, { code: l.code, label: l.label });
+          const isGorjeta = normalize(l.label) === 'gorjeta' || (gorjetaRef && normalize(l.code) === normalize(gorjetaRef));
+          if (isGorjeta) {
+            gorjetaLinkIds.add(l.id);
+            gorjetaTokens.add(normalize(l.code));
+            gorjetaTokens.add(normalize(l.label));
+          } else {
+            nonGorjetaLinkIds.add(l.id);
+            nonGorjetaByNormalized.set(normalize(l.code), { id: l.id, code: l.code, label: l.label });
+            nonGorjetaByNormalized.set(normalize(l.label), { id: l.id, code: l.code, label: l.label });
+          }
+        });
+
         let q = (supabase as any)
           .from('referral_redemptions')
           .select('*')
@@ -63,63 +89,61 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
         else q = q.eq('owner_id', ownerId);
         const { data: reds } = await q;
 
-        // 2) Load wheel_users that came via a referral link (only REAL users)
-        //    This recovers historical users who don't have a redemption row.
-        let wuQuery = (supabase as any)
+        const { data: allUsers } = await (supabase as any)
           .from('wheel_users')
-          .select('id, name, email, account_id, phone, referral_link_id, user_type, created_at')
+          .select('id, name, email, account_id, phone, referral_link_id, user_type, created_at, responsible')
           .eq('owner_id', ownerId)
-          .eq('user_type', 'Real')
-          .not('referral_link_id', 'is', null);
-        if (linkId) wuQuery = wuQuery.eq('referral_link_id', linkId);
-        const { data: refUsers } = await wuQuery;
+          .eq('user_type', 'Real');
 
-        // 3) Load referral_links once (to fill in code/label for synthetic redemptions)
-        const { data: links } = await (supabase as any)
-          .from('referral_links')
-          .select('id, code, label')
-          .eq('owner_id', ownerId);
-        const linkMap = new Map<string, { code: string; label: string }>();
-        (links || []).forEach((l: any) => linkMap.set(l.id, { code: l.code, label: l.label }));
-
-        // 4) Build a set of (account_id|email) already covered by real redemptions
         const covered = new Set<string>();
         (reds || []).forEach((r: any) => {
-          covered.add(`${r.account_id}|${(r.email || '').toLowerCase()}`);
+          covered.add(`${r.account_id}|${normalize(r.email)}`);
         });
 
-        // 5) Synthesize redemption rows from wheel_users not in `covered`
         const synthetic: any[] = [];
-        (refUsers || []).forEach((u: any) => {
-          const key = `${u.account_id}|${(u.email || '').toLowerCase()}`;
+        (allUsers || []).forEach((u: any) => {
+          const key = `${u.account_id}|${normalize(u.email)}`;
           if (covered.has(key)) return;
-          const linkInfo = u.referral_link_id ? linkMap.get(u.referral_link_id) : null;
+
+          const responsible = normalize(u.responsible);
+          const directLink = u.referral_link_id ? linkMap.get(u.referral_link_id) : null;
+          const matchedHistoricalLink = nonGorjetaByNormalized.get(responsible);
+
+          const isDirectNonGorjeta = !!(u.referral_link_id && nonGorjetaLinkIds.has(u.referral_link_id));
+          const isHistoricalNonGorjeta = !!(
+            !u.referral_link_id &&
+            responsible &&
+            !gorjetaTokens.has(responsible)
+          );
+
+          if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
+
+          const syntheticLinkId = isDirectNonGorjeta ? u.referral_link_id : matchedHistoricalLink?.id || null;
+          const syntheticCode = directLink?.code || matchedHistoricalLink?.code || u.responsible?.trim() || null;
+          const syntheticLabel = directLink?.label || matchedHistoricalLink?.label || 'Link antigo';
+
+          if (linkId && syntheticLinkId !== linkId) return;
+
           synthetic.push({
             id: `synth-${u.id}`,
             email: u.email,
             account_id: u.account_id,
             cpf: '',
             created_at: u.created_at || new Date().toISOString(),
-            referral_link_id: u.referral_link_id,
-            link_code: linkInfo?.code || null,
-            link_label: linkInfo?.label || null,
+            referral_link_id: syntheticLinkId,
+            link_code: syntheticCode,
+            link_label: syntheticLabel,
           });
         });
 
         const allReds = [...(reds || []), ...synthetic];
         setRedemptions(allReds);
 
-        // 6) Load wheel_users / spins / payments for stats (REAL users only when no linkId scope filter)
         const accountIds = Array.from(new Set(allReds.map((r: any) => r.account_id).filter(Boolean)));
 
-        if (accountIds.length) {
-          const { data: wu } = await (supabase as any)
-            .from('wheel_users')
-            .select('id, name, email, account_id, phone, referral_link_id, user_type')
-            .eq('owner_id', ownerId)
-            .in('account_id', accountIds);
-          setUsers(wu || []);
+        setUsers(allUsers || []);
 
+        if (accountIds.length) {
           const { data: sp } = await (supabase as any)
             .from('spin_results')
             .select('id, account_id, user_email, prize, spun_at')
@@ -134,14 +158,14 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
             .in('account_id', accountIds);
           setPayments(pp || []);
         } else {
-          setUsers([]); setSpins([]); setPayments([]);
+          setSpins([]); setPayments([]);
         }
       } catch (err: any) {
         toast.error('Erro ao carregar analytics: ' + (err.message || ''));
       }
       setLoading(false);
     })();
-  }, [linkId, ownerId]);
+  }, [linkId, ownerId, gorjetaRef]);
 
   const linkOptions = useMemo(() => {
     const map = new Map<string, { value: string; label: string; count: number }>();
@@ -181,14 +205,10 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
         || users.find(x => x.account_id === r.account_id)
         || users.find(x => x.email?.toLowerCase() === r.email?.toLowerCase());
 
-      // Filter: only REAL users
       if (!u || u.user_type !== 'Real') continue;
 
       const userPayments = payments.filter(p => p.account_id === r.account_id || p.user_email?.toLowerCase() === r.email?.toLowerCase());
       const paidPayments = userPayments.filter(p => p.status === 'paid');
-
-      // Filter: only users with at least one PAID payment
-      if (paidPayments.length === 0) continue;
 
       const existing = map.get(key);
       if (existing) {
@@ -210,7 +230,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           firstRedemption: r.created_at,
           lastRedemption: r.created_at,
           spinsTotal: userSpins.length,
-          prizesCount: paidPayments.length,
+          prizesCount: userPayments.length,
           totalAmountWon: totalAmount,
           totalAmountPaid: paidAmount,
           links: new Set(r.link_code ? [r.link_code] : []),
