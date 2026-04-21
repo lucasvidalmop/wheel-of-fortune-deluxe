@@ -3,6 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode, Wrench } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Recipient = { email: string; name?: string };
 type Source = 'csv' | 'contacts' | 'wheel_users';
