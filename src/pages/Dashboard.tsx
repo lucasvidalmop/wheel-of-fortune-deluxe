@@ -5934,6 +5934,12 @@ function Dashboard() {
                 </GlassCard>
               )}
 
+              {referralSubTab === 'analytics' && (
+                <GlassCard className="p-5">
+                  <ReferralAnalyticsPanel ownerId={session.user.id} />
+                </GlassCard>
+              )}
+
               {referralSubTab === 'links' && (
               <GlassCard className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
@@ -6237,13 +6243,22 @@ function Dashboard() {
           )}
 
           {analyticsReferral && session?.user?.id && (
-            <ReferralAnalyticsModal
-              linkId={analyticsReferral.id}
-              linkLabel={analyticsReferral.label}
-              linkCode={analyticsReferral.code}
-              ownerId={session.user.id}
-              onClose={() => setAnalyticsReferral(null)}
-            />
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAnalyticsReferral(null)} />
+              <div className="relative w-full max-w-5xl max-h-[90vh] bg-background border border-white/[0.08] rounded-2xl shadow-2xl overflow-y-auto p-5" style={{ scrollbarWidth: 'thin' }}>
+                <button
+                  onClick={() => setAnalyticsReferral(null)}
+                  className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition z-10"
+                >
+                  <X size={18} />
+                </button>
+                <ReferralAnalyticsPanel
+                  ownerId={session.user.id}
+                  linkId={analyticsReferral.id}
+                  scopeLabel={`${analyticsReferral.label || 'Link'} • ${analyticsReferral.code}`}
+                />
+              </div>
+            </div>
           )}
 
           {/* ══════ GORJETA TAB ══════ */}
