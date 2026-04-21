@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const TOOL_KEYS = [
-  "roleta", "sms", "email", "email_brevo", "whatsapp", "financeiro", "gorjeta", "referral",
+  "roleta", "sms", "sms_cs", "email", "email_brevo", "whatsapp", "financeiro", "gorjeta", "referral",
   "inscritos", "auth", "history", "analytics", "msg_analytics", "notificacoes", "configuracoes", "painel_casa"
 ] as const;
 type ToolKey = typeof TOOL_KEYS[number];

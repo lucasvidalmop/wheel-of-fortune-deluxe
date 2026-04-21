@@ -209,6 +209,7 @@ export type Database = {
           referral: boolean
           roleta: boolean
           sms: boolean
+          sms_cs: boolean
           updated_at: string
           user_id: string
           whatsapp: boolean
@@ -230,6 +231,7 @@ export type Database = {
           referral?: boolean
           roleta?: boolean
           sms?: boolean
+          sms_cs?: boolean
           updated_at?: string
           user_id: string
           whatsapp?: boolean
@@ -251,6 +253,7 @@ export type Database = {
           referral?: boolean
           roleta?: boolean
           sms?: boolean
+          sms_cs?: boolean
           updated_at?: string
           user_id?: string
           whatsapp?: boolean
@@ -275,6 +278,7 @@ export type Database = {
           referral: boolean
           roleta: boolean
           sms: boolean
+          sms_cs: boolean
           updated_at: string
           whatsapp: boolean
         }
@@ -295,6 +299,7 @@ export type Database = {
           referral?: boolean
           roleta?: boolean
           sms?: boolean
+          sms_cs?: boolean
           updated_at?: string
           whatsapp?: boolean
         }
@@ -315,6 +320,7 @@ export type Database = {
           referral?: boolean
           roleta?: boolean
           sms?: boolean
+          sms_cs?: boolean
           updated_at?: string
           whatsapp?: boolean
         }
@@ -655,6 +661,42 @@ export type Database = {
           site_description?: string | null
           site_title?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sms_cs_message_log: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          owner_id: string
+          recipient_name: string
+          recipient_phone: string
+          status: string
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          owner_id: string
+          recipient_name?: string
+          recipient_phone: string
+          status?: string
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          owner_id?: string
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
         }
         Relationships: []
       }
