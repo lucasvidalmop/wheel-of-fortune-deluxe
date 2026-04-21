@@ -462,7 +462,6 @@ const Roleta = () => {
     if (data.spins_available < 1) setMessage('Sem giros disponíveis');
     setIdentified(true);
     if (config.postLoginDialogEnabled) setShowPostLoginDialog(true);
-    setSearchParams({ account_id: trimmedId, email: trimmedEmail });
     setAuthLoading(false);
   };
 
@@ -826,7 +825,7 @@ const Roleta = () => {
           </div>
           <button
             data-close-btn
-            onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setUserName(null); setSearchParams({}); }}
+            onClick={() => { setIdentified(false); setAccountId(''); setInputValue(''); setEmailValue(''); setUserName(null); }}
             className="text-xs text-muted-foreground hover:text-foreground ml-1 transition-colors"
           >
             ✕
