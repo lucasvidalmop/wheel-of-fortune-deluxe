@@ -2303,7 +2303,7 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'email' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'email' | 'email_brevo' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
