@@ -54,22 +54,68 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
     (async () => {
       setLoading(true);
       try {
+        // 1) Load redemptions
         let q = (supabase as any)
           .from('referral_redemptions')
           .select('*')
           .order('created_at', { ascending: false });
         if (linkId) q = q.eq('referral_link_id', linkId);
         else q = q.eq('owner_id', ownerId);
-
         const { data: reds } = await q;
-        setRedemptions(reds || []);
 
-        const accountIds = Array.from(new Set((reds || []).map((r: any) => r.account_id).filter(Boolean)));
+        // 2) Load wheel_users that came via a referral link (only REAL users)
+        //    This recovers historical users who don't have a redemption row.
+        let wuQuery = (supabase as any)
+          .from('wheel_users')
+          .select('id, name, email, account_id, phone, referral_link_id, user_type, created_at')
+          .eq('owner_id', ownerId)
+          .eq('user_type', 'Real')
+          .not('referral_link_id', 'is', null);
+        if (linkId) wuQuery = wuQuery.eq('referral_link_id', linkId);
+        const { data: refUsers } = await wuQuery;
+
+        // 3) Load referral_links once (to fill in code/label for synthetic redemptions)
+        const { data: links } = await (supabase as any)
+          .from('referral_links')
+          .select('id, code, label')
+          .eq('owner_id', ownerId);
+        const linkMap = new Map<string, { code: string; label: string }>();
+        (links || []).forEach((l: any) => linkMap.set(l.id, { code: l.code, label: l.label }));
+
+        // 4) Build a set of (account_id|email) already covered by real redemptions
+        const covered = new Set<string>();
+        (reds || []).forEach((r: any) => {
+          covered.add(`${r.account_id}|${(r.email || '').toLowerCase()}`);
+        });
+
+        // 5) Synthesize redemption rows from wheel_users not in `covered`
+        const synthetic: any[] = [];
+        (refUsers || []).forEach((u: any) => {
+          const key = `${u.account_id}|${(u.email || '').toLowerCase()}`;
+          if (covered.has(key)) return;
+          const linkInfo = u.referral_link_id ? linkMap.get(u.referral_link_id) : null;
+          synthetic.push({
+            id: `synth-${u.id}`,
+            email: u.email,
+            account_id: u.account_id,
+            cpf: '',
+            created_at: u.created_at || new Date().toISOString(),
+            referral_link_id: u.referral_link_id,
+            link_code: linkInfo?.code || null,
+            link_label: linkInfo?.label || null,
+          });
+        });
+
+        const allReds = [...(reds || []), ...synthetic];
+        setRedemptions(allReds);
+
+        // 6) Load wheel_users / spins / payments for stats (REAL users only when no linkId scope filter)
+        const accountIds = Array.from(new Set(allReds.map((r: any) => r.account_id).filter(Boolean)));
 
         if (accountIds.length) {
           const { data: wu } = await (supabase as any)
             .from('wheel_users')
-            .select('id, name, email, account_id, phone, referral_link_id')
+            .select('id, name, email, account_id, phone, referral_link_id, user_type')
             .eq('owner_id', ownerId)
             .in('account_id', accountIds);
           setUsers(wu || []);
