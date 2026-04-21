@@ -21,6 +21,7 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
 import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
+import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
 
 interface WheelUser {
   id: string;
@@ -194,7 +195,7 @@ function Dashboard() {
     inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
@@ -2308,6 +2309,7 @@ function Dashboard() {
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico', tool: 'history' },
     { key: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics', tool: 'analytics' },
     { key: 'email', icon: <Mail size={20} />, label: 'Email', tool: 'email' },
+    { key: 'email_brevo', icon: <Mail size={20} />, label: 'Email API (Brevo)', tool: 'email' },
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS', tool: 'sms' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp', tool: 'whatsapp' },
     { key: 'msg_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Msg', tool: 'msg_analytics' },
@@ -2330,6 +2332,7 @@ function Dashboard() {
     history: 'Histórico de Prêmios',
     analytics: 'Web Analytics',
     email: 'Disparo de Email',
+    email_brevo: 'Disparo em Massa (Brevo API)',
     sms: 'Disparo de SMS',
     whatsapp: 'Disparo de WhatsApp',
     financeiro: 'Financeiro',
@@ -3719,6 +3722,10 @@ function Dashboard() {
           })()}
 
           {/* ══════ EMAIL TAB ══════ */}
+          {activeTab === 'email_brevo' && (
+            <BrevoBulkEmailPanel ownerId={session?.user?.id ?? null} />
+          )}
+
           {activeTab === 'email' && (
             <div className="max-w-2xl space-y-5">
               <div className="flex items-center gap-2 justify-end">
