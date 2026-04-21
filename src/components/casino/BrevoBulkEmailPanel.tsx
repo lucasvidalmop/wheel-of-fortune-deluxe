@@ -363,8 +363,11 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
       toast.error('Nenhum destinatário válido encontrado.');
       return;
     }
-    if (!confirm(`Enviar para ${recipients.length} destinatário(s) via Brevo?`)) return;
+    setPendingRecipients(recipients);
+    setConfirmOpen(true);
+  };
 
+  const performSend = async (recipients: Recipient[]) => {
     setLoading(true);
     setLastResult(null);
     try {
