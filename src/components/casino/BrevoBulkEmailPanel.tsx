@@ -322,9 +322,78 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
         )}
 
         {source !== 'csv' && (
-          <p className="text-[11px] text-muted-foreground">
-            Os emails serão buscados automaticamente do banco no momento do envio.
-          </p>
+          <div className="space-y-2">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Pesquisar por email ou nome..."
+                className="w-full pl-8 pr-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+
+            {contactsLoading ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground text-xs">
+                <Loader2 size={14} className="animate-spin mr-2" /> Carregando contatos...
+              </div>
+            ) : availableContacts.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground py-4 text-center">
+                Nenhum contato com email válido encontrado.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={toggleSelectAllFiltered}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-white/[0.05] text-foreground"
+                  >
+                    {filteredContacts.every((r) => selectedEmails.has(r.email.toLowerCase())) && filteredContacts.length > 0 ? (
+                      <CheckSquare size={13} className="text-primary" />
+                    ) : (
+                      <Square size={13} />
+                    )}
+                    {filteredContacts.every((r) => selectedEmails.has(r.email.toLowerCase())) && filteredContacts.length > 0
+                      ? 'Desmarcar todos'
+                      : 'Selecionar todos'}
+                  </button>
+                  <span>
+                    <span className="text-primary font-semibold">{selectedEmails.size}</span> de {availableContacts.length} selecionado(s)
+                  </span>
+                </div>
+
+                <div className="max-h-72 overflow-y-auto rounded-lg border border-white/[0.08] bg-white/[0.02] divide-y divide-white/[0.05]">
+                  {filteredContacts.slice(0, 500).map((r) => {
+                    const k = r.email.toLowerCase();
+                    const checked = selectedEmails.has(k);
+                    return (
+                      <label
+                        key={k}
+                        className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-white/[0.04]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleEmail(r.email)}
+                          className="accent-primary"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-foreground">{r.name || '—'}</div>
+                          <div className="truncate text-[10px] text-muted-foreground">{r.email}</div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                  {filteredContacts.length > 500 && (
+                    <div className="px-3 py-2 text-[10px] text-muted-foreground text-center">
+                      Mostrando primeiros 500 de {filteredContacts.length} resultados. Refine a busca.
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         )}
       </GlassCard>
 
