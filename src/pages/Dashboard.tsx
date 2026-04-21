@@ -902,6 +902,7 @@ function Dashboard() {
     fetchSmsCsScheduled();
   };
 
+  const fetchBulkSentPhones = async () => {
     if (!session?.user?.id) return;
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data } = await (supabase as any)
