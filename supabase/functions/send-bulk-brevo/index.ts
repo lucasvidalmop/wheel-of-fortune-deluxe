@@ -92,6 +92,37 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Helper: detecta erros do Brevo que indicam email rejeitado por formato/inválido
+    // (não erros transitórios). Esses devem entrar na suppression list.
+    const isInvalidEmailError = (data: any, status: number): boolean => {
+      if (status === 400) {
+        const code = (data?.code || '').toString().toLowerCase()
+        const msg = (data?.message || '').toString().toLowerCase()
+        return (
+          code.includes('invalid_parameter') ||
+          msg.includes('email is not valid') ||
+          msg.includes('invalid email') ||
+          msg.includes('not valid in to') ||
+          msg.includes('blacklisted')
+        )
+      }
+      return false
+    }
+
+    // Helper: adiciona email à suppression list (idempotente)
+    const suppressEmail = async (email: string, reason: string, meta: Record<string, unknown> = {}) => {
+      try {
+        await supabase.from('suppressed_emails').insert({
+          email,
+          reason,
+          metadata: { ...meta, source: 'send-bulk-brevo', owner_id: userId, suppressed_at: new Date().toISOString() },
+        })
+      } catch (e) {
+        // ignora duplicatas (unique constraint) ou erros de insert
+        console.log('[send-bulk-brevo] suppress skipped for', email, e instanceof Error ? e.message : e)
+      }
+    }
+
     // Dedupe + sanitização rigorosa
     const seen = new Set<string>()
     const cleanRecipients: Recipient[] = []
@@ -99,7 +130,12 @@ Deno.serve(async (req) => {
     for (const r of recipients) {
       const e = sanitizeEmail(r.email || '')
       if (!e) {
-        invalidRecipients.push({ email: r.email || '(vazio)', error: 'Email inválido' })
+        const orig = (r.email || '(vazio)').toString().slice(0, 254)
+        invalidRecipients.push({ email: orig, error: 'Email inválido (formato)' })
+        // auto-suprime emails malformados detectados localmente
+        if (orig && orig !== '(vazio)') {
+          await suppressEmail(orig.toLowerCase(), 'invalid_format')
+        }
         continue
       }
       if (seen.has(e)) continue
@@ -107,15 +143,39 @@ Deno.serve(async (req) => {
       cleanRecipients.push({ email: e, name: sanitizeName(r.name) })
     }
 
+    // Filtra emails já suprimidos antes de enviar
+    let suppressedSkipped = 0
+    if (cleanRecipients.length > 0) {
+      const emailsToCheck = cleanRecipients.map((r) => r.email)
+      const { data: suppressedRows } = await supabase
+        .from('suppressed_emails')
+        .select('email')
+        .in('email', emailsToCheck)
+      const suppressedSet = new Set((suppressedRows || []).map((s: any) => (s.email || '').toLowerCase()))
+      if (suppressedSet.size > 0) {
+        const before = cleanRecipients.length
+        for (let i = cleanRecipients.length - 1; i >= 0; i--) {
+          if (suppressedSet.has(cleanRecipients[i].email)) {
+            cleanRecipients.splice(i, 1)
+          }
+        }
+        suppressedSkipped = before - cleanRecipients.length
+      }
+    }
+
     console.log('[send-bulk-brevo] Sanitization', {
       received: recipients.length,
       valid: cleanRecipients.length,
       invalid: invalidRecipients.length,
-      duplicates: recipients.length - cleanRecipients.length - invalidRecipients.length,
+      suppressed_skipped: suppressedSkipped,
     })
 
     if (cleanRecipients.length === 0) {
-      return new Response(JSON.stringify({ error: 'No valid recipients' }), {
+      return new Response(JSON.stringify({
+        error: 'No valid recipients (after sanitization & suppression)',
+        invalid: invalidRecipients.length,
+        suppressed_skipped: suppressedSkipped,
+      }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
