@@ -3457,6 +3457,60 @@ function Dashboard() {
 
             return (
             <div className="space-y-4">
+              {/* Date filter */}
+              <GlassCard className="p-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon size={16} className="text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Período:</span>
+                  </div>
+                  {([
+                    { key: 'all', label: 'Tudo' },
+                    { key: 'today', label: 'Hoje' },
+                    { key: '7d', label: '7 dias' },
+                    { key: '30d', label: '30 dias' },
+                  ] as const).map(r => (
+                    <button
+                      key={r.key}
+                      onClick={() => { setAnalyticsRangeFilter(r.key); setAnalyticsDateFilter(''); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${analyticsRangeFilter === r.key && !analyticsDateFilter ? 'bg-primary text-primary-foreground' : 'bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]'}`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                  <div className="h-6 w-px bg-white/10 mx-1" />
+                  <input
+                    type="date"
+                    value={analyticsDateFilter}
+                    onChange={(e) => { setAnalyticsDateFilter(e.target.value); setAnalyticsRangeFilter('all'); }}
+                    className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-sm text-foreground"
+                  />
+                  {availableDates.length > 0 && (
+                    <select
+                      value={analyticsDateFilter}
+                      onChange={(e) => { setAnalyticsDateFilter(e.target.value); setAnalyticsRangeFilter('all'); }}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-sm text-foreground"
+                    >
+                      <option value="">Selecionar dia...</option>
+                      {availableDates.map(d => (
+                        <option key={d} value={d}>{new Date(d + 'T00:00:00').toLocaleDateString('pt-BR')}</option>
+                      ))}
+                    </select>
+                  )}
+                  {(analyticsDateFilter || analyticsRangeFilter !== 'all') && (
+                    <button
+                      onClick={() => { setAnalyticsDateFilter(''); setAnalyticsRangeFilter('all'); }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {filtered.length} registro{filtered.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </GlassCard>
+
               {/* Filter buttons */}
               <div className="flex items-center gap-2 flex-wrap">
                 {([
@@ -3472,7 +3526,7 @@ function Dashboard() {
                   >
                     {f.label}
                     <span className="ml-1.5 text-xs opacity-70">
-                      ({f.key === 'all' ? pageViews.length : pageViews.filter((v: any) => (v.page_type || 'roleta') === f.key).length})
+                      ({f.key === 'all' ? dateFiltered.length : dateFiltered.filter((v: any) => (v.page_type || 'roleta') === f.key).length})
                     </span>
                   </button>
                 ))}
