@@ -110,8 +110,8 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const previewHtml = useMemo(() => {
     const sample = csvRecipients[0] || { email: 'exemplo@email.com', name: 'Exemplo' };
     return htmlContent
-      .replaceAll('{{NOME}}', sample.name || 'Cliente')
-      .replaceAll('{{EMAIL}}', sample.email);
+      .split('{{NOME}}').join(sample.name || 'Cliente')
+      .split('{{EMAIL}}').join(sample.email);
   }, [htmlContent, csvRecipients]);
 
   return (
