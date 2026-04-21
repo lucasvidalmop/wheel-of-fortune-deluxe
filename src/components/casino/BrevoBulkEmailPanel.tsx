@@ -10,11 +10,53 @@ const GlassCard = ({ children, className = '' }: { children: React.ReactNode; cl
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl ${className}`}>{children}</div>
 );
 
+const STORAGE_KEY = 'brevo_bulk_panel_settings_v1';
+
+type StoredSettings = {
+  senderEmail?: string;
+  senderName?: string;
+  replyTo?: string;
+  subject?: string;
+};
+
+function loadStored(ownerId: string | null): StoredSettings {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(`${STORAGE_KEY}:${ownerId ?? 'anon'}`);
+    return raw ? (JSON.parse(raw) as StoredSettings) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | null }) {
-  const [senderEmail, setSenderEmail] = useState('');
-  const [senderName, setSenderName] = useState('');
-  const [replyTo, setReplyTo] = useState('');
-  const [subject, setSubject] = useState('');
+  const initial = useMemo(() => loadStored(ownerId), [ownerId]);
+  const [senderEmail, setSenderEmail] = useState(initial.senderEmail ?? '');
+  const [senderName, setSenderName] = useState(initial.senderName ?? '');
+  const [replyTo, setReplyTo] = useState(initial.replyTo ?? '');
+  const [subject, setSubject] = useState(initial.subject ?? '');
+
+  // Reload when owner changes
+  useEffect(() => {
+    const s = loadStored(ownerId);
+    setSenderEmail(s.senderEmail ?? '');
+    setSenderName(s.senderName ?? '');
+    setReplyTo(s.replyTo ?? '');
+    setSubject(s.subject ?? '');
+  }, [ownerId]);
+
+  // Persist on change
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(
+        `${STORAGE_KEY}:${ownerId ?? 'anon'}`,
+        JSON.stringify({ senderEmail, senderName, replyTo, subject })
+      );
+    } catch {
+      // ignore quota errors
+    }
+  }, [ownerId, senderEmail, senderName, replyTo, subject]);
   const [contentMode, setContentMode] = useState<'html' | 'text'>('html');
   const [htmlContent, setHtmlContent] = useState('<p>Olá {{NOME}},</p>\n<p>Sua mensagem aqui.</p>');
   const [textContent, setTextContent] = useState('Olá {{NOME}},\n\nSua mensagem aqui.');
