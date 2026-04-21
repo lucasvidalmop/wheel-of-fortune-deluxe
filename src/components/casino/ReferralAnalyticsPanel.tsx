@@ -113,13 +113,12 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           const matchedHistoricalLink = nonGorjetaByNormalized.get(responsibleSlug);
 
           const isDirectNonGorjeta = !!(u.referral_link_id && nonGorjetaLinkIds.has(u.referral_link_id));
-          // Only count historical users whose `responsible` matches a real non-gorjeta referral link.
-          // This prevents tip subscribers (e.g. responsible="Lucas BSB") from leaking into referral analytics.
+          // Historical user: has a `responsible` value that is NOT a known gorjeta token.
+          // Even if no matching referral_link exists anymore, we still include them.
           const isHistoricalNonGorjeta = !!(
             !u.referral_link_id &&
             responsibleSlug &&
-            !gorjetaTokens.has(responsibleSlug) &&
-            matchedHistoricalLink
+            !gorjetaTokens.has(responsibleSlug)
           );
 
           if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
