@@ -108,15 +108,18 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           const key = `${u.account_id}|${normalize(u.email)}`;
           if (covered.has(key)) return;
 
-          const responsible = normalize(u.responsible);
+          const responsibleSlug = slug(u.responsible);
           const directLink = u.referral_link_id ? linkMap.get(u.referral_link_id) : null;
-          const matchedHistoricalLink = nonGorjetaByNormalized.get(responsible);
+          const matchedHistoricalLink = nonGorjetaByNormalized.get(responsibleSlug);
 
           const isDirectNonGorjeta = !!(u.referral_link_id && nonGorjetaLinkIds.has(u.referral_link_id));
+          // Only count historical users whose `responsible` matches a real non-gorjeta referral link.
+          // This prevents tip subscribers (e.g. responsible="Lucas BSB") from leaking into referral analytics.
           const isHistoricalNonGorjeta = !!(
             !u.referral_link_id &&
-            responsible &&
-            !gorjetaTokens.has(responsible)
+            responsibleSlug &&
+            !gorjetaTokens.has(responsibleSlug) &&
+            matchedHistoricalLink
           );
 
           if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
