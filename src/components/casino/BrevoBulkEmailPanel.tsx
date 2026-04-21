@@ -1,0 +1,290 @@
+import { useState, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Mail, Upload, Send, FileText, Eye, Loader2 } from 'lucide-react';
+
+type Recipient = { email: string; name?: string };
+type Source = 'csv' | 'contacts' | 'wheel_users';
+
+const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl ${className}`}>{children}</div>
+);
+
+export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | null }) {
+  const [senderEmail, setSenderEmail] = useState('');
+  const [senderName, setSenderName] = useState('');
+  const [replyTo, setReplyTo] = useState('');
+  const [subject, setSubject] = useState('');
+  const [htmlContent, setHtmlContent] = useState('<p>Olá {{NOME}},</p>\n<p>Sua mensagem aqui.</p>');
+  const [source, setSource] = useState<Source>('csv');
+  const [csvText, setCsvText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [lastResult, setLastResult] = useState<{ total: number; sent: number; failed: number } | null>(null);
+
+  const csvRecipients = useMemo<Recipient[]>(() => {
+    if (!csvText.trim()) return [];
+    const lines = csvText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const out: Recipient[] = [];
+    for (const line of lines) {
+      // Accept "email", "email,name" or "name,email"
+      const parts = line.split(/[,;\t]/).map((p) => p.trim()).filter(Boolean);
+      if (parts.length === 0) continue;
+      const emailPart = parts.find((p) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p));
+      if (!emailPart) continue;
+      const namePart = parts.find((p) => p !== emailPart);
+      out.push({ email: emailPart, name: namePart });
+    }
+    return out;
+  }, [csvText]);
+
+  const handleCsvUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => setCsvText((e.target?.result as string) || '');
+    reader.readAsText(file);
+  };
+
+  const fetchRecipients = async (): Promise<Recipient[]> => {
+    if (source === 'csv') return csvRecipients;
+    if (!ownerId) return [];
+    if (source === 'wheel_users') {
+      const { data } = await supabase
+        .from('wheel_users')
+        .select('email, name')
+        .eq('owner_id', ownerId)
+        .eq('archived', false);
+      return (data ?? []).filter((r: any) => r.email).map((r: any) => ({ email: r.email, name: r.name }));
+    }
+    if (source === 'contacts') {
+      // imported_contacts only has 'numero' — try to use it as email if it looks like one
+      const { data } = await supabase
+        .from('imported_contacts')
+        .select('numero, lead')
+        .eq('owner_id', ownerId);
+      return (data ?? [])
+        .filter((r: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.numero || ''))
+        .map((r: any) => ({ email: r.numero, name: r.lead }));
+    }
+    return [];
+  };
+
+  const handleSend = async () => {
+    if (!senderEmail.trim() || !subject.trim() || !htmlContent.trim()) {
+      toast.error('Preencha remetente, assunto e conteúdo HTML.');
+      return;
+    }
+    const recipients = await fetchRecipients();
+    if (recipients.length === 0) {
+      toast.error('Nenhum destinatário válido encontrado.');
+      return;
+    }
+    if (!confirm(`Enviar para ${recipients.length} destinatário(s) via Brevo?`)) return;
+
+    setLoading(true);
+    setLastResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-bulk-brevo', {
+        body: {
+          senderEmail: senderEmail.trim(),
+          senderName: senderName.trim() || senderEmail.trim(),
+          replyTo: replyTo.trim() || undefined,
+          subject: subject.trim(),
+          htmlContent,
+          recipients,
+        },
+      });
+      if (error) throw error;
+      setLastResult(data);
+      if (data?.failed > 0) {
+        toast.warning(`Enviados: ${data.sent} • Falhas: ${data.failed}`);
+      } else {
+        toast.success(`✓ ${data?.sent ?? 0} email(s) enviados via Brevo`);
+      }
+    } catch (e: any) {
+      toast.error(`Erro: ${e?.message || 'falha desconhecida'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const previewHtml = useMemo(() => {
+    const sample = csvRecipients[0] || { email: 'exemplo@email.com', name: 'Exemplo' };
+    return htmlContent
+      .replaceAll('{{NOME}}', sample.name || 'Cliente')
+      .replaceAll('{{EMAIL}}', sample.email);
+  }, [htmlContent, csvRecipients]);
+
+  return (
+    <div className="max-w-3xl space-y-5">
+      <GlassCard className="p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Mail size={18} className="text-primary" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-foreground">Disparo em massa via Brevo API</h3>
+            <p className="text-xs text-muted-foreground">Para campanhas e newsletters de alto volume.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Email do remetente *</label>
+            <input
+              type="email"
+              value={senderEmail}
+              onChange={(e) => setSenderEmail(e.target.value)}
+              placeholder="noreply@seudominio.com"
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">Domínio precisa estar verificado no Brevo.</p>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Nome do remetente</label>
+            <input
+              value={senderName}
+              onChange={(e) => setSenderName(e.target.value)}
+              placeholder="Sua Marca"
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Reply-To (opcional)</label>
+          <input
+            type="email"
+            value={replyTo}
+            onChange={(e) => setReplyTo(e.target.value)}
+            placeholder="contato@seudominio.com"
+            className="w-full mt-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Assunto *</label>
+          <input
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Assunto do email"
+            className="w-full mt-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-medium text-muted-foreground">Conteúdo HTML *</label>
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className="text-[11px] text-primary hover:underline flex items-center gap-1"
+            >
+              <Eye size={12} /> {showPreview ? 'Ocultar' : 'Pré-visualizar'}
+            </button>
+          </div>
+          <textarea
+            value={htmlContent}
+            onChange={(e) => setHtmlContent(e.target.value)}
+            rows={8}
+            className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Variáveis: <code className="text-primary">{'{{NOME}}'}</code> e <code className="text-primary">{'{{EMAIL}}'}</code>
+          </p>
+        </div>
+
+        {showPreview && (
+          <div className="border border-white/[0.08] rounded-lg p-4 bg-white">
+            <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Preview</div>
+            <div className="text-black text-sm" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+          </div>
+        )}
+      </GlassCard>
+
+      <GlassCard className="p-5 space-y-3">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <Upload size={16} className="text-primary" /> Destinatários
+        </h3>
+        <div className="grid grid-cols-3 gap-2">
+          {(['csv', 'contacts', 'wheel_users'] as Source[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSource(s)}
+              className={`px-3 py-2 rounded-lg border text-xs font-medium transition ${
+                source === s
+                  ? 'border-primary/40 bg-primary/10 text-primary'
+                  : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {s === 'csv' ? 'CSV / Colar lista' : s === 'contacts' ? 'Contatos importados' : 'Inscritos da roleta'}
+            </button>
+          ))}
+        </div>
+
+        {source === 'csv' && (
+          <>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs cursor-pointer hover:bg-white/[0.08]">
+                <FileText size={13} /> Subir CSV
+                <input
+                  type="file"
+                  accept=".csv,.txt"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleCsvUpload(e.target.files[0])}
+                />
+              </label>
+              <span className="text-[11px] text-muted-foreground">
+                Formato: <code>email,nome</code> (uma linha por contato)
+              </span>
+            </div>
+            <textarea
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+              rows={6}
+              placeholder={'joao@email.com,João\nmaria@email.com,Maria'}
+              className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {csvRecipients.length} destinatário(s) válido(s) detectado(s).
+            </p>
+          </>
+        )}
+
+        {source !== 'csv' && (
+          <p className="text-[11px] text-muted-foreground">
+            Os emails serão buscados automaticamente do banco no momento do envio.
+          </p>
+        )}
+      </GlassCard>
+
+      <button
+        onClick={handleSend}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+      >
+        {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+        {loading ? 'Enviando...' : 'Disparar via Brevo'}
+      </button>
+
+      {lastResult && (
+        <GlassCard className="p-4">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div className="text-2xl font-bold text-foreground">{lastResult.total}</div>
+              <div className="text-[10px] text-muted-foreground uppercase">Total</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-emerald-400">{lastResult.sent}</div>
+              <div className="text-[10px] text-muted-foreground uppercase">Enviados</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-rose-400">{lastResult.failed}</div>
+              <div className="text-[10px] text-muted-foreground uppercase">Falhas</div>
+            </div>
+          </div>
+        </GlassCard>
+      )}
+    </div>
+  );
+}
