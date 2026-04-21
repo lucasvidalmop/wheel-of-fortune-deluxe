@@ -213,6 +213,8 @@ function Dashboard() {
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'roleta' | 'referral' | 'gorjeta'>('all');
+  const [analyticsDateFilter, setAnalyticsDateFilter] = useState<string>(''); // YYYY-MM-DD
+  const [analyticsRangeFilter, setAnalyticsRangeFilter] = useState<'all' | 'today' | '7d' | '30d'>('all');
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
