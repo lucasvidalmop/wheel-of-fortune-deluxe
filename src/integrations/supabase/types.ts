@@ -198,6 +198,7 @@ export type Database = {
           configuracoes: boolean
           created_at: string
           email: boolean
+          email_brevo: boolean
           financeiro: boolean
           gorjeta: boolean
           history: boolean
@@ -218,6 +219,7 @@ export type Database = {
           configuracoes?: boolean
           created_at?: string
           email?: boolean
+          email_brevo?: boolean
           financeiro?: boolean
           gorjeta?: boolean
           history?: boolean
@@ -238,6 +240,7 @@ export type Database = {
           configuracoes?: boolean
           created_at?: string
           email?: boolean
+          email_brevo?: boolean
           financeiro?: boolean
           gorjeta?: boolean
           history?: boolean
@@ -260,6 +263,7 @@ export type Database = {
           auth: boolean
           configuracoes: boolean
           email: boolean
+          email_brevo: boolean
           financeiro: boolean
           gorjeta: boolean
           history: boolean
@@ -279,6 +283,7 @@ export type Database = {
           auth?: boolean
           configuracoes?: boolean
           email?: boolean
+          email_brevo?: boolean
           financeiro?: boolean
           gorjeta?: boolean
           history?: boolean
@@ -298,6 +303,7 @@ export type Database = {
           auth?: boolean
           configuracoes?: boolean
           email?: boolean
+          email_brevo?: boolean
           financeiro?: boolean
           gorjeta?: boolean
           history?: boolean
