@@ -180,12 +180,13 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     }
   };
 
-  const previewHtml = useMemo(() => {
+  const previewContent = useMemo(() => {
     const sample = csvRecipients[0] || { email: 'exemplo@email.com', name: 'Exemplo' };
-    return htmlContent
+    const raw = contentMode === 'html' ? htmlContent : textContent;
+    return raw
       .split('{{NOME}}').join(sample.name || 'Cliente')
       .split('{{EMAIL}}').join(sample.email);
-  }, [htmlContent, csvRecipients]);
+  }, [htmlContent, textContent, contentMode, csvRecipients]);
 
   return (
     <div className="max-w-3xl space-y-5">
