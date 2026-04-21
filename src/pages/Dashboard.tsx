@@ -3381,7 +3381,28 @@ function Dashboard() {
 
           {/* ══════ ANALYTICS TAB ══════ */}
           {activeTab === 'analytics' && (() => {
-            const filtered = analyticsFilter === 'all' ? pageViews : pageViews.filter((v: any) => (v.page_type || 'roleta') === analyticsFilter);
+            // Date range filtering
+            const dayKey = (dateStr: string) => {
+              const d = new Date(dateStr);
+              return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            };
+            const nowRef = new Date();
+            const rangeCutoff = (() => {
+              if (analyticsRangeFilter === 'today') {
+                const d = new Date(nowRef); d.setHours(0, 0, 0, 0); return d.getTime();
+              }
+              if (analyticsRangeFilter === '7d') return nowRef.getTime() - 7 * 86400000;
+              if (analyticsRangeFilter === '30d') return nowRef.getTime() - 30 * 86400000;
+              return null;
+            })();
+            const dateFiltered = pageViews.filter((v: any) => {
+              if (analyticsDateFilter && dayKey(v.created_at) !== analyticsDateFilter) return false;
+              if (rangeCutoff !== null && new Date(v.created_at).getTime() < rangeCutoff) return false;
+              return true;
+            });
+            const filtered = analyticsFilter === 'all' ? dateFiltered : dateFiltered.filter((v: any) => (v.page_type || 'roleta') === analyticsFilter);
+            // Available unique dates for dropdown
+            const availableDates = Array.from(new Set(pageViews.map((v: any) => dayKey(v.created_at)))).sort().reverse();
             const total = filtered.length;
             const uniqueIPs = new Set(filtered.map((v: any) => v.ip_address)).size;
             const avgDuration = total > 0 ? Math.round(filtered.reduce((s: number, v: any) => s + (v.duration_seconds || 0), 0) / total) : 0;
