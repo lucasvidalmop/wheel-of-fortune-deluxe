@@ -1056,6 +1056,7 @@ function Dashboard() {
             roleta: src.roleta !== false,
             sms: src.sms !== false,
             email: src.email !== false,
+            email_brevo: src.email_brevo !== false,
             whatsapp: src.whatsapp !== false,
             financeiro: src.financeiro !== false,
             gorjeta: src.gorjeta !== false,
@@ -2302,14 +2303,14 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'email' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'email' | 'email_brevo' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico', tool: 'history' },
     { key: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics', tool: 'analytics' },
     { key: 'email', icon: <Mail size={20} />, label: 'Email', tool: 'email' },
-    { key: 'email_brevo', icon: <Mail size={20} />, label: 'Email API (Brevo)', tool: 'email' },
+    { key: 'email_brevo', icon: <Mail size={20} />, label: 'Email API (Brevo)', tool: 'email_brevo' },
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS', tool: 'sms' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp', tool: 'whatsapp' },
     { key: 'msg_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Msg', tool: 'msg_analytics' },
