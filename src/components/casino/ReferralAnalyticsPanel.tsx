@@ -55,6 +55,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
       setLoading(true);
       try {
         const normalize = (value?: string | null) => (value || '').trim().toLowerCase();
+        const slug = (value?: string | null) => (value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
         const { data: links } = await (supabase as any)
           .from('referral_links')
