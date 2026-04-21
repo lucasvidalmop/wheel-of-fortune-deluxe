@@ -55,6 +55,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
       setLoading(true);
       try {
         const normalize = (value?: string | null) => (value || '').trim().toLowerCase();
+        const slug = (value?: string | null) => (value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
         const { data: links } = await (supabase as any)
           .from('referral_links')
@@ -72,14 +73,16 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           const isGorjeta = normalize(l.label) === 'gorjeta' || (gorjetaRef && normalize(l.code) === normalize(gorjetaRef));
           if (isGorjeta) {
             gorjetaLinkIds.add(l.id);
-            gorjetaTokens.add(normalize(l.code));
-            gorjetaTokens.add(normalize(l.label));
+            gorjetaTokens.add(slug(l.code));
+            gorjetaTokens.add(slug(l.label));
           } else {
             nonGorjetaLinkIds.add(l.id);
-            nonGorjetaByNormalized.set(normalize(l.code), { id: l.id, code: l.code, label: l.label });
-            nonGorjetaByNormalized.set(normalize(l.label), { id: l.id, code: l.code, label: l.label });
+            nonGorjetaByNormalized.set(slug(l.code), { id: l.id, code: l.code, label: l.label });
+            nonGorjetaByNormalized.set(slug(l.label), { id: l.id, code: l.code, label: l.label });
           }
         });
+        // Always treat the configured gorjeta ref as a gorjeta token, even if no link exists
+        if (gorjetaRef) gorjetaTokens.add(slug(gorjetaRef));
 
         let q = (supabase as any)
           .from('referral_redemptions')
@@ -105,15 +108,18 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           const key = `${u.account_id}|${normalize(u.email)}`;
           if (covered.has(key)) return;
 
-          const responsible = normalize(u.responsible);
+          const responsibleSlug = slug(u.responsible);
           const directLink = u.referral_link_id ? linkMap.get(u.referral_link_id) : null;
-          const matchedHistoricalLink = nonGorjetaByNormalized.get(responsible);
+          const matchedHistoricalLink = nonGorjetaByNormalized.get(responsibleSlug);
 
           const isDirectNonGorjeta = !!(u.referral_link_id && nonGorjetaLinkIds.has(u.referral_link_id));
+          // Only count historical users whose `responsible` matches a real non-gorjeta referral link.
+          // This prevents tip subscribers (e.g. responsible="Lucas BSB") from leaking into referral analytics.
           const isHistoricalNonGorjeta = !!(
             !u.referral_link_id &&
-            responsible &&
-            !gorjetaTokens.has(responsible)
+            responsibleSlug &&
+            !gorjetaTokens.has(responsibleSlug) &&
+            matchedHistoricalLink
           );
 
           if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
