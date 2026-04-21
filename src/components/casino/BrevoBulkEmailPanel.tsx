@@ -141,8 +141,9 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   };
 
   const handleSend = async () => {
-    if (!senderEmail.trim() || !subject.trim() || !htmlContent.trim()) {
-      toast.error('Preencha remetente, assunto e conteúdo HTML.');
+    const body = contentMode === 'html' ? htmlContent : textContent;
+    if (!senderEmail.trim() || !subject.trim() || !body.trim()) {
+      toast.error('Preencha remetente, assunto e conteúdo.');
       return;
     }
     const recipients = await fetchRecipients();
@@ -161,7 +162,7 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
           senderName: senderName.trim() || senderEmail.trim(),
           replyTo: replyTo.trim() || undefined,
           subject: subject.trim(),
-          htmlContent,
+          ...(contentMode === 'html' ? { htmlContent } : { textContent }),
           recipients,
         },
       });
