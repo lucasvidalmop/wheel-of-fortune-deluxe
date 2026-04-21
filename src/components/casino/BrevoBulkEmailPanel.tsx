@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square } from 'lucide-react';
+import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode } from 'lucide-react';
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 type Recipient = { email: string; name?: string };
 type Source = 'csv' | 'contacts' | 'wheel_users';
@@ -69,6 +70,56 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [contactsLoading, setContactsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const htmlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const handleHtmlFileUpload = (file: File) => {
+    if (!/\.html?$/i.test(file.name) && file.type !== 'text/html') {
+      toast.error('Selecione um arquivo .html');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = (e.target?.result as string) || '';
+      setHtmlContent(content);
+      setContentMode('html');
+      toast.success('HTML carregado com sucesso');
+    };
+    reader.onerror = () => toast.error('Erro ao ler o arquivo HTML');
+    reader.readAsText(file);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem.');
+      return;
+    }
+    setUploadingImage(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, 'brevo-emails');
+      const tag = `<img src="${publicUrl}" alt="" style="max-width:100%;height:auto;display:block;" />`;
+      const ta = htmlTextareaRef.current;
+      if (ta && contentMode === 'html') {
+        const start = ta.selectionStart ?? htmlContent.length;
+        const end = ta.selectionEnd ?? htmlContent.length;
+        const next = htmlContent.slice(0, start) + tag + htmlContent.slice(end);
+        setHtmlContent(next);
+        requestAnimationFrame(() => {
+          ta.focus();
+          const pos = start + tag.length;
+          ta.setSelectionRange(pos, pos);
+        });
+      } else {
+        setHtmlContent((prev) => prev + '\n' + tag);
+        setContentMode('html');
+      }
+      toast.success('Imagem enviada e inserida no HTML');
+    } catch (e: any) {
+      toast.error(`Falha ao enviar imagem: ${e?.message || 'erro desconhecido'}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const csvRecipients = useMemo<Recipient[]>(() => {
     if (!csvText.trim()) return [];
@@ -311,6 +362,33 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
                   Texto simples
                 </button>
               </div>
+              <label className="text-[11px] text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                <FileCode size={12} /> Subir HTML
+                <input
+                  type="file"
+                  accept=".html,.htm,text/html"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleHtmlFileUpload(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+              <label className={`text-[11px] text-primary hover:underline flex items-center gap-1 cursor-pointer ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                {uploadingImage ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
+                {uploadingImage ? 'Enviando...' : 'Inserir imagem'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImageUpload(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
@@ -322,6 +400,7 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
           </div>
           {contentMode === 'html' ? (
             <textarea
+              ref={htmlTextareaRef}
               value={htmlContent}
               onChange={(e) => setHtmlContent(e.target.value)}
               rows={8}
