@@ -812,7 +812,96 @@ function Dashboard() {
     fetchSmsScheduled();
   };
 
-  const fetchBulkSentPhones = async () => {
+  // ═══ ClickSend (SMS API CS) helpers — log: sms_cs_message_log, channel: 'sms_cs' ═══
+  const fetchSmsCsLogs = async () => {
+    if (!session?.user?.id) return;
+    setSmsCsLogsLoading(true);
+    const { data } = await (supabase as any)
+      .from('sms_cs_message_log')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setSmsCsLogs(data || []);
+    setSmsCsLogsLoading(false);
+  };
+
+  const deleteSmsCsLog = async (id: string) => {
+    const ok = await confirmDialog({ title: 'Excluir registro?', message: 'Deseja remover este SMS do histórico?', variant: 'danger', confirmLabel: 'Excluir' });
+    if (!ok) return;
+    await (supabase as any).from('sms_cs_message_log').delete().eq('id', id);
+    setSmsCsLogs(prev => prev.filter(l => l.id !== id));
+    toast.success('Registro excluído');
+  };
+
+  const resendSmsCs = async (log: any) => {
+    if (!clicksendUsername || !clicksendApiKey || !clicksendSenderId) { toast.error('Configure as credenciais do ClickSend'); setShowSmsCsConfig(true); return; }
+    const { data, error } = await supabase.functions.invoke('send-sms-clicksend', {
+      body: { recipientPhone: log.recipient_phone, message: log.message, clicksendUsername, clicksendApiKey, clicksendSenderId }
+    });
+    if (error) { toast.error('Erro ao reenviar SMS'); return; }
+    if ((data as any)?.skipped) { toast.error((data as any)?.error || 'Número inválido'); return; }
+    await (supabase as any).from('sms_cs_message_log').insert({
+      owner_id: session?.user?.id,
+      recipient_phone: log.recipient_phone,
+      recipient_name: log.recipient_name || '',
+      message: log.message,
+      status: 'sent',
+    });
+    toast.success('SMS reenviado!');
+    fetchSmsCsLogs();
+  };
+
+  const fetchSmsCsScheduled = async () => {
+    if (!session?.user?.id) return;
+    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).eq('channel', 'sms_cs' as any).order('next_run_at', { ascending: true });
+    setSmsCsScheduledList(data || []);
+  };
+
+  const saveSmsCsSchedule = async () => {
+    if (!session?.user?.id) return;
+    if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
+    if (!smsCsSchedDate) { toast.error('Selecione a data'); return; }
+    let targetPhones: { phone: string; name: string }[] = [];
+    if (smsCsSourceMode === 'csv') {
+      targetPhones = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+    } else {
+      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+      targetPhones = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+    }
+    if (targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
+    setSmsCsSchedSaving(true);
+    const [h, m] = smsCsSchedTime.split(':').map(Number);
+    const scheduledAt = new Date(smsCsSchedDate);
+    scheduledAt.setHours(h, m, 0, 0);
+    const rows = targetPhones.map(t => ({
+      owner_id: session.user.id,
+      message: smsCsMessage,
+      recipient_type: 'individual',
+      recipient_value: t.phone,
+      recipient_label: t.name,
+      scheduled_at: scheduledAt.toISOString(),
+      next_run_at: scheduledAt.toISOString(),
+      recurrence: smsCsSchedRecurrence,
+      channel: 'sms_cs',
+    }));
+    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    setSmsCsSchedSaving(false);
+    if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
+    toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    setSmsCsScheduleMode(false);
+    setSmsCsSchedDate(undefined);
+    setSmsCsSchedTime('12:00');
+    setSmsCsSchedRecurrence('none');
+    fetchSmsCsScheduled();
+  };
+
+  const cancelSmsCsSchedule = async (id: string) => {
+    await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).eq('id', id);
+    toast.success('Agendamento cancelado');
+    fetchSmsCsScheduled();
+  };
+
     if (!session?.user?.id) return;
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data } = await (supabase as any)
