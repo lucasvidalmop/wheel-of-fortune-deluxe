@@ -362,6 +362,33 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
                   Texto simples
                 </button>
               </div>
+              <label className="text-[11px] text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                <FileCode size={12} /> Subir HTML
+                <input
+                  type="file"
+                  accept=".html,.htm,text/html"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleHtmlFileUpload(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+              <label className={`text-[11px] text-primary hover:underline flex items-center gap-1 cursor-pointer ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                {uploadingImage ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
+                {uploadingImage ? 'Enviando...' : 'Inserir imagem'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImageUpload(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
