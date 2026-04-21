@@ -122,10 +122,20 @@ Deno.serve(async (req) => {
         })
         const data = await resp.json().catch(() => ({}))
 
+        console.log('[send-bulk-brevo] Brevo response', {
+          status: resp.status,
+          ok: resp.ok,
+          chunkSize: chunk.length,
+          messageId: data?.messageId,
+          messageIds: Array.isArray(data?.messageIds) ? data.messageIds.length : undefined,
+          sender: senderEmail,
+          error: !resp.ok ? data : undefined,
+        })
+
         if (!resp.ok) {
-          // Whole chunk failed
           failed += chunk.length
           const errMsg = (data?.message || data?.code || `HTTP ${resp.status}`).toString().slice(0, 500)
+          console.error('[send-bulk-brevo] Chunk failed:', errMsg, 'full:', JSON.stringify(data).slice(0, 1000))
           for (const r of chunk) {
             errors.push({ email: r.email, error: errMsg })
             await supabase.from('email_send_log').insert({
@@ -133,17 +143,16 @@ Deno.serve(async (req) => {
               recipient_email: r.email,
               status: 'failed',
               error_message: errMsg,
-              metadata: { owner_id: userId, provider: 'brevo' },
+              metadata: { owner_id: userId, provider: 'brevo', brevo_response: data },
             })
           }
         } else {
           sent += chunk.length
-          // Log success per recipient
           const rows = chunk.map((r) => ({
             template_name: 'brevo_bulk',
             recipient_email: r.email,
             status: 'sent',
-            metadata: { owner_id: userId, provider: 'brevo', messageId: data?.messageId },
+            metadata: { owner_id: userId, provider: 'brevo', messageId: data?.messageId, messageIds: data?.messageIds },
           }))
           await supabase.from('email_send_log').insert(rows)
         }
