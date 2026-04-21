@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode } from 'lucide-react';
+import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode, Wrench } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 type Recipient = { email: string; name?: string };
@@ -64,13 +64,14 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [source, setSource] = useState<Source>('csv');
   const [csvText, setCsvText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const [lastResult, setLastResult] = useState<{ total: number; sent: number; failed: number } | null>(null);
   const [availableContacts, setAvailableContacts] = useState<Recipient[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [fixingImages, setFixingImages] = useState(false);
   const htmlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleHtmlFileUpload = (file: File) => {
@@ -118,6 +119,100 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
       toast.error(`Falha ao enviar imagem: ${e?.message || 'erro desconhecido'}`);
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  // Detecta <img> com src que não vai funcionar em email (data:, blob:, relativo, ou URL externa
+  // que pode bloquear hotlink) e re-envia para o nosso storage público.
+  const fixHtmlImages = async () => {
+    if (!htmlContent.trim()) {
+      toast.error('Sem HTML para corrigir.');
+      return;
+    }
+    setFixingImages(true);
+    try {
+      const imgRegex = /<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+      const matches = Array.from(htmlContent.matchAll(imgRegex));
+      if (matches.length === 0) {
+        toast.info('Nenhuma tag <img> encontrada no HTML.');
+        return;
+      }
+
+      const ourHost = (() => {
+        try {
+          return new URL(import.meta.env.VITE_SUPABASE_URL).host;
+        } catch {
+          return '';
+        }
+      })();
+
+      const replacements = new Map<string, string>();
+      let fixed = 0;
+      let failed = 0;
+      let skipped = 0;
+
+      for (const m of matches) {
+        const src = m[1];
+        if (replacements.has(src)) continue;
+
+        // Já está no nosso storage público — pular
+        if (ourHost && src.includes(ourHost) && src.includes('/storage/v1/object/public/')) {
+          skipped++;
+          continue;
+        }
+
+        try {
+          let blob: Blob;
+          let filename = 'image';
+
+          if (src.startsWith('data:')) {
+            const res = await fetch(src);
+            blob = await res.blob();
+            const ext = (blob.type.split('/')[1] || 'png').split(';')[0];
+            filename = `inline-${Date.now()}.${ext}`;
+          } else if (src.startsWith('blob:') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//')) {
+            const url = src.startsWith('//') ? `https:${src}` : src;
+            const res = await fetch(url, { mode: 'cors' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            blob = await res.blob();
+            const urlPath = (() => {
+              try { return new URL(url).pathname.split('/').pop() || ''; } catch { return ''; }
+            })();
+            const ext = urlPath.split('.').pop() || (blob.type.split('/')[1] || 'png').split(';')[0];
+            filename = urlPath || `remote-${Date.now()}.${ext}`;
+          } else {
+            // Caminho relativo — não temos como resolver de forma confiável no email
+            failed++;
+            continue;
+          }
+
+          const file = new File([blob], filename, { type: blob.type || 'image/png' });
+          const { publicUrl } = await uploadAppAsset(file, 'brevo-emails');
+          replacements.set(src, publicUrl);
+          fixed++;
+        } catch (e) {
+          failed++;
+        }
+      }
+
+      if (replacements.size > 0) {
+        let next = htmlContent;
+        for (const [oldSrc, newSrc] of replacements) {
+          // Substitui todas as ocorrências do src antigo
+          next = next.split(oldSrc).join(newSrc);
+        }
+        setHtmlContent(next);
+      }
+
+      if (fixed > 0) {
+        toast.success(`${fixed} imagem(ns) corrigida(s)${failed ? ` • ${failed} falharam` : ''}${skipped ? ` • ${skipped} já ok` : ''}`);
+      } else if (failed > 0) {
+        toast.error(`Não foi possível corrigir ${failed} imagem(ns). Verifique se o site de origem permite acesso.`);
+      } else {
+        toast.success('Todas as imagens já estão hospedadas corretamente.');
+      }
+    } finally {
+      setFixingImages(false);
     }
   };
 
@@ -391,6 +486,16 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
               </label>
               <button
                 type="button"
+                onClick={fixHtmlImages}
+                disabled={fixingImages}
+                title="Re-hospeda imagens com src inválido (data:, blob:, externas) no nosso storage para que cheguem ao destinatário"
+                className="text-[11px] text-amber-300 hover:underline flex items-center gap-1 disabled:opacity-50"
+              >
+                {fixingImages ? <Loader2 size={12} className="animate-spin" /> : <Wrench size={12} />}
+                {fixingImages ? 'Corrigindo...' : 'Corrigir imagens'}
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-[11px] text-primary hover:underline flex items-center gap-1"
               >
@@ -422,12 +527,23 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
         </div>
 
         {showPreview && (
-          <div className="border border-white/[0.08] rounded-lg p-4 bg-white">
-            <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Preview</div>
+          <div className="border border-white/[0.08] rounded-lg overflow-hidden bg-white">
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider">Preview do email</div>
+              <div className="text-[10px] text-gray-400">
+                {contentMode === 'html' ? 'renderização real' : 'texto simples'}
+              </div>
+            </div>
             {contentMode === 'html' ? (
-              <div className="text-black text-sm" dangerouslySetInnerHTML={{ __html: previewContent }} />
+              <iframe
+                title="Preview do email"
+                srcDoc={previewContent}
+                sandbox=""
+                className="w-full bg-white"
+                style={{ height: 480, border: 0 }}
+              />
             ) : (
-              <pre className="text-black text-sm whitespace-pre-wrap font-sans">{previewContent}</pre>
+              <pre className="text-black text-sm whitespace-pre-wrap font-sans p-4">{previewContent}</pre>
             )}
           </div>
         )}
