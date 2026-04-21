@@ -4598,6 +4598,275 @@ function Dashboard() {
             </div>
           )}
 
+          {/* ══════ SMS API (CS) — ClickSend TAB ══════ */}
+          {activeTab === 'sms_cs' && (
+            <div className="max-w-2xl space-y-5">
+              <div className="flex items-center gap-2 justify-end">
+                <button onClick={() => { setShowSmsCsHistory(!showSmsCsHistory); if (!showSmsCsHistory) fetchSmsCsLogs(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsCsHistory ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Clock size={15} /> Histórico
+                </button>
+                <button onClick={() => { setShowSmsCsScheduledList(!showSmsCsScheduledList); if (!showSmsCsScheduledList) fetchSmsCsScheduled(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsCsScheduledList ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <CalendarIcon size={15} /> Agendados
+                </button>
+                <button onClick={() => setShowSmsCsConfig(!showSmsCsConfig)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showSmsCsConfig ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Settings size={15} /> Configurar API
+                </button>
+              </div>
+
+              {showSmsCsHistory && (
+                <GlassCard className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} className="text-primary" /> Histórico de SMS (ClickSend)</h3>
+                    <button onClick={fetchSmsCsLogs} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                  </div>
+                  {smsCsLogsLoading ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm animate-pulse">Carregando...</div>
+                  ) : smsCsLogs.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">Nenhum SMS enviado ainda.</div>
+                  ) : (
+                    <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1">
+                      {smsCsLogs.map((log: any) => (
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition group">
+                          <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${log.status === 'sent' ? 'bg-green-400' : 'bg-red-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold text-foreground truncate">{log.recipient_name || 'Sem nome'}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{log.recipient_phone}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{log.message}</p>
+                            {log.error_message && <p className="text-[10px] text-red-400 mt-1">Erro: {log.error_message}</p>}
+                          </div>
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                              {new Date(log.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => resendSmsCs(log)} className="p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Reenviar"><RotateCcw size={12} /></button>
+                              <button onClick={() => deleteSmsCsLog(log.id)} className="p-1 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition" title="Excluir"><Trash2 size={12} /></button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
+              {showSmsCsConfig && (
+                <GlassCard className="p-5 space-y-3">
+                  <h3 className="text-sm font-bold text-foreground">🔑 ClickSend</h3>
+                  <p className="text-[10px] text-muted-foreground">Crie uma conta em <a href="https://www.clicksend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">clicksend.com</a> e pegue suas credenciais em Dashboard → API Credentials.</p>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Username</label>
+                    <input type="text" value={clicksendUsername} onChange={e => setClicksendUsername(e.target.value)} placeholder="seu-usuario" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">API Key</label>
+                    <input type="password" value={clicksendApiKey} onChange={e => setClicksendApiKey(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Sender ID (nome ou número alfa)</label>
+                    <input type="text" value={clicksendSenderId} onChange={e => setClicksendSenderId(e.target.value)} placeholder="MinhaCasa" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                  </div>
+                  <div className={`text-xs font-medium ${clicksendUsername && clicksendApiKey && clicksendSenderId ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {clicksendUsername && clicksendApiKey && clicksendSenderId ? '✅ Configurado' : '⚠️ Preencha todas as credenciais'}
+                  </div>
+                </GlassCard>
+              )}
+
+              <GlassCard className="p-5 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
+                <div className="flex gap-2">
+                  <button onClick={() => setSmsCsSourceMode('base')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsCsSourceMode === 'base' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>📋 Base</button>
+                  <button onClick={() => setSmsCsSourceMode('csv')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsCsSourceMode === 'csv' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}><span className="flex items-center justify-center gap-1.5"><Upload size={14} /> CSV / WhatsApp</span></button>
+                </div>
+
+                {smsCsSourceMode === 'base' ? (
+                  <>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setSmsCsTarget('all'); setSelectedSmsCsPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsCsTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10).length})
+                      </button>
+                      <button onClick={() => setSmsCsTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${smsCsTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Selecionar ({selectedSmsCsPhones.length})
+                      </button>
+                    </div>
+                    {smsCsTarget === 'selected' && (() => {
+                      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                      const filtered = smsCsSearchTerm ? usersWithPhone.filter(u => u.name.toLowerCase().includes(smsCsSearchTerm.toLowerCase()) || u.phone.includes(smsCsSearchTerm)) : usersWithPhone;
+                      const allSelected = filtered.length > 0 && filtered.every(u => selectedSmsCsPhones.includes(u.phone));
+                      return (
+                        <div className="space-y-2">
+                          <input type="text" value={smsCsSearchTerm} onChange={e => setSmsCsSearchTerm(e.target.value)} placeholder="Pesquisar..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                          <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition px-1">
+                            <input type="checkbox" checked={allSelected} onChange={e => { if (e.target.checked) setSelectedSmsCsPhones(Array.from(new Set([...selectedSmsCsPhones, ...filtered.map(u => u.phone)]))); else { const remove = new Set(filtered.map(u => u.phone)); setSelectedSmsCsPhones(selectedSmsCsPhones.filter(p => !remove.has(p))); } }} className="rounded border-white/20" />
+                            Selecionar todos ({filtered.length})
+                          </label>
+                          <div className="max-h-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-white/[0.02] p-2 space-y-0.5">
+                            {filtered.map(u => (
+                              <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                <input type="checkbox" checked={selectedSmsCsPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedSmsCsPhones([...selectedSmsCsPhones, u.phone]); else setSelectedSmsCsPhones(selectedSmsCsPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                                <span className="text-sm text-foreground">{u.name}</span>
+                                <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                              </label>
+                            ))}
+                            {filtered.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">Nenhum resultado</p>}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground">Use a aba SMS / WhatsApp para importar contatos CSV — eles ficam compartilhados. Os contatos selecionados em <code className="bg-white/10 px-1 rounded">selectedCsvContacts</code> serão usados aqui também.</p>
+                )}
+              </GlassCard>
+
+              <GlassCard className="p-5 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Smartphone size={16} className="text-primary" /> Mensagem</h3>
+                <textarea value={smsCsMessage} onChange={e => setSmsCsMessage(e.target.value)} rows={4} placeholder="Digite a mensagem..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                <p className="text-[10px] text-muted-foreground">{smsCsMessage.length}/160 caracteres</p>
+              </GlassCard>
+
+              <GlassCard className="p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><CalendarIcon size={16} className="text-primary" /> Agendar envio</h3>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-xs text-muted-foreground">{smsCsScheduleMode ? 'Agendado' : 'Enviar agora'}</span>
+                    <button onClick={() => setSmsCsScheduleMode(!smsCsScheduleMode)} className={`relative w-10 h-5 rounded-full transition-colors ${smsCsScheduleMode ? 'bg-primary' : 'bg-white/[0.12]'}`}>
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${smsCsScheduleMode ? 'translate-x-5' : ''}`} />
+                    </button>
+                  </label>
+                </div>
+                {smsCsScheduleMode && (
+                  <div className="space-y-3 pt-2">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Data</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left flex items-center gap-2">
+                              <CalendarIcon size={14} className="text-muted-foreground" />
+                              {smsCsSchedDate ? smsCsSchedDate.toLocaleDateString('pt-BR') : 'Selecionar'}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={smsCsSchedDate} onSelect={setSmsCsSchedDate} initialFocus className="p-3 pointer-events-auto" />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Hora</label>
+                        <input type="time" value={smsCsSchedTime} onChange={e => setSmsCsSchedTime(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Recorrência</label>
+                      <select value={smsCsSchedRecurrence} onChange={e => setSmsCsSchedRecurrence(e.target.value as any)} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40">
+                        <option value="none">Sem recorrência</option>
+                        <option value="daily">Diário</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensal</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </GlassCard>
+
+              {smsCsScheduleMode ? (
+                <button onClick={saveSmsCsSchedule} disabled={smsCsSchedSaving} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                  {smsCsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    if (!clicksendUsername || !clicksendApiKey || !clicksendSenderId) { toast.error('Configure as credenciais do ClickSend'); setShowSmsCsConfig(true); return; }
+                    let phoneList: { phone: string; name: string }[] = [];
+                    if (smsCsSourceMode === 'csv') {
+                      phoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+                    } else {
+                      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+                      phoneList = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+                    }
+                    const phones = phoneList.map(p => p.phone);
+                    if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
+                    if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                    setSmsCsSending(true);
+                    let sent = 0, errors = 0, skipped = 0;
+                    const BATCH_SIZE = 5;
+                    const entries: any[] = [];
+                    const batchId = phones.length > 1 ? `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : null;
+                    try {
+                      for (let i = 0; i < phones.length; i += BATCH_SIZE) {
+                        const batch = phones.slice(i, i + BATCH_SIZE);
+                        const results = await Promise.allSettled(batch.map(phone =>
+                          supabase.functions.invoke('send-sms-clicksend', {
+                            body: { recipientPhone: phone, message: smsCsMessage, clicksendUsername, clicksendApiKey, clicksendSenderId }
+                          })
+                        ));
+                        for (let j = 0; j < results.length; j++) {
+                          const r = results[j];
+                          const phone = batch[j];
+                          const u = users.find(x => x.phone === phone) || phoneList.find(p => p.phone === phone);
+                          if (r.status === 'fulfilled' && !r.value.error) {
+                            const payload = r.value.data as any;
+                            if (payload?.skipped) { skipped++; entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId }); }
+                            else { sent++; entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'sent', batch_id: batchId }); }
+                          } else {
+                            errors++;
+                            const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
+                            entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: errMsg, batch_id: batchId });
+                          }
+                        }
+                      }
+                    } catch (e) { console.error('SMS CS batch error:', e); }
+                    if (entries.length > 0) await (supabase as any).from('sms_cs_message_log').insert(entries);
+                    setSmsCsSending(false);
+                    if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
+                    else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
+                    else toast.error('Nenhum SMS enviado');
+                    if (showSmsCsHistory) fetchSmsCsLogs();
+                  }}
+                  disabled={smsCsSending}
+                  className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                >
+                  {smsCsSending ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar SMS (ClickSend)</>}
+                </button>
+              )}
+
+              {showSmsCsScheduledList && (
+                <GlassCard className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><CalendarIcon size={16} className="text-primary" /> SMS Agendados (CS)</h3>
+                    <button onClick={fetchSmsCsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                  </div>
+                  {smsCsScheduledList.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">Nenhum SMS agendado</p>
+                  ) : (
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                      {smsCsScheduledList.map((m: any) => (
+                        <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-foreground truncate">{m.recipient_label || m.recipient_value}</p>
+                              <p className="text-muted-foreground line-clamp-2 mt-0.5">{m.message}</p>
+                            </div>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 flex-shrink-0 ${m.status === 'pending' ? 'bg-primary/20 text-primary' : m.status === 'sent' ? 'bg-green-500/20 text-green-400' : m.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' : 'bg-red-500/20 text-red-400'}`}>
+                              {m.status === 'pending' ? 'Pendente' : m.status === 'sent' ? 'Enviado' : m.status === 'cancelled' ? 'Cancelado' : 'Falhou'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center pt-1">
+                            <span className="text-muted-foreground">📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleDateString('pt-BR')} {new Date(m.next_run_at || m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
+                            {m.status === 'pending' && <button onClick={() => cancelSmsCsSchedule(m.id)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+            </div>
+          )}
+
           {/* ══════ WHATSAPP TAB ══════ */}
           {activeTab === 'whatsapp' && (
             <div className="max-w-2xl space-y-5">
