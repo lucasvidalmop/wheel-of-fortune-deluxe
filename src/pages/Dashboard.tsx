@@ -1093,6 +1093,7 @@ function Dashboard() {
           setToolPerms({
             roleta: src.roleta !== false,
             sms: src.sms !== false,
+            sms_cs: src.sms_cs !== false,
             email: src.email !== false,
             email_brevo: src.email_brevo !== false,
             whatsapp: src.whatsapp !== false,
@@ -1246,6 +1247,10 @@ function Dashboard() {
     twilioAccountSid,
     twilioAuthToken,
     twilioPhoneNumber,
+    smsCsMessage,
+    clicksendUsername,
+    clicksendApiKey,
+    clicksendSenderId,
     whatsappMessage,
     whatsappDelaySeconds,
     evolutionApiUrl,
