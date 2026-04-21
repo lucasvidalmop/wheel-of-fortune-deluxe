@@ -9,6 +9,8 @@ interface Props {
   linkId?: string;
   /** Optional label shown in header (e.g. link name). */
   scopeLabel?: string;
+  /** Code of the gorjeta link to EXCLUDE from analytics (general view only). */
+  gorjetaRef?: string;
 }
 
 interface Redemption {
