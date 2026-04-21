@@ -400,6 +400,7 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
           </div>
           {contentMode === 'html' ? (
             <textarea
+              ref={htmlTextareaRef}
               value={htmlContent}
               onChange={(e) => setHtmlContent(e.target.value)}
               rows={8}
