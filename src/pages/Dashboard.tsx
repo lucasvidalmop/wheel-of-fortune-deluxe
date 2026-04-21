@@ -2436,7 +2436,7 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'email' | 'email_brevo' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
@@ -2445,6 +2445,7 @@ function Dashboard() {
     { key: 'email', icon: <Mail size={20} />, label: 'Email', tool: 'email' },
     { key: 'email_brevo', icon: <Mail size={20} />, label: 'Email API (Brevo)', tool: 'email_brevo' },
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS', tool: 'sms' },
+    { key: 'sms_cs', icon: <Smartphone size={20} />, label: 'SMS API (CS)', tool: 'sms_cs' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp', tool: 'whatsapp' },
     { key: 'msg_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Msg', tool: 'msg_analytics' },
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro', tool: 'financeiro' },
@@ -2468,6 +2469,7 @@ function Dashboard() {
     email: 'Disparo de Email',
     email_brevo: 'Disparo em Massa (Brevo API)',
     sms: 'Disparo de SMS',
+    sms_cs: 'Disparo de SMS API (ClickSend)',
     whatsapp: 'Disparo de WhatsApp',
     financeiro: 'Financeiro',
     notificacoes: 'Notificações',
