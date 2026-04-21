@@ -25,10 +25,32 @@ interface Payload {
   replyTo?: string
 }
 
-// Brevo permite até 1000 destinatários por chamada via messageVersions.
-// Usamos 1000 para máxima eficiência em disparos em massa (>500).
-const CHUNK_SIZE = 1000
+// Brevo aceita até 1000 destinatários via messageVersions, mas se UM email
+// for inválido, o batch INTEIRO falha. Usamos 100 para isolar melhor falhas.
+const CHUNK_SIZE = 100
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email'
+
+// Validação estrita de email (mais rigorosa que a do Brevo)
+const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+function sanitizeEmail(raw: string): string | null {
+  if (!raw) return null
+  // remove zero-width, espaços, quebras de linha, aspas e vírgulas residuais
+  const cleaned = raw
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\s"',;<>]/g, '')
+    .trim()
+    .toLowerCase()
+  if (!cleaned) return null
+  if (cleaned.length > 254) return null
+  if (!EMAIL_RE.test(cleaned)) return null
+  return cleaned
+}
+
+function sanitizeName(raw?: string): string | undefined {
+  if (!raw) return undefined
+  const cleaned = raw.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/[\r\n\t]/g, ' ').trim()
+  return cleaned || undefined
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -70,16 +92,27 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Dedupe + basic email validation
+    // Dedupe + sanitização rigorosa
     const seen = new Set<string>()
     const cleanRecipients: Recipient[] = []
+    const invalidRecipients: { email: string; error: string }[] = []
     for (const r of recipients) {
-      const e = (r.email || '').trim().toLowerCase()
-      if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) continue
+      const e = sanitizeEmail(r.email || '')
+      if (!e) {
+        invalidRecipients.push({ email: r.email || '(vazio)', error: 'Email inválido' })
+        continue
+      }
       if (seen.has(e)) continue
       seen.add(e)
-      cleanRecipients.push({ email: e, name: r.name?.trim() || undefined })
+      cleanRecipients.push({ email: e, name: sanitizeName(r.name) })
     }
+
+    console.log('[send-bulk-brevo] Sanitization', {
+      received: recipients.length,
+      valid: cleanRecipients.length,
+      invalid: invalidRecipients.length,
+      duplicates: recipients.length - cleanRecipients.length - invalidRecipients.length,
+    })
 
     if (cleanRecipients.length === 0) {
       return new Response(JSON.stringify({ error: 'No valid recipients' }), {
@@ -133,18 +166,61 @@ Deno.serve(async (req) => {
         })
 
         if (!resp.ok) {
-          failed += chunk.length
           const errMsg = (data?.message || data?.code || `HTTP ${resp.status}`).toString().slice(0, 500)
-          console.error('[send-bulk-brevo] Chunk failed:', errMsg, 'full:', JSON.stringify(data).slice(0, 1000))
+          console.error('[send-bulk-brevo] Chunk failed, falling back to per-recipient send:', errMsg)
+
+          // FALLBACK: tenta enviar 1 a 1 para isolar o(s) email(s) ruins.
+          // Assim, mesmo se 1 endereço for inválido, os outros 99 do chunk são enviados.
           for (const r of chunk) {
-            errors.push({ email: r.email, error: errMsg })
-            await supabase.from('email_send_log').insert({
-              template_name: 'brevo_bulk',
-              recipient_email: r.email,
-              status: 'failed',
-              error_message: errMsg,
-              metadata: { owner_id: userId, provider: 'brevo', brevo_response: data },
-            })
+            const singlePayload = {
+              sender: { email: senderEmail, name: senderName || senderEmail },
+              subject,
+              ...(htmlContent ? { htmlContent } : {}),
+              ...(textContent ? { textContent } : {}),
+              to: [{ email: r.email, name: r.name || r.email }],
+              ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+            }
+            try {
+              const singleResp = await fetch(BREVO_URL, {
+                method: 'POST',
+                headers: { 'api-key': apiKey, 'Content-Type': 'application/json', accept: 'application/json' },
+                body: JSON.stringify(singlePayload),
+              })
+              const singleData = await singleResp.json().catch(() => ({}))
+              if (!singleResp.ok) {
+                failed++
+                const sErr = (singleData?.message || singleData?.code || `HTTP ${singleResp.status}`).toString().slice(0, 500)
+                errors.push({ email: r.email, error: sErr })
+                await supabase.from('email_send_log').insert({
+                  template_name: 'brevo_bulk',
+                  recipient_email: r.email,
+                  status: 'failed',
+                  error_message: sErr,
+                  metadata: { owner_id: userId, provider: 'brevo', brevo_response: singleData, fallback: true },
+                })
+              } else {
+                sent++
+                await supabase.from('email_send_log').insert({
+                  template_name: 'brevo_bulk',
+                  recipient_email: r.email,
+                  status: 'sent',
+                  metadata: { owner_id: userId, provider: 'brevo', messageId: singleData?.messageId, fallback: true },
+                })
+              }
+            } catch (sErr) {
+              failed++
+              const m = sErr instanceof Error ? sErr.message : String(sErr)
+              errors.push({ email: r.email, error: m })
+              await supabase.from('email_send_log').insert({
+                template_name: 'brevo_bulk',
+                recipient_email: r.email,
+                status: 'failed',
+                error_message: m.slice(0, 500),
+                metadata: { owner_id: userId, provider: 'brevo', fallback: true },
+              })
+            }
+            // pequena pausa entre envios individuais
+            await new Promise((res) => setTimeout(res, 50))
           }
         } else {
           sent += chunk.length
