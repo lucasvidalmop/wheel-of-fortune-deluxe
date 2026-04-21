@@ -218,6 +218,7 @@ function Dashboard() {
   const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false, expires_at: '' });
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
+  const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'default_style'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
@@ -6195,6 +6196,12 @@ function Dashboard() {
                             <Palette size={12} /> Personalizar
                           </button>
                           <button
+                            onClick={() => setAnalyticsReferral(link)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-500/15 text-sky-300 text-[10px] hover:bg-sky-500/25 transition"
+                          >
+                            <BarChart3 size={12} /> Analytics
+                          </button>
+                          <button
                             onClick={() => handleToggleReferral(link.id, link.is_active)}
                             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition ${link.is_active ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25' : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'}`}
                           >
@@ -6225,6 +6232,16 @@ function Dashboard() {
               currentConfig={customizingReferral.page_config || {}}
               onClose={() => setCustomizingReferral(null)}
               onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
+            />
+          )}
+
+          {analyticsReferral && session?.user?.id && (
+            <ReferralAnalyticsModal
+              linkId={analyticsReferral.id}
+              linkLabel={analyticsReferral.label}
+              linkCode={analyticsReferral.code}
+              ownerId={session.user.id}
+              onClose={() => setAnalyticsReferral(null)}
             />
           )}
 
