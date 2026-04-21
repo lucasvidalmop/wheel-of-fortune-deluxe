@@ -74,6 +74,33 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [fixingImages, setFixingImages] = useState(false);
   const htmlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const replaceOrInsertHtmlImage = (publicUrl: string) => {
+    const imgSrcRegex = /(<img\b[^>]*\bsrc\s*=\s*)(["'])([^"']*)(\2)([^>]*>)/i;
+    const tag = `<img src="${publicUrl}" alt="" style="max-width:100%;height:auto;display:block;" />`;
+
+    if (imgSrcRegex.test(htmlContent)) {
+      setHtmlContent((prev) => prev.replace(imgSrcRegex, `$1$2${publicUrl}$4$5`));
+      return 'replaced';
+    }
+
+    const ta = htmlTextareaRef.current;
+    if (ta && contentMode === 'html') {
+      const start = ta.selectionStart ?? htmlContent.length;
+      const end = ta.selectionEnd ?? htmlContent.length;
+      const next = htmlContent.slice(0, start) + tag + htmlContent.slice(end);
+      setHtmlContent(next);
+      requestAnimationFrame(() => {
+        ta.focus();
+        const pos = start + tag.length;
+        ta.setSelectionRange(pos, pos);
+      });
+    } else {
+      setHtmlContent((prev) => prev + '\n' + tag);
+      setContentMode('html');
+    }
+    return 'inserted';
+  };
+
   const handleHtmlFileUpload = (file: File) => {
     if (!/\.html?$/i.test(file.name) && file.type !== 'text/html') {
       toast.error('Selecione um arquivo .html');
@@ -98,23 +125,8 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     setUploadingImage(true);
     try {
       const { publicUrl } = await uploadAppAsset(file, 'brevo-emails');
-      const tag = `<img src="${publicUrl}" alt="" style="max-width:100%;height:auto;display:block;" />`;
-      const ta = htmlTextareaRef.current;
-      if (ta && contentMode === 'html') {
-        const start = ta.selectionStart ?? htmlContent.length;
-        const end = ta.selectionEnd ?? htmlContent.length;
-        const next = htmlContent.slice(0, start) + tag + htmlContent.slice(end);
-        setHtmlContent(next);
-        requestAnimationFrame(() => {
-          ta.focus();
-          const pos = start + tag.length;
-          ta.setSelectionRange(pos, pos);
-        });
-      } else {
-        setHtmlContent((prev) => prev + '\n' + tag);
-        setContentMode('html');
-      }
-      toast.success('Imagem enviada e inserida no HTML');
+      const action = replaceOrInsertHtmlImage(publicUrl);
+      toast.success(action === 'replaced' ? 'Imagem quebrada substituída no HTML' : 'Imagem enviada e inserida no HTML');
     } catch (e: any) {
       toast.error(`Falha ao enviar imagem: ${e?.message || 'erro desconhecido'}`);
     } finally {
