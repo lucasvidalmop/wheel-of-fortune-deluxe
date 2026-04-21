@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Upload, Send, FileText, Eye, Loader2 } from 'lucide-react';
+import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square } from 'lucide-react';
 
 type Recipient = { email: string; name?: string };
 type Source = 'csv' | 'contacts' | 'wheel_users';
@@ -21,6 +21,10 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [lastResult, setLastResult] = useState<{ total: number; sent: number; failed: number } | null>(null);
+  const [availableContacts, setAvailableContacts] = useState<Recipient[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
 
   const csvRecipients = useMemo<Recipient[]>(() => {
     if (!csvText.trim()) return [];
@@ -44,28 +48,94 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     reader.readAsText(file);
   };
 
+  // Load contacts when source changes (for non-csv)
+  useEffect(() => {
+    if (source === 'csv' || !ownerId) {
+      setAvailableContacts([]);
+      setSelectedEmails(new Set());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setContactsLoading(true);
+      try {
+        let recipients: Recipient[] = [];
+        if (source === 'wheel_users') {
+          const { data } = await supabase
+            .from('wheel_users')
+            .select('email, name')
+            .eq('owner_id', ownerId)
+            .eq('archived', false)
+            .order('created_at', { ascending: false })
+            .limit(5000);
+          recipients = (data ?? [])
+            .filter((r: any) => r.email)
+            .map((r: any) => ({ email: r.email, name: r.name }));
+        } else if (source === 'contacts') {
+          const { data } = await supabase
+            .from('imported_contacts')
+            .select('numero, lead')
+            .eq('owner_id', ownerId)
+            .limit(5000);
+          recipients = (data ?? [])
+            .filter((r: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.numero || ''))
+            .map((r: any) => ({ email: r.numero, name: r.lead }));
+        }
+        // Dedup by email
+        const seen = new Set<string>();
+        const unique = recipients.filter((r) => {
+          const k = r.email.toLowerCase();
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+        if (!cancelled) {
+          setAvailableContacts(unique);
+          setSelectedEmails(new Set(unique.map((r) => r.email.toLowerCase())));
+        }
+      } catch (e) {
+        if (!cancelled) toast.error('Erro ao carregar contatos.');
+      } finally {
+        if (!cancelled) setContactsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [source, ownerId]);
+
+  const filteredContacts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return availableContacts;
+    return availableContacts.filter(
+      (r) => r.email.toLowerCase().includes(q) || (r.name || '').toLowerCase().includes(q)
+    );
+  }, [availableContacts, search]);
+
+  const toggleEmail = (email: string) => {
+    const k = email.toLowerCase();
+    setSelectedEmails((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  };
+
+  const toggleSelectAllFiltered = () => {
+    const filteredKeys = filteredContacts.map((r) => r.email.toLowerCase());
+    const allSelected = filteredKeys.every((k) => selectedEmails.has(k));
+    setSelectedEmails((prev) => {
+      const next = new Set(prev);
+      if (allSelected) filteredKeys.forEach((k) => next.delete(k));
+      else filteredKeys.forEach((k) => next.add(k));
+      return next;
+    });
+  };
+
   const fetchRecipients = async (): Promise<Recipient[]> => {
     if (source === 'csv') return csvRecipients;
-    if (!ownerId) return [];
-    if (source === 'wheel_users') {
-      const { data } = await supabase
-        .from('wheel_users')
-        .select('email, name')
-        .eq('owner_id', ownerId)
-        .eq('archived', false);
-      return (data ?? []).filter((r: any) => r.email).map((r: any) => ({ email: r.email, name: r.name }));
-    }
-    if (source === 'contacts') {
-      // imported_contacts only has 'numero' — try to use it as email if it looks like one
-      const { data } = await supabase
-        .from('imported_contacts')
-        .select('numero, lead')
-        .eq('owner_id', ownerId);
-      return (data ?? [])
-        .filter((r: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.numero || ''))
-        .map((r: any) => ({ email: r.numero, name: r.lead }));
-    }
-    return [];
+    return availableContacts.filter((r) => selectedEmails.has(r.email.toLowerCase()));
   };
 
   const handleSend = async () => {
@@ -252,9 +322,78 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
         )}
 
         {source !== 'csv' && (
-          <p className="text-[11px] text-muted-foreground">
-            Os emails serão buscados automaticamente do banco no momento do envio.
-          </p>
+          <div className="space-y-2">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Pesquisar por email ou nome..."
+                className="w-full pl-8 pr-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+
+            {contactsLoading ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground text-xs">
+                <Loader2 size={14} className="animate-spin mr-2" /> Carregando contatos...
+              </div>
+            ) : availableContacts.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground py-4 text-center">
+                Nenhum contato com email válido encontrado.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={toggleSelectAllFiltered}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-white/[0.05] text-foreground"
+                  >
+                    {filteredContacts.every((r) => selectedEmails.has(r.email.toLowerCase())) && filteredContacts.length > 0 ? (
+                      <CheckSquare size={13} className="text-primary" />
+                    ) : (
+                      <Square size={13} />
+                    )}
+                    {filteredContacts.every((r) => selectedEmails.has(r.email.toLowerCase())) && filteredContacts.length > 0
+                      ? 'Desmarcar todos'
+                      : 'Selecionar todos'}
+                  </button>
+                  <span>
+                    <span className="text-primary font-semibold">{selectedEmails.size}</span> de {availableContacts.length} selecionado(s)
+                  </span>
+                </div>
+
+                <div className="max-h-72 overflow-y-auto rounded-lg border border-white/[0.08] bg-white/[0.02] divide-y divide-white/[0.05]">
+                  {filteredContacts.slice(0, 500).map((r) => {
+                    const k = r.email.toLowerCase();
+                    const checked = selectedEmails.has(k);
+                    return (
+                      <label
+                        key={k}
+                        className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-white/[0.04]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleEmail(r.email)}
+                          className="accent-primary"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-foreground">{r.name || '—'}</div>
+                          <div className="truncate text-[10px] text-muted-foreground">{r.email}</div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                  {filteredContacts.length > 500 && (
+                    <div className="px-3 py-2 text-[10px] text-muted-foreground text-center">
+                      Mostrando primeiros 500 de {filteredContacts.length} resultados. Refine a busca.
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         )}
       </GlassCard>
 
