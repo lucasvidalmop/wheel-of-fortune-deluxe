@@ -15,7 +15,9 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [senderName, setSenderName] = useState('');
   const [replyTo, setReplyTo] = useState('');
   const [subject, setSubject] = useState('');
+  const [contentMode, setContentMode] = useState<'html' | 'text'>('html');
   const [htmlContent, setHtmlContent] = useState('<p>Olá {{NOME}},</p>\n<p>Sua mensagem aqui.</p>');
+  const [textContent, setTextContent] = useState('Olá {{NOME}},\n\nSua mensagem aqui.');
   const [source, setSource] = useState<Source>('csv');
   const [csvText, setCsvText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -139,8 +141,9 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   };
 
   const handleSend = async () => {
-    if (!senderEmail.trim() || !subject.trim() || !htmlContent.trim()) {
-      toast.error('Preencha remetente, assunto e conteúdo HTML.');
+    const body = contentMode === 'html' ? htmlContent : textContent;
+    if (!senderEmail.trim() || !subject.trim() || !body.trim()) {
+      toast.error('Preencha remetente, assunto e conteúdo.');
       return;
     }
     const recipients = await fetchRecipients();
@@ -159,7 +162,7 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
           senderName: senderName.trim() || senderEmail.trim(),
           replyTo: replyTo.trim() || undefined,
           subject: subject.trim(),
-          htmlContent,
+          ...(contentMode === 'html' ? { htmlContent } : { textContent }),
           recipients,
         },
       });
@@ -177,12 +180,13 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     }
   };
 
-  const previewHtml = useMemo(() => {
+  const previewContent = useMemo(() => {
     const sample = csvRecipients[0] || { email: 'exemplo@email.com', name: 'Exemplo' };
-    return htmlContent
+    const raw = contentMode === 'html' ? htmlContent : textContent;
+    return raw
       .split('{{NOME}}').join(sample.name || 'Cliente')
       .split('{{EMAIL}}').join(sample.email);
-  }, [htmlContent, csvRecipients]);
+  }, [htmlContent, textContent, contentMode, csvRecipients]);
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -243,30 +247,67 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-xs font-medium text-muted-foreground">Conteúdo HTML *</label>
-            <button
-              type="button"
-              onClick={() => setShowPreview(!showPreview)}
-              className="text-[11px] text-primary hover:underline flex items-center gap-1"
-            >
-              <Eye size={12} /> {showPreview ? 'Ocultar' : 'Pré-visualizar'}
-            </button>
+            <label className="text-xs font-medium text-muted-foreground">Conteúdo *</label>
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-lg border border-white/[0.08] bg-white/[0.04] p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setContentMode('html')}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
+                    contentMode === 'html' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  HTML
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContentMode('text')}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
+                    contentMode === 'text' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Texto simples
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-[11px] text-primary hover:underline flex items-center gap-1"
+              >
+                <Eye size={12} /> {showPreview ? 'Ocultar' : 'Pré-visualizar'}
+              </button>
+            </div>
           </div>
-          <textarea
-            value={htmlContent}
-            onChange={(e) => setHtmlContent(e.target.value)}
-            rows={8}
-            className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
+          {contentMode === 'html' ? (
+            <textarea
+              value={htmlContent}
+              onChange={(e) => setHtmlContent(e.target.value)}
+              rows={8}
+              className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          ) : (
+            <textarea
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+              rows={8}
+              placeholder="Digite sua mensagem em texto simples..."
+              className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          )}
           <p className="text-[10px] text-muted-foreground mt-1">
             Variáveis: <code className="text-primary">{'{{NOME}}'}</code> e <code className="text-primary">{'{{EMAIL}}'}</code>
+            {contentMode === 'text' && ' • Quebras de linha são preservadas.'}
           </p>
         </div>
 
         {showPreview && (
           <div className="border border-white/[0.08] rounded-lg p-4 bg-white">
             <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Preview</div>
-            <div className="text-black text-sm" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            {contentMode === 'html' ? (
+              <div className="text-black text-sm" dangerouslySetInnerHTML={{ __html: previewContent }} />
+            ) : (
+              <pre className="text-black text-sm whitespace-pre-wrap font-sans">{previewContent}</pre>
+            )}
           </div>
         )}
       </GlassCard>
