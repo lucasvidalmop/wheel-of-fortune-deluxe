@@ -71,6 +71,7 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [search, setSearch] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [fixingImages, setFixingImages] = useState(false);
   const htmlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleHtmlFileUpload = (file: File) => {
