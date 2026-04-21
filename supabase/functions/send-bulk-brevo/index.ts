@@ -104,7 +104,8 @@ Deno.serve(async (req) => {
       const payload = {
         sender: { email: senderEmail, name: senderName || senderEmail },
         subject,
-        htmlContent,
+        ...(htmlContent ? { htmlContent } : {}),
+        ...(textContent ? { textContent } : {}),
         messageVersions,
         ...(replyTo ? { replyTo: { email: replyTo } } : {}),
       }
