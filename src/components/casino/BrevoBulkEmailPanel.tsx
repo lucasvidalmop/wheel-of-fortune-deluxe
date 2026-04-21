@@ -48,28 +48,94 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     reader.readAsText(file);
   };
 
+  // Load contacts when source changes (for non-csv)
+  useEffect(() => {
+    if (source === 'csv' || !ownerId) {
+      setAvailableContacts([]);
+      setSelectedEmails(new Set());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setContactsLoading(true);
+      try {
+        let recipients: Recipient[] = [];
+        if (source === 'wheel_users') {
+          const { data } = await supabase
+            .from('wheel_users')
+            .select('email, name')
+            .eq('owner_id', ownerId)
+            .eq('archived', false)
+            .order('created_at', { ascending: false })
+            .limit(5000);
+          recipients = (data ?? [])
+            .filter((r: any) => r.email)
+            .map((r: any) => ({ email: r.email, name: r.name }));
+        } else if (source === 'contacts') {
+          const { data } = await supabase
+            .from('imported_contacts')
+            .select('numero, lead')
+            .eq('owner_id', ownerId)
+            .limit(5000);
+          recipients = (data ?? [])
+            .filter((r: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.numero || ''))
+            .map((r: any) => ({ email: r.numero, name: r.lead }));
+        }
+        // Dedup by email
+        const seen = new Set<string>();
+        const unique = recipients.filter((r) => {
+          const k = r.email.toLowerCase();
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+        if (!cancelled) {
+          setAvailableContacts(unique);
+          setSelectedEmails(new Set(unique.map((r) => r.email.toLowerCase())));
+        }
+      } catch (e) {
+        if (!cancelled) toast.error('Erro ao carregar contatos.');
+      } finally {
+        if (!cancelled) setContactsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [source, ownerId]);
+
+  const filteredContacts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return availableContacts;
+    return availableContacts.filter(
+      (r) => r.email.toLowerCase().includes(q) || (r.name || '').toLowerCase().includes(q)
+    );
+  }, [availableContacts, search]);
+
+  const toggleEmail = (email: string) => {
+    const k = email.toLowerCase();
+    setSelectedEmails((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  };
+
+  const toggleSelectAllFiltered = () => {
+    const filteredKeys = filteredContacts.map((r) => r.email.toLowerCase());
+    const allSelected = filteredKeys.every((k) => selectedEmails.has(k));
+    setSelectedEmails((prev) => {
+      const next = new Set(prev);
+      if (allSelected) filteredKeys.forEach((k) => next.delete(k));
+      else filteredKeys.forEach((k) => next.add(k));
+      return next;
+    });
+  };
+
   const fetchRecipients = async (): Promise<Recipient[]> => {
     if (source === 'csv') return csvRecipients;
-    if (!ownerId) return [];
-    if (source === 'wheel_users') {
-      const { data } = await supabase
-        .from('wheel_users')
-        .select('email, name')
-        .eq('owner_id', ownerId)
-        .eq('archived', false);
-      return (data ?? []).filter((r: any) => r.email).map((r: any) => ({ email: r.email, name: r.name }));
-    }
-    if (source === 'contacts') {
-      // imported_contacts only has 'numero' — try to use it as email if it looks like one
-      const { data } = await supabase
-        .from('imported_contacts')
-        .select('numero, lead')
-        .eq('owner_id', ownerId);
-      return (data ?? [])
-        .filter((r: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.numero || ''))
-        .map((r: any) => ({ email: r.numero, name: r.lead }));
-    }
-    return [];
+    return availableContacts.filter((r) => selectedEmails.has(r.email.toLowerCase()));
   };
 
   const handleSend = async () => {
