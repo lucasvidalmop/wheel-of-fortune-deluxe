@@ -40,7 +40,7 @@ interface UserStats {
   links: Set<string>;
 }
 
-const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel }: Props) => {
+const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Props) => {
   const [loading, setLoading] = useState(true);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [users, setUsers] = useState<any[]>([]);
