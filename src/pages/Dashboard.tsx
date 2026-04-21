@@ -53,6 +53,10 @@ interface PersistedDashboardSettings {
   twilioAccountSid: string;
   twilioAuthToken: string;
   twilioPhoneNumber: string;
+  smsCsMessage: string;
+  clicksendUsername: string;
+  clicksendApiKey: string;
+  clicksendSenderId: string;
   whatsappMessage: string;
   whatsappDelaySeconds: number;
   evolutionApiUrl: string;
@@ -99,6 +103,10 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   twilioAccountSid: '',
   twilioAuthToken: '',
   twilioPhoneNumber: '',
+  smsCsMessage: '',
+  clicksendUsername: '',
+  clicksendApiKey: '',
+  clicksendSenderId: '',
   whatsappMessage: '',
   whatsappDelaySeconds: 2,
   evolutionApiUrl: '',
@@ -191,11 +199,11 @@ function Dashboard() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [toolPerms, setToolPerms] = useState<Record<string, boolean>>({
-    roleta: true, sms: true, email: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true,
+    roleta: true, sms: true, sms_cs: true, email: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true,
     inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
@@ -268,6 +276,28 @@ function Dashboard() {
   const [twilioAccountSid, setTwilioAccountSid] = useState('');
   const [twilioAuthToken, setTwilioAuthToken] = useState('');
   const [twilioPhoneNumber, setTwilioPhoneNumber] = useState('');
+
+  // ClickSend (SMS API CS) — separate state, separate log table (sms_cs_message_log)
+  const [smsCsMessage, setSmsCsMessage] = useState('');
+  const [smsCsSending, setSmsCsSending] = useState(false);
+  const [smsCsTarget, setSmsCsTarget] = useState<'all' | 'selected'>('all');
+  const [selectedSmsCsPhones, setSelectedSmsCsPhones] = useState<string[]>([]);
+  const [showSmsCsConfig, setShowSmsCsConfig] = useState(false);
+  const [smsCsSearchTerm, setSmsCsSearchTerm] = useState('');
+  const [smsCsLogs, setSmsCsLogs] = useState<any[]>([]);
+  const [smsCsLogsLoading, setSmsCsLogsLoading] = useState(false);
+  const [showSmsCsHistory, setShowSmsCsHistory] = useState(false);
+  const [smsCsScheduleMode, setSmsCsScheduleMode] = useState(false);
+  const [smsCsSchedDate, setSmsCsSchedDate] = useState<Date | undefined>(undefined);
+  const [smsCsSchedTime, setSmsCsSchedTime] = useState('12:00');
+  const [smsCsSchedRecurrence, setSmsCsSchedRecurrence] = useState<'none' | 'daily' | 'weekly' | 'monthly'>('none');
+  const [smsCsSchedSaving, setSmsCsSchedSaving] = useState(false);
+  const [smsCsScheduledList, setSmsCsScheduledList] = useState<any[]>([]);
+  const [showSmsCsScheduledList, setShowSmsCsScheduledList] = useState(false);
+  const [smsCsSourceMode, setSmsCsSourceMode] = useState<'base' | 'csv'>('base');
+  const [clicksendUsername, setClicksendUsername] = useState('');
+  const [clicksendApiKey, setClicksendApiKey] = useState('');
+  const [clicksendSenderId, setClicksendSenderId] = useState('');
 
   // WhatsApp state
   const [whatsappMessage, setWhatsappMessage] = useState('');
