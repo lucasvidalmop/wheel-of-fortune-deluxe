@@ -180,6 +180,16 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
       const u = users.find(x => x.account_id === r.account_id && x.email?.toLowerCase() === r.email?.toLowerCase())
         || users.find(x => x.account_id === r.account_id)
         || users.find(x => x.email?.toLowerCase() === r.email?.toLowerCase());
+
+      // Filter: only REAL users
+      if (!u || u.user_type !== 'Real') continue;
+
+      const userPayments = payments.filter(p => p.account_id === r.account_id || p.user_email?.toLowerCase() === r.email?.toLowerCase());
+      const paidPayments = userPayments.filter(p => p.status === 'paid');
+
+      // Filter: only users with at least one PAID payment
+      if (paidPayments.length === 0) continue;
+
       const existing = map.get(key);
       if (existing) {
         existing.redemptions += 1;
@@ -188,9 +198,8 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
         if (r.link_code) existing.links.add(r.link_code);
       } else {
         const userSpins = spins.filter(s => s.account_id === r.account_id || s.user_email?.toLowerCase() === r.email?.toLowerCase());
-        const userPayments = payments.filter(p => p.account_id === r.account_id || p.user_email?.toLowerCase() === r.email?.toLowerCase());
         const totalAmount = userPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-        const paidAmount = userPayments.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        const paidAmount = paidPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
         map.set(key, {
           email: r.email,
           account_id: r.account_id,
@@ -201,7 +210,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           firstRedemption: r.created_at,
           lastRedemption: r.created_at,
           spinsTotal: userSpins.length,
-          prizesCount: userPayments.length,
+          prizesCount: paidPayments.length,
           totalAmountWon: totalAmount,
           totalAmountPaid: paidAmount,
           links: new Set(r.link_code ? [r.link_code] : []),
