@@ -213,6 +213,8 @@ function Dashboard() {
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'roleta' | 'referral' | 'gorjeta'>('all');
+  const [analyticsDateFilter, setAnalyticsDateFilter] = useState<string>(''); // YYYY-MM-DD
+  const [analyticsRangeFilter, setAnalyticsRangeFilter] = useState<'all' | 'today' | '7d' | '30d'>('all');
   const [users, setUsers] = useState<WheelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -3379,7 +3381,28 @@ function Dashboard() {
 
           {/* ══════ ANALYTICS TAB ══════ */}
           {activeTab === 'analytics' && (() => {
-            const filtered = analyticsFilter === 'all' ? pageViews : pageViews.filter((v: any) => (v.page_type || 'roleta') === analyticsFilter);
+            // Date range filtering
+            const dayKey = (dateStr: string) => {
+              const d = new Date(dateStr);
+              return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            };
+            const nowRef = new Date();
+            const rangeCutoff = (() => {
+              if (analyticsRangeFilter === 'today') {
+                const d = new Date(nowRef); d.setHours(0, 0, 0, 0); return d.getTime();
+              }
+              if (analyticsRangeFilter === '7d') return nowRef.getTime() - 7 * 86400000;
+              if (analyticsRangeFilter === '30d') return nowRef.getTime() - 30 * 86400000;
+              return null;
+            })();
+            const dateFiltered = pageViews.filter((v: any) => {
+              if (analyticsDateFilter && dayKey(v.created_at) !== analyticsDateFilter) return false;
+              if (rangeCutoff !== null && new Date(v.created_at).getTime() < rangeCutoff) return false;
+              return true;
+            });
+            const filtered = analyticsFilter === 'all' ? dateFiltered : dateFiltered.filter((v: any) => (v.page_type || 'roleta') === analyticsFilter);
+            // Available unique dates for dropdown
+            const availableDates = Array.from(new Set(pageViews.map((v: any) => dayKey(v.created_at)))).sort().reverse();
             const total = filtered.length;
             const uniqueIPs = new Set(filtered.map((v: any) => v.ip_address)).size;
             const avgDuration = total > 0 ? Math.round(filtered.reduce((s: number, v: any) => s + (v.duration_seconds || 0), 0) / total) : 0;
@@ -3434,6 +3457,60 @@ function Dashboard() {
 
             return (
             <div className="space-y-4">
+              {/* Date filter */}
+              <GlassCard className="p-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon size={16} className="text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Período:</span>
+                  </div>
+                  {([
+                    { key: 'all', label: 'Tudo' },
+                    { key: 'today', label: 'Hoje' },
+                    { key: '7d', label: '7 dias' },
+                    { key: '30d', label: '30 dias' },
+                  ] as const).map(r => (
+                    <button
+                      key={r.key}
+                      onClick={() => { setAnalyticsRangeFilter(r.key); setAnalyticsDateFilter(''); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${analyticsRangeFilter === r.key && !analyticsDateFilter ? 'bg-primary text-primary-foreground' : 'bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]'}`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                  <div className="h-6 w-px bg-white/10 mx-1" />
+                  <input
+                    type="date"
+                    value={analyticsDateFilter}
+                    onChange={(e) => { setAnalyticsDateFilter(e.target.value); setAnalyticsRangeFilter('all'); }}
+                    className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-sm text-foreground"
+                  />
+                  {availableDates.length > 0 && (
+                    <select
+                      value={analyticsDateFilter}
+                      onChange={(e) => { setAnalyticsDateFilter(e.target.value); setAnalyticsRangeFilter('all'); }}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-sm text-foreground"
+                    >
+                      <option value="">Selecionar dia...</option>
+                      {availableDates.map(d => (
+                        <option key={d} value={d}>{new Date(d + 'T00:00:00').toLocaleDateString('pt-BR')}</option>
+                      ))}
+                    </select>
+                  )}
+                  {(analyticsDateFilter || analyticsRangeFilter !== 'all') && (
+                    <button
+                      onClick={() => { setAnalyticsDateFilter(''); setAnalyticsRangeFilter('all'); }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:bg-white/[0.1]"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {filtered.length} registro{filtered.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </GlassCard>
+
               {/* Filter buttons */}
               <div className="flex items-center gap-2 flex-wrap">
                 {([
@@ -3449,7 +3526,7 @@ function Dashboard() {
                   >
                     {f.label}
                     <span className="ml-1.5 text-xs opacity-70">
-                      ({f.key === 'all' ? pageViews.length : pageViews.filter((v: any) => (v.page_type || 'roleta') === f.key).length})
+                      ({f.key === 'all' ? dateFiltered.length : dateFiltered.filter((v: any) => (v.page_type || 'roleta') === f.key).length})
                     </span>
                   </button>
                 ))}
