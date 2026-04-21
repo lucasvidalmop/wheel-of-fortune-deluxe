@@ -527,12 +527,23 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
         </div>
 
         {showPreview && (
-          <div className="border border-white/[0.08] rounded-lg p-4 bg-white">
-            <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Preview</div>
+          <div className="border border-white/[0.08] rounded-lg overflow-hidden bg-white">
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider">Preview do email</div>
+              <div className="text-[10px] text-gray-400">
+                {contentMode === 'html' ? 'renderização real' : 'texto simples'}
+              </div>
+            </div>
             {contentMode === 'html' ? (
-              <div className="text-black text-sm" dangerouslySetInnerHTML={{ __html: previewContent }} />
+              <iframe
+                title="Preview do email"
+                srcDoc={previewContent}
+                sandbox=""
+                className="w-full bg-white"
+                style={{ height: 480, border: 0 }}
+              />
             ) : (
-              <pre className="text-black text-sm whitespace-pre-wrap font-sans">{previewContent}</pre>
+              <pre className="text-black text-sm whitespace-pre-wrap font-sans p-4">{previewContent}</pre>
             )}
           </div>
         )}
