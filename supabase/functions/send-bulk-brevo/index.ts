@@ -24,7 +24,9 @@ interface Payload {
   replyTo?: string
 }
 
-const CHUNK_SIZE = 100
+// Brevo permite até 1000 destinatários por chamada via messageVersions.
+// Usamos 1000 para máxima eficiência em disparos em massa (>500).
+const CHUNK_SIZE = 1000
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email'
 
 Deno.serve(async (req) => {
