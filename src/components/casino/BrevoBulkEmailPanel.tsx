@@ -15,7 +15,9 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [senderName, setSenderName] = useState('');
   const [replyTo, setReplyTo] = useState('');
   const [subject, setSubject] = useState('');
+  const [contentMode, setContentMode] = useState<'html' | 'text'>('html');
   const [htmlContent, setHtmlContent] = useState('<p>Olá {{NOME}},</p>\n<p>Sua mensagem aqui.</p>');
+  const [textContent, setTextContent] = useState('Olá {{NOME}},\n\nSua mensagem aqui.');
   const [source, setSource] = useState<Source>('csv');
   const [csvText, setCsvText] = useState('');
   const [loading, setLoading] = useState(false);
