@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
-import ReferralAnalyticsModal from '@/components/casino/ReferralAnalyticsModal';
+import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
@@ -219,7 +219,7 @@ function Dashboard() {
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
-  const [referralSubTab, setReferralSubTab] = useState<'links' | 'default_style'>('links');
+  const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -5907,6 +5907,7 @@ function Dashboard() {
               <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
                 {([
                   { key: 'links' as const, label: '🔗 Links', icon: Link2 },
+                  { key: 'analytics' as const, label: '📊 Analytics', icon: BarChart3 },
                   { key: 'default_style' as const, label: '🎨 Visual Padrão', icon: Palette },
                 ] as const).map(tab => (
                   <button
@@ -5930,6 +5931,12 @@ function Dashboard() {
                     currentConfig={defaultReferralConfig}
                     onSaved={(cfg) => setDefaultReferralConfig(cfg)}
                   />
+                </GlassCard>
+              )}
+
+              {referralSubTab === 'analytics' && (
+                <GlassCard className="p-5">
+                  <ReferralAnalyticsPanel ownerId={session.user.id} />
                 </GlassCard>
               )}
 
@@ -6236,13 +6243,22 @@ function Dashboard() {
           )}
 
           {analyticsReferral && session?.user?.id && (
-            <ReferralAnalyticsModal
-              linkId={analyticsReferral.id}
-              linkLabel={analyticsReferral.label}
-              linkCode={analyticsReferral.code}
-              ownerId={session.user.id}
-              onClose={() => setAnalyticsReferral(null)}
-            />
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAnalyticsReferral(null)} />
+              <div className="relative w-full max-w-5xl max-h-[90vh] bg-background border border-white/[0.08] rounded-2xl shadow-2xl overflow-y-auto p-5" style={{ scrollbarWidth: 'thin' }}>
+                <button
+                  onClick={() => setAnalyticsReferral(null)}
+                  className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition z-10"
+                >
+                  <X size={18} />
+                </button>
+                <ReferralAnalyticsPanel
+                  ownerId={session.user.id}
+                  linkId={analyticsReferral.id}
+                  scopeLabel={`${analyticsReferral.label || 'Link'} • ${analyticsReferral.code}`}
+                />
+              </div>
+            </div>
           )}
 
           {/* ══════ GORJETA TAB ══════ */}

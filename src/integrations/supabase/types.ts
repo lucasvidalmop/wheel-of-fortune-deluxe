@@ -528,7 +528,10 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          referral_link_id: string
+          link_code: string | null
+          link_label: string | null
+          owner_id: string | null
+          referral_link_id: string | null
         }
         Insert: {
           account_id: string
@@ -536,7 +539,10 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
-          referral_link_id: string
+          link_code?: string | null
+          link_label?: string | null
+          owner_id?: string | null
+          referral_link_id?: string | null
         }
         Update: {
           account_id?: string
@@ -544,7 +550,10 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
-          referral_link_id?: string
+          link_code?: string | null
+          link_label?: string | null
+          owner_id?: string | null
+          referral_link_id?: string | null
         }
         Relationships: [
           {
