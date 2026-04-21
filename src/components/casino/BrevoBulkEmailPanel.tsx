@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Upload, Send, FileText, Eye, Loader2 } from 'lucide-react';
+import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square } from 'lucide-react';
 
 type Recipient = { email: string; name?: string };
 type Source = 'csv' | 'contacts' | 'wheel_users';
