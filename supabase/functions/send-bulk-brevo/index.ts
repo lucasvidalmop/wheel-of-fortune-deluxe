@@ -19,7 +19,8 @@ interface Payload {
   senderEmail: string
   senderName: string
   subject: string
-  htmlContent: string
+  htmlContent?: string
+  textContent?: string
   recipients: Recipient[]
   replyTo?: string
 }
