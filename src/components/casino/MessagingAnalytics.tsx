@@ -6,6 +6,8 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { toast } from 'sonner';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
@@ -32,10 +34,12 @@ type ChannelFilter = 'all' | 'sms' | 'whatsapp' | 'email';
 type PeriodFilter = '7d' | '30d' | '90d' | 'all';
 
 export default function MessagingAnalytics({ ownerId }: Props) {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [smsLogs, setSmsLogs] = useState<LogEntry[]>([]);
   const [waLogs, setWaLogs] = useState<LogEntry[]>([]);
   const [emailLogs, setEmailLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingFailures, setDeletingFailures] = useState(false);
   const [channel, setChannel] = useState<ChannelFilter>('all');
   const [period, setPeriod] = useState<PeriodFilter>('30d');
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
@@ -230,6 +234,53 @@ export default function MessagingAnalytics({ ownerId }: Props) {
       .slice(0, 5);
   }, [allFiltered]);
 
+  const failedForSelectedDay = useMemo(() => {
+    if (!selectedDate) return 0;
+    return allFiltered.filter(l => l.status !== 'sent').length;
+  }, [allFiltered, selectedDate]);
+
+  const handleDeleteFailures = async () => {
+    if (!selectedDate || failedForSelectedDay === 0) return;
+
+    const readableChannel = channel === 'all'
+      ? 'todos os canais'
+      : channel === 'whatsapp'
+        ? 'WhatsApp'
+        : channel === 'sms'
+          ? 'SMS'
+          : 'Email';
+
+    const confirmed = await confirm({
+      title: 'Excluir histórico de falhas',
+      message: `Excluir ${failedForSelectedDay} falha(s) de ${readableChannel} em ${format(selectedDate, 'dd/MM/yyyy')}?\nEssa ação não pode ser desfeita.`,
+      confirmLabel: 'Excluir falhas',
+      cancelLabel: 'Cancelar',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
+
+    setDeletingFailures(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-message-failures', {
+        body: {
+          date: format(selectedDate, 'yyyy-MM-dd'),
+          channel,
+        },
+      });
+
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Erro ao excluir falhas');
+
+      const deletedCount = Number(data?.deleted_count || 0);
+      toast.success(`${deletedCount} falha(s) excluída(s) de ${format(selectedDate, 'dd/MM/yyyy')}.`);
+      await fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Não foi possível excluir as falhas.');
+    } finally {
+      setDeletingFailures(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -240,6 +291,7 @@ export default function MessagingAnalytics({ ownerId }: Props) {
 
   return (
     <div className="space-y-5">
+      {ConfirmDialog}
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         {([
@@ -292,6 +344,17 @@ export default function MessagingAnalytics({ ownerId }: Props) {
         {selectedDate && (
           <button onClick={() => setSelectedDate(undefined)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition" title="Limpar filtro de data">
             <X size={14} />
+          </button>
+        )}
+        {selectedDate && failedForSelectedDay > 0 && (
+          <button
+            onClick={handleDeleteFailures}
+            disabled={deletingFailures}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 disabled:opacity-50 disabled:pointer-events-none"
+            title="Excluir histórico de falhas do dia selecionado"
+          >
+            <AlertTriangle size={12} />
+            {deletingFailures ? 'Excluindo...' : `Excluir falhas (${failedForSelectedDay})`}
           </button>
         )}
         <button onClick={fetchAll} className="ml-auto p-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition" title="Atualizar">
