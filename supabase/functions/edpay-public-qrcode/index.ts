@@ -105,6 +105,11 @@ Deno.serve(async (req) => {
 
     // Step 2: Generate QR Code PIX
     const descText = description || `Depósito - ${userName || "Cliente"}`;
+    const webhookSecret = Deno.env.get("EDPAY_WEBHOOK_SECRET") || "";
+    const callbackUrl = webhookSecret
+      ? `${supabaseUrl}/functions/v1/edpay/webhook?secret=${encodeURIComponent(webhookSecret)}`
+      : `${supabaseUrl}/functions/v1/edpay/webhook`;
+
     const qrResponse = await fetch("https://api.edpay.me/qrcode", {
       method: "POST",
       headers: {
@@ -114,7 +119,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: amountNum,
         description: descText,
-        callback: `${supabaseUrl}/functions/v1/edpay/webhook`,
+        callback: callbackUrl,
       }),
     });
 
