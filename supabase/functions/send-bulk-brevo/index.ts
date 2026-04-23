@@ -295,14 +295,14 @@ Deno.serve(async (req) => {
             status: 'sent',
             metadata: { owner_id: userId, provider: 'brevo', messageId: data?.messageId, messageIds: data?.messageIds },
           }))
-          await supabase.from('email_send_log').insert(rows)
+           await adminSupabase.from('email_send_log').insert(rows)
         }
       } catch (err) {
         failed += chunk.length
         const errMsg = err instanceof Error ? err.message : String(err)
         for (const r of chunk) {
           errors.push({ email: r.email, error: errMsg })
-          await supabase.from('email_send_log').insert({
+           await adminSupabase.from('email_send_log').insert({
             template_name: 'brevo_bulk',
             recipient_email: r.email,
             status: 'failed',
