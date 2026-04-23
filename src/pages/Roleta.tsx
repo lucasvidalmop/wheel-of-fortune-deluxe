@@ -23,6 +23,7 @@ const Roleta = () => {
 
   const [spinsRemaining, setSpinsRemaining] = useState<number | null>(null);
   const [canSpin, setCanSpin] = useState(false);
+  const [isResolvingSpin, setIsResolvingSpin] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
@@ -467,9 +468,12 @@ const Roleta = () => {
 
   const handleSpinEnd = async (segmentIndex: number) => {
     const seg = config.segments[segmentIndex];
-    if (!seg) return;
+    if (!seg || !accountId || isResolvingSpin) return;
 
-    if (accountId) {
+    setIsResolvingSpin(true);
+    setCanSpin(false);
+
+    try {
       const { data: spinResultId } = await (supabase as any).rpc('record_spin_result', {
         p_account_id: accountId,
         p_user_name: userName || '',
@@ -541,9 +545,25 @@ const Roleta = () => {
       if (row) {
         setSpinsRemaining(row.spins_available);
         setCanSpin(row.spins_available >= 1);
+        setMessage(row.spins_available < 1 ? 'Sem giros disponíveis' : '');
         if (!ownerId && row.owner_id) setOwnerId(row.owner_id);
-        if (row.spins_available < 1) setMessage('Sem giros disponíveis');
       }
+    } catch (error) {
+      console.error('Failed to resolve spin:', error);
+
+      const { data: refreshData } = await (supabase as any).rpc('get_wheel_user_spins', {
+        p_account_id: accountId,
+        p_owner_id: ownerId || null,
+      });
+      const refreshedRow = Array.isArray(refreshData) ? refreshData[0] : refreshData;
+      if (refreshedRow) {
+        setSpinsRemaining(refreshedRow.spins_available);
+        setCanSpin(refreshedRow.spins_available >= 1);
+        setMessage(refreshedRow.spins_available < 1 ? 'Sem giros disponíveis' : '');
+        if (!ownerId && refreshedRow.owner_id) setOwnerId(refreshedRow.owner_id);
+      }
+    } finally {
+      setIsResolvingSpin(false);
     }
 
     // Auto-redirect invisível após ver o prêmio
@@ -797,7 +817,7 @@ const Roleta = () => {
           <PremiumWheel
             config={config}
             onSpinEnd={handleSpinEnd}
-            disabled={accountId ? !canSpin : false}
+            disabled={accountId ? (!canSpin || isResolvingSpin) : false}
             forcedSegment={
               fixedPrizeEnabled ? fixedPrizeSegment
               : (isBlacklisted && (config as any).blacklistFixedSegmentEnabled && (config as any).blacklistFixedSegment != null)
