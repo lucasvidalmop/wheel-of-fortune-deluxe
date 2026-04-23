@@ -35,6 +35,7 @@ const Roleta = () => {
   const [showPrizeHistory, setShowPrizeHistory] = useState(false);
   const [prizeHistory, setPrizeHistory] = useState<any[]>([]);
   const [prizeHistoryLoading, setPrizeHistoryLoading] = useState(false);
+  const [claimedForcedSegment, setClaimedForcedSegment] = useState<number | null>(null);
 
   const maskId = (id: string) => {
     if (id.length <= 3) return '***';
@@ -531,7 +532,8 @@ const Roleta = () => {
         }
       }
 
-      const { data: decrementData } = await (supabase as any).rpc('decrement_wheel_user_spins', {
+      const decrementRpc = claimedForcedSegment == null ? 'decrement_wheel_user_spins' : 'decrement_claimed_spin';
+      const { data: decrementData } = await (supabase as any).rpc(decrementRpc, {
         p_account_id: accountId,
         p_owner_id: ownerId || null,
       });
@@ -576,6 +578,7 @@ const Roleta = () => {
         if (!ownerId && refreshedRow.owner_id) setOwnerId(refreshedRow.owner_id);
       }
     } finally {
+      setClaimedForcedSegment(null);
       setIsResolvingSpin(false);
     }
 
@@ -602,6 +605,50 @@ const Roleta = () => {
   const openPrizeHistory = () => {
     fetchPrizeHistory();
     setShowPrizeHistory(true);
+  };
+
+  const resolveSpinTarget = useCallback(async () => {
+    if (!accountId) return forcedPrizeFallback();
+
+    if (!fixedPrizeEnabled || fixedPrizeSegment == null) {
+      return forcedPrizeFallback();
+    }
+
+    const { data, error } = await (supabase as any).rpc('consume_fixed_prize_spin', {
+      p_account_id: accountId,
+      p_owner_id: ownerId || null,
+    });
+
+    if (error) {
+      console.error('Failed to consume fixed prize spin:', error);
+      toast.error('Erro ao aplicar prêmio pré-definido');
+      throw error;
+    }
+
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row || row.segment_index == null) {
+      toast.error('Nenhum prêmio pré-definido disponível para este giro');
+      throw new Error('No predefined prize available');
+    }
+
+    setClaimedForcedSegment(row.segment_index);
+    setSpinsRemaining(row.spins_available ?? null);
+    setCanSpin(false);
+    setFixedPrizeEnabled(row.fixed_prize_enabled ?? false);
+    setFixedPrizeSegment(row.fixed_prize_segment ?? null);
+    setIsBlacklisted(row.blacklisted ?? false);
+    if (!ownerId && row.owner_id) setOwnerId(row.owner_id);
+    setMessage((row.spins_available ?? 0) < 1 ? 'Sem giros disponíveis' : '');
+
+    return row.segment_index;
+  }, [accountId, fixedPrizeEnabled, fixedPrizeSegment, ownerId]);
+
+  const forcedPrizeFallback = () => {
+    if (fixedPrizeEnabled && fixedPrizeSegment != null) return fixedPrizeSegment;
+    if (isBlacklisted && (config as any).blacklistFixedSegmentEnabled && (config as any).blacklistFixedSegment != null) {
+      return (config as any).blacklistFixedSegment;
+    }
+    return null;
   };
 
   if (configLoading) {
@@ -831,14 +878,10 @@ const Roleta = () => {
             config={config}
             onSpinEnd={handleSpinEnd}
             disabled={accountId ? (!canSpin || isResolvingSpin) : false}
-            forcedSegment={
-              fixedPrizeEnabled ? fixedPrizeSegment
-              : (isBlacklisted && (config as any).blacklistFixedSegmentEnabled && (config as any).blacklistFixedSegment != null)
-                ? (config as any).blacklistFixedSegment
-                : null
-            }
+            forcedSegment={claimedForcedSegment ?? forcedPrizeFallback()}
             isMobile={isMobile}
             onShare={handleShare}
+            resolveSpinTarget={resolveSpinTarget}
           />
         </div>
       </div>

@@ -1057,6 +1057,17 @@ export type Database = {
             }
             Returns: Json
           }
+      consume_fixed_prize_spin: {
+        Args: { p_account_id: string; p_owner_id?: string }
+        Returns: {
+          blacklisted: boolean
+          fixed_prize_enabled: boolean
+          fixed_prize_segment: number
+          owner_id: string
+          segment_index: number
+          spins_available: number
+        }[]
+      }
       create_prize_payment:
         | {
             Args: {
@@ -1083,6 +1094,13 @@ export type Database = {
             }
             Returns: Json
           }
+      decrement_claimed_spin: {
+        Args: { p_account_id: string; p_owner_id?: string }
+        Returns: {
+          owner_id: string
+          spins_available: number
+        }[]
+      }
       decrement_wheel_user_spins: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
