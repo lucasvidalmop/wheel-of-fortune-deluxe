@@ -800,7 +800,7 @@ function Dashboard() {
 
   const fetchSmsScheduled = async () => {
     if (!session?.user?.id) return;
-    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).eq('channel', 'sms' as any).order('next_run_at', { ascending: true });
+    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['sms', 'sms_mb'] as any).order('next_run_at', { ascending: true });
     setSmsScheduledList(data || []);
   };
 
@@ -829,7 +829,7 @@ function Dashboard() {
       scheduled_at: scheduledAt.toISOString(),
       next_run_at: scheduledAt.toISOString(),
       recurrence: smsSchedRecurrence,
-      channel: 'sms',
+      channel: smsProvider === 'mobizon' ? 'sms_mb' : 'sms',
     }));
     const { error } = await supabase.from('scheduled_messages').insert(rows as any);
     setSmsSchedSaving(false);
