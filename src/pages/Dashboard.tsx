@@ -204,7 +204,7 @@ function Dashboard() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [toolPerms, setToolPerms] = useState<Record<string, boolean>>({
-    roleta: true, sms: true, sms_cs: true, email: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true,
+    roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true,
     inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
   });
 
@@ -1223,6 +1223,7 @@ function Dashboard() {
           setToolPerms({
             roleta: src.roleta !== false,
             sms: src.sms !== false,
+            sms_mb: src.sms_mb !== false,
             sms_cs: src.sms_cs !== false,
             email: src.email !== false,
             email_brevo: src.email_brevo !== false,
@@ -4278,9 +4279,11 @@ function Dashboard() {
                 <GlassCard className="p-5 space-y-4">
                   <div className="space-y-2">
                     <h3 className="text-sm font-bold text-foreground">🔑 Provedor de SMS</h3>
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className={`grid gap-2 ${toolPerms.sms_mb === false ? 'grid-cols-1' : 'grid-cols-2'}`}>
                       <button type="button" onClick={() => setSmsProvider('twilio')} className={`px-3 py-2 rounded-xl text-sm font-medium border transition ${smsProvider === 'twilio' ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>Twilio</button>
+                    {toolPerms.sms_mb !== false && (
                       <button type="button" onClick={() => setSmsProvider('mobizon')} className={`px-3 py-2 rounded-xl text-sm font-medium border transition ${smsProvider === 'mobizon' ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>SMS API (MB)</button>
+                    )}
                     </div>
                   </div>
 
