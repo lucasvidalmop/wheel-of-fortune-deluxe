@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
                 if (invalid) {
                   await suppressEmail(r.email, 'invalid_format', { brevo_response: singleData })
                 }
-                await supabase.from('email_send_log').insert({
+                 await adminSupabase.from('email_send_log').insert({
                   template_name: 'brevo_bulk',
                   recipient_email: r.email,
                   status: invalid ? 'suppressed' : 'failed',
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
                 })
               } else {
                 sent++
-                await supabase.from('email_send_log').insert({
+                 await adminSupabase.from('email_send_log').insert({
                   template_name: 'brevo_bulk',
                   recipient_email: r.email,
                   status: 'sent',
@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
               failed++
               const m = sErr instanceof Error ? sErr.message : String(sErr)
               errors.push({ email: r.email, error: m })
-              await supabase.from('email_send_log').insert({
+               await adminSupabase.from('email_send_log').insert({
                 template_name: 'brevo_bulk',
                 recipient_email: r.email,
                 status: 'failed',
