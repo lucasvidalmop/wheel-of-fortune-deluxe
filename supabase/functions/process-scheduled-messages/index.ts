@@ -94,6 +94,43 @@ Deno.serve(async (req) => {
             status: ok ? "sent" : "failed",
             error_message: ok ? null : "Twilio API error",
           });
+        } else if (channel === "sms_mb") {
+          const mobizonApiKey = Deno.env.get("MOBIZON_BR_API_KEY");
+
+          if (!mobizonApiKey) {
+            await supabase.from("scheduled_messages").update({ status: "failed", updated_at: now }).eq("id", msg.id);
+            results.push({ id: msg.id, ok: false, error: "Mobizon API key not configured" });
+            continue;
+          }
+
+          let cleanPhone = msg.recipient_value.replace(/\D/g, "");
+          while (cleanPhone.startsWith("0")) cleanPhone = cleanPhone.slice(1);
+          if (cleanPhone.startsWith("55") && cleanPhone.length > 11) cleanPhone = cleanPhone.slice(2);
+          if (cleanPhone.length === 10) cleanPhone = `${cleanPhone.slice(0, 2)}9${cleanPhone.slice(2)}`;
+          if (!cleanPhone.startsWith("55")) cleanPhone = `55${cleanPhone}`;
+
+          const mobizonUrl = new URL("https://api.mobizon.com.br/service/message/sendSMSMessage");
+          mobizonUrl.searchParams.set("apiKey", mobizonApiKey);
+          mobizonUrl.searchParams.set("recipient", cleanPhone);
+          mobizonUrl.searchParams.set("text", msg.message);
+          mobizonUrl.searchParams.set("sender", String(ds.mobizonSender || "MobizonBR"));
+
+          const response = await fetch(mobizonUrl.toString(), {
+            method: "GET",
+            headers: { "Accept": "application/json" },
+          });
+
+          const payload = await response.json().catch(() => null);
+          ok = response.ok && Number(payload?.code ?? -1) === 0;
+
+          await supabase.from("sms_message_log").insert({
+            owner_id: msg.owner_id,
+            recipient_phone: msg.recipient_value,
+            recipient_name: msg.recipient_label || "",
+            message: msg.message,
+            status: ok ? "sent" : "failed",
+            error_message: ok ? null : String(payload?.message || "Mobizon API error"),
+          });
         } else {
           // ── WhatsApp via Evolution API ──
           const evolutionApiUrl = ds.evolutionApiUrl;

@@ -17,6 +17,8 @@ project_id = "zrijrsntmmzyykuqjbno"
     verify_jwt = false
   [functions.send-sms-clicksend]
     verify_jwt = false
+  [functions.send-sms-mobizon]
+    verify_jwt = false
   [functions.track-pageview]
     verify_jwt = false
   [functions.send-whatsapp]
