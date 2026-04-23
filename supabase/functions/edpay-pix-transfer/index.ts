@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -35,10 +36,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (paymentError || !payment) {
-      return new Response(JSON.stringify({ error: "Pagamento não encontrado" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Pagamento não encontrado" }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Fetch owner's wheel_config (needed for EdPay keys and notification settings)
@@ -51,7 +55,9 @@ Deno.serve(async (req) => {
     // For auto-payment or when keys not provided, use config keys
     if (autoPayment || !edpayPublicKey || !edpaySecretKey) {
       if (configData?.config) {
-        const cfg = typeof configData.config === "string" ? JSON.parse(configData.config) : configData.config;
+        const cfg = typeof configData.config === "string"
+          ? JSON.parse(configData.config)
+          : configData.config;
         const dashSettings = cfg.dashboardSettings || {};
         edpayPublicKey = edpayPublicKey || dashSettings.edpayPublicKey || "";
         edpaySecretKey = edpaySecretKey || dashSettings.edpaySecretKey || "";
@@ -80,10 +86,13 @@ Deno.serve(async (req) => {
     }
 
     if (!edpayPublicKey || !edpaySecretKey) {
-      return new Response(JSON.stringify({ error: "Credenciais EdPay não configuradas" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Credenciais EdPay não configuradas" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     if (payment.status === "paid") {
@@ -94,10 +103,13 @@ Deno.serve(async (req) => {
     }
 
     if (!payment.pix_key) {
-      return new Response(JSON.stringify({ error: "Inscrito não possui chave PIX cadastrada" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Inscrito não possui chave PIX cadastrada" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Step 1: Authenticate with EdPay
@@ -112,10 +124,13 @@ Deno.serve(async (req) => {
     if (!authResponse.ok) {
       const errText = await authResponse.text();
       console.error("EdPay auth failed:", errText);
-      return new Response(JSON.stringify({ error: "Falha na autenticação EdPay" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Falha na autenticação EdPay" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const authData = await authResponse.json();
@@ -123,10 +138,13 @@ Deno.serve(async (req) => {
 
     if (!edpayToken) {
       console.error("EdPay auth response:", JSON.stringify(authData));
-      return new Response(JSON.stringify({ error: "Token EdPay não retornado" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Token EdPay não retornado" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Step 2: Execute PIX transfer
@@ -139,9 +157,15 @@ Deno.serve(async (req) => {
       aleatoria: "CHAVE_ALEATORIA",
       random: "CHAVE_ALEATORIA",
     };
-    const pixType = pixTypeMap[(payment.pix_key_type || "cpf").toLowerCase()] || "CPF";
+    const pixType = pixTypeMap[(payment.pix_key_type || "cpf").toLowerCase()] ||
+      "CPF";
 
-    const webhookUrl = `${supabaseUrl}/functions/v1/edpay/webhook`;
+    const webhookSecret = Deno.env.get("EDPAY_WEBHOOK_SECRET") || "";
+    const webhookUrl = webhookSecret
+      ? `${supabaseUrl}/functions/v1/edpay/webhook?secret=${
+        encodeURIComponent(webhookSecret)
+      }`
+      : `${supabaseUrl}/functions/v1/edpay/webhook`;
 
     const transferResponse = await fetch("https://api.edpay.me/transfer", {
       method: "POST",
@@ -162,7 +186,8 @@ Deno.serve(async (req) => {
 
     // Check both HTTP status AND response body for failure indicators
     const transferStatus = (transferData.status || "").toString().toLowerCase();
-    const transferError = transferData.error || transferData.message || transferData.msg || "";
+    const transferError = transferData.error || transferData.message ||
+      transferData.msg || "";
     const isInsufficient = transferStatus === "insufficient_funds" ||
       transferStatus === "failed" ||
       transferStatus === "error" ||
@@ -170,9 +195,12 @@ Deno.serve(async (req) => {
       transferStatus === "declined" ||
       transferStatus === false ||
       transferData.status === false ||
-      (typeof transferError === "string" && transferError.toLowerCase().includes("saldo")) ||
-      (typeof transferError === "string" && transferError.toLowerCase().includes("insufficient")) ||
-      (typeof transferError === "string" && transferError.toLowerCase().includes("balance"));
+      (typeof transferError === "string" &&
+        transferError.toLowerCase().includes("saldo")) ||
+      (typeof transferError === "string" &&
+        transferError.toLowerCase().includes("insufficient")) ||
+      (typeof transferError === "string" &&
+        transferError.toLowerCase().includes("balance"));
 
     if (!transferResponse.ok || isInsufficient) {
       console.error("EdPay transfer failed:", JSON.stringify(transferData));
@@ -186,14 +214,21 @@ Deno.serve(async (req) => {
         })
         .eq("id", paymentId);
 
-      return new Response(JSON.stringify({ error: "Falha na transferência PIX", details: transferData }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Falha na transferência PIX",
+          details: transferData,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Step 3: Check if EdPay already confirmed the transfer immediately
-    const transactionId = transferData.id || transferData.transaction_id || transferData.data?.id || "";
+    const transactionId = transferData.id || transferData.transaction_id ||
+      transferData.data?.id || "";
     const isAlreadyConfirmed = transferStatus === "confirmed" ||
       transferStatus === "completed" ||
       transferStatus === "approved" ||
@@ -262,9 +297,12 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("Edge function error:", err);
-    return new Response(JSON.stringify({ error: "Erro interno", message: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Erro interno", message: String(err) }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 });
