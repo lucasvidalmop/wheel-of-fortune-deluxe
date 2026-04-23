@@ -4275,24 +4275,44 @@ function Dashboard() {
               )}
 
               {showSmsConfig && (
-                <GlassCard className="p-5 space-y-3">
-                  <h3 className="text-sm font-bold text-foreground">🔑 Twilio</h3>
-                  <p className="text-[10px] text-muted-foreground">Crie uma conta em <a href="https://www.twilio.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">twilio.com</a></p>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Account SID</label>
-                    <input type="text" value={twilioAccountSid} onChange={e => setTwilioAccountSid(e.target.value)} placeholder="ACxxxxxxxx" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                <GlassCard className="p-5 space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">🔑 Provedor de SMS</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setSmsProvider('twilio')} className={`px-3 py-2 rounded-xl text-sm font-medium border transition ${smsProvider === 'twilio' ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>Twilio</button>
+                      <button type="button" onClick={() => setSmsProvider('mobizon')} className={`px-3 py-2 rounded-xl text-sm font-medium border transition ${smsProvider === 'mobizon' ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>SMS API (MB)</button>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Auth Token</label>
-                    <input type="password" value={twilioAuthToken} onChange={e => setTwilioAuthToken(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Número remetente</label>
-                    <input type="text" value={twilioPhoneNumber} onChange={e => setTwilioPhoneNumber(e.target.value)} placeholder="+5511999999999" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                  </div>
-                  <div className={`text-xs font-medium ${twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? 'text-green-400' : 'text-yellow-400'}`}>
-                    {twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? '✅ Configurado' : '⚠️ Preencha todas as credenciais'}
-                  </div>
+
+                  {smsProvider === 'twilio' ? (
+                    <>
+                      <p className="text-[10px] text-muted-foreground">Crie uma conta em <a href="https://www.twilio.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">twilio.com</a></p>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Account SID</label>
+                        <input type="text" value={twilioAccountSid} onChange={e => setTwilioAccountSid(e.target.value)} placeholder="ACxxxxxxxx" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Auth Token</label>
+                        <input type="password" value={twilioAuthToken} onChange={e => setTwilioAuthToken(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Número remetente</label>
+                        <input type="text" value={twilioPhoneNumber} onChange={e => setTwilioPhoneNumber(e.target.value)} placeholder="+5511999999999" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className={`text-xs font-medium ${twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {twilioAccountSid && twilioAuthToken && twilioPhoneNumber ? '✅ Twilio configurado' : '⚠️ Preencha todas as credenciais'}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[10px] text-muted-foreground">A chave da Mobizon Brasil fica salva com segurança no backend. Aqui você só define o nome do remetente.</p>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Remetente</label>
+                        <input type="text" value={mobizonSender} onChange={e => setMobizonSender(e.target.value)} placeholder="MobizonBR" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      </div>
+                      <div className="text-xs font-medium text-green-400">✅ SMS API (MB) pronta para uso</div>
+                    </>
+                  )}
                 </GlassCard>
               )}
 
@@ -4529,7 +4549,7 @@ function Dashboard() {
               ) : (
               <button
                 onClick={async () => {
-                  if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
+                  if (smsProvider === 'twilio' && (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber)) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
                   let phoneList: { phone: string; name: string }[] = [];
                   if (smsSourceMode === 'csv') {
                     phoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
@@ -4553,8 +4573,10 @@ function Dashboard() {
                         batch.map(phone => {
                           const controller = new AbortController();
                           const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-                          return supabase.functions.invoke('send-sms', {
-                            body: { recipientPhone: phone, message: smsMessage, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
+                          return supabase.functions.invoke(smsProvider === 'mobizon' ? 'send-sms-mobizon' : 'send-sms', {
+                            body: smsProvider === 'mobizon'
+                              ? { recipientPhone: phone, message: smsMessage, sender: mobizonSender }
+                              : { recipientPhone: phone, message: smsMessage, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
                           }).then(res => { clearTimeout(timer); return { ...res, phone }; })
                             .catch(err => { clearTimeout(timer); throw err; });
                         })
@@ -4583,7 +4605,7 @@ function Dashboard() {
                     console.error('SMS batch error:', e);
                   }
                   if (smsLogEntries.length > 0) {
-                    await (supabase as any).from('sms_message_log').insert(smsLogEntries);
+                    await (supabase as any).from(smsProvider === 'mobizon' ? 'sms_mb_message_log' : 'sms_message_log').insert(smsLogEntries);
                   }
                   setSmsSending(false);
                   if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
