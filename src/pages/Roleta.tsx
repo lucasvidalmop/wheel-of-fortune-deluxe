@@ -36,6 +36,7 @@ const Roleta = () => {
   const [prizeHistory, setPrizeHistory] = useState<any[]>([]);
   const [prizeHistoryLoading, setPrizeHistoryLoading] = useState(false);
   const [claimedForcedSegment, setClaimedForcedSegment] = useState<number | null>(null);
+  const claimedForcedSegmentRef = useRef<number | null>(null);
 
   const maskId = (id: string) => {
     if (id.length <= 3) return '***';
@@ -532,7 +533,7 @@ const Roleta = () => {
         }
       }
 
-      const decrementRpc = claimedForcedSegment == null ? 'decrement_wheel_user_spins' : 'decrement_claimed_spin';
+      const decrementRpc = claimedForcedSegmentRef.current == null ? 'decrement_wheel_user_spins' : 'decrement_claimed_spin';
       const { data: decrementData } = await (supabase as any).rpc(decrementRpc, {
         p_account_id: accountId,
         p_owner_id: ownerId || null,
@@ -578,6 +579,7 @@ const Roleta = () => {
         if (!ownerId && refreshedRow.owner_id) setOwnerId(refreshedRow.owner_id);
       }
     } finally {
+      claimedForcedSegmentRef.current = null;
       setClaimedForcedSegment(null);
       setIsResolvingSpin(false);
     }
@@ -631,6 +633,7 @@ const Roleta = () => {
       throw new Error('No predefined prize available');
     }
 
+    claimedForcedSegmentRef.current = row.segment_index;
     setClaimedForcedSegment(row.segment_index);
     setSpinsRemaining(row.spins_available ?? null);
     setCanSpin(false);
