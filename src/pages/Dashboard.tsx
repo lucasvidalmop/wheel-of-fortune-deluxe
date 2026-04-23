@@ -6882,7 +6882,7 @@ function Dashboard() {
           })()}
 
           {activeTab === 'deposito' && (() => {
-            const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '' };
+            const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '', confirmationButtonText: 'Acessar →', confirmationButtonUrl: '', confirmationButtonColor: '', showNewDepositButton: true };
             const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
             const depositUrl = dc.tag ? `${baseUrl}/dep=${dc.tag}` : '';
 
@@ -7115,6 +7115,10 @@ function Dashboard() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Texto do botão pós-pagamento</label>
+                    <input value={dc.confirmationButtonText || ''} onChange={e => updateDc({ confirmationButtonText: e.target.value })} placeholder="Acessar →" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Link do botão pós-pagamento</label>
                     <input value={dc.confirmationButtonUrl || ''} onChange={e => updateDc({ confirmationButtonUrl: e.target.value })} placeholder="https://exemplo.com" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     <p className="text-[10px] text-muted-foreground/60">Deixe vazio para não exibir o botão.</p>
@@ -7125,6 +7129,15 @@ function Dashboard() {
                       <input type="color" value={dc.confirmationButtonColor || dc.accentColor || '#10b981'} onChange={e => updateDc({ confirmationButtonColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
                       <input value={dc.confirmationButtonColor || ''} onChange={e => updateDc({ confirmationButtonColor: e.target.value })} placeholder="Usa cor de destaque padrão" className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">Botão de novo depósito</p>
+                      <p className="text-[10px] text-muted-foreground/70">Mostra ou esconde o botão abaixo da confirmação.</p>
+                    </div>
+                    <button type="button" onClick={() => updateDc({ showNewDepositButton: !(dc.showNewDepositButton ?? true) })} className={`relative h-6 w-11 rounded-full transition-all ${(dc.showNewDepositButton ?? true) ? 'bg-primary' : 'bg-white/[0.12]'}`}>
+                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${(dc.showNewDepositButton ?? true) ? 'left-[22px]' : 'left-0.5'}`} />
+                    </button>
                   </div>
                 </div>
 
