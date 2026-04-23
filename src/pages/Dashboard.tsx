@@ -703,13 +703,25 @@ function Dashboard() {
   const fetchSmsLogs = async () => {
     if (!session?.user?.id) return;
     setSmsLogsLoading(true);
-    const { data } = await (supabase as any)
-      .from('sms_message_log')
-      .select('*')
-      .eq('owner_id', session.user.id)
-      .order('created_at', { ascending: false })
-      .limit(100);
-    setSmsLogs(data || []);
+    const [{ data: smsData }, { data: smsMbData }] = await Promise.all([
+      (supabase as any)
+        .from('sms_message_log')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      (supabase as any)
+        .from('sms_mb_message_log')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(100),
+    ]);
+    const merged = [
+      ...((smsData || []).map((row: any) => ({ ...row, provider: row.provider || 'twilio' }))),
+      ...((smsMbData || []).map((row: any) => ({ ...row, provider: 'mobizon_br' }))),
+    ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setSmsLogs(merged);
     setSmsLogsLoading(false);
   };
 
@@ -747,7 +759,8 @@ function Dashboard() {
   const deleteSmsLog = async (id: string) => {
     const ok = await confirmDialog({ title: 'Excluir registro?', message: 'Deseja remover este SMS do histórico?', variant: 'danger', confirmLabel: 'Excluir' });
     if (!ok) return;
-    await (supabase as any).from('sms_message_log').delete().eq('id', id);
+    const log = smsLogs.find((item: any) => item.id === id);
+    await (supabase as any).from(log?.provider === 'mobizon_br' ? 'sms_mb_message_log' : 'sms_message_log').delete().eq('id', id);
     setSmsLogs(prev => prev.filter(l => l.id !== id));
     toast.success('Registro excluído');
   };
@@ -771,6 +784,16 @@ function Dashboard() {
       error_message: null,
       provider: provider === 'mobizon' ? 'mobizon_br' : 'twilio',
     });
+    if (provider === 'mobizon') {
+      await (supabase as any).from('sms_mb_message_log').insert({
+        owner_id: session?.user?.id,
+        recipient_phone: log.recipient_phone,
+        recipient_name: log.recipient_name || '',
+        message: log.message,
+        status: 'sent',
+        error_message: null,
+      });
+    }
     toast.success('SMS reenviado!');
     fetchSmsLogs();
   };
