@@ -210,6 +210,7 @@ export type Database = {
           roleta: boolean
           sms: boolean
           sms_cs: boolean
+          sms_mb: boolean
           updated_at: string
           user_id: string
           whatsapp: boolean
@@ -232,6 +233,7 @@ export type Database = {
           roleta?: boolean
           sms?: boolean
           sms_cs?: boolean
+          sms_mb?: boolean
           updated_at?: string
           user_id: string
           whatsapp?: boolean
@@ -254,6 +256,7 @@ export type Database = {
           roleta?: boolean
           sms?: boolean
           sms_cs?: boolean
+          sms_mb?: boolean
           updated_at?: string
           user_id?: string
           whatsapp?: boolean
@@ -279,6 +282,7 @@ export type Database = {
           roleta: boolean
           sms: boolean
           sms_cs: boolean
+          sms_mb: boolean
           updated_at: string
           whatsapp: boolean
         }
@@ -300,6 +304,7 @@ export type Database = {
           roleta?: boolean
           sms?: boolean
           sms_cs?: boolean
+          sms_mb?: boolean
           updated_at?: string
           whatsapp?: boolean
         }
@@ -321,6 +326,7 @@ export type Database = {
           roleta?: boolean
           sms?: boolean
           sms_cs?: boolean
+          sms_mb?: boolean
           updated_at?: string
           whatsapp?: boolean
         }
