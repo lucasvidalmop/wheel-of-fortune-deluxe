@@ -219,7 +219,15 @@ function Dashboard() {
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
-  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false, expires_at: '' });
+  const [referralForm, setReferralForm] = useState({
+    label: '',
+    spins_per_registration: 1,
+    max_registrations: '' as string,
+    fixed_prize_segments: [] as number[],
+    fixed_prize_plan: [] as { segment_index: number; count: number }[],
+    auto_payment: false,
+    expires_at: '',
+  });
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
@@ -636,12 +644,61 @@ function Dashboard() {
     setGorjetaHistoryLoading(false);
   };
 
+  const buildReferralFixedPrizePlan = (link: any) => {
+    if (Array.isArray(link?.fixed_prize_plan)) {
+      return link.fixed_prize_plan
+        .map((item: any) => ({
+          segment_index: Number(item?.segment_index),
+          count: Math.max(0, Number(item?.count) || 0),
+        }))
+        .filter((item: any) => Number.isInteger(item.segment_index) && item.segment_index >= 0 && item.count > 0);
+    }
+
+    if (Array.isArray(link?.fixed_prize_segments) && link.fixed_prize_segments.length > 0) {
+      const counts = new Map<number, number>();
+      link.fixed_prize_segments.forEach((segmentIndex: any) => {
+        const idx = Number(segmentIndex);
+        if (!Number.isInteger(idx) || idx < 0) return;
+        counts.set(idx, (counts.get(idx) || 0) + 1);
+      });
+      return Array.from(counts.entries()).map(([segment_index, count]) => ({ segment_index, count }));
+    }
+
+    if (link?.fixed_prize_segment != null) {
+      return [{ segment_index: Number(link.fixed_prize_segment), count: 1 }];
+    }
+
+    return [] as { segment_index: number; count: number }[];
+  };
+
+  const formatReferralPrizePlan = (plan: { segment_index: number; count: number }[]) => {
+    if (!plan.length) return 'Nenhum';
+    return plan
+      .map(({ segment_index, count }) => {
+        const segment = wheelConfig?.segments?.[segment_index];
+        const label = segment ? `${segment.title} — ${segment.reward}` : `Segmento ${segment_index + 1}`;
+        return `${count}x ${label}`;
+      })
+      .join(', ');
+  };
+
+  const totalReferralPrizePlanCount = referralForm.fixed_prize_plan.reduce((sum, item) => sum + item.count, 0);
+
   const handleSaveReferral = async () => {
     if (!referralForm.label.trim()) { toast.error('Preencha o nome do link'); return; }
+    if (totalReferralPrizePlanCount > referralForm.spins_per_registration) {
+      toast.error('A soma dos segmentos garantidos não pode ser maior que a quantidade de giros');
+      return;
+    }
+
+    const normalizedPlan = referralForm.fixed_prize_plan
+      .map(item => ({ segment_index: item.segment_index, count: Math.max(0, Math.floor(item.count || 0)) }))
+      .filter(item => item.count > 0);
+
     if (editingReferral) {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null, updated_at: new Date().toISOString() })
+        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: null, fixed_prize_plan: normalizedPlan.length > 0 ? normalizedPlan : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null, updated_at: new Date().toISOString() })
         .eq('id', editingReferral.id);
       if (error) { toast.error('Erro ao atualizar'); return; }
       toast.success('Link atualizado!');
@@ -652,7 +709,7 @@ function Dashboard() {
         `🎰 Giros por resgate: ${referralForm.spins_per_registration}`,
         referralForm.max_registrations ? `👥 Limite de resgates: ${referralForm.max_registrations}` : '👥 Limite de resgates: Ilimitado',
         referralForm.expires_at ? `📅 Expira em: ${new Date(referralForm.expires_at).toLocaleString('pt-BR')}` : '📅 Expiração: Sem prazo',
-        referralForm.fixed_prize_segments.length > 0 ? `🎯 Segmentos fixos:\n${referralForm.fixed_prize_segments.map(i => `   • ${wheelConfig?.segments?.[i]?.title || `Segmento ${i + 1}`} — ${wheelConfig?.segments?.[i]?.reward || ''}`).join('\n')}` : '🎯 Segmentos fixos: Nenhum',
+        normalizedPlan.length > 0 ? `🎯 Plano de prêmios:\n${normalizedPlan.map(item => `   • ${item.count}x ${wheelConfig?.segments?.[item.segment_index]?.title || `Segmento ${item.segment_index + 1}`} — ${wheelConfig?.segments?.[item.segment_index]?.reward || ''}`).join('\n')}` : '🎯 Plano de prêmios: Nenhum',
         `💸 Auto-pagamento: ${referralForm.auto_payment ? 'Sim' : 'Não'}`,
       ];
       const confirmed = await confirmDialog({
@@ -665,13 +722,13 @@ function Dashboard() {
 
       const { error } = await (supabase as any)
         .from('referral_links')
-        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null });
+        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: null, fixed_prize_plan: normalizedPlan.length > 0 ? normalizedPlan : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null });
       if (error) { toast.error('Erro ao criar link'); return; }
       toast.success('Link criado!');
     }
     setShowReferralForm(false);
     setEditingReferral(null);
-    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false, expires_at: '' });
+    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], fixed_prize_plan: [], auto_payment: false, expires_at: '' });
     fetchReferralLinks();
   };
 
@@ -6015,7 +6072,7 @@ function Dashboard() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Link2 size={16} /> Links de Referência</h3>
                   <button
-                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false, expires_at: '' }); }}
+                    onClick={() => { setShowReferralForm(true); setEditingReferral(null); setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], fixed_prize_plan: [], auto_payment: false, expires_at: '' }); }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/20 text-xs font-semibold hover:bg-primary/25 transition"
                   >
                     <Plus size={14} /> Novo Link
@@ -6047,6 +6104,83 @@ function Dashboard() {
                         onChange={e => setReferralForm(p => ({ ...p, spins_per_registration: Math.max(1, parseInt(e.target.value) || 1) }))}
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
                       />
+                    </div>
+                    <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-3 space-y-3">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-1">Plano de saídas por segmento</label>
+                        <p className="text-[10px] text-muted-foreground/70">
+                          Defina quantas vezes cada segmento deve sair dentro dos giros desse resgate. Ex.: 3 giros = 1x prêmio A, 1x prêmio B, 1x perdeu.
+                        </p>
+                      </div>
+                      <div className="space-y-2 max-h-52 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+                        {wheelConfig.segments.map((seg: any, i: number) => {
+                          const planItem = referralForm.fixed_prize_plan.find(item => item.segment_index === i);
+                          const count = planItem?.count || 0;
+                          return (
+                            <div key={seg.id} className="flex items-center gap-3 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium text-foreground truncate">{seg.title}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{seg.reward}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setReferralForm(prev => ({
+                                    ...prev,
+                                    fixed_prize_plan: prev.fixed_prize_plan
+                                      .map(item => item.segment_index === i ? { ...item, count: Math.max(0, item.count - 1) } : item)
+                                      .filter(item => item.count > 0),
+                                  }))}
+                                  className="w-7 h-7 rounded-lg border border-white/[0.08] bg-white/[0.05] text-foreground hover:bg-white/[0.1] transition"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={referralForm.spins_per_registration}
+                                  value={count}
+                                  onChange={e => {
+                                    const nextCount = Math.max(0, Math.min(referralForm.spins_per_registration, parseInt(e.target.value) || 0));
+                                    setReferralForm(prev => {
+                                      const otherItems = prev.fixed_prize_plan.filter(item => item.segment_index !== i);
+                                      return {
+                                        ...prev,
+                                        fixed_prize_plan: nextCount > 0 ? [...otherItems, { segment_index: i, count: nextCount }] : otherItems,
+                                      };
+                                    });
+                                  }}
+                                  className="w-16 px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.1] text-center text-sm text-foreground focus:outline-none focus:border-primary/50"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setReferralForm(prev => {
+                                    const currentCount = prev.fixed_prize_plan.find(item => item.segment_index === i)?.count || 0;
+                                    const nextCount = Math.min(prev.spins_per_registration, currentCount + 1);
+                                    const otherItems = prev.fixed_prize_plan.filter(item => item.segment_index !== i);
+                                    return {
+                                      ...prev,
+                                      fixed_prize_plan: [...otherItems, { segment_index: i, count: nextCount }],
+                                    };
+                                  })}
+                                  className="w-7 h-7 rounded-lg border border-white/[0.08] bg-white/[0.05] text-foreground hover:bg-white/[0.1] transition"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-muted-foreground">Total configurado</span>
+                        <span className={`${totalReferralPrizePlanCount > referralForm.spins_per_registration ? 'text-destructive' : 'text-foreground'} font-semibold`}>
+                          {totalReferralPrizePlanCount}/{referralForm.spins_per_registration}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/70">
+                        Se sobrar giro sem plano, ele continua aleatório. Se quiser todos garantidos, deixe o total igual ao número de giros.
+                      </p>
                     </div>
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">Limite de inscrições <span className="text-muted-foreground/50">(vazio = ilimitado)</span></label>
@@ -6169,33 +6303,6 @@ function Dashboard() {
                         </div>
                       )}
                     </div>
-                    {/* Prêmios fixos (multi-select) */}
-                    <div>
-                      <label className="text-[10px] text-muted-foreground block mb-1">Prêmios garantidos <span className="text-muted-foreground/50">(nenhum = aleatório, múltiplos = sorteio entre selecionados)</span></label>
-                      <div className="space-y-1 max-h-40 overflow-y-auto rounded-lg border border-white/[0.08] bg-white/[0.02] p-2" style={{ scrollbarWidth: 'thin' }}>
-                        {wheelConfig.segments.map((seg: any, i: number) => {
-                          const isSelected = referralForm.fixed_prize_segments.includes(i);
-                          return (
-                            <label key={seg.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition ${isSelected ? 'bg-primary/15 border border-primary/30' : 'hover:bg-white/[0.04] border border-transparent'}`}>
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => {
-                                  setReferralForm(p => ({
-                                    ...p,
-                                    fixed_prize_segments: isSelected
-                                      ? p.fixed_prize_segments.filter(s => s !== i)
-                                      : [...p.fixed_prize_segments, i]
-                                  }));
-                                }}
-                                className="accent-primary"
-                              />
-                              <span className="text-xs text-foreground">{seg.title} — {seg.reward}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
                     {/* Auto-payment */}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">💳 Pagamento automático</span>
@@ -6233,7 +6340,7 @@ function Dashboard() {
                             <p className="text-sm font-bold text-foreground">{link.label || 'Sem nome'}</p>
                             <p className="text-[10px] text-muted-foreground">
                               {link.registrations_count}{link.max_registrations ? `/${link.max_registrations}` : ''} inscrição(ões) • {link.spins_per_registration} giro(s)/inscrição
-                              {link.fixed_prize_segments && (link.fixed_prize_segments as number[]).length > 0 ? ` • 🎯 ${(link.fixed_prize_segments as number[]).map((s: number) => wheelConfig.segments[s]?.title).filter(Boolean).join(', ')}` : link.fixed_prize_segment != null && wheelConfig.segments[link.fixed_prize_segment] ? ` • 🎯 ${wheelConfig.segments[link.fixed_prize_segment].title}` : ''}
+                              {buildReferralFixedPrizePlan(link).length > 0 ? ` • 🎯 ${formatReferralPrizePlan(buildReferralFixedPrizePlan(link))}` : ''}
                               {link.auto_payment ? ' • 💳 Auto' : ''}
                               {link.expires_at ? ` • ⏳ ${new Date(link.expires_at).toLocaleString('pt-BR')}${new Date(link.expires_at) <= new Date() ? ' (expirado)' : ''}` : ''}
                             </p>
@@ -6261,7 +6368,7 @@ function Dashboard() {
                         </div>
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
                           <button
-                            onClick={() => { setEditingReferral(link); const exAt = link.expires_at ? (() => { const d = new Date(link.expires_at); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : ''; setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '', fixed_prize_segments: Array.isArray(link.fixed_prize_segments) ? link.fixed_prize_segments : link.fixed_prize_segment != null ? [link.fixed_prize_segment] : [], auto_payment: link.auto_payment ?? false, expires_at: exAt }); setShowReferralForm(true); }}
+                            onClick={() => { setEditingReferral(link); const exAt = link.expires_at ? (() => { const d = new Date(link.expires_at); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : ''; setReferralForm({ label: link.label, spins_per_registration: link.spins_per_registration, max_registrations: link.max_registrations ? String(link.max_registrations) : '', fixed_prize_segments: Array.isArray(link.fixed_prize_segments) ? link.fixed_prize_segments : link.fixed_prize_segment != null ? [link.fixed_prize_segment] : [], fixed_prize_plan: buildReferralFixedPrizePlan(link), auto_payment: link.auto_payment ?? false, expires_at: exAt }); setShowReferralForm(true); }}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] text-muted-foreground text-[10px] hover:bg-white/[0.1] transition"
                           >
                             <Pencil size={12} /> Editar

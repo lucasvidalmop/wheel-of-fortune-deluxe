@@ -479,6 +479,7 @@ export type Database = {
           code: string
           created_at: string
           expires_at: string | null
+          fixed_prize_plan: Json | null
           fixed_prize_segment: number | null
           fixed_prize_segments: Json | null
           id: string
@@ -496,6 +497,7 @@ export type Database = {
           code?: string
           created_at?: string
           expires_at?: string | null
+          fixed_prize_plan?: Json | null
           fixed_prize_segment?: number | null
           fixed_prize_segments?: Json | null
           id?: string
@@ -513,6 +515,7 @@ export type Database = {
           code?: string
           created_at?: string
           expires_at?: string | null
+          fixed_prize_plan?: Json | null
           fixed_prize_segment?: number | null
           fixed_prize_segments?: Json | null
           id?: string
@@ -931,6 +934,7 @@ export type Database = {
           created_at: string | null
           email: string
           fixed_prize_enabled: boolean
+          fixed_prize_queue: Json
           fixed_prize_segment: number | null
           guaranteed_next_win: boolean
           id: string
@@ -954,6 +958,7 @@ export type Database = {
           created_at?: string | null
           email: string
           fixed_prize_enabled?: boolean
+          fixed_prize_queue?: Json
           fixed_prize_segment?: number | null
           guaranteed_next_win?: boolean
           id?: string
@@ -977,6 +982,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           fixed_prize_enabled?: boolean
+          fixed_prize_queue?: Json
           fixed_prize_segment?: number | null
           guaranteed_next_win?: boolean
           id?: string
@@ -1019,6 +1025,15 @@ export type Database = {
           owner_id: string
           spins_available: number
         }[]
+      }
+      build_fixed_prize_queue: {
+        Args: {
+          p_legacy_segment?: number
+          p_legacy_segments?: Json
+          p_plan: Json
+          p_spins: number
+        }
+        Returns: Json
       }
       create_prize_payment:
         | {
