@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
   const provided =
     req.headers.get("x-edpay-signature") ||
     req.headers.get("x-webhook-secret") ||
+    url.searchParams.get("secret") ||
     "";
 
   if (!provided || !safeEqual(provided, webhookSecret)) {
