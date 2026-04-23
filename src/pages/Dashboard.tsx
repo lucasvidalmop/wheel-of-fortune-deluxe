@@ -54,6 +54,7 @@ interface PersistedDashboardSettings {
   twilioAccountSid: string;
   twilioAuthToken: string;
   twilioPhoneNumber: string;
+  mobizonSender: string;
   smsCsMessage: string;
   clicksendUsername: string;
   clicksendApiKey: string;
@@ -104,6 +105,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   twilioAccountSid: '',
   twilioAuthToken: '',
   twilioPhoneNumber: '',
+  mobizonSender: 'MobizonBR',
   smsCsMessage: '',
   clicksendUsername: '',
   clicksendApiKey: '',
@@ -278,6 +280,7 @@ function Dashboard() {
   const [twilioAccountSid, setTwilioAccountSid] = useState('');
   const [twilioAuthToken, setTwilioAuthToken] = useState('');
   const [twilioPhoneNumber, setTwilioPhoneNumber] = useState('');
+  const [mobizonSender, setMobizonSender] = useState('MobizonBR');
 
   // ClickSend (SMS API CS) — separate state, separate log table (sms_cs_message_log)
   const [smsCsMessage, setSmsCsMessage] = useState('');
@@ -1037,6 +1040,7 @@ function Dashboard() {
     twilioAccountSid,
     twilioAuthToken,
     twilioPhoneNumber,
+    mobizonSender,
     smsCsMessage,
     clicksendUsername,
     clicksendApiKey,
@@ -1095,6 +1099,7 @@ function Dashboard() {
     setTwilioAccountSid(settings.twilioAccountSid || '');
     setTwilioAuthToken(settings.twilioAuthToken || '');
     setTwilioPhoneNumber(settings.twilioPhoneNumber || '');
+    setMobizonSender(settings.mobizonSender || 'MobizonBR');
     setSmsCsMessage(settings.smsCsMessage || '');
     setClicksendUsername(settings.clicksendUsername || '');
     setClicksendApiKey(settings.clicksendApiKey || '');
