@@ -1094,6 +1094,13 @@ export type Database = {
             }
             Returns: Json
           }
+      decrement_claimed_spin: {
+        Args: { p_account_id: string; p_owner_id?: string }
+        Returns: {
+          owner_id: string
+          spins_available: number
+        }[]
+      }
       decrement_wheel_user_spins: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
