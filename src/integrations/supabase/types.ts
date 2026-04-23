@@ -1026,15 +1026,26 @@ export type Database = {
           spins_available: number
         }[]
       }
-      build_fixed_prize_queue: {
-        Args: {
-          p_legacy_segment?: number
-          p_legacy_segments?: Json
-          p_plan: Json
-          p_spins: number
-        }
-        Returns: Json
-      }
+      build_fixed_prize_queue:
+        | {
+            Args: {
+              p_legacy_segment?: number
+              p_legacy_segments?: Json
+              p_plan: Json
+              p_spins: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_legacy_segment?: number
+              p_legacy_segments?: Json
+              p_plan: Json
+              p_spins: number
+              p_total_segments?: number
+            }
+            Returns: Json
+          }
       create_prize_payment:
         | {
             Args: {
