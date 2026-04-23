@@ -532,14 +532,11 @@ const Roleta = () => {
         }
       }
 
-      let decrementData: any = null;
-      if (claimedForcedSegment == null) {
-        const decrementResponse = await (supabase as any).rpc('decrement_wheel_user_spins', {
-          p_account_id: accountId,
-          p_owner_id: ownerId || null,
-        });
-        decrementData = decrementResponse.data;
-      }
+      const decrementRpc = claimedForcedSegment == null ? 'decrement_wheel_user_spins' : 'decrement_claimed_spin';
+      const { data: decrementData } = await (supabase as any).rpc(decrementRpc, {
+        p_account_id: accountId,
+        p_owner_id: ownerId || null,
+      });
 
       const { data: refreshData } = await (supabase as any).rpc('get_wheel_user_spins', {
         p_account_id: accountId,
