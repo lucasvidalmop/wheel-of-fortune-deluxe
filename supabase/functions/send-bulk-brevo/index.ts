@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey, {
       global: { headers: { Authorization: authHeader } },
     })
+    const adminSupabase = createClient(supabaseUrl, serviceKey)
     const { data: userData } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     const userId = userData?.user?.id
     if (!userId) {
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
     // Helper: adiciona email à suppression list (idempotente)
     const suppressEmail = async (email: string, reason: string, meta: Record<string, unknown> = {}) => {
       try {
-        await supabase.from('suppressed_emails').insert({
+        await adminSupabase.from('suppressed_emails').insert({
           email,
           reason,
           metadata: { ...meta, source: 'send-bulk-brevo', owner_id: userId, suppressed_at: new Date().toISOString() },
@@ -147,7 +148,7 @@ Deno.serve(async (req) => {
     let suppressedSkipped = 0
     if (cleanRecipients.length > 0) {
       const emailsToCheck = cleanRecipients.map((r) => r.email)
-      const { data: suppressedRows } = await supabase
+      const { data: suppressedRows } = await adminSupabase
         .from('suppressed_emails')
         .select('email')
         .in('email', emailsToCheck)
