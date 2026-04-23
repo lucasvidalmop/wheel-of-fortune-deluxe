@@ -36,10 +36,15 @@ Deno.serve(async (req) => {
     const { amount, edpayPublicKey, edpaySecretKey, description } = body;
 
     if (!amount || !edpayPublicKey || !edpaySecretKey) {
-      return new Response(JSON.stringify({ error: "Campos obrigatórios: amount, edpayPublicKey, edpaySecretKey" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Campos obrigatórios: amount, edpayPublicKey, edpaySecretKey",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const amountNum = Number(amount);
@@ -62,10 +67,15 @@ Deno.serve(async (req) => {
     if (!authResponse.ok) {
       const authErr = await authResponse.text();
       console.error("EdPay auth failed:", authErr);
-      return new Response(JSON.stringify({ error: "Falha na autenticação EdPay. Verifique suas credenciais." }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Falha na autenticação EdPay. Verifique suas credenciais.",
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const authData = await authResponse.json();
@@ -73,16 +83,21 @@ Deno.serve(async (req) => {
 
     if (!token) {
       console.error("EdPay auth response:", JSON.stringify(authData));
-      return new Response(JSON.stringify({ error: "Token não retornado pela EdPay" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Token não retornado pela EdPay" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Step 2: Generate QR Code PIX
     const webhookSecret = Deno.env.get("EDPAY_WEBHOOK_SECRET") || "";
     const callbackUrl = webhookSecret
-      ? `${supabaseUrl}/functions/v1/edpay/webhook?secret=${encodeURIComponent(webhookSecret)}`
+      ? `${supabaseUrl}/functions/v1/edpay/webhook?secret=${
+        encodeURIComponent(webhookSecret)
+      }`
       : `${supabaseUrl}/functions/v1/edpay/webhook`;
 
     const qrResponse = await fetch("https://api.edpay.me/qrcode", {
@@ -101,10 +116,13 @@ Deno.serve(async (req) => {
     if (!qrResponse.ok) {
       const qrErr = await qrResponse.text();
       console.error("EdPay QR failed:", qrErr);
-      return new Response(JSON.stringify({ error: "Falha ao gerar QR Code", details: qrErr }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Falha ao gerar QR Code", details: qrErr }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const qrData = await qrResponse.json();
@@ -115,9 +133,12 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("Edge function error:", err);
-    return new Response(JSON.stringify({ error: "Erro interno", message: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Erro interno", message: String(err) }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 });

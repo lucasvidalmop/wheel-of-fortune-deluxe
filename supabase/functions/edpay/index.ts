@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-edpay-signature",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-edpay-signature",
 };
 
 // Constant-time string comparison to avoid timing attacks
@@ -38,8 +39,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const provided =
-    req.headers.get("x-edpay-signature") ||
+  const provided = req.headers.get("x-edpay-signature") ||
     req.headers.get("x-webhook-secret") ||
     url.searchParams.get("secret") ||
     "";
@@ -60,9 +60,15 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("EdPay webhook received:", JSON.stringify(body));
 
-    const edpayId = String(body.txid || body.id || body.track_id || body.transaction_id || "");
-    const rawStatus = body.status || (body.object === "in" ? "paid" : "confirmed");
-    const status = rawStatus === "confirmed" || rawStatus === "completed" || rawStatus === "approved" ? "paid" : rawStatus;
+    const edpayId = String(
+      body.txid || body.id || body.track_id || body.transaction_id || "",
+    );
+    const rawStatus = body.status ||
+      (body.object === "in" ? "paid" : "confirmed");
+    const status = rawStatus === "confirmed" || rawStatus === "completed" ||
+        rawStatus === "approved"
+      ? "paid"
+      : rawStatus;
 
     if (!edpayId) {
       console.error("Webhook missing transaction ID");
@@ -81,7 +87,10 @@ Deno.serve(async (req) => {
 
     if (existing) {
       // Merge webhook payload into existing metadata to preserve userName, userPhone, etc.
-      const existingMeta = (typeof existing.metadata === "object" && existing.metadata) ? existing.metadata : {};
+      const existingMeta =
+        (typeof existing.metadata === "object" && existing.metadata)
+          ? existing.metadata
+          : {};
       const mergedMetadata = { ...existingMeta, webhook: body };
 
       await supabase
