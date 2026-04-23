@@ -718,7 +718,7 @@ function Dashboard() {
         .limit(100),
     ]);
     const merged = [
-      ...((smsData || []).map((row: any) => ({ ...row, provider: row.provider || 'twilio' }))),
+      ...((smsData || []).map((row: any) => ({ ...row, provider: 'twilio' }))),
       ...((smsMbData || []).map((row: any) => ({ ...row, provider: 'mobizon_br' }))),
     ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setSmsLogs(merged);
@@ -775,17 +775,17 @@ function Dashboard() {
     });
     if (error) { toast.error('Erro ao reenviar SMS'); return; }
     if ((data as any)?.skipped) { toast.error((data as any)?.error || 'Número inválido'); return; }
-    await (supabase as any).from('sms_message_log').insert({
-      owner_id: session?.user?.id,
-      recipient_phone: log.recipient_phone,
-      recipient_name: log.recipient_name || '',
-      message: log.message,
-      status: 'sent',
-      error_message: null,
-      provider: provider === 'mobizon' ? 'mobizon_br' : 'twilio',
-    });
     if (provider === 'mobizon') {
       await (supabase as any).from('sms_mb_message_log').insert({
+        owner_id: session?.user?.id,
+        recipient_phone: log.recipient_phone,
+        recipient_name: log.recipient_name || '',
+        message: log.message,
+        status: 'sent',
+        error_message: null,
+      });
+    } else {
+      await (supabase as any).from('sms_message_log').insert({
         owner_id: session?.user?.id,
         recipient_phone: log.recipient_phone,
         recipient_name: log.recipient_name || '',
