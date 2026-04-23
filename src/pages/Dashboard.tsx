@@ -750,9 +750,12 @@ function Dashboard() {
   };
 
   const resendSms = async (log: any) => {
-    if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
-    const { data, error } = await supabase.functions.invoke('send-sms', {
-      body: { recipientPhone: log.recipient_phone, message: log.message, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
+    const provider = log.provider === 'mobizon_br' ? 'mobizon' : 'twilio';
+    if (provider === 'twilio' && (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber)) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
+    const { data, error } = await supabase.functions.invoke(provider === 'mobizon' ? 'send-sms-mobizon' : 'send-sms', {
+      body: provider === 'mobizon'
+        ? { recipientPhone: log.recipient_phone, message: log.message, sender: mobizonSender }
+        : { recipientPhone: log.recipient_phone, message: log.message, twilioAccountSid, twilioAuthToken, twilioPhoneNumber }
     });
     if (error) { toast.error('Erro ao reenviar SMS'); return; }
     if ((data as any)?.skipped) { toast.error((data as any)?.error || 'Número inválido'); return; }
@@ -762,6 +765,8 @@ function Dashboard() {
       recipient_name: log.recipient_name || '',
       message: log.message,
       status: 'sent',
+      error_message: null,
+      provider: provider === 'mobizon' ? 'mobizon_br' : 'twilio',
     });
     toast.success('SMS reenviado!');
     fetchSmsLogs();
