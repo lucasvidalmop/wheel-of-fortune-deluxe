@@ -141,7 +141,10 @@ Deno.serve(async (req) => {
     };
     const pixType = pixTypeMap[(payment.pix_key_type || "cpf").toLowerCase()] || "CPF";
 
-    const webhookUrl = `${supabaseUrl}/functions/v1/edpay/webhook`;
+    const webhookSecret = Deno.env.get("EDPAY_WEBHOOK_SECRET") || "";
+    const webhookUrl = webhookSecret
+      ? `${supabaseUrl}/functions/v1/edpay/webhook?secret=${encodeURIComponent(webhookSecret)}`
+      : `${supabaseUrl}/functions/v1/edpay/webhook`;
 
     const transferResponse = await fetch("https://api.edpay.me/transfer", {
       method: "POST",
