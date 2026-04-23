@@ -1266,6 +1266,12 @@ function Dashboard() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (toolPerms.sms_mb === false && smsProvider === 'mobizon') {
+      setSmsProvider('twilio');
+    }
+  }, [toolPerms.sms_mb, smsProvider]);
+
   // Realtime subscription for prize_payments updates
   useEffect(() => {
     if (!session?.user?.id) return;
