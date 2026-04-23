@@ -51,6 +51,7 @@ interface PersistedDashboardSettings {
   emailSenderName: string;
   emailSenderEmail: string;
   smsMessage: string;
+  smsProvider: 'twilio' | 'mobizon';
   twilioAccountSid: string;
   twilioAuthToken: string;
   twilioPhoneNumber: string;
@@ -102,6 +103,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   emailSenderName: 'Royal Spin Wheel',
   emailSenderEmail: 'noreply',
   smsMessage: '',
+  smsProvider: 'twilio',
   twilioAccountSid: '',
   twilioAuthToken: '',
   twilioPhoneNumber: '',
@@ -261,6 +263,7 @@ function Dashboard() {
 
   const { templates: customTemplates, refresh: refreshCustomTemplates } = useEmailTemplates(session?.user?.id || null);
   const [smsMessage, setSmsMessage] = useState('');
+  const [smsProvider, setSmsProvider] = useState<'twilio' | 'mobizon'>('twilio');
   const [smsSending, setSmsSending] = useState(false);
   const [smsTarget, setSmsTarget] = useState<'all' | 'selected'>('all');
   const [selectedPhones, setSelectedPhones] = useState<string[]>([]);
@@ -1042,6 +1045,7 @@ function Dashboard() {
     emailSenderName,
     emailSenderEmail,
     smsMessage,
+    smsProvider,
     twilioAccountSid,
     twilioAuthToken,
     twilioPhoneNumber,
@@ -1101,6 +1105,7 @@ function Dashboard() {
     setEmailSenderName(settings.emailSenderName || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderName);
     setEmailSenderEmail(settings.emailSenderEmail || DEFAULT_PERSISTED_DASHBOARD_SETTINGS.emailSenderEmail);
     setSmsMessage(settings.smsMessage || '');
+    setSmsProvider(settings.smsProvider === 'mobizon' ? 'mobizon' : 'twilio');
     setTwilioAccountSid(settings.twilioAccountSid || '');
     setTwilioAuthToken(settings.twilioAuthToken || '');
     setTwilioPhoneNumber(settings.twilioPhoneNumber || '');
@@ -1346,6 +1351,7 @@ function Dashboard() {
     emailSenderName,
     emailSenderEmail,
     smsMessage,
+    smsProvider,
     twilioAccountSid,
     twilioAuthToken,
     twilioPhoneNumber,
