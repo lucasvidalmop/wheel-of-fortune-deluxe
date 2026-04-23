@@ -709,6 +709,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_mb_message_log: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          owner_id: string
+          recipient_name: string
+          recipient_phone: string
+          status: string
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          owner_id: string
+          recipient_name?: string
+          recipient_phone: string
+          status?: string
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          owner_id?: string
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
       sms_message_log: {
         Row: {
           batch_id: string | null
