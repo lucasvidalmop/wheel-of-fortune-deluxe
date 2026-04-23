@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey, {
       global: { headers: { Authorization: authHeader } },
     })
+    const adminSupabase = createClient(supabaseUrl, serviceKey)
     const { data: userData } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     const userId = userData?.user?.id
     if (!userId) {
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
     // Helper: adiciona email à suppression list (idempotente)
     const suppressEmail = async (email: string, reason: string, meta: Record<string, unknown> = {}) => {
       try {
-        await supabase.from('suppressed_emails').insert({
+        await adminSupabase.from('suppressed_emails').insert({
           email,
           reason,
           metadata: { ...meta, source: 'send-bulk-brevo', owner_id: userId, suppressed_at: new Date().toISOString() },
@@ -147,7 +148,7 @@ Deno.serve(async (req) => {
     let suppressedSkipped = 0
     if (cleanRecipients.length > 0) {
       const emailsToCheck = cleanRecipients.map((r) => r.email)
-      const { data: suppressedRows } = await supabase
+      const { data: suppressedRows } = await adminSupabase
         .from('suppressed_emails')
         .select('email')
         .in('email', emailsToCheck)
@@ -255,7 +256,7 @@ Deno.serve(async (req) => {
                 if (invalid) {
                   await suppressEmail(r.email, 'invalid_format', { brevo_response: singleData })
                 }
-                await supabase.from('email_send_log').insert({
+                 await adminSupabase.from('email_send_log').insert({
                   template_name: 'brevo_bulk',
                   recipient_email: r.email,
                   status: invalid ? 'suppressed' : 'failed',
@@ -264,7 +265,7 @@ Deno.serve(async (req) => {
                 })
               } else {
                 sent++
-                await supabase.from('email_send_log').insert({
+                 await adminSupabase.from('email_send_log').insert({
                   template_name: 'brevo_bulk',
                   recipient_email: r.email,
                   status: 'sent',
@@ -275,7 +276,7 @@ Deno.serve(async (req) => {
               failed++
               const m = sErr instanceof Error ? sErr.message : String(sErr)
               errors.push({ email: r.email, error: m })
-              await supabase.from('email_send_log').insert({
+               await adminSupabase.from('email_send_log').insert({
                 template_name: 'brevo_bulk',
                 recipient_email: r.email,
                 status: 'failed',
@@ -294,14 +295,14 @@ Deno.serve(async (req) => {
             status: 'sent',
             metadata: { owner_id: userId, provider: 'brevo', messageId: data?.messageId, messageIds: data?.messageIds },
           }))
-          await supabase.from('email_send_log').insert(rows)
+           await adminSupabase.from('email_send_log').insert(rows)
         }
       } catch (err) {
         failed += chunk.length
         const errMsg = err instanceof Error ? err.message : String(err)
         for (const r of chunk) {
           errors.push({ email: r.email, error: errMsg })
-          await supabase.from('email_send_log').insert({
+           await adminSupabase.from('email_send_log').insert({
             template_name: 'brevo_bulk',
             recipient_email: r.email,
             status: 'failed',
