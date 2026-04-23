@@ -11,9 +11,10 @@ interface PremiumWheelProps {
   forcedSegment?: number | null;
   isMobile?: boolean;
   onShare?: (prizeName: string) => void;
+  resolveSpinTarget?: () => Promise<number | null | undefined>;
 }
 
-const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment, isMobile = false, onShare }) => {
+const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled = false, forcedSegment, isMobile = false, onShare, resolveSpinTarget }) => {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinDuration, setSpinDuration] = useState(5);
@@ -77,9 +78,20 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
       playSpinSound(durationMs, isCustom ? config.customSpinSoundUrl : undefined);
     }
 
+    let resolvedSegment: number | null | undefined = forcedSegment;
+    if (resolveSpinTarget) {
+      try {
+        resolvedSegment = await resolveSpinTarget();
+      } catch (error) {
+        console.error('Failed to resolve spin target', error);
+        setIsSpinning(false);
+        return;
+      }
+    }
+
     // Use requestAnimationFrame to ensure duration state is applied before rotation
     requestAnimationFrame(() => {
-      const winnerIdx = (forcedSegment != null && forcedSegment >= 0 && forcedSegment < numSegments) ? forcedSegment : pickWeightedSegment();
+      const winnerIdx = (resolvedSegment != null && resolvedSegment >= 0 && resolvedSegment < numSegments) ? resolvedSegment : pickWeightedSegment();
       const targetOffset = 360 - (winnerIdx + 0.5) * segmentAngle;
       const extraSpins = 5 + Math.floor(Math.random() * 5);
       const totalRotation = extraSpins * 360 + targetOffset;
@@ -96,7 +108,7 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
         onSpinEnd?.(winnerIdx);
       }, durationMs);
     });
-  }, [isSpinning, disabled, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments, config.spinSoundEnabled, config.spinSoundMode, config.customSpinSoundUrl]);
+  }, [isSpinning, disabled, rotation, segmentAngle, pickWeightedSegment, onSpinEnd, forcedSegment, numSegments, config.spinSoundEnabled, config.spinSoundMode, config.customSpinSoundUrl, resolveSpinTarget]);
 
   const getSegmentPath = (index: number, r: number, ir: number) => {
     const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
