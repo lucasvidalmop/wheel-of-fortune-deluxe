@@ -60,13 +60,13 @@ export default function MessagingAnalytics({ ownerId }: Props) {
           .range(from, from + PAGE - 1);
         if (ownerFilter === 'owner_id') {
           q = q.eq('owner_id', ownerId);
-        } else if (ownerFilter === 'metadata_owner') {
-          // Filter email_send_log by owner_id stored in metadata JSON
-          q = q.eq('metadata->>owner_id', ownerId);
         }
         const { data } = await q;
         if (!data || data.length === 0) break;
-        all = all.concat(data);
+        const filteredData = ownerFilter === 'metadata_owner'
+          ? data.filter((row: any) => row?.metadata?.owner_id === ownerId)
+          : data;
+        all = all.concat(filteredData);
         if (data.length < PAGE) break;
         from += PAGE;
       }
