@@ -219,7 +219,15 @@ function Dashboard() {
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
-  const [referralForm, setReferralForm] = useState({ label: '', spins_per_registration: 1, max_registrations: '' as string, fixed_prize_segments: [] as number[], auto_payment: false, expires_at: '' });
+  const [referralForm, setReferralForm] = useState({
+    label: '',
+    spins_per_registration: 1,
+    max_registrations: '' as string,
+    fixed_prize_segments: [] as number[],
+    fixed_prize_plan: [] as { segment_index: number; count: number }[],
+    auto_payment: false,
+    expires_at: '',
+  });
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
@@ -636,12 +644,61 @@ function Dashboard() {
     setGorjetaHistoryLoading(false);
   };
 
+  const buildReferralFixedPrizePlan = (link: any) => {
+    if (Array.isArray(link?.fixed_prize_plan)) {
+      return link.fixed_prize_plan
+        .map((item: any) => ({
+          segment_index: Number(item?.segment_index),
+          count: Math.max(0, Number(item?.count) || 0),
+        }))
+        .filter((item: any) => Number.isInteger(item.segment_index) && item.segment_index >= 0 && item.count > 0);
+    }
+
+    if (Array.isArray(link?.fixed_prize_segments) && link.fixed_prize_segments.length > 0) {
+      const counts = new Map<number, number>();
+      link.fixed_prize_segments.forEach((segmentIndex: any) => {
+        const idx = Number(segmentIndex);
+        if (!Number.isInteger(idx) || idx < 0) return;
+        counts.set(idx, (counts.get(idx) || 0) + 1);
+      });
+      return Array.from(counts.entries()).map(([segment_index, count]) => ({ segment_index, count }));
+    }
+
+    if (link?.fixed_prize_segment != null) {
+      return [{ segment_index: Number(link.fixed_prize_segment), count: 1 }];
+    }
+
+    return [] as { segment_index: number; count: number }[];
+  };
+
+  const formatReferralPrizePlan = (plan: { segment_index: number; count: number }[]) => {
+    if (!plan.length) return 'Nenhum';
+    return plan
+      .map(({ segment_index, count }) => {
+        const segment = wheelConfig?.segments?.[segment_index];
+        const label = segment ? `${segment.title} — ${segment.reward}` : `Segmento ${segment_index + 1}`;
+        return `${count}x ${label}`;
+      })
+      .join(', ');
+  };
+
+  const totalReferralPrizePlanCount = referralForm.fixed_prize_plan.reduce((sum, item) => sum + item.count, 0);
+
   const handleSaveReferral = async () => {
     if (!referralForm.label.trim()) { toast.error('Preencha o nome do link'); return; }
+    if (totalReferralPrizePlanCount > referralForm.spins_per_registration) {
+      toast.error('A soma dos segmentos garantidos não pode ser maior que a quantidade de giros');
+      return;
+    }
+
+    const normalizedPlan = referralForm.fixed_prize_plan
+      .map(item => ({ segment_index: item.segment_index, count: Math.max(0, Math.floor(item.count || 0)) }))
+      .filter(item => item.count > 0);
+
     if (editingReferral) {
       const { error } = await (supabase as any)
         .from('referral_links')
-        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null, updated_at: new Date().toISOString() })
+        .update({ label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: null, fixed_prize_plan: normalizedPlan.length > 0 ? normalizedPlan : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null, updated_at: new Date().toISOString() })
         .eq('id', editingReferral.id);
       if (error) { toast.error('Erro ao atualizar'); return; }
       toast.success('Link atualizado!');
@@ -652,7 +709,7 @@ function Dashboard() {
         `🎰 Giros por resgate: ${referralForm.spins_per_registration}`,
         referralForm.max_registrations ? `👥 Limite de resgates: ${referralForm.max_registrations}` : '👥 Limite de resgates: Ilimitado',
         referralForm.expires_at ? `📅 Expira em: ${new Date(referralForm.expires_at).toLocaleString('pt-BR')}` : '📅 Expiração: Sem prazo',
-        referralForm.fixed_prize_segments.length > 0 ? `🎯 Segmentos fixos:\n${referralForm.fixed_prize_segments.map(i => `   • ${wheelConfig?.segments?.[i]?.title || `Segmento ${i + 1}`} — ${wheelConfig?.segments?.[i]?.reward || ''}`).join('\n')}` : '🎯 Segmentos fixos: Nenhum',
+        normalizedPlan.length > 0 ? `🎯 Plano de prêmios:\n${normalizedPlan.map(item => `   • ${item.count}x ${wheelConfig?.segments?.[item.segment_index]?.title || `Segmento ${item.segment_index + 1}`} — ${wheelConfig?.segments?.[item.segment_index]?.reward || ''}`).join('\n')}` : '🎯 Plano de prêmios: Nenhum',
         `💸 Auto-pagamento: ${referralForm.auto_payment ? 'Sim' : 'Não'}`,
       ];
       const confirmed = await confirmDialog({
@@ -665,13 +722,13 @@ function Dashboard() {
 
       const { error } = await (supabase as any)
         .from('referral_links')
-        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: referralForm.fixed_prize_segments.length > 0 ? referralForm.fixed_prize_segments : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null });
+        .insert({ owner_id: session.user.id, label: referralForm.label, spins_per_registration: referralForm.spins_per_registration, max_registrations: referralForm.max_registrations ? parseInt(referralForm.max_registrations) : null, fixed_prize_segments: null, fixed_prize_plan: normalizedPlan.length > 0 ? normalizedPlan : null, auto_payment: referralForm.auto_payment, expires_at: referralForm.expires_at ? new Date(referralForm.expires_at).toISOString() : null });
       if (error) { toast.error('Erro ao criar link'); return; }
       toast.success('Link criado!');
     }
     setShowReferralForm(false);
     setEditingReferral(null);
-    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], auto_payment: false, expires_at: '' });
+    setReferralForm({ label: '', spins_per_registration: 1, max_registrations: '', fixed_prize_segments: [], fixed_prize_plan: [], auto_payment: false, expires_at: '' });
     fetchReferralLinks();
   };
 
