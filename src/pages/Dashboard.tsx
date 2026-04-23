@@ -6105,6 +6105,83 @@ function Dashboard() {
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-foreground text-sm focus:outline-none focus:border-primary/50"
                       />
                     </div>
+                    <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-3 space-y-3">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-1">Plano de saídas por segmento</label>
+                        <p className="text-[10px] text-muted-foreground/70">
+                          Defina quantas vezes cada segmento deve sair dentro dos giros desse resgate. Ex.: 3 giros = 1x prêmio A, 1x prêmio B, 1x perdeu.
+                        </p>
+                      </div>
+                      <div className="space-y-2 max-h-52 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+                        {wheelConfig.segments.map((seg: any, i: number) => {
+                          const planItem = referralForm.fixed_prize_plan.find(item => item.segment_index === i);
+                          const count = planItem?.count || 0;
+                          return (
+                            <div key={seg.id} className="flex items-center gap-3 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium text-foreground truncate">{seg.title}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{seg.reward}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setReferralForm(prev => ({
+                                    ...prev,
+                                    fixed_prize_plan: prev.fixed_prize_plan
+                                      .map(item => item.segment_index === i ? { ...item, count: Math.max(0, item.count - 1) } : item)
+                                      .filter(item => item.count > 0),
+                                  }))}
+                                  className="w-7 h-7 rounded-lg border border-white/[0.08] bg-white/[0.05] text-foreground hover:bg-white/[0.1] transition"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={referralForm.spins_per_registration}
+                                  value={count}
+                                  onChange={e => {
+                                    const nextCount = Math.max(0, Math.min(referralForm.spins_per_registration, parseInt(e.target.value) || 0));
+                                    setReferralForm(prev => {
+                                      const otherItems = prev.fixed_prize_plan.filter(item => item.segment_index !== i);
+                                      return {
+                                        ...prev,
+                                        fixed_prize_plan: nextCount > 0 ? [...otherItems, { segment_index: i, count: nextCount }] : otherItems,
+                                      };
+                                    });
+                                  }}
+                                  className="w-16 px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.1] text-center text-sm text-foreground focus:outline-none focus:border-primary/50"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setReferralForm(prev => {
+                                    const currentCount = prev.fixed_prize_plan.find(item => item.segment_index === i)?.count || 0;
+                                    const nextCount = Math.min(prev.spins_per_registration, currentCount + 1);
+                                    const otherItems = prev.fixed_prize_plan.filter(item => item.segment_index !== i);
+                                    return {
+                                      ...prev,
+                                      fixed_prize_plan: [...otherItems, { segment_index: i, count: nextCount }],
+                                    };
+                                  })}
+                                  className="w-7 h-7 rounded-lg border border-white/[0.08] bg-white/[0.05] text-foreground hover:bg-white/[0.1] transition"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-muted-foreground">Total configurado</span>
+                        <span className={`${totalReferralPrizePlanCount > referralForm.spins_per_registration ? 'text-destructive' : 'text-foreground'} font-semibold`}>
+                          {totalReferralPrizePlanCount}/{referralForm.spins_per_registration}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/70">
+                        Se sobrar giro sem plano, ele continua aleatório. Se quiser todos garantidos, deixe o total igual ao número de giros.
+                      </p>
+                    </div>
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">Limite de inscrições <span className="text-muted-foreground/50">(vazio = ilimitado)</span></label>
                       <input
@@ -6225,33 +6302,6 @@ function Dashboard() {
                           </button>
                         </div>
                       )}
-                    </div>
-                    {/* Prêmios fixos (multi-select) */}
-                    <div>
-                      <label className="text-[10px] text-muted-foreground block mb-1">Prêmios garantidos <span className="text-muted-foreground/50">(nenhum = aleatório, múltiplos = sorteio entre selecionados)</span></label>
-                      <div className="space-y-1 max-h-40 overflow-y-auto rounded-lg border border-white/[0.08] bg-white/[0.02] p-2" style={{ scrollbarWidth: 'thin' }}>
-                        {wheelConfig.segments.map((seg: any, i: number) => {
-                          const isSelected = referralForm.fixed_prize_segments.includes(i);
-                          return (
-                            <label key={seg.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition ${isSelected ? 'bg-primary/15 border border-primary/30' : 'hover:bg-white/[0.04] border border-transparent'}`}>
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => {
-                                  setReferralForm(p => ({
-                                    ...p,
-                                    fixed_prize_segments: isSelected
-                                      ? p.fixed_prize_segments.filter(s => s !== i)
-                                      : [...p.fixed_prize_segments, i]
-                                  }));
-                                }}
-                                className="accent-primary"
-                              />
-                              <span className="text-xs text-foreground">{seg.title} — {seg.reward}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
                     </div>
                     {/* Auto-payment */}
                     <div className="flex items-center justify-between">
