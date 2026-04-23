@@ -531,22 +531,32 @@ const Roleta = () => {
         }
       }
 
-      // Prêmio pré-definido é desativado automaticamente pelo decrement_wheel_user_spins
-      if (fixedPrizeEnabled) {
-        setFixedPrizeEnabled(false);
-        setFixedPrizeSegment(null);
-      }
-
       const { data: decrementData } = await (supabase as any).rpc('decrement_wheel_user_spins', {
         p_account_id: accountId,
         p_owner_id: ownerId || null,
       });
-      const row = Array.isArray(decrementData) ? decrementData[0] : decrementData;
+
+      const { data: refreshData } = await (supabase as any).rpc('get_wheel_user_spins', {
+        p_account_id: accountId,
+        p_owner_id: ownerId || null,
+      });
+      const row = Array.isArray(refreshData) ? refreshData[0] : refreshData;
       if (row) {
         setSpinsRemaining(row.spins_available);
         setCanSpin(row.spins_available >= 1);
+        setFixedPrizeEnabled(row.fixed_prize_enabled ?? false);
+        setFixedPrizeSegment(row.fixed_prize_segment ?? null);
+        setIsBlacklisted(row.blacklisted ?? false);
         setMessage(row.spins_available < 1 ? 'Sem giros disponíveis' : '');
         if (!ownerId && row.owner_id) setOwnerId(row.owner_id);
+      } else {
+        const decrementRow = Array.isArray(decrementData) ? decrementData[0] : decrementData;
+        if (decrementRow) {
+          setSpinsRemaining(decrementRow.spins_available);
+          setCanSpin(decrementRow.spins_available >= 1);
+          setMessage(decrementRow.spins_available < 1 ? 'Sem giros disponíveis' : '');
+          if (!ownerId && decrementRow.owner_id) setOwnerId(decrementRow.owner_id);
+        }
       }
     } catch (error) {
       console.error('Failed to resolve spin:', error);
@@ -559,6 +569,9 @@ const Roleta = () => {
       if (refreshedRow) {
         setSpinsRemaining(refreshedRow.spins_available);
         setCanSpin(refreshedRow.spins_available >= 1);
+        setFixedPrizeEnabled(refreshedRow.fixed_prize_enabled ?? false);
+        setFixedPrizeSegment(refreshedRow.fixed_prize_segment ?? null);
+        setIsBlacklisted(refreshedRow.blacklisted ?? false);
         setMessage(refreshedRow.spins_available < 1 ? 'Sem giros disponíveis' : '');
         if (!ownerId && refreshedRow.owner_id) setOwnerId(refreshedRow.owner_id);
       }
