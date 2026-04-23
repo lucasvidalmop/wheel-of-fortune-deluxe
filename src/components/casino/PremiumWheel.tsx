@@ -32,13 +32,27 @@ const PremiumWheel: React.FC<PremiumWheelProps> = ({ config, onSpinEnd, disabled
   const cx = 300, cy = 300, outerR = 250, innerR = 40;
 
   const pickWeightedSegment = useCallback(() => {
-    const totalWeight = config.segments.reduce((sum, s) => sum + s.percentage, 0);
-    let rand = Math.random() * totalWeight;
-    for (let i = 0; i < config.segments.length; i++) {
-      rand -= config.segments[i].percentage;
-      if (rand <= 0) return i;
+    const eligibleSegments = config.segments
+      .map((segment, index) => ({ segment, index }))
+      .filter(({ segment }) => Number(segment.percentage) > 0);
+
+    if (eligibleSegments.length === 0) {
+      return 0;
     }
-    return config.segments.length - 1;
+
+    const totalWeight = eligibleSegments.reduce((sum, { segment }) => sum + Number(segment.percentage || 0), 0);
+
+    if (totalWeight <= 0) {
+      return eligibleSegments[0].index;
+    }
+
+    let rand = Math.random() * totalWeight;
+    for (const { segment, index } of eligibleSegments) {
+      rand -= Number(segment.percentage || 0);
+      if (rand < 0) return index;
+    }
+
+    return eligibleSegments[eligibleSegments.length - 1].index;
   }, [config.segments]);
 
   const spin = useCallback(async () => {

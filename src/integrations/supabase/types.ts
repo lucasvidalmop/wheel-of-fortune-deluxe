@@ -1046,6 +1046,17 @@ export type Database = {
             }
             Returns: Json
           }
+        | {
+            Args: {
+              p_legacy_segment?: number
+              p_legacy_segments?: Json
+              p_plan: Json
+              p_segments?: Json
+              p_spins: number
+              p_total_segments?: number
+            }
+            Returns: Json
+          }
       create_prize_payment:
         | {
             Args: {
@@ -1190,6 +1201,7 @@ export type Database = {
             }
             Returns: Json
           }
+      segment_is_paying_prize: { Args: { p_segment: Json }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
