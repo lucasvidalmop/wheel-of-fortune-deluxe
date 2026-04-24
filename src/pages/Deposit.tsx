@@ -65,13 +65,26 @@ const defaultDepositConfig: DepositConfig = {
   showNewDepositButton: true,
 };
 
-const Deposit = ({ tag: tagProp }: { tag?: string }) => {
+interface DepositLabels {
+  nameLabel?: string;
+  namePlaceholder?: string;
+  accountLabel?: string;
+  accountPlaceholder?: string;
+  whatsappLabel?: string;
+}
+
+const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabels }) => {
   const params = useParams<{ tag: string }>();
   const tag = tagProp || params.tag || '';
+  const nameLabel = labels?.nameLabel ?? 'Nome completo';
+  const namePlaceholder = labels?.namePlaceholder ?? 'Seu nome';
+  const whatsappLabel = labels?.whatsappLabel ?? 'WhatsApp';
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
   const [notFound, setNotFound] = useState(false);
+  const accountLabel = labels?.accountLabel ?? config.accountIdLabel;
+  const accountPlaceholder = labels?.accountPlaceholder ?? config.accountIdLabel;
 
   const [name, setName] = useState('');
   const [accountId, setAccountId] = useState('');
@@ -357,19 +370,19 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
           <form onSubmit={handleFormSubmit} className="space-y-4 rounded-2xl backdrop-blur-xl p-6" style={cardStyle}>
             <div className="space-y-1.5">
               <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: txtMuted }}>
-                <User size={12} /> Nome completo
+                <User size={12} /> {nameLabel}
               </label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder={namePlaceholder} required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: txtMuted }}>
-                <CreditCard size={12} /> {config.accountIdLabel}
+                <CreditCard size={12} /> {accountLabel}
               </label>
-              <input type="text" value={accountId} onChange={e => setAccountId(e.target.value)} placeholder={config.accountIdLabel} required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
+              <input type="text" value={accountId} onChange={e => setAccountId(e.target.value)} placeholder={accountPlaceholder} required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: txtMuted }}>
-                <Smartphone size={12} /> WhatsApp
+                <Smartphone size={12} /> {whatsappLabel}
               </label>
               <input type="text" value={whatsapp} onChange={e => setWhatsapp(maskPhone(e.target.value))} placeholder="(00) 00000-0000" required className={`w-full px-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={{ ...inputStyle, '--tw-ring-color': `${accent}66` } as any} />
             </div>
@@ -469,15 +482,15 @@ const Deposit = ({ tag: tagProp }: { tag?: string }) => {
             {/* Receipt-like card */}
             <div className="rounded-xl p-4 space-y-3 text-left" style={{ background: `${txt}06`, border: `1px solid ${txt}10` }}>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>Nome</span>
+                <span style={{ color: txtMuted }}>{nameLabel}</span>
                 <span className="font-semibold">{name}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>{config.accountIdLabel}</span>
+                <span style={{ color: txtMuted }}>{accountLabel}</span>
                 <span className="font-semibold">{accountId}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>WhatsApp</span>
+                <span style={{ color: txtMuted }}>{whatsappLabel}</span>
                 <span className="font-semibold">{whatsapp}</span>
               </div>
               <div className="pt-2" style={{ borderTop: `1px solid ${txt}14` }}>
