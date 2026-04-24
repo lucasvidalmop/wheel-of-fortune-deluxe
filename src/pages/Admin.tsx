@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload, Copy, Monitor, ToggleLeft, RotateCw } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
-const TOOL_DEFS: { key: 'roleta' | 'sms' | 'sms_mb' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa'; label: string }[] = [
+const TOOL_DEFS: { key: 'roleta' | 'sms' | 'sms_mb' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa'; label: string }[] = [
   { key: 'inscritos', label: 'Inscritos' },
   { key: 'roleta', label: 'Roleta' },
   { key: 'auth', label: 'Login' },
@@ -16,6 +16,7 @@ const TOOL_DEFS: { key: 'roleta' | 'sms' | 'sms_mb' | 'sms_cs' | 'email' | 'emai
   { key: 'sms_mb', label: 'SMS API (MB)' },
   { key: 'sms_cs', label: 'SMS API (CS)' },
   { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'whatsapp2', label: 'WhatsApp 2' },
   { key: 'msg_analytics', label: 'Analytics Msg' },
   { key: 'financeiro', label: 'Financeiro' },
   { key: 'notificacoes', label: 'Notificações' },
@@ -27,7 +28,7 @@ const TOOL_DEFS: { key: 'roleta' | 'sms' | 'sms_mb' | 'sms_cs' | 'email' | 'emai
 type ToolKey = typeof TOOL_DEFS[number]['key'];
 type Perms = Record<ToolKey, boolean>;
 const DEFAULT_PERMS: Perms = {
-  roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, email_brevo: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true,
+  roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, email_brevo: true, whatsapp: true, whatsapp2: true, financeiro: true, gorjeta: true, referral: true,
   inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
 };
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
