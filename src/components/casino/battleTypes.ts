@@ -4,6 +4,7 @@
 export interface BattleParticipant {
   id: string;
   name: string;
+  game?: string; // chosen slot game (ex: Fortune Tiger)
   avatarUrl?: string;
   weight?: number; // optional weighting for the draw (default 1)
 }
@@ -17,96 +18,107 @@ export interface BattleConfig {
   headerTitleSize: number;
   headerSubtitleSize: number;
   headerImageSize: number;
+  headerAccentColor: string; // underline / accent under title
+  titleColor: string;
 
   // Background
   bgColor: string;
   bgImageUrl?: string;
   bgImageMobileUrl?: string;
 
-  // Wheel visuals
+  // Wheel visuals (minimalist style)
   wheelOuterRingColor: string;
   wheelDividerColor: string;
   wheelDividerWidth: number;
-  wheelLedColor: string;
-  wheelLedSize: number;
   wheelGlowColor: string;
   wheelPointerColor: string;
-  wheelCenterCapColor: string;
-  wheelCenterImageUrl?: string;
+  wheelInnerColor: string; // inner disc color
+  wheelCenterButtonColor: string; // SPIN center button bg
+  wheelCenterButtonTextColor: string;
+  wheelCenterButtonText: string;
 
   // Default segment palette (used when participants don't override colors)
   segmentPalette: string[];
   segmentTextColor: string;
   segmentFontSize: number;
 
-  // Action button
+  // Action button (below wheel)
   buttonColor: string;
   buttonTextColor: string;
   buttonText: string;
   buttonFontSize: number;
   buttonBorderRadius: number;
+  buttonBorderColor: string;
+
+  // Side panels
+  panelBgColor: string;
+  panelBorderColor: string;
+  panelTextColor: string;
+  panelLabelColor: string; // small uppercase labels
+  inputBgColor: string;
+  inputBorderColor: string;
+  inputTextColor: string;
 
   // Result box
   resultBoxColor: string;
   resultTextColor: string;
   resultBorderColor: string;
-  resultTitle: string; // e.g. "Vencedor"
-
-  // Mobile adjustments
-  mobileWheelScale?: number;
-  mobileWheelOffsetY?: number;
+  resultTitle: string;
 
   // SEO
   seoTitle?: string;
   seoDescription?: string;
   faviconUrl?: string;
-
-  // Participants (defined later by the user, but stored with the config)
-  participants: BattleParticipant[];
 }
 
 export const defaultBattleConfig: BattleConfig = {
-  pageTitle: 'BATALHA SLOT',
-  pageSubtitle: 'Quem será o sorteado?',
+  pageTitle: 'SLOT BATTLE',
+  pageSubtitle: '',
   headerMode: 'text',
-  headerTitleSize: 36,
+  headerTitleSize: 64,
   headerSubtitleSize: 14,
   headerImageSize: 120,
+  headerAccentColor: '#3DE8D2',
+  titleColor: '#FFFFFF',
 
-  bgColor: '#0b0820',
+  bgColor: '#0B0F14',
 
-  wheelOuterRingColor: '#8B8B8B',
-  wheelDividerColor: '#C0C0C0',
-  wheelDividerWidth: 3,
-  wheelLedColor: '#FFE033',
-  wheelLedSize: 5,
-  wheelGlowColor: '#FFD700',
-  wheelPointerColor: '#E0E0E0',
-  wheelCenterCapColor: '#2a2a2a',
+  wheelOuterRingColor: '#1A2028',
+  wheelDividerColor: '#2A323C',
+  wheelDividerWidth: 1,
+  wheelGlowColor: '#3DE8D2',
+  wheelPointerColor: '#3DE8D2',
+  wheelInnerColor: '#0F141A',
+  wheelCenterButtonColor: '#0F141A',
+  wheelCenterButtonTextColor: '#3DE8D2',
+  wheelCenterButtonText: 'SPIN',
 
   segmentPalette: [
-    '#1a1a3e',
-    '#2d1a1a',
-    '#1a2a1a',
-    '#2a1a2a',
-    '#1a2a2a',
-    '#3a2a1a',
-    '#1a1a2a',
-    '#2a2a1a',
+    '#11161C',
+    '#161C24',
+    '#0F141A',
+    '#1A2028',
   ],
-  segmentTextColor: '#ffffff',
-  segmentFontSize: 14,
+  segmentTextColor: '#E6FFFB',
+  segmentFontSize: 13,
 
-  buttonColor: '#FFD700',
-  buttonTextColor: '#000000',
+  buttonColor: 'transparent',
+  buttonTextColor: '#5A6470',
   buttonText: 'GIRAR',
-  buttonFontSize: 18,
-  buttonBorderRadius: 12,
+  buttonFontSize: 14,
+  buttonBorderRadius: 6,
+  buttonBorderColor: '#1F262E',
 
-  resultBoxColor: '#000000',
-  resultTextColor: '#FFD700',
-  resultBorderColor: '#FFD700',
+  panelBgColor: '#11161C',
+  panelBorderColor: '#1F262E',
+  panelTextColor: '#E6FFFB',
+  panelLabelColor: '#8A95A1',
+  inputBgColor: '#0B0F14',
+  inputBorderColor: '#3DE8D2',
+  inputTextColor: '#E6FFFB',
+
+  resultBoxColor: '#11161C',
+  resultTextColor: '#3DE8D2',
+  resultBorderColor: '#3DE8D2',
   resultTitle: 'VENCEDOR',
-
-  participants: [],
 };
