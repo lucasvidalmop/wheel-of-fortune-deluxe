@@ -2619,6 +2619,7 @@ function Dashboard() {
   const tabTitles: Record<string, string> = {
     inscritos: 'Inscritos',
     wheel: 'Configuração da Roleta',
+    batalha_slot: 'Batalha Slot',
     auth: 'Página de Login',
     history: 'Histórico de Prêmios',
     analytics: 'Web Analytics',
