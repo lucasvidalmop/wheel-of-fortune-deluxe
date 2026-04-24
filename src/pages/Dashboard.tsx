@@ -232,6 +232,7 @@ function Dashboard() {
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
+  const [sharingReferral, setSharingReferral] = useState<any>(null);
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
