@@ -66,6 +66,9 @@ interface PersistedDashboardSettings {
   evolutionApiUrl: string;
   evolutionApiKey: string;
   evolutionInstance: string;
+  evolutionApiUrl2: string;
+  evolutionApiKey2: string;
+  evolutionInstance2: string;
   spinWhatsappEnabled: boolean;
   spinWhatsappTemplate: string;
   spinWhatsappCustomMsg: string;
@@ -118,6 +121,9 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   evolutionApiUrl: '',
   evolutionApiKey: '',
   evolutionInstance: '',
+  evolutionApiUrl2: '',
+  evolutionApiKey2: '',
+  evolutionInstance2: '',
   spinWhatsappEnabled: false,
   spinWhatsappTemplate: 'welcome',
   spinWhatsappCustomMsg: '',
@@ -338,9 +344,9 @@ function Dashboard() {
   // WhatsApp 2 state (segunda instância — credenciais e envios independentes)
   const [whatsappSending2, setWhatsappSending2] = useState(false);
   const [showWhatsappConfig2, setShowWhatsappConfig2] = useState(false);
-  const [evolutionApiUrl2, setEvolutionApiUrl2] = useState(() => localStorage.getItem('evolution_api_url_2') || '');
-  const [evolutionApiKey2, setEvolutionApiKey2] = useState(() => localStorage.getItem('evolution_api_key_2') || '');
-  const [evolutionInstance2, setEvolutionInstance2] = useState(() => localStorage.getItem('evolution_instance_2') || '');
+  const [evolutionApiUrl2, setEvolutionApiUrl2] = useState('');
+  const [evolutionApiKey2, setEvolutionApiKey2] = useState('');
+  const [evolutionInstance2, setEvolutionInstance2] = useState('');
   const [instanceStatus2, setInstanceStatus2] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
   const [instanceQrCode2, setInstanceQrCode2] = useState<string | null>(null);
   const [creatingInstance2, setCreatingInstance2] = useState(false);
@@ -1132,6 +1138,7 @@ function Dashboard() {
     // Clear any legacy values left over from before the fix.
     ['twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number',
      'evolution_api_url', 'evolution_api_key', 'evolution_instance',
+     'evolution_api_url_2', 'evolution_api_key_2', 'evolution_instance_2',
      PANEL_CASA_STORAGE_KEY].forEach((key) => {
       try { localStorage.removeItem(key); } catch {}
     });
@@ -1159,6 +1166,9 @@ function Dashboard() {
     evolutionApiUrl,
     evolutionApiKey,
     evolutionInstance,
+    evolutionApiUrl2,
+    evolutionApiKey2,
+    evolutionInstance2,
     spinWhatsappEnabled,
     spinWhatsappTemplate,
     spinWhatsappCustomMsg,
@@ -1219,6 +1229,9 @@ function Dashboard() {
     setEvolutionApiUrl(settings.evolutionApiUrl || '');
     setEvolutionApiKey(settings.evolutionApiKey || '');
     setEvolutionInstance(settings.evolutionInstance || '');
+    setEvolutionApiUrl2(settings.evolutionApiUrl2 || '');
+    setEvolutionApiKey2(settings.evolutionApiKey2 || '');
+    setEvolutionInstance2(settings.evolutionInstance2 || '');
     setSpinWhatsappEnabled(!!settings.spinWhatsappEnabled);
     setSpinWhatsappTemplate(settings.spinWhatsappTemplate || 'welcome');
     setSpinWhatsappCustomMsg(settings.spinWhatsappCustomMsg || '');
@@ -5920,15 +5933,15 @@ function Dashboard() {
                   <p className="text-[10px] text-muted-foreground">Configure sua instância da <a href="https://doc.evolution-api.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Evolution API</a></p>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">URL da API</label>
-                    <input type="text" value={evolutionApiUrl2} onChange={e => { setEvolutionApiUrl2(e.target.value); localStorage.setItem('evolution_api_url_2', e.target.value); }} placeholder="https://sua-api.com" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={evolutionApiUrl2} onChange={e => setEvolutionApiUrl2(e.target.value)} placeholder="https://sua-api.com" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">API Key</label>
-                    <input type="password" value={evolutionApiKey2} onChange={e => { setEvolutionApiKey2(e.target.value); localStorage.setItem('evolution_api_key_2', e.target.value); }} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="password" value={evolutionApiKey2} onChange={e => setEvolutionApiKey2(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Nome da Instância</label>
-                    <input type="text" value={evolutionInstance2} onChange={e => { setEvolutionInstance2(e.target.value); localStorage.setItem('evolution_instance_2', e.target.value); }} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={evolutionInstance2} onChange={e => setEvolutionInstance2(e.target.value)} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
 
                   <div className="border-t border-white/[0.06] pt-4 space-y-3">
