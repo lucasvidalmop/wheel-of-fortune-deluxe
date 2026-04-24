@@ -241,20 +241,32 @@ export default function Batalha() {
                         </div>
                       )}
                     </div>
-                    <input
-                      type="number"
-                      value={p.score ?? 0}
-                      onChange={(e) => updateScore(p.id, Number(e.target.value))}
-                      onFocus={(e) => e.target.select()}
-                      step="any"
-                      className="w-20 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px]"
-                      style={{
-                        backgroundColor: config.panelBgColor,
-                        border: `1px solid ${config.inputBorderColor}55`,
-                        color: config.headerAccentColor,
-                      }}
-                      aria-label={`Pontos de ${p.name}`}
-                    />
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="text-xs font-bold"
+                        style={{ color: config.headerAccentColor }}
+                      >
+                        R$
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={p.score ? String(p.score) : ''}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(',', '.').replace(/[^0-9.]/g, '');
+                          updateScore(p.id, raw === '' ? 0 : Number(raw));
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        className="w-20 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        style={{
+                          backgroundColor: config.panelBgColor,
+                          border: `1px solid ${config.inputBorderColor}55`,
+                          color: config.headerAccentColor,
+                        }}
+                        aria-label={`Valor de ${p.name}`}
+                      />
+                    </div>
                     <button
                       onClick={() => removeParticipant(p.id)}
                       className="opacity-50 hover:opacity-100 transition-opacity"
