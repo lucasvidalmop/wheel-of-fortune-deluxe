@@ -5941,7 +5941,7 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Nome da Instância</label>
-                    <input type="text" value={evolutionInstance2} onChange={e => { setEvolutionInstance2(e.target.value); localStorage.setItem('evolution_instance_2', e.target.value); }} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={evolutionInstance2} onChange={e => setEvolutionInstance2(e.target.value)} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
 
                   <div className="border-t border-white/[0.06] pt-4 space-y-3">
