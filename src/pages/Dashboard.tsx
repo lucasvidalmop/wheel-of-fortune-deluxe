@@ -66,6 +66,9 @@ interface PersistedDashboardSettings {
   evolutionApiUrl: string;
   evolutionApiKey: string;
   evolutionInstance: string;
+  evolutionApiUrl2: string;
+  evolutionApiKey2: string;
+  evolutionInstance2: string;
   spinWhatsappEnabled: boolean;
   spinWhatsappTemplate: string;
   spinWhatsappCustomMsg: string;
