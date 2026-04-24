@@ -52,9 +52,9 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
     if (!t) return;
     // Replace placeholders with current link data
     const filled = t.message
-      .replaceAll('{link}', shareUrl)
-      .replaceAll('{url}', shareUrl)
-      .replaceAll('{label}', linkLabel);
+      .split('{link}').join(shareUrl)
+      .split('{url}').join(shareUrl)
+      .split('{label}').join(linkLabel);
     setMessage(filled);
   };
 
