@@ -334,6 +334,24 @@ function Dashboard() {
   const [whatsappLogs, setWhatsappLogs] = useState<any[]>([]);
   const [whatsappLogsLoading, setWhatsappLogsLoading] = useState(false);
   const [showWhatsappHistory, setShowWhatsappHistory] = useState(false);
+
+  // WhatsApp 2 state (segunda instância — credenciais e envios independentes)
+  const [whatsappSending2, setWhatsappSending2] = useState(false);
+  const [showWhatsappConfig2, setShowWhatsappConfig2] = useState(false);
+  const [evolutionApiUrl2, setEvolutionApiUrl2] = useState(() => localStorage.getItem('evolution_api_url_2') || '');
+  const [evolutionApiKey2, setEvolutionApiKey2] = useState(() => localStorage.getItem('evolution_api_key_2') || '');
+  const [evolutionInstance2, setEvolutionInstance2] = useState(() => localStorage.getItem('evolution_instance_2') || '');
+  const [instanceStatus2, setInstanceStatus2] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
+  const [instanceQrCode2, setInstanceQrCode2] = useState<string | null>(null);
+  const [creatingInstance2, setCreatingInstance2] = useState(false);
+  const [whatsappLogs2, setWhatsappLogs2] = useState<any[]>([]);
+  const [whatsappLogsLoading2, setWhatsappLogsLoading2] = useState(false);
+  const [showWhatsappHistory2, setShowWhatsappHistory2] = useState(false);
+  const [notifyGroups2, setNotifyGroups2] = useState<{ id: string; subject: string }[]>([]);
+  const [notifySelectedGroups2, setNotifySelectedGroups2] = useState<{ id: string; subject: string }[]>([]);
+  const [notifyGroupJid2, setNotifyGroupJid2] = useState('');
+  const [notifyGroupName2, setNotifyGroupName2] = useState('');
+  const [notifyGroupsLoading2, setNotifyGroupsLoading2] = useState(false);
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
