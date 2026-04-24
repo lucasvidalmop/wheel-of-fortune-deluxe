@@ -701,9 +701,6 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
                       Envio direto via Evolution API (sem abrir abas). Configure as credenciais em Configurações &gt; WhatsApp.
                     </p>
 
-                    <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                      Agora a lista inclui contatos importados por CSV e inscritos com telefone salvo.
-                    </p>
                   </>
                 )}
               </div>
