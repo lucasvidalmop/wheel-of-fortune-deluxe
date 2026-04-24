@@ -87,6 +87,7 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
   const [groupFilter, setGroupFilter] = useState<string>('__all__');
   const [search, setSearch] = useState('');
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
+  const [sending, setSending] = useState(false);
 
   const loadTemplates = async () => {
     setLoading(true);
