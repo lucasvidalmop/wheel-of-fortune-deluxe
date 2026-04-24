@@ -2054,7 +2054,18 @@ function Dashboard() {
     fetchPrizePayments();
   };
 
-
+  const fetchWhatsappLogs2 = async () => {
+    if (!session?.user?.id) return;
+    setWhatsappLogsLoading2(true);
+    const { data } = await (supabase as any)
+      .from('whatsapp2_message_log')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setWhatsappLogs2(data || []);
+    setWhatsappLogsLoading2(false);
+  };
   const handleGrantSpin = async (user: WheelUser) => {
     // Open modal to choose prize
     setGrantSpinUser(user);
