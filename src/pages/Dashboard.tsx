@@ -1138,6 +1138,7 @@ function Dashboard() {
     // Clear any legacy values left over from before the fix.
     ['twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number',
      'evolution_api_url', 'evolution_api_key', 'evolution_instance',
+     'evolution_api_url_2', 'evolution_api_key_2', 'evolution_instance_2',
      PANEL_CASA_STORAGE_KEY].forEach((key) => {
       try { localStorage.removeItem(key); } catch {}
     });
