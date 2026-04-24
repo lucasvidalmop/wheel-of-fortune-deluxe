@@ -219,43 +219,52 @@ export default function Batalha() {
               </p>
             ) : (
               <ul className="space-y-2">
-                {participants.map((p) => {
-                  const wins = ranking.find((r) => r.name === p.name && r.game === p.game)?.wins ?? 0;
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
-                      style={{ backgroundColor: config.bgColor }}
+                {rankedParticipants.map((p, idx) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                    style={{ backgroundColor: config.bgColor }}
+                  >
+                    <span
+                      className="text-xs font-bold tabular-nums w-5 text-center"
+                      style={{ color: config.panelLabelColor }}
                     >
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium truncate" style={{ color: config.panelTextColor }}>
-                          {p.name}
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate" style={{ color: config.panelTextColor }}>
+                        {p.name}
+                      </div>
+                      {p.game && (
+                        <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
+                          {p.game}
                         </div>
-                        {p.game && (
-                          <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
-                            {p.game}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-xs font-bold tabular-nums"
-                          style={{ color: config.headerAccentColor }}
-                        >
-                          {wins}
-                        </span>
-                        <button
-                          onClick={() => removeParticipant(p.id)}
-                          className="opacity-50 hover:opacity-100 transition-opacity"
-                          aria-label="Remover"
-                          style={{ color: config.panelLabelColor }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      value={p.score ?? 0}
+                      onChange={(e) => updateScore(p.id, Number(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                      step="any"
+                      className="w-20 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px]"
+                      style={{
+                        backgroundColor: config.panelBgColor,
+                        border: `1px solid ${config.inputBorderColor}55`,
+                        color: config.headerAccentColor,
+                      }}
+                      aria-label={`Pontos de ${p.name}`}
+                    />
+                    <button
+                      onClick={() => removeParticipant(p.id)}
+                      className="opacity-50 hover:opacity-100 transition-opacity"
+                      aria-label="Remover"
+                      style={{ color: config.panelLabelColor }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </li>
+                ))}
               </ul>
             )}
           </section>
