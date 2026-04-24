@@ -603,6 +603,9 @@ function Dashboard() {
   };
 
   const [financeiroSubTab, setFinanceiroSubTab] = useState<'credenciais' | 'deposito' | 'aprovacoes' | 'saldo' | 'crypto' | 'withdraw' | 'historico' | 'pagamento_manual'>('credenciais');
+  // Sub-tab for the public Deposit page variant displayed in the dashboard.
+  // Both variants share the same depositConfig — only the public URL differs (/dep= vs /depbs=).
+  const [depositVariant, setDepositVariant] = useState<'dep' | 'depbs'>('dep');
   const [manualPaySelectedIds, setManualPaySelectedIds] = useState<Set<string>>(new Set());
   const [manualPayAmount, setManualPayAmount] = useState('');
   const [manualPayPrize, setManualPayPrize] = useState('');
