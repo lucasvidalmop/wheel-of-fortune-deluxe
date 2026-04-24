@@ -650,22 +650,6 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
             )}
           </div>
 
-          <div className="flex items-center gap-2 pt-2">
-            <button
-              onClick={handleCopy}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-foreground text-xs font-bold hover:bg-white/[0.08] transition"
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? 'Copiado' : 'Copiar mensagem'}
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 text-white text-xs font-bold hover:brightness-110 transition shadow-lg shadow-emerald-500/20"
-            >
-              <Send size={14} /> Abrir WhatsApp
-            </button>
-          </div>
         </div>
       </div>
     </div>
