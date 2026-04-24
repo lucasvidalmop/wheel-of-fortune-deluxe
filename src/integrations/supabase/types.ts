@@ -895,6 +895,33 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_share_templates: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       wheel_configs: {
         Row: {
           clone_code: string
