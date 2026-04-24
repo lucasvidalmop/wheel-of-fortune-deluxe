@@ -66,6 +66,7 @@ export default function Batalha() {
       name: trimmed,
       game: game.trim() || undefined,
       weight: 1,
+      score: 0,
     };
     setParticipants((prev) => [...prev, p]);
     setName('');
@@ -75,20 +76,22 @@ export default function Batalha() {
   const removeParticipant = (id: string) =>
     setParticipants((prev) => prev.filter((p) => p.id !== id));
 
+  const updateScore = (id: string, score: number) =>
+    setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, score } : p)));
+
   const handleWinner = (w: BattleParticipant) => {
     setWinnerHistory((prev) => [{ id: crypto.randomUUID(), name: w.name, game: w.game, at: Date.now() }, ...prev].slice(0, 20));
   };
 
-  const ranking = useMemo(() => {
-    const counts = new Map<string, { name: string; game?: string; wins: number }>();
-    for (const w of winnerHistory) {
-      const key = w.name + '|' + (w.game ?? '');
-      const existing = counts.get(key);
-      if (existing) existing.wins += 1;
-      else counts.set(key, { name: w.name, game: w.game, wins: 1 });
-    }
-    return Array.from(counts.values()).sort((a, b) => b.wins - a.wins);
-  }, [winnerHistory]);
+  // Ranking sorted by manual score (highest first), then by name as tiebreaker.
+  const rankedParticipants = useMemo(() => {
+    return [...participants].sort((a, b) => {
+      const sa = a.score ?? 0;
+      const sb = b.score ?? 0;
+      if (sb !== sa) return sb - sa;
+      return a.name.localeCompare(b.name);
+    });
+  }, [participants]);
 
   return (
     <main className="min-h-screen w-full px-4 py-10 lg:px-12" style={bgStyle}>

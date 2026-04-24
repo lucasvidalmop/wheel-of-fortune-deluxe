@@ -7,6 +7,7 @@ export interface BattleParticipant {
   game?: string; // chosen slot game (ex: Fortune Tiger)
   avatarUrl?: string;
   weight?: number; // optional weighting for the draw (default 1)
+  score?: number; // manual ranking score, defined per round by the operator
 }
 
 export interface BattleConfig {
