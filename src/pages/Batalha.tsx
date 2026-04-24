@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import BattleWheel from '@/components/casino/BattleWheel';
 import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from '@/components/casino/battleTypes';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Swords, LogOut, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Batalha() {
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
@@ -13,16 +14,79 @@ export default function Batalha() {
   const [game, setGame] = useState('');
   const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>([]);
 
+  // ═══ Auth state (linked to operator) ═══
+  const [session, setSession] = useState<any>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  // Subscribe to auth changes (set listener BEFORE getSession)
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setAuthReady(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Check operator permission for batalha_slot
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setHasAccess(null);
+      return;
+    }
     let cancelled = false;
     (async () => {
+      // Admins always have access
+      const { data: roleRow } = await (supabase as any)
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (cancelled) return;
+      if (roleRow) {
+        setHasAccess(true);
+        return;
+      }
+      // Otherwise check operator_permissions (fall back to defaults)
+      const [{ data: perms }, { data: defaults }] = await Promise.all([
+        (supabase as any).from('operator_permissions').select('batalha_slot').eq('user_id', session.user.id).maybeSingle(),
+        (supabase as any).from('operator_permissions_defaults').select('batalha_slot').eq('id', 1).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const allowed = perms?.batalha_slot ?? defaults?.batalha_slot ?? false;
+      setHasAccess(!!allowed);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
+  // Load battle_config for the LOGGED-IN operator (linked by user_id)
+  useEffect(() => {
+    if (!session?.user?.id || hasAccess !== true) {
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
       try {
-        const { data, error } = await (supabase as any).rpc('get_battle_config_default');
-        if (!cancelled && !error && data && data.length > 0) {
-          const remote = data[0]?.config as Partial<BattleConfig> | null;
-          if (remote && typeof remote === 'object') {
-            setConfig({ ...defaultBattleConfig, ...remote });
-          }
+        const { data, error } = await (supabase as any)
+          .from('battle_configs')
+          .select('config')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (!error && data?.config && typeof data.config === 'object') {
+          setConfig({ ...defaultBattleConfig, ...(data.config as Partial<BattleConfig>) });
+        } else {
+          setConfig(defaultBattleConfig);
         }
       } catch (_) {
         // fall back to defaults
@@ -33,7 +97,7 @@ export default function Batalha() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [session?.user?.id, hasAccess]);
 
   // SEO
   useEffect(() => {
@@ -50,6 +114,23 @@ export default function Batalha() {
       link.href = config.faviconUrl;
     }
   }, [config]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+    if (error) toast.error(error.message);
+    setLoginLoading(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setHasAccess(null);
+    setParticipants([]);
+    setEliminatedIds(new Set());
+    setWinnerHistory([]);
+  };
 
   const bgStyle: React.CSSProperties = {
     backgroundColor: config.bgColor,
@@ -114,8 +195,113 @@ export default function Batalha() {
     });
   }, [participants]);
 
+  // ═══ While auth is loading ═══
+  if (!authReady) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="opacity-60 text-sm">Carregando...</div>
+      </main>
+    );
+  }
+
+  // ═══ LOGIN ═══
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-destructive/10 blur-[120px]" />
+        <div className="w-full max-w-sm mx-4 p-8 space-y-6 relative rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto mb-4">
+              <Swords className="w-7 h-7 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Batalha Slot</h1>
+            <p className="text-sm text-muted-foreground">Entre com sua conta de operador</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</label>
+              <input
+                type="email"
+                placeholder="operador@email.com"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Senha</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/25"
+            >
+              {loginLoading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ ACCESS DENIED ═══
+  if (hasAccess === false) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6">
+        <div className="p-8 text-center space-y-4 max-w-sm mx-4 rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/20 border border-destructive/30 flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">Acesso Negado</h2>
+          <p className="text-sm text-muted-foreground">
+            Sua conta de operador não possui permissão para a Batalha Slot. Solicite acesso ao administrador.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="w-full py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm hover:bg-white/[0.08] transition flex items-center justify-center gap-2"
+          >
+            <LogOut size={16} /> Sair
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ Permission check still loading ═══
+  if (hasAccess === null) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="opacity-60 text-sm">Validando acesso...</div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen w-full px-4 py-10 lg:px-12" style={bgStyle}>
+    <main className="min-h-screen w-full px-4 py-10 lg:px-12 relative" style={bgStyle}>
+      {/* Logout button */}
+      <button
+        onClick={handleLogout}
+        title="Sair"
+        className="absolute top-4 right-4 z-10 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs tracking-[0.2em] transition-opacity hover:opacity-80"
+        style={{
+          color: config.panelLabelColor,
+          border: `1px solid ${config.panelBorderColor}`,
+          backgroundColor: config.panelBgColor,
+        }}
+      >
+        <LogOut size={12} /> SAIR
+      </button>
+
       {/* Header */}
       <header className="text-center mb-10">
         {config.headerMode !== 'image' && (
