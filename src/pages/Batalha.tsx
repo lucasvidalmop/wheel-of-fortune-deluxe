@@ -8,6 +8,7 @@ export default function Batalha() {
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
   const [loading, setLoading] = useState(true);
   const [participants, setParticipants] = useState<BattleParticipant[]>([]);
+  const [eliminatedIds, setEliminatedIds] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
   const [game, setGame] = useState('');
   const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>([]);
@@ -73,15 +74,35 @@ export default function Batalha() {
     setGame('');
   };
 
-  const removeParticipant = (id: string) =>
+  const removeParticipant = (id: string) => {
     setParticipants((prev) => prev.filter((p) => p.id !== id));
+    setEliminatedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
 
   const updateScore = (id: string, score: number) =>
     setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, score } : p)));
 
   const handleWinner = (w: BattleParticipant) => {
     setWinnerHistory((prev) => [{ id: crypto.randomUUID(), name: w.name, game: w.game, at: Date.now() }, ...prev].slice(0, 20));
+    // Remove the winner from the wheel but keep them in the ranking.
+    setEliminatedIds((prev) => {
+      const next = new Set(prev);
+      next.add(w.id);
+      return next;
+    });
   };
+
+  // Active participants on the wheel (not yet drawn).
+  const activeParticipants = useMemo(
+    () => participants.filter((p) => !eliminatedIds.has(p.id)),
+    [participants, eliminatedIds],
+  );
+
+  const resetWheel = () => setEliminatedIds(new Set());
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
   const rankedParticipants = useMemo(() => {
