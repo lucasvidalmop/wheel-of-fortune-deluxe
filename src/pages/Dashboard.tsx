@@ -6446,6 +6446,15 @@ function Dashboard() {
             </div>
           )}
 
+          {sharingReferral && session?.user?.id && (
+            <WhatsAppShareDialog
+              ownerId={session.user.id}
+              shareUrl={`${window.location.origin}/ref/${sharingReferral.code}`}
+              linkLabel={sharingReferral.label || ''}
+              onClose={() => setSharingReferral(null)}
+            />
+          )}
+
           {/* ══════ GORJETA TAB ══════ */}
           {activeTab === 'gorjeta' && (() => {
             const gorjetaRef = (wheelConfig as any).gorjetaRef || '';
