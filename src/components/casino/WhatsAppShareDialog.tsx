@@ -385,7 +385,6 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
     } catch {/* ignora erro de log */}
   };
 
-  const [sending, setSending] = useState(false);
 
   const sendToSelected = async () => {
     if (!message.trim()) {
