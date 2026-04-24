@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      battle_configs: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       edpay_transactions: {
         Row: {
           amount: number | null
@@ -195,6 +219,7 @@ export type Database = {
         Row: {
           analytics: boolean
           auth: boolean
+          batalha_slot: boolean
           configuracoes: boolean
           created_at: string
           email: boolean
@@ -219,6 +244,7 @@ export type Database = {
         Insert: {
           analytics?: boolean
           auth?: boolean
+          batalha_slot?: boolean
           configuracoes?: boolean
           created_at?: string
           email?: boolean
@@ -243,6 +269,7 @@ export type Database = {
         Update: {
           analytics?: boolean
           auth?: boolean
+          batalha_slot?: boolean
           configuracoes?: boolean
           created_at?: string
           email?: boolean
@@ -270,6 +297,7 @@ export type Database = {
         Row: {
           analytics: boolean
           auth: boolean
+          batalha_slot: boolean
           configuracoes: boolean
           email: boolean
           email_brevo: boolean
@@ -293,6 +321,7 @@ export type Database = {
         Insert: {
           analytics?: boolean
           auth?: boolean
+          batalha_slot?: boolean
           configuracoes?: boolean
           email?: boolean
           email_brevo?: boolean
@@ -316,6 +345,7 @@ export type Database = {
         Update: {
           analytics?: boolean
           auth?: boolean
+          batalha_slot?: boolean
           configuracoes?: boolean
           email?: boolean
           email_brevo?: boolean
@@ -1181,6 +1211,13 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_battle_config_default: {
+        Args: never
+        Returns: {
+          config: Json
+          user_id: string
+        }[]
       }
       get_prize_history: {
         Args: { p_account_id: string; p_owner_id: string }
