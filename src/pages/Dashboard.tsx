@@ -8010,6 +8010,7 @@ function Dashboard() {
             const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '', confirmationButtonText: 'Acessar →', confirmationButtonUrl: '', confirmationButtonColor: '', showNewDepositButton: true };
             const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
             const depositUrl = dc.tag ? `${baseUrl}/dep=${dc.tag}` : '';
+            const depositBsUrl = dc.tag ? `${baseUrl}/depbs=${dc.tag}` : '';
 
             const handleDepositUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
               const file = e.target.files?.[0]; if (!file) return;
@@ -8023,12 +8024,28 @@ function Dashboard() {
 
             return (
               <div className="w-full max-w-2xl min-w-0 space-y-6">
+                {/* Sub-tabs: Depósito / Depósito BS */}
+                <div className="flex gap-2 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06] w-fit">
+                  {[
+                    { key: 'dep', label: 'Depósito' },
+                    { key: 'depbs', label: 'Depósito BS' },
+                  ].map(t => (
+                    <button
+                      key={t.key}
+                      onClick={() => setDepositVariant(t.key as 'dep' | 'depbs')}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${depositVariant === t.key ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Ativar + Tag */}
                 <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <DollarSign size={20} className="text-primary" />
-                      <h3 className="text-base font-bold text-foreground">Página de Depósito</h3>
+                      <h3 className="text-base font-bold text-foreground">{depositVariant === 'depbs' ? 'Página de Depósito BS' : 'Página de Depósito'}</h3>
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <span className="text-xs text-muted-foreground">{dc.enabled ? 'Ativa' : 'Inativa'}</span>
@@ -8041,13 +8058,18 @@ function Dashboard() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Tag da rota (URL)</label>
                     <input value={dc.tag || ''} onChange={e => updateDc({ tag: e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase() })} placeholder="ex: meudeposito" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                    {depositUrl && (
+                    {(depositVariant === 'depbs' ? depositBsUrl : depositUrl) && (
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground truncate">{depositUrl}</span>
-                        <button onClick={() => { navigator.clipboard.writeText(depositUrl); toast.success('Link copiado!'); }} className="text-xs text-primary hover:text-primary/80 shrink-0"><Copy size={12} /></button>
-                        <a href={depositUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:text-primary/80 shrink-0"><ExternalLink size={12} /></a>
+                        <span className="text-xs text-muted-foreground truncate">{depositVariant === 'depbs' ? depositBsUrl : depositUrl}</span>
+                        <button onClick={() => { const url = depositVariant === 'depbs' ? depositBsUrl : depositUrl; navigator.clipboard.writeText(url); toast.success('Link copiado!'); }} className="text-xs text-primary hover:text-primary/80 shrink-0"><Copy size={12} /></button>
+                        <a href={depositVariant === 'depbs' ? depositBsUrl : depositUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:text-primary/80 shrink-0"><ExternalLink size={12} /></a>
                       </div>
                     )}
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">
+                      {depositVariant === 'depbs'
+                        ? 'Esta variação compartilha a mesma configuração e credenciais do Depósito principal.'
+                        : 'Tag única para gerar a URL pública desta página.'}
+                    </p>
                   </div>
                 </div>
 
