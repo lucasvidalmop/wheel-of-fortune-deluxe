@@ -691,11 +691,15 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
 
                     <button
                       onClick={sendToSelected}
-                      disabled={selectedContacts.size === 0}
+                      disabled={selectedContacts.size === 0 || sending}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 text-white text-xs font-bold hover:brightness-110 transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Send size={13} /> Enviar para {selectedContacts.size || 0} contato{selectedContacts.size === 1 ? '' : 's'} selecionado{selectedContacts.size === 1 ? '' : 's'}
+                      <Send size={13} /> {sending ? 'Enviando...' : `Enviar para ${selectedContacts.size || 0} contato${selectedContacts.size === 1 ? '' : 's'} selecionado${selectedContacts.size === 1 ? '' : 's'}`}
                     </button>
+
+                    <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+                      Envio direto via Evolution API (sem abrir abas). Configure as credenciais em Configurações &gt; WhatsApp.
+                    </p>
 
                     <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
                       Agora a lista inclui contatos importados por CSV e inscritos com telefone salvo.
