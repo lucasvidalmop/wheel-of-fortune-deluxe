@@ -40,6 +40,7 @@ const App = () => (
           <Route path="/ref/:code" element={<Referral />} />
           <Route path="/gorjeta" element={<Registration />} />
           <Route path="/influencer" element={<Influencer />} />
+          <Route path="/batalha" element={<Batalha />} />
           <Route path="/:slug" element={<SlugRouter />} />
         </Routes>
       </BrowserRouter>
