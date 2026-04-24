@@ -12,6 +12,7 @@ import Referral from "./pages/Referral.tsx";
 import Registration from "./pages/Registration.tsx";
 import Influencer from "./pages/Influencer.tsx";
 import Deposit from "./pages/Deposit.tsx";
+import Batalha from "./pages/Batalha.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/ref/:code" element={<Referral />} />
           <Route path="/gorjeta" element={<Registration />} />
           <Route path="/influencer" element={<Influencer />} />
+          <Route path="/batalha" element={<Batalha />} />
           <Route path="/:slug" element={<SlugRouter />} />
         </Routes>
       </BrowserRouter>

@@ -1,0 +1,292 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from './battleTypes';
+import BattleWheel from './BattleWheel';
+import { Plus, Trash2, Save, RotateCcw } from 'lucide-react';
+
+interface Props {
+  userId: string;
+}
+
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <label className="flex flex-col gap-1 text-sm">
+    <span className="text-foreground/80 font-medium">{label}</span>
+    {children}
+  </label>
+);
+
+const ColorInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+  <div className="flex items-center gap-2">
+    <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="h-8 w-12 rounded border border-border bg-transparent" />
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-8 flex-1 rounded border border-border bg-background px-2 text-xs font-mono"
+    />
+  </div>
+);
+
+const NumberInput = ({ value, onChange, min, max, step }: { value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }) => (
+  <input
+    type="number"
+    value={value}
+    min={min}
+    max={max}
+    step={step ?? 1}
+    onChange={(e) => onChange(Number(e.target.value))}
+    className="h-8 rounded border border-border bg-background px-2 text-sm"
+  />
+);
+
+const TextInput = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
+  <input
+    type="text"
+    value={value}
+    placeholder={placeholder}
+    onChange={(e) => onChange(e.target.value)}
+    className="h-8 rounded border border-border bg-background px-2 text-sm"
+  />
+);
+
+export default function BattleConfigPanel({ userId }: Props) {
+  const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from('battle_configs')
+        .select('config')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (cancelled) return;
+      if (!error && data?.config && typeof data.config === 'object') {
+        setConfig({ ...defaultBattleConfig, ...data.config, participants: data.config.participants ?? [] });
+      }
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const update = <K extends keyof BattleConfig>(key: K, value: BattleConfig[K]) =>
+    setConfig((prev) => ({ ...prev, [key]: value }));
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await (supabase as any)
+      .from('battle_configs')
+      .upsert({ user_id: userId, config }, { onConflict: 'user_id' });
+    setSaving(false);
+    if (error) {
+      toast.error('Erro ao salvar: ' + error.message);
+    } else {
+      toast.success('Configuração salva!');
+    }
+  };
+
+  const resetDefaults = () => {
+    if (confirm('Restaurar configurações visuais para o padrão? (participantes serão mantidos)')) {
+      setConfig((prev) => ({ ...defaultBattleConfig, participants: prev.participants }));
+    }
+  };
+
+  // Participants
+  const addParticipant = () => {
+    const p: BattleParticipant = {
+      id: crypto.randomUUID(),
+      name: `Participante ${config.participants.length + 1}`,
+      weight: 1,
+    };
+    update('participants', [...config.participants, p]);
+  };
+
+  const removeParticipant = (id: string) =>
+    update('participants', config.participants.filter((p) => p.id !== id));
+
+  const updateParticipant = (id: string, patch: Partial<BattleParticipant>) =>
+    update('participants', config.participants.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+
+  const updatePalette = (idx: number, color: string) => {
+    const next = [...config.segmentPalette];
+    next[idx] = color;
+    update('segmentPalette', next);
+  };
+  const addPaletteColor = () => update('segmentPalette', [...config.segmentPalette, '#444444']);
+  const removePaletteColor = (idx: number) => {
+    if (config.segmentPalette.length <= 1) return;
+    update('segmentPalette', config.segmentPalette.filter((_, i) => i !== idx));
+  };
+
+  if (loading) {
+    return <div className="p-6 text-foreground/70">Carregando configuração...</div>;
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-6 p-4 lg:p-6">
+      {/* PREVIEW */}
+      <div
+        className="rounded-xl border border-border p-6 flex flex-col items-center"
+        style={{ backgroundColor: config.bgColor, minHeight: 600 }}
+      >
+        <div className="text-center mb-6">
+          <h2 className="font-extrabold text-white" style={{ fontSize: config.headerTitleSize }}>{config.pageTitle}</h2>
+          <p className="text-white/80 mt-1" style={{ fontSize: config.headerSubtitleSize }}>{config.pageSubtitle}</p>
+        </div>
+        <BattleWheel config={config} />
+      </div>
+
+      {/* CONTROLS */}
+      <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-2">
+        <div className="flex items-center gap-2 sticky top-0 bg-background z-10 py-2 -my-2 border-b border-border">
+          <button onClick={save} disabled={saving} className="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">
+            <Save size={16} /> {saving ? 'Salvando...' : 'Salvar'}
+          </button>
+          <button onClick={resetDefaults} className="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-lg border border-border text-sm">
+            <RotateCcw size={14} /> Padrão
+          </button>
+        </div>
+
+        {/* Participants */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-foreground">Participantes ({config.participants.length})</h3>
+            <button onClick={addParticipant} className="inline-flex items-center gap-1 h-8 px-3 rounded-md bg-primary/10 text-primary text-sm">
+              <Plus size={14} /> Adicionar
+            </button>
+          </div>
+          <div className="space-y-2">
+            {config.participants.length === 0 && (
+              <p className="text-xs text-foreground/60 italic">Adicione os participantes que vão entrar no sorteio.</p>
+            )}
+            {config.participants.map((p) => (
+              <div key={p.id} className="flex items-center gap-2 rounded-md border border-border p-2">
+                <input
+                  type="text"
+                  value={p.name}
+                  onChange={(e) => updateParticipant(p.id, { name: e.target.value })}
+                  className="h-8 flex-1 rounded border border-border bg-background px-2 text-sm"
+                  placeholder="Nome"
+                />
+                <input
+                  type="number"
+                  value={p.weight ?? 1}
+                  min={1}
+                  onChange={(e) => updateParticipant(p.id, { weight: Math.max(1, Number(e.target.value)) })}
+                  className="h-8 w-16 rounded border border-border bg-background px-2 text-sm"
+                  title="Peso (chance)"
+                />
+                <button onClick={() => removeParticipant(p.id)} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-destructive hover:bg-destructive/10">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Header */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Cabeçalho & SEO</h3>
+          <Field label="Título"><TextInput value={config.pageTitle} onChange={(v) => update('pageTitle', v)} /></Field>
+          <Field label="Subtítulo"><TextInput value={config.pageSubtitle} onChange={(v) => update('pageSubtitle', v)} /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Tamanho título"><NumberInput value={config.headerTitleSize} onChange={(v) => update('headerTitleSize', v)} min={10} max={100} /></Field>
+            <Field label="Tamanho subtítulo"><NumberInput value={config.headerSubtitleSize} onChange={(v) => update('headerSubtitleSize', v)} min={8} max={60} /></Field>
+          </div>
+          <Field label="Modo do cabeçalho">
+            <select
+              value={config.headerMode}
+              onChange={(e) => update('headerMode', e.target.value as BattleConfig['headerMode'])}
+              className="h-8 rounded border border-border bg-background px-2 text-sm"
+            >
+              <option value="text">Apenas texto</option>
+              <option value="image">Apenas imagem</option>
+              <option value="image_text">Imagem + texto</option>
+            </select>
+          </Field>
+          <Field label="URL imagem do cabeçalho"><TextInput value={config.headerImageUrl ?? ''} onChange={(v) => update('headerImageUrl', v)} placeholder="https://..." /></Field>
+          <Field label="Tamanho da imagem"><NumberInput value={config.headerImageSize} onChange={(v) => update('headerImageSize', v)} min={40} max={500} /></Field>
+          <Field label="SEO Title"><TextInput value={config.seoTitle ?? ''} onChange={(v) => update('seoTitle', v)} /></Field>
+          <Field label="SEO Description"><TextInput value={config.seoDescription ?? ''} onChange={(v) => update('seoDescription', v)} /></Field>
+          <Field label="Favicon URL"><TextInput value={config.faviconUrl ?? ''} onChange={(v) => update('faviconUrl', v)} /></Field>
+        </section>
+
+        {/* Background */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Fundo</h3>
+          <Field label="Cor de fundo"><ColorInput value={config.bgColor} onChange={(v) => update('bgColor', v)} /></Field>
+          <Field label="Imagem de fundo (desktop)"><TextInput value={config.bgImageUrl ?? ''} onChange={(v) => update('bgImageUrl', v)} placeholder="https://..." /></Field>
+          <Field label="Imagem de fundo (mobile)"><TextInput value={config.bgImageMobileUrl ?? ''} onChange={(v) => update('bgImageMobileUrl', v)} placeholder="https://..." /></Field>
+        </section>
+
+        {/* Wheel visuals */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Visual da Roleta</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Anel externo"><ColorInput value={config.wheelOuterRingColor} onChange={(v) => update('wheelOuterRingColor', v)} /></Field>
+            <Field label="LEDs"><ColorInput value={config.wheelLedColor} onChange={(v) => update('wheelLedColor', v)} /></Field>
+            <Field label="Tamanho LED"><NumberInput value={config.wheelLedSize} onChange={(v) => update('wheelLedSize', v)} min={1} max={20} /></Field>
+            <Field label="Brilho/glow"><ColorInput value={config.wheelGlowColor} onChange={(v) => update('wheelGlowColor', v)} /></Field>
+            <Field label="Divisores"><ColorInput value={config.wheelDividerColor} onChange={(v) => update('wheelDividerColor', v)} /></Field>
+            <Field label="Largura divisor"><NumberInput value={config.wheelDividerWidth} onChange={(v) => update('wheelDividerWidth', v)} min={1} max={20} /></Field>
+            <Field label="Ponteiro"><ColorInput value={config.wheelPointerColor} onChange={(v) => update('wheelPointerColor', v)} /></Field>
+            <Field label="Centro"><ColorInput value={config.wheelCenterCapColor} onChange={(v) => update('wheelCenterCapColor', v)} /></Field>
+          </div>
+          <Field label="Imagem do centro (URL)"><TextInput value={config.wheelCenterImageUrl ?? ''} onChange={(v) => update('wheelCenterImageUrl', v)} placeholder="https://..." /></Field>
+        </section>
+
+        {/* Segments */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Segmentos</h3>
+          <Field label="Cor do texto"><ColorInput value={config.segmentTextColor} onChange={(v) => update('segmentTextColor', v)} /></Field>
+          <Field label="Tamanho da fonte"><NumberInput value={config.segmentFontSize} onChange={(v) => update('segmentFontSize', v)} min={8} max={40} /></Field>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-foreground/80 font-medium">Paleta de cores</span>
+              <button onClick={addPaletteColor} className="text-xs text-primary inline-flex items-center gap-1"><Plus size={12} /> cor</button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {config.segmentPalette.map((c, i) => (
+                <div key={i} className="flex items-center gap-1">
+                  <ColorInput value={c} onChange={(v) => updatePalette(i, v)} />
+                  <button onClick={() => removePaletteColor(i)} className="h-8 w-8 inline-flex items-center justify-center text-destructive">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Button */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Botão</h3>
+          <Field label="Texto do botão"><TextInput value={config.buttonText} onChange={(v) => update('buttonText', v)} /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Cor"><ColorInput value={config.buttonColor} onChange={(v) => update('buttonColor', v)} /></Field>
+            <Field label="Cor do texto"><ColorInput value={config.buttonTextColor} onChange={(v) => update('buttonTextColor', v)} /></Field>
+            <Field label="Tamanho fonte"><NumberInput value={config.buttonFontSize} onChange={(v) => update('buttonFontSize', v)} min={10} max={40} /></Field>
+            <Field label="Borda (raio)"><NumberInput value={config.buttonBorderRadius} onChange={(v) => update('buttonBorderRadius', v)} min={0} max={40} /></Field>
+          </div>
+        </section>
+
+        {/* Result */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Caixa do Vencedor</h3>
+          <Field label="Título da caixa"><TextInput value={config.resultTitle} onChange={(v) => update('resultTitle', v)} /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Fundo"><ColorInput value={config.resultBoxColor} onChange={(v) => update('resultBoxColor', v)} /></Field>
+            <Field label="Texto"><ColorInput value={config.resultTextColor} onChange={(v) => update('resultTextColor', v)} /></Field>
+            <Field label="Borda"><ColorInput value={config.resultBorderColor} onChange={(v) => update('resultBorderColor', v)} /></Field>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
