@@ -82,9 +82,9 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
+  const [notFound, setNotFound] = useState(false);
   const accountLabel = labels?.accountLabel ?? config.accountIdLabel;
   const accountPlaceholder = labels?.accountPlaceholder ?? config.accountIdLabel;
-
 
   const [name, setName] = useState('');
   const [accountId, setAccountId] = useState('');
