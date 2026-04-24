@@ -12,6 +12,7 @@ import Referral from "./pages/Referral.tsx";
 import Registration from "./pages/Registration.tsx";
 import Influencer from "./pages/Influencer.tsx";
 import Deposit from "./pages/Deposit.tsx";
+import DepositBS from "./pages/DepositBS.tsx";
 import Batalha from "./pages/Batalha.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -19,6 +20,10 @@ const queryClient = new QueryClient();
 
 const SlugRouter = () => {
   const { slug } = useParams<{ slug: string }>();
+  if (slug && slug.startsWith('depbs=')) {
+    const tag = slug.substring(6);
+    return <DepositBS tag={tag} />;
+  }
   if (slug && slug.startsWith('dep=')) {
     const tag = slug.substring(4);
     return <Deposit tag={tag} />;
