@@ -65,9 +65,20 @@ const defaultDepositConfig: DepositConfig = {
   showNewDepositButton: true,
 };
 
-const Deposit = ({ tag: tagProp }: { tag?: string }) => {
+interface DepositLabels {
+  nameLabel?: string;
+  namePlaceholder?: string;
+  accountLabel?: string;
+  accountPlaceholder?: string;
+  whatsappLabel?: string;
+}
+
+const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabels }) => {
   const params = useParams<{ tag: string }>();
   const tag = tagProp || params.tag || '';
+  const nameLabel = labels?.nameLabel ?? 'Nome completo';
+  const namePlaceholder = labels?.namePlaceholder ?? 'Seu nome';
+  const whatsappLabel = labels?.whatsappLabel ?? 'WhatsApp';
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
