@@ -66,6 +66,7 @@ export default function Batalha() {
       name: trimmed,
       game: game.trim() || undefined,
       weight: 1,
+      score: 0,
     };
     setParticipants((prev) => [...prev, p]);
     setName('');
@@ -75,20 +76,22 @@ export default function Batalha() {
   const removeParticipant = (id: string) =>
     setParticipants((prev) => prev.filter((p) => p.id !== id));
 
+  const updateScore = (id: string, score: number) =>
+    setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, score } : p)));
+
   const handleWinner = (w: BattleParticipant) => {
     setWinnerHistory((prev) => [{ id: crypto.randomUUID(), name: w.name, game: w.game, at: Date.now() }, ...prev].slice(0, 20));
   };
 
-  const ranking = useMemo(() => {
-    const counts = new Map<string, { name: string; game?: string; wins: number }>();
-    for (const w of winnerHistory) {
-      const key = w.name + '|' + (w.game ?? '');
-      const existing = counts.get(key);
-      if (existing) existing.wins += 1;
-      else counts.set(key, { name: w.name, game: w.game, wins: 1 });
-    }
-    return Array.from(counts.values()).sort((a, b) => b.wins - a.wins);
-  }, [winnerHistory]);
+  // Ranking sorted by manual score (highest first), then by name as tiebreaker.
+  const rankedParticipants = useMemo(() => {
+    return [...participants].sort((a, b) => {
+      const sa = a.score ?? 0;
+      const sb = b.score ?? 0;
+      if (sb !== sa) return sb - sa;
+      return a.name.localeCompare(b.name);
+    });
+  }, [participants]);
 
   return (
     <main className="min-h-screen w-full px-4 py-10 lg:px-12" style={bgStyle}>
@@ -216,43 +219,52 @@ export default function Batalha() {
               </p>
             ) : (
               <ul className="space-y-2">
-                {participants.map((p) => {
-                  const wins = ranking.find((r) => r.name === p.name && r.game === p.game)?.wins ?? 0;
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
-                      style={{ backgroundColor: config.bgColor }}
+                {rankedParticipants.map((p, idx) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                    style={{ backgroundColor: config.bgColor }}
+                  >
+                    <span
+                      className="text-xs font-bold tabular-nums w-5 text-center"
+                      style={{ color: config.panelLabelColor }}
                     >
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium truncate" style={{ color: config.panelTextColor }}>
-                          {p.name}
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate" style={{ color: config.panelTextColor }}>
+                        {p.name}
+                      </div>
+                      {p.game && (
+                        <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
+                          {p.game}
                         </div>
-                        {p.game && (
-                          <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
-                            {p.game}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-xs font-bold tabular-nums"
-                          style={{ color: config.headerAccentColor }}
-                        >
-                          {wins}
-                        </span>
-                        <button
-                          onClick={() => removeParticipant(p.id)}
-                          className="opacity-50 hover:opacity-100 transition-opacity"
-                          aria-label="Remover"
-                          style={{ color: config.panelLabelColor }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      value={p.score ?? 0}
+                      onChange={(e) => updateScore(p.id, Number(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                      step="any"
+                      className="w-20 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px]"
+                      style={{
+                        backgroundColor: config.panelBgColor,
+                        border: `1px solid ${config.inputBorderColor}55`,
+                        color: config.headerAccentColor,
+                      }}
+                      aria-label={`Pontos de ${p.name}`}
+                    />
+                    <button
+                      onClick={() => removeParticipant(p.id)}
+                      className="opacity-50 hover:opacity-100 transition-opacity"
+                      aria-label="Remover"
+                      style={{ color: config.panelLabelColor }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </li>
+                ))}
               </ul>
             )}
           </section>
