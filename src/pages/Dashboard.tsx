@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
+import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
@@ -231,6 +232,7 @@ function Dashboard() {
   const [editingReferral, setEditingReferral] = useState<any>(null);
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
+  const [sharingReferral, setSharingReferral] = useState<any>(null);
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
@@ -6380,6 +6382,12 @@ function Dashboard() {
                             <Palette size={12} /> Personalizar
                           </button>
                           <button
+                            onClick={() => setSharingReferral(link)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-[10px] hover:bg-emerald-500/25 transition"
+                          >
+                            <MessageCircle size={12} /> WhatsApp
+                          </button>
+                          <button
                             onClick={() => setAnalyticsReferral(link)}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-500/15 text-sky-300 text-[10px] hover:bg-sky-500/25 transition"
                           >
@@ -6436,6 +6444,15 @@ function Dashboard() {
                 />
               </div>
             </div>
+          )}
+
+          {sharingReferral && session?.user?.id && (
+            <WhatsAppShareDialog
+              ownerId={session.user.id}
+              shareUrl={`${window.location.origin}/ref/${sharingReferral.code}`}
+              linkLabel={sharingReferral.label || ''}
+              onClose={() => setSharingReferral(null)}
+            />
           )}
 
           {/* ══════ GORJETA TAB ══════ */}
