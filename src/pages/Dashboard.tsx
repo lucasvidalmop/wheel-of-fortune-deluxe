@@ -1228,6 +1228,9 @@ function Dashboard() {
     setEvolutionApiUrl(settings.evolutionApiUrl || '');
     setEvolutionApiKey(settings.evolutionApiKey || '');
     setEvolutionInstance(settings.evolutionInstance || '');
+    setEvolutionApiUrl2(settings.evolutionApiUrl2 || '');
+    setEvolutionApiKey2(settings.evolutionApiKey2 || '');
+    setEvolutionInstance2(settings.evolutionInstance2 || '');
     setSpinWhatsappEnabled(!!settings.spinWhatsappEnabled);
     setSpinWhatsappTemplate(settings.spinWhatsappTemplate || 'welcome');
     setSpinWhatsappCustomMsg(settings.spinWhatsappCustomMsg || '');
