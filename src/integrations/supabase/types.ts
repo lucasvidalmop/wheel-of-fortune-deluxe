@@ -214,6 +214,7 @@ export type Database = {
           updated_at: string
           user_id: string
           whatsapp: boolean
+          whatsapp2: boolean
         }
         Insert: {
           analytics?: boolean
@@ -237,6 +238,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           whatsapp?: boolean
+          whatsapp2?: boolean
         }
         Update: {
           analytics?: boolean
@@ -260,6 +262,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp?: boolean
+          whatsapp2?: boolean
         }
         Relationships: []
       }
@@ -285,6 +288,7 @@ export type Database = {
           sms_mb: boolean
           updated_at: string
           whatsapp: boolean
+          whatsapp2: boolean
         }
         Insert: {
           analytics?: boolean
@@ -307,6 +311,7 @@ export type Database = {
           sms_mb?: boolean
           updated_at?: string
           whatsapp?: boolean
+          whatsapp2?: boolean
         }
         Update: {
           analytics?: boolean
@@ -329,6 +334,7 @@ export type Database = {
           sms_mb?: boolean
           updated_at?: string
           whatsapp?: boolean
+          whatsapp2?: boolean
         }
         Relationships: []
       }
@@ -919,6 +925,39 @@ export type Database = {
           name?: string
           owner_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp2_message_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          owner_id: string
+          recipient_name: string
+          recipient_phone: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          owner_id: string
+          recipient_name?: string
+          recipient_phone: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          owner_id?: string
+          recipient_name?: string
+          recipient_phone?: string
+          status?: string
         }
         Relationships: []
       }
