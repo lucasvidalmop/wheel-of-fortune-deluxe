@@ -8,6 +8,9 @@ interface Props {
   shareUrl: string;
   linkLabel?: string;
   onClose: () => void;
+  evolutionApiUrl?: string;
+  evolutionApiKey?: string;
+  evolutionInstance?: string;
 }
 
 interface Template {
@@ -71,7 +74,15 @@ const mergeContacts = (items: Contact[]) => {
   return Array.from(map.values());
 };
 
-const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Props) => {
+const WhatsAppShareDialog = ({
+  ownerId,
+  shareUrl,
+  linkLabel = '',
+  onClose,
+  evolutionApiUrl: propApiUrl,
+  evolutionApiKey: propApiKey,
+  evolutionInstance: propInstance,
+}: Props) => {
   const [message, setMessage] = useState(DEFAULT_MESSAGE(linkLabel, shareUrl));
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -355,9 +366,9 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
   };
 
   const getEvolutionCreds = () => {
-    const evolutionApiUrl = localStorage.getItem('evolution_api_url') || '';
-    const evolutionApiKey = localStorage.getItem('evolution_api_key') || '';
-    const evolutionInstance = localStorage.getItem('evolution_instance') || '';
+    const evolutionApiUrl = (propApiUrl || localStorage.getItem('evolution_api_url') || '').trim();
+    const evolutionApiKey = (propApiKey || localStorage.getItem('evolution_api_key') || '').trim();
+    const evolutionInstance = (propInstance || localStorage.getItem('evolution_instance') || '').trim();
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) return null;
     return { evolutionApiUrl, evolutionApiKey, evolutionInstance };
   };

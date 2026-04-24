@@ -6452,6 +6452,9 @@ function Dashboard() {
               shareUrl={`${window.location.origin}/ref/${sharingReferral.code}`}
               linkLabel={sharingReferral.label || ''}
               onClose={() => setSharingReferral(null)}
+              evolutionApiUrl={evolutionApiUrl}
+              evolutionApiKey={evolutionApiKey}
+              evolutionInstance={evolutionInstance}
             />
           )}
 
