@@ -3,22 +3,22 @@ import type { BattleConfig, BattleParticipant } from './battleTypes';
 
 interface Props {
   config: BattleConfig;
+  participants: BattleParticipant[];
   onWinner?: (p: BattleParticipant) => void;
 }
 
 const TAU = Math.PI * 2;
 
-export default function BattleWheel({ config, onWinner }: Props) {
+export default function BattleWheel({ config, participants, onWinner }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [rotation, setRotation] = useState(0); // radians
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<BattleParticipant | null>(null);
 
-  const participants = config.participants ?? [];
   const segCount = participants.length;
 
   const segments = useMemo(() => {
-    const palette = config.segmentPalette.length > 0 ? config.segmentPalette : ['#1a1a3e'];
+    const palette = config.segmentPalette.length > 0 ? config.segmentPalette : ['#11161C'];
     return participants.map((p, i) => ({
       participant: p,
       color: palette[i % palette.length],
@@ -42,44 +42,27 @@ export default function BattleWheel({ config, onWinner }: Props) {
     const cx = size / 2;
     const cy = size / 2;
     const outerR = size / 2 - 4;
-    const ringW = Math.max(8, size * 0.04);
+    const ringW = Math.max(6, size * 0.025);
     const innerR = outerR - ringW;
 
-    // Outer ring
+    // Subtle outer ring with soft inner shadow look
     ctx.beginPath();
     ctx.arc(cx, cy, outerR, 0, TAU);
     ctx.fillStyle = config.wheelOuterRingColor;
     ctx.fill();
 
-    // LEDs
-    const ledCount = 32;
-    const ledR = Math.max(2, config.wheelLedSize);
-    for (let i = 0; i < ledCount; i++) {
-      const a = (i / ledCount) * TAU;
-      const lx = cx + Math.cos(a) * (outerR - ringW / 2);
-      const ly = cy + Math.sin(a) * (outerR - ringW / 2);
-      ctx.beginPath();
-      ctx.arc(lx, ly, ledR, 0, TAU);
-      ctx.fillStyle = config.wheelLedColor;
-      ctx.fill();
-    }
+    // Inner disc
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerR, 0, TAU);
+    ctx.fillStyle = config.wheelInnerColor;
+    ctx.fill();
 
     // Segments
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(rotation);
 
-    if (segCount === 0) {
-      ctx.beginPath();
-      ctx.arc(0, 0, innerR, 0, TAU);
-      ctx.fillStyle = '#222';
-      ctx.fill();
-      ctx.fillStyle = '#888';
-      ctx.font = `${Math.max(12, size * 0.04)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Adicione participantes', 0, 0);
-    } else {
+    if (segCount > 0) {
       const segAngle = TAU / segCount;
       segments.forEach((seg, i) => {
         const start = i * segAngle;
@@ -93,12 +76,14 @@ export default function BattleWheel({ config, onWinner }: Props) {
         ctx.fill();
 
         // Divider
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(start) * innerR, Math.sin(start) * innerR);
-        ctx.lineWidth = config.wheelDividerWidth;
-        ctx.strokeStyle = config.wheelDividerColor;
-        ctx.stroke();
+        if (config.wheelDividerWidth > 0) {
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(start) * innerR, Math.sin(start) * innerR);
+          ctx.lineWidth = config.wheelDividerWidth;
+          ctx.strokeStyle = config.wheelDividerColor;
+          ctx.stroke();
+        }
 
         // Label
         ctx.save();
@@ -106,24 +91,14 @@ export default function BattleWheel({ config, onWinner }: Props) {
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = config.segmentTextColor;
-        ctx.font = `bold ${config.segmentFontSize}px sans-serif`;
-        const text = seg.participant.name.length > 16 ? seg.participant.name.slice(0, 15) + '…' : seg.participant.name;
-        ctx.fillText(text, innerR - 12, 0);
+        ctx.font = `600 ${config.segmentFontSize}px ui-sans-serif, system-ui, sans-serif`;
+        const text = seg.participant.name.length > 18 ? seg.participant.name.slice(0, 17) + '…' : seg.participant.name;
+        ctx.fillText(text, innerR - 18, 0);
         ctx.restore();
       });
     }
 
     ctx.restore();
-
-    // Center cap
-    const capR = innerR * 0.12;
-    ctx.beginPath();
-    ctx.arc(cx, cy, capR, 0, TAU);
-    ctx.fillStyle = config.wheelCenterCapColor;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = config.wheelGlowColor;
-    ctx.stroke();
   }, [rotation, segments, segCount, config]);
 
   const handleSpin = () => {
@@ -131,7 +106,6 @@ export default function BattleWheel({ config, onWinner }: Props) {
     setWinner(null);
     setSpinning(true);
 
-    // Weighted pick
     const weights = participants.map((p) => Math.max(1, p.weight ?? 1));
     const total = weights.reduce((a, b) => a + b, 0);
     let r = Math.random() * total;
@@ -146,7 +120,6 @@ export default function BattleWheel({ config, onWinner }: Props) {
 
     const segAngle = TAU / segCount;
     const targetCenter = pickIdx * segAngle + segAngle / 2;
-    // Pointer is at top (angle = -PI/2). Bring targetCenter to that position.
     const baseTurns = 6 + Math.floor(Math.random() * 3);
     const finalRotation = baseTurns * TAU + (-Math.PI / 2 - targetCenter);
 
@@ -175,33 +148,60 @@ export default function BattleWheel({ config, onWinner }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-6 w-full">
-      <div className="relative w-full max-w-[480px] aspect-square">
-        {/* Pointer */}
+      <div className="relative w-full max-w-[560px] aspect-square">
+        {/* Pointer (top) */}
         <div
-          className="absolute left-1/2 -top-2 -translate-x-1/2 z-10"
+          className="absolute left-1/2 top-1 -translate-x-1/2 z-10"
           style={{
             width: 0,
             height: 0,
-            borderLeft: '14px solid transparent',
-            borderRight: '14px solid transparent',
-            borderTop: `28px solid ${config.wheelPointerColor}`,
-            filter: `drop-shadow(0 0 6px ${config.wheelGlowColor})`,
+            borderLeft: '10px solid transparent',
+            borderRight: '10px solid transparent',
+            borderTop: `18px solid ${config.wheelPointerColor}`,
+            filter: `drop-shadow(0 0 8px ${config.wheelGlowColor}aa)`,
           }}
         />
-        <canvas ref={canvasRef} className="w-full h-full rounded-full" style={{ boxShadow: `0 0 40px ${config.wheelGlowColor}55` }} />
+
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full rounded-full"
+          style={{
+            boxShadow: `inset 0 0 60px rgba(0,0,0,0.6), 0 0 60px ${config.wheelGlowColor}11`,
+          }}
+        />
+
+        {/* Center SPIN button */}
+        <button
+          onClick={handleSpin}
+          disabled={spinning || segCount === 0}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full font-extrabold tracking-widest transition-all active:scale-95 disabled:opacity-60"
+          style={{
+            width: '22%',
+            aspectRatio: '1 / 1',
+            backgroundColor: config.wheelCenterButtonColor,
+            color: config.wheelCenterButtonTextColor,
+            border: `2px solid ${config.wheelGlowColor}`,
+            boxShadow: `0 0 24px ${config.wheelGlowColor}55, inset 0 0 20px ${config.wheelGlowColor}22`,
+            fontSize: 'clamp(12px, 2vw, 18px)',
+          }}
+        >
+          {spinning ? '...' : config.wheelCenterButtonText}
+        </button>
       </div>
 
+      {/* Secondary GIRAR button (matches reference) */}
       <button
         onClick={handleSpin}
         disabled={spinning || segCount === 0}
-        className="font-bold transition-transform active:scale-95 disabled:opacity-50"
+        className="font-semibold tracking-[0.4em] transition-all active:scale-95 disabled:opacity-50"
         style={{
           backgroundColor: config.buttonColor,
           color: config.buttonTextColor,
           fontSize: config.buttonFontSize,
           borderRadius: config.buttonBorderRadius,
-          padding: '12px 32px',
-          boxShadow: `0 4px 20px ${config.buttonColor}55`,
+          border: `1px solid ${config.buttonBorderColor}`,
+          padding: '10px 48px',
+          minWidth: 220,
         }}
       >
         {spinning ? '...' : config.buttonText}
@@ -209,17 +209,19 @@ export default function BattleWheel({ config, onWinner }: Props) {
 
       {winner && (
         <div
-          className="mt-4 px-6 py-4 text-center font-bold animate-in fade-in slide-in-from-bottom-2"
+          className="px-6 py-4 text-center font-bold animate-in fade-in slide-in-from-bottom-2"
           style={{
             backgroundColor: config.resultBoxColor,
             color: config.resultTextColor,
-            border: `2px solid ${config.resultBorderColor}`,
+            border: `1px solid ${config.resultBorderColor}`,
             borderRadius: 12,
             minWidth: 240,
+            boxShadow: `0 0 30px ${config.resultBorderColor}33`,
           }}
         >
-          <div className="text-sm opacity-80 mb-1">{config.resultTitle}</div>
+          <div className="text-xs tracking-[0.3em] opacity-70 mb-1">{config.resultTitle}</div>
           <div className="text-2xl">{winner.name}</div>
+          {winner.game && <div className="text-sm opacity-70 mt-1">{winner.game}</div>}
         </div>
       )}
     </div>
