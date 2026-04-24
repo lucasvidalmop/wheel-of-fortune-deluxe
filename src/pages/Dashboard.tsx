@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
+import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
