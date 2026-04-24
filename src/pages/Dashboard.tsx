@@ -5937,7 +5937,7 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">API Key</label>
-                    <input type="password" value={evolutionApiKey2} onChange={e => { setEvolutionApiKey2(e.target.value); localStorage.setItem('evolution_api_key_2', e.target.value); }} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="password" value={evolutionApiKey2} onChange={e => setEvolutionApiKey2(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Nome da Instância</label>
