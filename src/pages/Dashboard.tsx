@@ -205,11 +205,11 @@ function Dashboard() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [toolPerms, setToolPerms] = useState<Record<string, boolean>>({
-    roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, whatsapp: true, financeiro: true, gorjeta: true, referral: true,
+    roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, whatsapp: true, whatsapp2: true, financeiro: true, gorjeta: true, referral: true,
     inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
@@ -2543,7 +2543,7 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
@@ -2554,6 +2554,7 @@ function Dashboard() {
     { key: 'sms', icon: <Smartphone size={20} />, label: 'SMS', tool: 'sms' },
     { key: 'sms_cs', icon: <Smartphone size={20} />, label: 'SMS API (CS)', tool: 'sms_cs' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp', tool: 'whatsapp' },
+    { key: 'whatsapp2', icon: <MessageCircle size={20} />, label: 'WhatsApp 2', tool: 'whatsapp2' },
     { key: 'msg_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Msg', tool: 'msg_analytics' },
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro', tool: 'financeiro' },
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações', tool: 'notificacoes' },
@@ -2578,6 +2579,7 @@ function Dashboard() {
     sms: 'Disparo de SMS',
     sms_cs: 'Disparo de SMS API (ClickSend)',
     whatsapp: 'Disparo de WhatsApp',
+    whatsapp2: 'Disparo de WhatsApp 2',
     financeiro: 'Financeiro',
     notificacoes: 'Notificações',
     referral: 'Links de Referência',
