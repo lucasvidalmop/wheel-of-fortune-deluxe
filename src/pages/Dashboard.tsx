@@ -344,9 +344,9 @@ function Dashboard() {
   // WhatsApp 2 state (segunda instância — credenciais e envios independentes)
   const [whatsappSending2, setWhatsappSending2] = useState(false);
   const [showWhatsappConfig2, setShowWhatsappConfig2] = useState(false);
-  const [evolutionApiUrl2, setEvolutionApiUrl2] = useState(() => localStorage.getItem('evolution_api_url_2') || '');
-  const [evolutionApiKey2, setEvolutionApiKey2] = useState(() => localStorage.getItem('evolution_api_key_2') || '');
-  const [evolutionInstance2, setEvolutionInstance2] = useState(() => localStorage.getItem('evolution_instance_2') || '');
+  const [evolutionApiUrl2, setEvolutionApiUrl2] = useState('');
+  const [evolutionApiKey2, setEvolutionApiKey2] = useState('');
+  const [evolutionInstance2, setEvolutionInstance2] = useState('');
   const [instanceStatus2, setInstanceStatus2] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
   const [instanceQrCode2, setInstanceQrCode2] = useState<string | null>(null);
   const [creatingInstance2, setCreatingInstance2] = useState(false);
