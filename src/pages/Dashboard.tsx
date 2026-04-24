@@ -6382,6 +6382,12 @@ function Dashboard() {
                             <Palette size={12} /> Personalizar
                           </button>
                           <button
+                            onClick={() => setSharingReferral(link)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-[10px] hover:bg-emerald-500/25 transition"
+                          >
+                            <MessageCircle size={12} /> WhatsApp
+                          </button>
+                          <button
                             onClick={() => setAnalyticsReferral(link)}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-500/15 text-sky-300 text-[10px] hover:bg-sky-500/25 transition"
                           >
