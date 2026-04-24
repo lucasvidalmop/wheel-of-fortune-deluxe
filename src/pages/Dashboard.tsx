@@ -492,6 +492,8 @@ function Dashboard() {
     setSchedSaving(true);
     const isoDate = scheduledAt.toISOString();
 
+    const scheduleChannel = activeTab === 'whatsapp2' ? 'whatsapp2' : 'whatsapp';
+
     const baseRow = {
       message: schedForm.message || '',
       recipient_type: schedForm.recipientType,
@@ -504,6 +506,7 @@ function Dashboard() {
       mention_all: schedForm.mentionAll,
       scheduled_at: isoDate,
       next_run_at: isoDate,
+      channel: scheduleChannel,
       updated_at: new Date().toISOString(),
     };
 
