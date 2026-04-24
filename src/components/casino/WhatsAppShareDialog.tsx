@@ -84,8 +84,8 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
     if (!selectedId) return;
     setSaving(true);
     const stored = message
-      .replaceAll(shareUrl, '{link}')
-      .replaceAll(linkLabel, linkLabel ? '{label}' : linkLabel);
+      .split(shareUrl).join('{link}')
+      .split(linkLabel || '\u0000').join(linkLabel ? '{label}' : (linkLabel || '\u0000'));
     const { error } = await (supabase as any)
       .from('whatsapp_share_templates')
       .update({ message: stored, updated_at: new Date().toISOString() })
