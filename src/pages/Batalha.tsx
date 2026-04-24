@@ -159,11 +159,24 @@ export default function Batalha() {
           {loading ? (
             <div className="opacity-60">Carregando...</div>
           ) : (
-            <BattleWheel config={config} participants={participants} onWinner={handleWinner} />
+            <BattleWheel config={config} participants={activeParticipants} onWinner={handleWinner} />
           )}
           <div className="mt-6 text-xs tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
-            {participants.length} JOGADORES ATIVOS
+            {activeParticipants.length} JOGADORES ATIVOS
           </div>
+          {participants.length > 0 && activeParticipants.length === 0 && (
+            <button
+              onClick={resetWheel}
+              className="mt-3 text-xs tracking-[0.2em] px-4 py-2 rounded-md transition-opacity hover:opacity-80"
+              style={{
+                color: config.headerAccentColor,
+                border: `1px solid ${config.headerAccentColor}55`,
+                backgroundColor: 'transparent',
+              }}
+            >
+              REINICIAR ROLETA
+            </button>
+          )}
         </div>
 
         {/* Side panels */}
