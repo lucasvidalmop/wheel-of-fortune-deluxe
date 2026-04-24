@@ -5933,7 +5933,7 @@ function Dashboard() {
                   <p className="text-[10px] text-muted-foreground">Configure sua instância da <a href="https://doc.evolution-api.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Evolution API</a></p>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">URL da API</label>
-                    <input type="text" value={evolutionApiUrl2} onChange={e => { setEvolutionApiUrl2(e.target.value); localStorage.setItem('evolution_api_url_2', e.target.value); }} placeholder="https://sua-api.com" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={evolutionApiUrl2} onChange={e => setEvolutionApiUrl2(e.target.value)} placeholder="https://sua-api.com" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">API Key</label>
