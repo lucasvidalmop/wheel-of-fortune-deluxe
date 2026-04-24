@@ -131,15 +131,18 @@ Deno.serve(async (req) => {
             status: ok ? "sent" : "failed",
             error_message: ok ? null : String(payload?.message || "Mobizon API error"),
           });
-        } else {
-          // ── WhatsApp via Evolution API ──
-          const evolutionApiUrl = ds.evolutionApiUrl;
-          const evolutionApiKey = ds.evolutionApiKey;
-          const evolutionInstance = ds.evolutionInstance;
+        } else if (channel === "whatsapp" || channel === "whatsapp2") {
+          // ── WhatsApp via Evolution API (instância 1 ou 2) ──
+          const isInstance2 = channel === "whatsapp2";
+          const evolutionApiUrl = isInstance2 ? ds.evolutionApiUrl2 : ds.evolutionApiUrl;
+          const evolutionApiKey = isInstance2 ? ds.evolutionApiKey2 : ds.evolutionApiKey;
+          const evolutionInstance = isInstance2 ? ds.evolutionInstance2 : ds.evolutionInstance;
+          const logTable = isInstance2 ? "whatsapp2_message_log" : "whatsapp_message_log";
+          const errorLabel = isInstance2 ? "Evolution API (instância 2) not configured" : "Evolution API not configured";
 
           if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) {
             await supabase.from("scheduled_messages").update({ status: "failed", updated_at: now }).eq("id", msg.id);
-            results.push({ id: msg.id, ok: false, error: "Evolution API not configured" });
+            results.push({ id: msg.id, ok: false, error: errorLabel });
             continue;
           }
 
@@ -177,7 +180,7 @@ Deno.serve(async (req) => {
 
           ok = response.ok;
 
-          await supabase.from("whatsapp_message_log").insert({
+          await supabase.from(logTable).insert({
             owner_id: msg.owner_id,
             recipient_phone: msg.recipient_value,
             recipient_name: msg.recipient_label || "",
@@ -185,6 +188,11 @@ Deno.serve(async (req) => {
             status: ok ? "sent" : "failed",
             error_message: ok ? null : "API error",
           });
+        } else {
+          // canal desconhecido
+          await supabase.from("scheduled_messages").update({ status: "failed", updated_at: now }).eq("id", msg.id);
+          results.push({ id: msg.id, ok: false, error: `Unknown channel: ${channel}` });
+          continue;
         }
 
         // Calculate next_run_at for recurrent messages

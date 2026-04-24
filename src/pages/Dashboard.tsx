@@ -492,6 +492,8 @@ function Dashboard() {
     setSchedSaving(true);
     const isoDate = scheduledAt.toISOString();
 
+    const scheduleChannel = activeTab === 'whatsapp2' ? 'whatsapp2' : 'whatsapp';
+
     const baseRow = {
       message: schedForm.message || '',
       recipient_type: schedForm.recipientType,
@@ -504,6 +506,7 @@ function Dashboard() {
       mention_all: schedForm.mentionAll,
       scheduled_at: isoDate,
       next_run_at: isoDate,
+      channel: scheduleChannel,
       updated_at: new Date().toISOString(),
     };
 
@@ -5871,11 +5874,11 @@ function Dashboard() {
                       <h4 className="text-xs font-semibold text-muted-foreground">Mensagens agendadas</h4>
                       {scheduledLoading ? (
                         <p className="text-xs text-muted-foreground text-center py-4">Carregando...</p>
-                      ) : scheduledMessages.length === 0 ? (
+                      ) : scheduledMessages.filter((m: any) => (m.channel || 'whatsapp') === 'whatsapp').length === 0 ? (
                         <p className="text-xs text-muted-foreground text-center py-4">Nenhum agendamento</p>
                       ) : (
                         <div className="space-y-2 max-h-80 overflow-y-auto">
-                          {scheduledMessages.map((m: any) => (
+                          {scheduledMessages.filter((m: any) => (m.channel || 'whatsapp') === 'whatsapp').map((m: any) => (
                             <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
                               <div className="flex justify-between items-start">
                                 <span className="font-medium text-foreground truncate max-w-[70%]">{m.recipient_label || m.recipient_value}</span>
@@ -6742,11 +6745,11 @@ function Dashboard() {
                       <h4 className="text-xs font-semibold text-muted-foreground">Mensagens agendadas</h4>
                       {scheduledLoading ? (
                         <p className="text-xs text-muted-foreground text-center py-4">Carregando...</p>
-                      ) : scheduledMessages.length === 0 ? (
+                      ) : scheduledMessages.filter((m: any) => m.channel === 'whatsapp2').length === 0 ? (
                         <p className="text-xs text-muted-foreground text-center py-4">Nenhum agendamento</p>
                       ) : (
                         <div className="space-y-2 max-h-80 overflow-y-auto">
-                          {scheduledMessages.map((m: any) => (
+                          {scheduledMessages.filter((m: any) => m.channel === 'whatsapp2').map((m: any) => (
                             <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
                               <div className="flex justify-between items-start">
                                 <span className="font-medium text-foreground truncate max-w-[70%]">{m.recipient_label || m.recipient_value}</span>
