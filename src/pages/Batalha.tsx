@@ -250,15 +250,21 @@ export default function Batalha() {
                       </span>
                       <input
                         type="text"
-                        inputMode="decimal"
-                        value={p.score ? String(p.score) : ''}
-                        placeholder="0"
+                        inputMode="numeric"
+                        value={
+                          p.score
+                            ? p.score.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            : ''
+                        }
+                        placeholder="0,00"
                         onChange={(e) => {
-                          const raw = e.target.value.replace(',', '.').replace(/[^0-9.]/g, '');
-                          updateScore(p.id, raw === '' ? 0 : Number(raw));
+                          // Currency mask: keep only digits, treat them as cents.
+                          const digits = e.target.value.replace(/\D/g, '');
+                          const cents = digits === '' ? 0 : Number(digits);
+                          updateScore(p.id, cents / 100);
                         }}
                         onFocus={(e) => e.target.select()}
-                        className="w-20 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-24 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         style={{
                           backgroundColor: config.panelBgColor,
                           border: `1px solid ${config.inputBorderColor}55`,
