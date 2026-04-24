@@ -482,15 +482,15 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
             {/* Receipt-like card */}
             <div className="rounded-xl p-4 space-y-3 text-left" style={{ background: `${txt}06`, border: `1px solid ${txt}10` }}>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>Nome</span>
+                <span style={{ color: txtMuted }}>{nameLabel}</span>
                 <span className="font-semibold">{name}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>{config.accountIdLabel}</span>
+                <span style={{ color: txtMuted }}>{accountLabel}</span>
                 <span className="font-semibold">{accountId}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>WhatsApp</span>
+                <span style={{ color: txtMuted }}>{whatsappLabel}</span>
                 <span className="font-semibold">{whatsapp}</span>
               </div>
               <div className="pt-2" style={{ borderTop: `1px solid ${txt}14` }}>
