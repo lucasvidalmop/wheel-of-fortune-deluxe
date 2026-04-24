@@ -87,6 +87,7 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
   const [groupFilter, setGroupFilter] = useState<string>('__all__');
   const [search, setSearch] = useState('');
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
+  const [sending, setSending] = useState(false);
 
   const loadTemplates = async () => {
     setLoading(true);
@@ -353,7 +354,39 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
     }
   };
 
-  const sendToSelected = () => {
+  const getEvolutionCreds = () => {
+    const evolutionApiUrl = localStorage.getItem('evolution_api_url') || '';
+    const evolutionApiKey = localStorage.getItem('evolution_api_key') || '';
+    const evolutionInstance = localStorage.getItem('evolution_instance') || '';
+    if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) return null;
+    return { evolutionApiUrl, evolutionApiKey, evolutionInstance };
+  };
+
+  const sendViaEvolution = async (phone: string, name: string) => {
+    const creds = getEvolutionCreds();
+    if (!creds) throw new Error('Configure a Evolution API em Configurações > WhatsApp.');
+
+    const { data, error } = await supabase.functions.invoke('send-whatsapp', {
+      body: { recipientPhone: phone, message, ...creds },
+    });
+
+    const errMsg = (error as any)?.message || (data as any)?.error;
+    if (errMsg) throw new Error(errMsg);
+
+    // Log do envio
+    try {
+      await (supabase as any).from('whatsapp_message_log').insert({
+        owner_id: ownerId,
+        recipient_name: name || '',
+        recipient_phone: phone,
+        message,
+        status: 'sent',
+      });
+    } catch {/* ignora erro de log */}
+  };
+
+
+  const sendToSelected = async () => {
     if (!message.trim()) {
       toast.error('Mensagem vazia');
       return;
@@ -365,28 +398,41 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
       return;
     }
 
-    const text = encodeURIComponent(message);
-    let opened = 0;
-    let blocked = 0;
+    if (!getEvolutionCreds()) {
+      toast.error('Configure a Evolution API em Configurações > WhatsApp.');
+      return;
+    }
 
-    targets.forEach((contact, index) => {
+    setSending(true);
+    const toastId = toast.loading(`Enviando para ${targets.length} contato(s)...`);
+    let ok = 0;
+    let fail = 0;
+
+    for (let i = 0; i < targets.length; i++) {
+      const contact = targets[i];
       const phone = normalizePhone(contact.numero);
-      if (!phone) return;
+      if (!phone) { fail++; continue; }
 
-      setTimeout(() => {
-        const popup = window.open(`https://wa.me/${phone}?text=${text}`, '_blank', 'noopener,noreferrer');
-        if (!popup) blocked++;
-        else opened++;
+      try {
+        await sendViaEvolution(phone, contact.lead);
+        ok++;
+        toast.loading(`Enviando ${i + 1}/${targets.length}... (${ok} ok, ${fail} falha)`, { id: toastId });
+      } catch (err: any) {
+        fail++;
+        console.error('Falha envio WhatsApp:', contact.numero, err?.message);
+      }
 
-        if (index === targets.length - 1) {
-          if (blocked > 0) toast.warning(`${opened} aberto(s), ${blocked} bloqueado(s) pelo navegador. Permita pop-ups.`);
-          else toast.success(`Abrindo WhatsApp para ${opened} contato(s)`);
-        }
-      }, index * 350);
-    });
+      // pequeno intervalo para não sobrecarregar a Evolution
+      if (i < targets.length - 1) await new Promise((r) => setTimeout(r, 800));
+    }
+
+    setSending(false);
+    if (fail === 0) toast.success(`✅ ${ok} mensagem(ns) enviada(s)!`, { id: toastId });
+    else if (ok === 0) toast.error(`❌ Falha ao enviar para todos os ${fail} contato(s).`, { id: toastId });
+    else toast.warning(`${ok} enviada(s), ${fail} falharam.`, { id: toastId });
   };
 
-  const sendToOne = (contact: Contact) => {
+  const sendToOne = async (contact: Contact) => {
     if (!message.trim()) {
       toast.error('Mensagem vazia');
       return;
@@ -398,8 +444,18 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
       return;
     }
 
-    const text = encodeURIComponent(message);
-    window.open(`https://wa.me/${phone}?text=${text}`, '_blank', 'noopener,noreferrer');
+    if (!getEvolutionCreds()) {
+      toast.error('Configure a Evolution API em Configurações > WhatsApp.');
+      return;
+    }
+
+    const toastId = toast.loading(`Enviando para ${contact.lead || phone}...`);
+    try {
+      await sendViaEvolution(phone, contact.lead);
+      toast.success(`✅ Enviado para ${contact.lead || phone}`, { id: toastId });
+    } catch (err: any) {
+      toast.error(`❌ ${err?.message || 'Falha ao enviar'}`, { id: toastId });
+    }
   };
 
   const allFilteredSelected = filteredContacts.length > 0 && filteredContacts.every((contact) => selectedContacts.has(contact.id));
@@ -635,15 +691,16 @@ const WhatsAppShareDialog = ({ ownerId, shareUrl, linkLabel = '', onClose }: Pro
 
                     <button
                       onClick={sendToSelected}
-                      disabled={selectedContacts.size === 0}
+                      disabled={selectedContacts.size === 0 || sending}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 text-white text-xs font-bold hover:brightness-110 transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Send size={13} /> Enviar para {selectedContacts.size || 0} contato{selectedContacts.size === 1 ? '' : 's'} selecionado{selectedContacts.size === 1 ? '' : 's'}
+                      <Send size={13} /> {sending ? 'Enviando...' : `Enviar para ${selectedContacts.size || 0} contato${selectedContacts.size === 1 ? '' : 's'} selecionado${selectedContacts.size === 1 ? '' : 's'}`}
                     </button>
 
                     <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                      Agora a lista inclui contatos importados por CSV e inscritos com telefone salvo.
+                      Envio direto via Evolution API (sem abrir abas). Configure as credenciais em Configurações &gt; WhatsApp.
                     </p>
+
                   </>
                 )}
               </div>
