@@ -3448,6 +3448,11 @@ function Dashboard() {
             </div>
           )}
 
+          {/* ══════ BATALHA SLOT ══════ */}
+          {activeTab === 'batalha_slot' && session?.user?.id && (
+            <BattleConfigPanel userId={session.user.id} />
+          )}
+
           {/* ══════ AUTH CONFIG ══════ */}
           {activeTab === 'auth' && (
             <div className="max-w-lg space-y-4">
