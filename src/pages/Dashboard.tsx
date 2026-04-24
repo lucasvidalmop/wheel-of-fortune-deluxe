@@ -5942,7 +5942,7 @@ function Dashboard() {
                           setCreatingInstance2(true);
                           try {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
-                              body: { action: 'create', evolutionApiUrl2, evolutionApiKey2, evolutionInstance2 }
+                              body: { action: 'create', evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2 }
                             });
                             const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao criar instância';
                             if (error || !data?.ok) {
@@ -5978,7 +5978,7 @@ function Dashboard() {
                           setInstanceQrCode2(null);
                           try {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
-                              body: { action: 'connect', evolutionApiUrl2, evolutionApiKey2, evolutionInstance2 }
+                              body: { action: 'connect', evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2 }
                             });
                             const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao conectar';
                             if (error || !data?.ok) {
@@ -6015,7 +6015,7 @@ function Dashboard() {
                           setInstanceStatus2('loading');
                           try {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
-                              body: { action: 'status', evolutionApiUrl2, evolutionApiKey2, evolutionInstance2 }
+                              body: { action: 'status', evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2 }
                             });
                             const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao verificar';
                             if (error || !data?.ok) {
@@ -6051,7 +6051,7 @@ function Dashboard() {
                         onClick={async () => {
                           try {
                             const { data, error } = await supabase.functions.invoke('evolution-proxy', {
-                              body: { action: 'logout', evolutionApiUrl2, evolutionApiKey2, evolutionInstance2 }
+                              body: { action: 'logout', evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2 }
                             });
                             const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao desconectar';
                             if (error || !data?.ok) {
@@ -6127,9 +6127,7 @@ function Dashboard() {
                         const { data } = await supabase.functions.invoke('evolution-proxy', {
                           body: {
                             action: 'fetchGroups',
-                            evolutionApiUrl2,
-                            evolutionApiKey2,
-                            evolutionInstance2,
+                            evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2,
                           },
                         });
                         if (data?.ok && Array.isArray(data.data)) {
@@ -6498,7 +6496,7 @@ function Dashboard() {
                     const phone = phones[i];
                     const matchedUser = waPhoneList.find(p => p.phone === phone);
                     try {
-                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp2', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl2, evolutionApiKey2, evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined } });
+                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp2', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined } });
                       const hasError = !!error || !!respData?.error;
                       const errorMsg = error?.message || respData?.error || null;
                       await (supabase as any).from('whatsapp2_message_log').insert({
@@ -6547,7 +6545,7 @@ function Dashboard() {
                     for (const group of notifySelectedGroups2) {
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp2', {
-                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl2, evolutionApiKey2, evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
+                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
                         if (hasError) errors++; else sent++;
