@@ -4347,6 +4347,7 @@ function Dashboard() {
                     await Promise.all(chunk.map(sendOne));
                   }
                   setEmailSending(false);
+                  setTimeout(() => setEmailProgress(emptyProgress), 4000);
                   const skipMsg = skipped > 0 ? ` (${skipped} excluído${skipped > 1 ? 's' : ''} por já ter recebido)` : '';
                   if (errors > 0) {
                     toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}${skipMsg}`);
