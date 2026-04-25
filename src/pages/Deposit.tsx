@@ -526,12 +526,22 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
             {(qrData.copiacola || qrData.qrcode) && (
               <div className="space-y-2">
                 <p className="text-xs" style={{ color: txtMuted }}>PIX Copia e Cola:</p>
-                <div className="flex gap-2">
-                  <input readOnly value={qrData.copiacola || qrData.qrcode} className="flex-1 px-3 py-2 rounded-lg text-xs truncate" style={inputStyle} />
-                  <button onClick={() => handleCopy(qrData.copiacola || qrData.qrcode)} className="px-3 py-2 rounded-lg transition-all" style={{ background: `${accent}33`, color: accent }}>
-                    {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
-                  </button>
-                </div>
+                <textarea
+                  readOnly
+                  value={qrData.copiacola || qrData.qrcode}
+                  onClick={(e) => (e.currentTarget as HTMLTextAreaElement).select()}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg text-[11px] leading-snug break-all resize-none"
+                  style={{ ...inputStyle, fontFamily: 'monospace' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleCopy(qrData.copiacola || qrData.qrcode)}
+                  className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
+                  style={{ background: accent, color: '#fff', boxShadow: `0 8px 20px -5px ${accent}33` }}
+                >
+                  {copied ? <><CheckCircle2 size={16} /> Copiado!</> : <><Copy size={16} /> Copiar código PIX</>}
+                </button>
               </div>
             )}
             <div className="flex items-center justify-center gap-2 pt-2" style={{ color: txtMuted }}>
