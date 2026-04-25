@@ -153,3 +153,20 @@ input[type="checkbox"]:checked::after {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
+
+/* Battle ranking custom scrollbar */
+.battle-ranking-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.battle-ranking-scroll::-webkit-scrollbar-track {
+  background: var(--scroll-track, transparent);
+  border-radius: 100px;
+}
+.battle-ranking-scroll::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb, rgba(255,255,255,0.15));
+  border-radius: 100px;
+  border: none;
+}
+.battle-ranking-scroll::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.4);
+}
