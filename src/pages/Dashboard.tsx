@@ -729,11 +729,17 @@ function Dashboard() {
   };
 
   const totalReferralPrizePlanCount = referralForm.fixed_prize_plan.reduce((sum, item) => sum + item.count, 0);
+  const referralMaxRegistrationsNum = parseInt(referralForm.max_registrations) || 0;
+  // Total de giros possíveis = giros por inscrição × limite de inscrições.
+  // Se inscrições for ilimitado (0), o cap também é ilimitado (Infinity).
+  const referralTotalAvailableSpins = referralMaxRegistrationsNum > 0
+    ? referralForm.spins_per_registration * referralMaxRegistrationsNum
+    : Infinity;
 
   const handleSaveReferral = async () => {
     if (!referralForm.label.trim()) { toast.error('Preencha o nome do link'); return; }
-    if (totalReferralPrizePlanCount > referralForm.spins_per_registration) {
-      toast.error('A soma dos segmentos garantidos não pode ser maior que a quantidade de giros');
+    if (totalReferralPrizePlanCount > referralTotalAvailableSpins) {
+      toast.error('A soma dos prêmios garantidos não pode ser maior que o total de giros disponíveis');
       return;
     }
 
@@ -7137,10 +7143,11 @@ function Dashboard() {
                                 <input
                                   type="number"
                                   min={0}
-                                  max={referralForm.spins_per_registration}
+                                  max={Number.isFinite(referralTotalAvailableSpins) ? referralTotalAvailableSpins : undefined}
                                   value={count}
                                   onChange={e => {
-                                    const nextCount = Math.max(0, Math.min(referralForm.spins_per_registration, parseInt(e.target.value) || 0));
+                                    const cap = Number.isFinite(referralTotalAvailableSpins) ? referralTotalAvailableSpins : Number.MAX_SAFE_INTEGER;
+                                    const nextCount = Math.max(0, Math.min(cap, parseInt(e.target.value) || 0));
                                     setReferralForm(prev => {
                                       const otherItems = prev.fixed_prize_plan.filter(item => item.segment_index !== i);
                                       return {
@@ -7154,8 +7161,9 @@ function Dashboard() {
                                 <button
                                   type="button"
                                   onClick={() => setReferralForm(prev => {
+                                    const cap = Number.isFinite(referralTotalAvailableSpins) ? referralTotalAvailableSpins : Number.MAX_SAFE_INTEGER;
                                     const currentCount = prev.fixed_prize_plan.find(item => item.segment_index === i)?.count || 0;
-                                    const nextCount = Math.min(prev.spins_per_registration, currentCount + 1);
+                                    const nextCount = Math.min(cap, currentCount + 1);
                                     const otherItems = prev.fixed_prize_plan.filter(item => item.segment_index !== i);
                                     return {
                                       ...prev,
@@ -7173,12 +7181,12 @@ function Dashboard() {
                       </div>
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-muted-foreground">Total configurado</span>
-                        <span className={`${totalReferralPrizePlanCount > referralForm.spins_per_registration ? 'text-destructive' : 'text-foreground'} font-semibold`}>
-                          {totalReferralPrizePlanCount}/{referralForm.spins_per_registration}
+                        <span className={`${totalReferralPrizePlanCount > referralTotalAvailableSpins ? 'text-destructive' : 'text-foreground'} font-semibold`}>
+                          {totalReferralPrizePlanCount}/{Number.isFinite(referralTotalAvailableSpins) ? referralTotalAvailableSpins : '∞'}
                         </span>
                       </div>
                       <p className="text-[10px] text-muted-foreground/70">
-                        Se sobrar giro sem plano, ele continua aleatório. Se quiser todos garantidos, deixe o total igual ao número de giros.
+                        Total de giros disponíveis = giros por inscrição × limite de inscrições. Se sobrar giro sem plano, ele continua aleatório. Defina um limite de inscrições para usar prêmios garantidos.
                       </p>
                     </div>
                     <div>
