@@ -17,13 +17,23 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
 
   const segCount = participants.length;
 
+  // Shuffle the visual order of segments so the layout doesn't reflect arrival
+  // order. Recomputed whenever the participant set changes (by id signature).
   const segments = useMemo(() => {
     const palette = config.segmentPalette.length > 0 ? config.segmentPalette : ['#11161C'];
-    return participants.map((p, i) => ({
-      participant: p,
-      color: palette[i % palette.length],
+    const indices = participants.map((_, i) => i);
+    // Fisher-Yates shuffle
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices.map((origIdx, displayIdx) => ({
+      participant: participants[origIdx],
+      color: palette[displayIdx % palette.length],
+      originalIndex: origIdx,
     }));
-  }, [participants, config.segmentPalette]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [participants.map((p) => p.id).join('|'), config.segmentPalette]);
 
   // Draw the wheel
   useEffect(() => {
@@ -106,7 +116,8 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
     setWinner(null);
     setSpinning(true);
 
-    const weights = participants.map((p) => Math.max(1, p.weight ?? 1));
+    // Pick a random segment index (uniform). Weights kept for compatibility.
+    const weights = segments.map((s) => Math.max(1, s.participant.weight ?? 1));
     const total = weights.reduce((a, b) => a + b, 0);
     let r = Math.random() * total;
     let pickIdx = 0;
@@ -145,7 +156,7 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
         requestAnimationFrame(tick);
       } else {
         setSpinning(false);
-        const w = participants[pickIdx];
+        const w = segments[pickIdx].participant;
         setWinner(w);
         onWinner?.(w);
       }
