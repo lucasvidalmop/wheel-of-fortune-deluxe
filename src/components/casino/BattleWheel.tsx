@@ -169,16 +169,42 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
       <div className="relative w-full max-w-[560px] aspect-square">
         {/* Pointer (top) */}
         <div
-          className="absolute left-1/2 top-1 -translate-x-1/2 z-10"
+          className="absolute left-1/2 -top-2 -translate-x-1/2 z-10"
           style={{
-            width: 0,
-            height: 0,
-            borderLeft: '10px solid transparent',
-            borderRight: '10px solid transparent',
-            borderTop: `18px solid ${config.wheelPointerColor}`,
-            filter: `drop-shadow(0 0 8px ${config.wheelGlowColor}aa)`,
+            filter: `drop-shadow(0 4px 6px rgba(0,0,0,0.55)) drop-shadow(0 0 10px ${config.wheelGlowColor}cc)`,
           }}
-        />
+        >
+          <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="battle-pointer-grad" x1="17" y1="2" x2="17" y2="42" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor={config.wheelPointerColor} stopOpacity="1" />
+                <stop offset="55%" stopColor={config.wheelPointerColor} stopOpacity="0.95" />
+                <stop offset="100%" stopColor={config.wheelPointerColor} stopOpacity="0.7" />
+              </linearGradient>
+              <linearGradient id="battle-pointer-shine" x1="17" y1="3" x2="17" y2="22" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {/* Body: rounded teardrop pointing down */}
+            <path
+              d="M17 42 C 7 30, 2 22, 2 14 A 15 15 0 0 1 32 14 C 32 22, 27 30, 17 42 Z"
+              fill="url(#battle-pointer-grad)"
+              stroke="rgba(0,0,0,0.35)"
+              strokeWidth="1"
+              strokeLinejoin="round"
+            />
+            {/* Glossy highlight */}
+            <path
+              d="M17 38 C 9 28, 5 21, 5 14 A 12 12 0 0 1 29 14 C 29 21, 25 28, 17 38 Z"
+              fill="url(#battle-pointer-shine)"
+              opacity="0.9"
+            />
+            {/* Inner dot */}
+            <circle cx="17" cy="14" r="3.2" fill="rgba(255,255,255,0.85)" />
+          </svg>
+        </div>
+
 
         <canvas
           ref={canvasRef}
