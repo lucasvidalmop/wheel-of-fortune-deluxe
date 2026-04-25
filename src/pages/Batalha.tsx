@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 export default function Batalha() {
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
   const [loading, setLoading] = useState(true);
-  const [participants, setParticipants] = useState<BattleParticipant[]>([]);
+  const [participants, setParticipants] = useState<(BattleParticipant & { dbId?: string })[]>([]);
   const [eliminatedIds, setEliminatedIds] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
   const [game, setGame] = useState('');
