@@ -1219,6 +1219,13 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_deposit_config_by_tag: {
+        Args: { p_tag: string }
+        Returns: {
+          config: Json
+          user_id: string
+        }[]
+      }
       get_prize_history: {
         Args: { p_account_id: string; p_owner_id: string }
         Returns: {
