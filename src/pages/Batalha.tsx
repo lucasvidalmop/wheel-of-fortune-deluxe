@@ -639,7 +639,7 @@ export default function Batalha() {
 
           {/* Ranking */}
           <section
-            className="rounded-2xl p-5"
+            className="rounded-2xl p-5 min-h-0 lg:flex-1 overflow-hidden"
             style={{
               backgroundColor: config.panelBgColor,
               border: `1px solid ${config.panelBorderColor}`,
