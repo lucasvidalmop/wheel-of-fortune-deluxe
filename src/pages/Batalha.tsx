@@ -4,6 +4,7 @@ import BattleWheel from '@/components/casino/BattleWheel';
 import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from '@/components/casino/battleTypes';
 import { Plus, Trash2, Swords, LogOut, AlertTriangle, Search, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 export default function Batalha() {
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
