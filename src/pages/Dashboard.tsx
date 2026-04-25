@@ -8125,7 +8125,7 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Descrição da página</label>
-                    <input value={dc.description || ''} onChange={e => updateDc({ description: e.target.value })} placeholder="Texto exibido no topo" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.description || ''} onChange={e => updateDcv({ description: e.target.value })} placeholder="Texto exibido no topo" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                 </div>
 
