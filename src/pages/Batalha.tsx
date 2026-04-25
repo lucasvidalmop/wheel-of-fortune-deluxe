@@ -547,6 +547,8 @@ export default function Batalha() {
                   <input
                     type="text"
                     inputMode="numeric"
+                    autoComplete="off"
+                    name="battle-tournament-entry"
                     value={tournamentEntry ? fmtBRL(tournamentEntry) : ''}
                     placeholder="0,00"
                     onChange={(e) => {
@@ -555,7 +557,7 @@ export default function Batalha() {
                       setTournamentEntry(cents / 100);
                     }}
                     onFocus={(e) => e.target.select()}
-                    className="w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
+                    className="battle-money-input w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
                     style={{ color: config.panelTextColor }}
                     aria-label="Valor do torneio"
                   />
