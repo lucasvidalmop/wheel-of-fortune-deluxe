@@ -32,6 +32,10 @@ interface DepositConfig {
   confirmationButtonText: string;
   confirmationButtonUrl: string;
   confirmationButtonColor: string;
+  confirmationTitleColor?: string;
+  confirmationMessageColor?: string;
+  confirmationReceiptLabelColor?: string;
+  confirmationReceiptValueColor?: string;
   showNewDepositButton: boolean;
   // BS-only limits (Depósito BS — /depbs=tag)
   bsMaxPerDeposit?: number; // 0 = sem limite
@@ -565,10 +569,10 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
               </div>
             )}
             <div className="space-y-2">
-              <h2 className="text-2xl font-extrabold" style={{ color: accent }}>
+              <h2 className="text-2xl font-extrabold" style={{ color: config.confirmationTitleColor || accent }}>
                 {config.confirmationTitle || 'Pagamento Confirmado!'}
               </h2>
-              <p className="text-sm" style={{ color: txtMuted }}>
+              <p className="text-sm" style={{ color: config.confirmationMessageColor || txtMuted }}>
                 {config.confirmationMessage || 'Seu depósito foi recebido com sucesso.'}
               </p>
             </div>
@@ -576,21 +580,21 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
             {/* Receipt-like card */}
             <div className="rounded-xl p-4 space-y-3 text-left" style={{ background: `${txt}06`, border: `1px solid ${txt}10` }}>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>{nameLabel}</span>
-                <span className="font-semibold">{name}</span>
+                <span style={{ color: config.confirmationReceiptLabelColor || txtMuted }}>{nameLabel}</span>
+                <span className="font-semibold" style={{ color: config.confirmationReceiptValueColor || undefined }}>{name}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>{accountLabel}</span>
-                <span className="font-semibold">{accountId}</span>
+                <span style={{ color: config.confirmationReceiptLabelColor || txtMuted }}>{accountLabel}</span>
+                <span className="font-semibold" style={{ color: config.confirmationReceiptValueColor || undefined }}>{accountId}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span style={{ color: txtMuted }}>{whatsappLabel}</span>
-                <span className="font-semibold">{whatsapp}</span>
+                <span style={{ color: config.confirmationReceiptLabelColor || txtMuted }}>{whatsappLabel}</span>
+                <span className="font-semibold" style={{ color: config.confirmationReceiptValueColor || undefined }}>{whatsapp}</span>
               </div>
               <div className="pt-2" style={{ borderTop: `1px solid ${txt}14` }}>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: accent }}>Valor Depositado</span>
-                  <span className="text-2xl font-extrabold" style={{ color: accent }}>R$ {finalAmount?.toFixed(2)}</span>
+                  <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: config.confirmationReceiptValueColor || accent }}>Valor Depositado</span>
+                  <span className="text-2xl font-extrabold" style={{ color: config.confirmationReceiptValueColor || accent }}>R$ {finalAmount?.toFixed(2)}</span>
                 </div>
               </div>
             </div>
