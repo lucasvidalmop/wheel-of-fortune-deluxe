@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import BattleWheel from '@/components/casino/BattleWheel';
 import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from '@/components/casino/battleTypes';
-import { Plus, Trash2, Swords, LogOut, AlertTriangle, Search } from 'lucide-react';
+import { Plus, Trash2, Swords, LogOut, AlertTriangle, Search, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Batalha() {
@@ -293,6 +293,29 @@ export default function Batalha() {
   );
 
   const resetWheel = () => setEliminatedIds(new Set());
+
+  const resetTournament = () => {
+    const ok = window.confirm('Tem certeza que deseja resetar o sorteio? Isso irá limpar a banca e o ranking.');
+    if (!ok) return;
+    // Mark all linked DB participants as consumed so they don't reappear via realtime
+    const dbIds = participants.map((p) => p.dbId).filter(Boolean) as string[];
+    if (dbIds.length > 0) {
+      (supabase as any)
+        .from('battle_participants')
+        .update({ consumed: true })
+        .in('id', dbIds)
+        .then(({ error }: any) => {
+          if (error) console.warn('Failed to mark participants consumed on reset:', error);
+        });
+    }
+    setParticipants([]);
+    setEliminatedIds(new Set());
+    setWinnerHistory([]);
+    setInitialBankroll(0);
+    setTournamentEntry(0);
+    setRankingSearch('');
+    toast.success('Sorteio resetado');
+  };
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
   const rankedParticipants = useMemo(() => {
@@ -668,9 +691,21 @@ export default function Batalha() {
                 </button>
               </div>
             </div>
-          </section>
 
-          {/* Ranking */}
+            <button
+              onClick={resetTournament}
+              className="mt-4 w-full h-10 rounded-full inline-flex items-center justify-center gap-2 text-[11px] font-semibold tracking-[0.25em] transition-opacity hover:opacity-80 active:scale-[0.98]"
+              style={{
+                backgroundColor: 'transparent',
+                border: `1px solid ${config.panelBorderColor}`,
+                color: config.panelLabelColor,
+              }}
+              aria-label="Resetar sorteio"
+            >
+              <RotateCcw size={13} />
+              RESETAR SORTEIO
+            </button>
+          </section>
           <section
             className="rounded-2xl p-5 min-h-0 lg:flex-1 overflow-hidden"
             style={{
