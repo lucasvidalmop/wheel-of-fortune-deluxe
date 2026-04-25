@@ -10,11 +10,32 @@ export default function Batalha() {
   const { confirm, ConfirmDialog } = useConfirmDialog();
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
   const [loading, setLoading] = useState(true);
-  const [participants, setParticipants] = useState<(BattleParticipant & { dbId?: string })[]>([]);
-  const [eliminatedIds, setEliminatedIds] = useState<Set<string>>(new Set());
+  const [participants, setParticipants] = useState<(BattleParticipant & { dbId?: string })[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = window.localStorage.getItem('battle_participants');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  });
+  const [eliminatedIds, setEliminatedIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const raw = window.localStorage.getItem('battle_eliminated_ids');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    } catch { return new Set(); }
+  });
   const [name, setName] = useState('');
   const [game, setGame] = useState('');
-  const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>([]);
+  const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = window.localStorage.getItem('battle_winner_history');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  });
   const [rankingSearch, setRankingSearch] = useState('');
   const [initialBankroll, setInitialBankroll] = useState<number>(() => {
     if (typeof window === 'undefined') return 0;
@@ -26,6 +47,18 @@ export default function Batalha() {
     const v = Number(window.localStorage.getItem('battle_tournament_entry') ?? '0');
     return Number.isFinite(v) ? v : 0;
   });
+
+  useEffect(() => {
+    try { window.localStorage.setItem('battle_participants', JSON.stringify(participants)); } catch { /* ignore */ }
+  }, [participants]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem('battle_eliminated_ids', JSON.stringify(Array.from(eliminatedIds))); } catch { /* ignore */ }
+  }, [eliminatedIds]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem('battle_winner_history', JSON.stringify(winnerHistory)); } catch { /* ignore */ }
+  }, [winnerHistory]);
 
   useEffect(() => {
     try {
@@ -322,6 +355,13 @@ export default function Batalha() {
     setInitialBankroll(0);
     setTournamentEntry(0);
     setRankingSearch('');
+    try {
+      window.localStorage.removeItem('battle_participants');
+      window.localStorage.removeItem('battle_eliminated_ids');
+      window.localStorage.removeItem('battle_winner_history');
+      window.localStorage.removeItem('battle_initial_bankroll');
+      window.localStorage.removeItem('battle_tournament_entry');
+    } catch { /* ignore */ }
     toast.success('Sorteio resetado');
   };
 
