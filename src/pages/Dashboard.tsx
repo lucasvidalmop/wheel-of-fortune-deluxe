@@ -5750,6 +5750,7 @@ function Dashboard() {
                     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
                     if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                     setWhatsappSending(true);
+                    setWhatsappProgress({ total: notifySelectedGroups.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups) {
                       try {
@@ -5757,14 +5758,17 @@ function Dashboard() {
                           body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
-                        if (hasError) errors++; else sent++;
+                        if (hasError) { errors++; setWhatsappProgress(p => ({ ...p, errors: p.errors + 1 })); }
+                        else { sent++; setWhatsappProgress(p => ({ ...p, sent: p.sent + 1 })); }
                       } catch {
                         errors++;
+                        setWhatsappProgress(p => ({ ...p, errors: p.errors + 1 }));
                       }
                     }
                     setWhatsappSending(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
                     else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
+                    setTimeout(() => setWhatsappProgress(emptyProgress), 4000);
                   }}
                   disabled={whatsappSending}
                   className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
