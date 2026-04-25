@@ -555,7 +555,6 @@ export default function Batalha() {
                       const cents = digits === '' ? 0 : Number(digits);
                       setTournamentEntry(cents / 100);
                     }}
-                    onFocus={(e) => e.target.select()}
                     className="battle-money-input w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
                     style={{ color: config.panelTextColor }}
                     aria-label="Valor do torneio"
