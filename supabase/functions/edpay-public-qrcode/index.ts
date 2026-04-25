@@ -75,8 +75,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate deposit config
-    const depositConfig = cfg.depositConfig || {};
+    // Validate deposit config — apply BS overrides when variant === 'bs'
+    const baseDepositConfig = cfg.depositConfig || {};
+    const bsOverrides = (isBs && baseDepositConfig.bsOverrides && typeof baseDepositConfig.bsOverrides === "object")
+      ? baseDepositConfig.bsOverrides
+      : {};
+    // Shallow merge: BS-overridable fields take precedence when present (not null/undefined/empty array)
+    const depositConfig: Record<string, any> = { ...baseDepositConfig };
+    for (const [k, v] of Object.entries(bsOverrides)) {
+      if (v === null || v === undefined) continue;
+      if (Array.isArray(v) && v.length === 0) continue;
+      depositConfig[k] = v;
+    }
+
     if (!depositConfig.enabled) {
       return new Response(
         JSON.stringify({ error: "Página de depósito não está ativa" }),
@@ -87,7 +98,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const minValue = depositConfig.minimumValue || 1;
+    const minValue = Number(depositConfig.minimumValue) || 1;
     if (amountNum < minValue) {
       return new Response(
         JSON.stringify({ error: `Valor mínimo: R$ ${minValue.toFixed(2)}` }),
