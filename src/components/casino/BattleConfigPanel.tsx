@@ -254,6 +254,13 @@ export default function BattleConfigPanel({ userId }: Props) {
             <Field label="Cor de fundo"><ColorInput value={config.wheelCenterButtonColor} onChange={(v) => update('wheelCenterButtonColor', v)} /></Field>
             <Field label="Cor do texto"><ColorInput value={config.wheelCenterButtonTextColor} onChange={(v) => update('wheelCenterButtonTextColor', v)} /></Field>
           </div>
+          <Field label="Imagem do botão (opcional — substitui o texto)">
+            <ImageUpload
+              value={config.wheelCenterButtonImageUrl}
+              onChange={(url) => update('wheelCenterButtonImageUrl', url)}
+              folder="battle-center-button"
+            />
+          </Field>
         </section>
 
         {/* Segments */}
