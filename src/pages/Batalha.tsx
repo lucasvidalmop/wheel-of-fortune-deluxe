@@ -19,12 +19,23 @@ export default function Batalha() {
     const v = Number(window.localStorage.getItem('battle_initial_bankroll') ?? '0');
     return Number.isFinite(v) ? v : 0;
   });
+  const [tournamentEntry, setTournamentEntry] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    const v = Number(window.localStorage.getItem('battle_tournament_entry') ?? '0');
+    return Number.isFinite(v) ? v : 0;
+  });
 
   useEffect(() => {
     try {
       window.localStorage.setItem('battle_initial_bankroll', String(initialBankroll));
     } catch { /* ignore */ }
   }, [initialBankroll]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('battle_tournament_entry', String(tournamentEntry));
+    } catch { /* ignore */ }
+  }, [tournamentEntry]);
 
   // ═══ Auth state (linked to operator) ═══
   const [session, setSession] = useState<any>(null);
@@ -293,12 +304,14 @@ export default function Batalha() {
     });
   }, [participants]);
 
-  // Bankroll calculator: sum of all participant scores + initial bankroll.
-  const participantsTotal = useMemo(
-    () => participants.reduce((sum, p) => sum + (p.score ?? 0), 0),
-    [participants],
+  // Bankroll calculator:
+  // For each participant: net cost to house = bonus paid (score) − tournament entry value.
+  // BANCA TOTAL = initial bankroll − Σ (bonus − entrada).
+  const participantsNet = useMemo(
+    () => participants.reduce((sum, p) => sum + ((p.score ?? 0) - tournamentEntry), 0),
+    [participants, tournamentEntry],
   );
-  const totalBankroll = initialBankroll + participantsTotal;
+  const totalBankroll = initialBankroll - participantsNet;
   const fmtBRL = (n: number) =>
     n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -474,6 +487,99 @@ export default function Batalha() {
 
         {/* Side panels */}
         <aside className="space-y-5">
+          {/* Bankroll calculator */}
+          <section
+            className="rounded-2xl p-5"
+            style={{
+              backgroundColor: config.panelBgColor,
+              border: `1px solid ${config.panelBorderColor}`,
+            }}
+          >
+            <div className="text-[11px] tracking-[0.35em] mb-4" style={{ color: config.panelLabelColor }}>
+              BANCA
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-[10px] tracking-[0.2em] mb-1.5" style={{ color: config.panelLabelColor }}>
+                  BANCA INICIAL
+                </label>
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 h-10"
+                  style={{
+                    backgroundColor: config.bgColor,
+                    border: `1px solid ${config.inputBorderColor}55`,
+                  }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={initialBankroll ? fmtBRL(initialBankroll) : ''}
+                    placeholder="0,00"
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      const cents = digits === '' ? 0 : Number(digits);
+                      setInitialBankroll(cents / 100);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
+                    style={{ color: config.panelTextColor }}
+                    aria-label="Banca inicial"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] tracking-[0.2em] mb-1.5" style={{ color: config.panelLabelColor }}>
+                  VALOR DO TORNEIO
+                </label>
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 h-10"
+                  style={{
+                    backgroundColor: config.bgColor,
+                    border: `1px solid ${config.inputBorderColor}55`,
+                  }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={tournamentEntry ? fmtBRL(tournamentEntry) : ''}
+                    placeholder="0,00"
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      const cents = digits === '' ? 0 : Number(digits);
+                      setTournamentEntry(cents / 100);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
+                    style={{ color: config.panelTextColor }}
+                    aria-label="Valor do torneio"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="mt-3 pt-3 flex items-center justify-between"
+              style={{ borderTop: `1px solid ${config.panelBorderColor}` }}
+            >
+              <span className="text-[10px] tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
+                BANCA TOTAL DE PRÊMIO
+              </span>
+              <span
+                className="text-xl font-extrabold tabular-nums"
+                style={{
+                  color: config.headerAccentColor,
+                  textShadow: `0 0 12px ${config.headerAccentColor}66`,
+                }}
+              >
+                R$ {fmtBRL(totalBankroll)}
+              </span>
+            </div>
+          </section>
+
           {/* Novo jogador */}
           <section
             className="rounded-2xl p-5"
@@ -679,77 +785,6 @@ export default function Batalha() {
           </section>
         </aside>
       </div>
-
-      {/* Bankroll calculator - fixed bottom-left */}
-      <aside
-        className="fixed bottom-4 left-4 z-20 rounded-2xl px-4 py-3 shadow-2xl backdrop-blur-sm w-[260px]"
-        style={{
-          backgroundColor: `${config.panelBgColor}f2`,
-          border: `1px solid ${config.panelBorderColor}`,
-        }}
-      >
-        <div
-          className="text-[10px] tracking-[0.35em] mb-2"
-          style={{ color: config.panelLabelColor }}
-        >
-          BANCA
-        </div>
-
-        <div
-          className="flex items-center gap-1.5 rounded-lg px-2.5 h-9 mb-2"
-          style={{
-            backgroundColor: config.bgColor,
-            border: `1px solid ${config.inputBorderColor}55`,
-          }}
-        >
-          <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>
-            R$
-          </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={initialBankroll ? fmtBRL(initialBankroll) : ''}
-            placeholder="0,00"
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '');
-              const cents = digits === '' ? 0 : Number(digits);
-              setInitialBankroll(cents / 100);
-            }}
-            onFocus={(e) => e.target.select()}
-            className="flex-1 bg-transparent text-sm text-right font-bold tabular-nums outline-none"
-            style={{ color: config.panelTextColor }}
-            aria-label="Banca inicial"
-          />
-        </div>
-
-        <div
-          className="flex items-center justify-between text-[11px]"
-          style={{ color: config.panelLabelColor }}
-        >
-          <span className="opacity-70">+ jogadores</span>
-          <span className="tabular-nums font-semibold" style={{ color: config.panelTextColor }}>
-            R$ {fmtBRL(participantsTotal)}
-          </span>
-        </div>
-
-        <div
-          className="mt-2 pt-2 flex items-center justify-between"
-          style={{ borderTop: `1px solid ${config.panelBorderColor}` }}
-        >
-          <span className="text-[10px] tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
-            TOTAL
-          </span>
-          <span
-            className="text-base font-extrabold tabular-nums"
-            style={{
-              color: config.headerAccentColor,
-              textShadow: `0 0 12px ${config.headerAccentColor}66`,
-            }}
-          >
-            R$ {fmtBRL(totalBankroll)}
-          </span>
-        </div>
-      </aside>
     </main>
   );
 }
