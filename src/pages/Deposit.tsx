@@ -303,11 +303,40 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
     finally { setQrLoading(false); }
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success('Copiado!');
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async (text: string) => {
+    let ok = false;
+    // Try modern Clipboard API first (requires HTTPS + user gesture; fails on some mobile WebViews)
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      }
+    } catch { /* fall back below */ }
+    // Fallback: hidden textarea + execCommand (works on most mobile browsers)
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch { ok = false; }
+    }
+    if (ok) {
+      setCopied(true);
+      toast.success('Código PIX copiado!');
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error('Não foi possível copiar. Selecione e copie manualmente.');
+    }
   };
 
   const resetForm = () => {
