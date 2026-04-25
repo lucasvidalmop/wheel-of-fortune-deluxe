@@ -4332,10 +4332,12 @@ function Dashboard() {
                         invocation,
                         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), PER_REQUEST_TIMEOUT_MS)),
                       ]);
-                      if (result?.error) errors++; else sent++;
+                      if (result?.error) { errors++; setEmailProgress(p => ({ ...p, errors: p.errors + 1 })); }
+                      else { sent++; setEmailProgress(p => ({ ...p, sent: p.sent + 1 })); }
                     } catch (e: any) {
                       if (e?.message === 'timeout') timedOut++;
                       errors++;
+                      setEmailProgress(p => ({ ...p, errors: p.errors + 1 }));
                     }
                   };
 
