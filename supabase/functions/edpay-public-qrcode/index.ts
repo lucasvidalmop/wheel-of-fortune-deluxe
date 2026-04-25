@@ -218,6 +218,7 @@ Deno.serve(async (req) => {
         userPhone: userPhone || "",
         userAccountId: userAccountId || "",
         description: descText,
+        variant: isBs ? "bs" : "default",
       },
     });
 
