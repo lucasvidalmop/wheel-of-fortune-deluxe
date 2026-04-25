@@ -708,6 +708,17 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
         )}
       </GlassCard>
 
+      {loading && (
+        <BulkSendProgress
+          total={pendingRecipients.length || lastResult?.total || 1}
+          sent={0}
+          errors={0}
+          label="Disparando via Brevo (lote único)"
+          indeterminate
+          accent="blue"
+        />
+      )}
+
       <button
         onClick={handleSend}
         disabled={loading}
