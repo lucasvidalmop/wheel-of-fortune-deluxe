@@ -8025,6 +8025,30 @@ function Dashboard() {
           {activeTab === 'deposito' && (() => {
             const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '', confirmationButtonText: 'Acessar →', confirmationButtonUrl: '', confirmationButtonColor: '', showNewDepositButton: true };
             const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
+            // Visual / textos / SEO / pixels / confirmação independentes por variante.
+            // `dcv` lê com fallback para o Depósito padrão; `updateDcv` grava em `bsOverrides` quando variant=='depbs'.
+            const isBs = depositVariant === 'depbs';
+            const overrides = (dc.bsOverrides || {}) as Record<string, any>;
+            const dcv: any = isBs ? new Proxy({}, {
+              get: (_t, key: string) => {
+                if (overrides[key] !== undefined && overrides[key] !== null && overrides[key] !== '') return overrides[key];
+                return (dc as any)[key];
+              },
+            }) : dc;
+            const updateDcv = (patch: any) => {
+              if (!isBs) { updateDc(patch); return; }
+              setWheelConfig((prev: any) => {
+                const prevDc = prev.depositConfig || dc;
+                const prevOv = (prevDc.bsOverrides || {}) as Record<string, any>;
+                return {
+                  ...prev,
+                  depositConfig: {
+                    ...prevDc,
+                    bsOverrides: { ...prevOv, ...patch },
+                  },
+                };
+              });
+            };
             const depositUrl = dc.tag ? `${baseUrl}/dep=${dc.tag}` : '';
             const depositBsUrl = dc.tag ? `${baseUrl}/depbs=${dc.tag}` : '';
 
@@ -8032,7 +8056,8 @@ function Dashboard() {
               const file = e.target.files?.[0]; if (!file) return;
               try {
                 const { publicUrl } = await uploadAppAsset(file, 'deposit');
-                updateDc({ [field]: publicUrl });
+                // All upload fields (logoUrl, bgImageUrl, seoFaviconUrl, seoOgImageUrl, confirmationLogoUrl) are visual
+                updateDcv({ [field]: publicUrl });
                 toast.success('Imagem enviada!');
               } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
               e.target.value = '';
@@ -8083,7 +8108,7 @@ function Dashboard() {
                     )}
                     <p className="text-[10px] text-muted-foreground/70 mt-1">
                       {depositVariant === 'depbs'
-                        ? 'Esta variação compartilha a mesma configuração e credenciais do Depósito principal.'
+                        ? 'Compartilha tag, valores e credenciais EdPay com o Depósito padrão. Visual, textos, SEO/pixels e tela de confirmação são independentes.'
                         : 'Tag única para gerar a URL pública desta página.'}
                     </p>
                   </div>
@@ -8101,7 +8126,7 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Descrição da página</label>
-                    <input value={dc.description || ''} onChange={e => updateDc({ description: e.target.value })} placeholder="Texto exibido no topo" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.description || ''} onChange={e => updateDcv({ description: e.target.value })} placeholder="Texto exibido no topo" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                 </div>
 
@@ -8246,45 +8271,45 @@ function Dashboard() {
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted-foreground">Fundo</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.bgColor || '#0a0a0f'} onChange={e => updateDc({ bgColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
-                        <span className="text-[10px] font-mono text-muted-foreground">{dc.bgColor || '#0a0a0f'}</span>
+                        <input type="color" value={dcv.bgColor || '#0a0a0f'} onChange={e => updateDcv({ bgColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dcv.bgColor || '#0a0a0f'}</span>
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted-foreground">Destaque</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.accentColor || '#10b981'} onChange={e => updateDc({ accentColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
-                        <span className="text-[10px] font-mono text-muted-foreground">{dc.accentColor || '#10b981'}</span>
+                        <input type="color" value={dcv.accentColor || '#10b981'} onChange={e => updateDcv({ accentColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dcv.accentColor || '#10b981'}</span>
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted-foreground">Texto</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.textColor || '#ffffff'} onChange={e => updateDc({ textColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
-                        <span className="text-[10px] font-mono text-muted-foreground">{dc.textColor || '#ffffff'}</span>
+                        <input type="color" value={dcv.textColor || '#ffffff'} onChange={e => updateDcv({ textColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dcv.textColor || '#ffffff'}</span>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Logo</label>
                     <div className="flex items-center gap-3">
-                      {dc.logoUrl && <img src={dc.logoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
+                      {dcv.logoUrl && <img src={dcv.logoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.logoUrl ? '🔄 Trocar' : '📤 Enviar'} Logo
+                        {dcv.logoUrl ? '🔄 Trocar' : '📤 Enviar'} Logo
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'logoUrl')} className="hidden" />
                       </label>
-                      {dc.logoUrl && <button onClick={() => updateDc({ logoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.logoUrl && <button onClick={() => updateDcv({ logoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Imagem de fundo</label>
                     <div className="flex items-center gap-3">
-                      {dc.bgImageUrl && <img src={dc.bgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
+                      {dcv.bgImageUrl && <img src={dcv.bgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.bgImageUrl ? '🔄 Trocar' : '📤 Enviar'} Fundo
+                        {dcv.bgImageUrl ? '🔄 Trocar' : '📤 Enviar'} Fundo
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'bgImageUrl')} className="hidden" />
                       </label>
-                      {dc.bgImageUrl && <button onClick={() => updateDc({ bgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.bgImageUrl && <button onClick={() => updateDcv({ bgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                 </div>
@@ -8297,32 +8322,32 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Título da página</label>
-                    <input value={dc.seoTitle || ''} onChange={e => updateDc({ seoTitle: e.target.value })} placeholder="Título exibido na aba do navegador" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.seoTitle || ''} onChange={e => updateDcv({ seoTitle: e.target.value })} placeholder="Título exibido na aba do navegador" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Meta descrição</label>
-                    <textarea value={dc.seoDescription || ''} onChange={e => updateDc({ seoDescription: e.target.value })} placeholder="Descrição para SEO e compartilhamento" rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                    <textarea value={dcv.seoDescription || ''} onChange={e => updateDcv({ seoDescription: e.target.value })} placeholder="Descrição para SEO e compartilhamento" rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Favicon</label>
                     <div className="flex items-center gap-3">
-                      {dc.seoFaviconUrl && <img src={dc.seoFaviconUrl} alt="" className="h-8 w-8 rounded border border-white/[0.08] object-contain" />}
+                      {dcv.seoFaviconUrl && <img src={dcv.seoFaviconUrl} alt="" className="h-8 w-8 rounded border border-white/[0.08] object-contain" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.seoFaviconUrl ? '🔄 Trocar' : '📤 Enviar'} Favicon
+                        {dcv.seoFaviconUrl ? '🔄 Trocar' : '📤 Enviar'} Favicon
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'seoFaviconUrl')} className="hidden" />
                       </label>
-                      {dc.seoFaviconUrl && <button onClick={() => updateDc({ seoFaviconUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.seoFaviconUrl && <button onClick={() => updateDcv({ seoFaviconUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Imagem social (OG Image)</label>
                     <div className="flex items-center gap-3">
-                      {dc.seoOgImageUrl && <img src={dc.seoOgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
+                      {dcv.seoOgImageUrl && <img src={dcv.seoOgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.seoOgImageUrl ? '🔄 Trocar' : '📤 Enviar'} OG Image
+                        {dcv.seoOgImageUrl ? '🔄 Trocar' : '📤 Enviar'} OG Image
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'seoOgImageUrl')} className="hidden" />
                       </label>
-                      {dc.seoOgImageUrl && <button onClick={() => updateDc({ seoOgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.seoOgImageUrl && <button onClick={() => updateDcv({ seoOgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                 </div>
@@ -8335,19 +8360,19 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Facebook Pixel ID</label>
-                    <input value={dc.pixelFacebook || ''} onChange={e => updateDc({ pixelFacebook: e.target.value })} placeholder="Ex: 123456789" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.pixelFacebook || ''} onChange={e => updateDcv({ pixelFacebook: e.target.value })} placeholder="Ex: 123456789" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Google Analytics / GTM ID</label>
-                    <input value={dc.pixelGoogle || ''} onChange={e => updateDc({ pixelGoogle: e.target.value })} placeholder="Ex: G-XXXXXXX ou GTM-XXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.pixelGoogle || ''} onChange={e => updateDcv({ pixelGoogle: e.target.value })} placeholder="Ex: G-XXXXXXX ou GTM-XXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">TikTok Pixel ID</label>
-                    <input value={dc.pixelTiktok || ''} onChange={e => updateDc({ pixelTiktok: e.target.value })} placeholder="Ex: CXXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.pixelTiktok || ''} onChange={e => updateDcv({ pixelTiktok: e.target.value })} placeholder="Ex: CXXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Script customizado (Head)</label>
-                    <textarea value={dc.customHeadScript || ''} onChange={e => updateDc({ customHeadScript: e.target.value })} placeholder="<script>...</script>" rows={3} className="w-full px-4 py-2.5 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                    <textarea value={dcv.customHeadScript || ''} onChange={e => updateDcv({ customHeadScript: e.target.value })} placeholder="<script>...</script>" rows={3} className="w-full px-4 py-2.5 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                   </div>
                 </div>
 
@@ -8360,67 +8385,67 @@ function Dashboard() {
                   <p className="text-xs text-muted-foreground">Exibida após o pagamento ser confirmado.</p>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Título da confirmação</label>
-                    <input value={dc.confirmationTitle || ''} onChange={e => updateDc({ confirmationTitle: e.target.value })} placeholder="Pagamento Confirmado!" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.confirmationTitle || ''} onChange={e => updateDcv({ confirmationTitle: e.target.value })} placeholder="Pagamento Confirmado!" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Mensagem de confirmação</label>
-                    <textarea value={dc.confirmationMessage || ''} onChange={e => updateDc({ confirmationMessage: e.target.value })} placeholder="Seu depósito foi recebido com sucesso." rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                    <textarea value={dcv.confirmationMessage || ''} onChange={e => updateDcv({ confirmationMessage: e.target.value })} placeholder="Seu depósito foi recebido com sucesso." rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-muted-foreground">Cor do título</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.confirmationTitleColor || dc.accentColor || '#10b981'} onChange={e => updateDc({ confirmationTitleColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
-                        <input value={dc.confirmationTitleColor || ''} onChange={e => updateDc({ confirmationTitleColor: e.target.value })} placeholder="Cor de destaque" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input type="color" value={dcv.confirmationTitleColor || dcv.accentColor || '#10b981'} onChange={e => updateDcv({ confirmationTitleColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dcv.confirmationTitleColor || ''} onChange={e => updateDcv({ confirmationTitleColor: e.target.value })} placeholder="Cor de destaque" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-muted-foreground">Cor da mensagem</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.confirmationMessageColor || '#94a3b8'} onChange={e => updateDc({ confirmationMessageColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
-                        <input value={dc.confirmationMessageColor || ''} onChange={e => updateDc({ confirmationMessageColor: e.target.value })} placeholder="Padrão suave" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input type="color" value={dcv.confirmationMessageColor || '#94a3b8'} onChange={e => updateDcv({ confirmationMessageColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dcv.confirmationMessageColor || ''} onChange={e => updateDcv({ confirmationMessageColor: e.target.value })} placeholder="Padrão suave" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-muted-foreground">Cor dos rótulos do recibo</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.confirmationReceiptLabelColor || '#94a3b8'} onChange={e => updateDc({ confirmationReceiptLabelColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
-                        <input value={dc.confirmationReceiptLabelColor || ''} onChange={e => updateDc({ confirmationReceiptLabelColor: e.target.value })} placeholder="Padrão suave" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input type="color" value={dcv.confirmationReceiptLabelColor || '#94a3b8'} onChange={e => updateDcv({ confirmationReceiptLabelColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dcv.confirmationReceiptLabelColor || ''} onChange={e => updateDcv({ confirmationReceiptLabelColor: e.target.value })} placeholder="Padrão suave" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-muted-foreground">Cor dos valores + Valor Depositado</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.confirmationReceiptValueColor || dc.accentColor || '#10b981'} onChange={e => updateDc({ confirmationReceiptValueColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
-                        <input value={dc.confirmationReceiptValueColor || ''} onChange={e => updateDc({ confirmationReceiptValueColor: e.target.value })} placeholder="Cor de destaque" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input type="color" value={dcv.confirmationReceiptValueColor || dcv.accentColor || '#10b981'} onChange={e => updateDcv({ confirmationReceiptValueColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dcv.confirmationReceiptValueColor || ''} onChange={e => updateDcv({ confirmationReceiptValueColor: e.target.value })} placeholder="Cor de destaque" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Logo da confirmação (opcional)</label>
                     <div className="flex items-center gap-3">
-                      {dc.confirmationLogoUrl && <img src={dc.confirmationLogoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
+                      {dcv.confirmationLogoUrl && <img src={dcv.confirmationLogoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.confirmationLogoUrl ? '🔄 Trocar' : '📤 Enviar'}
+                        {dcv.confirmationLogoUrl ? '🔄 Trocar' : '📤 Enviar'}
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'confirmationLogoUrl')} className="hidden" />
                       </label>
-                      {dc.confirmationLogoUrl && <button onClick={() => updateDc({ confirmationLogoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.confirmationLogoUrl && <button onClick={() => updateDcv({ confirmationLogoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Texto do botão pós-pagamento</label>
-                    <input value={dc.confirmationButtonText || ''} onChange={e => updateDc({ confirmationButtonText: e.target.value })} placeholder="Acessar →" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.confirmationButtonText || ''} onChange={e => updateDcv({ confirmationButtonText: e.target.value })} placeholder="Acessar →" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Link do botão pós-pagamento</label>
-                    <input value={dc.confirmationButtonUrl || ''} onChange={e => updateDc({ confirmationButtonUrl: e.target.value })} placeholder="https://exemplo.com" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.confirmationButtonUrl || ''} onChange={e => updateDcv({ confirmationButtonUrl: e.target.value })} placeholder="https://exemplo.com" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     <p className="text-[10px] text-muted-foreground/60">Deixe vazio para não exibir o botão.</p>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Cor do botão pós-pagamento</label>
                     <div className="flex items-center gap-3">
-                      <input type="color" value={dc.confirmationButtonColor || dc.accentColor || '#10b981'} onChange={e => updateDc({ confirmationButtonColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
-                      <input value={dc.confirmationButtonColor || ''} onChange={e => updateDc({ confirmationButtonColor: e.target.value })} placeholder="Usa cor de destaque padrão" className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      <input type="color" value={dcv.confirmationButtonColor || dcv.accentColor || '#10b981'} onChange={e => updateDcv({ confirmationButtonColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                      <input value={dcv.confirmationButtonColor || ''} onChange={e => updateDcv({ confirmationButtonColor: e.target.value })} placeholder="Usa cor de destaque padrão" className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
                   </div>
                   <div className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
@@ -8428,8 +8453,8 @@ function Dashboard() {
                       <p className="text-xs font-semibold text-foreground">Botão de novo depósito</p>
                       <p className="text-[10px] text-muted-foreground/70">Mostra ou esconde o botão abaixo da confirmação.</p>
                     </div>
-                    <button type="button" onClick={() => updateDc({ showNewDepositButton: !(dc.showNewDepositButton ?? true) })} className={`relative h-6 w-11 rounded-full transition-all ${(dc.showNewDepositButton ?? true) ? 'bg-primary' : 'bg-white/[0.12]'}`}>
-                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${(dc.showNewDepositButton ?? true) ? 'left-[22px]' : 'left-0.5'}`} />
+                    <button type="button" onClick={() => updateDcv({ showNewDepositButton: !(dcv.showNewDepositButton ?? true) })} className={`relative h-6 w-11 rounded-full transition-all ${(dcv.showNewDepositButton ?? true) ? 'bg-primary' : 'bg-white/[0.12]'}`}>
+                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${(dcv.showNewDepositButton ?? true) ? 'left-[22px]' : 'left-0.5'}`} />
                     </button>
                   </div>
                 </div>

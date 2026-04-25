@@ -43,6 +43,9 @@ interface DepositConfig {
   bsMaxCount?: number;      // 0 = sem limite
   bsLimitReachedMessage?: string;
   bsLimitsResetAt?: string; // ISO timestamp — só conta depósitos a partir dessa data
+  // Visual / textos / SEO / pixels / confirmação independentes para a variante BS (/depbs=).
+  // Quando ausente, BS herda os valores do Depósito padrão.
+  bsOverrides?: Partial<Omit<DepositConfig, 'bsOverrides'>>;
 }
 
 const defaultDepositConfig: DepositConfig = {
@@ -207,7 +210,27 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
 
       const cfg = typeof match.config === 'string' ? JSON.parse(match.config) : match.config;
       setOwnerId(match.user_id);
-      setConfig({ ...defaultDepositConfig, ...cfg.depositConfig });
+      const baseCfg = { ...defaultDepositConfig, ...cfg.depositConfig } as DepositConfig;
+      // BS variant pulls visual/text/SEO/pixels/confirmation from `bsOverrides`,
+      // falling back to the default deposit config for any unset key.
+      if (isBs && baseCfg.bsOverrides) {
+        const ov = baseCfg.bsOverrides;
+        const overridable: (keyof DepositConfig)[] = [
+          'description', 'bgColor', 'accentColor', 'textColor', 'logoUrl', 'bgImageUrl',
+          'seoTitle', 'seoDescription', 'seoFaviconUrl', 'seoOgImageUrl',
+          'pixelFacebook', 'pixelGoogle', 'pixelTiktok', 'customHeadScript',
+          'confirmationTitle', 'confirmationMessage', 'confirmationLogoUrl',
+          'confirmationButtonText', 'confirmationButtonUrl', 'confirmationButtonColor',
+          'confirmationTitleColor', 'confirmationMessageColor',
+          'confirmationReceiptLabelColor', 'confirmationReceiptValueColor',
+          'showNewDepositButton',
+        ];
+        for (const k of overridable) {
+          const v = (ov as any)[k];
+          if (v !== undefined && v !== null && v !== '') (baseCfg as any)[k] = v;
+        }
+      }
+      setConfig(baseCfg);
 
       if (isBs) {
         const sinceIso = (cfg.depositConfig as DepositConfig | undefined)?.bsLimitsResetAt || null;
