@@ -192,7 +192,7 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
         <button
           onClick={handleSpin}
           disabled={spinning || segCount === 0}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full font-extrabold tracking-widest transition-all active:scale-95 disabled:opacity-60"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full font-extrabold tracking-widest transition-all active:scale-95 disabled:opacity-60 overflow-hidden flex items-center justify-center"
           style={{
             width: '22%',
             aspectRatio: '1 / 1',
@@ -201,9 +201,19 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
             border: `2px solid ${config.wheelGlowColor}`,
             boxShadow: `0 0 24px ${config.wheelGlowColor}55, inset 0 0 20px ${config.wheelGlowColor}22`,
             fontSize: 'clamp(12px, 2vw, 18px)',
+            padding: 0,
           }}
         >
-          {spinning ? '...' : config.wheelCenterButtonText}
+          {config.wheelCenterButtonImageUrl ? (
+            <img
+              src={config.wheelCenterButtonImageUrl}
+              alt={config.wheelCenterButtonText || 'SPIN'}
+              className="w-full h-full object-cover rounded-full"
+              draggable={false}
+            />
+          ) : (
+            spinning ? '...' : config.wheelCenterButtonText
+          )}
         </button>
       </div>
 
