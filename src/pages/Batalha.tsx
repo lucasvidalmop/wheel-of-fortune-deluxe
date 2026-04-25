@@ -99,6 +99,72 @@ export default function Batalha() {
     };
   }, [session?.user?.id, hasAccess]);
 
+  // Load battle_participants from BS deposits + subscribe to realtime inserts
+  useEffect(() => {
+    if (!session?.user?.id || hasAccess !== true) return;
+    const ownerId = session.user.id;
+    let cancelled = false;
+
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from('battle_participants')
+        .select('id, name, game')
+        .eq('owner_id', ownerId)
+        .eq('consumed', false)
+        .order('created_at', { ascending: true });
+      if (cancelled || error || !Array.isArray(data)) return;
+      setParticipants((prev) => {
+        const existingDbIds = new Set(prev.map((p) => p.dbId).filter(Boolean));
+        const fresh = data
+          .filter((row: any) => !existingDbIds.has(row.id))
+          .map((row: any) => ({
+            id: crypto.randomUUID(),
+            dbId: row.id as string,
+            name: row.name as string,
+            game: (row.game as string) || undefined,
+            weight: 1,
+            score: 0,
+          }));
+        return [...prev, ...fresh];
+      });
+    })();
+
+    const channel = (supabase as any)
+      .channel(`battle_participants_${ownerId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'battle_participants',
+          filter: `owner_id=eq.${ownerId}`,
+        },
+        (payload: any) => {
+          const row = payload?.new;
+          if (!row || row.consumed) return;
+          setParticipants((prev) => {
+            if (prev.some((p) => p.dbId === row.id)) return prev;
+            const newP = {
+              id: crypto.randomUUID(),
+              dbId: row.id as string,
+              name: row.name as string,
+              game: (row.game as string) || undefined,
+              weight: 1,
+              score: 0,
+            };
+            toast.success(`Novo participante: ${newP.name}${newP.game ? ` (${newP.game})` : ''}`);
+            return [...prev, newP];
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      try { (supabase as any).removeChannel(channel); } catch (_) { /* noop */ }
+    };
+  }, [session?.user?.id, hasAccess]);
+
   // SEO
   useEffect(() => {
     document.title = config.seoTitle || `${config.pageTitle}`;
