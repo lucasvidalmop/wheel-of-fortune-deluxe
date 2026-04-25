@@ -348,6 +348,24 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
     );
   }
 
+  if (bsLimitReached && step === 'form') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg, color: txt }}>
+        {config.bgImageUrl && (
+          <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
+        )}
+        <div className="relative text-center space-y-4 max-w-md z-10">
+          {config.logoUrl && <img src={config.logoUrl} alt="" className="h-14 mx-auto object-contain" />}
+          <div className="text-5xl">🔒</div>
+          <h1 className="text-2xl font-bold">Depósitos encerrados</h1>
+          <p className="text-sm" style={{ color: txtMuted }}>
+            {config.bsLimitReachedMessage || 'O limite de depósitos para esta página foi atingido. Volte mais tarde.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const cardStyle = { background: `${txt}08`, border: `1px solid ${txt}14` };
   const inputStyle = { background: `${txt}0a`, border: `1px solid ${txt}14`, color: txt };
   const inputFocusClass = 'focus:outline-none focus:ring-2 transition-all';
