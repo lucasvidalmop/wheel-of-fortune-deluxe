@@ -78,9 +78,10 @@ interface DepositLabels {
   whatsappLabel?: string;
 }
 
-const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabels }) => {
+const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: DepositLabels; variant?: 'default' | 'bs' }) => {
   const params = useParams<{ tag: string }>();
   const tag = tagProp || params.tag || '';
+  const isBs = variant === 'bs';
   const nameLabel = labels?.nameLabel ?? 'Nome completo';
   const namePlaceholder = labels?.namePlaceholder ?? 'Seu nome';
   const whatsappLabel = labels?.whatsappLabel ?? 'WhatsApp';
@@ -88,6 +89,7 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
   const [notFound, setNotFound] = useState(false);
+  const [bsStats, setBsStats] = useState<{ total: number; count: number } | null>(null);
   const accountLabel = labels?.accountLabel ?? config.accountIdLabel;
   const accountPlaceholder = labels?.accountPlaceholder ?? config.accountIdLabel;
 
