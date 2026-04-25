@@ -446,6 +446,13 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
         {step === 'amount' && (
           <div className="space-y-4 rounded-2xl backdrop-blur-xl p-6" style={cardStyle}>
             <p className="text-sm text-center" style={{ color: txtMuted }}>Selecione o valor do depósito</p>
+            {isBs && (bsMaxPerDeposit > 0 || bsMaxTotal > 0 || bsMaxCount > 0) && (
+              <div className="text-[11px] space-y-0.5 px-3 py-2 rounded-xl" style={{ background: `${accent}10`, border: `1px solid ${accent}33`, color: txtMuted }}>
+                {bsMaxPerDeposit > 0 && <div>Máx por depósito: <span style={{ color: txt }}>R$ {bsMaxPerDeposit.toFixed(2)}</span></div>}
+                {bsMaxTotal > 0 && <div>Restante do total: <span style={{ color: txt }}>R$ {Math.max(bsMaxTotal - bsTotal, 0).toFixed(2)}</span> de R$ {bsMaxTotal.toFixed(2)}</div>}
+                {bsMaxCount > 0 && <div>Depósitos restantes: <span style={{ color: txt }}>{Math.max(bsMaxCount - bsCount, 0)}</span> de {bsMaxCount}</div>}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               {config.presetValues.map(val => (
                 <button key={val} onClick={() => { setSelectedAmount(val); setCustomAmount(''); }} className="py-3.5 rounded-xl text-sm font-bold transition-all" style={{ background: selectedAmount === val ? accent : `${txt}08`, color: selectedAmount === val ? '#fff' : txt, border: `1px solid ${selectedAmount === val ? accent : `${txt}14`}`, boxShadow: selectedAmount === val ? `0 8px 20px -5px ${accent}33` : 'none' }}>
