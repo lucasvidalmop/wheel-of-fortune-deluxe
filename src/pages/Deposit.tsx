@@ -185,21 +185,11 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
     const fetchConfig = async () => {
       if (!tag) { setNotFound(true); setLoading(false); return; }
 
-      const { data: configs } = await (supabase as any)
-        .from('wheel_configs')
-        .select('user_id, config');
+      const { data: rows, error } = await (supabase as any)
+        .rpc('get_deposit_config_by_tag', { p_tag: tag });
 
-      if (!configs || configs.length === 0) {
-        setNotFound(true); setLoading(false); return;
-      }
-
-      const match = configs.find((c: any) => {
-        const cfg = typeof c.config === 'string' ? JSON.parse(c.config) : c.config;
-        const dc = cfg?.depositConfig;
-        return dc?.enabled && dc?.tag?.toLowerCase() === tag.toLowerCase();
-      });
-
-      if (!match) {
+      const match = Array.isArray(rows) ? rows[0] : null;
+      if (error || !match) {
         setNotFound(true); setLoading(false); return;
       }
 
