@@ -219,21 +219,18 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
     fetchConfig();
   }, [tag, isBs]);
 
-  // Poll for payment confirmation
+  // Poll for payment confirmation (uses public RPC so it works for anonymous visitors)
   useEffect(() => {
     if (step !== 'qrcode' || !txId) return;
 
     const poll = async () => {
       try {
-        const { data } = await (supabase as any)
-          .from('edpay_transactions')
-          .select('status')
-          .eq('edpay_id', txId)
-          .maybeSingle();
-        if (data?.status === 'paid' || data?.status === 'confirmed' || data?.status === 'completed') {
+        const { data: status } = await (supabase as any)
+          .rpc('get_public_deposit_status', { p_edpay_id: txId });
+        if (status === 'paid' || status === 'confirmed' || status === 'completed') {
           setStep('confirmed');
           if (pollRef.current) clearInterval(pollRef.current);
-        } else if (data?.status === 'cancelled' || data?.status === 'expired') {
+        } else if (status === 'cancelled' || status === 'expired') {
           toast.error('Pagamento expirado. Gere um novo QR Code.');
           resetForm();
           if (pollRef.current) clearInterval(pollRef.current);
@@ -241,7 +238,8 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
       } catch { /* ignore */ }
     };
 
-    pollRef.current = setInterval(poll, 5000);
+    poll(); // run once immediately
+    pollRef.current = setInterval(poll, 4000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [step, txId]);
 
