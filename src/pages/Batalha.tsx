@@ -863,6 +863,7 @@ export default function Batalha() {
           </section>
         </aside>
       </div>
+      {ConfirmDialog}
     </main>
   );
 }
