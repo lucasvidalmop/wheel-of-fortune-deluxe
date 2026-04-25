@@ -475,6 +475,34 @@ export default function Batalha() {
           <div className="mt-6 text-xs tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
             {activeParticipants.length} JOGADORES ATIVOS
           </div>
+
+          {winnerHistory[0] && (
+            <div
+              className="mt-4 rounded-2xl px-5 py-3 flex items-center gap-4 min-w-[260px]"
+              style={{
+                backgroundColor: config.panelBgColor,
+                border: `1px solid ${config.headerAccentColor}55`,
+                boxShadow: `0 0 18px ${config.headerAccentColor}22`,
+              }}
+            >
+              <div
+                className="text-[10px] tracking-[0.3em] font-bold"
+                style={{ color: config.headerAccentColor }}
+              >
+                ÚLTIMO SORTEADO
+              </div>
+              <div className="min-w-0 flex-1 text-right">
+                <div className="text-sm font-bold truncate" style={{ color: config.panelTextColor }}>
+                  {winnerHistory[0].name}
+                </div>
+                {winnerHistory[0].game && (
+                  <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
+                    {winnerHistory[0].game}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {participants.length > 0 && activeParticipants.length === 0 && (
             <button
               onClick={resetWheel}
