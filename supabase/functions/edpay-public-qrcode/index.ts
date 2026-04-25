@@ -17,8 +17,9 @@ Deno.serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
-    const { ownerId, amount, description, userName, userPhone, userAccountId } =
+    const { ownerId, amount, description, userName, userPhone, userAccountId, variant } =
       body;
+    const isBs = variant === "bs";
 
     if (!ownerId || !amount) {
       return new Response(
