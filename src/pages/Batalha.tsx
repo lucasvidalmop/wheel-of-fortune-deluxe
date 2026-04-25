@@ -461,7 +461,7 @@ export default function Batalha() {
       {/* Layout */}
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start lg:h-[calc(100vh-170px)] min-h-0">
         {/* Wheel */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center min-h-0">
           {loading ? (
             <div className="opacity-60">Carregando...</div>
           ) : (
