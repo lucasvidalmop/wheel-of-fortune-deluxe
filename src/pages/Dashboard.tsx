@@ -25,6 +25,7 @@ import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
 import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
 import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
+import BulkSendProgress from '@/components/casino/BulkSendProgress';
 
 interface WheelUser {
   id: string;
@@ -361,6 +362,16 @@ function Dashboard() {
   const [notifyGroupName2, setNotifyGroupName2] = useState('');
   const [notifyGroupsLoading2, setNotifyGroupsLoading2] = useState(false);
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
+
+  // Progresso dos disparos em massa (Email/SMS/WhatsApp)
+  type BulkProgress = { total: number; sent: number; errors: number; skipped: number };
+  const emptyProgress: BulkProgress = { total: 0, sent: 0, errors: 0, skipped: 0 };
+  const [emailProgress, setEmailProgress] = useState<BulkProgress>(emptyProgress);
+  const [smsProgress, setSmsProgress] = useState<BulkProgress>(emptyProgress);
+  const [smsCsProgress, setSmsCsProgress] = useState<BulkProgress>(emptyProgress);
+  const [whatsappProgress, setWhatsappProgress] = useState<BulkProgress>(emptyProgress);
+  const [whatsappProgress2, setWhatsappProgress2] = useState<BulkProgress>(emptyProgress);
+
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
@@ -4269,6 +4280,14 @@ function Dashboard() {
                 </div>
               </GlassCard>
 
+              <BulkSendProgress
+                total={emailProgress.total}
+                sent={emailProgress.sent}
+                errors={emailProgress.errors}
+                skipped={emailProgress.skipped}
+                label="Disparo de email"
+              />
+
               <button
                 onClick={async () => {
                   const baseRecipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
@@ -4279,10 +4298,11 @@ function Dashboard() {
                   if (recipients.length === 0) { toast.error(skipped > 0 ? `Todos os ${skipped} destinatários foram excluídos (email recente)` : 'Nenhum destinatário selecionado'); return; }
                   if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
                   setEmailSending(true);
+                  setEmailProgress({ total: recipients.length, sent: 0, errors: 0, skipped: 0 });
                    const publishedUrl = 'https://tipspayroleta.com';
                    const roletaLink = `${publishedUrl}/${slug}`;
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
-                  if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); return; }
+                  if (!freshSession?.access_token) { toast.error('Sessão expirada, faça login novamente'); setEmailSending(false); setEmailProgress(emptyProgress); return; }
                   let sent = 0, errors = 0, timedOut = 0;
                   const customTpl = customTemplates.find(t => t.id === emailTemplate);
                   const templateName = customTpl
@@ -4320,10 +4340,12 @@ function Dashboard() {
                         invocation,
                         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), PER_REQUEST_TIMEOUT_MS)),
                       ]);
-                      if (result?.error) errors++; else sent++;
+                      if (result?.error) { errors++; setEmailProgress(p => ({ ...p, errors: p.errors + 1 })); }
+                      else { sent++; setEmailProgress(p => ({ ...p, sent: p.sent + 1 })); }
                     } catch (e: any) {
                       if (e?.message === 'timeout') timedOut++;
                       errors++;
+                      setEmailProgress(p => ({ ...p, errors: p.errors + 1 }));
                     }
                   };
 
@@ -4333,6 +4355,7 @@ function Dashboard() {
                     await Promise.all(chunk.map(sendOne));
                   }
                   setEmailSending(false);
+                  setTimeout(() => setEmailProgress(emptyProgress), 4000);
                   const skipMsg = skipped > 0 ? ` (${skipped} excluído${skipped > 1 ? 's' : ''} por já ter recebido)` : '';
                   if (errors > 0) {
                     toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}${skipMsg}`);
@@ -4678,6 +4701,8 @@ function Dashboard() {
                 )}
               </GlassCard>
 
+              <BulkSendProgress total={smsProgress.total} sent={smsProgress.sent} errors={smsProgress.errors} skipped={smsProgress.skipped} label="Disparo de SMS" />
+
               {smsScheduleMode ? (
                 <button
                   onClick={saveSmsSchedule}
@@ -4701,6 +4726,7 @@ function Dashboard() {
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setSmsSending(true);
+                  setSmsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                   let sent = 0, errors = 0, skipped = 0;
                   const BATCH_SIZE = 5;
                   const TIMEOUT_MS = 15000;
@@ -4729,13 +4755,16 @@ function Dashboard() {
                           const payload = r.value.data as any;
                           if (payload?.skipped) {
                             skipped++;
+                            setSmsProgress(p => ({ ...p, skipped: p.skipped + 1 }));
                             smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId });
                           } else {
                             sent++;
+                            setSmsProgress(p => ({ ...p, sent: p.sent + 1 }));
                             smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent', batch_id: batchId });
                           }
                         } else {
                           errors++;
+                          setSmsProgress(p => ({ ...p, errors: p.errors + 1 }));
                           const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
                           smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: errMsg, batch_id: batchId });
                         }
@@ -4748,6 +4777,7 @@ function Dashboard() {
                     await (supabase as any).from(smsProvider === 'mobizon' ? 'sms_mb_message_log' : 'sms_message_log').insert(smsLogEntries);
                   }
                   setSmsSending(false);
+                  setTimeout(() => setSmsProgress(emptyProgress), 4000);
                   if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
                   else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
                   else toast.error('Nenhum SMS enviado');
@@ -4994,6 +5024,7 @@ function Dashboard() {
                     if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                     if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                     setSmsCsSending(true);
+                    setSmsCsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0, skipped = 0;
                     const BATCH_SIZE = 5;
                     const entries: any[] = [];
@@ -5012,10 +5043,11 @@ function Dashboard() {
                           const u = users.find(x => x.phone === phone) || phoneList.find(p => p.phone === phone);
                           if (r.status === 'fulfilled' && !r.value.error) {
                             const payload = r.value.data as any;
-                            if (payload?.skipped) { skipped++; entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId }); }
-                            else { sent++; entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'sent', batch_id: batchId }); }
+                            if (payload?.skipped) { skipped++; setSmsCsProgress(p => ({ ...p, skipped: p.skipped + 1 })); entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId }); }
+                            else { sent++; setSmsCsProgress(p => ({ ...p, sent: p.sent + 1 })); entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'sent', batch_id: batchId }); }
                           } else {
                             errors++;
+                            setSmsCsProgress(p => ({ ...p, errors: p.errors + 1 }));
                             const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
                             entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: errMsg, batch_id: batchId });
                           }
@@ -5024,6 +5056,7 @@ function Dashboard() {
                     } catch (e) { console.error('SMS CS batch error:', e); }
                     if (entries.length > 0) await (supabase as any).from('sms_cs_message_log').insert(entries);
                     setSmsCsSending(false);
+                    setTimeout(() => setSmsCsProgress(emptyProgress), 4000);
                     if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
                     else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
                     else toast.error('Nenhum SMS enviado');
