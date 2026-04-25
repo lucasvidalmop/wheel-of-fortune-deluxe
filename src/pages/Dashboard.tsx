@@ -362,6 +362,16 @@ function Dashboard() {
   const [notifyGroupName2, setNotifyGroupName2] = useState('');
   const [notifyGroupsLoading2, setNotifyGroupsLoading2] = useState(false);
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
+
+  // Progresso dos disparos em massa (Email/SMS/WhatsApp)
+  type BulkProgress = { total: number; sent: number; errors: number; skipped: number };
+  const emptyProgress: BulkProgress = { total: 0, sent: 0, errors: 0, skipped: 0 };
+  const [emailProgress, setEmailProgress] = useState<BulkProgress>(emptyProgress);
+  const [smsProgress, setSmsProgress] = useState<BulkProgress>(emptyProgress);
+  const [smsCsProgress, setSmsCsProgress] = useState<BulkProgress>(emptyProgress);
+  const [whatsappProgress, setWhatsappProgress] = useState<BulkProgress>(emptyProgress);
+  const [whatsappProgress2, setWhatsappProgress2] = useState<BulkProgress>(emptyProgress);
+
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
