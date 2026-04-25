@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 export default function Batalha() {
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
   const [loading, setLoading] = useState(true);
-  const [participants, setParticipants] = useState<BattleParticipant[]>([]);
+  const [participants, setParticipants] = useState<(BattleParticipant & { dbId?: string })[]>([]);
   const [eliminatedIds, setEliminatedIds] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
   const [game, setGame] = useState('');
@@ -99,6 +99,72 @@ export default function Batalha() {
     };
   }, [session?.user?.id, hasAccess]);
 
+  // Load battle_participants from BS deposits + subscribe to realtime inserts
+  useEffect(() => {
+    if (!session?.user?.id || hasAccess !== true) return;
+    const ownerId = session.user.id;
+    let cancelled = false;
+
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from('battle_participants')
+        .select('id, name, game')
+        .eq('owner_id', ownerId)
+        .eq('consumed', false)
+        .order('created_at', { ascending: true });
+      if (cancelled || error || !Array.isArray(data)) return;
+      setParticipants((prev) => {
+        const existingDbIds = new Set(prev.map((p) => p.dbId).filter(Boolean));
+        const fresh = data
+          .filter((row: any) => !existingDbIds.has(row.id))
+          .map((row: any) => ({
+            id: crypto.randomUUID(),
+            dbId: row.id as string,
+            name: row.name as string,
+            game: (row.game as string) || undefined,
+            weight: 1,
+            score: 0,
+          }));
+        return [...prev, ...fresh];
+      });
+    })();
+
+    const channel = (supabase as any)
+      .channel(`battle_participants_${ownerId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'battle_participants',
+          filter: `owner_id=eq.${ownerId}`,
+        },
+        (payload: any) => {
+          const row = payload?.new;
+          if (!row || row.consumed) return;
+          setParticipants((prev) => {
+            if (prev.some((p) => p.dbId === row.id)) return prev;
+            const newP = {
+              id: crypto.randomUUID(),
+              dbId: row.id as string,
+              name: row.name as string,
+              game: (row.game as string) || undefined,
+              weight: 1,
+              score: 0,
+            };
+            toast.success(`Novo participante: ${newP.name}${newP.game ? ` (${newP.game})` : ''}`);
+            return [...prev, newP];
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      try { (supabase as any).removeChannel(channel); } catch (_) { /* noop */ }
+    };
+  }, [session?.user?.id, hasAccess]);
+
   // SEO
   useEffect(() => {
     document.title = config.seoTitle || `${config.pageTitle}`;
@@ -156,12 +222,22 @@ export default function Batalha() {
   };
 
   const removeParticipant = (id: string) => {
+    const target = participants.find((p) => p.id === id);
     setParticipants((prev) => prev.filter((p) => p.id !== id));
     setEliminatedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
     });
+    if (target?.dbId) {
+      (supabase as any)
+        .from('battle_participants')
+        .update({ consumed: true })
+        .eq('id', target.dbId)
+        .then(({ error }: any) => {
+          if (error) console.warn('Failed to mark participant consumed:', error);
+        });
+    }
   };
 
   const updateScore = (id: string, score: number) =>
@@ -175,6 +251,16 @@ export default function Batalha() {
       next.add(w.id);
       return next;
     });
+    const target = participants.find((p) => p.id === w.id) as (BattleParticipant & { dbId?: string }) | undefined;
+    if (target?.dbId) {
+      (supabase as any)
+        .from('battle_participants')
+        .update({ consumed: true })
+        .eq('id', target.dbId)
+        .then(({ error }: any) => {
+          if (error) console.warn('Failed to mark winner consumed:', error);
+        });
+    }
   };
 
   // Active participants on the wheel (not yet drawn).

@@ -111,9 +111,38 @@ Deno.serve(async (req) => {
           // Fetch owner_id from the transaction
           const { data: txData } = await supabase
             .from("edpay_transactions")
-            .select("owner_id, amount")
+            .select("id, owner_id, amount")
             .eq("edpay_id", edpayId)
             .maybeSingle();
+
+          // If this was a BS public deposit, auto-add as Battle participant
+          if (txData?.owner_id && meta.variant === "bs") {
+            try {
+              const ytName = String(meta.userName || "").trim();
+              const gameName = String(meta.userAccountId || "").trim();
+              if (ytName) {
+                const { error: bpErr } = await supabase
+                  .from("battle_participants")
+                  .insert({
+                    owner_id: txData.owner_id,
+                    name: ytName,
+                    game: gameName,
+                    source: "deposit_bs",
+                    edpay_transaction_id: (txData as any).id,
+                  });
+                if (bpErr) {
+                  // Ignore unique-violation (already inserted for this tx)
+                  if (!String(bpErr.message || "").toLowerCase().includes("duplicate")) {
+                    console.error("battle_participants insert error:", bpErr);
+                  }
+                } else {
+                  console.log("Battle participant created from BS deposit", edpayId);
+                }
+              }
+            } catch (bpExc) {
+              console.error("Failed to create battle participant:", bpExc);
+            }
+          }
 
           if (txData?.owner_id) {
             await fetch(`${supabaseUrl}/functions/v1/send-owner-notification`, {

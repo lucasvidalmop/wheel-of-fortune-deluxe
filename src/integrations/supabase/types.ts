@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_participants: {
+        Row: {
+          consumed: boolean
+          created_at: string
+          edpay_transaction_id: string | null
+          game: string
+          id: string
+          name: string
+          owner_id: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          consumed?: boolean
+          created_at?: string
+          edpay_transaction_id?: string | null
+          game?: string
+          id?: string
+          name?: string
+          owner_id: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          consumed?: boolean
+          created_at?: string
+          edpay_transaction_id?: string | null
+          game?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       edpay_transactions: {
         Row: {
           amount: number | null
