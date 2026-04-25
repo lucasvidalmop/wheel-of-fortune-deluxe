@@ -5043,10 +5043,11 @@ function Dashboard() {
                           const u = users.find(x => x.phone === phone) || phoneList.find(p => p.phone === phone);
                           if (r.status === 'fulfilled' && !r.value.error) {
                             const payload = r.value.data as any;
-                            if (payload?.skipped) { skipped++; entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId }); }
-                            else { sent++; entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'sent', batch_id: batchId }); }
+                            if (payload?.skipped) { skipped++; setSmsCsProgress(p => ({ ...p, skipped: p.skipped + 1 })); entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId }); }
+                            else { sent++; setSmsCsProgress(p => ({ ...p, sent: p.sent + 1 })); entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'sent', batch_id: batchId }); }
                           } else {
                             errors++;
+                            setSmsCsProgress(p => ({ ...p, errors: p.errors + 1 }));
                             const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
                             entries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: u?.name || '', message: smsCsMessage, status: 'error', error_message: errMsg, batch_id: batchId });
                           }
