@@ -539,7 +539,7 @@ export default function Batalha() {
                 <div
                   className="flex items-center gap-1.5 rounded-lg px-2.5 h-10"
                   style={{
-                    backgroundColor: config.bgColor,
+                    backgroundColor: 'transparent',
                     border: `1px solid ${config.inputBorderColor}55`,
                   }}
                 >
