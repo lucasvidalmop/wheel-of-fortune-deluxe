@@ -8360,19 +8360,19 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Facebook Pixel ID</label>
-                    <input value={dc.pixelFacebook || ''} onChange={e => updateDc({ pixelFacebook: e.target.value })} placeholder="Ex: 123456789" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.pixelFacebook || ''} onChange={e => updateDcv({ pixelFacebook: e.target.value })} placeholder="Ex: 123456789" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Google Analytics / GTM ID</label>
-                    <input value={dc.pixelGoogle || ''} onChange={e => updateDc({ pixelGoogle: e.target.value })} placeholder="Ex: G-XXXXXXX ou GTM-XXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.pixelGoogle || ''} onChange={e => updateDcv({ pixelGoogle: e.target.value })} placeholder="Ex: G-XXXXXXX ou GTM-XXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">TikTok Pixel ID</label>
-                    <input value={dc.pixelTiktok || ''} onChange={e => updateDc({ pixelTiktok: e.target.value })} placeholder="Ex: CXXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.pixelTiktok || ''} onChange={e => updateDcv({ pixelTiktok: e.target.value })} placeholder="Ex: CXXXXXXX" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Script customizado (Head)</label>
-                    <textarea value={dc.customHeadScript || ''} onChange={e => updateDc({ customHeadScript: e.target.value })} placeholder="<script>...</script>" rows={3} className="w-full px-4 py-2.5 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                    <textarea value={dcv.customHeadScript || ''} onChange={e => updateDcv({ customHeadScript: e.target.value })} placeholder="<script>...</script>" rows={3} className="w-full px-4 py-2.5 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                   </div>
                 </div>
 
