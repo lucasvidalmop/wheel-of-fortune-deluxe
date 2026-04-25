@@ -25,6 +25,7 @@ import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
 import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
 import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
+import BulkSendProgress from '@/components/casino/BulkSendProgress';
 
 interface WheelUser {
   id: string;
