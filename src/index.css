@@ -182,3 +182,13 @@ input[type="checkbox"]:checked::after {
   box-shadow: inset 0 0 0 1000px transparent;
   caret-color: inherit;
 }
+
+/* Remove text selection highlight on battle money inputs (avoids dark box behind value) */
+.battle-money-input::selection {
+  background: transparent;
+  color: inherit;
+}
+.battle-money-input::-moz-selection {
+  background: transparent;
+  color: inherit;
+}
