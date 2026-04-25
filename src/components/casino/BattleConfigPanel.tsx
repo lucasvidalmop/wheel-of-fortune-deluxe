@@ -51,6 +51,50 @@ const TextInput = ({ value, onChange, placeholder }: { value: string; onChange: 
   />
 );
 
+const ImageUpload = ({ value, onChange, folder }: { value?: string; onChange: (url: string) => void; folder: string }) => {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, folder);
+      onChange(publicUrl);
+      toast.success('Imagem enviada!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {value && (
+        <img src={value} alt="" className="h-10 w-16 rounded border border-border object-cover" />
+      )}
+      <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-border bg-background px-2 h-8 text-xs hover:bg-muted">
+        <Upload size={12} />
+        {uploading ? 'Enviando...' : value ? 'Trocar' : 'Enviar'}
+        <input ref={inputRef} type="file" accept="image/*" onChange={handle} className="hidden" disabled={uploading} />
+      </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          className="text-destructive hover:opacity-80"
+          aria-label="Remover imagem"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
+    </div>
+  );
+};
+
 // Mock participants for the live preview only (not saved).
 const previewParticipants: BattleParticipant[] = [
   { id: 'p1', name: 'Jogador 1', game: 'Fortune Tiger', weight: 1 },
