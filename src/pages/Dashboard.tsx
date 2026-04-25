@@ -8056,7 +8056,8 @@ function Dashboard() {
               const file = e.target.files?.[0]; if (!file) return;
               try {
                 const { publicUrl } = await uploadAppAsset(file, 'deposit');
-                updateDc({ [field]: publicUrl });
+                // All upload fields (logoUrl, bgImageUrl, seoFaviconUrl, seoOgImageUrl, confirmationLogoUrl) are visual
+                updateDcv({ [field]: publicUrl });
                 toast.success('Imagem enviada!');
               } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
               e.target.value = '';
