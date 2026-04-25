@@ -42,6 +42,7 @@ interface DepositConfig {
   bsMaxTotal?: number;      // 0 = sem limite
   bsMaxCount?: number;      // 0 = sem limite
   bsLimitReachedMessage?: string;
+  bsLimitsResetAt?: string; // ISO timestamp — só conta depósitos a partir dessa data
 }
 
 const defaultDepositConfig: DepositConfig = {
@@ -209,8 +210,9 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
       setConfig({ ...defaultDepositConfig, ...cfg.depositConfig });
 
       if (isBs) {
+        const sinceIso = (cfg.depositConfig as DepositConfig | undefined)?.bsLimitsResetAt || null;
         const { data: stats } = await (supabase as any)
-          .rpc('get_bs_deposit_stats', { p_owner_id: match.user_id });
+          .rpc('get_bs_deposit_stats', { p_owner_id: match.user_id, p_since: sinceIso });
         const row = Array.isArray(stats) ? stats[0] : null;
         setBsStats({
           total: Number(row?.total_amount || 0),

@@ -612,6 +612,7 @@ function Dashboard() {
   const [manualPaySearch, setManualPaySearch] = useState('');
   const [manualPaySending, setManualPaySending] = useState(false);
   const { confirm: confirmDialog, ConfirmDialog } = useConfirmDialog();
+  const [bsDepositStats, setBsDepositStats] = useState<{ total: number; count: number }>({ total: 0, count: 0 });
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
@@ -1118,6 +1119,18 @@ function Dashboard() {
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(defaultConfig);
   const [configId, setConfigId] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+
+  // Auto-load BS deposit stats whenever the operator opens the BS deposit tab
+  useEffect(() => {
+    if (activeTab !== 'deposito' || depositVariant !== 'depbs' || !session?.user?.id) return;
+    const sinceIso = (wheelConfig as any)?.depositConfig?.bsLimitsResetAt || null;
+    (supabase as any)
+      .rpc('get_bs_deposit_stats', { p_owner_id: session.user.id, p_since: sinceIso })
+      .then(({ data }: any) => {
+        const row = Array.isArray(data) ? data[0] : null;
+        setBsDepositStats({ total: Number(row?.total_amount || 0), count: Number(row?.total_count || 0) });
+      });
+  }, [activeTab, depositVariant, session?.user?.id, (wheelConfig as any)?.depositConfig?.bsLimitsResetAt]);
 
   // Grant spin modal
   const [grantSpinUser, setGrantSpinUser] = useState<WheelUser | null>(null);
@@ -8124,7 +8137,16 @@ function Dashboard() {
                 </div>
 
                 {/* Limites — exclusivos do Depósito BS */}
-                {depositVariant === 'depbs' && (
+                {depositVariant === 'depbs' && (() => {
+                  const [bsStats, setBsStats] = [bsDepositStats, setBsDepositStats];
+                  const refreshStats = async () => {
+                    if (!session?.user?.id) return;
+                    const sinceIso = dc.bsLimitsResetAt || null;
+                    const { data } = await (supabase as any).rpc('get_bs_deposit_stats', { p_owner_id: session.user.id, p_since: sinceIso });
+                    const row = Array.isArray(data) ? data[0] : null;
+                    setBsStats({ total: Number(row?.total_amount || 0), count: Number(row?.total_count || 0) });
+                  };
+                  return (
                   <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                     <div className="flex items-center gap-2 mb-1">
                       <DollarSign size={18} className="text-primary" />
@@ -8151,8 +8173,68 @@ function Dashboard() {
                       <label className="text-xs font-semibold text-muted-foreground">Mensagem quando limite for atingido</label>
                       <input value={dc.bsLimitReachedMessage || ''} onChange={e => updateDc({ bsLimitReachedMessage: e.target.value })} placeholder="O limite de depósitos para esta página foi atingido. Volte mais tarde." className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
+
+                    {/* Reset counters */}
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex-1 min-w-[200px]">
+                          <p className="text-xs font-semibold text-amber-300/90 mb-1">Contagem atual (após último reset)</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {bsStats.count} depósito(s) · R$ {bsStats.total.toFixed(2)}
+                            {dc.bsLimitsResetAt && (
+                              <span className="block opacity-70">desde {new Date(dc.bsLimitsResetAt).toLocaleString('pt-BR')}</span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={refreshStats}
+                            className="px-3 py-2 rounded-xl text-xs font-medium bg-white/[0.06] hover:bg-white/[0.12] text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
+                          >
+                            <RotateCcw size={12} /> Atualizar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const ok = await confirmDialog({
+                                title: 'Resetar contagem de depósitos BS?',
+                                message: 'A partir de agora, apenas novos depósitos contarão para os limites de "Total acumulado" e "Quantidade máx". O histórico não é apagado.',
+                                confirmLabel: 'Resetar agora',
+                                variant: 'warning',
+                              });
+                              if (!ok || !session?.user?.id) return;
+                              const nowIso = new Date().toISOString();
+                              // Persist immediately to DB so the public deposit page picks it up
+                              const { data: dbRow } = await (supabase as any)
+                                .from('wheel_configs')
+                                .select('config')
+                                .eq('user_id', session.user.id)
+                                .maybeSingle();
+                              const dbConfig = dbRow?.config || {};
+                              const newConfig = {
+                                ...dbConfig,
+                                depositConfig: { ...(dbConfig.depositConfig || {}), ...dc, bsLimitsResetAt: nowIso },
+                              };
+                              const { error } = await (supabase as any)
+                                .from('wheel_configs')
+                                .update({ config: newConfig, updated_at: nowIso })
+                                .eq('user_id', session.user.id);
+                              if (error) { toast.error('Erro ao resetar: ' + error.message); return; }
+                              updateDc({ bsLimitsResetAt: nowIso });
+                              toast.success('Contagem resetada!');
+                              await refreshStats();
+                            }}
+                            className="px-3 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white transition-all flex items-center gap-1.5 shadow-lg shadow-amber-600/20"
+                          >
+                            <RotateCcw size={12} /> Resetar contagem
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* Visual */}
                 <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
