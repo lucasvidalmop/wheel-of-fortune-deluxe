@@ -222,19 +222,19 @@ export default function BattleConfigPanel({ userId }: Props) {
               <option value="image_text">Imagem + texto</option>
             </select>
           </Field>
-          <Field label="URL imagem do cabeçalho"><TextInput value={config.headerImageUrl ?? ''} onChange={(v) => update('headerImageUrl', v)} placeholder="https://..." /></Field>
+          <Field label="Imagem do cabeçalho"><ImageUpload value={config.headerImageUrl} onChange={(v) => update('headerImageUrl', v)} folder="battle/header" /></Field>
           <Field label="Tamanho da imagem"><NumberInput value={config.headerImageSize} onChange={(v) => update('headerImageSize', v)} min={40} max={500} /></Field>
           <Field label="SEO Title"><TextInput value={config.seoTitle ?? ''} onChange={(v) => update('seoTitle', v)} /></Field>
           <Field label="SEO Description"><TextInput value={config.seoDescription ?? ''} onChange={(v) => update('seoDescription', v)} /></Field>
-          <Field label="Favicon URL"><TextInput value={config.faviconUrl ?? ''} onChange={(v) => update('faviconUrl', v)} /></Field>
+          <Field label="Favicon"><ImageUpload value={config.faviconUrl} onChange={(v) => update('faviconUrl', v)} folder="battle/favicon" /></Field>
         </section>
 
         {/* Background */}
         <section className="space-y-3">
           <h3 className="font-bold text-foreground">Fundo</h3>
           <Field label="Cor de fundo"><ColorInput value={config.bgColor} onChange={(v) => update('bgColor', v)} /></Field>
-          <Field label="Imagem de fundo (desktop)"><TextInput value={config.bgImageUrl ?? ''} onChange={(v) => update('bgImageUrl', v)} placeholder="https://..." /></Field>
-          <Field label="Imagem de fundo (mobile)"><TextInput value={config.bgImageMobileUrl ?? ''} onChange={(v) => update('bgImageMobileUrl', v)} placeholder="https://..." /></Field>
+          <Field label="Imagem de fundo (desktop)"><ImageUpload value={config.bgImageUrl} onChange={(v) => update('bgImageUrl', v)} folder="battle/bg-desktop" /></Field>
+          <Field label="Imagem de fundo (mobile)"><ImageUpload value={config.bgImageMobileUrl} onChange={(v) => update('bgImageMobileUrl', v)} folder="battle/bg-mobile" /></Field>
         </section>
 
         {/* Wheel visuals */}
