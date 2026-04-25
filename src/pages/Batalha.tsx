@@ -19,12 +19,23 @@ export default function Batalha() {
     const v = Number(window.localStorage.getItem('battle_initial_bankroll') ?? '0');
     return Number.isFinite(v) ? v : 0;
   });
+  const [tournamentEntry, setTournamentEntry] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    const v = Number(window.localStorage.getItem('battle_tournament_entry') ?? '0');
+    return Number.isFinite(v) ? v : 0;
+  });
 
   useEffect(() => {
     try {
       window.localStorage.setItem('battle_initial_bankroll', String(initialBankroll));
     } catch { /* ignore */ }
   }, [initialBankroll]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('battle_tournament_entry', String(tournamentEntry));
+    } catch { /* ignore */ }
+  }, [tournamentEntry]);
 
   // ═══ Auth state (linked to operator) ═══
   const [session, setSession] = useState<any>(null);
