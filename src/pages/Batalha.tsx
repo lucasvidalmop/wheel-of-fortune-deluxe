@@ -355,6 +355,13 @@ export default function Batalha() {
     setInitialBankroll(0);
     setTournamentEntry(0);
     setRankingSearch('');
+    try {
+      window.localStorage.removeItem('battle_participants');
+      window.localStorage.removeItem('battle_eliminated_ids');
+      window.localStorage.removeItem('battle_winner_history');
+      window.localStorage.removeItem('battle_initial_bankroll');
+      window.localStorage.removeItem('battle_tournament_entry');
+    } catch { /* ignore */ }
     toast.success('Sorteio resetado');
   };
 
