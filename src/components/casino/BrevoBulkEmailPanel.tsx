@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode, Wrench } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import BulkSendProgress from '@/components/casino/BulkSendProgress';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -707,6 +708,17 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
           </div>
         )}
       </GlassCard>
+
+      {loading && (
+        <BulkSendProgress
+          total={pendingRecipients.length || lastResult?.total || 1}
+          sent={0}
+          errors={0}
+          label="Disparando via Brevo (lote único)"
+          indeterminate
+          accent="blue"
+        />
+      )}
 
       <button
         onClick={handleSend}
