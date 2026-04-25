@@ -1120,6 +1120,18 @@ function Dashboard() {
   const [configId, setConfigId] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
 
+  // Auto-load BS deposit stats whenever the operator opens the BS deposit tab
+  useEffect(() => {
+    if (activeTab !== 'deposito' || depositVariant !== 'depbs' || !session?.user?.id) return;
+    const sinceIso = (wheelConfig as any)?.depositConfig?.bsLimitsResetAt || null;
+    (supabase as any)
+      .rpc('get_bs_deposit_stats', { p_owner_id: session.user.id, p_since: sinceIso })
+      .then(({ data }: any) => {
+        const row = Array.isArray(data) ? data[0] : null;
+        setBsDepositStats({ total: Number(row?.total_amount || 0), count: Number(row?.total_count || 0) });
+      });
+  }, [activeTab, depositVariant, session?.user?.id, (wheelConfig as any)?.depositConfig?.bsLimitsResetAt]);
+
   // Grant spin modal
   const [grantSpinUser, setGrantSpinUser] = useState<WheelUser | null>(null);
   const [grantSpinMode, setGrantSpinMode] = useState<'random' | 'fixed'>('random');
