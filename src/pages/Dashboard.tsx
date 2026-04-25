@@ -612,6 +612,7 @@ function Dashboard() {
   const [manualPaySearch, setManualPaySearch] = useState('');
   const [manualPaySending, setManualPaySending] = useState(false);
   const { confirm: confirmDialog, ConfirmDialog } = useConfirmDialog();
+  const [bsDepositStats, setBsDepositStats] = useState<{ total: number; count: number }>({ total: 0, count: 0 });
   const [edpayBalance, setEdpayBalance] = useState<number | null>(null);
   const [edpayBalanceLoading, setEdpayBalanceLoading] = useState(false);
   const [cryptoAmount, setCryptoAmount] = useState('');
