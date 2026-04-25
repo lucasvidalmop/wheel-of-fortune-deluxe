@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 export default function Batalha() {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
   const [loading, setLoading] = useState(true);
   const [participants, setParticipants] = useState<(BattleParticipant & { dbId?: string })[]>([]);
