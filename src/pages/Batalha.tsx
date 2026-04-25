@@ -294,6 +294,29 @@ export default function Batalha() {
 
   const resetWheel = () => setEliminatedIds(new Set());
 
+  const resetTournament = () => {
+    const ok = window.confirm('Tem certeza que deseja resetar o sorteio? Isso irá limpar a banca e o ranking.');
+    if (!ok) return;
+    // Mark all linked DB participants as consumed so they don't reappear via realtime
+    const dbIds = participants.map((p) => p.dbId).filter(Boolean) as string[];
+    if (dbIds.length > 0) {
+      (supabase as any)
+        .from('battle_participants')
+        .update({ consumed: true })
+        .in('id', dbIds)
+        .then(({ error }: any) => {
+          if (error) console.warn('Failed to mark participants consumed on reset:', error);
+        });
+    }
+    setParticipants([]);
+    setEliminatedIds(new Set());
+    setWinnerHistory([]);
+    setInitialBankroll(0);
+    setTournamentEntry(0);
+    setRankingSearch('');
+    toast.success('Sorteio resetado');
+  };
+
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
   const rankedParticipants = useMemo(() => {
     return [...participants].sort((a, b) => {
