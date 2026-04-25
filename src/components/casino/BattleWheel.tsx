@@ -235,22 +235,22 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
           />
 
           <div
-            className="relative w-full max-w-xl text-center font-bold animate-in zoom-in-50 slide-in-from-bottom-4 duration-500"
+            className="relative w-full max-w-md text-center font-bold animate-in zoom-in-50 slide-in-from-bottom-4 duration-500"
             style={{
               backgroundColor: config.resultBoxColor,
               color: config.resultTextColor,
               border: `2px solid ${config.resultBorderColor}`,
-              borderRadius: 20,
-              padding: 'clamp(24px, 4vw, 48px) clamp(20px, 3.5vw, 44px)',
-              boxShadow: `0 0 60px ${config.resultBorderColor}55, 0 0 120px ${config.resultBorderColor}22, inset 0 0 40px ${config.resultBorderColor}11`,
+              borderRadius: 18,
+              padding: 'clamp(18px, 3vw, 32px) clamp(16px, 2.5vw, 28px)',
+              boxShadow: `0 0 40px ${config.resultBorderColor}55, 0 0 80px ${config.resultBorderColor}22, inset 0 0 30px ${config.resultBorderColor}11`,
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div
-              className="font-semibold opacity-80 mb-4"
+              className="font-semibold opacity-80 mb-3"
               style={{
-                fontSize: 'clamp(12px, 1.4vw, 16px)',
-                letterSpacing: '0.5em',
+                fontSize: 'clamp(10px, 1.1vw, 13px)',
+                letterSpacing: '0.4em',
                 color: config.headerAccentColor,
               }}
             >
@@ -258,12 +258,14 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
             </div>
 
             <div
-              className="font-black leading-[1.05] mb-3 break-words"
+              className="font-black leading-[1.05] mb-2 break-words px-2"
               style={{
-                fontSize: 'clamp(36px, 6.5vw, 72px)',
+                fontSize: `clamp(20px, ${Math.max(18, 56 - winner.name.length * 1.6)}px, 48px)`,
                 color: config.resultTextColor,
-                textShadow: `0 0 30px ${config.resultBorderColor}aa, 0 0 60px ${config.resultBorderColor}55`,
+                textShadow: `0 0 24px ${config.resultBorderColor}aa, 0 0 48px ${config.resultBorderColor}55`,
                 letterSpacing: '-0.02em',
+                wordBreak: 'break-word',
+                hyphens: 'auto',
               }}
             >
               {winner.name}
@@ -271,9 +273,9 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
 
             {winner.game && (
               <div
-                className="font-semibold opacity-90 mt-1"
+                className="font-semibold opacity-90 mt-1 break-words"
                 style={{
-                  fontSize: 'clamp(16px, 2.4vw, 26px)',
+                  fontSize: 'clamp(13px, 1.6vw, 18px)',
                   color: config.headerAccentColor,
                   letterSpacing: '0.05em',
                 }}
@@ -284,14 +286,14 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
 
             <button
               onClick={() => setWinner(null)}
-              className="mt-7 font-bold tracking-[0.4em] transition-all active:scale-95 hover:brightness-125"
+              className="mt-5 font-bold tracking-[0.3em] transition-all active:scale-95 hover:brightness-125"
               style={{
                 backgroundColor: 'transparent',
                 color: config.resultBorderColor,
-                fontSize: 'clamp(11px, 1.2vw, 13px)',
+                fontSize: 'clamp(10px, 1vw, 12px)',
                 borderRadius: 8,
                 border: `1px solid ${config.resultBorderColor}`,
-                padding: '10px 28px',
+                padding: '8px 22px',
               }}
             >
               FECHAR
