@@ -470,6 +470,80 @@ export default function Batalha() {
               REINICIAR ROLETA
             </button>
           )}
+
+          {/* Bankroll calculator - horizontal compact under wheel */}
+          <section
+            className="mt-8 w-full max-w-[560px] rounded-2xl px-5 py-4"
+            style={{
+              backgroundColor: config.panelBgColor,
+              border: `1px solid ${config.panelBorderColor}`,
+            }}
+          >
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3 min-w-0">
+                <span
+                  className="text-[10px] tracking-[0.35em] whitespace-nowrap"
+                  style={{ color: config.panelLabelColor }}
+                >
+                  BANCA
+                </span>
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 h-9"
+                  style={{
+                    backgroundColor: config.bgColor,
+                    border: `1px solid ${config.inputBorderColor}55`,
+                  }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>
+                    R$
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={initialBankroll ? fmtBRL(initialBankroll) : ''}
+                    placeholder="0,00"
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      const cents = digits === '' ? 0 : Number(digits);
+                      setInitialBankroll(cents / 100);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-24 bg-transparent text-sm text-right font-bold tabular-nums outline-none"
+                    style={{ color: config.panelTextColor }}
+                    aria-label="Banca inicial"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 text-xs" style={{ color: config.panelLabelColor }}>
+                <span className="opacity-70">+ jogadores</span>
+                <span className="tabular-nums font-semibold" style={{ color: config.panelTextColor }}>
+                  R$ {fmtBRL(participantsTotal)}
+                </span>
+              </div>
+
+              <div
+                className="flex items-center gap-2 pl-4"
+                style={{ borderLeft: `1px solid ${config.panelBorderColor}` }}
+              >
+                <span
+                  className="text-[10px] tracking-[0.3em]"
+                  style={{ color: config.panelLabelColor }}
+                >
+                  TOTAL
+                </span>
+                <span
+                  className="text-lg font-extrabold tabular-nums"
+                  style={{
+                    color: config.headerAccentColor,
+                    textShadow: `0 0 12px ${config.headerAccentColor}66`,
+                  }}
+                >
+                  R$ {fmtBRL(totalBankroll)}
+                </span>
+              </div>
+            </div>
+          </section>
         </div>
 
         {/* Side panels */}
