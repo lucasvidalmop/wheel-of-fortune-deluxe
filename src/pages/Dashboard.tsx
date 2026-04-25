@@ -8322,32 +8322,32 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Título da página</label>
-                    <input value={dc.seoTitle || ''} onChange={e => updateDc({ seoTitle: e.target.value })} placeholder="Título exibido na aba do navegador" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input value={dcv.seoTitle || ''} onChange={e => updateDcv({ seoTitle: e.target.value })} placeholder="Título exibido na aba do navegador" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Meta descrição</label>
-                    <textarea value={dc.seoDescription || ''} onChange={e => updateDc({ seoDescription: e.target.value })} placeholder="Descrição para SEO e compartilhamento" rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                    <textarea value={dcv.seoDescription || ''} onChange={e => updateDcv({ seoDescription: e.target.value })} placeholder="Descrição para SEO e compartilhamento" rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Favicon</label>
                     <div className="flex items-center gap-3">
-                      {dc.seoFaviconUrl && <img src={dc.seoFaviconUrl} alt="" className="h-8 w-8 rounded border border-white/[0.08] object-contain" />}
+                      {dcv.seoFaviconUrl && <img src={dcv.seoFaviconUrl} alt="" className="h-8 w-8 rounded border border-white/[0.08] object-contain" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.seoFaviconUrl ? '🔄 Trocar' : '📤 Enviar'} Favicon
+                        {dcv.seoFaviconUrl ? '🔄 Trocar' : '📤 Enviar'} Favicon
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'seoFaviconUrl')} className="hidden" />
                       </label>
-                      {dc.seoFaviconUrl && <button onClick={() => updateDc({ seoFaviconUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.seoFaviconUrl && <button onClick={() => updateDcv({ seoFaviconUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Imagem social (OG Image)</label>
                     <div className="flex items-center gap-3">
-                      {dc.seoOgImageUrl && <img src={dc.seoOgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
+                      {dcv.seoOgImageUrl && <img src={dcv.seoOgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.seoOgImageUrl ? '🔄 Trocar' : '📤 Enviar'} OG Image
+                        {dcv.seoOgImageUrl ? '🔄 Trocar' : '📤 Enviar'} OG Image
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'seoOgImageUrl')} className="hidden" />
                       </label>
-                      {dc.seoOgImageUrl && <button onClick={() => updateDc({ seoOgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.seoOgImageUrl && <button onClick={() => updateDcv({ seoOgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                 </div>
