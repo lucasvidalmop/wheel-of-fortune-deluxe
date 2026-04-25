@@ -17,8 +17,9 @@ Deno.serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
-    const { ownerId, amount, description, userName, userPhone, userAccountId } =
+    const { ownerId, amount, description, userName, userPhone, userAccountId, variant } =
       body;
+    const isBs = variant === "bs";
 
     if (!ownerId || !amount) {
       return new Response(
@@ -95,6 +96,43 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
       );
+    }
+
+    // BS-only limits enforcement
+    if (isBs) {
+      const bsMaxPerDeposit = Number(depositConfig.bsMaxPerDeposit || 0);
+      const bsMaxTotal = Number(depositConfig.bsMaxTotal || 0);
+      const bsMaxCount = Number(depositConfig.bsMaxCount || 0);
+      const limitMsg = depositConfig.bsLimitReachedMessage ||
+        "O limite de depósitos para esta página foi atingido.";
+
+      if (bsMaxPerDeposit > 0 && amountNum > bsMaxPerDeposit) {
+        return new Response(
+          JSON.stringify({ error: `Valor máximo por depósito: R$ ${bsMaxPerDeposit.toFixed(2)}` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (bsMaxTotal > 0 || bsMaxCount > 0) {
+        const { data: statsRows } = await supabaseAdmin.rpc("get_bs_deposit_stats", { p_owner_id: ownerId });
+        const stats = Array.isArray(statsRows) ? statsRows[0] : null;
+        const bsTotal = Number(stats?.total_amount || 0);
+        const bsCount = Number(stats?.total_count || 0);
+
+        if (bsMaxCount > 0 && bsCount >= bsMaxCount) {
+          return new Response(JSON.stringify({ error: limitMsg }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (bsMaxTotal > 0 && bsTotal >= bsMaxTotal) {
+          return new Response(JSON.stringify({ error: limitMsg }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (bsMaxTotal > 0 && bsTotal + amountNum > bsMaxTotal) {
+          const remaining = Math.max(bsMaxTotal - bsTotal, 0);
+          return new Response(
+            JSON.stringify({ error: `Valor excede o limite restante (R$ ${remaining.toFixed(2)}).` }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
     }
 
     // Step 1: Authenticate with EdPay
@@ -180,6 +218,7 @@ Deno.serve(async (req) => {
         userPhone: userPhone || "",
         userAccountId: userAccountId || "",
         description: descText,
+        variant: isBs ? "bs" : "default",
       },
     });
 

@@ -8123,6 +8123,37 @@ function Dashboard() {
                   </label>
                 </div>
 
+                {/* Limites — exclusivos do Depósito BS */}
+                {depositVariant === 'depbs' && (
+                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <DollarSign size={18} className="text-primary" />
+                      <h3 className="text-base font-bold text-foreground">Limites de Aceitação (Depósito BS)</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground/80 -mt-2">Use 0 para "sem limite". Os limites contam apenas depósitos BS confirmados.</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-muted-foreground">Máx por depósito (R$)</label>
+                        <input type="number" min={0} step="0.01" value={dc.bsMaxPerDeposit ?? 0} onChange={e => updateDc({ bsMaxPerDeposit: Math.max(0, Number(e.target.value)) })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-muted-foreground">Total acumulado máx (R$)</label>
+                        <input type="number" min={0} step="0.01" value={dc.bsMaxTotal ?? 0} onChange={e => updateDc({ bsMaxTotal: Math.max(0, Number(e.target.value)) })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-muted-foreground">Quantidade máx de depósitos</label>
+                        <input type="number" min={0} step="1" value={dc.bsMaxCount ?? 0} onChange={e => updateDc({ bsMaxCount: Math.max(0, Math.floor(Number(e.target.value))) })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground">Mensagem quando limite for atingido</label>
+                      <input value={dc.bsLimitReachedMessage || ''} onChange={e => updateDc({ bsLimitReachedMessage: e.target.value })} placeholder="O limite de depósitos para esta página foi atingido. Volte mais tarde." className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    </div>
+                  </div>
+                )}
+
                 {/* Visual */}
                 <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-1">

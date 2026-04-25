@@ -33,6 +33,11 @@ interface DepositConfig {
   confirmationButtonUrl: string;
   confirmationButtonColor: string;
   showNewDepositButton: boolean;
+  // BS-only limits (Depósito BS — /depbs=tag)
+  bsMaxPerDeposit?: number; // 0 = sem limite
+  bsMaxTotal?: number;      // 0 = sem limite
+  bsMaxCount?: number;      // 0 = sem limite
+  bsLimitReachedMessage?: string;
 }
 
 const defaultDepositConfig: DepositConfig = {
@@ -73,9 +78,10 @@ interface DepositLabels {
   whatsappLabel?: string;
 }
 
-const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabels }) => {
+const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: DepositLabels; variant?: 'default' | 'bs' }) => {
   const params = useParams<{ tag: string }>();
   const tag = tagProp || params.tag || '';
+  const isBs = variant === 'bs';
   const nameLabel = labels?.nameLabel ?? 'Nome completo';
   const namePlaceholder = labels?.namePlaceholder ?? 'Seu nome';
   const whatsappLabel = labels?.whatsappLabel ?? 'WhatsApp';
@@ -83,6 +89,7 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
   const [ownerId, setOwnerId] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
   const [notFound, setNotFound] = useState(false);
+  const [bsStats, setBsStats] = useState<{ total: number; count: number } | null>(null);
   const accountLabel = labels?.accountLabel ?? config.accountIdLabel;
   const accountPlaceholder = labels?.accountPlaceholder ?? config.accountIdLabel;
 
@@ -196,11 +203,21 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
       const cfg = typeof match.config === 'string' ? JSON.parse(match.config) : match.config;
       setOwnerId(match.user_id);
       setConfig({ ...defaultDepositConfig, ...cfg.depositConfig });
+
+      if (isBs) {
+        const { data: stats } = await (supabase as any)
+          .rpc('get_bs_deposit_stats', { p_owner_id: match.user_id });
+        const row = Array.isArray(stats) ? stats[0] : null;
+        setBsStats({
+          total: Number(row?.total_amount || 0),
+          count: Number(row?.total_count || 0),
+        });
+      }
       setLoading(false);
     };
 
     fetchConfig();
-  }, [tag]);
+  }, [tag, isBs]);
 
   // Poll for payment confirmation
   useEffect(() => {
@@ -239,16 +256,41 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
 
   const finalAmount = selectedAmount || Number(customAmount);
 
+  // BS limits — only enforced when variant === 'bs'
+  const bsMaxPerDeposit = isBs ? Number(config.bsMaxPerDeposit || 0) : 0;
+  const bsMaxTotal = isBs ? Number(config.bsMaxTotal || 0) : 0;
+  const bsMaxCount = isBs ? Number(config.bsMaxCount || 0) : 0;
+  const bsTotal = bsStats?.total || 0;
+  const bsCount = bsStats?.count || 0;
+  const bsTotalReached = bsMaxTotal > 0 && bsTotal >= bsMaxTotal;
+  const bsCountReached = bsMaxCount > 0 && bsCount >= bsMaxCount;
+  const bsLimitReached = isBs && (bsTotalReached || bsCountReached);
+  const bsRemainingTotal = bsMaxTotal > 0 ? Math.max(bsMaxTotal - bsTotal, 0) : Infinity;
+
   const handleGenerateQr = async () => {
     if (!finalAmount || finalAmount < config.minimumValue) {
       toast.error(`Valor mínimo: R$ ${config.minimumValue.toFixed(2)}`);
       return;
     }
+    if (isBs) {
+      if (bsLimitReached) {
+        toast.error(config.bsLimitReachedMessage || 'Limite de depósitos atingido.');
+        return;
+      }
+      if (bsMaxPerDeposit > 0 && finalAmount > bsMaxPerDeposit) {
+        toast.error(`Valor máximo por depósito: R$ ${bsMaxPerDeposit.toFixed(2)}`);
+        return;
+      }
+      if (bsMaxTotal > 0 && finalAmount > bsRemainingTotal) {
+        toast.error(`Valor excede o limite restante (R$ ${bsRemainingTotal.toFixed(2)}).`);
+        return;
+      }
+    }
     setQrLoading(true);
     setQrData(null);
     try {
       const { data, error } = await supabase.functions.invoke('edpay-public-qrcode', {
-        body: { ownerId, amount: finalAmount, userName: name, userPhone: whatsapp.replace(/\D/g, ''), userAccountId: accountId },
+        body: { ownerId, amount: finalAmount, userName: name, userPhone: whatsapp.replace(/\D/g, ''), userAccountId: accountId, variant: isBs ? 'bs' : 'default' },
       });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); }
@@ -301,6 +343,24 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
           <div className="text-5xl">🚫</div>
           <h1 className="text-xl font-bold">Página não encontrada</h1>
           <p className="text-sm" style={{ color: txtMuted }}>Este link de depósito não existe ou está desativado.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bsLimitReached && step === 'form') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg, color: txt }}>
+        {config.bgImageUrl && (
+          <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
+        )}
+        <div className="relative text-center space-y-4 max-w-md z-10">
+          {config.logoUrl && <img src={config.logoUrl} alt="" className="h-14 mx-auto object-contain" />}
+          <div className="text-5xl">🔒</div>
+          <h1 className="text-2xl font-bold">Depósitos encerrados</h1>
+          <p className="text-sm" style={{ color: txtMuted }}>
+            {config.bsLimitReachedMessage || 'O limite de depósitos para esta página foi atingido. Volte mais tarde.'}
+          </p>
         </div>
       </div>
     );
@@ -386,6 +446,13 @@ const Deposit = ({ tag: tagProp, labels }: { tag?: string; labels?: DepositLabel
         {step === 'amount' && (
           <div className="space-y-4 rounded-2xl backdrop-blur-xl p-6" style={cardStyle}>
             <p className="text-sm text-center" style={{ color: txtMuted }}>Selecione o valor do depósito</p>
+            {isBs && (bsMaxPerDeposit > 0 || bsMaxTotal > 0 || bsMaxCount > 0) && (
+              <div className="text-[11px] space-y-0.5 px-3 py-2 rounded-xl" style={{ background: `${accent}10`, border: `1px solid ${accent}33`, color: txtMuted }}>
+                {bsMaxPerDeposit > 0 && <div>Máx por depósito: <span style={{ color: txt }}>R$ {bsMaxPerDeposit.toFixed(2)}</span></div>}
+                {bsMaxTotal > 0 && <div>Restante do total: <span style={{ color: txt }}>R$ {Math.max(bsMaxTotal - bsTotal, 0).toFixed(2)}</span> de R$ {bsMaxTotal.toFixed(2)}</div>}
+                {bsMaxCount > 0 && <div>Depósitos restantes: <span style={{ color: txt }}>{Math.max(bsMaxCount - bsCount, 0)}</span> de {bsMaxCount}</div>}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               {config.presetValues.map(val => (
                 <button key={val} onClick={() => { setSelectedAmount(val); setCustomAmount(''); }} className="py-3.5 rounded-xl text-sm font-bold transition-all" style={{ background: selectedAmount === val ? accent : `${txt}08`, color: selectedAmount === val ? '#fff' : txt, border: `1px solid ${selectedAmount === val ? accent : `${txt}14`}`, boxShadow: selectedAmount === val ? `0 8px 20px -5px ${accent}33` : 'none' }}>

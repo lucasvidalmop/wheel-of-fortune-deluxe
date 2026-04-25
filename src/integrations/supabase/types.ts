@@ -1219,6 +1219,13 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_bs_deposit_stats: {
+        Args: { p_owner_id: string }
+        Returns: {
+          total_amount: number
+          total_count: number
+        }[]
+      }
       get_deposit_config_by_tag: {
         Args: { p_tag: string }
         Returns: {
