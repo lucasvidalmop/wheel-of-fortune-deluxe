@@ -207,23 +207,6 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
         </button>
       </div>
 
-      {/* Secondary GIRAR button (matches reference) */}
-      <button
-        onClick={handleSpin}
-        disabled={spinning || segCount === 0}
-        className="font-semibold tracking-[0.4em] transition-all active:scale-95 disabled:opacity-50"
-        style={{
-          backgroundColor: config.buttonColor,
-          color: config.buttonTextColor,
-          fontSize: config.buttonFontSize,
-          borderRadius: config.buttonBorderRadius,
-          border: `1px solid ${config.buttonBorderColor}`,
-          padding: '10px 48px',
-          minWidth: 220,
-        }}
-      >
-        {spinning ? '...' : config.buttonText}
-      </button>
 
       {/* FULLSCREEN WINNER ANNOUNCEMENT */}
       {winner && (
