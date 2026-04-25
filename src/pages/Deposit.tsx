@@ -32,6 +32,10 @@ interface DepositConfig {
   confirmationButtonText: string;
   confirmationButtonUrl: string;
   confirmationButtonColor: string;
+  confirmationTitleColor?: string;
+  confirmationMessageColor?: string;
+  confirmationReceiptLabelColor?: string;
+  confirmationReceiptValueColor?: string;
   showNewDepositButton: boolean;
   // BS-only limits (Depósito BS — /depbs=tag)
   bsMaxPerDeposit?: number; // 0 = sem limite
