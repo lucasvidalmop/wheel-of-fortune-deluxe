@@ -42,6 +42,7 @@ interface DepositConfig {
   bsMaxTotal?: number;      // 0 = sem limite
   bsMaxCount?: number;      // 0 = sem limite
   bsLimitReachedMessage?: string;
+  bsLimitsResetAt?: string; // ISO timestamp — só conta depósitos a partir dessa data
 }
 
 const defaultDepositConfig: DepositConfig = {
