@@ -223,11 +223,14 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
           'confirmationButtonText', 'confirmationButtonUrl', 'confirmationButtonColor',
           'confirmationTitleColor', 'confirmationMessageColor',
           'confirmationReceiptLabelColor', 'confirmationReceiptValueColor',
-          'showNewDepositButton',
+          'showNewDepositButton', 'presetValues', 'minimumValue', 'allowCustomValue',
         ];
         for (const k of overridable) {
           const v = (ov as any)[k];
-          if (v !== undefined && v !== null && v !== '') (baseCfg as any)[k] = v;
+          if (v === undefined || v === null) continue;
+          if (typeof v === 'string' && v === '') continue;
+          if (Array.isArray(v) && v.length === 0) continue;
+          (baseCfg as any)[k] = v;
         }
       }
       setConfig(baseCfg);
