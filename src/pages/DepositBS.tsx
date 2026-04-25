@@ -10,6 +10,7 @@ const DepositBS = ({ tag }: { tag?: string }) => {
   return (
     <Deposit
       tag={tag}
+      variant="bs"
       labels={{
         nameLabel: 'Nome no Youtube',
         namePlaceholder: 'Seu nome no Youtube',
