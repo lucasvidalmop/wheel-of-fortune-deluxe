@@ -729,11 +729,17 @@ function Dashboard() {
   };
 
   const totalReferralPrizePlanCount = referralForm.fixed_prize_plan.reduce((sum, item) => sum + item.count, 0);
+  const referralMaxRegistrationsNum = parseInt(referralForm.max_registrations) || 0;
+  // Total de giros possíveis = giros por inscrição × limite de inscrições.
+  // Se inscrições for ilimitado (0), o cap também é ilimitado (Infinity).
+  const referralTotalAvailableSpins = referralMaxRegistrationsNum > 0
+    ? referralForm.spins_per_registration * referralMaxRegistrationsNum
+    : Infinity;
 
   const handleSaveReferral = async () => {
     if (!referralForm.label.trim()) { toast.error('Preencha o nome do link'); return; }
-    if (totalReferralPrizePlanCount > referralForm.spins_per_registration) {
-      toast.error('A soma dos segmentos garantidos não pode ser maior que a quantidade de giros');
+    if (totalReferralPrizePlanCount > referralTotalAvailableSpins) {
+      toast.error('A soma dos prêmios garantidos não pode ser maior que o total de giros disponíveis');
       return;
     }
 
