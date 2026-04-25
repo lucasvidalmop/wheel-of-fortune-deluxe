@@ -8284,6 +8284,36 @@ function Dashboard() {
                     <label className="text-xs font-semibold text-muted-foreground">Mensagem de confirmação</label>
                     <textarea value={dc.confirmationMessage || ''} onChange={e => updateDc({ confirmationMessage: e.target.value })} placeholder="Seu depósito foi recebido com sucesso." rows={2} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground">Cor do título</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={dc.confirmationTitleColor || dc.accentColor || '#10b981'} onChange={e => updateDc({ confirmationTitleColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dc.confirmationTitleColor || ''} onChange={e => updateDc({ confirmationTitleColor: e.target.value })} placeholder="Cor de destaque" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground">Cor da mensagem</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={dc.confirmationMessageColor || '#94a3b8'} onChange={e => updateDc({ confirmationMessageColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dc.confirmationMessageColor || ''} onChange={e => updateDc({ confirmationMessageColor: e.target.value })} placeholder="Padrão suave" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground">Cor dos rótulos do recibo</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={dc.confirmationReceiptLabelColor || '#94a3b8'} onChange={e => updateDc({ confirmationReceiptLabelColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dc.confirmationReceiptLabelColor || ''} onChange={e => updateDc({ confirmationReceiptLabelColor: e.target.value })} placeholder="Padrão suave" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground">Cor dos valores + Valor Depositado</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={dc.confirmationReceiptValueColor || dc.accentColor || '#10b981'} onChange={e => updateDc({ confirmationReceiptValueColor: e.target.value })} className="w-10 h-10 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent p-0.5" />
+                        <input value={dc.confirmationReceiptValueColor || ''} onChange={e => updateDc({ confirmationReceiptValueColor: e.target.value })} placeholder="Cor de destaque" className="flex-1 px-3 py-2 rounded-xl text-xs bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Logo da confirmação (opcional)</label>
                     <div className="flex items-center gap-3">
