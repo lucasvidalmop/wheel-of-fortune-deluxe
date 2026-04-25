@@ -550,7 +550,7 @@ export default function Batalha() {
         </div>
 
         {/* Side panels */}
-        <aside className="space-y-5 min-h-0 lg:h-full overflow-hidden">
+        <aside className="flex flex-col gap-5 min-h-0 lg:h-full overflow-hidden">
           {/* Bankroll calculator */}
           <section
             className="rounded-2xl p-5"
