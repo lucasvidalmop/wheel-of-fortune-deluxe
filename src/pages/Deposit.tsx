@@ -33,6 +33,11 @@ interface DepositConfig {
   confirmationButtonUrl: string;
   confirmationButtonColor: string;
   showNewDepositButton: boolean;
+  // BS-only limits (Depósito BS — /depbs=tag)
+  bsMaxPerDeposit?: number; // 0 = sem limite
+  bsMaxTotal?: number;      // 0 = sem limite
+  bsMaxCount?: number;      // 0 = sem limite
+  bsLimitReachedMessage?: string;
 }
 
 const defaultDepositConfig: DepositConfig = {
