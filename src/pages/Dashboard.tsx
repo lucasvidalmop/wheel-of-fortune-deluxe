@@ -4775,6 +4775,7 @@ function Dashboard() {
                     await (supabase as any).from(smsProvider === 'mobizon' ? 'sms_mb_message_log' : 'sms_message_log').insert(smsLogEntries);
                   }
                   setSmsSending(false);
+                  setTimeout(() => setSmsProgress(emptyProgress), 4000);
                   if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
                   else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
                   else toast.error('Nenhum SMS enviado');
