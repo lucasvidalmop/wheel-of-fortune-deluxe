@@ -13,6 +13,7 @@ export default function Batalha() {
   const [name, setName] = useState('');
   const [game, setGame] = useState('');
   const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>([]);
+  const [rankingSearch, setRankingSearch] = useState('');
 
   // ═══ Auth state (linked to operator) ═══
   const [session, setSession] = useState<any>(null);
