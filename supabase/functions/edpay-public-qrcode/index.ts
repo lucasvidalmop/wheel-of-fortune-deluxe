@@ -114,7 +114,8 @@ Deno.serve(async (req) => {
       }
 
       if (bsMaxTotal > 0 || bsMaxCount > 0) {
-        const { data: statsRows } = await supabaseAdmin.rpc("get_bs_deposit_stats", { p_owner_id: ownerId });
+        const sinceIso = depositConfig.bsLimitsResetAt || null;
+        const { data: statsRows } = await supabaseAdmin.rpc("get_bs_deposit_stats", { p_owner_id: ownerId, p_since: sinceIso });
         const stats = Array.isArray(statsRows) ? statsRows[0] : null;
         const bsTotal = Number(stats?.total_amount || 0);
         const bsCount = Number(stats?.total_count || 0);
