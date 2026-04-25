@@ -407,7 +407,7 @@ export default function Batalha() {
   }
 
   return (
-    <main className="min-h-screen w-full px-4 py-10 lg:px-12 relative" style={bgStyle}>
+    <main className="battle-page min-h-screen w-full px-4 py-10 lg:px-12 relative" style={bgStyle}>
       {/* Logout button */}
       <button
         onClick={handleLogout}
