@@ -568,7 +568,16 @@ export default function Batalha() {
                 const medals = ['🥇', '🥈', '🥉'];
 
                 return (
-                  <ul className="space-y-2">
+                  <ul
+                    className="space-y-2 overflow-y-auto pr-1 battle-ranking-scroll"
+                    style={{
+                      maxHeight: filtered.length > 5 ? '340px' : 'none',
+                      ['--scroll-thumb' as string]: `${config.headerAccentColor}66`,
+                      ['--scroll-track' as string]: `${config.bgColor}`,
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: `${config.headerAccentColor}66 ${config.bgColor}`,
+                    }}
+                  >
                     {filtered.map((p) => {
                       const realIdx = rankedParticipants.findIndex((rp) => rp.id === p.id);
                       const isTop3 = realIdx < 3;
