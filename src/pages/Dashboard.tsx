@@ -8107,7 +8107,7 @@ function Dashboard() {
                     )}
                     <p className="text-[10px] text-muted-foreground/70 mt-1">
                       {depositVariant === 'depbs'
-                        ? 'Esta variação compartilha a mesma configuração e credenciais do Depósito principal.'
+                        ? 'Compartilha tag, valores e credenciais EdPay com o Depósito padrão. Visual, textos, SEO/pixels e tela de confirmação são independentes.'
                         : 'Tag única para gerar a URL pública desta página.'}
                     </p>
                   </div>
