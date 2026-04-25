@@ -407,7 +407,7 @@ export default function Batalha() {
   }
 
   return (
-    <main className="battle-page min-h-screen w-full px-4 py-10 lg:px-12 relative" style={bgStyle}>
+    <main className="battle-page h-screen overflow-hidden w-full px-4 py-6 lg:px-10 relative" style={bgStyle}>
       {/* Logout button */}
       <button
         onClick={handleLogout}
@@ -423,7 +423,7 @@ export default function Batalha() {
       </button>
 
       {/* Header */}
-      <header className="text-center mb-10">
+      <header className="text-center mb-6 lg:mb-8 flex-shrink-0">
         {config.headerMode !== 'image' && (
           <h1
             className="font-black tracking-tight"
@@ -459,9 +459,9 @@ export default function Batalha() {
       </header>
 
       {/* Layout */}
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start lg:h-[calc(100vh-170px)] min-h-0">
         {/* Wheel */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center min-h-0">
           {loading ? (
             <div className="opacity-60">Carregando...</div>
           ) : (
@@ -486,7 +486,7 @@ export default function Batalha() {
         </div>
 
         {/* Side panels */}
-        <aside className="space-y-5">
+        <aside className="space-y-5 min-h-0 lg:h-full overflow-hidden">
           {/* Bankroll calculator */}
           <section
             className="rounded-2xl p-5"
@@ -639,7 +639,7 @@ export default function Batalha() {
 
           {/* Ranking */}
           <section
-            className="rounded-2xl p-5"
+            className="rounded-2xl p-5 min-h-0 lg:flex-1 overflow-hidden"
             style={{
               backgroundColor: config.panelBgColor,
               border: `1px solid ${config.panelBorderColor}`,
@@ -649,140 +649,141 @@ export default function Batalha() {
               RANKING
             </div>
 
-            {/* Search bar */}
-            {participants.length > 0 && (
-              <div
-                className="relative mb-3 flex items-center rounded-lg"
-                style={{
-                  backgroundColor: config.bgColor,
-                  border: `1px solid ${config.inputBorderColor}55`,
-                }}
-              >
-                <Search size={14} className="absolute left-3 opacity-60" style={{ color: config.panelLabelColor }} />
-                <input
-                  type="text"
-                  value={rankingSearch}
-                  onChange={(e) => setRankingSearch(e.target.value)}
-                  placeholder="Pesquisar jogador..."
-                  className="w-full bg-transparent pl-9 pr-3 py-2 text-sm outline-none"
-                  style={{ color: config.panelTextColor }}
-                />
-              </div>
-            )}
+            <div className="flex flex-col min-h-0 lg:h-full">
+              {/* Search bar */}
+              {participants.length > 0 && (
+                <div
+                  className="relative mb-3 flex items-center rounded-lg flex-shrink-0"
+                  style={{
+                    backgroundColor: config.bgColor,
+                    border: `1px solid ${config.inputBorderColor}55`,
+                  }}
+                >
+                  <Search size={14} className="absolute left-3 opacity-60" style={{ color: config.panelLabelColor }} />
+                  <input
+                    type="text"
+                    value={rankingSearch}
+                    onChange={(e) => setRankingSearch(e.target.value)}
+                    placeholder="Pesquisar jogador..."
+                    className="w-full bg-transparent pl-9 pr-3 py-2 text-sm outline-none"
+                    style={{ color: config.panelTextColor }}
+                  />
+                </div>
+              )}
 
-            {participants.length === 0 ? (
-              <p className="text-sm italic text-center py-6" style={{ color: config.panelLabelColor }}>
-                Adicione jogadores para começar
-              </p>
-            ) : (
-              (() => {
-                const q = rankingSearch.trim().toLowerCase();
-                const filtered = q
-                  ? rankedParticipants.filter(
-                      (p) =>
-                        p.name.toLowerCase().includes(q) ||
-                        (p.game ?? '').toLowerCase().includes(q),
-                    )
-                  : rankedParticipants;
+              {participants.length === 0 ? (
+                <p className="text-sm italic text-center py-6" style={{ color: config.panelLabelColor }}>
+                  Adicione jogadores para começar
+                </p>
+              ) : (
+                (() => {
+                  const q = rankingSearch.trim().toLowerCase();
+                  const filtered = q
+                    ? rankedParticipants.filter(
+                        (p) =>
+                          p.name.toLowerCase().includes(q) ||
+                          (p.game ?? '').toLowerCase().includes(q),
+                      )
+                    : rankedParticipants;
 
-                if (filtered.length === 0) {
+                  if (filtered.length === 0) {
+                    return (
+                      <p className="text-sm italic text-center py-6" style={{ color: config.panelLabelColor }}>
+                        Nenhum jogador encontrado
+                      </p>
+                    );
+                  }
+
+                  const medals = ['🥇', '🥈', '🥉'];
+
                   return (
-                    <p className="text-sm italic text-center py-6" style={{ color: config.panelLabelColor }}>
-                      Nenhum jogador encontrado
-                    </p>
-                  );
-                }
-
-                const medals = ['🥇', '🥈', '🥉'];
-
-                return (
-                  <ul
-                    className="space-y-2 overflow-y-auto pr-1 battle-ranking-scroll"
-                    style={{
-                      maxHeight: filtered.length > 5 ? '340px' : 'none',
-                      ['--scroll-thumb' as string]: `${config.headerAccentColor}66`,
-                      ['--scroll-track' as string]: `${config.bgColor}`,
-                      scrollbarWidth: 'thin',
-                      scrollbarColor: `${config.headerAccentColor}66 ${config.bgColor}`,
-                    }}
-                  >
-                    {filtered.map((p) => {
-                      const realIdx = rankedParticipants.findIndex((rp) => rp.id === p.id);
-                      const isTop3 = realIdx < 3;
-                      return (
-                        <li
-                          key={p.id}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                          style={{
-                            backgroundColor: config.bgColor,
-                            border: isTop3 ? `1px solid ${config.headerAccentColor}55` : 'none',
-                            boxShadow: isTop3 ? `0 0 12px ${config.headerAccentColor}22` : 'none',
-                          }}
-                        >
-                          <span
-                            className="font-bold tabular-nums w-6 text-center flex items-center justify-center"
+                    <ul
+                      className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1 battle-ranking-scroll"
+                      style={{
+                        ['--scroll-thumb' as string]: `${config.headerAccentColor}66`,
+                        ['--scroll-track' as string]: `${config.bgColor}`,
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: `${config.headerAccentColor}66 ${config.bgColor}`,
+                      }}
+                    >
+                      {filtered.map((p) => {
+                        const realIdx = rankedParticipants.findIndex((rp) => rp.id === p.id);
+                        const isTop3 = realIdx < 3;
+                        return (
+                          <li
+                            key={p.id}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg"
                             style={{
-                              color: isTop3 ? config.headerAccentColor : config.panelLabelColor,
-                              fontSize: isTop3 ? '18px' : '12px',
+                              backgroundColor: config.bgColor,
+                              border: isTop3 ? `1px solid ${config.headerAccentColor}55` : 'none',
+                              boxShadow: isTop3 ? `0 0 12px ${config.headerAccentColor}22` : 'none',
                             }}
                           >
-                            {isTop3 ? medals[realIdx] : realIdx + 1}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium truncate" style={{ color: config.panelTextColor }}>
-                              {p.name}
-                            </div>
-                            {p.game && (
-                              <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
-                                {p.game}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1">
                             <span
-                              className="text-xs font-bold"
-                              style={{ color: config.headerAccentColor }}
-                            >
-                              R$
-                            </span>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={
-                                p.score
-                                  ? p.score.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                  : ''
-                              }
-                              placeholder="0,00"
-                              onChange={(e) => {
-                                const digits = e.target.value.replace(/\D/g, '');
-                                const cents = digits === '' ? 0 : Number(digits);
-                                updateScore(p.id, cents / 100);
-                              }}
-                              className="w-24 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="font-bold tabular-nums w-6 text-center flex items-center justify-center flex-shrink-0"
                               style={{
-                                backgroundColor: config.panelBgColor,
-                                border: `1px solid ${config.inputBorderColor}55`,
-                                color: config.headerAccentColor,
+                                color: isTop3 ? config.headerAccentColor : config.panelLabelColor,
+                                fontSize: isTop3 ? '18px' : '12px',
                               }}
-                              aria-label={`Valor de ${p.name}`}
-                            />
-                          </div>
-                          <button
-                            onClick={() => removeParticipant(p.id)}
-                            className="opacity-50 hover:opacity-100 transition-opacity"
-                            aria-label="Remover"
-                            style={{ color: config.panelLabelColor }}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                );
-              })()
-            )}
+                            >
+                              {isTop3 ? medals[realIdx] : realIdx + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium truncate" style={{ color: config.panelTextColor }}>
+                                {p.name}
+                              </div>
+                              {p.game && (
+                                <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
+                                  {p.game}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <span
+                                className="text-xs font-bold"
+                                style={{ color: config.headerAccentColor }}
+                              >
+                                R$
+                              </span>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={
+                                  p.score
+                                    ? p.score.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                    : ''
+                                }
+                                placeholder="0,00"
+                                onChange={(e) => {
+                                  const digits = e.target.value.replace(/\D/g, '');
+                                  const cents = digits === '' ? 0 : Number(digits);
+                                  updateScore(p.id, cents / 100);
+                                }}
+                                className="w-24 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                style={{
+                                  backgroundColor: config.panelBgColor,
+                                  border: `1px solid ${config.inputBorderColor}55`,
+                                  color: config.headerAccentColor,
+                                }}
+                                aria-label={`Valor de ${p.name}`}
+                              />
+                            </div>
+                            <button
+                              onClick={() => removeParticipant(p.id)}
+                              className="opacity-50 hover:opacity-100 transition-opacity flex-shrink-0"
+                              aria-label="Remover"
+                              style={{ color: config.panelLabelColor }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
+                })()
+              )}
+            </div>
           </section>
         </aside>
       </div>
