@@ -203,11 +203,21 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
       const cfg = typeof match.config === 'string' ? JSON.parse(match.config) : match.config;
       setOwnerId(match.user_id);
       setConfig({ ...defaultDepositConfig, ...cfg.depositConfig });
+
+      if (isBs) {
+        const { data: stats } = await (supabase as any)
+          .rpc('get_bs_deposit_stats', { p_owner_id: match.user_id });
+        const row = Array.isArray(stats) ? stats[0] : null;
+        setBsStats({
+          total: Number(row?.total_amount || 0),
+          count: Number(row?.total_count || 0),
+        });
+      }
       setLoading(false);
     };
 
     fetchConfig();
-  }, [tag]);
+  }, [tag, isBs]);
 
   // Poll for payment confirmation
   useEffect(() => {
