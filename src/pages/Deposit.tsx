@@ -43,6 +43,9 @@ interface DepositConfig {
   bsMaxCount?: number;      // 0 = sem limite
   bsLimitReachedMessage?: string;
   bsLimitsResetAt?: string; // ISO timestamp — só conta depósitos a partir dessa data
+  // Visual / textos / SEO / pixels / confirmação independentes para a variante BS (/depbs=).
+  // Quando ausente, BS herda os valores do Depósito padrão.
+  bsOverrides?: Partial<Omit<DepositConfig, 'bsOverrides'>>;
 }
 
 const defaultDepositConfig: DepositConfig = {
