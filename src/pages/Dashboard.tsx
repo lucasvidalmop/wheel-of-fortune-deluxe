@@ -5056,6 +5056,7 @@ function Dashboard() {
                     } catch (e) { console.error('SMS CS batch error:', e); }
                     if (entries.length > 0) await (supabase as any).from('sms_cs_message_log').insert(entries);
                     setSmsCsSending(false);
+                    setTimeout(() => setSmsCsProgress(emptyProgress), 4000);
                     if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
                     else if (sent > 0) toast.success(`${sent} SMS enviado(s)!`);
                     else toast.error('Nenhum SMS enviado');
