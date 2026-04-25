@@ -529,6 +529,79 @@ export default function Batalha() {
             </div>
           </section>
 
+          {/* Bankroll calculator */}
+          <section
+            className="rounded-2xl p-5"
+            style={{
+              backgroundColor: config.panelBgColor,
+              border: `1px solid ${config.panelBorderColor}`,
+            }}
+          >
+            <div className="text-[11px] tracking-[0.35em] mb-3" style={{ color: config.panelLabelColor }}>
+              BANCA
+            </div>
+
+            <label className="block text-xs mb-1.5" style={{ color: config.panelLabelColor }}>
+              Banca inicial
+            </label>
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 mb-4"
+              style={{
+                backgroundColor: config.bgColor,
+                border: `1px solid ${config.inputBorderColor}55`,
+              }}
+            >
+              <span className="text-xs font-bold" style={{ color: config.headerAccentColor }}>R$</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={initialBankroll ? fmtBRL(initialBankroll) : ''}
+                placeholder="0,00"
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '');
+                  const cents = digits === '' ? 0 : Number(digits);
+                  setInitialBankroll(cents / 100);
+                }}
+                onFocus={(e) => e.target.select()}
+                className="flex-1 bg-transparent py-2 text-sm text-right font-bold tabular-nums outline-none"
+                style={{ color: config.panelTextColor }}
+              />
+            </div>
+
+            <div className="space-y-1.5 text-xs" style={{ color: config.panelLabelColor }}>
+              <div className="flex justify-between">
+                <span>Banca inicial</span>
+                <span className="tabular-nums" style={{ color: config.panelTextColor }}>
+                  R$ {fmtBRL(initialBankroll)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Soma dos jogadores</span>
+                <span className="tabular-nums" style={{ color: config.panelTextColor }}>
+                  R$ {fmtBRL(participantsTotal)}
+                </span>
+              </div>
+            </div>
+
+            <div
+              className="mt-3 pt-3 flex items-center justify-between"
+              style={{ borderTop: `1px solid ${config.panelBorderColor}` }}
+            >
+              <span className="text-[11px] tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
+                BANCA TOTAL
+              </span>
+              <span
+                className="text-lg font-extrabold tabular-nums"
+                style={{
+                  color: config.headerAccentColor,
+                  textShadow: `0 0 12px ${config.headerAccentColor}66`,
+                }}
+              >
+                R$ {fmtBRL(totalBankroll)}
+              </span>
+            </div>
+          </section>
+
           {/* Ranking */}
           <section
             className="rounded-2xl p-5"
