@@ -116,7 +116,8 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
     setWinner(null);
     setSpinning(true);
 
-    const weights = participants.map((p) => Math.max(1, p.weight ?? 1));
+    // Pick a random segment index (uniform). Weights kept for compatibility.
+    const weights = segments.map((s) => Math.max(1, s.participant.weight ?? 1));
     const total = weights.reduce((a, b) => a + b, 0);
     let r = Math.random() * total;
     let pickIdx = 0;
@@ -155,7 +156,7 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
         requestAnimationFrame(tick);
       } else {
         setSpinning(false);
-        const w = participants[pickIdx];
+        const w = segments[pickIdx].participant;
         setWinner(w);
         onWinner?.(w);
       }
