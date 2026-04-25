@@ -4724,6 +4724,7 @@ function Dashboard() {
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                   setSmsSending(true);
+                  setSmsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                   let sent = 0, errors = 0, skipped = 0;
                   const BATCH_SIZE = 5;
                   const TIMEOUT_MS = 15000;
