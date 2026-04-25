@@ -691,9 +691,21 @@ export default function Batalha() {
                 </button>
               </div>
             </div>
-          </section>
 
-          {/* Ranking */}
+            <button
+              onClick={resetTournament}
+              className="mt-4 w-full h-10 rounded-full inline-flex items-center justify-center gap-2 text-[11px] font-semibold tracking-[0.25em] transition-opacity hover:opacity-80 active:scale-[0.98]"
+              style={{
+                backgroundColor: 'transparent',
+                border: `1px solid ${config.panelBorderColor}`,
+                color: config.panelLabelColor,
+              }}
+              aria-label="Resetar sorteio"
+            >
+              <RotateCcw size={13} />
+              RESETAR SORTEIO
+            </button>
+          </section>
           <section
             className="rounded-2xl p-5 min-h-0 lg:flex-1 overflow-hidden"
             style={{
