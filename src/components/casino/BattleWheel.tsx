@@ -121,11 +121,18 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
     const segAngle = TAU / segCount;
     const targetCenter = pickIdx * segAngle + segAngle / 2;
     const baseTurns = 6 + Math.floor(Math.random() * 3);
-    const finalRotation = baseTurns * TAU + (-Math.PI / 2 - targetCenter);
+
+    // Normalize current rotation and compute a forward-only delta so spin
+    // duration feels constant regardless of participant count or prior spins.
+    const startRot = rotation;
+    const currentMod = ((startRot % TAU) + TAU) % TAU;
+    const targetMod = ((-Math.PI / 2 - targetCenter) % TAU + TAU) % TAU;
+    let delta = targetMod - currentMod;
+    if (delta <= 0) delta += TAU;
+    const finalRotation = startRot + baseTurns * TAU + delta;
 
     const start = performance.now();
-    const startRot = rotation;
-    const duration = 5200;
+    const duration = 5000;
 
     const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
