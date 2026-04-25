@@ -8138,25 +8138,25 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Valor mínimo (R$)</label>
-                    <input type="number" min={1} step="0.01" value={dc.minimumValue ?? 10} onChange={e => updateDc({ minimumValue: Math.max(1, Number(e.target.value)) })} className="w-32 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <input type="number" min={1} step="0.01" value={dcv.minimumValue ?? 10} onChange={e => updateDcv({ minimumValue: Math.max(1, Number(e.target.value)) })} className="w-32 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-muted-foreground">Valores pré-definidos</label>
                     <div className="flex flex-wrap gap-2">
-                      {(dc.presetValues || []).map((val: number, idx: number) => (
+                      {(dcv.presetValues || []).map((val: number, idx: number) => (
                         <div key={idx} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08]">
                           <span className="text-xs text-foreground">R$ {val.toFixed(2)}</span>
-                          <button onClick={() => { const nv = [...(dc.presetValues || [])]; nv.splice(idx, 1); updateDc({ presetValues: nv }); }} className="text-destructive hover:text-destructive/80 ml-1"><X size={12} /></button>
+                          <button onClick={() => { const nv = [...(dcv.presetValues || [])]; nv.splice(idx, 1); updateDcv({ presetValues: nv }); }} className="text-destructive hover:text-destructive/80 ml-1"><X size={12} /></button>
                         </div>
                       ))}
                     </div>
                     <div className="flex items-center gap-2">
                       <input type="number" min={1} step="0.01" placeholder="Novo valor" id="deposit-new-preset" className="w-32 px-3 py-2 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                      <button onClick={() => { const inp = document.getElementById('deposit-new-preset') as HTMLInputElement; const val = Number(inp?.value); if (val >= 1) { updateDc({ presetValues: [...(dc.presetValues || []), val] }); if (inp) inp.value = ''; } }} className="px-3 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:brightness-110 transition-all"><Plus size={14} /></button>
+                      <button onClick={() => { const inp = document.getElementById('deposit-new-preset') as HTMLInputElement; const val = Number(inp?.value); if (val >= 1) { updateDcv({ presetValues: [...(dcv.presetValues || []), val] }); if (inp) inp.value = ''; } }} className="px-3 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:brightness-110 transition-all"><Plus size={14} /></button>
                     </div>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer pt-2">
-                    <Checkbox checked={dc.allowCustomValue !== false} onCheckedChange={(v) => updateDc({ allowCustomValue: !!v })} />
+                    <Checkbox checked={dcv.allowCustomValue !== false} onCheckedChange={(v) => updateDcv({ allowCustomValue: !!v })} />
                     <span className="text-sm text-foreground">Permitir valor personalizado</span>
                   </label>
                 </div>
