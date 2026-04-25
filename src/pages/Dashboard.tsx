@@ -4753,13 +4753,16 @@ function Dashboard() {
                           const payload = r.value.data as any;
                           if (payload?.skipped) {
                             skipped++;
+                            setSmsProgress(p => ({ ...p, skipped: p.skipped + 1 }));
                             smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: payload?.error || 'Número inválido', batch_id: batchId });
                           } else {
                             sent++;
+                            setSmsProgress(p => ({ ...p, sent: p.sent + 1 }));
                             smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'sent', batch_id: batchId });
                           }
                         } else {
                           errors++;
+                          setSmsProgress(p => ({ ...p, errors: p.errors + 1 }));
                           const errMsg = r.status === 'rejected' ? r.reason?.message : r.value?.error?.message || 'Erro';
                           smsLogEntries.push({ owner_id: session?.user?.id, recipient_phone: phone, recipient_name: user?.name || '', message: smsMessage, status: 'error', error_message: errMsg, batch_id: batchId });
                         }
