@@ -207,21 +207,89 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
         {spinning ? '...' : config.buttonText}
       </button>
 
+      {/* FULLSCREEN WINNER ANNOUNCEMENT */}
       {winner && (
         <div
-          className="px-6 py-4 text-center font-bold animate-in fade-in slide-in-from-bottom-2"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-6 animate-in fade-in duration-300"
           style={{
-            backgroundColor: config.resultBoxColor,
-            color: config.resultTextColor,
-            border: `1px solid ${config.resultBorderColor}`,
-            borderRadius: 12,
-            minWidth: 240,
-            boxShadow: `0 0 30px ${config.resultBorderColor}33`,
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(8px)',
           }}
+          onClick={() => setWinner(null)}
         >
-          <div className="text-xs tracking-[0.3em] opacity-70 mb-1">{config.resultTitle}</div>
-          <div className="text-2xl">{winner.name}</div>
-          {winner.game && <div className="text-sm opacity-70 mt-1">{winner.game}</div>}
+          {/* Glow orbs */}
+          <div
+            className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full blur-[120px] opacity-40 pointer-events-none animate-pulse"
+            style={{ backgroundColor: config.resultBorderColor }}
+          />
+          <div
+            className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] rounded-full blur-[120px] opacity-30 pointer-events-none animate-pulse"
+            style={{ backgroundColor: config.headerAccentColor, animationDelay: '0.5s' }}
+          />
+
+          <div
+            className="relative w-full max-w-3xl text-center font-bold animate-in zoom-in-50 slide-in-from-bottom-4 duration-500"
+            style={{
+              backgroundColor: config.resultBoxColor,
+              color: config.resultTextColor,
+              border: `2px solid ${config.resultBorderColor}`,
+              borderRadius: 24,
+              padding: 'clamp(32px, 6vw, 72px) clamp(24px, 5vw, 64px)',
+              boxShadow: `0 0 80px ${config.resultBorderColor}66, 0 0 160px ${config.resultBorderColor}33, inset 0 0 60px ${config.resultBorderColor}11`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="font-semibold opacity-80 mb-6"
+              style={{
+                fontSize: 'clamp(14px, 2vw, 20px)',
+                letterSpacing: '0.5em',
+                color: config.headerAccentColor,
+              }}
+            >
+              🏆 {config.resultTitle} 🏆
+            </div>
+
+            <div
+              className="font-black leading-[1.05] mb-4 break-words"
+              style={{
+                fontSize: 'clamp(48px, 10vw, 120px)',
+                color: config.resultTextColor,
+                textShadow: `0 0 40px ${config.resultBorderColor}aa, 0 0 80px ${config.resultBorderColor}55`,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {winner.name}
+            </div>
+
+            {winner.game && (
+              <div
+                className="font-semibold opacity-90 mt-2"
+                style={{
+                  fontSize: 'clamp(20px, 3.5vw, 40px)',
+                  color: config.headerAccentColor,
+                  letterSpacing: '0.05em',
+                }}
+              >
+                {winner.game}
+              </div>
+            )}
+
+            <button
+              onClick={() => setWinner(null)}
+              className="mt-10 font-bold tracking-[0.4em] transition-all active:scale-95 hover:brightness-125"
+              style={{
+                backgroundColor: 'transparent',
+                color: config.resultBorderColor,
+                fontSize: 'clamp(12px, 1.4vw, 14px)',
+                borderRadius: 8,
+                border: `1px solid ${config.resultBorderColor}`,
+                padding: '12px 36px',
+              }}
+            >
+              FECHAR
+            </button>
+          </div>
         </div>
       )}
     </div>
