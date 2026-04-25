@@ -14,6 +14,17 @@ export default function Batalha() {
   const [game, setGame] = useState('');
   const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>([]);
   const [rankingSearch, setRankingSearch] = useState('');
+  const [initialBankroll, setInitialBankroll] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    const v = Number(window.localStorage.getItem('battle_initial_bankroll') ?? '0');
+    return Number.isFinite(v) ? v : 0;
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('battle_initial_bankroll', String(initialBankroll));
+    } catch { /* ignore */ }
+  }, [initialBankroll]);
 
   // ═══ Auth state (linked to operator) ═══
   const [session, setSession] = useState<any>(null);
