@@ -1277,6 +1277,10 @@ export type Database = {
           spun_at: string
         }[]
       }
+      get_public_deposit_status: {
+        Args: { p_edpay_id: string }
+        Returns: string
+      }
       get_wheel_config_by_slug: {
         Args: { p_slug: string }
         Returns: {

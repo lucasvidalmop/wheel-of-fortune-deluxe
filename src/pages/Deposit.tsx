@@ -219,21 +219,18 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
     fetchConfig();
   }, [tag, isBs]);
 
-  // Poll for payment confirmation
+  // Poll for payment confirmation (uses public RPC so it works for anonymous visitors)
   useEffect(() => {
     if (step !== 'qrcode' || !txId) return;
 
     const poll = async () => {
       try {
-        const { data } = await (supabase as any)
-          .from('edpay_transactions')
-          .select('status')
-          .eq('edpay_id', txId)
-          .maybeSingle();
-        if (data?.status === 'paid' || data?.status === 'confirmed' || data?.status === 'completed') {
+        const { data: status } = await (supabase as any)
+          .rpc('get_public_deposit_status', { p_edpay_id: txId });
+        if (status === 'paid' || status === 'confirmed' || status === 'completed') {
           setStep('confirmed');
           if (pollRef.current) clearInterval(pollRef.current);
-        } else if (data?.status === 'cancelled' || data?.status === 'expired') {
+        } else if (status === 'cancelled' || status === 'expired') {
           toast.error('Pagamento expirado. Gere um novo QR Code.');
           resetForm();
           if (pollRef.current) clearInterval(pollRef.current);
@@ -241,7 +238,8 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
       } catch { /* ignore */ }
     };
 
-    pollRef.current = setInterval(poll, 5000);
+    poll(); // run once immediately
+    pollRef.current = setInterval(poll, 4000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [step, txId]);
 
@@ -305,11 +303,40 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
     finally { setQrLoading(false); }
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success('Copiado!');
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async (text: string) => {
+    let ok = false;
+    // Try modern Clipboard API first (requires HTTPS + user gesture; fails on some mobile WebViews)
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      }
+    } catch { /* fall back below */ }
+    // Fallback: hidden textarea + execCommand (works on most mobile browsers)
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch { ok = false; }
+    }
+    if (ok) {
+      setCopied(true);
+      toast.success('Código PIX copiado!');
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error('Não foi possível copiar. Selecione e copie manualmente.');
+    }
   };
 
   const resetForm = () => {
@@ -499,12 +526,22 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
             {(qrData.copiacola || qrData.qrcode) && (
               <div className="space-y-2">
                 <p className="text-xs" style={{ color: txtMuted }}>PIX Copia e Cola:</p>
-                <div className="flex gap-2">
-                  <input readOnly value={qrData.copiacola || qrData.qrcode} className="flex-1 px-3 py-2 rounded-lg text-xs truncate" style={inputStyle} />
-                  <button onClick={() => handleCopy(qrData.copiacola || qrData.qrcode)} className="px-3 py-2 rounded-lg transition-all" style={{ background: `${accent}33`, color: accent }}>
-                    {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
-                  </button>
-                </div>
+                <textarea
+                  readOnly
+                  value={qrData.copiacola || qrData.qrcode}
+                  onClick={(e) => (e.currentTarget as HTMLTextAreaElement).select()}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg text-[11px] leading-snug break-all resize-none"
+                  style={{ ...inputStyle, fontFamily: 'monospace' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleCopy(qrData.copiacola || qrData.qrcode)}
+                  className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
+                  style={{ background: accent, color: '#fff', boxShadow: `0 8px 20px -5px ${accent}33` }}
+                >
+                  {copied ? <><CheckCircle2 size={16} /> Copiado!</> : <><Copy size={16} /> Copiar código PIX</>}
+                </button>
               </div>
             )}
             <div className="flex items-center justify-center gap-2 pt-2" style={{ color: txtMuted }}>
