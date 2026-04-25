@@ -5024,6 +5024,7 @@ function Dashboard() {
                     if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                     if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
                     setSmsCsSending(true);
+                    setSmsCsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0, skipped = 0;
                     const BATCH_SIZE = 5;
                     const entries: any[] = [];
