@@ -515,6 +515,8 @@ export default function Batalha() {
                   <input
                     type="text"
                     inputMode="numeric"
+                    autoComplete="off"
+                    name="battle-initial-bankroll"
                     value={initialBankroll ? fmtBRL(initialBankroll) : ''}
                     placeholder="0,00"
                     onChange={(e) => {
@@ -523,7 +525,7 @@ export default function Batalha() {
                       setInitialBankroll(cents / 100);
                     }}
                     onFocus={(e) => e.target.select()}
-                    className="w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
+                    className="battle-money-input w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
                     style={{ color: config.panelTextColor }}
                     aria-label="Banca inicial"
                   />
