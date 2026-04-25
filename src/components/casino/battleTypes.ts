@@ -37,6 +37,7 @@ export interface BattleConfig {
   wheelCenterButtonColor: string; // SPIN center button bg
   wheelCenterButtonTextColor: string;
   wheelCenterButtonText: string;
+  wheelCenterButtonImageUrl?: string; // optional image to display inside center button
 
   // Default segment palette (used when participants don't override colors)
   segmentPalette: string[];
