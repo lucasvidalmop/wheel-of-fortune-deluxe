@@ -487,6 +487,99 @@ export default function Batalha() {
 
         {/* Side panels */}
         <aside className="space-y-5">
+          {/* Bankroll calculator */}
+          <section
+            className="rounded-2xl p-5"
+            style={{
+              backgroundColor: config.panelBgColor,
+              border: `1px solid ${config.panelBorderColor}`,
+            }}
+          >
+            <div className="text-[11px] tracking-[0.35em] mb-4" style={{ color: config.panelLabelColor }}>
+              BANCA
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-[10px] tracking-[0.2em] mb-1.5" style={{ color: config.panelLabelColor }}>
+                  BANCA INICIAL
+                </label>
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 h-10"
+                  style={{
+                    backgroundColor: config.bgColor,
+                    border: `1px solid ${config.inputBorderColor}55`,
+                  }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={initialBankroll ? fmtBRL(initialBankroll) : ''}
+                    placeholder="0,00"
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      const cents = digits === '' ? 0 : Number(digits);
+                      setInitialBankroll(cents / 100);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
+                    style={{ color: config.panelTextColor }}
+                    aria-label="Banca inicial"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] tracking-[0.2em] mb-1.5" style={{ color: config.panelLabelColor }}>
+                  VALOR DO TORNEIO
+                </label>
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 h-10"
+                  style={{
+                    backgroundColor: config.bgColor,
+                    border: `1px solid ${config.inputBorderColor}55`,
+                  }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={tournamentEntry ? fmtBRL(tournamentEntry) : ''}
+                    placeholder="0,00"
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      const cents = digits === '' ? 0 : Number(digits);
+                      setTournamentEntry(cents / 100);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
+                    style={{ color: config.panelTextColor }}
+                    aria-label="Valor do torneio"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="mt-3 pt-3 flex items-center justify-between"
+              style={{ borderTop: `1px solid ${config.panelBorderColor}` }}
+            >
+              <span className="text-[10px] tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
+                BANCA TOTAL DE PRÊMIO
+              </span>
+              <span
+                className="text-xl font-extrabold tabular-nums"
+                style={{
+                  color: config.headerAccentColor,
+                  textShadow: `0 0 12px ${config.headerAccentColor}66`,
+                }}
+              >
+                R$ {fmtBRL(totalBankroll)}
+              </span>
+            </div>
+          </section>
+
           {/* Novo jogador */}
           <section
             className="rounded-2xl p-5"
