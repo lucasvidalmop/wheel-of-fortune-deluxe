@@ -524,7 +524,6 @@ export default function Batalha() {
                       const cents = digits === '' ? 0 : Number(digits);
                       setInitialBankroll(cents / 100);
                     }}
-                    onFocus={(e) => e.target.select()}
                     className="battle-money-input w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
                     style={{ color: config.panelTextColor }}
                     aria-label="Banca inicial"
@@ -556,7 +555,6 @@ export default function Batalha() {
                       const cents = digits === '' ? 0 : Number(digits);
                       setTournamentEntry(cents / 100);
                     }}
-                    onFocus={(e) => e.target.select()}
                     className="battle-money-input w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
                     style={{ color: config.panelTextColor }}
                     aria-label="Valor do torneio"
@@ -761,7 +759,6 @@ export default function Batalha() {
                                 const cents = digits === '' ? 0 : Number(digits);
                                 updateScore(p.id, cents / 100);
                               }}
-                              onFocus={(e) => e.target.select()}
                               className="w-24 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               style={{
                                 backgroundColor: config.panelBgColor,
