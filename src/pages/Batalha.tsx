@@ -407,7 +407,7 @@ export default function Batalha() {
   }
 
   return (
-    <main className="battle-page min-h-screen w-full px-4 py-10 lg:px-12 relative" style={bgStyle}>
+    <main className="battle-page h-screen overflow-hidden w-full px-4 py-6 lg:px-10 relative" style={bgStyle}>
       {/* Logout button */}
       <button
         onClick={handleLogout}
@@ -423,7 +423,7 @@ export default function Batalha() {
       </button>
 
       {/* Header */}
-      <header className="text-center mb-10">
+      <header className="text-center mb-6 lg:mb-8 flex-shrink-0">
         {config.headerMode !== 'image' && (
           <h1
             className="font-black tracking-tight"
@@ -459,7 +459,7 @@ export default function Batalha() {
       </header>
 
       {/* Layout */}
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start lg:h-[calc(100vh-170px)] min-h-0">
         {/* Wheel */}
         <div className="flex flex-col items-center">
           {loading ? (
