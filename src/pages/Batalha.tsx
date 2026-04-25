@@ -293,6 +293,15 @@ export default function Batalha() {
     });
   }, [participants]);
 
+  // Bankroll calculator: sum of all participant scores + initial bankroll.
+  const participantsTotal = useMemo(
+    () => participants.reduce((sum, p) => sum + (p.score ?? 0), 0),
+    [participants],
+  );
+  const totalBankroll = initialBankroll + participantsTotal;
+  const fmtBRL = (n: number) =>
+    n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   // ═══ While auth is loading ═══
   if (!authReady) {
     return (
