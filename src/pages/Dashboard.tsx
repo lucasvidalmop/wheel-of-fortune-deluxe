@@ -4280,6 +4280,14 @@ function Dashboard() {
                 </div>
               </GlassCard>
 
+              <BulkSendProgress
+                total={emailProgress.total}
+                sent={emailProgress.sent}
+                errors={emailProgress.errors}
+                skipped={emailProgress.skipped}
+                label="Disparo de email"
+              />
+
               <button
                 onClick={async () => {
                   const baseRecipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
