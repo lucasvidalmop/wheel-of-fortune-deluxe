@@ -4,8 +4,10 @@ import BattleWheel from '@/components/casino/BattleWheel';
 import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from '@/components/casino/battleTypes';
 import { Plus, Trash2, Swords, LogOut, AlertTriangle, Search, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 
 export default function Batalha() {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [config, setConfig] = useState<BattleConfig>(defaultBattleConfig);
   const [loading, setLoading] = useState(true);
   const [participants, setParticipants] = useState<(BattleParticipant & { dbId?: string })[]>([]);
@@ -294,8 +296,14 @@ export default function Batalha() {
 
   const resetWheel = () => setEliminatedIds(new Set());
 
-  const resetTournament = () => {
-    const ok = window.confirm('Tem certeza que deseja resetar o sorteio? Isso irá limpar a banca e o ranking.');
+  const resetTournament = async () => {
+    const ok = await confirm({
+      title: 'Resetar sorteio?',
+      message: 'Isso irá limpar a banca, o ranking e o histórico de sorteados. Esta ação não pode ser desfeita.',
+      confirmLabel: 'Resetar',
+      cancelLabel: 'Cancelar',
+      variant: 'danger',
+    });
     if (!ok) return;
     // Mark all linked DB participants as consumed so they don't reappear via realtime
     const dbIds = participants.map((p) => p.dbId).filter(Boolean) as string[];
@@ -855,6 +863,7 @@ export default function Batalha() {
           </section>
         </aside>
       </div>
+      {ConfirmDialog}
     </main>
   );
 }
