@@ -192,3 +192,14 @@ input[type="checkbox"]:checked::after {
   background: transparent;
   color: inherit;
 }
+
+/* Prevent mobile browsers (iOS Safari) from auto-zooming when focusing inputs.
+   Browsers zoom whenever an input has font-size < 16px. Force >=16px on mobile
+   for any text-like field on the Batalha page. */
+@media (max-width: 768px) {
+  .battle-page input,
+  .battle-page textarea,
+  .battle-page select {
+    font-size: 16px !important;
+  }
+}
