@@ -256,16 +256,41 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
 
   const finalAmount = selectedAmount || Number(customAmount);
 
+  // BS limits — only enforced when variant === 'bs'
+  const bsMaxPerDeposit = isBs ? Number(config.bsMaxPerDeposit || 0) : 0;
+  const bsMaxTotal = isBs ? Number(config.bsMaxTotal || 0) : 0;
+  const bsMaxCount = isBs ? Number(config.bsMaxCount || 0) : 0;
+  const bsTotal = bsStats?.total || 0;
+  const bsCount = bsStats?.count || 0;
+  const bsTotalReached = bsMaxTotal > 0 && bsTotal >= bsMaxTotal;
+  const bsCountReached = bsMaxCount > 0 && bsCount >= bsMaxCount;
+  const bsLimitReached = isBs && (bsTotalReached || bsCountReached);
+  const bsRemainingTotal = bsMaxTotal > 0 ? Math.max(bsMaxTotal - bsTotal, 0) : Infinity;
+
   const handleGenerateQr = async () => {
     if (!finalAmount || finalAmount < config.minimumValue) {
       toast.error(`Valor mínimo: R$ ${config.minimumValue.toFixed(2)}`);
       return;
     }
+    if (isBs) {
+      if (bsLimitReached) {
+        toast.error(config.bsLimitReachedMessage || 'Limite de depósitos atingido.');
+        return;
+      }
+      if (bsMaxPerDeposit > 0 && finalAmount > bsMaxPerDeposit) {
+        toast.error(`Valor máximo por depósito: R$ ${bsMaxPerDeposit.toFixed(2)}`);
+        return;
+      }
+      if (bsMaxTotal > 0 && finalAmount > bsRemainingTotal) {
+        toast.error(`Valor excede o limite restante (R$ ${bsRemainingTotal.toFixed(2)}).`);
+        return;
+      }
+    }
     setQrLoading(true);
     setQrData(null);
     try {
       const { data, error } = await supabase.functions.invoke('edpay-public-qrcode', {
-        body: { ownerId, amount: finalAmount, userName: name, userPhone: whatsapp.replace(/\D/g, ''), userAccountId: accountId },
+        body: { ownerId, amount: finalAmount, userName: name, userPhone: whatsapp.replace(/\D/g, ''), userAccountId: accountId, variant: isBs ? 'bs' : 'default' },
       });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); }
