@@ -170,3 +170,15 @@ input[type="checkbox"]:checked::after {
 .battle-ranking-scroll::-webkit-scrollbar-thumb:hover {
   filter: brightness(1.4);
 }
+
+/* Neutralize browser autofill background on battle money inputs */
+.battle-money-input:-webkit-autofill,
+.battle-money-input:-webkit-autofill:hover,
+.battle-money-input:-webkit-autofill:focus,
+.battle-money-input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: inherit;
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: inset 0 0 0 1000px transparent;
+  caret-color: inherit;
+}
