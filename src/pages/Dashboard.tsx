@@ -8271,45 +8271,45 @@ function Dashboard() {
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted-foreground">Fundo</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.bgColor || '#0a0a0f'} onChange={e => updateDc({ bgColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
-                        <span className="text-[10px] font-mono text-muted-foreground">{dc.bgColor || '#0a0a0f'}</span>
+                        <input type="color" value={dcv.bgColor || '#0a0a0f'} onChange={e => updateDcv({ bgColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dcv.bgColor || '#0a0a0f'}</span>
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted-foreground">Destaque</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.accentColor || '#10b981'} onChange={e => updateDc({ accentColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
-                        <span className="text-[10px] font-mono text-muted-foreground">{dc.accentColor || '#10b981'}</span>
+                        <input type="color" value={dcv.accentColor || '#10b981'} onChange={e => updateDcv({ accentColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dcv.accentColor || '#10b981'}</span>
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted-foreground">Texto</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={dc.textColor || '#ffffff'} onChange={e => updateDc({ textColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
-                        <span className="text-[10px] font-mono text-muted-foreground">{dc.textColor || '#ffffff'}</span>
+                        <input type="color" value={dcv.textColor || '#ffffff'} onChange={e => updateDcv({ textColor: e.target.value })} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer" />
+                        <span className="text-[10px] font-mono text-muted-foreground">{dcv.textColor || '#ffffff'}</span>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Logo</label>
                     <div className="flex items-center gap-3">
-                      {dc.logoUrl && <img src={dc.logoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
+                      {dcv.logoUrl && <img src={dcv.logoUrl} alt="" className="h-10 w-10 rounded-lg border border-white/[0.08] object-contain" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.logoUrl ? '🔄 Trocar' : '📤 Enviar'} Logo
+                        {dcv.logoUrl ? '🔄 Trocar' : '📤 Enviar'} Logo
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'logoUrl')} className="hidden" />
                       </label>
-                      {dc.logoUrl && <button onClick={() => updateDc({ logoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.logoUrl && <button onClick={() => updateDcv({ logoUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">Imagem de fundo</label>
                     <div className="flex items-center gap-3">
-                      {dc.bgImageUrl && <img src={dc.bgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
+                      {dcv.bgImageUrl && <img src={dcv.bgImageUrl} alt="" className="h-10 w-16 rounded-lg border border-white/[0.08] object-cover" />}
                       <label className="cursor-pointer rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs text-foreground hover:bg-white/[0.1] transition-all">
-                        {dc.bgImageUrl ? '🔄 Trocar' : '📤 Enviar'} Fundo
+                        {dcv.bgImageUrl ? '🔄 Trocar' : '📤 Enviar'} Fundo
                         <input type="file" accept="image/*" onChange={e => handleDepositUpload(e, 'bgImageUrl')} className="hidden" />
                       </label>
-                      {dc.bgImageUrl && <button onClick={() => updateDc({ bgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
+                      {dcv.bgImageUrl && <button onClick={() => updateDcv({ bgImageUrl: '' })} className="text-xs text-destructive"><Trash2 size={14} /></button>}
                     </div>
                   </div>
                 </div>
