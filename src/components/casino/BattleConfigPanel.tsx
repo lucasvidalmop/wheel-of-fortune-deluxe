@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from './battleTypes';
 import BattleWheel from './BattleWheel';
-import { Plus, Trash2, Save, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, Save, RotateCcw, Upload } from 'lucide-react';
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 interface Props {
   userId: string;
@@ -49,6 +50,50 @@ const TextInput = ({ value, onChange, placeholder }: { value: string; onChange: 
     className="h-8 rounded border border-border bg-background px-2 text-sm"
   />
 );
+
+const ImageUpload = ({ value, onChange, folder }: { value?: string; onChange: (url: string) => void; folder: string }) => {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, folder);
+      onChange(publicUrl);
+      toast.success('Imagem enviada!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {value && (
+        <img src={value} alt="" className="h-10 w-16 rounded border border-border object-cover" />
+      )}
+      <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-border bg-background px-2 h-8 text-xs hover:bg-muted">
+        <Upload size={12} />
+        {uploading ? 'Enviando...' : value ? 'Trocar' : 'Enviar'}
+        <input ref={inputRef} type="file" accept="image/*" onChange={handle} className="hidden" disabled={uploading} />
+      </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          className="text-destructive hover:opacity-80"
+          aria-label="Remover imagem"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
+    </div>
+  );
+};
 
 // Mock participants for the live preview only (not saved).
 const previewParticipants: BattleParticipant[] = [
@@ -177,19 +222,19 @@ export default function BattleConfigPanel({ userId }: Props) {
               <option value="image_text">Imagem + texto</option>
             </select>
           </Field>
-          <Field label="URL imagem do cabeçalho"><TextInput value={config.headerImageUrl ?? ''} onChange={(v) => update('headerImageUrl', v)} placeholder="https://..." /></Field>
+          <Field label="Imagem do cabeçalho"><ImageUpload value={config.headerImageUrl} onChange={(v) => update('headerImageUrl', v)} folder="battle/header" /></Field>
           <Field label="Tamanho da imagem"><NumberInput value={config.headerImageSize} onChange={(v) => update('headerImageSize', v)} min={40} max={500} /></Field>
           <Field label="SEO Title"><TextInput value={config.seoTitle ?? ''} onChange={(v) => update('seoTitle', v)} /></Field>
           <Field label="SEO Description"><TextInput value={config.seoDescription ?? ''} onChange={(v) => update('seoDescription', v)} /></Field>
-          <Field label="Favicon URL"><TextInput value={config.faviconUrl ?? ''} onChange={(v) => update('faviconUrl', v)} /></Field>
+          <Field label="Favicon"><ImageUpload value={config.faviconUrl} onChange={(v) => update('faviconUrl', v)} folder="battle/favicon" /></Field>
         </section>
 
         {/* Background */}
         <section className="space-y-3">
           <h3 className="font-bold text-foreground">Fundo</h3>
           <Field label="Cor de fundo"><ColorInput value={config.bgColor} onChange={(v) => update('bgColor', v)} /></Field>
-          <Field label="Imagem de fundo (desktop)"><TextInput value={config.bgImageUrl ?? ''} onChange={(v) => update('bgImageUrl', v)} placeholder="https://..." /></Field>
-          <Field label="Imagem de fundo (mobile)"><TextInput value={config.bgImageMobileUrl ?? ''} onChange={(v) => update('bgImageMobileUrl', v)} placeholder="https://..." /></Field>
+          <Field label="Imagem de fundo (desktop)"><ImageUpload value={config.bgImageUrl} onChange={(v) => update('bgImageUrl', v)} folder="battle/bg-desktop" /></Field>
+          <Field label="Imagem de fundo (mobile)"><ImageUpload value={config.bgImageMobileUrl} onChange={(v) => update('bgImageMobileUrl', v)} folder="battle/bg-mobile" /></Field>
         </section>
 
         {/* Wheel visuals */}
