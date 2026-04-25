@@ -6561,6 +6561,8 @@ function Dashboard() {
                 </div>
               </GlassCard>
 
+              <BulkSendProgress total={whatsappProgress2.total} sent={whatsappProgress2.sent} errors={whatsappProgress2.errors} skipped={whatsappProgress2.skipped} label="Disparo de WhatsApp 2" accent="green" />
+
               <button
                 onClick={async () => {
                   if (!evolutionApiUrl2 || !evolutionApiKey2 || !evolutionInstance2) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig2(true); return; }
@@ -6575,6 +6577,7 @@ function Dashboard() {
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                   setWhatsappSending2(true);
+                  setWhatsappProgress2({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                   let sent = 0, errors = 0;
                   for (let i = 0; i < phones.length; i++) {
                     const phone = phones[i];
@@ -6591,9 +6594,11 @@ function Dashboard() {
                         status: hasError ? 'error' : 'sent',
                         error_message: errorMsg,
                       });
-                      if (hasError) errors++; else sent++;
+                      if (hasError) { errors++; setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 })); }
+                      else { sent++; setWhatsappProgress2(p => ({ ...p, sent: p.sent + 1 })); }
                     } catch (e: any) {
                       errors++;
+                      setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 }));
                       await (supabase as any).from('whatsapp2_message_log').insert({
                         owner_id: session.user.id,
                         recipient_phone: phone,
@@ -6611,6 +6616,7 @@ function Dashboard() {
                   setWhatsappSending2(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
                   else toast.success(`${sent} mensagem(ns) enviada(s)!`);
+                  setTimeout(() => setWhatsappProgress2(emptyProgress), 4000);
                 }}
                 disabled={whatsappSending2}
                 className="w-full py-3.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
@@ -6625,6 +6631,7 @@ function Dashboard() {
                     if (!evolutionApiUrl2 || !evolutionApiKey2 || !evolutionInstance2) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig2(true); return; }
                     if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
                     setWhatsappSending2(true);
+                    setWhatsappProgress2({ total: notifySelectedGroups2.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups2) {
                       try {
@@ -6632,14 +6639,17 @@ function Dashboard() {
                           body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
-                        if (hasError) errors++; else sent++;
+                        if (hasError) { errors++; setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 })); }
+                        else { sent++; setWhatsappProgress2(p => ({ ...p, sent: p.sent + 1 })); }
                       } catch {
                         errors++;
+                        setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 }));
                       }
                     }
                     setWhatsappSending2(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
                     else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
+                    setTimeout(() => setWhatsappProgress2(emptyProgress), 4000);
                   }}
                   disabled={whatsappSending2}
                   className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
