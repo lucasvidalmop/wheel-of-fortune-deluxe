@@ -8025,6 +8025,30 @@ function Dashboard() {
           {activeTab === 'deposito' && (() => {
             const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '', confirmationButtonText: 'Acessar →', confirmationButtonUrl: '', confirmationButtonColor: '', showNewDepositButton: true };
             const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
+            // Visual / textos / SEO / pixels / confirmação independentes por variante.
+            // `dcv` lê com fallback para o Depósito padrão; `updateDcv` grava em `bsOverrides` quando variant=='depbs'.
+            const isBs = depositVariant === 'depbs';
+            const overrides = (dc.bsOverrides || {}) as Record<string, any>;
+            const dcv: any = isBs ? new Proxy({}, {
+              get: (_t, key: string) => {
+                if (overrides[key] !== undefined && overrides[key] !== null && overrides[key] !== '') return overrides[key];
+                return (dc as any)[key];
+              },
+            }) : dc;
+            const updateDcv = (patch: any) => {
+              if (!isBs) { updateDc(patch); return; }
+              setWheelConfig((prev: any) => {
+                const prevDc = prev.depositConfig || dc;
+                const prevOv = (prevDc.bsOverrides || {}) as Record<string, any>;
+                return {
+                  ...prev,
+                  depositConfig: {
+                    ...prevDc,
+                    bsOverrides: { ...prevOv, ...patch },
+                  },
+                };
+              });
+            };
             const depositUrl = dc.tag ? `${baseUrl}/dep=${dc.tag}` : '';
             const depositBsUrl = dc.tag ? `${baseUrl}/depbs=${dc.tag}` : '';
 
