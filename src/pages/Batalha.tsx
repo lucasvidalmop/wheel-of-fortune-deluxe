@@ -305,13 +305,18 @@ export default function Batalha() {
   }, [participants]);
 
   // Bankroll calculator:
-  // For each participant: net cost to house = bonus paid (score) − tournament entry value.
-  // BANCA TOTAL = initial bankroll − Σ (bonus − entrada).
-  const participantsNet = useMemo(
-    () => participants.reduce((sum, p) => sum + ((p.score ?? 0) - tournamentEntry), 0),
-    [participants, tournamentEntry],
+  // - Each draw (sorteio) subtracts the tournament entry from the bankroll.
+  // - The score (lucro/bônus) of each drawn player adds back to the bankroll.
+  // BANCA TOTAL = inicial − (nº sorteados × valor do torneio) + Σ score dos sorteados
+  const drawnScoresSum = useMemo(
+    () =>
+      participants
+        .filter((p) => eliminatedIds.has(p.id))
+        .reduce((sum, p) => sum + (p.score ?? 0), 0),
+    [participants, eliminatedIds],
   );
-  const totalBankroll = initialBankroll - participantsNet;
+  const drawsCount = eliminatedIds.size;
+  const totalBankroll = initialBankroll - drawsCount * tournamentEntry + drawnScoresSum;
   const fmtBRL = (n: number) =>
     n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
