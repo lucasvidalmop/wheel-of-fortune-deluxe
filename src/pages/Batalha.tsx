@@ -222,12 +222,22 @@ export default function Batalha() {
   };
 
   const removeParticipant = (id: string) => {
+    const target = participants.find((p) => p.id === id);
     setParticipants((prev) => prev.filter((p) => p.id !== id));
     setEliminatedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
     });
+    if (target?.dbId) {
+      (supabase as any)
+        .from('battle_participants')
+        .update({ consumed: true })
+        .eq('id', target.dbId)
+        .then(({ error }: any) => {
+          if (error) console.warn('Failed to mark participant consumed:', error);
+        });
+    }
   };
 
   const updateScore = (id: string, score: number) =>
@@ -241,6 +251,16 @@ export default function Batalha() {
       next.add(w.id);
       return next;
     });
+    const target = participants.find((p) => p.id === w.id) as (BattleParticipant & { dbId?: string }) | undefined;
+    if (target?.dbId) {
+      (supabase as any)
+        .from('battle_participants')
+        .update({ consumed: true })
+        .eq('id', target.dbId)
+        .then(({ error }: any) => {
+          if (error) console.warn('Failed to mark winner consumed:', error);
+        });
+    }
   };
 
   // Active participants on the wheel (not yet drawn).
