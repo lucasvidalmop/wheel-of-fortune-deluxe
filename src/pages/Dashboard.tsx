@@ -4701,6 +4701,8 @@ function Dashboard() {
                 )}
               </GlassCard>
 
+              <BulkSendProgress total={smsProgress.total} sent={smsProgress.sent} errors={smsProgress.errors} skipped={smsProgress.skipped} label="Disparo de SMS" />
+
               {smsScheduleMode ? (
                 <button
                   onClick={saveSmsSchedule}
