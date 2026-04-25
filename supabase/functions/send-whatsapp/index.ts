@@ -168,14 +168,14 @@ serve(async (req) => {
         signal: controller.signal,
         redirect: "manual",
       });
-    } catch (fetchError) {
+    } catch (fetchError: any) {
       clearTimeout(timeoutId);
-      const isTimeout = fetchError.name === "AbortError";
+      const isTimeout = fetchError?.name === "AbortError";
       return new Response(
         JSON.stringify({
           error: isTimeout
             ? "Tempo limite excedido ao enviar mensagem. Verifique a Evolution API."
-            : `Erro de conexão: ${fetchError.message}`
+            : `Erro de conexão: ${fetchError?.message ?? String(fetchError)}`
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -197,10 +197,10 @@ serve(async (req) => {
       JSON.stringify({ success: true, data }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("WhatsApp error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Erro interno" }),
+      JSON.stringify({ error: error?.message || "Erro interno" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
