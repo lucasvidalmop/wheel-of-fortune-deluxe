@@ -304,12 +304,14 @@ export default function Batalha() {
     });
   }, [participants]);
 
-  // Bankroll calculator: sum of all participant scores + initial bankroll.
-  const participantsTotal = useMemo(
-    () => participants.reduce((sum, p) => sum + (p.score ?? 0), 0),
-    [participants],
+  // Bankroll calculator:
+  // For each participant: net cost to house = bonus paid (score) − tournament entry value.
+  // BANCA TOTAL = initial bankroll − Σ (bonus − entrada).
+  const participantsNet = useMemo(
+    () => participants.reduce((sum, p) => sum + ((p.score ?? 0) - tournamentEntry), 0),
+    [participants, tournamentEntry],
   );
-  const totalBankroll = initialBankroll + participantsTotal;
+  const totalBankroll = initialBankroll - participantsNet;
   const fmtBRL = (n: number) =>
     n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
