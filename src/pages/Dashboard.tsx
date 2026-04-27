@@ -4444,6 +4444,7 @@ function Dashboard() {
                    if (!await confirmDialog({ title: 'Confirmar disparo de Email', message: `Enviar este email para ${recipients.length} destinatário(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                    setEmailSending(true);
                   setEmailProgress({ total: recipients.length, sent: 0, errors: 0, skipped: 0 });
+                  emailCtrl.start();
                    const publishedUrl = 'https://tipspayroleta.com';
                    const roletaLink = `${publishedUrl}/${slug}`;
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
@@ -4495,10 +4496,13 @@ function Dashboard() {
                   };
 
                   // Process in chunks of CONCURRENCY, never blocking forever on a single request
+                  let stoppedEarly = false;
                   for (let i = 0; i < recipients.length; i += CONCURRENCY) {
+                    if (await emailCtrl.shouldStop()) { stoppedEarly = true; break; }
                     const chunk = recipients.slice(i, i + CONCURRENCY);
                     await Promise.all(chunk.map(sendOne));
                   }
+                  emailCtrl.finish();
                   setEmailSending(false);
                   setTimeout(() => setEmailProgress(emptyProgress), 4000);
                   const skipMsg = skipped > 0 ? ` (${skipped} excluído${skipped > 1 ? 's' : ''} por já ter recebido)` : '';
