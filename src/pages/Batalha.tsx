@@ -535,11 +535,10 @@ export default function Batalha() {
       </header>
 
       {/* Layout */}
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start lg:h-[calc(100vh-170px)] min-h-0">
-        {/* Wheel */}
-        <div className="flex flex-col items-center min-h-0">
-          {/* Top controls — Banca + Novo Jogador lado a lado */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+      <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[300px_1fr_380px] gap-6 items-start lg:h-[calc(100vh-170px)] min-h-0">
+        {/* LEFT — Banca + Novo Jogador */}
+        <aside className="flex flex-col gap-4 min-h-0 lg:h-full overflow-y-auto">
+          <div className="contents">
             {/* BANCA */}
             <section
               className="rounded-2xl p-3"
