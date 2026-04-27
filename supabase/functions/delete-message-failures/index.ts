@@ -55,31 +55,35 @@ Deno.serve(async (req) => {
     let deletedCount = 0;
 
     if (selectedChannel === 'all' || selectedChannel === 'sms') {
-      const { data, error } = await admin
-        .from('sms_message_log')
-        .delete()
-        .eq('owner_id', callerId)
-        .neq('status', 'sent')
-        .gte('created_at', start.toISOString())
-        .lte('created_at', end.toISOString())
-        .select('id');
+      for (const table of ['sms_message_log', 'sms_mb_message_log', 'sms_cs_message_log']) {
+        const { data, error } = await admin
+          .from(table)
+          .delete()
+          .eq('owner_id', callerId)
+          .neq('status', 'sent')
+          .gte('created_at', start.toISOString())
+          .lte('created_at', end.toISOString())
+          .select('id');
 
-      if (error) return json({ error: error.message }, 400);
-      deletedCount += data?.length || 0;
+        if (error) return json({ error: error.message }, 400);
+        deletedCount += data?.length || 0;
+      }
     }
 
     if (selectedChannel === 'all' || selectedChannel === 'whatsapp') {
-      const { data, error } = await admin
-        .from('whatsapp_message_log')
-        .delete()
-        .eq('owner_id', callerId)
-        .neq('status', 'sent')
-        .gte('created_at', start.toISOString())
-        .lte('created_at', end.toISOString())
-        .select('id');
+      for (const table of ['whatsapp_message_log', 'whatsapp2_message_log']) {
+        const { data, error } = await admin
+          .from(table)
+          .delete()
+          .eq('owner_id', callerId)
+          .neq('status', 'sent')
+          .gte('created_at', start.toISOString())
+          .lte('created_at', end.toISOString())
+          .select('id');
 
-      if (error) return json({ error: error.message }, 400);
-      deletedCount += data?.length || 0;
+        if (error) return json({ error: error.message }, 400);
+        deletedCount += data?.length || 0;
+      }
     }
 
     if (selectedChannel === 'all' || selectedChannel === 'email') {

@@ -73,11 +73,20 @@ export default function MessagingAnalytics({ ownerId }: Props) {
       return all;
     };
 
-    const [sms, wa, emails] = await Promise.all([
+    const [smsTwilio, smsMb, smsCs, wa1, wa2, emails] = await Promise.all([
       fetchPaginated('sms_message_log', 'owner_id'),
+      fetchPaginated('sms_mb_message_log', 'owner_id'),
+      fetchPaginated('sms_cs_message_log', 'owner_id'),
       fetchPaginated('whatsapp_message_log', 'owner_id'),
+      fetchPaginated('whatsapp2_message_log', 'owner_id'),
       fetchPaginated('email_send_log', 'metadata_owner'),
     ]);
+    const sms = [...smsTwilio, ...smsMb, ...smsCs].sort(
+      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    const wa = [...wa1, ...wa2].sort(
+      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
     // Deduplicate emails by message_id (latest status per message wins; data is ordered DESC)
     const emailDedupMap = new Map<string, any>();
