@@ -5163,6 +5163,9 @@ function Dashboard() {
                 )}
               </GlassCard>
 
+              <BulkSendProgress total={smsCsProgress.total} sent={smsCsProgress.sent} errors={smsCsProgress.errors} skipped={smsCsProgress.skipped} label="Disparo de SMS (ClickSend)" />
+              <BulkSendControls control={smsCsCtrl} visible={smsCsSending} />
+
               {smsCsScheduleMode ? (
                 <button onClick={saveSmsCsSchedule} disabled={smsCsSchedSaving} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
                   {smsCsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
@@ -5184,12 +5187,14 @@ function Dashboard() {
                     if (!await confirmDialog({ title: 'Confirmar disparo de SMS (ClickSend)', message: `Enviar este SMS para ${phones.length} número(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setSmsCsSending(true);
                     setSmsCsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                    smsCsCtrl.start();
                     let sent = 0, errors = 0, skipped = 0;
                     const BATCH_SIZE = 5;
                     const entries: any[] = [];
                     const batchId = phones.length > 1 ? `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : null;
                     try {
                       for (let i = 0; i < phones.length; i += BATCH_SIZE) {
+                        if (await smsCsCtrl.shouldStop()) break;
                         const batch = phones.slice(i, i + BATCH_SIZE);
                         const results = await Promise.allSettled(batch.map(phone =>
                           supabase.functions.invoke('send-sms-clicksend', {
@@ -5214,6 +5219,7 @@ function Dashboard() {
                       }
                     } catch (e) { console.error('SMS CS batch error:', e); }
                     if (entries.length > 0) await (supabase as any).from('sms_cs_message_log').insert(entries);
+                    smsCsCtrl.finish();
                     setSmsCsSending(false);
                     setTimeout(() => setSmsCsProgress(emptyProgress), 4000);
                     if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
