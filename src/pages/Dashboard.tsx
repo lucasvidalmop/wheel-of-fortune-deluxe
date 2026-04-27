@@ -1739,6 +1739,28 @@ function Dashboard() {
   const [selectedWaContacts, setSelectedWaContacts] = useState<string[]>([]);
   const [waContactSearch, setWaContactSearch] = useState('');
 
+  const getSelectedExternalPhoneList = (): { phone: string; name: string }[] => {
+    const selectedNumbers = new Set(selectedCsvContacts);
+    const sourceContacts: { lead: string; numero: string; group_name?: string }[] = selectedGroup === '__all__'
+      ? (() => {
+          const merged: { lead: string; numero: string; group_name?: string }[] = [...csvContacts];
+          const existingNums = new Set(csvContacts.map(c => c.numero));
+          for (const wc of waContacts) {
+            if (!existingNums.has(wc.numero)) merged.push({ ...wc, group_name: '' });
+          }
+          return merged;
+        })()
+      : csvContacts.filter(c => c.group_name === selectedGroup);
+
+    const uniqueByPhone = new Map<string, { phone: string; name: string }>();
+    for (const contact of sourceContacts) {
+      if (selectedNumbers.has(contact.numero) && !uniqueByPhone.has(contact.numero)) {
+        uniqueByPhone.set(contact.numero, { phone: contact.numero, name: contact.lead || '' });
+      }
+    }
+    return Array.from(uniqueByPhone.values());
+  };
+
   const parseCsvContacts = (file: File): Promise<{ lead: string; numero: string }[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
