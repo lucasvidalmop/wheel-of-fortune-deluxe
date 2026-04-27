@@ -4406,9 +4406,10 @@ function Dashboard() {
                     ? baseRecipients.filter(e => e && !recentEmailRecipients.has(e.toLowerCase()))
                     : baseRecipients.filter(e => !!e);
                   const skipped = baseRecipients.length - recipients.length;
-                  if (recipients.length === 0) { toast.error(skipped > 0 ? `Todos os ${skipped} destinatários foram excluídos (email recente)` : 'Nenhum destinatário selecionado'); return; }
-                  if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
-                  setEmailSending(true);
+                   if (recipients.length === 0) { toast.error(skipped > 0 ? `Todos os ${skipped} destinatários foram excluídos (email recente)` : 'Nenhum destinatário selecionado'); return; }
+                   if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
+                   if (!await confirmDialog({ title: 'Confirmar disparo de Email', message: `Enviar este email para ${recipients.length} destinatário(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
+                   setEmailSending(true);
                   setEmailProgress({ total: recipients.length, sent: 0, errors: 0, skipped: 0 });
                    const publishedUrl = 'https://tipspayroleta.com';
                    const roletaLink = `${publishedUrl}/${slug}`;
