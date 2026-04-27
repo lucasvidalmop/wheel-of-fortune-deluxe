@@ -2779,6 +2779,24 @@ function Dashboard() {
                 </div>
               );
             })}
+            {standaloneItems.map(item => (
+              <button
+                key={item.key}
+                onClick={() => handleMenuClick(item.key)}
+                title={sidebarCollapsed ? item.label : undefined}
+                className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative mt-2 ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
+                  activeTab === item.key
+                    ? 'bg-primary/15 text-primary font-semibold'
+                    : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                }`}
+              >
+                {activeTab === item.key && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+                )}
+                <span className={`shrink-0 transition-transform duration-200 ${activeTab === item.key ? 'scale-110' : 'group-hover:scale-105'}`}>{item.icon}</span>
+                {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+              </button>
+            ))}
           </nav>
 
           {/* Collapse toggle & logout */}
