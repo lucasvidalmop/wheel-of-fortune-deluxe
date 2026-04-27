@@ -11,6 +11,8 @@ interface Props {
   scopeLabel?: string;
   /** Code of the gorjeta link to EXCLUDE from analytics (general view only). */
   gorjetaRef?: string;
+  /** When 'gorjeta', INVERTS the filter and shows ONLY gorjeta redemptions. */
+  mode?: 'general' | 'gorjeta';
 }
 
 interface Redemption {
