@@ -328,10 +328,10 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
         <div>
           <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
             <BarChart3 size={16} className="text-primary" />
-            {linkId ? 'Analytics do Link' : 'Analytics Geral de Referências'}
+            {linkId ? 'Analytics do Link' : (isGorjetaMode ? 'Analytics de Inscrições (Gorjeta)' : 'Analytics Geral de Referências')}
           </h2>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            {scopeLabel || (linkId ? 'Link de referência' : 'Inclui histórico de todos os links — mesmo os já excluídos')}
+            {scopeLabel || (linkId ? 'Link de referência' : (isGorjetaMode ? 'Inscrições realizadas via página de gorjeta' : 'Inclui histórico de todos os links — mesmo os já excluídos'))}
           </p>
         </div>
         <button onClick={exportCsv} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary text-xs hover:bg-primary/25 transition">
