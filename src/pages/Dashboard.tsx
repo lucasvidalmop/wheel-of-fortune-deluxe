@@ -219,6 +219,7 @@ function Dashboard() {
   });
 
   const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
@@ -2663,7 +2664,6 @@ function Dashboard() {
 
   const activeGroupKey: GroupKey | null =
     menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null;
-  const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const isGroupOpen = (k: GroupKey) =>
     openGroupsRaw[k] !== undefined ? openGroupsRaw[k] : k === activeGroupKey;
   const toggleGroup = (k: GroupKey) =>
