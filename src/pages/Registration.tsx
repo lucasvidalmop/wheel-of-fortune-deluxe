@@ -381,7 +381,7 @@ const Registration = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-6 px-4 relative overflow-hidden" style={bgStyle}>
-      {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
+      
 
       {/* Header */}
       <div className="relative z-10 text-center space-y-3 mb-6">
