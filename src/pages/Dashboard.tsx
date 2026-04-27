@@ -2643,6 +2643,7 @@ function Dashboard() {
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.', tool: 'referral' },
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta', tool: 'gorjeta' },
     { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta', tool: 'gorjeta' },
+    { key: 'gorjeta_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Gorjeta', tool: 'gorjeta' },
     { key: 'deposito', icon: <DollarSign size={20} />, label: 'Depósito', tool: 'financeiro' },
     { key: 'hist_deposito', icon: <Clock size={20} />, label: 'Hist. Depósito', tool: 'financeiro' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações', tool: 'configuracoes' },
