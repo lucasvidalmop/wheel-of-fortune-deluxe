@@ -2663,7 +2663,6 @@ function Dashboard() {
 
   const activeGroupKey: GroupKey | null =
     menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null;
-  const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const isGroupOpen = (k: GroupKey) =>
     openGroupsRaw[k] !== undefined ? openGroupsRaw[k] : k === activeGroupKey;
   const toggleGroup = (k: GroupKey) =>
