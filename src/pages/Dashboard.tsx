@@ -4432,6 +4432,8 @@ function Dashboard() {
                 label="Disparo de email"
               />
 
+              <BulkSendControls control={emailCtrl} visible={emailSending} />
+
               <button
                 onClick={async () => {
                   const baseRecipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
