@@ -176,7 +176,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
       }
       setLoading(false);
     })();
-  }, [linkId, ownerId, gorjetaRef]);
+  }, [linkId, ownerId, gorjetaRef, isGorjetaMode]);
 
   const linkOptions = useMemo(() => {
     const map = new Map<string, { value: string; label: string; count: number }>();
