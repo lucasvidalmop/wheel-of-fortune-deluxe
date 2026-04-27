@@ -5,15 +5,17 @@ interface Props {
   config: BattleConfig;
   participants: BattleParticipant[];
   onWinner?: (p: BattleParticipant) => void;
+  onUpdateScore?: (id: string, score: number) => void;
 }
 
 const TAU = Math.PI * 2;
 
-export default function BattleWheel({ config, participants, onWinner }: Props) {
+export default function BattleWheel({ config, participants, onWinner, onUpdateScore }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [rotation, setRotation] = useState(0); // radians
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<BattleParticipant | null>(null);
+  const [winnerScoreInput, setWinnerScoreInput] = useState<string>('');
 
   const segCount = participants.length;
 
