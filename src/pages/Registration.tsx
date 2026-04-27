@@ -66,26 +66,17 @@ const Registration = () => {
   useEffect(() => {
     const fetchLink = async () => {
       if (!code) { setLoading(false); return; }
-      const { data, error } = await (supabase as any)
-        .from('referral_links')
-        .select('*')
-        .eq('code', code)
-        .eq('is_active', true)
-        .maybeSingle();
-      if (error || !data) {
+      const { data, error } = await supabase.functions.invoke('get-gorjeta-page', {
+        body: { code },
+      });
+
+      if (error || !data?.linkData) {
         toast.error('Link inválido ou desativado');
       } else {
-        setLinkData(data);
-        const { data: wcData } = await (supabase as any)
-          .from('wheel_configs')
-          .select('slug, config')
-          .eq('user_id', data.owner_id)
-          .maybeSingle();
-        if (wcData?.slug) setWheelSlug(wcData.slug);
-        const gorjetaCfg = wcData?.config?.gorjetaPageConfig || {};
-        setCfg({ ...defaultGorjetaConfig, ...gorjetaCfg });
-        const seo = wcData?.config?.gorjetaSeo || {};
-        setSeoConfig(seo);
+        setLinkData(data.linkData);
+        setWheelSlug(data.wheelSlug || '');
+        setCfg({ ...defaultGorjetaConfig, ...(data.gorjetaPageConfig || {}) });
+        setSeoConfig(data.gorjetaSeo || {});
       }
       setLoading(false);
     };
