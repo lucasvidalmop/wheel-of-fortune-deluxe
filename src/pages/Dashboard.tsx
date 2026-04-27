@@ -4506,7 +4506,9 @@ function Dashboard() {
                   setEmailSending(false);
                   setTimeout(() => setEmailProgress(emptyProgress), 4000);
                   const skipMsg = skipped > 0 ? ` (${skipped} excluído${skipped > 1 ? 's' : ''} por já ter recebido)` : '';
-                  if (errors > 0) {
+                  if (stoppedEarly) {
+                    toast.warning(`Disparo interrompido — ${sent} enviado(s), ${errors} erro(s)${skipMsg}`);
+                  } else if (errors > 0) {
                     toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}${skipMsg}`);
                   } else {
                     toast.success(`${sent} email(s) enviado(s) com sucesso!${skipMsg}`);
