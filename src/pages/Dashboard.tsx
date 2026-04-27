@@ -4855,6 +4855,7 @@ function Dashboard() {
               </GlassCard>
 
               <BulkSendProgress total={smsProgress.total} sent={smsProgress.sent} errors={smsProgress.errors} skipped={smsProgress.skipped} label="Disparo de SMS" />
+              <BulkSendControls control={smsCtrl} visible={smsSending} />
 
               {smsScheduleMode ? (
                 <button
@@ -4881,6 +4882,7 @@ function Dashboard() {
                   if (!await confirmDialog({ title: 'Confirmar disparo de SMS', message: `Enviar este SMS para ${phones.length} número(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setSmsSending(true);
                   setSmsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                  smsCtrl.start();
                   let sent = 0, errors = 0, skipped = 0;
                   const BATCH_SIZE = 5;
                   const TIMEOUT_MS = 15000;
@@ -4888,6 +4890,7 @@ function Dashboard() {
                   const batchId = phones.length > 1 ? `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : null;
                   try {
                     for (let i = 0; i < phones.length; i += BATCH_SIZE) {
+                      if (await smsCtrl.shouldStop()) break;
                       const batch = phones.slice(i, i + BATCH_SIZE);
                       const results = await Promise.allSettled(
                         batch.map(phone => {
@@ -4930,6 +4933,7 @@ function Dashboard() {
                   if (smsLogEntries.length > 0) {
                     await (supabase as any).from(smsProvider === 'mobizon' ? 'sms_mb_message_log' : 'sms_message_log').insert(smsLogEntries);
                   }
+                  smsCtrl.finish();
                   setSmsSending(false);
                   setTimeout(() => setSmsProgress(emptyProgress), 4000);
                   if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
