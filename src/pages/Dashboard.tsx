@@ -26,6 +26,8 @@ import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
 import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
 import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
 import BulkSendProgress from '@/components/casino/BulkSendProgress';
+import BulkSendControls from '@/components/casino/BulkSendControls';
+import { useBulkSendControl } from '@/hooks/useBulkSendControl';
 
 interface WheelUser {
   id: string;
@@ -372,6 +374,15 @@ function Dashboard() {
   const [smsCsProgress, setSmsCsProgress] = useState<BulkProgress>(emptyProgress);
   const [whatsappProgress, setWhatsappProgress] = useState<BulkProgress>(emptyProgress);
   const [whatsappProgress2, setWhatsappProgress2] = useState<BulkProgress>(emptyProgress);
+
+  // Controles de PAUSAR/PARAR para cada modo de disparo
+  const emailCtrl = useBulkSendControl();
+  const smsCtrl = useBulkSendControl();
+  const smsCsCtrl = useBulkSendControl();
+  const whatsappCtrl = useBulkSendControl();
+  const whatsappGroupCtrl = useBulkSendControl();
+  const whatsapp2Ctrl = useBulkSendControl();
+  const whatsapp2GroupCtrl = useBulkSendControl();
 
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
@@ -4421,6 +4432,8 @@ function Dashboard() {
                 label="Disparo de email"
               />
 
+              <BulkSendControls control={emailCtrl} visible={emailSending} />
+
               <button
                 onClick={async () => {
                   const baseRecipients = emailTarget === 'all' ? users.map(u => u.email) : selectedEmails;
@@ -4433,6 +4446,7 @@ function Dashboard() {
                    if (!await confirmDialog({ title: 'Confirmar disparo de Email', message: `Enviar este email para ${recipients.length} destinatário(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                    setEmailSending(true);
                   setEmailProgress({ total: recipients.length, sent: 0, errors: 0, skipped: 0 });
+                  emailCtrl.start();
                    const publishedUrl = 'https://tipspayroleta.com';
                    const roletaLink = `${publishedUrl}/${slug}`;
                   const { data: { session: freshSession } } = await supabase.auth.getSession();
@@ -4484,14 +4498,19 @@ function Dashboard() {
                   };
 
                   // Process in chunks of CONCURRENCY, never blocking forever on a single request
+                  let stoppedEarly = false;
                   for (let i = 0; i < recipients.length; i += CONCURRENCY) {
+                    if (await emailCtrl.shouldStop()) { stoppedEarly = true; break; }
                     const chunk = recipients.slice(i, i + CONCURRENCY);
                     await Promise.all(chunk.map(sendOne));
                   }
+                  emailCtrl.finish();
                   setEmailSending(false);
                   setTimeout(() => setEmailProgress(emptyProgress), 4000);
                   const skipMsg = skipped > 0 ? ` (${skipped} excluído${skipped > 1 ? 's' : ''} por já ter recebido)` : '';
-                  if (errors > 0) {
+                  if (stoppedEarly) {
+                    toast.warning(`Disparo interrompido — ${sent} enviado(s), ${errors} erro(s)${skipMsg}`);
+                  } else if (errors > 0) {
                     toast.error(`${sent} enviado(s), ${errors} erro(s)${timedOut > 0 ? ` (${timedOut} sem resposta)` : ''}${skipMsg}`);
                   } else {
                     toast.success(`${sent} email(s) enviado(s) com sucesso!${skipMsg}`);
@@ -4836,6 +4855,7 @@ function Dashboard() {
               </GlassCard>
 
               <BulkSendProgress total={smsProgress.total} sent={smsProgress.sent} errors={smsProgress.errors} skipped={smsProgress.skipped} label="Disparo de SMS" />
+              <BulkSendControls control={smsCtrl} visible={smsSending} />
 
               {smsScheduleMode ? (
                 <button
@@ -4862,6 +4882,7 @@ function Dashboard() {
                   if (!await confirmDialog({ title: 'Confirmar disparo de SMS', message: `Enviar este SMS para ${phones.length} número(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setSmsSending(true);
                   setSmsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                  smsCtrl.start();
                   let sent = 0, errors = 0, skipped = 0;
                   const BATCH_SIZE = 5;
                   const TIMEOUT_MS = 15000;
@@ -4869,6 +4890,7 @@ function Dashboard() {
                   const batchId = phones.length > 1 ? `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : null;
                   try {
                     for (let i = 0; i < phones.length; i += BATCH_SIZE) {
+                      if (await smsCtrl.shouldStop()) break;
                       const batch = phones.slice(i, i + BATCH_SIZE);
                       const results = await Promise.allSettled(
                         batch.map(phone => {
@@ -4911,6 +4933,7 @@ function Dashboard() {
                   if (smsLogEntries.length > 0) {
                     await (supabase as any).from(smsProvider === 'mobizon' ? 'sms_mb_message_log' : 'sms_message_log').insert(smsLogEntries);
                   }
+                  smsCtrl.finish();
                   setSmsSending(false);
                   setTimeout(() => setSmsProgress(emptyProgress), 4000);
                   if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
@@ -5140,6 +5163,9 @@ function Dashboard() {
                 )}
               </GlassCard>
 
+              <BulkSendProgress total={smsCsProgress.total} sent={smsCsProgress.sent} errors={smsCsProgress.errors} skipped={smsCsProgress.skipped} label="Disparo de SMS (ClickSend)" />
+              <BulkSendControls control={smsCsCtrl} visible={smsCsSending} />
+
               {smsCsScheduleMode ? (
                 <button onClick={saveSmsCsSchedule} disabled={smsCsSchedSaving} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
                   {smsCsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
@@ -5161,12 +5187,14 @@ function Dashboard() {
                     if (!await confirmDialog({ title: 'Confirmar disparo de SMS (ClickSend)', message: `Enviar este SMS para ${phones.length} número(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setSmsCsSending(true);
                     setSmsCsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                    smsCsCtrl.start();
                     let sent = 0, errors = 0, skipped = 0;
                     const BATCH_SIZE = 5;
                     const entries: any[] = [];
                     const batchId = phones.length > 1 ? `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : null;
                     try {
                       for (let i = 0; i < phones.length; i += BATCH_SIZE) {
+                        if (await smsCsCtrl.shouldStop()) break;
                         const batch = phones.slice(i, i + BATCH_SIZE);
                         const results = await Promise.allSettled(batch.map(phone =>
                           supabase.functions.invoke('send-sms-clicksend', {
@@ -5191,6 +5219,7 @@ function Dashboard() {
                       }
                     } catch (e) { console.error('SMS CS batch error:', e); }
                     if (entries.length > 0) await (supabase as any).from('sms_cs_message_log').insert(entries);
+                    smsCsCtrl.finish();
                     setSmsCsSending(false);
                     setTimeout(() => setSmsCsProgress(emptyProgress), 4000);
                     if (errors > 0 || skipped > 0) toast.error(`${sent} enviado(s), ${skipped} inválido(s), ${errors} erro(s)`);
@@ -5817,6 +5846,7 @@ function Dashboard() {
               </GlassCard>
 
               <BulkSendProgress total={whatsappProgress.total} sent={whatsappProgress.sent} errors={whatsappProgress.errors} skipped={whatsappProgress.skipped} label="Disparo de WhatsApp" accent="green" />
+              <BulkSendControls control={whatsappCtrl.active ? whatsappCtrl : whatsappGroupCtrl} visible={whatsappSending} />
 
               <button
                 onClick={async () => {
@@ -5834,8 +5864,10 @@ function Dashboard() {
                   if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setWhatsappSending(true);
                   setWhatsappProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                  whatsappCtrl.start();
                   let sent = 0, errors = 0;
                   for (let i = 0; i < phones.length; i++) {
+                    if (await whatsappCtrl.shouldStop()) break;
                     const phone = phones[i];
                     const matchedUser = waPhoneList.find(p => p.phone === phone);
                     try {
@@ -5869,6 +5901,7 @@ function Dashboard() {
                       await new Promise(resolve => setTimeout(resolve, whatsappDelaySeconds * 1000));
                     }
                   }
+                  whatsappCtrl.finish();
                   setWhatsappSending(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
                   else toast.success(`${sent} mensagem(ns) enviada(s)!`);
@@ -5889,8 +5922,10 @@ function Dashboard() {
                     if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending(true);
                     setWhatsappProgress({ total: notifySelectedGroups.length, sent: 0, errors: 0, skipped: 0 });
+                    whatsappGroupCtrl.start();
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups) {
+                      if (await whatsappGroupCtrl.shouldStop()) break;
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
                           body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
@@ -5903,6 +5938,7 @@ function Dashboard() {
                         setWhatsappProgress(p => ({ ...p, errors: p.errors + 1 }));
                       }
                     }
+                    whatsappGroupCtrl.finish();
                     setWhatsappSending(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
                     else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
@@ -6700,6 +6736,7 @@ function Dashboard() {
               </GlassCard>
 
               <BulkSendProgress total={whatsappProgress2.total} sent={whatsappProgress2.sent} errors={whatsappProgress2.errors} skipped={whatsappProgress2.skipped} label="Disparo de WhatsApp 2" accent="green" />
+              <BulkSendControls control={whatsapp2Ctrl.active ? whatsapp2Ctrl : whatsapp2GroupCtrl} visible={whatsappSending2} />
 
               <button
                 onClick={async () => {
@@ -6717,8 +6754,10 @@ function Dashboard() {
                   if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setWhatsappSending2(true);
                   setWhatsappProgress2({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                  whatsapp2Ctrl.start();
                   let sent = 0, errors = 0;
                   for (let i = 0; i < phones.length; i++) {
+                    if (await whatsapp2Ctrl.shouldStop()) break;
                     const phone = phones[i];
                     const matchedUser = waPhoneList.find(p => p.phone === phone);
                     try {
@@ -6752,6 +6791,7 @@ function Dashboard() {
                       await new Promise(resolve => setTimeout(resolve, whatsappDelaySeconds * 1000));
                     }
                   }
+                  whatsapp2Ctrl.finish();
                   setWhatsappSending2(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
                   else toast.success(`${sent} mensagem(ns) enviada(s)!`);
@@ -6772,8 +6812,10 @@ function Dashboard() {
                     if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending2(true);
                     setWhatsappProgress2({ total: notifySelectedGroups2.length, sent: 0, errors: 0, skipped: 0 });
+                    whatsapp2GroupCtrl.start();
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups2) {
+                      if (await whatsapp2GroupCtrl.shouldStop()) break;
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp2', {
                           body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
@@ -6786,6 +6828,7 @@ function Dashboard() {
                         setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 }));
                       }
                     }
+                    whatsapp2GroupCtrl.finish();
                     setWhatsappSending2(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
                     else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
