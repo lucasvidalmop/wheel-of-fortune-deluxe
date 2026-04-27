@@ -5136,6 +5136,7 @@ function Dashboard() {
                     const phones = phoneList.map(p => p.phone);
                     if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                     if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                    if (!await confirmDialog({ title: 'Confirmar disparo de SMS (ClickSend)', message: `Enviar este SMS para ${phones.length} número(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setSmsCsSending(true);
                     setSmsCsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0, skipped = 0;
