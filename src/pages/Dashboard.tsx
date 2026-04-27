@@ -375,6 +375,15 @@ function Dashboard() {
   const [whatsappProgress, setWhatsappProgress] = useState<BulkProgress>(emptyProgress);
   const [whatsappProgress2, setWhatsappProgress2] = useState<BulkProgress>(emptyProgress);
 
+  // Controles de PAUSAR/PARAR para cada modo de disparo
+  const emailCtrl = useBulkSendControl();
+  const smsCtrl = useBulkSendControl();
+  const smsCsCtrl = useBulkSendControl();
+  const whatsappCtrl = useBulkSendControl();
+  const whatsappGroupCtrl = useBulkSendControl();
+  const whatsapp2Ctrl = useBulkSendControl();
+  const whatsapp2GroupCtrl = useBulkSendControl();
+
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
   const [showEdpaySecret, setShowEdpaySecret] = useState(false);
