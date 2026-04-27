@@ -2740,25 +2740,44 @@ function Dashboard() {
           </div>
 
           {/* Nav items */}
-          <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-            {menuItems.map(item => (
-              <button
-                key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); if (item.key === 'hist_gorjeta') fetchGorjetaHistory(); }}
-                title={sidebarCollapsed ? item.label : undefined}
-                className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
-                  activeTab === item.key
-                    ? 'bg-primary/15 text-primary font-semibold'
-                    : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
-                }`}
-              >
-                {activeTab === item.key && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
-                )}
-                <span className={`shrink-0 transition-transform duration-200 ${activeTab === item.key ? 'scale-110' : 'group-hover:scale-105'}`}>{item.icon}</span>
-                {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
-              </button>
-            ))}
+          <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+            {menuGroups.map(group => {
+              const open = isGroupOpen(group.key);
+              const groupHasActive = group.items.some(i => i.key === activeTab);
+              return (
+                <div key={group.key} className="space-y-0.5">
+                  {!sidebarCollapsed && (
+                    <button
+                      onClick={() => toggleGroup(group.key)}
+                      className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all ${
+                        groupHasActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <span>{group.label}</span>
+                      <ChevronRight size={12} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
+                    </button>
+                  )}
+                  {(open || sidebarCollapsed) && group.items.map(item => (
+                    <button
+                      key={item.key}
+                      onClick={() => handleMenuClick(item.key)}
+                      title={sidebarCollapsed ? item.label : undefined}
+                      className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
+                        activeTab === item.key
+                          ? 'bg-primary/15 text-primary font-semibold'
+                          : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                      }`}
+                    >
+                      {activeTab === item.key && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+                      )}
+                      <span className={`shrink-0 transition-transform duration-200 ${activeTab === item.key ? 'scale-110' : 'group-hover:scale-105'}`}>{item.icon}</span>
+                      {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
           </nav>
 
           {/* Collapse toggle & logout */}
