@@ -2870,6 +2870,24 @@ function Dashboard() {
                 </div>
               );
             })}
+            {standaloneItems.length > 0 && (
+              <div className="flex gap-1 overflow-x-auto pb-1 pt-1 border-t border-white/[0.06]" style={{ scrollbarWidth: 'none' }}>
+                {standaloneItems.map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => handleMenuClick(item.key)}
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                      activeTab === item.key
+                        ? 'bg-primary/15 text-primary border border-primary/20'
+                        : 'text-muted-foreground hover:bg-white/[0.04] border border-transparent'
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
