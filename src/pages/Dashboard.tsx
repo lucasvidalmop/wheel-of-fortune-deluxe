@@ -2663,12 +2663,11 @@ function Dashboard() {
 
   const activeGroupKey: GroupKey | null =
     menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null;
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  useEffect(() => {
-    if (activeGroupKey) setOpenGroups(prev => (prev[activeGroupKey] ? prev : { ...prev, [activeGroupKey]: true }));
-  }, [activeGroupKey]);
-  const isGroupOpen = (k: GroupKey) => openGroups[k] ?? k === activeGroupKey;
-  const toggleGroup = (k: GroupKey) => setOpenGroups(prev => ({ ...prev, [k]: !isGroupOpen(k) }));
+  const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
+  const isGroupOpen = (k: GroupKey) =>
+    openGroupsRaw[k] !== undefined ? openGroupsRaw[k] : k === activeGroupKey;
+  const toggleGroup = (k: GroupKey) =>
+    setOpenGroupsRaw(prev => ({ ...prev, [k]: !isGroupOpen(k) }));
 
   const handleMenuClick = (key: typeof activeTab) => {
     setActiveTab(key);
