@@ -6736,6 +6736,7 @@ function Dashboard() {
               </GlassCard>
 
               <BulkSendProgress total={whatsappProgress2.total} sent={whatsappProgress2.sent} errors={whatsappProgress2.errors} skipped={whatsappProgress2.skipped} label="Disparo de WhatsApp 2" accent="green" />
+              <BulkSendControls control={whatsapp2Ctrl.active ? whatsapp2Ctrl : whatsapp2GroupCtrl} visible={whatsappSending2} />
 
               <button
                 onClick={async () => {
@@ -6753,8 +6754,10 @@ function Dashboard() {
                   if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setWhatsappSending2(true);
                   setWhatsappProgress2({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                  whatsapp2Ctrl.start();
                   let sent = 0, errors = 0;
                   for (let i = 0; i < phones.length; i++) {
+                    if (await whatsapp2Ctrl.shouldStop()) break;
                     const phone = phones[i];
                     const matchedUser = waPhoneList.find(p => p.phone === phone);
                     try {
@@ -6788,6 +6791,7 @@ function Dashboard() {
                       await new Promise(resolve => setTimeout(resolve, whatsappDelaySeconds * 1000));
                     }
                   }
+                  whatsapp2Ctrl.finish();
                   setWhatsappSending2(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
                   else toast.success(`${sent} mensagem(ns) enviada(s)!`);
@@ -6808,8 +6812,10 @@ function Dashboard() {
                     if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending2(true);
                     setWhatsappProgress2({ total: notifySelectedGroups2.length, sent: 0, errors: 0, skipped: 0 });
+                    whatsapp2GroupCtrl.start();
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups2) {
+                      if (await whatsapp2GroupCtrl.shouldStop()) break;
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp2', {
                           body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
@@ -6822,6 +6828,7 @@ function Dashboard() {
                         setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 }));
                       }
                     }
+                    whatsapp2GroupCtrl.finish();
                     setWhatsappSending2(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
                     else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
