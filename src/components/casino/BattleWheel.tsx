@@ -159,6 +159,8 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
       } else {
         setSpinning(false);
         const w = segments[pickIdx].participant;
+        const initialCents = Math.round(((w.score ?? 0)) * 100);
+        setWinnerScoreInput(initialCents > 0 ? (initialCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '');
         setWinner(w);
         onWinner?.(w);
       }
