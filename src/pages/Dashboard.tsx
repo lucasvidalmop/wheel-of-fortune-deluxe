@@ -2702,6 +2702,7 @@ function Dashboard() {
     hist_deposito: 'Histórico de Depósitos',
     painel_casa: 'Painel da Casa',
     msg_analytics: 'Analytics de Mensagens',
+    gorjeta_analytics: 'Analytics de Inscrições (Gorjeta)',
   };
 
   return (
