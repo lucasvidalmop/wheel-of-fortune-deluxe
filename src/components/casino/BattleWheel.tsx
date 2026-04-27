@@ -318,72 +318,72 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
               </div>
             )}
 
-            <div
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg"
-              style={{
-                backgroundColor: `${config.resultBorderColor}14`,
-                border: `1px solid ${config.resultBorderColor}55`,
-              }}
-            >
-              <span
-                className="font-semibold uppercase tracking-[0.2em] opacity-80"
+            <div className="mt-4 flex items-stretch justify-center gap-2 flex-wrap">
+              <div
+                className="inline-flex items-center gap-2 px-3 rounded-lg h-10"
                 style={{
-                  fontSize: 'clamp(9px, 0.9vw, 11px)',
-                  color: config.headerAccentColor,
+                  backgroundColor: `${config.resultBorderColor}14`,
+                  border: `1px solid ${config.resultBorderColor}55`,
                 }}
               >
-                Bônus
-              </span>
-              <span
-                className="font-black tabular-nums"
-                style={{
-                  fontSize: 'clamp(16px, 2vw, 22px)',
-                  color: config.resultTextColor,
-                  textShadow: `0 0 16px ${config.resultBorderColor}88`,
-                }}
-              >
-                R$
-              </span>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={winnerScoreInput}
-                placeholder="0,00"
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '');
-                  const cents = digits === '' ? 0 : Number(digits);
-                  const value = cents / 100;
-                  setWinnerScoreInput(
-                    cents === 0 ? '' : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                  );
-                  onUpdateScore?.(winner.id, value);
-                }}
-                className="bg-transparent outline-none font-black tabular-nums text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                style={{
-                  fontSize: 'clamp(16px, 2vw, 22px)',
-                  color: config.resultTextColor,
-                  textShadow: `0 0 16px ${config.resultBorderColor}88`,
-                  width: '6.5ch',
-                  minWidth: '6.5ch',
-                }}
-                aria-label="Editar valor do bônus"
-              />
-            </div>
+                <span
+                  className="font-semibold uppercase tracking-[0.2em] opacity-80 leading-none"
+                  style={{
+                    fontSize: 'clamp(9px, 0.9vw, 11px)',
+                    color: config.headerAccentColor,
+                  }}
+                >
+                  Bônus
+                </span>
+                <span
+                  className="font-black tabular-nums leading-none"
+                  style={{
+                    fontSize: '15px',
+                    color: config.resultTextColor,
+                    textShadow: `0 0 16px ${config.resultBorderColor}88`,
+                  }}
+                >
+                  R$
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={winnerScoreInput}
+                  placeholder="0,00"
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '');
+                    const cents = digits === '' ? 0 : Number(digits);
+                    const value = cents / 100;
+                    setWinnerScoreInput(
+                      cents === 0 ? '' : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    );
+                    onUpdateScore?.(winner.id, value);
+                  }}
+                  className="bg-transparent outline-none font-black tabular-nums text-right leading-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{
+                    fontSize: '15px',
+                    color: config.resultTextColor,
+                    textShadow: `0 0 16px ${config.resultBorderColor}88`,
+                    width: '6ch',
+                    minWidth: '6ch',
+                  }}
+                  aria-label="Editar valor do bônus"
+                />
+              </div>
 
-            <button
-              onClick={() => setWinner(null)}
-              className="mt-3 font-bold tracking-[0.3em] transition-all active:scale-95 hover:brightness-125"
-              style={{
-                backgroundColor: 'transparent',
-                color: config.resultBorderColor,
-                fontSize: 'clamp(10px, 1vw, 12px)',
-                borderRadius: 8,
-                border: `1px solid ${config.resultBorderColor}`,
-                padding: '8px 22px',
-              }}
-            >
-              FECHAR
-            </button>
+              <button
+                onClick={() => setWinner(null)}
+                className="font-bold tracking-[0.3em] transition-all active:scale-95 hover:brightness-125 h-10 px-5 rounded-lg"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: config.resultBorderColor,
+                  fontSize: '11px',
+                  border: `1px solid ${config.resultBorderColor}`,
+                }}
+              >
+                FECHAR
+              </button>
+            </div>
           </div>
         </div>
       )}
