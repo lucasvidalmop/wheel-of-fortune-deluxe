@@ -4406,9 +4406,10 @@ function Dashboard() {
                     ? baseRecipients.filter(e => e && !recentEmailRecipients.has(e.toLowerCase()))
                     : baseRecipients.filter(e => !!e);
                   const skipped = baseRecipients.length - recipients.length;
-                  if (recipients.length === 0) { toast.error(skipped > 0 ? `Todos os ${skipped} destinatários foram excluídos (email recente)` : 'Nenhum destinatário selecionado'); return; }
-                  if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
-                  setEmailSending(true);
+                   if (recipients.length === 0) { toast.error(skipped > 0 ? `Todos os ${skipped} destinatários foram excluídos (email recente)` : 'Nenhum destinatário selecionado'); return; }
+                   if (!emailSubject.trim()) { toast.error('Preencha o assunto'); return; }
+                   if (!await confirmDialog({ title: 'Confirmar disparo de Email', message: `Enviar este email para ${recipients.length} destinatário(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
+                   setEmailSending(true);
                   setEmailProgress({ total: recipients.length, sent: 0, errors: 0, skipped: 0 });
                    const publishedUrl = 'https://tipspayroleta.com';
                    const roletaLink = `${publishedUrl}/${slug}`;
@@ -4836,6 +4837,7 @@ function Dashboard() {
                   const phones = phoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                  if (!await confirmDialog({ title: 'Confirmar disparo de SMS', message: `Enviar este SMS para ${phones.length} número(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setSmsSending(true);
                   setSmsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                   let sent = 0, errors = 0, skipped = 0;
@@ -5134,6 +5136,7 @@ function Dashboard() {
                     const phones = phoneList.map(p => p.phone);
                     if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                     if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
+                    if (!await confirmDialog({ title: 'Confirmar disparo de SMS (ClickSend)', message: `Enviar este SMS para ${phones.length} número(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setSmsCsSending(true);
                     setSmsCsProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0, skipped = 0;
@@ -5806,6 +5809,7 @@ function Dashboard() {
                   const phones = waPhoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                  if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setWhatsappSending(true);
                   setWhatsappProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                   let sent = 0, errors = 0;
@@ -5860,6 +5864,7 @@ function Dashboard() {
                   onClick={async () => {
                     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
                     if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                    if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending(true);
                     setWhatsappProgress({ total: notifySelectedGroups.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0;
@@ -6687,6 +6692,7 @@ function Dashboard() {
                   const phones = waPhoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                  if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setWhatsappSending2(true);
                   setWhatsappProgress2({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                   let sent = 0, errors = 0;
@@ -6741,6 +6747,7 @@ function Dashboard() {
                   onClick={async () => {
                     if (!evolutionApiUrl2 || !evolutionApiKey2 || !evolutionInstance2) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig2(true); return; }
                     if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                    if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending2(true);
                     setWhatsappProgress2({ total: notifySelectedGroups2.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0;
