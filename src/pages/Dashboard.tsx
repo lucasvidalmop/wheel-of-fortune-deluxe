@@ -2661,10 +2661,8 @@ function Dashboard() {
     .map(g => ({ ...g, items: g.itemKeys.map(k => menuItems.find(i => i.key === k)).filter(Boolean) as typeof menuItems }))
     .filter(g => g.items.length > 0);
 
-  const activeGroupKey = useMemo<GroupKey | null>(
-    () => menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null,
-    [menuGroups, activeTab]
-  );
+  const activeGroupKey: GroupKey | null =
+    menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null;
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   useEffect(() => {
     if (activeGroupKey) setOpenGroups(prev => (prev[activeGroupKey] ? prev : { ...prev, [activeGroupKey]: true }));
