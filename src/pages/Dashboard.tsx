@@ -920,7 +920,7 @@ function Dashboard() {
     if (!smsSchedDate) { toast.error('Selecione a data'); return; }
     let targetPhones: { phone: string; name: string }[] = [];
     if (smsSourceMode === 'csv') {
-      targetPhones = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+      targetPhones = getSelectedExternalPhoneList();
     } else {
       const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
       targetPhones = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -1010,7 +1010,7 @@ function Dashboard() {
     if (!smsCsSchedDate) { toast.error('Selecione a data'); return; }
     let targetPhones: { phone: string; name: string }[] = [];
     if (smsCsSourceMode === 'csv') {
-      targetPhones = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+      targetPhones = getSelectedExternalPhoneList();
     } else {
       const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
       targetPhones = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -4851,7 +4851,7 @@ function Dashboard() {
                   if (smsProvider === 'twilio' && (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber)) { toast.error('Configure as credenciais do Twilio'); setShowSmsConfig(true); return; }
                   let phoneList: { phone: string; name: string }[] = [];
                   if (smsSourceMode === 'csv') {
-                    phoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+                    phoneList = getSelectedExternalPhoneList();
                   } else {
                     const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                     phoneList = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -5150,7 +5150,7 @@ function Dashboard() {
                     if (!clicksendUsername || !clicksendApiKey || !clicksendSenderId) { toast.error('Configure as credenciais do ClickSend'); setShowSmsCsConfig(true); return; }
                     let phoneList: { phone: string; name: string }[] = [];
                     if (smsCsSourceMode === 'csv') {
-                      phoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+                      phoneList = getSelectedExternalPhoneList();
                     } else {
                       const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
                       phoneList = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -5823,7 +5823,7 @@ function Dashboard() {
                   if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
                   let waPhoneList: { phone: string; name: string }[] = [];
                   if (whatsappSourceMode === 'csv') {
-                    waPhoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+                    waPhoneList = getSelectedExternalPhoneList();
                   } else {
                     const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
                     waPhoneList = (whatsappTarget === 'all' ? usersWithPhone : usersWithPhone.filter(u => selectedWhatsappPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
@@ -6706,7 +6706,7 @@ function Dashboard() {
                   if (!evolutionApiUrl2 || !evolutionApiKey2 || !evolutionInstance2) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig2(true); return; }
                   let waPhoneList: { phone: string; name: string }[] = [];
                   if (whatsappSourceMode === 'csv') {
-                    waPhoneList = [...csvContacts, ...waContacts].filter(c => selectedCsvContacts.includes(c.numero)).map(c => ({ phone: c.numero, name: c.lead }));
+                    waPhoneList = getSelectedExternalPhoneList();
                   } else {
                     const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
                     waPhoneList = (whatsappTarget === 'all' ? usersWithPhone : usersWithPhone.filter(u => selectedWhatsappPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
