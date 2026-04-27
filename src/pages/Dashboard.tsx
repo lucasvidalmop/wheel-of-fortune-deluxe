@@ -2656,11 +2656,12 @@ function Dashboard() {
     { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'auth', 'history'] },
     { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
     { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
-    { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes', 'painel_casa'] },
+    { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
   ];
   const menuGroups = groupDefs
     .map(g => ({ ...g, items: g.itemKeys.map(k => menuItems.find(i => i.key === k)).filter(Boolean) as typeof menuItems }))
     .filter(g => g.items.length > 0);
+  const standaloneItems = menuItems.filter(i => i.key === 'painel_casa');
 
   const activeGroupKey: GroupKey | null =
     menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null;
@@ -2778,6 +2779,24 @@ function Dashboard() {
                 </div>
               );
             })}
+            {standaloneItems.map(item => (
+              <button
+                key={item.key}
+                onClick={() => handleMenuClick(item.key)}
+                title={sidebarCollapsed ? item.label : undefined}
+                className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-200 group relative mt-2 ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'} ${
+                  activeTab === item.key
+                    ? 'bg-primary/15 text-primary font-semibold'
+                    : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                }`}
+              >
+                {activeTab === item.key && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+                )}
+                <span className={`shrink-0 transition-transform duration-200 ${activeTab === item.key ? 'scale-110' : 'group-hover:scale-105'}`}>{item.icon}</span>
+                {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+              </button>
+            ))}
           </nav>
 
           {/* Collapse toggle & logout */}
@@ -2851,6 +2870,24 @@ function Dashboard() {
                 </div>
               );
             })}
+            {standaloneItems.length > 0 && (
+              <div className="flex gap-1 overflow-x-auto pb-1 pt-1 border-t border-white/[0.06]" style={{ scrollbarWidth: 'none' }}>
+                {standaloneItems.map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => handleMenuClick(item.key)}
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                      activeTab === item.key
+                        ? 'bg-primary/15 text-primary border border-primary/20'
+                        : 'text-muted-foreground hover:bg-white/[0.04] border border-transparent'
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
