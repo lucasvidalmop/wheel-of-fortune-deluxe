@@ -9238,6 +9238,16 @@ function Dashboard() {
             </div>
           )}
 
+          {activeTab === 'gorjeta_analytics' && session?.user?.id && (
+            <div className="w-full max-w-[1200px] min-w-0">
+              <ReferralAnalyticsPanel
+                ownerId={session.user.id}
+                gorjetaRef={(wheelConfig as any).gorjetaRef || ''}
+                mode="gorjeta"
+              />
+            </div>
+          )}
+
           {activeTab === 'financeiro' && (
             <div className="w-full max-w-2xl min-w-0 space-y-5">
               {/* Sub-tabs with scroll arrows */}
