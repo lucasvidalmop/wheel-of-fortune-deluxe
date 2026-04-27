@@ -314,6 +314,36 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
               </div>
             )}
 
+            {typeof winner.score === 'number' && winner.score > 0 && (
+              <div
+                className="mt-3 inline-flex items-baseline gap-1.5 px-4 py-2 rounded-lg"
+                style={{
+                  backgroundColor: `${config.resultBorderColor}14`,
+                  border: `1px solid ${config.resultBorderColor}55`,
+                }}
+              >
+                <span
+                  className="font-semibold uppercase tracking-[0.2em] opacity-80"
+                  style={{
+                    fontSize: 'clamp(9px, 0.9vw, 11px)',
+                    color: config.headerAccentColor,
+                  }}
+                >
+                  Bônus
+                </span>
+                <span
+                  className="font-black tabular-nums"
+                  style={{
+                    fontSize: 'clamp(18px, 2.2vw, 26px)',
+                    color: config.resultTextColor,
+                    textShadow: `0 0 16px ${config.resultBorderColor}88`,
+                  }}
+                >
+                  R$ {winner.score.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            )}
+
             <button
               onClick={() => setWinner(null)}
               className="mt-5 font-bold tracking-[0.3em] transition-all active:scale-95 hover:brightness-125"
