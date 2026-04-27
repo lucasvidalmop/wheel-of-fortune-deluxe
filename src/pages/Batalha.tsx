@@ -703,7 +703,10 @@ export default function Batalha() {
               </button>
             </section>
           </div>
+        </aside>
 
+        {/* CENTER — Wheel */}
+        <div className="flex flex-col items-center min-h-0">
           {loading ? (
             <div className="opacity-60">Carregando...</div>
           ) : (
