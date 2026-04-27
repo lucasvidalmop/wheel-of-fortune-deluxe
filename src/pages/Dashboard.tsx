@@ -6747,6 +6747,7 @@ function Dashboard() {
                   onClick={async () => {
                     if (!evolutionApiUrl2 || !evolutionApiKey2 || !evolutionInstance2) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig2(true); return; }
                     if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                    if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending2(true);
                     setWhatsappProgress2({ total: notifySelectedGroups2.length, sent: 0, errors: 0, skipped: 0 });
                     let sent = 0, errors = 0;
