@@ -118,8 +118,16 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
             responsible &&
             !gorjetaTokens.has(responsible)
           );
+          const isDirectGorjeta = !!(u.referral_link_id && gorjetaLinkIds.has(u.referral_link_id));
+          const isHistoricalGorjeta = !!(
+            !u.referral_link_id &&
+            responsible &&
+            gorjetaTokens.has(responsible)
+          );
 
-          if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
+          if (isGorjetaMode) {
+            if (!isDirectGorjeta && !isHistoricalGorjeta) return;
+          } else if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
 
           const syntheticLinkId = isDirectNonGorjeta ? u.referral_link_id : matchedHistoricalLink?.id || null;
           const syntheticCode = directLink?.code || matchedHistoricalLink?.code || u.responsible?.trim() || null;
