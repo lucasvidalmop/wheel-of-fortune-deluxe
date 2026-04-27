@@ -590,184 +590,30 @@ export default function Batalha() {
         </div>
 
         {/* Side panels */}
-        <aside className="flex flex-col gap-5 min-h-0 lg:h-full overflow-hidden">
-          {/* Bankroll calculator */}
+        <aside className="flex flex-col gap-4 min-h-0 lg:h-full overflow-hidden">
+          {/* RANKING — destaque principal */}
           <section
-            className="rounded-2xl p-5"
+            className="rounded-2xl p-5 min-h-0 lg:flex-1 overflow-hidden order-1"
             style={{
               backgroundColor: config.panelBgColor,
-              border: `1px solid ${config.panelBorderColor}`,
+              border: `2px solid ${config.headerAccentColor}`,
+              boxShadow: `0 0 24px ${config.headerAccentColor}33, inset 0 0 20px ${config.headerAccentColor}0d`,
             }}
           >
-            <div className="text-[11px] tracking-[0.35em] mb-4" style={{ color: config.panelLabelColor }}>
-              BANCA
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] mb-1.5" style={{ color: config.panelLabelColor }}>
-                  BANCA INICIAL
-                </label>
-                <div
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 h-10"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: `1px solid ${config.inputBorderColor}55`,
-                  }}
-                >
-                  <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    name="battle-initial-bankroll"
-                    value={initialBankroll ? fmtBRL(initialBankroll) : ''}
-                    placeholder="0,00"
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, '');
-                      const cents = digits === '' ? 0 : Number(digits);
-                      setInitialBankroll(cents / 100);
-                    }}
-                    className="battle-money-input w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
-                    style={{ color: config.panelTextColor }}
-                    aria-label="Banca inicial"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] mb-1.5" style={{ color: config.panelLabelColor }}>
-                  VALOR DO TORNEIO
-                </label>
-                <div
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 h-10"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: `1px solid ${config.inputBorderColor}55`,
-                  }}
-                >
-                  <span className="text-[11px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    name="battle-tournament-entry"
-                    value={tournamentEntry ? fmtBRL(tournamentEntry) : ''}
-                    placeholder="0,00"
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, '');
-                      const cents = digits === '' ? 0 : Number(digits);
-                      setTournamentEntry(cents / 100);
-                    }}
-                    className="battle-money-input w-full bg-transparent text-sm text-right font-bold tabular-nums outline-none"
-                    style={{ color: config.panelTextColor }}
-                    aria-label="Valor do torneio"
-                  />
-                </div>
-              </div>
-            </div>
-
             <div
-              className="mt-3 pt-3 flex items-center justify-between"
-              style={{ borderTop: `1px solid ${config.panelBorderColor}` }}
-            >
-              <span className="text-[10px] tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
-                BANCA TOTAL DE PRÊMIO
-              </span>
-              <span
-                className="text-xl font-extrabold tabular-nums"
-                style={{
-                  color: config.headerAccentColor,
-                  textShadow: `0 0 12px ${config.headerAccentColor}66`,
-                }}
-              >
-                R$ {fmtBRL(totalBankroll)}
-              </span>
-            </div>
-          </section>
-
-          {/* Novo jogador */}
-          <section
-            className="rounded-2xl p-5"
-            style={{
-              backgroundColor: config.panelBgColor,
-              border: `1px solid ${config.panelBorderColor}`,
-            }}
-          >
-            <div className="text-[11px] tracking-[0.35em] mb-4" style={{ color: config.panelLabelColor }}>
-              NOVO JOGADOR
-            </div>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addParticipant()}
-                placeholder="Nome do jogador"
-                className="w-full h-11 rounded-full px-4 text-sm outline-none transition-shadow focus:shadow-[0_0_0_2px] focus:shadow-current/20"
-                style={{
-                  backgroundColor: config.bgColor,
-                  border: `1px solid ${config.inputBorderColor}55`,
-                  color: config.inputTextColor,
-                }}
-              />
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={game}
-                  onChange={(e) => setGame(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addParticipant()}
-                  placeholder="Jogo escolhido (ex: Fortune Tiger)"
-                  className="flex-1 h-11 rounded-full px-4 text-sm outline-none"
-                  style={{
-                    backgroundColor: config.bgColor,
-                    border: `1px solid ${config.inputBorderColor}55`,
-                    color: config.inputTextColor,
-                  }}
-                />
-                <button
-                  onClick={addParticipant}
-                  className="h-11 w-11 rounded-full inline-flex items-center justify-center transition-transform active:scale-95"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: `1px solid ${config.inputBorderColor}`,
-                    color: config.inputBorderColor,
-                  }}
-                  aria-label="Adicionar"
-                >
-                  <Plus size={18} />
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={resetTournament}
-              className="mt-4 w-full h-10 rounded-full inline-flex items-center justify-center gap-2 text-[11px] font-semibold tracking-[0.25em] transition-opacity hover:opacity-80 active:scale-[0.98]"
+              className="text-sm font-bold tracking-[0.35em] mb-3"
               style={{
-                backgroundColor: 'transparent',
-                border: `1px solid ${config.panelBorderColor}`,
-                color: config.panelLabelColor,
+                color: config.headerAccentColor,
+                textShadow: `0 0 12px ${config.headerAccentColor}66`,
               }}
-              aria-label="Resetar sorteio"
             >
-              <RotateCcw size={13} />
-              RESETAR SORTEIO
-            </button>
-          </section>
-          <section
-            className="rounded-2xl p-5 min-h-0 lg:flex-1 overflow-hidden"
-            style={{
-              backgroundColor: config.panelBgColor,
-              border: `1px solid ${config.panelBorderColor}`,
-            }}
-          >
-            <div className="text-[11px] tracking-[0.35em] mb-3" style={{ color: config.panelLabelColor }}>
-              RANKING
+              🏆 RANKING
             </div>
 
             <div className="flex flex-col min-h-0 lg:h-full">
               {/* Search bar */}
               {participants.length > 0 && (
+{/* __KEEP_ANCHOR_RANKING_BODY__ */}
                 <div
                   className="relative mb-3 flex items-center rounded-lg flex-shrink-0"
                   style={{
