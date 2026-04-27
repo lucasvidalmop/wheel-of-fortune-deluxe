@@ -11,8 +11,6 @@ interface Props {
   scopeLabel?: string;
   /** Code of the gorjeta link to EXCLUDE from analytics (general view only). */
   gorjetaRef?: string;
-  /** When 'gorjeta', INVERTS the filter and shows ONLY gorjeta redemptions. */
-  mode?: 'general' | 'gorjeta';
 }
 
 interface Redemption {
@@ -42,8 +40,7 @@ interface UserStats {
   links: Set<string>;
 }
 
-const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode = 'general' }: Props) => {
-  const isGorjetaMode = mode === 'gorjeta';
+const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Props) => {
   const [loading, setLoading] = useState(true);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -118,16 +115,8 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
             responsible &&
             !gorjetaTokens.has(responsible)
           );
-          const isDirectGorjeta = !!(u.referral_link_id && gorjetaLinkIds.has(u.referral_link_id));
-          const isHistoricalGorjeta = !!(
-            !u.referral_link_id &&
-            responsible &&
-            gorjetaTokens.has(responsible)
-          );
 
-          if (isGorjetaMode) {
-            if (!isDirectGorjeta && !isHistoricalGorjeta) return;
-          } else if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
+          if (!isDirectNonGorjeta && !isHistoricalNonGorjeta) return;
 
           const syntheticLinkId = isDirectNonGorjeta ? u.referral_link_id : matchedHistoricalLink?.id || null;
           const syntheticCode = directLink?.code || matchedHistoricalLink?.code || u.responsible?.trim() || null;
@@ -176,7 +165,7 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
       }
       setLoading(false);
     })();
-  }, [linkId, ownerId, gorjetaRef, isGorjetaMode]);
+  }, [linkId, ownerId, gorjetaRef]);
 
   const linkOptions = useMemo(() => {
     const map = new Map<string, { value: string; label: string; count: number }>();
@@ -193,18 +182,20 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
 
   const scopedRedemptions = useMemo(() => {
     let base = redemptions;
+    // In general view, exclude gorjeta link redemptions (by code OR by label)
     if (!linkId) {
       const g = (gorjetaRef || '').toLowerCase();
       base = base.filter(r => {
         const code = (r.link_code || '').toLowerCase();
         const label = (r.link_label || '').toLowerCase();
-        const isGorjetaRow = (g && code === g) || label === 'gorjeta';
-        return isGorjetaMode ? isGorjetaRow : !isGorjetaRow;
+        if (g && code === g) return false;
+        if (label === 'gorjeta') return false;
+        return true;
       });
     }
     if (linkId || linkFilter === '__all__') return base;
     return base.filter(r => (r.link_code || '_deleted_') === linkFilter);
-  }, [redemptions, linkFilter, linkId, gorjetaRef, isGorjetaMode]);
+  }, [redemptions, linkFilter, linkId, gorjetaRef]);
 
   const stats = useMemo<UserStats[]>(() => {
     const map = new Map<string, UserStats>();
@@ -328,10 +319,10 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
         <div>
           <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
             <BarChart3 size={16} className="text-primary" />
-            {linkId ? 'Analytics do Link' : (isGorjetaMode ? 'Analytics de Inscrições (Gorjeta)' : 'Analytics Geral de Referências')}
+            {linkId ? 'Analytics do Link' : 'Analytics Geral de Referências'}
           </h2>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            {scopeLabel || (linkId ? 'Link de referência' : (isGorjetaMode ? 'Inscrições realizadas via página de gorjeta' : 'Inclui histórico de todos os links — mesmo os já excluídos'))}
+            {scopeLabel || (linkId ? 'Link de referência' : 'Inclui histórico de todos os links — mesmo os já excluídos')}
           </p>
         </div>
         <button onClick={exportCsv} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary text-xs hover:bg-primary/25 transition">
