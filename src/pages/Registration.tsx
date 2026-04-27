@@ -243,9 +243,45 @@ const Registration = () => {
   // ─── Styles ───
   const accentColor = cfg.accentColor || cfg.btnBgColor || '#2dd4bf';
 
+  // Cross-browser color helper: converts any color (hex 3/6, rgb, hsl, named)
+  // into rgba() with the requested alpha. Older iOS Safari, Samsung Internet
+  // and in-app webviews (Instagram/Facebook/TikTok) don't support the
+  // 8-digit hex shorthand (#RRGGBBAA), which left buttons/borders invisible
+  // for some operators.
+  const withAlpha = (color: string, alpha: number): string => {
+    if (!color) return `rgba(0,0,0,${alpha})`;
+    const c = color.trim();
+    // 8-digit hex -> strip alpha and rebuild
+    let hex = c;
+    if (hex.startsWith('#')) {
+      if (hex.length === 9) hex = hex.slice(0, 7);
+      else if (hex.length === 5) hex = hex.slice(0, 4);
+      if (hex.length === 4) {
+        // #RGB -> #RRGGBB
+        hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+      }
+      if (hex.length === 7) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+    }
+    // rgb()/rgba() -> swap to rgba with new alpha
+    const rgbMatch = c.match(/^rgba?\(([^)]+)\)$/i);
+    if (rgbMatch) {
+      const parts = rgbMatch[1].split(',').map(p => p.trim());
+      if (parts.length >= 3) return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${alpha})`;
+    }
+    // Fallback: return as-is (browser will use solid color)
+    return c;
+  };
+
   const bgStyle: React.CSSProperties = {
     background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`,
     ...(cfg.bgImage ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
+    // Older Safari needs the prefixed version for backdrop-filter to render
+    WebkitBackdropFilter: 'none',
   };
 
   const cardBg = cfg.cardBgColor || 'rgba(20, 25, 40, 0.92)';
