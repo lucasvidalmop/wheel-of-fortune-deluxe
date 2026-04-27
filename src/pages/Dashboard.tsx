@@ -2656,11 +2656,12 @@ function Dashboard() {
     { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'auth', 'history'] },
     { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
     { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
-    { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes', 'painel_casa'] },
+    { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
   ];
   const menuGroups = groupDefs
     .map(g => ({ ...g, items: g.itemKeys.map(k => menuItems.find(i => i.key === k)).filter(Boolean) as typeof menuItems }))
     .filter(g => g.items.length > 0);
+  const standaloneItems = menuItems.filter(i => i.key === 'painel_casa');
 
   const activeGroupKey: GroupKey | null =
     menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null;
