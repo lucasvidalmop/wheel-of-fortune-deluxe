@@ -278,10 +278,8 @@ const Registration = () => {
   };
 
   const bgStyle: React.CSSProperties = {
-    background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`,
+    background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || '#1e293b'} 0%, ${cfg.bgGradientTo || '#0f172a'} 70%)`,
     ...(cfg.bgImage ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
-    // Older Safari needs the prefixed version for backdrop-filter to render
-    WebkitBackdropFilter: 'none',
   };
 
   const cardBg = cfg.cardBgColor || 'rgba(20, 25, 40, 0.92)';
