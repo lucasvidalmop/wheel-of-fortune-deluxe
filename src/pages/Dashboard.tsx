@@ -5922,8 +5922,10 @@ function Dashboard() {
                     if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending(true);
                     setWhatsappProgress({ total: notifySelectedGroups.length, sent: 0, errors: 0, skipped: 0 });
+                    whatsappGroupCtrl.start();
                     let sent = 0, errors = 0;
                     for (const group of notifySelectedGroups) {
+                      if (await whatsappGroupCtrl.shouldStop()) break;
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
                           body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
@@ -5936,6 +5938,7 @@ function Dashboard() {
                         setWhatsappProgress(p => ({ ...p, errors: p.errors + 1 }));
                       }
                     }
+                    whatsappGroupCtrl.finish();
                     setWhatsappSending(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
                     else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
