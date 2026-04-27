@@ -2649,6 +2649,37 @@ function Dashboard() {
   ];
   const menuItems = allMenuItems.filter(it => !it.tool || toolPerms[it.tool] !== false);
 
+  // ═══ MENU GROUPS ═══
+  type GroupKey = 'operacao' | 'disparos' | 'crescimento' | 'sistema';
+  const groupDefs: { key: GroupKey; label: string; itemKeys: typeof activeTab[] }[] = [
+    { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'auth', 'history'] },
+    { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
+    { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
+    { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes', 'painel_casa'] },
+  ];
+  const menuGroups = groupDefs
+    .map(g => ({ ...g, items: g.itemKeys.map(k => menuItems.find(i => i.key === k)).filter(Boolean) as typeof menuItems }))
+    .filter(g => g.items.length > 0);
+
+  const activeGroupKey = useMemo<GroupKey | null>(
+    () => menuGroups.find(g => g.items.some(i => i.key === activeTab))?.key ?? null,
+    [menuGroups, activeTab]
+  );
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (activeGroupKey) setOpenGroups(prev => (prev[activeGroupKey] ? prev : { ...prev, [activeGroupKey]: true }));
+  }, [activeGroupKey]);
+  const isGroupOpen = (k: GroupKey) => openGroups[k] ?? k === activeGroupKey;
+  const toggleGroup = (k: GroupKey) => setOpenGroups(prev => ({ ...prev, [k]: !isGroupOpen(k) }));
+
+  const handleMenuClick = (key: typeof activeTab) => {
+    setActiveTab(key);
+    if (key === 'history') fetchHistory();
+    if (key === 'analytics') fetchAnalytics();
+    if (key === 'referral') fetchReferralLinks();
+    if (key === 'hist_gorjeta') fetchGorjetaHistory();
+  };
+
   const tabTitles: Record<string, string> = {
     inscritos: 'Inscritos',
     wheel: 'Configuração da Roleta',
