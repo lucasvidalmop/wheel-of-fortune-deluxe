@@ -5809,6 +5809,7 @@ function Dashboard() {
                   const phones = waPhoneList.map(p => p.phone);
                   if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
                   if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                  if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setWhatsappSending(true);
                   setWhatsappProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
                   let sent = 0, errors = 0;
