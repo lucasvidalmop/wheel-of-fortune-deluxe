@@ -5846,6 +5846,7 @@ function Dashboard() {
               </GlassCard>
 
               <BulkSendProgress total={whatsappProgress.total} sent={whatsappProgress.sent} errors={whatsappProgress.errors} skipped={whatsappProgress.skipped} label="Disparo de WhatsApp" accent="green" />
+              <BulkSendControls control={whatsappCtrl.active ? whatsappCtrl : whatsappGroupCtrl} visible={whatsappSending} />
 
               <button
                 onClick={async () => {
@@ -5863,8 +5864,10 @@ function Dashboard() {
                   if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                   setWhatsappSending(true);
                   setWhatsappProgress({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                  whatsappCtrl.start();
                   let sent = 0, errors = 0;
                   for (let i = 0; i < phones.length; i++) {
+                    if (await whatsappCtrl.shouldStop()) break;
                     const phone = phones[i];
                     const matchedUser = waPhoneList.find(p => p.phone === phone);
                     try {
@@ -5898,6 +5901,7 @@ function Dashboard() {
                       await new Promise(resolve => setTimeout(resolve, whatsappDelaySeconds * 1000));
                     }
                   }
+                  whatsappCtrl.finish();
                   setWhatsappSending(false);
                   if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
                   else toast.success(`${sent} mensagem(ns) enviada(s)!`);
