@@ -218,7 +218,7 @@ function Dashboard() {
     batalha_slot: false,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'gorjeta_analytics' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
@@ -2643,6 +2643,7 @@ function Dashboard() {
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.', tool: 'referral' },
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta', tool: 'gorjeta' },
     { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta', tool: 'gorjeta' },
+    { key: 'gorjeta_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Gorjeta', tool: 'gorjeta' },
     { key: 'deposito', icon: <DollarSign size={20} />, label: 'Depósito', tool: 'financeiro' },
     { key: 'hist_deposito', icon: <Clock size={20} />, label: 'Hist. Depósito', tool: 'financeiro' },
     { key: 'configuracoes', icon: <Settings size={20} />, label: 'Configurações', tool: 'configuracoes' },
@@ -2655,7 +2656,7 @@ function Dashboard() {
   const groupDefs: { key: GroupKey; label: string; itemKeys: typeof activeTab[] }[] = [
     { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'auth', 'history'] },
     { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
-    { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
+    { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'gorjeta_analytics', 'deposito', 'hist_deposito'] },
     { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
   ];
   const menuGroups = groupDefs
@@ -2701,6 +2702,7 @@ function Dashboard() {
     hist_deposito: 'Histórico de Depósitos',
     painel_casa: 'Painel da Casa',
     msg_analytics: 'Analytics de Mensagens',
+    gorjeta_analytics: 'Analytics de Inscrições (Gorjeta)',
   };
 
   return (
@@ -9233,6 +9235,16 @@ function Dashboard() {
           {activeTab === 'msg_analytics' && (
             <div className="w-full max-w-[1200px] min-w-0">
               <MessagingAnalytics ownerId={session?.user?.id || ''} />
+            </div>
+          )}
+
+          {activeTab === 'gorjeta_analytics' && session?.user?.id && (
+            <div className="w-full max-w-[1200px] min-w-0">
+              <ReferralAnalyticsPanel
+                ownerId={session.user.id}
+                gorjetaRef={(wheelConfig as any).gorjetaRef || ''}
+                mode="gorjeta"
+              />
             </div>
           )}
 
