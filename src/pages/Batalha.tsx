@@ -613,7 +613,6 @@ export default function Batalha() {
             <div className="flex flex-col min-h-0 lg:h-full">
               {/* Search bar */}
               {participants.length > 0 && (
-{/* __KEEP_ANCHOR_RANKING_BODY__ */}
                 <div
                   className="relative mb-3 flex items-center rounded-lg flex-shrink-0"
                   style={{
