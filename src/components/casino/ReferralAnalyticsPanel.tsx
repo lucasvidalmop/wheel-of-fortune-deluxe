@@ -185,20 +185,18 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef, mode 
 
   const scopedRedemptions = useMemo(() => {
     let base = redemptions;
-    // In general view, exclude gorjeta link redemptions (by code OR by label)
     if (!linkId) {
       const g = (gorjetaRef || '').toLowerCase();
       base = base.filter(r => {
         const code = (r.link_code || '').toLowerCase();
         const label = (r.link_label || '').toLowerCase();
-        if (g && code === g) return false;
-        if (label === 'gorjeta') return false;
-        return true;
+        const isGorjetaRow = (g && code === g) || label === 'gorjeta';
+        return isGorjetaMode ? isGorjetaRow : !isGorjetaRow;
       });
     }
     if (linkId || linkFilter === '__all__') return base;
     return base.filter(r => (r.link_code || '_deleted_') === linkFilter);
-  }, [redemptions, linkFilter, linkId, gorjetaRef]);
+  }, [redemptions, linkFilter, linkId, gorjetaRef, isGorjetaMode]);
 
   const stats = useMemo<UserStats[]>(() => {
     const map = new Map<string, UserStats>();
