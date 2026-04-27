@@ -2815,21 +2815,42 @@ function Dashboard() {
               <LogOut size={18} />
             </button>
           </div>
-          <div className="flex gap-1 px-3 pb-2.5 overflow-x-auto [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
-            {menuItems.map(item => (
-              <button
-                key={item.key}
-                onClick={() => { setActiveTab(item.key); if (item.key === 'history') fetchHistory(); if (item.key === 'analytics') fetchAnalytics(); if (item.key === 'referral') fetchReferralLinks(); if (item.key === 'hist_gorjeta') fetchGorjetaHistory(); }}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
-                  activeTab === item.key
-                    ? 'bg-primary/15 text-primary border border-primary/20'
-                    : 'text-muted-foreground hover:bg-white/[0.04] border border-transparent'
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            ))}
+          <div className="px-3 pb-2.5 space-y-2 max-h-[60vh] overflow-y-auto">
+            {menuGroups.map(group => {
+              const open = isGroupOpen(group.key);
+              const groupHasActive = group.items.some(i => i.key === activeTab);
+              return (
+                <div key={group.key}>
+                  <button
+                    onClick={() => toggleGroup(group.key)}
+                    className={`w-full flex items-center justify-between px-2 py-1 text-[10px] font-semibold uppercase tracking-wider transition-all ${
+                      groupHasActive ? 'text-primary' : 'text-muted-foreground'
+                    }`}
+                  >
+                    <span>{group.label}</span>
+                    <ChevronRight size={12} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
+                  </button>
+                  {open && (
+                    <div className="flex gap-1 overflow-x-auto [touch-action:pan-x] pb-1" style={{ scrollbarWidth: 'none' }}>
+                      {group.items.map(item => (
+                        <button
+                          key={item.key}
+                          onClick={() => handleMenuClick(item.key)}
+                          className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                            activeTab === item.key
+                              ? 'bg-primary/15 text-primary border border-primary/20'
+                              : 'text-muted-foreground hover:bg-white/[0.04] border border-transparent'
+                          }`}
+                        >
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
