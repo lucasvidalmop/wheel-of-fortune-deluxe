@@ -381,7 +381,7 @@ const Registration = () => {
         {/* Card Header */}
         <div className="text-center pt-6 pb-4 px-6">
           <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-3"
-            style={{ backgroundColor: `${accentColor}15`, border: `1.5px solid ${accentColor}30` }}>
+            style={{ backgroundColor: `${withAlpha(accentColor, 0.082)}`, border: `1.5px solid ${withAlpha(accentColor, 0.188)}` }}>
             <Gift size={24} style={{ color: accentColor }} />
           </div>
           <h2 className="text-lg font-bold" style={{ color: titleColor }}>{cfg.titleText || 'Participar'}</h2>
@@ -400,7 +400,7 @@ const Registration = () => {
                 placeholder="Qual seu nome completo"
                 required
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
-                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${withAlpha(accentColor, 0.251)}` } as any}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: name ? accentColor : 'rgba(255,255,255,0.15)' }} />
             </div>
@@ -416,7 +416,7 @@ const Registration = () => {
                 placeholder="seu@email.com"
                 required
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
-                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${withAlpha(accentColor, 0.251)}` } as any}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: email ? accentColor : 'rgba(255,255,255,0.15)' }} />
             </div>
@@ -431,7 +431,7 @@ const Registration = () => {
                 type="tel" value={phone} onChange={e => setPhone(maskPhone(e.target.value))}
                 placeholder="(DD) 9XXXX-XXXX"
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
-                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${withAlpha(accentColor, 0.251)}` } as any}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: phone ? accentColor : 'rgba(255,255,255,0.15)' }} />
             </div>
@@ -446,7 +446,7 @@ const Registration = () => {
                 type="text" value={cpf} onChange={e => setCpf(maskCpf(e.target.value))}
                 placeholder="000.000.000-00"
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
-                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${withAlpha(accentColor, 0.251)}` } as any}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: cpf ? accentColor : 'rgba(255,255,255,0.15)' }} />
             </div>
@@ -464,7 +464,7 @@ const Registration = () => {
                 placeholder={cfg.casinoName ? `Seu ID de usuário ${cfg.casinoName}` : 'Seu ID de usuário'}
                 required
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
-                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+                style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${withAlpha(accentColor, 0.251)}` } as any}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: accountId ? accentColor : 'rgba(255,255,255,0.15)' }} />
             </div>
@@ -479,7 +479,7 @@ const Registration = () => {
                   value={pixKeyType}
                   onChange={e => { setPixKeyType(e.target.value); setPixKey(''); }}
                   className="w-full py-3 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer"
-                  style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+                  style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${withAlpha(accentColor, 0.251)}` } as any}
                 >
                   {PIX_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
@@ -506,7 +506,7 @@ const Registration = () => {
                     'Chave aleatória'
                   }
                   className="w-full px-3.5 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
-                  style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${accentColor}40` } as any}
+                  style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputText, '--tw-ring-color': `${withAlpha(accentColor, 0.251)}` } as any}
                 />
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: pixKey ? accentColor : 'rgba(255,255,255,0.15)' }} />
               </div>
@@ -515,7 +515,7 @@ const Registration = () => {
 
           {/* Warning */}
           <div className="flex items-center gap-2.5 p-3 rounded-xl text-xs"
-            style={{ backgroundColor: `${accentColor}08`, border: `1px solid ${accentColor}15`, color: subtitleColor }}>
+            style={{ backgroundColor: `${withAlpha(accentColor, 0.031)}`, border: `1px solid ${withAlpha(accentColor, 0.082)}`, color: subtitleColor }}>
             <AlertCircle size={16} className="shrink-0" style={{ color: accentColor }} />
             <span>{cfg.warningText || 'Importante: Prazo de até 72h para crédito.'}</span>
           </div>
@@ -562,7 +562,7 @@ const Registration = () => {
             style={{
               backgroundColor: accentColor,
               color: cfg.btnTextColor || '#000000',
-              boxShadow: `0 8px 25px ${accentColor}30`,
+              boxShadow: `0 8px 25px ${withAlpha(accentColor, 0.188)}`,
             }}
           >
             {submitting ? (
@@ -573,7 +573,7 @@ const Registration = () => {
           </button>
 
           {/* Security note */}
-          <div className="flex items-center justify-center gap-1.5 text-[10px]" style={{ color: `${accentColor}90` }}>
+          <div className="flex items-center justify-center gap-1.5 text-[10px]" style={{ color: `${withAlpha(accentColor, 0.565)}` }}>
             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
             Seus dados estão seguros
           </div>
