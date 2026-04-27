@@ -541,7 +541,7 @@ export default function Batalha() {
           {loading ? (
             <div className="opacity-60">Carregando...</div>
           ) : (
-            <BattleWheel config={config} participants={activeParticipants} onWinner={handleWinner} />
+            <BattleWheel config={config} participants={activeParticipants} onWinner={handleWinner} onUpdateScore={updateScore} />
           )}
           <div className="mt-6 text-xs tracking-[0.3em]" style={{ color: config.panelLabelColor }}>
             {activeParticipants.length} JOGADORES ATIVOS

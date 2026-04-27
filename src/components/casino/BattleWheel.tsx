@@ -5,15 +5,17 @@ interface Props {
   config: BattleConfig;
   participants: BattleParticipant[];
   onWinner?: (p: BattleParticipant) => void;
+  onUpdateScore?: (id: string, score: number) => void;
 }
 
 const TAU = Math.PI * 2;
 
-export default function BattleWheel({ config, participants, onWinner }: Props) {
+export default function BattleWheel({ config, participants, onWinner, onUpdateScore }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [rotation, setRotation] = useState(0); // radians
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<BattleParticipant | null>(null);
+  const [winnerScoreInput, setWinnerScoreInput] = useState<string>('');
 
   const segCount = participants.length;
 
@@ -157,6 +159,8 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
       } else {
         setSpinning(false);
         const w = segments[pickIdx].participant;
+        const initialCents = Math.round(((w.score ?? 0)) * 100);
+        setWinnerScoreInput(initialCents > 0 ? (initialCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '');
         setWinner(w);
         onWinner?.(w);
       }
@@ -315,7 +319,7 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
             )}
 
             <div
-              className="mt-3 inline-flex items-baseline gap-1.5 px-4 py-2 rounded-lg"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg"
               style={{
                 backgroundColor: `${config.resultBorderColor}14`,
                 border: `1px solid ${config.resultBorderColor}55`,
@@ -333,18 +337,42 @@ export default function BattleWheel({ config, participants, onWinner }: Props) {
               <span
                 className="font-black tabular-nums"
                 style={{
-                  fontSize: 'clamp(18px, 2.2vw, 26px)',
+                  fontSize: 'clamp(16px, 2vw, 22px)',
                   color: config.resultTextColor,
                   textShadow: `0 0 16px ${config.resultBorderColor}88`,
                 }}
               >
-                R$ {(winner.score ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                R$
               </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={winnerScoreInput}
+                placeholder="0,00"
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '');
+                  const cents = digits === '' ? 0 : Number(digits);
+                  const value = cents / 100;
+                  setWinnerScoreInput(
+                    cents === 0 ? '' : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  );
+                  onUpdateScore?.(winner.id, value);
+                }}
+                className="bg-transparent outline-none font-black tabular-nums text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                style={{
+                  fontSize: 'clamp(16px, 2vw, 22px)',
+                  color: config.resultTextColor,
+                  textShadow: `0 0 16px ${config.resultBorderColor}88`,
+                  width: '6.5ch',
+                  minWidth: '6.5ch',
+                }}
+                aria-label="Editar valor do bônus"
+              />
             </div>
 
             <button
               onClick={() => setWinner(null)}
-              className="mt-5 font-bold tracking-[0.3em] transition-all active:scale-95 hover:brightness-125"
+              className="mt-3 font-bold tracking-[0.3em] transition-all active:scale-95 hover:brightness-125"
               style={{
                 backgroundColor: 'transparent',
                 color: config.resultBorderColor,
