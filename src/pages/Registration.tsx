@@ -277,10 +277,27 @@ const Registration = () => {
     return c;
   };
 
-  const bgStyle: React.CSSProperties = {
-    background: cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || '#1e293b'} 0%, ${cfg.bgGradientTo || '#0f172a'} 70%)`,
-    ...(cfg.bgImage ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
-  };
+  // Build background using longhand properties only.
+  // Mixing the `background` shorthand with `backgroundImage` longhand causes
+  // Edge/Chrome to render different results (the shorthand resets the longhand,
+  // so the bg image disappears in some browsers).
+  const bgStyle: React.CSSProperties = (() => {
+    const gradient = `radial-gradient(ellipse at center, ${cfg.bgGradientFrom || '#1e293b'} 0%, ${cfg.bgGradientTo || '#0f172a'} 70%)`;
+    // Layer image on top of gradient when both exist (image first = drawn on top in CSS background stack)
+    if (cfg.bgImage) {
+      return {
+        backgroundColor: cfg.bgColor || '#0d1117',
+        backgroundImage: `url("${cfg.bgImage}"), ${gradient}`,
+        backgroundSize: 'cover, auto',
+        backgroundPosition: 'center, center',
+        backgroundRepeat: 'no-repeat, no-repeat',
+      };
+    }
+    if (cfg.bgColor) {
+      return { backgroundColor: cfg.bgColor, backgroundImage: gradient };
+    }
+    return { backgroundColor: '#0d1117', backgroundImage: gradient };
+  })();
 
   const cardBg = cfg.cardBgColor || 'rgba(20, 25, 40, 0.92)';
   const cardBorder = cfg.cardBorderColor || 'rgba(255,255,255,0.06)';
@@ -364,7 +381,7 @@ const Registration = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-6 px-4 relative overflow-hidden" style={bgStyle}>
-      {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
+      
 
       {/* Header */}
       <div className="relative z-10 text-center space-y-3 mb-6">
