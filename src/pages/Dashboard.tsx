@@ -509,7 +509,15 @@ function Dashboard() {
   };
 
   const saveScheduledMessage = async () => {
-    if (!schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
+    let pollPayload: { name: string; values: string[]; selectableCount: number } | null = null;
+    if (schedForm.pollEnabled) {
+      if (schedForm.recipientType !== 'group') { toast.error('Enquetes só podem ser enviadas para grupos'); return; }
+      const opts = schedForm.pollValues.map(v => v.trim()).filter(Boolean);
+      if (!schedForm.pollName.trim()) { toast.error('Informe a pergunta da enquete'); return; }
+      if (opts.length < 2) { toast.error('A enquete precisa de pelo menos 2 opções'); return; }
+      pollPayload = { name: schedForm.pollName.trim(), values: opts, selectableCount: schedForm.pollMulti ? opts.length : 1 };
+    }
+    if (!pollPayload && !schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
     if (schedForm.recipientType === 'individual' && !schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
     if (schedForm.recipientType === 'group' && schedForm.selectedGroups.length === 0) { toast.error('Selecione ao menos um grupo'); return; }
     if (!schedForm.date) { toast.error('Selecione a data'); return; }
@@ -530,14 +538,15 @@ function Dashboard() {
       recipient_type: schedForm.recipientType,
       recurrence: schedForm.recurrence,
       status: 'pending',
-      media_url: schedMedia?.url || null,
-      media_type: schedMedia?.mediatype || null,
-      media_mimetype: schedMedia?.mimetype || null,
-      media_filename: schedMedia?.fileName || null,
+      media_url: pollPayload ? null : (schedMedia?.url || null),
+      media_type: pollPayload ? null : (schedMedia?.mediatype || null),
+      media_mimetype: pollPayload ? null : (schedMedia?.mimetype || null),
+      media_filename: pollPayload ? null : (schedMedia?.fileName || null),
       mention_all: schedForm.mentionAll,
       scheduled_at: isoDate,
       next_run_at: isoDate,
       channel: scheduleChannel,
+      poll: pollPayload,
       updated_at: new Date().toISOString(),
     };
 
