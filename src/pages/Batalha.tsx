@@ -815,85 +815,31 @@ export default function Batalha() {
             {activeParticipants.length} JOGADORES ATIVOS
           </div>
 
-          {winnerHistory.length > 0 && (
+          {winnerHistory[0] && (
             <div
-              className="mt-4 rounded-2xl px-5 py-4 w-full max-w-[420px]"
+              className="mt-4 rounded-2xl px-5 py-3 flex items-center gap-4 min-w-[260px]"
               style={{
                 backgroundColor: config.panelBgColor,
                 border: `1px solid ${config.headerAccentColor}55`,
                 boxShadow: `0 0 18px ${config.headerAccentColor}22`,
               }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="text-[10px] tracking-[0.3em] font-bold"
-                  style={{ color: config.headerAccentColor }}
-                >
-                  HISTÓRICO DE SORTEADOS · {winnerHistory.length}
-                </div>
-                <button
-                  onClick={async () => {
-                    const ok = await confirm({
-                      title: 'Limpar histórico?',
-                      message: 'Esta ação não pode ser desfeita.',
-                      confirmLabel: 'Limpar',
-                      variant: 'danger',
-                    });
-                    if (ok) setWinnerHistory([]);
-                  }}
-                  className="text-[10px] tracking-[0.2em] px-2 py-1 rounded transition-opacity hover:opacity-80"
-                  style={{
-                    color: config.panelLabelColor,
-                    border: `1px solid ${config.panelBorderColor}`,
-                  }}
-                >
-                  LIMPAR
-                </button>
-              </div>
-              <ol
-                className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1"
-                style={{ scrollbarWidth: 'thin' }}
+              <div
+                className="text-[10px] tracking-[0.3em] font-bold"
+                style={{ color: config.headerAccentColor }}
               >
-                {winnerHistory.map((w, idx) => {
-                  const isLatest = idx === 0;
-                  return (
-                    <li
-                      key={w.id}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                      style={{
-                        backgroundColor: isLatest ? `${config.headerAccentColor}14` : config.bgColor,
-                        border: `1px solid ${isLatest ? config.headerAccentColor + '66' : config.panelBorderColor}`,
-                      }}
-                    >
-                      <div
-                        className="text-[10px] font-bold tabular-nums w-6 text-center"
-                        style={{ color: isLatest ? config.headerAccentColor : config.panelLabelColor }}
-                      >
-                        #{winnerHistory.length - idx}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className="text-sm font-bold truncate"
-                          style={{ color: config.panelTextColor }}
-                        >
-                          {w.name}
-                        </div>
-                        {w.game && (
-                          <div className="text-[11px] truncate" style={{ color: config.panelLabelColor }}>
-                            {w.game}
-                          </div>
-                        )}
-                      </div>
-                      <div
-                        className="text-[10px] tabular-nums whitespace-nowrap"
-                        style={{ color: config.panelLabelColor }}
-                      >
-                        {new Date(w.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
+                ÚLTIMO SORTEADO
+              </div>
+              <div className="min-w-0 flex-1 text-right">
+                <div className="text-sm font-bold truncate" style={{ color: config.panelTextColor }}>
+                  {winnerHistory[0].name}
+                </div>
+                {winnerHistory[0].game && (
+                  <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
+                    {winnerHistory[0].game}
+                  </div>
+                )}
+              </div>
             </div>
           )}
           {participants.length > 0 && activeParticipants.length === 0 && (
