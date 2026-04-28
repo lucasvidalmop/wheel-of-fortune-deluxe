@@ -1,15 +1,7 @@
-// Generates a roulette spinning sound using Web Audio API
-// Simulates the "tick tick tick" of a spinning wheel that slows down
+// Plays a per-operator custom audio for the wheel spin.
+// The wheel duration is matched to the audio's real length.
 
-let audioCtx: AudioContext | null = null;
 let customAudioEl: HTMLAudioElement | null = null;
-
-function getAudioContext(): AudioContext {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  return audioCtx;
-}
 
 /** Preload a custom audio URL and return its duration in ms. */
 export function getCustomAudioDuration(url: string): Promise<number> {
@@ -18,13 +10,10 @@ export function getCustomAudioDuration(url: string): Promise<number> {
     audio.addEventListener('loadedmetadata', () => {
       resolve(Math.round(audio.duration * 1000));
     });
-    audio.addEventListener('error', () => resolve(5000)); // fallback
-    // timeout fallback
+    audio.addEventListener('error', () => resolve(5000));
     setTimeout(() => resolve(5000), 3000);
   });
 }
-
-const DEFAULT_SPIN_SOUND_URL = '/sounds/spinning-wheel.mp3';
 
 export function playSpinSound(durationMs = 5000, customUrl?: string, volume = 0.85) {
   stopSpinSound();
