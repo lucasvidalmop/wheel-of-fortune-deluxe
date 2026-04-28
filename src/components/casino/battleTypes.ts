@@ -71,6 +71,11 @@ export interface BattleConfig {
   seoTitle?: string;
   seoDescription?: string;
   faviconUrl?: string;
+
+  // Spin audio (per-operator) — when set, the wheel plays this sound on spin
+  // and the spin animation duration matches the audio duration.
+  spinSoundUrl?: string;
+  spinSoundVolume?: number; // 0..1, default 0.85
 }
 
 export const defaultBattleConfig: BattleConfig = {
