@@ -1737,6 +1737,8 @@ function Dashboard() {
 
   // Group management
   const [contactGroups, setContactGroups] = useState<string[]>([]);
+  // Grupos criados manualmente que ainda não possuem contatos (para não desaparecerem ao re-derivar)
+  const [manualGroups, setManualGroups] = useState<string[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('__all__');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
