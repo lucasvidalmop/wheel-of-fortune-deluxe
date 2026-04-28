@@ -1289,6 +1289,7 @@ export type Database = {
         Args: { p_edpay_id: string }
         Returns: string
       }
+      get_referral_page_data: { Args: { p_code: string }; Returns: Json }
       get_wheel_config_by_slug: {
         Args: { p_slug: string }
         Returns: {
