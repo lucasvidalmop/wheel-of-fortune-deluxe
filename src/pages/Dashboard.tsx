@@ -5899,6 +5899,57 @@ function Dashboard() {
                   </label>
                 </div>
 
+                {/* Poll editor (only relevant when sending to groups) */}
+                {(notifySelectedGroups.length > 0 || notifySelectedGroups2.length > 0) && (
+                  <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                      <input type="checkbox" checked={groupPoll.enabled} onChange={e => setGroupPoll(p => ({ ...p, enabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                      <BarChart3 size={14} className="text-blue-400" />
+                      <span className="text-foreground font-medium">Enviar como enquete (apenas para grupos)</span>
+                    </label>
+                    {groupPoll.enabled && (
+                      <div className="space-y-2 pl-1">
+                        <input
+                          type="text"
+                          value={groupPoll.name}
+                          onChange={e => setGroupPoll(p => ({ ...p, name: e.target.value }))}
+                          maxLength={255}
+                          placeholder="Pergunta da enquete"
+                          className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        />
+                        <div className="space-y-1.5">
+                          {groupPoll.values.map((v, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={v}
+                                onChange={e => setGroupPoll(p => { const nv = [...p.values]; nv[idx] = e.target.value; return { ...p, values: nv }; })}
+                                maxLength={100}
+                                placeholder={`Opção ${idx + 1}`}
+                                className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                              />
+                              {groupPoll.values.length > 2 && (
+                                <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: p.values.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition">
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          {groupPoll.values.length < 12 && (
+                            <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: [...p.values, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition">
+                              <Plus size={12} /> Adicionar opção
+                            </button>
+                          )}
+                        </div>
+                        <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                          <input type="checkbox" checked={groupPoll.multi} onChange={e => setGroupPoll(p => ({ ...p, multi: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                          <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 pt-1">
                   <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
                   <input
