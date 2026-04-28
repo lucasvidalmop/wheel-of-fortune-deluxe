@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import BattleWheel from '@/components/casino/BattleWheel';
+import BattleWinnerOverlay from '@/components/casino/BattleWinnerOverlay';
 import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from '@/components/casino/battleTypes';
 import { Plus, Trash2, Swords, LogOut, AlertTriangle, Search, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
