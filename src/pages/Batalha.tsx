@@ -620,21 +620,13 @@ export default function Batalha() {
                     }}
                   >
                     <span className="text-[10px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
+                    <MoneyInput
                       name="battle-tournament-entry"
-                      value={tournamentEntry ? fmtBRL(tournamentEntry) : ''}
-                      placeholder="0,00"
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '');
-                        const cents = digits === '' ? 0 : Number(digits);
-                        setTournamentEntry(cents / 100);
-                      }}
+                      value={tournamentEntry}
+                      onChange={(v) => setTournamentEntry(v)}
                       className="battle-money-input w-full bg-transparent text-xs text-right font-bold tabular-nums outline-none"
                       style={{ color: config.panelTextColor }}
-                      aria-label="Valor do torneio"
+                      ariaLabel="Valor do torneio"
                     />
                   </div>
                 </div>
