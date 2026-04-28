@@ -212,6 +212,7 @@ function Dashboard() {
   const lastPersistedSettingsRef = useRef('');
   const lastConfigUpdatedAtRef = useRef<string | null>(null);
   const savingInFlightRef = useRef(false);
+  const configDirtyRef = useRef(false);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
@@ -1354,6 +1355,8 @@ function Dashboard() {
   };
 
   const syncDashboardConfig = async (userId: string, force = false) => {
+    if (!force && configDirtyRef.current) return;
+
     const { data: latest } = await (supabase as any)
       .from('wheel_configs')
       .select('id, slug, config, updated_at')
@@ -1363,6 +1366,7 @@ function Dashboard() {
     if (!latest) return;
     if (!force && lastConfigUpdatedAtRef.current && latest.updated_at === lastConfigUpdatedAtRef.current) return;
     if (savingInFlightRef.current) return;
+    if (!force && configDirtyRef.current) return;
 
     configHydratedRef.current = false;
     hydrateDashboardConfig(latest);
@@ -1735,6 +1739,7 @@ function Dashboard() {
       } else {
         toast.success('Configuração salva!');
         lastConfigUpdatedAtRef.current = updated.updated_at || lastConfigUpdatedAtRef.current;
+        configDirtyRef.current = false;
         // Sync local state with what was actually saved in DB
         setWheelConfig({ ...defaultConfig, ...updated.config });
         setDashboardTheme({ ...defaultTheme, ...(updated.config?.dashboardTheme || {}) });
@@ -8526,7 +8531,13 @@ function Dashboard() {
 
           {activeTab === 'deposito' && (() => {
             const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '', confirmationButtonText: 'Acessar →', confirmationButtonUrl: '', confirmationButtonColor: '', showNewDepositButton: true };
-            const updateDc = (patch: any) => setWheelConfig((prev: any) => ({ ...prev, depositConfig: { ...dc, ...patch } }));
+            const updateDc = (patch: any) => {
+              configDirtyRef.current = true;
+              setWheelConfig((prev: any) => {
+                const prevDc = prev.depositConfig || dc;
+                return { ...prev, depositConfig: { ...prevDc, ...patch } };
+              });
+            };
             // Visual / textos / SEO / pixels / confirmação independentes por variante.
             // `dcv` lê com fallback para o Depósito padrão; `updateDcv` grava em `bsOverrides` quando variant=='depbs'.
             const isBs = depositVariant === 'depbs';
@@ -8539,6 +8550,7 @@ function Dashboard() {
             }) : dc;
             const updateDcv = (patch: any) => {
               if (!isBs) { updateDc(patch); return; }
+              configDirtyRef.current = true;
               setWheelConfig((prev: any) => {
                 const prevDc = prev.depositConfig || dc;
                 const prevOv = (prevDc.bsOverrides || {}) as Record<string, any>;
