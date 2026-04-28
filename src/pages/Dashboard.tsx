@@ -101,6 +101,7 @@ interface PersistedDashboardSettings {
   hideReceiptSection: boolean;
   hideEdpaySection: boolean;
   panelCasaUrl: string;
+  csvContactGroups: string[];
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -156,6 +157,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   hideReceiptSection: false,
   hideEdpaySection: false,
   panelCasaUrl: '',
+  csvContactGroups: [],
 };
 
 const PANEL_CASA_STORAGE_KEY = 'dashboard_panel_casa_url';
