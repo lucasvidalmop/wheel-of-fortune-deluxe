@@ -392,6 +392,37 @@ export default function Batalha() {
   const fmtBRL = (n: number) =>
     n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  // ═══ Winner celebration overlay ═══
+  // Triggers when there are 2+ participants AND every participant has a score > 0
+  // (i.e. the operator has filled in the last result of the battle).
+  const [winnerOverlayOpen, setWinnerOverlayOpen] = useState(false);
+  const [shownRoundKey, setShownRoundKey] = useState<string | null>(null);
+
+  const allScoredKey = useMemo(() => {
+    if (participants.length < 2) return null;
+    if (!participants.every((p) => (p.score ?? 0) > 0)) return null;
+    // Stable key for this "round" — ids + scores. If anything changes, a new round.
+    return participants
+      .map((p) => `${p.id}:${p.score ?? 0}`)
+      .sort()
+      .join('|');
+  }, [participants]);
+
+  useEffect(() => {
+    if (allScoredKey && allScoredKey !== shownRoundKey) {
+      setWinnerOverlayOpen(true);
+      setShownRoundKey(allScoredKey);
+    }
+    // If scores were cleared / participants changed back to "incomplete", reset
+    // the shown key so a new completion will trigger again.
+    if (!allScoredKey && shownRoundKey) {
+      setShownRoundKey(null);
+    }
+  }, [allScoredKey, shownRoundKey]);
+
+  const overlayWinner = rankedParticipants[0] ?? null;
+  const overlayRunnersUp = rankedParticipants.slice(1, 3);
+
   // ═══ While auth is loading ═══
   if (!authReady) {
     return (
