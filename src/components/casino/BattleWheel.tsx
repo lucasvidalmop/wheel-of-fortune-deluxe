@@ -18,6 +18,8 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
   const [winner, setWinner] = useState<BattleParticipant | null>(null);
   const [winnerScoreInput, setWinnerScoreInput] = useState<string>('');
 
+  useEffect(() => () => stopSpinSound(), []);
+
   const segCount = participants.length;
 
   // Shuffle the visual order of segments so the layout doesn't reflect arrival
