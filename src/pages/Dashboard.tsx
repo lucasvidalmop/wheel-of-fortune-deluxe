@@ -28,6 +28,7 @@ import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
 import BulkSendProgress from '@/components/casino/BulkSendProgress';
 import BulkSendControls from '@/components/casino/BulkSendControls';
 import { useBulkSendControl } from '@/hooks/useBulkSendControl';
+import MoneyInput from '@/components/casino/MoneyInput';
 
 interface WheelUser {
   id: string;
