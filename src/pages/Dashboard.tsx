@@ -1842,7 +1842,8 @@ function Dashboard() {
         const rows = contacts.map(c => ({ owner_id: session.user.id, lead: c.lead, numero: c.numero, group_name: groupName }));
         const BATCH = 500;
         for (let i = 0; i < rows.length; i += BATCH) {
-          await (supabase as any).from('imported_contacts').upsert(rows.slice(i, i + BATCH), { onConflict: 'owner_id,numero,group_name', ignoreDuplicates: true });
+          const { error: upErr } = await (supabase as any).from('imported_contacts').upsert(rows.slice(i, i + BATCH), { onConflict: 'owner_id,numero,group_name', ignoreDuplicates: true });
+          if (upErr) { console.error('Erro ao salvar contatos:', upErr); toast.error(`Erro ao salvar no banco: ${upErr.message}`); break; }
         }
       }
       if (groupName) setSelectedGroup(groupName);
