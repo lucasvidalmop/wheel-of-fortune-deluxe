@@ -17,8 +17,24 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<BattleParticipant | null>(null);
   const [winnerScoreInput, setWinnerScoreInput] = useState<string>('');
+  const [spinAudioDurationMs, setSpinAudioDurationMs] = useState<number | null>(null);
 
   useEffect(() => () => stopSpinSound(), []);
+
+  // Preload custom spin audio duration whenever it changes, so the wheel
+  // animation matches the audio length.
+  useEffect(() => {
+    let cancelled = false;
+    const url = config.spinSoundUrl;
+    if (!url) {
+      setSpinAudioDurationMs(null);
+      return;
+    }
+    getCustomAudioDuration(url).then((ms) => {
+      if (!cancelled) setSpinAudioDurationMs(ms > 0 ? ms : null);
+    });
+    return () => { cancelled = true; };
+  }, [config.spinSoundUrl]);
 
   const segCount = participants.length;
 
