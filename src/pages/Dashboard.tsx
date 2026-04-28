@@ -6985,8 +6985,15 @@ function Dashboard() {
                 <button
                   onClick={async () => {
                     if (!evolutionApiUrl2 || !evolutionApiKey2 || !evolutionInstance2) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig2(true); return; }
-                    if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
-                    if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
+                    const pollPayload = groupPoll.enabled ? (() => {
+                      const opts = groupPoll.values.map(v => v.trim()).filter(Boolean);
+                      if (!groupPoll.name.trim()) { toast.error('Informe a pergunta da enquete'); return null; }
+                      if (opts.length < 2) { toast.error('A enquete precisa de pelo menos 2 opções'); return null; }
+                      return { name: groupPoll.name.trim(), values: opts, selectableCount: groupPoll.multi ? opts.length : 1 };
+                    })() : null;
+                    if (groupPoll.enabled && !pollPayload) return;
+                    if (!pollPayload && !whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                    if (!await confirmDialog({ title: pollPayload ? 'Confirmar enquete para Grupos' : 'Confirmar disparo para Grupos', message: pollPayload ? `Enviar enquete para ${notifySelectedGroups2.length} grupo(s)?` : `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending2(true);
                     setWhatsappProgress2({ total: notifySelectedGroups2.length, sent: 0, errors: 0, skipped: 0 });
                     whatsapp2GroupCtrl.start();
@@ -6995,7 +7002,7 @@ function Dashboard() {
                       if (await whatsapp2GroupCtrl.shouldStop()) break;
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp2', {
-                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
+                          body: { recipientPhone: group.id, message: pollPayload ? '' : whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: pollPayload ? undefined : (whatsappMedia || undefined), mentionsEveryOne: whatsappMentionAll || undefined, poll: pollPayload || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
                         if (hasError) { errors++; setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 })); }
@@ -7008,7 +7015,7 @@ function Dashboard() {
                     whatsapp2GroupCtrl.finish();
                     setWhatsappSending2(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
-                    else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
+                    else toast.success(pollPayload ? `Enquete enviada para ${sent} grupo(s)!` : `Mensagem enviada para ${sent} grupo(s)!`);
                     setTimeout(() => setWhatsappProgress2(emptyProgress), 4000);
                   }}
                   disabled={whatsappSending2}
