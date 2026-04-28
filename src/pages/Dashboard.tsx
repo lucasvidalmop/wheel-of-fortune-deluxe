@@ -417,7 +417,7 @@ function Dashboard() {
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [scheduledLoading, setScheduledLoading] = useState(false);
-  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[] });
+  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[], pollEnabled: false, pollName: '', pollValues: ['', ''] as string[], pollMulti: false });
   const [schedSaving, setSchedSaving] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
@@ -478,7 +478,7 @@ function Dashboard() {
   };
 
   const resetSchedForm = () => {
-    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false, selectedGroups: [] });
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false, selectedGroups: [], pollEnabled: false, pollName: '', pollValues: ['', ''], pollMulti: false });
     setSchedMedia(null);
     setEditingScheduleId(null);
   };
@@ -495,6 +495,10 @@ function Dashboard() {
       recurrence: m.recurrence || 'none',
       mentionAll: m.mention_all || false,
       selectedGroups: m.recipient_type === 'group' ? [{ id: m.recipient_value, name: m.recipient_label || m.recipient_value }] : [],
+      pollEnabled: !!m.poll,
+      pollName: m.poll?.name || '',
+      pollValues: Array.isArray(m.poll?.values) && m.poll.values.length >= 2 ? m.poll.values : ['', ''],
+      pollMulti: !!(m.poll && Number(m.poll.selectableCount) > 1),
     });
     if (m.media_url) {
       setSchedMedia({ url: m.media_url, mediatype: m.media_type || 'document', mimetype: m.media_mimetype || '', fileName: m.media_filename || 'file' });
