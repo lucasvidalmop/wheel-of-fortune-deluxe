@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { playSpinSound, stopSpinSound } from '@/lib/spinSound';
+import { playSpinSound, stopSpinSound, getCustomAudioDuration } from '@/lib/spinSound';
 import type { BattleConfig, BattleParticipant } from './battleTypes';
 
 interface Props {
