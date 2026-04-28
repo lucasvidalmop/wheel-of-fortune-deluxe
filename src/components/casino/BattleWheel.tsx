@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { playSpinSound, stopSpinSound } from '@/lib/spinSound';
 import type { BattleConfig, BattleParticipant } from './battleTypes';
 
 interface Props {
@@ -16,6 +17,8 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<BattleParticipant | null>(null);
   const [winnerScoreInput, setWinnerScoreInput] = useState<string>('');
+
+  useEffect(() => () => stopSpinSound(), []);
 
   const segCount = participants.length;
 
@@ -117,6 +120,7 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
     if (spinning || segCount === 0) return;
     setWinner(null);
     setSpinning(true);
+    playSpinSound(5000);
 
     // Pick a random segment index (uniform). Weights kept for compatibility.
     const weights = segments.map((s) => Math.max(1, s.participant.weight ?? 1));
