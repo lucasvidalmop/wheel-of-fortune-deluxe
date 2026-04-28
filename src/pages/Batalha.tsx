@@ -841,7 +841,7 @@ export default function Batalha() {
             {activeParticipants.length} JOGADORES ATIVOS
           </div>
 
-          {winnerHistory[0] && (
+          {lastDrawn && (
             <div
               className="mt-4 rounded-2xl px-5 py-3 flex items-center gap-4 min-w-[260px]"
               style={{
@@ -858,11 +858,11 @@ export default function Batalha() {
               </div>
               <div className="min-w-0 flex-1 text-right">
                 <div className="text-sm font-bold truncate" style={{ color: config.panelTextColor }}>
-                  {winnerHistory[0].name}
+                  {lastDrawn.name}
                 </div>
-                {winnerHistory[0].game && (
+                {lastDrawn.game && (
                   <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
-                    {winnerHistory[0].game}
+                    {lastDrawn.game}
                   </div>
                 )}
               </div>
