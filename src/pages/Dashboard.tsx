@@ -1355,6 +1355,8 @@ function Dashboard() {
   };
 
   const syncDashboardConfig = async (userId: string, force = false) => {
+    if (!force && configDirtyRef.current) return;
+
     const { data: latest } = await (supabase as any)
       .from('wheel_configs')
       .select('id, slug, config, updated_at')
@@ -1364,6 +1366,7 @@ function Dashboard() {
     if (!latest) return;
     if (!force && lastConfigUpdatedAtRef.current && latest.updated_at === lastConfigUpdatedAtRef.current) return;
     if (savingInFlightRef.current) return;
+    if (!force && configDirtyRef.current) return;
 
     configHydratedRef.current = false;
     hydrateDashboardConfig(latest);
