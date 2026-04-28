@@ -285,6 +285,32 @@ export default function BattleConfigPanel({ userId }: Props) {
           <Field label="Favicon"><ImageUpload value={config.faviconUrl} onChange={(v) => update('faviconUrl', v)} folder="battle/favicon" /></Field>
         </section>
 
+        {/* Spin sound */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Som da Roleta</h3>
+          <p className="text-xs text-muted-foreground">
+            Envie um MP3/WAV. O giro acompanhará automaticamente a duração do áudio. Sem áudio = sem som.
+          </p>
+          <Field label="Arquivo de áudio">
+            <AudioUpload
+              value={config.spinSoundUrl}
+              onChange={(v) => update('spinSoundUrl', v)}
+              folder="battle/spin-sound"
+            />
+          </Field>
+          <Field label={`Volume — ${Math.round(((config.spinSoundVolume ?? 0.85) * 100))}%`}>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={config.spinSoundVolume ?? 0.85}
+              onChange={(e) => update('spinSoundVolume', Number(e.target.value))}
+              className="w-full accent-primary"
+            />
+          </Field>
+        </section>
+
         {/* Background */}
         <section className="space-y-3">
           <h3 className="font-bold text-foreground">Fundo</h3>
