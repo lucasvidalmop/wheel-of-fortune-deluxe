@@ -101,6 +101,7 @@ interface PersistedDashboardSettings {
   hideReceiptSection: boolean;
   hideEdpaySection: boolean;
   panelCasaUrl: string;
+  csvContactGroups: string[];
 }
 
 const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
@@ -156,6 +157,7 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   hideReceiptSection: false,
   hideEdpaySection: false,
   panelCasaUrl: '',
+  csvContactGroups: [],
 };
 
 const PANEL_CASA_STORAGE_KEY = 'dashboard_panel_casa_url';
@@ -1247,6 +1249,7 @@ function Dashboard() {
     hideReceiptSection,
     hideEdpaySection,
     panelCasaUrl: normalizePanelCasaUrl(panelCasaUrl),
+    csvContactGroups: contactGroups,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -1310,6 +1313,7 @@ function Dashboard() {
     setHideReceiptSection(!!settings.hideReceiptSection);
     setHideEdpaySection(!!settings.hideEdpaySection);
     setPanelCasaUrl(normalizePanelCasaUrl(settings.panelCasaUrl || ''));
+    setManualGroups(Array.isArray(settings.csvContactGroups) ? settings.csvContactGroups.filter(Boolean) : []);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
@@ -1779,44 +1783,62 @@ function Dashboard() {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          let text = (e.target?.result as string) || '';
-          // Remove BOM (UTF-8 byte order mark) que costuma vir em CSV exportado do Excel
+          let text = ((e.target?.result as string) || '').replace(/\u0000/g, '');
           if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
           const lines = text.split(/\r?\n/).filter(l => l.trim());
-          if (lines.length < 2) { reject(new Error('CSV vazio')); return; }
-          // Detecta o separador automaticamente (vírgula, ponto-e-vírgula ou tab)
-          const firstLine = lines[0];
-          const sep = firstLine.includes(';') ? ';' : firstLine.includes('\t') ? '\t' : ',';
-          // Normaliza headers: lowercase, remove acentos, remove aspas e espaços
-          const normalize = (s: string) => s
-            .toLowerCase()
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .replace(/^["'\s]+|["'\s]+$/g, '')
-            .trim();
-          const header = firstLine.split(sep).map(normalize);
-          const leadIdx = header.findIndex(h => ['lead', 'nome', 'name', 'contato', 'cliente'].includes(h));
-          let numIdx = header.findIndex(h => ['numero', 'telefone', 'phone', 'number', 'celular', 'whatsapp', 'whats', 'tel'].includes(h));
-          // Fallback: se não houver header reconhecido, tenta detectar pela coluna com mais dígitos
+          if (lines.length === 0) { reject(new Error('CSV vazio')); return; }
+          const countSep = (line: string, sep: string) => {
+            let count = 0, quoted = false;
+            for (let i = 0; i < line.length; i++) {
+              if (line[i] === '"') quoted = !quoted;
+              else if (!quoted && line[i] === sep) count++;
+            }
+            return count;
+          };
+          const sep = [',', ';', '\t', '|'].sort((a, b) => lines.slice(0, 5).reduce((n, l) => n + countSep(l, b), 0) - lines.slice(0, 5).reduce((n, l) => n + countSep(l, a), 0))[0];
+          const splitCsvLine = (line: string) => {
+            const out: string[] = [];
+            let cur = '', quoted = false;
+            for (let i = 0; i < line.length; i++) {
+              const ch = line[i];
+              if (ch === '"') {
+                if (quoted && line[i + 1] === '"') { cur += '"'; i++; }
+                else quoted = !quoted;
+              } else if (!quoted && ch === sep) { out.push(cur.trim()); cur = ''; }
+              else cur += ch;
+            }
+            out.push(cur.trim());
+            return out.map(c => c.replace(/^["'\s]+|["'\s]+$/g, ''));
+          };
+          const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^["'\s]+|["'\s]+$/g, '').trim();
+          const compact = (s: string) => normalize(s).replace(/[\s_\-().]/g, '');
+          const phoneDigits = (s: string) => (s || '').replace(/\D/g, '');
+          const rows = lines.map(splitCsvLine);
+          const header = (rows[0] || []).map(compact);
+          const phoneHeader = (h: string) => ['numero', 'numeros', 'telefone', 'telefones', 'celular', 'celulares', 'whatsapp', 'whats', 'zap', 'phone', 'phones', 'mobile', 'tel'].some(k => h === k || h.includes(k));
+          const nameHeader = (h: string) => ['lead', 'nome', 'name', 'contato', 'cliente', 'customer'].some(k => h === k || h.includes(k));
+          let numIdx = header.findIndex(phoneHeader);
+          let leadIdx = header.findIndex(nameHeader);
+          const hasHeader = numIdx >= 0 || leadIdx >= 0 || (rows[0] || []).every(c => phoneDigits(c).length < 10);
           if (numIdx === -1) {
-            const sample = lines.slice(1, Math.min(6, lines.length)).map(l => l.split(sep));
-            const colCount = header.length;
+            const colCount = Math.max(...rows.map(r => r.length));
             let bestIdx = -1, bestScore = 0;
             for (let c = 0; c < colCount; c++) {
-              const score = sample.reduce((acc, row) => acc + ((row[c] || '').replace(/\D/g, '').length >= 10 ? 1 : 0), 0);
+              const score = rows.slice(hasHeader ? 1 : 0).reduce((acc, row) => acc + (phoneDigits(row[c] || '').length >= 10 ? 1 : 0), 0);
               if (score > bestScore) { bestScore = score; bestIdx = c; }
             }
-            if (bestIdx === -1) { reject(new Error('Coluna de número não encontrada no CSV. Use cabeçalho "numero" ou "telefone".')); return; }
+            if (bestIdx === -1) { reject(new Error('Nenhum telefone com 10 ou mais dígitos foi encontrado no CSV.')); return; }
             numIdx = bestIdx;
           }
           const contacts: { lead: string; numero: string }[] = [];
-          for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(sep).map(c => c.replace(/^["'\s]+|["'\s]+$/g, ''));
-            const numero = cols[numIdx]?.replace(/\D/g, '') || '';
+          for (let i = hasHeader ? 1 : 0; i < rows.length; i++) {
+            const cols = rows[i];
+            const numero = phoneDigits(cols[numIdx] || '');
             if (numero.length >= 10) {
               contacts.push({ lead: leadIdx >= 0 ? (cols[leadIdx] || '') : '', numero });
             }
           }
-          if (contacts.length === 0) { reject(new Error('Nenhum número válido (mínimo 10 dígitos) encontrado no CSV')); return; }
+          if (contacts.length === 0) { reject(new Error('Nenhum telefone com 10 ou mais dígitos foi encontrado no CSV.')); return; }
           resolve(contacts);
         } catch (err) { reject(err); }
       };
@@ -1969,6 +1991,20 @@ function Dashboard() {
     const groups = [...new Set([...fromContacts, ...manualGroups])];
     setContactGroups(groups);
   }, [csvContacts, manualGroups]);
+
+  useEffect(() => {
+    if (!session?.user?.id || !configHydratedRef.current || !configId) return;
+    const groups = contactGroups.filter(Boolean);
+    const timeoutId = window.setTimeout(async () => {
+      const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).maybeSingle();
+      const dbConfig = dbRow?.config || {};
+      await (supabase as any).from('wheel_configs').update({
+        config: { ...dbConfig, dashboardSettings: { ...(dbConfig.dashboardSettings || {}), csvContactGroups: groups } },
+        updated_at: new Date().toISOString(),
+      }).eq('id', configId);
+    }, 400);
+    return () => window.clearTimeout(timeoutId);
+  }, [session?.user?.id, configId, contactGroups]);
   
 
   const handleSaveUser = async (e: React.FormEvent) => {
