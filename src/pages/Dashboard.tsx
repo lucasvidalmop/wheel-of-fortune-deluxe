@@ -1777,26 +1777,49 @@ function Dashboard() {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const text = e.target?.result as string;
+          let text = (e.target?.result as string) || '';
+          // Remove BOM (UTF-8 byte order mark) que costuma vir em CSV exportado do Excel
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
           const lines = text.split(/\r?\n/).filter(l => l.trim());
           if (lines.length < 2) { reject(new Error('CSV vazio')); return; }
-          const header = lines[0].toLowerCase().split(/[;,\t]/).map(h => h.trim());
-          const leadIdx = header.findIndex(h => h === 'lead' || h === 'nome' || h === 'name');
-          const numIdx = header.findIndex(h => h === 'numero' || h === 'telefone' || h === 'phone' || h === 'number');
-          if (numIdx === -1) { reject(new Error('Coluna "numero" não encontrada no CSV')); return; }
+          // Detecta o separador automaticamente (vírgula, ponto-e-vírgula ou tab)
+          const firstLine = lines[0];
+          const sep = firstLine.includes(';') ? ';' : firstLine.includes('\t') ? '\t' : ',';
+          // Normaliza headers: lowercase, remove acentos, remove aspas e espaços
+          const normalize = (s: string) => s
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/^["'\s]+|["'\s]+$/g, '')
+            .trim();
+          const header = firstLine.split(sep).map(normalize);
+          const leadIdx = header.findIndex(h => ['lead', 'nome', 'name', 'contato', 'cliente'].includes(h));
+          let numIdx = header.findIndex(h => ['numero', 'telefone', 'phone', 'number', 'celular', 'whatsapp', 'whats', 'tel'].includes(h));
+          // Fallback: se não houver header reconhecido, tenta detectar pela coluna com mais dígitos
+          if (numIdx === -1) {
+            const sample = lines.slice(1, Math.min(6, lines.length)).map(l => l.split(sep));
+            const colCount = header.length;
+            let bestIdx = -1, bestScore = 0;
+            for (let c = 0; c < colCount; c++) {
+              const score = sample.reduce((acc, row) => acc + ((row[c] || '').replace(/\D/g, '').length >= 10 ? 1 : 0), 0);
+              if (score > bestScore) { bestScore = score; bestIdx = c; }
+            }
+            if (bestIdx === -1) { reject(new Error('Coluna de número não encontrada no CSV. Use cabeçalho "numero" ou "telefone".')); return; }
+            numIdx = bestIdx;
+          }
           const contacts: { lead: string; numero: string }[] = [];
           for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(/[;,\t]/).map(c => c.trim());
+            const cols = lines[i].split(sep).map(c => c.replace(/^["'\s]+|["'\s]+$/g, ''));
             const numero = cols[numIdx]?.replace(/\D/g, '') || '';
             if (numero.length >= 10) {
               contacts.push({ lead: leadIdx >= 0 ? (cols[leadIdx] || '') : '', numero });
             }
           }
+          if (contacts.length === 0) { reject(new Error('Nenhum número válido (mínimo 10 dígitos) encontrado no CSV')); return; }
           resolve(contacts);
         } catch (err) { reject(err); }
       };
       reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
-      reader.readAsText(file);
+      reader.readAsText(file, 'UTF-8');
     });
   };
 
