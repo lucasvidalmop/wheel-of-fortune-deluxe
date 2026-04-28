@@ -157,7 +157,18 @@ Deno.serve(async (req) => {
           let url: string;
           let body: Record<string, any>;
 
-          if (msg.media_url && msg.media_type === 'ptt') {
+          const poll = (msg as any).poll;
+          if (poll && poll.name && Array.isArray(poll.values) && poll.values.length >= 2) {
+            const opts = (poll.values as string[]).map((v) => String(v).trim()).filter(Boolean).slice(0, 12);
+            const selectableCount = Number(poll.selectableCount);
+            url = `${baseUrl}/message/sendPoll/${evolutionInstance}`;
+            body = {
+              number,
+              name: String(poll.name).trim(),
+              selectableCount: Number.isFinite(selectableCount) && selectableCount >= 1 ? Math.min(selectableCount, opts.length) : 1,
+              values: opts,
+            };
+          } else if (msg.media_url && msg.media_type === 'ptt') {
             url = `${baseUrl}/message/sendWhatsAppAudio/${evolutionInstance}`;
             body = { number, audio: msg.media_url, encoding: true };
           } else if (msg.media_url) {

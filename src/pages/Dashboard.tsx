@@ -417,7 +417,7 @@ function Dashboard() {
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [scheduledLoading, setScheduledLoading] = useState(false);
-  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[] });
+  const [schedForm, setSchedForm] = useState({ message: '', recipientType: 'individual' as 'individual' | 'group', recipientValue: '', recipientLabel: '', date: undefined as Date | undefined, time: '12:00', recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly', mentionAll: false, selectedGroups: [] as { id: string; name: string }[], pollEnabled: false, pollName: '', pollValues: ['', ''] as string[], pollMulti: false });
   const [schedSaving, setSchedSaving] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [schedMedia, setSchedMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
@@ -478,7 +478,7 @@ function Dashboard() {
   };
 
   const resetSchedForm = () => {
-    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false, selectedGroups: [] });
+    setSchedForm({ message: '', recipientType: 'individual', recipientValue: '', recipientLabel: '', date: undefined, time: '12:00', recurrence: 'none', mentionAll: false, selectedGroups: [], pollEnabled: false, pollName: '', pollValues: ['', ''], pollMulti: false });
     setSchedMedia(null);
     setEditingScheduleId(null);
   };
@@ -495,6 +495,10 @@ function Dashboard() {
       recurrence: m.recurrence || 'none',
       mentionAll: m.mention_all || false,
       selectedGroups: m.recipient_type === 'group' ? [{ id: m.recipient_value, name: m.recipient_label || m.recipient_value }] : [],
+      pollEnabled: !!m.poll,
+      pollName: m.poll?.name || '',
+      pollValues: Array.isArray(m.poll?.values) && m.poll.values.length >= 2 ? m.poll.values : ['', ''],
+      pollMulti: !!(m.poll && Number(m.poll.selectableCount) > 1),
     });
     if (m.media_url) {
       setSchedMedia({ url: m.media_url, mediatype: m.media_type || 'document', mimetype: m.media_mimetype || '', fileName: m.media_filename || 'file' });
@@ -505,7 +509,15 @@ function Dashboard() {
   };
 
   const saveScheduledMessage = async () => {
-    if (!schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
+    let pollPayload: { name: string; values: string[]; selectableCount: number } | null = null;
+    if (schedForm.pollEnabled) {
+      if (schedForm.recipientType !== 'group') { toast.error('Enquetes só podem ser enviadas para grupos'); return; }
+      const opts = schedForm.pollValues.map(v => v.trim()).filter(Boolean);
+      if (!schedForm.pollName.trim()) { toast.error('Informe a pergunta da enquete'); return; }
+      if (opts.length < 2) { toast.error('A enquete precisa de pelo menos 2 opções'); return; }
+      pollPayload = { name: schedForm.pollName.trim(), values: opts, selectableCount: schedForm.pollMulti ? opts.length : 1 };
+    }
+    if (!pollPayload && !schedForm.message.trim() && !schedMedia) { toast.error('Digite a mensagem ou anexe mídia'); return; }
     if (schedForm.recipientType === 'individual' && !schedForm.recipientValue) { toast.error('Selecione o destinatário'); return; }
     if (schedForm.recipientType === 'group' && schedForm.selectedGroups.length === 0) { toast.error('Selecione ao menos um grupo'); return; }
     if (!schedForm.date) { toast.error('Selecione a data'); return; }
@@ -526,14 +538,15 @@ function Dashboard() {
       recipient_type: schedForm.recipientType,
       recurrence: schedForm.recurrence,
       status: 'pending',
-      media_url: schedMedia?.url || null,
-      media_type: schedMedia?.mediatype || null,
-      media_mimetype: schedMedia?.mimetype || null,
-      media_filename: schedMedia?.fileName || null,
+      media_url: pollPayload ? null : (schedMedia?.url || null),
+      media_type: pollPayload ? null : (schedMedia?.mediatype || null),
+      media_mimetype: pollPayload ? null : (schedMedia?.mimetype || null),
+      media_filename: pollPayload ? null : (schedMedia?.fileName || null),
       mention_all: schedForm.mentionAll,
       scheduled_at: isoDate,
       next_run_at: isoDate,
       channel: scheduleChannel,
+      poll: pollPayload,
       updated_at: new Date().toISOString(),
     };
 
@@ -580,6 +593,7 @@ function Dashboard() {
   const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
   const [whatsappMediaUploading, setWhatsappMediaUploading] = useState(false);
   const [whatsappMentionAll, setWhatsappMentionAll] = useState(false);
+  const [groupPoll, setGroupPoll] = useState<{ enabled: boolean; name: string; values: string[]; multi: boolean }>({ enabled: false, name: '', values: ['', ''], multi: false });
   const whatsappMediaInputRef = useRef<HTMLInputElement>(null);
   const whatsappPttInputRef = useRef<HTMLInputElement>(null);
 
@@ -5898,6 +5912,57 @@ function Dashboard() {
                   </label>
                 </div>
 
+                {/* Poll editor (only relevant when sending to groups) */}
+                {(notifySelectedGroups.length > 0 || notifySelectedGroups2.length > 0) && (
+                  <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                      <input type="checkbox" checked={groupPoll.enabled} onChange={e => setGroupPoll(p => ({ ...p, enabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                      <BarChart3 size={14} className="text-blue-400" />
+                      <span className="text-foreground font-medium">Enviar como enquete (apenas para grupos)</span>
+                    </label>
+                    {groupPoll.enabled && (
+                      <div className="space-y-2 pl-1">
+                        <input
+                          type="text"
+                          value={groupPoll.name}
+                          onChange={e => setGroupPoll(p => ({ ...p, name: e.target.value }))}
+                          maxLength={255}
+                          placeholder="Pergunta da enquete"
+                          className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        />
+                        <div className="space-y-1.5">
+                          {groupPoll.values.map((v, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={v}
+                                onChange={e => setGroupPoll(p => { const nv = [...p.values]; nv[idx] = e.target.value; return { ...p, values: nv }; })}
+                                maxLength={100}
+                                placeholder={`Opção ${idx + 1}`}
+                                className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                              />
+                              {groupPoll.values.length > 2 && (
+                                <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: p.values.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition">
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          {groupPoll.values.length < 12 && (
+                            <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: [...p.values, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition">
+                              <Plus size={12} /> Adicionar opção
+                            </button>
+                          )}
+                        </div>
+                        <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                          <input type="checkbox" checked={groupPoll.multi} onChange={e => setGroupPoll(p => ({ ...p, multi: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                          <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 pt-1">
                   <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
                   <input
@@ -5985,8 +6050,15 @@ function Dashboard() {
                 <button
                   onClick={async () => {
                     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig(true); return; }
-                    if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
-                    if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
+                    const pollPayload = groupPoll.enabled ? (() => {
+                      const opts = groupPoll.values.map(v => v.trim()).filter(Boolean);
+                      if (!groupPoll.name.trim()) { toast.error('Informe a pergunta da enquete'); return null; }
+                      if (opts.length < 2) { toast.error('A enquete precisa de pelo menos 2 opções'); return null; }
+                      return { name: groupPoll.name.trim(), values: opts, selectableCount: groupPoll.multi ? opts.length : 1 };
+                    })() : null;
+                    if (groupPoll.enabled && !pollPayload) return;
+                    if (!pollPayload && !whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                    if (!await confirmDialog({ title: pollPayload ? 'Confirmar enquete para Grupos' : 'Confirmar disparo para Grupos', message: pollPayload ? `Enviar enquete para ${notifySelectedGroups.length} grupo(s)?` : `Enviar esta mensagem para ${notifySelectedGroups.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending(true);
                     setWhatsappProgress({ total: notifySelectedGroups.length, sent: 0, errors: 0, skipped: 0 });
                     whatsappGroupCtrl.start();
@@ -5995,7 +6067,7 @@ function Dashboard() {
                       if (await whatsappGroupCtrl.shouldStop()) break;
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp', {
-                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
+                          body: { recipientPhone: group.id, message: pollPayload ? '' : whatsappMessage, evolutionApiUrl, evolutionApiKey, evolutionInstance, media: pollPayload ? undefined : (whatsappMedia || undefined), mentionsEveryOne: whatsappMentionAll || undefined, poll: pollPayload || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
                         if (hasError) { errors++; setWhatsappProgress(p => ({ ...p, errors: p.errors + 1 })); }
@@ -6008,7 +6080,7 @@ function Dashboard() {
                     whatsappGroupCtrl.finish();
                     setWhatsappSending(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
-                    else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
+                    else toast.success(pollPayload ? `Enquete enviada para ${sent} grupo(s)!` : `Mensagem enviada para ${sent} grupo(s)!`);
                     setTimeout(() => setWhatsappProgress(emptyProgress), 4000);
                   }}
                   disabled={whatsappSending}
@@ -6031,7 +6103,40 @@ function Dashboard() {
                   <div className="space-y-4">
                     {/* Form */}
                     <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
-                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" disabled={schedForm.pollEnabled} />
+
+                      {/* Poll editor (groups only) */}
+                      {schedForm.recipientType === 'group' && (
+                        <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                          <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                            <input type="checkbox" checked={schedForm.pollEnabled} onChange={e => setSchedForm(f => ({ ...f, pollEnabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                            <BarChart3 size={14} className="text-blue-400" />
+                            <span className="text-foreground font-medium">Agendar enquete (apenas grupos)</span>
+                          </label>
+                          {schedForm.pollEnabled && (
+                            <div className="space-y-2">
+                              <input type="text" value={schedForm.pollName} onChange={e => setSchedForm(f => ({ ...f, pollName: e.target.value }))} maxLength={255} placeholder="Pergunta da enquete" className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                              <div className="space-y-1.5">
+                                {schedForm.pollValues.map((v, idx) => (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <input type="text" value={v} onChange={e => setSchedForm(f => { const nv = [...f.pollValues]; nv[idx] = e.target.value; return { ...f, pollValues: nv }; })} maxLength={100} placeholder={`Opção ${idx + 1}`} className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                    {schedForm.pollValues.length > 2 && (
+                                      <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: f.pollValues.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition"><X size={14} /></button>
+                                    )}
+                                  </div>
+                                ))}
+                                {schedForm.pollValues.length < 12 && (
+                                  <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: [...f.pollValues, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition"><Plus size={12} /> Adicionar opção</button>
+                                )}
+                              </div>
+                              <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                                <input type="checkbox" checked={schedForm.pollMulti} onChange={e => setSchedForm(f => ({ ...f, pollMulti: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                                <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Media attachment for scheduler */}
                       <div className="flex items-center gap-2 flex-wrap">
@@ -6788,6 +6893,57 @@ function Dashboard() {
                   </label>
                 </div>
 
+                {/* Poll editor (only relevant when sending to groups) */}
+                {(notifySelectedGroups.length > 0 || notifySelectedGroups2.length > 0) && (
+                  <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                      <input type="checkbox" checked={groupPoll.enabled} onChange={e => setGroupPoll(p => ({ ...p, enabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                      <BarChart3 size={14} className="text-blue-400" />
+                      <span className="text-foreground font-medium">Enviar como enquete (apenas para grupos)</span>
+                    </label>
+                    {groupPoll.enabled && (
+                      <div className="space-y-2 pl-1">
+                        <input
+                          type="text"
+                          value={groupPoll.name}
+                          onChange={e => setGroupPoll(p => ({ ...p, name: e.target.value }))}
+                          maxLength={255}
+                          placeholder="Pergunta da enquete"
+                          className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        />
+                        <div className="space-y-1.5">
+                          {groupPoll.values.map((v, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={v}
+                                onChange={e => setGroupPoll(p => { const nv = [...p.values]; nv[idx] = e.target.value; return { ...p, values: nv }; })}
+                                maxLength={100}
+                                placeholder={`Opção ${idx + 1}`}
+                                className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                              />
+                              {groupPoll.values.length > 2 && (
+                                <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: p.values.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition">
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          {groupPoll.values.length < 12 && (
+                            <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: [...p.values, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition">
+                              <Plus size={12} /> Adicionar opção
+                            </button>
+                          )}
+                        </div>
+                        <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                          <input type="checkbox" checked={groupPoll.multi} onChange={e => setGroupPoll(p => ({ ...p, multi: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                          <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 pt-1">
                   <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
                   <input
@@ -6875,8 +7031,15 @@ function Dashboard() {
                 <button
                   onClick={async () => {
                     if (!evolutionApiUrl2 || !evolutionApiKey2 || !evolutionInstance2) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig2(true); return; }
-                    if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
-                    if (!await confirmDialog({ title: 'Confirmar disparo para Grupos', message: `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
+                    const pollPayload = groupPoll.enabled ? (() => {
+                      const opts = groupPoll.values.map(v => v.trim()).filter(Boolean);
+                      if (!groupPoll.name.trim()) { toast.error('Informe a pergunta da enquete'); return null; }
+                      if (opts.length < 2) { toast.error('A enquete precisa de pelo menos 2 opções'); return null; }
+                      return { name: groupPoll.name.trim(), values: opts, selectableCount: groupPoll.multi ? opts.length : 1 };
+                    })() : null;
+                    if (groupPoll.enabled && !pollPayload) return;
+                    if (!pollPayload && !whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                    if (!await confirmDialog({ title: pollPayload ? 'Confirmar enquete para Grupos' : 'Confirmar disparo para Grupos', message: pollPayload ? `Enviar enquete para ${notifySelectedGroups2.length} grupo(s)?` : `Enviar esta mensagem para ${notifySelectedGroups2.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
                     setWhatsappSending2(true);
                     setWhatsappProgress2({ total: notifySelectedGroups2.length, sent: 0, errors: 0, skipped: 0 });
                     whatsapp2GroupCtrl.start();
@@ -6885,7 +7048,7 @@ function Dashboard() {
                       if (await whatsapp2GroupCtrl.shouldStop()) break;
                       try {
                         const { data: respData, error } = await supabase.functions.invoke('send-whatsapp2', {
-                          body: { recipientPhone: group.id, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined }
+                          body: { recipientPhone: group.id, message: pollPayload ? '' : whatsappMessage, evolutionApiUrl: evolutionApiUrl2, evolutionApiKey: evolutionApiKey2, evolutionInstance: evolutionInstance2, media: pollPayload ? undefined : (whatsappMedia || undefined), mentionsEveryOne: whatsappMentionAll || undefined, poll: pollPayload || undefined }
                         });
                         const hasError = !!error || !!respData?.error;
                         if (hasError) { errors++; setWhatsappProgress2(p => ({ ...p, errors: p.errors + 1 })); }
@@ -6898,7 +7061,7 @@ function Dashboard() {
                     whatsapp2GroupCtrl.finish();
                     setWhatsappSending2(false);
                     if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
-                    else toast.success(`Mensagem enviada para ${sent} grupo(s)!`);
+                    else toast.success(pollPayload ? `Enquete enviada para ${sent} grupo(s)!` : `Mensagem enviada para ${sent} grupo(s)!`);
                     setTimeout(() => setWhatsappProgress2(emptyProgress), 4000);
                   }}
                   disabled={whatsappSending2}
@@ -6921,7 +7084,40 @@ function Dashboard() {
                   <div className="space-y-4">
                     {/* Form */}
                     <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
-                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" disabled={schedForm.pollEnabled} />
+
+                      {/* Poll editor (groups only) */}
+                      {schedForm.recipientType === 'group' && (
+                        <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                          <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                            <input type="checkbox" checked={schedForm.pollEnabled} onChange={e => setSchedForm(f => ({ ...f, pollEnabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                            <BarChart3 size={14} className="text-blue-400" />
+                            <span className="text-foreground font-medium">Agendar enquete (apenas grupos)</span>
+                          </label>
+                          {schedForm.pollEnabled && (
+                            <div className="space-y-2">
+                              <input type="text" value={schedForm.pollName} onChange={e => setSchedForm(f => ({ ...f, pollName: e.target.value }))} maxLength={255} placeholder="Pergunta da enquete" className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                              <div className="space-y-1.5">
+                                {schedForm.pollValues.map((v, idx) => (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <input type="text" value={v} onChange={e => setSchedForm(f => { const nv = [...f.pollValues]; nv[idx] = e.target.value; return { ...f, pollValues: nv }; })} maxLength={100} placeholder={`Opção ${idx + 1}`} className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                    {schedForm.pollValues.length > 2 && (
+                                      <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: f.pollValues.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition"><X size={14} /></button>
+                                    )}
+                                  </div>
+                                ))}
+                                {schedForm.pollValues.length < 12 && (
+                                  <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: [...f.pollValues, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition"><Plus size={12} /> Adicionar opção</button>
+                                )}
+                              </div>
+                              <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                                <input type="checkbox" checked={schedForm.pollMulti} onChange={e => setSchedForm(f => ({ ...f, pollMulti: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                                <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Media attachment for scheduler */}
                       <div className="flex items-center gap-2 flex-wrap">
