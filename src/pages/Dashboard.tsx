@@ -580,6 +580,7 @@ function Dashboard() {
   const [whatsappMedia, setWhatsappMedia] = useState<{ url: string; mediatype: string; mimetype: string; fileName: string; ptt?: boolean } | null>(null);
   const [whatsappMediaUploading, setWhatsappMediaUploading] = useState(false);
   const [whatsappMentionAll, setWhatsappMentionAll] = useState(false);
+  const [groupPoll, setGroupPoll] = useState<{ enabled: boolean; name: string; values: string[]; multi: boolean }>({ enabled: false, name: '', values: ['', ''], multi: false });
   const whatsappMediaInputRef = useRef<HTMLInputElement>(null);
   const whatsappPttInputRef = useRef<HTMLInputElement>(null);
 
