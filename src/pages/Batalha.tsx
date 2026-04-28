@@ -760,7 +760,7 @@ export default function Batalha() {
                     className="text-[10px] tracking-[0.3em] font-bold"
                     style={{ color: config.headerAccentColor }}
                   >
-                    HISTÓRICO · {winnerHistory.length}
+                    🏆 VENCEDORES · {winnerHistory.length}
                   </div>
                   <button
                     onClick={async () => {
