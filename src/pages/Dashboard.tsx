@@ -1566,7 +1566,6 @@ function Dashboard() {
     hideReceiptSection,
     hideEdpaySection,
     panelCasaUrl,
-    contactGroups,
   ]);
 
   useEffect(() => {
