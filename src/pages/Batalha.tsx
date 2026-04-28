@@ -303,8 +303,24 @@ export default function Batalha() {
   const updateScore = (id: string, score: number) =>
     setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, score } : p)));
 
+  // Last drawn participant from the wheel (shown in the "ÚLTIMO SORTEADO" card).
+  const [lastDrawn, setLastDrawn] = useState<{ name: string; game?: string } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem('battle_last_drawn');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    try {
+      if (lastDrawn) window.localStorage.setItem('battle_last_drawn', JSON.stringify(lastDrawn));
+      else window.localStorage.removeItem('battle_last_drawn');
+    } catch { /* ignore */ }
+  }, [lastDrawn]);
+
   const handleWinner = (w: BattleParticipant) => {
-    setWinnerHistory((prev) => [{ id: crypto.randomUUID(), name: w.name, game: w.game, at: Date.now() }, ...prev].slice(0, 20));
+    setLastDrawn({ name: w.name, game: w.game });
     // Remove the winner from the wheel but keep them in the ranking.
     setEliminatedIds((prev) => {
       const next = new Set(prev);
