@@ -23,30 +23,17 @@ const Referral = () => {
   useEffect(() => {
     const fetchLink = async () => {
       if (!code) { setLoading(false); return; }
-      const { data, error } = await (supabase as any)
-        .from('referral_links')
-        .select('*')
-        .eq('code', code.toUpperCase())
-        .eq('is_active', true)
-        .maybeSingle();
-      if (error || !data) {
+      const { data: rpcData, error } = await (supabase as any)
+        .rpc('get_referral_page_data', { p_code: code });
+      const link = rpcData?.linkData;
+      if (error || !link) {
         toast.error('Link inválido ou desativado');
       } else {
-        setLinkData(data);
-        // Load page config: individual > default from wheel_configs > defaultPageConfig
-        const { data: wcData } = await (supabase as any)
-          .from('wheel_configs')
-          .select('slug, config')
-          .eq('user_id', data.owner_id)
-          .maybeSingle();
-        if (wcData?.slug) setWheelSlug(wcData.slug);
-
-        // Load shared slot machine config from gorjetaPageConfig
-        const gorjetaSlot = wcData?.config?.gorjetaPageConfig || {};
-        setSlotCfg(gorjetaSlot);
-
-        const defaultCfg = wcData?.config?.defaultReferralPageConfig || {};
-        const individualCfg = data.page_config && Object.keys(data.page_config).length > 0 ? data.page_config : {};
+        setLinkData(link);
+        if (rpcData?.wheelSlug) setWheelSlug(rpcData.wheelSlug);
+        setSlotCfg(rpcData?.gorjetaPageConfig || {});
+        const defaultCfg = rpcData?.defaultReferralPageConfig || {};
+        const individualCfg = link.page_config && Object.keys(link.page_config).length > 0 ? link.page_config : {};
         setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
       }
       setLoading(false);
