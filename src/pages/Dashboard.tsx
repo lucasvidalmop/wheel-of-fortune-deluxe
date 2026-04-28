@@ -212,6 +212,7 @@ function Dashboard() {
   const lastPersistedSettingsRef = useRef('');
   const lastConfigUpdatedAtRef = useRef<string | null>(null);
   const savingInFlightRef = useRef(false);
+  const configDirtyRef = useRef(false);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
