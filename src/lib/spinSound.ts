@@ -24,18 +24,32 @@ export function getCustomAudioDuration(url: string): Promise<number> {
   });
 }
 
+const DEFAULT_SPIN_SOUND_URL = '/sounds/spinning-wheel.mp3';
+
 export function playSpinSound(durationMs = 5000, customUrl?: string) {
   stopSpinSound();
 
-  if (customUrl) {
-    try {
-      customAudioEl = new Audio(customUrl);
-      customAudioEl.currentTime = 0;
-      customAudioEl.play().catch(() => {});
-    } catch {
-      // fallback silently
+  const url = customUrl || DEFAULT_SPIN_SOUND_URL;
+  try {
+    customAudioEl = new Audio(url);
+    customAudioEl.currentTime = 0;
+    customAudioEl.volume = 0.85;
+    customAudioEl.play().catch(() => {});
+    // Stop the audio when the spin animation ends so it doesn't keep playing.
+    if (durationMs > 0) {
+      const el = customAudioEl;
+      window.setTimeout(() => {
+        if (el && customAudioEl === el) {
+          try {
+            el.pause();
+            el.currentTime = 0;
+          } catch { /* noop */ }
+        }
+      }, durationMs);
     }
     return;
+  } catch {
+    // fall through to synthesized fallback below
   }
 
   try {
