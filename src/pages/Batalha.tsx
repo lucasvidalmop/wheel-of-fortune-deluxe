@@ -597,21 +597,13 @@ export default function Batalha() {
                     }}
                   >
                     <span className="text-[10px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
+                    <MoneyInput
                       name="battle-initial-bankroll"
-                      value={initialBankroll ? fmtBRL(initialBankroll) : ''}
-                      placeholder="0,00"
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '');
-                        const cents = digits === '' ? 0 : Number(digits);
-                        setInitialBankroll(cents / 100);
-                      }}
+                      value={initialBankroll}
+                      onChange={(v) => setInitialBankroll(v)}
                       className="battle-money-input w-full bg-transparent text-xs text-right font-bold tabular-nums outline-none"
                       style={{ color: config.panelTextColor }}
-                      aria-label="Banca inicial"
+                      ariaLabel="Banca inicial"
                     />
                   </div>
                 </div>
