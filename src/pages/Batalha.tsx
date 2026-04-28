@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import BattleWheel from '@/components/casino/BattleWheel';
 import BattleWinnerOverlay from '@/components/casino/BattleWinnerOverlay';
+import MoneyInput from '@/components/casino/MoneyInput';
 import { defaultBattleConfig, type BattleConfig, type BattleParticipant } from '@/components/casino/battleTypes';
 import { Plus, Trash2, Swords, LogOut, AlertTriangle, Search, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -596,21 +597,13 @@ export default function Batalha() {
                     }}
                   >
                     <span className="text-[10px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
+                    <MoneyInput
                       name="battle-initial-bankroll"
-                      value={initialBankroll ? fmtBRL(initialBankroll) : ''}
-                      placeholder="0,00"
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '');
-                        const cents = digits === '' ? 0 : Number(digits);
-                        setInitialBankroll(cents / 100);
-                      }}
+                      value={initialBankroll}
+                      onChange={(v) => setInitialBankroll(v)}
                       className="battle-money-input w-full bg-transparent text-xs text-right font-bold tabular-nums outline-none"
                       style={{ color: config.panelTextColor }}
-                      aria-label="Banca inicial"
+                      ariaLabel="Banca inicial"
                     />
                   </div>
                 </div>
@@ -627,21 +620,13 @@ export default function Batalha() {
                     }}
                   >
                     <span className="text-[10px] font-bold" style={{ color: config.headerAccentColor }}>R$</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
+                    <MoneyInput
                       name="battle-tournament-entry"
-                      value={tournamentEntry ? fmtBRL(tournamentEntry) : ''}
-                      placeholder="0,00"
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '');
-                        const cents = digits === '' ? 0 : Number(digits);
-                        setTournamentEntry(cents / 100);
-                      }}
+                      value={tournamentEntry}
+                      onChange={(v) => setTournamentEntry(v)}
                       className="battle-money-input w-full bg-transparent text-xs text-right font-bold tabular-nums outline-none"
                       style={{ color: config.panelTextColor }}
-                      aria-label="Valor do torneio"
+                      ariaLabel="Valor do torneio"
                     />
                   </div>
                 </div>
@@ -907,27 +892,16 @@ export default function Batalha() {
                               >
                                 R$
                               </span>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                value={
-                                  p.score
-                                    ? p.score.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                    : ''
-                                }
-                                placeholder="0,00"
-                                onChange={(e) => {
-                                  const digits = e.target.value.replace(/\D/g, '');
-                                  const cents = digits === '' ? 0 : Number(digits);
-                                  updateScore(p.id, cents / 100);
-                                }}
-                                className="w-24 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              <MoneyInput
+                                value={p.score || 0}
+                                onChange={(v) => updateScore(p.id, v)}
+                                className="w-24 h-8 rounded-md px-2 text-sm text-right font-bold tabular-nums outline-none transition-shadow focus:shadow-[0_0_0_2px]"
                                 style={{
                                   backgroundColor: config.panelBgColor,
                                   border: `1px solid ${config.inputBorderColor}55`,
                                   color: config.headerAccentColor,
                                 }}
-                                aria-label={`Valor de ${p.name}`}
+                                ariaLabel={`Valor de ${p.name}`}
                               />
                             </div>
                             <button
