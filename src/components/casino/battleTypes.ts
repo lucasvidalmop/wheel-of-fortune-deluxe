@@ -128,4 +128,6 @@ export const defaultBattleConfig: BattleConfig = {
   resultTextColor: '#3DE8D2',
   resultBorderColor: '#3DE8D2',
   resultTitle: 'VENCEDOR',
+
+  spinSoundVolume: 0.85,
 };
