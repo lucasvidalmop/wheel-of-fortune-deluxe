@@ -1968,7 +1968,7 @@ function Dashboard() {
     const groups = [...new Set([...fromContacts, ...manualGroups])];
     setContactGroups(groups);
   }, [csvContacts, manualGroups]);
-  }, [csvContacts]);
+  
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
