@@ -26,14 +26,17 @@ export function getCustomAudioDuration(url: string): Promise<number> {
 
 const DEFAULT_SPIN_SOUND_URL = '/sounds/spinning-wheel.mp3';
 
-export function playSpinSound(durationMs = 5000, customUrl?: string) {
+export function playSpinSound(durationMs = 5000, customUrl?: string, volume = 0.85) {
   stopSpinSound();
 
-  const url = customUrl || DEFAULT_SPIN_SOUND_URL;
+  // Only play if a custom URL is configured. No fallback sound — the operator
+  // must upload their own audio in the Battle config panel.
+  if (!customUrl) return;
+
   try {
-    customAudioEl = new Audio(url);
+    customAudioEl = new Audio(customUrl);
     customAudioEl.currentTime = 0;
-    customAudioEl.volume = 0.85;
+    customAudioEl.volume = Math.min(1, Math.max(0, volume));
     customAudioEl.play().catch(() => {});
     // Stop the audio when the spin animation ends so it doesn't keep playing.
     if (durationMs > 0) {
@@ -47,10 +50,10 @@ export function playSpinSound(durationMs = 5000, customUrl?: string) {
         }
       }, durationMs);
     }
-    return;
   } catch {
-    // fall through to synthesized fallback below
+    // ignore
   }
+}
 
   try {
     const ctx = getAudioContext();
