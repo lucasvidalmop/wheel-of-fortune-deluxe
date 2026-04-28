@@ -95,6 +95,62 @@ const ImageUpload = ({ value, onChange, folder }: { value?: string; onChange: (u
   );
 };
 
+const AudioUpload = ({ value, onChange, folder }: { value?: string; onChange: (url: string) => void; folder: string }) => {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      toast.error('Selecione um arquivo de áudio (MP3, WAV, etc.)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('O áudio deve ter no máximo 5MB');
+      return;
+    }
+    setUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, folder);
+      onChange(publicUrl);
+      toast.success('Áudio enviado!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao enviar áudio');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-border bg-background px-2 h-8 text-xs hover:bg-muted">
+          <Upload size={12} />
+          {uploading ? 'Enviando...' : value ? 'Trocar áudio' : 'Enviar áudio'}
+          <input ref={inputRef} type="file" accept="audio/*" onChange={handle} className="hidden" disabled={uploading} />
+        </label>
+        {value && (
+          <>
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="text-destructive hover:opacity-80"
+              aria-label="Remover áudio"
+            >
+              <Trash2 size={14} />
+            </button>
+          </>
+        )}
+      </div>
+      {value && (
+        <audio src={value} controls className="w-full h-8" />
+      )}
+    </div>
+  );
+};
+
 // Mock participants for the live preview only (not saved).
 const previewParticipants: BattleParticipant[] = [
   { id: 'p1', name: 'Jogador 1', game: 'Fortune Tiger', weight: 1 },
