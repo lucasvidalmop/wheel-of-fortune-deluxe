@@ -30,7 +30,7 @@ export default function Batalha() {
   });
   const [name, setName] = useState('');
   const [game, setGame] = useState('');
-  const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>(() => {
+  const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; score?: number; at: number }[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
       const raw = window.localStorage.getItem('battle_winner_history');
@@ -303,8 +303,24 @@ export default function Batalha() {
   const updateScore = (id: string, score: number) =>
     setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, score } : p)));
 
+  // Last drawn participant from the wheel (shown in the "ÚLTIMO SORTEADO" card).
+  const [lastDrawn, setLastDrawn] = useState<{ name: string; game?: string } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem('battle_last_drawn');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    try {
+      if (lastDrawn) window.localStorage.setItem('battle_last_drawn', JSON.stringify(lastDrawn));
+      else window.localStorage.removeItem('battle_last_drawn');
+    } catch { /* ignore */ }
+  }, [lastDrawn]);
+
   const handleWinner = (w: BattleParticipant) => {
-    setWinnerHistory((prev) => [{ id: crypto.randomUUID(), name: w.name, game: w.game, at: Date.now() }, ...prev].slice(0, 20));
+    setLastDrawn({ name: w.name, game: w.game });
     // Remove the winner from the wheel but keep them in the ranking.
     setEliminatedIds((prev) => {
       const next = new Set(prev);
@@ -333,13 +349,23 @@ export default function Batalha() {
 
   const resetTournament = async () => {
     const ok = await confirm({
-      title: 'Resetar sorteio?',
-      message: 'Isso irá limpar a banca, o ranking e o histórico de sorteados. Esta ação não pode ser desfeita.',
-      confirmLabel: 'Resetar',
+      title: 'Encerrar batalha?',
+      message: 'O campeão atual (1º do ranking) será gravado no histórico de vencedores e uma nova batalha será iniciada.',
+      confirmLabel: 'Encerrar e iniciar nova',
       cancelLabel: 'Cancelar',
       variant: 'danger',
     });
     if (!ok) return;
+
+    // Determine the champion: highest score in the ranking.
+    const champion = [...participants].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+    if (champion && (champion.score ?? 0) > 0) {
+      setWinnerHistory((prev) => [
+        { id: crypto.randomUUID(), name: champion.name, game: champion.game, score: champion.score ?? 0, at: Date.now() },
+        ...prev,
+      ].slice(0, 50));
+    }
+
     // Mark all linked DB participants as consumed so they don't reappear via realtime
     const dbIds = participants.map((p) => p.dbId).filter(Boolean) as string[];
     if (dbIds.length > 0) {
@@ -353,18 +379,18 @@ export default function Batalha() {
     }
     setParticipants([]);
     setEliminatedIds(new Set());
-    setWinnerHistory([]);
+    setLastDrawn(null);
     setInitialBankroll(0);
     setTournamentEntry(0);
     setRankingSearch('');
     try {
       window.localStorage.removeItem('battle_participants');
       window.localStorage.removeItem('battle_eliminated_ids');
-      window.localStorage.removeItem('battle_winner_history');
+      window.localStorage.removeItem('battle_last_drawn');
       window.localStorage.removeItem('battle_initial_bankroll');
       window.localStorage.removeItem('battle_tournament_entry');
     } catch { /* ignore */ }
-    toast.success('Sorteio resetado');
+    toast.success(champion && (champion.score ?? 0) > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
   };
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
@@ -716,7 +742,7 @@ export default function Batalha() {
                 aria-label="Resetar sorteio"
               >
                 <RotateCcw size={12} />
-                RESETAR SORTEIO
+                ENCERRAR BATALHA
               </button>
             </section>
 
@@ -734,7 +760,7 @@ export default function Batalha() {
                     className="text-[10px] tracking-[0.3em] font-bold"
                     style={{ color: config.headerAccentColor }}
                   >
-                    HISTÓRICO · {winnerHistory.length}
+                    🏆 VENCEDORES · {winnerHistory.length}
                   </div>
                   <button
                     onClick={async () => {
@@ -789,11 +815,21 @@ export default function Batalha() {
                             </div>
                           )}
                         </div>
-                        <div
-                          className="text-[10px] tabular-nums whitespace-nowrap"
-                          style={{ color: config.panelLabelColor }}
-                        >
-                          {new Date(w.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        <div className="text-right whitespace-nowrap">
+                          {typeof w.score === 'number' && w.score > 0 && (
+                            <div
+                              className="text-xs font-bold tabular-nums"
+                              style={{ color: config.headerAccentColor }}
+                            >
+                              R$ {w.score.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                          )}
+                          <div
+                            className="text-[9px] tabular-nums"
+                            style={{ color: config.panelLabelColor }}
+                          >
+                            {new Date(w.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {new Date(w.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
                         </div>
                       </li>
                     );
@@ -815,7 +851,7 @@ export default function Batalha() {
             {activeParticipants.length} JOGADORES ATIVOS
           </div>
 
-          {winnerHistory[0] && (
+          {lastDrawn && (
             <div
               className="mt-4 rounded-2xl px-5 py-3 flex items-center gap-4 min-w-[260px]"
               style={{
@@ -832,11 +868,11 @@ export default function Batalha() {
               </div>
               <div className="min-w-0 flex-1 text-right">
                 <div className="text-sm font-bold truncate" style={{ color: config.panelTextColor }}>
-                  {winnerHistory[0].name}
+                  {lastDrawn.name}
                 </div>
-                {winnerHistory[0].game && (
+                {lastDrawn.game && (
                   <div className="text-xs truncate" style={{ color: config.panelLabelColor }}>
-                    {winnerHistory[0].game}
+                    {lastDrawn.game}
                   </div>
                 )}
               </div>
