@@ -755,7 +755,7 @@ export default function Batalha() {
                       title: 'Limpar histórico?',
                       description: 'Esta ação não pode ser desfeita.',
                       confirmText: 'Limpar',
-                      variant: 'destructive',
+                      variant: 'danger',
                     });
                     if (ok) setWinnerHistory([]);
                   }}
