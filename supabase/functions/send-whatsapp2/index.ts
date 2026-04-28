@@ -67,7 +67,7 @@ serve(async (req) => {
       );
     }
 
-    const { recipientPhone, message, evolutionApiUrl, evolutionApiKey, evolutionInstance, media, mentionsEveryOne } = await req.json();
+    const { recipientPhone, message, evolutionApiUrl, evolutionApiKey, evolutionInstance, media, mentionsEveryOne, poll } = await req.json();
 
     if (!recipientPhone) {
       return new Response(
@@ -76,7 +76,18 @@ serve(async (req) => {
       );
     }
 
-    if (!media && !message) {
+    if (poll) {
+      const opts = Array.isArray(poll.values) ? poll.values.filter((v: any) => typeof v === "string" && v.trim()) : [];
+      if (!poll.name || typeof poll.name !== "string" || !poll.name.trim()) {
+        return new Response(JSON.stringify({ error: "poll.name é obrigatório" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (opts.length < 2) {
+        return new Response(JSON.stringify({ error: "Enquete precisa de pelo menos 2 opções" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (opts.length > 12) {
+        return new Response(JSON.stringify({ error: "Enquete suporta no máximo 12 opções" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    } else if (!media && !message) {
       return new Response(
         JSON.stringify({ error: "message ou media são obrigatórios" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -117,7 +128,20 @@ serve(async (req) => {
     let url: string;
     let body: Record<string, any>;
 
-    if (media && media.url && media.ptt) {
+    if (poll) {
+      const opts = (poll.values as string[]).map((v) => String(v).trim()).filter(Boolean).slice(0, 12);
+      const selectableCount = Number(poll.selectableCount);
+      url = `${apiUrl}/message/sendPoll/${encodeURIComponent(evolutionInstance)}`;
+      body = {
+        number: cleanPhone,
+        name: String(poll.name).trim(),
+        selectableCount: Number.isFinite(selectableCount) && selectableCount >= 1 ? Math.min(selectableCount, opts.length) : 1,
+        values: opts,
+      };
+      if (mentionsEveryOne && cleanPhone.includes("@g.us")) {
+        body.mentionsEveryOne = true;
+      }
+    } else if (media && media.url && media.ptt) {
       url = `${apiUrl}/message/sendWhatsAppAudio/${encodeURIComponent(evolutionInstance)}`;
       body = {
         number: cleanPhone,
