@@ -392,7 +392,7 @@ export default function Batalha() {
       window.localStorage.removeItem('battle_initial_bankroll');
       window.localStorage.removeItem('battle_tournament_entry');
     } catch { /* ignore */ }
-    toast.success(champion && (champion.score ?? 0) > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
+    toast.success(champion && finalPrize > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
   };
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
