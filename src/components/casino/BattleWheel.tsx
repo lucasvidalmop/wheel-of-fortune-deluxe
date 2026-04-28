@@ -118,6 +118,7 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
     if (spinning || segCount === 0) return;
     setWinner(null);
     setSpinning(true);
+    playSpinSound(5000);
 
     // Pick a random segment index (uniform). Weights kept for compatibility.
     const weights = segments.map((s) => Math.max(1, s.participant.weight ?? 1));
