@@ -815,11 +815,21 @@ export default function Batalha() {
                             </div>
                           )}
                         </div>
-                        <div
-                          className="text-[10px] tabular-nums whitespace-nowrap"
-                          style={{ color: config.panelLabelColor }}
-                        >
-                          {new Date(w.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        <div className="text-right whitespace-nowrap">
+                          {typeof w.score === 'number' && w.score > 0 && (
+                            <div
+                              className="text-xs font-bold tabular-nums"
+                              style={{ color: config.headerAccentColor }}
+                            >
+                              R$ {w.score.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                          )}
+                          <div
+                            className="text-[9px] tabular-nums"
+                            style={{ color: config.panelLabelColor }}
+                          >
+                            {new Date(w.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {new Date(w.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
                         </div>
                       </li>
                     );
