@@ -742,7 +742,7 @@ export default function Batalha() {
                 aria-label="Resetar sorteio"
               >
                 <RotateCcw size={12} />
-                RESETAR SORTEIO
+                ENCERRAR BATALHA
               </button>
             </section>
 
