@@ -949,6 +949,14 @@ export default function Batalha() {
           </section>
         </aside>
       </div>
+      <BattleWinnerOverlay
+        open={winnerOverlayOpen}
+        winner={overlayWinner}
+        runnersUp={overlayRunnersUp}
+        config={config}
+        prize={totalBankroll > 0 ? totalBankroll : undefined}
+        onClose={() => setWinnerOverlayOpen(false)}
+      />
       {ConfirmDialog}
     </main>
   );
