@@ -359,9 +359,11 @@ export default function Batalha() {
 
     // Determine the champion: highest score in the ranking.
     const champion = [...participants].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
-    if (champion && (champion.score ?? 0) > 0) {
+    // Final prize = total bankroll at end of tournament (banca total), not the champion's individual bonus.
+    const finalPrize = totalBankroll;
+    if (champion && finalPrize > 0) {
       setWinnerHistory((prev) => [
-        { id: crypto.randomUUID(), name: champion.name, game: champion.game, score: champion.score ?? 0, at: Date.now() },
+        { id: crypto.randomUUID(), name: champion.name, game: champion.game, score: finalPrize, at: Date.now() },
         ...prev,
       ].slice(0, 50));
     }
@@ -390,7 +392,7 @@ export default function Batalha() {
       window.localStorage.removeItem('battle_initial_bankroll');
       window.localStorage.removeItem('battle_tournament_entry');
     } catch { /* ignore */ }
-    toast.success(champion && (champion.score ?? 0) > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
+    toast.success(champion && finalPrize > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
   };
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
