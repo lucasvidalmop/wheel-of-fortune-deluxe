@@ -1737,6 +1737,8 @@ function Dashboard() {
 
   // Group management
   const [contactGroups, setContactGroups] = useState<string[]>([]);
+  // Grupos criados manualmente que ainda não possuem contatos (para não desaparecerem ao re-derivar)
+  const [manualGroups, setManualGroups] = useState<string[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('__all__');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -1777,26 +1779,49 @@ function Dashboard() {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const text = e.target?.result as string;
+          let text = (e.target?.result as string) || '';
+          // Remove BOM (UTF-8 byte order mark) que costuma vir em CSV exportado do Excel
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
           const lines = text.split(/\r?\n/).filter(l => l.trim());
           if (lines.length < 2) { reject(new Error('CSV vazio')); return; }
-          const header = lines[0].toLowerCase().split(/[;,\t]/).map(h => h.trim());
-          const leadIdx = header.findIndex(h => h === 'lead' || h === 'nome' || h === 'name');
-          const numIdx = header.findIndex(h => h === 'numero' || h === 'telefone' || h === 'phone' || h === 'number');
-          if (numIdx === -1) { reject(new Error('Coluna "numero" não encontrada no CSV')); return; }
+          // Detecta o separador automaticamente (vírgula, ponto-e-vírgula ou tab)
+          const firstLine = lines[0];
+          const sep = firstLine.includes(';') ? ';' : firstLine.includes('\t') ? '\t' : ',';
+          // Normaliza headers: lowercase, remove acentos, remove aspas e espaços
+          const normalize = (s: string) => s
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/^["'\s]+|["'\s]+$/g, '')
+            .trim();
+          const header = firstLine.split(sep).map(normalize);
+          const leadIdx = header.findIndex(h => ['lead', 'nome', 'name', 'contato', 'cliente'].includes(h));
+          let numIdx = header.findIndex(h => ['numero', 'telefone', 'phone', 'number', 'celular', 'whatsapp', 'whats', 'tel'].includes(h));
+          // Fallback: se não houver header reconhecido, tenta detectar pela coluna com mais dígitos
+          if (numIdx === -1) {
+            const sample = lines.slice(1, Math.min(6, lines.length)).map(l => l.split(sep));
+            const colCount = header.length;
+            let bestIdx = -1, bestScore = 0;
+            for (let c = 0; c < colCount; c++) {
+              const score = sample.reduce((acc, row) => acc + ((row[c] || '').replace(/\D/g, '').length >= 10 ? 1 : 0), 0);
+              if (score > bestScore) { bestScore = score; bestIdx = c; }
+            }
+            if (bestIdx === -1) { reject(new Error('Coluna de número não encontrada no CSV. Use cabeçalho "numero" ou "telefone".')); return; }
+            numIdx = bestIdx;
+          }
           const contacts: { lead: string; numero: string }[] = [];
           for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(/[;,\t]/).map(c => c.trim());
+            const cols = lines[i].split(sep).map(c => c.replace(/^["'\s]+|["'\s]+$/g, ''));
             const numero = cols[numIdx]?.replace(/\D/g, '') || '';
             if (numero.length >= 10) {
               contacts.push({ lead: leadIdx >= 0 ? (cols[leadIdx] || '') : '', numero });
             }
           }
+          if (contacts.length === 0) { reject(new Error('Nenhum número válido (mínimo 10 dígitos) encontrado no CSV')); return; }
           resolve(contacts);
         } catch (err) { reject(err); }
       };
       reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
-      reader.readAsText(file);
+      reader.readAsText(file, 'UTF-8');
     });
   };
 
@@ -1817,7 +1842,8 @@ function Dashboard() {
         const rows = contacts.map(c => ({ owner_id: session.user.id, lead: c.lead, numero: c.numero, group_name: groupName }));
         const BATCH = 500;
         for (let i = 0; i < rows.length; i += BATCH) {
-          await (supabase as any).from('imported_contacts').upsert(rows.slice(i, i + BATCH), { onConflict: 'owner_id,numero,group_name', ignoreDuplicates: true });
+          const { error: upErr } = await (supabase as any).from('imported_contacts').upsert(rows.slice(i, i + BATCH), { onConflict: 'owner_id,numero,group_name', ignoreDuplicates: true });
+          if (upErr) { console.error('Erro ao salvar contatos:', upErr); toast.error(`Erro ao salvar no banco: ${upErr.message}`); break; }
         }
       }
       if (groupName) setSelectedGroup(groupName);
@@ -1869,7 +1895,8 @@ function Dashboard() {
     const name = newGroupName.trim();
     if (!name) { toast.error('Digite um nome para o grupo'); return; }
     if (contactGroups.includes(name)) { toast.error('Grupo já existe'); return; }
-    setContactGroups(prev => [...prev, name]);
+    setManualGroups(prev => prev.includes(name) ? prev : [...prev, name]);
+    setContactGroups(prev => prev.includes(name) ? prev : [...prev, name]);
     setImportTargetGroup(name);
     setSelectedGroup(name);
     setNewGroupName('');
@@ -1883,6 +1910,7 @@ function Dashboard() {
     if (newName === oldName) { setEditingGroup(null); return; }
     if (contactGroups.includes(newName)) { toast.error('Grupo já existe'); return; }
     setCsvContacts(prev => prev.map(c => c.group_name === oldName ? { ...c, group_name: newName } : c));
+    setManualGroups(prev => prev.map(g => g === oldName ? newName : g));
     if (selectedGroup === oldName) setSelectedGroup(newName);
     if (importTargetGroup === oldName) setImportTargetGroup(newName);
     if (session?.user?.id) {
@@ -1894,6 +1922,7 @@ function Dashboard() {
 
   const handleDeleteGroup = async (groupName: string) => {
     setCsvContacts(prev => prev.filter(c => c.group_name !== groupName));
+    setManualGroups(prev => prev.filter(g => g !== groupName));
     setSelectedCsvContacts(prev => {
       const numsInGroup = new Set(csvContacts.filter(c => c.group_name === groupName).map(c => c.numero));
       return prev.filter(n => !numsInGroup.has(n));
@@ -1934,11 +1963,13 @@ function Dashboard() {
     setWaContactsLoading(false);
   };
 
-  // Derive groups from contacts
+  // Derive groups from contacts (mesclando os grupos criados manualmente, mesmo sem contatos)
   useEffect(() => {
-    const groups = [...new Set(csvContacts.map(c => c.group_name).filter(g => g))];
+    const fromContacts = csvContacts.map(c => c.group_name).filter(g => g);
+    const groups = [...new Set([...fromContacts, ...manualGroups])];
     setContactGroups(groups);
-  }, [csvContacts]);
+  }, [csvContacts, manualGroups]);
+  
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
