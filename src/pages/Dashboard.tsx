@@ -28,6 +28,7 @@ import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
 import BulkSendProgress from '@/components/casino/BulkSendProgress';
 import BulkSendControls from '@/components/casino/BulkSendControls';
 import { useBulkSendControl } from '@/hooks/useBulkSendControl';
+import MoneyInput from '@/components/casino/MoneyInput';
 
 interface WheelUser {
   id: string;
@@ -8639,7 +8640,7 @@ function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Valor mínimo (R$)</label>
-                    <input type="number" min={1} step="0.01" value={dcv.minimumValue ?? 10} onChange={e => updateDcv({ minimumValue: Math.max(1, Number(e.target.value)) })} className="w-32 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    <MoneyInput value={Number(dcv.minimumValue ?? 0)} onChange={(value) => updateDcv({ minimumValue: value })} className="w-32 px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-muted-foreground">Valores pré-definidos</label>
@@ -8652,8 +8653,8 @@ function Dashboard() {
                       ))}
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="number" min={1} step="0.01" placeholder="Novo valor" id="deposit-new-preset" className="w-32 px-3 py-2 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                      <button onClick={() => { const inp = document.getElementById('deposit-new-preset') as HTMLInputElement; const val = Number(inp?.value); if (val >= 1) { updateDcv({ presetValues: [...(dcv.presetValues || []), val] }); if (inp) inp.value = ''; } }} className="px-3 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:brightness-110 transition-all"><Plus size={14} /></button>
+                      <MoneyInput value={Number(dcv.newPresetValue ?? 0)} onChange={(value) => updateDcv({ newPresetValue: value })} placeholder="Novo valor" className="w-32 px-3 py-2 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                      <button onClick={() => { const val = Number(dcv.newPresetValue || 0); if (val > 0) { updateDcv({ presetValues: [...(dcv.presetValues || []), val], newPresetValue: 0 }); } }} className="px-3 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:brightness-110 transition-all"><Plus size={14} /></button>
                     </div>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer pt-2">
@@ -8683,15 +8684,15 @@ function Dashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground">Máx por depósito (R$)</label>
-                        <input type="number" min={0} step="0.01" value={dc.bsMaxPerDeposit ?? 0} onChange={e => updateDc({ bsMaxPerDeposit: Math.max(0, Number(e.target.value)) })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <MoneyInput value={Number(dc.bsMaxPerDeposit ?? 0)} onChange={(value) => updateDc({ bsMaxPerDeposit: value })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground">Total acumulado máx (R$)</label>
-                        <input type="number" min={0} step="0.01" value={dc.bsMaxTotal ?? 0} onChange={e => updateDc({ bsMaxTotal: Math.max(0, Number(e.target.value)) })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <MoneyInput value={Number(dc.bsMaxTotal ?? 0)} onChange={(value) => updateDc({ bsMaxTotal: value })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground">Quantidade máx de depósitos</label>
-                        <input type="number" min={0} step="1" value={dc.bsMaxCount ?? 0} onChange={e => updateDc({ bsMaxCount: Math.max(0, Math.floor(Number(e.target.value))) })} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input type="number" min={0} step="1" value={dc.bsMaxCount ?? ''} onChange={e => updateDc({ bsMaxCount: e.target.value === '' ? 0 : Math.max(0, Math.floor(Number(e.target.value))) })} onFocus={(e) => e.currentTarget.select()} className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                       </div>
                     </div>
 
