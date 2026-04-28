@@ -349,13 +349,23 @@ export default function Batalha() {
 
   const resetTournament = async () => {
     const ok = await confirm({
-      title: 'Resetar sorteio?',
-      message: 'Isso irá limpar a banca, o ranking e o histórico de sorteados. Esta ação não pode ser desfeita.',
-      confirmLabel: 'Resetar',
+      title: 'Encerrar batalha?',
+      message: 'O campeão atual (1º do ranking) será gravado no histórico de vencedores e uma nova batalha será iniciada.',
+      confirmLabel: 'Encerrar e iniciar nova',
       cancelLabel: 'Cancelar',
       variant: 'danger',
     });
     if (!ok) return;
+
+    // Determine the champion: highest score in the ranking.
+    const champion = [...participants].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+    if (champion && (champion.score ?? 0) > 0) {
+      setWinnerHistory((prev) => [
+        { id: crypto.randomUUID(), name: champion.name, game: champion.game, score: champion.score ?? 0, at: Date.now() },
+        ...prev,
+      ].slice(0, 50));
+    }
+
     // Mark all linked DB participants as consumed so they don't reappear via realtime
     const dbIds = participants.map((p) => p.dbId).filter(Boolean) as string[];
     if (dbIds.length > 0) {
@@ -369,18 +379,18 @@ export default function Batalha() {
     }
     setParticipants([]);
     setEliminatedIds(new Set());
-    setWinnerHistory([]);
+    setLastDrawn(null);
     setInitialBankroll(0);
     setTournamentEntry(0);
     setRankingSearch('');
     try {
       window.localStorage.removeItem('battle_participants');
       window.localStorage.removeItem('battle_eliminated_ids');
-      window.localStorage.removeItem('battle_winner_history');
+      window.localStorage.removeItem('battle_last_drawn');
       window.localStorage.removeItem('battle_initial_bankroll');
       window.localStorage.removeItem('battle_tournament_entry');
     } catch { /* ignore */ }
-    toast.success('Sorteio resetado');
+    toast.success(champion && (champion.score ?? 0) > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
   };
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
