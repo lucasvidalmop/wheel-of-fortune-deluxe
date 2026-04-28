@@ -6103,7 +6103,40 @@ function Dashboard() {
                   <div className="space-y-4">
                     {/* Form */}
                     <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
-                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" disabled={schedForm.pollEnabled} />
+
+                      {/* Poll editor (groups only) */}
+                      {schedForm.recipientType === 'group' && (
+                        <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                          <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                            <input type="checkbox" checked={schedForm.pollEnabled} onChange={e => setSchedForm(f => ({ ...f, pollEnabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                            <BarChart3 size={14} className="text-blue-400" />
+                            <span className="text-foreground font-medium">Agendar enquete (apenas grupos)</span>
+                          </label>
+                          {schedForm.pollEnabled && (
+                            <div className="space-y-2">
+                              <input type="text" value={schedForm.pollName} onChange={e => setSchedForm(f => ({ ...f, pollName: e.target.value }))} maxLength={255} placeholder="Pergunta da enquete" className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                              <div className="space-y-1.5">
+                                {schedForm.pollValues.map((v, idx) => (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <input type="text" value={v} onChange={e => setSchedForm(f => { const nv = [...f.pollValues]; nv[idx] = e.target.value; return { ...f, pollValues: nv }; })} maxLength={100} placeholder={`Opção ${idx + 1}`} className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                    {schedForm.pollValues.length > 2 && (
+                                      <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: f.pollValues.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition"><X size={14} /></button>
+                                    )}
+                                  </div>
+                                ))}
+                                {schedForm.pollValues.length < 12 && (
+                                  <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: [...f.pollValues, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition"><Plus size={12} /> Adicionar opção</button>
+                                )}
+                              </div>
+                              <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                                <input type="checkbox" checked={schedForm.pollMulti} onChange={e => setSchedForm(f => ({ ...f, pollMulti: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                                <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Media attachment for scheduler */}
                       <div className="flex items-center gap-2 flex-wrap">
@@ -7051,7 +7084,40 @@ function Dashboard() {
                   <div className="space-y-4">
                     {/* Form */}
                     <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
-                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" disabled={schedForm.pollEnabled} />
+
+                      {/* Poll editor (groups only) */}
+                      {schedForm.recipientType === 'group' && (
+                        <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                          <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                            <input type="checkbox" checked={schedForm.pollEnabled} onChange={e => setSchedForm(f => ({ ...f, pollEnabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                            <BarChart3 size={14} className="text-blue-400" />
+                            <span className="text-foreground font-medium">Agendar enquete (apenas grupos)</span>
+                          </label>
+                          {schedForm.pollEnabled && (
+                            <div className="space-y-2">
+                              <input type="text" value={schedForm.pollName} onChange={e => setSchedForm(f => ({ ...f, pollName: e.target.value }))} maxLength={255} placeholder="Pergunta da enquete" className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                              <div className="space-y-1.5">
+                                {schedForm.pollValues.map((v, idx) => (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <input type="text" value={v} onChange={e => setSchedForm(f => { const nv = [...f.pollValues]; nv[idx] = e.target.value; return { ...f, pollValues: nv }; })} maxLength={100} placeholder={`Opção ${idx + 1}`} className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                    {schedForm.pollValues.length > 2 && (
+                                      <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: f.pollValues.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition"><X size={14} /></button>
+                                    )}
+                                  </div>
+                                ))}
+                                {schedForm.pollValues.length < 12 && (
+                                  <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: [...f.pollValues, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition"><Plus size={12} /> Adicionar opção</button>
+                                )}
+                              </div>
+                              <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                                <input type="checkbox" checked={schedForm.pollMulti} onChange={e => setSchedForm(f => ({ ...f, pollMulti: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                                <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Media attachment for scheduler */}
                       <div className="flex items-center gap-2 flex-wrap">
