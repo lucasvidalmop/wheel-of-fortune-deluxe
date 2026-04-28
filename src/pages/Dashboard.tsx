@@ -1249,6 +1249,7 @@ function Dashboard() {
     hideReceiptSection,
     hideEdpaySection,
     panelCasaUrl: normalizePanelCasaUrl(panelCasaUrl),
+    csvContactGroups: contactGroups,
   });
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
@@ -1312,6 +1313,7 @@ function Dashboard() {
     setHideReceiptSection(!!settings.hideReceiptSection);
     setHideEdpaySection(!!settings.hideEdpaySection);
     setPanelCasaUrl(normalizePanelCasaUrl(settings.panelCasaUrl || ''));
+    setManualGroups(Array.isArray(settings.csvContactGroups) ? settings.csvContactGroups.filter(Boolean) : []);
 
     syncLegacyIntegrationStorage(settings);
     lastPersistedSettingsRef.current = JSON.stringify(settings);
