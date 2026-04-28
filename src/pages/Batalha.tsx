@@ -30,7 +30,7 @@ export default function Batalha() {
   });
   const [name, setName] = useState('');
   const [game, setGame] = useState('');
-  const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; at: number }[]>(() => {
+  const [winnerHistory, setWinnerHistory] = useState<{ id: string; name: string; game?: string; score?: number; at: number }[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
       const raw = window.localStorage.getItem('battle_winner_history');
