@@ -552,6 +552,7 @@ export type Database = {
           created_at: string
           expires_at: string | null
           fixed_prize_plan: Json | null
+          fixed_prize_pool: Json | null
           fixed_prize_segment: number | null
           fixed_prize_segments: Json | null
           id: string
@@ -570,6 +571,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           fixed_prize_plan?: Json | null
+          fixed_prize_pool?: Json | null
           fixed_prize_segment?: number | null
           fixed_prize_segments?: Json | null
           id?: string
@@ -588,6 +590,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           fixed_prize_plan?: Json | null
+          fixed_prize_pool?: Json | null
           fixed_prize_segment?: number | null
           fixed_prize_segments?: Json | null
           id?: string
@@ -1189,6 +1192,7 @@ export type Database = {
             }
             Returns: Json
           }
+      build_link_prize_pool: { Args: { p_plan: Json }; Returns: Json }
       consume_fixed_prize_spin: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
@@ -1329,6 +1333,10 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      pop_link_prize_pool: {
+        Args: { p_count: number; p_link_id: string }
+        Returns: Json
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
