@@ -1894,7 +1894,8 @@ function Dashboard() {
     const name = newGroupName.trim();
     if (!name) { toast.error('Digite um nome para o grupo'); return; }
     if (contactGroups.includes(name)) { toast.error('Grupo já existe'); return; }
-    setContactGroups(prev => [...prev, name]);
+    setManualGroups(prev => prev.includes(name) ? prev : [...prev, name]);
+    setContactGroups(prev => prev.includes(name) ? prev : [...prev, name]);
     setImportTargetGroup(name);
     setSelectedGroup(name);
     setNewGroupName('');
