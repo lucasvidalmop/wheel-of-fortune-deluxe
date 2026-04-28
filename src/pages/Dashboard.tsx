@@ -1962,10 +1962,12 @@ function Dashboard() {
     setWaContactsLoading(false);
   };
 
-  // Derive groups from contacts
+  // Derive groups from contacts (mesclando os grupos criados manualmente, mesmo sem contatos)
   useEffect(() => {
-    const groups = [...new Set(csvContacts.map(c => c.group_name).filter(g => g))];
+    const fromContacts = csvContacts.map(c => c.group_name).filter(g => g);
+    const groups = [...new Set([...fromContacts, ...manualGroups])];
     setContactGroups(groups);
+  }, [csvContacts, manualGroups]);
   }, [csvContacts]);
 
   const handleSaveUser = async (e: React.FormEvent) => {
