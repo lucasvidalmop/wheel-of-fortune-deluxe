@@ -753,8 +753,8 @@ export default function Batalha() {
                   onClick={async () => {
                     const ok = await confirm({
                       title: 'Limpar histórico?',
-                      description: 'Esta ação não pode ser desfeita.',
-                      confirmText: 'Limpar',
+                      message: 'Esta ação não pode ser desfeita.',
+                      confirmLabel: 'Limpar',
                       variant: 'danger',
                     });
                     if (ok) setWinnerHistory([]);
