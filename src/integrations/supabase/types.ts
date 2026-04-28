@@ -663,6 +663,7 @@ export type Database = {
           message: string
           next_run_at: string | null
           owner_id: string
+          poll: Json | null
           recipient_label: string
           recipient_type: string
           recipient_value: string
@@ -684,6 +685,7 @@ export type Database = {
           message: string
           next_run_at?: string | null
           owner_id: string
+          poll?: Json | null
           recipient_label?: string
           recipient_type?: string
           recipient_value: string
@@ -705,6 +707,7 @@ export type Database = {
           message?: string
           next_run_at?: string | null
           owner_id?: string
+          poll?: Json | null
           recipient_label?: string
           recipient_type?: string
           recipient_value?: string
