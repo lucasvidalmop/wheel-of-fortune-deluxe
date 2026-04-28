@@ -95,6 +95,62 @@ const ImageUpload = ({ value, onChange, folder }: { value?: string; onChange: (u
   );
 };
 
+const AudioUpload = ({ value, onChange, folder }: { value?: string; onChange: (url: string) => void; folder: string }) => {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      toast.error('Selecione um arquivo de áudio (MP3, WAV, etc.)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('O áudio deve ter no máximo 5MB');
+      return;
+    }
+    setUploading(true);
+    try {
+      const { publicUrl } = await uploadAppAsset(file, folder);
+      onChange(publicUrl);
+      toast.success('Áudio enviado!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao enviar áudio');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <label className="inline-flex cursor-pointer items-center gap-1 rounded border border-border bg-background px-2 h-8 text-xs hover:bg-muted">
+          <Upload size={12} />
+          {uploading ? 'Enviando...' : value ? 'Trocar áudio' : 'Enviar áudio'}
+          <input ref={inputRef} type="file" accept="audio/*" onChange={handle} className="hidden" disabled={uploading} />
+        </label>
+        {value && (
+          <>
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="text-destructive hover:opacity-80"
+              aria-label="Remover áudio"
+            >
+              <Trash2 size={14} />
+            </button>
+          </>
+        )}
+      </div>
+      {value && (
+        <audio src={value} controls className="w-full h-8" />
+      )}
+    </div>
+  );
+};
+
 // Mock participants for the live preview only (not saved).
 const previewParticipants: BattleParticipant[] = [
   { id: 'p1', name: 'Jogador 1', game: 'Fortune Tiger', weight: 1 },
@@ -227,6 +283,32 @@ export default function BattleConfigPanel({ userId }: Props) {
           <Field label="SEO Title"><TextInput value={config.seoTitle ?? ''} onChange={(v) => update('seoTitle', v)} /></Field>
           <Field label="SEO Description"><TextInput value={config.seoDescription ?? ''} onChange={(v) => update('seoDescription', v)} /></Field>
           <Field label="Favicon"><ImageUpload value={config.faviconUrl} onChange={(v) => update('faviconUrl', v)} folder="battle/favicon" /></Field>
+        </section>
+
+        {/* Spin sound */}
+        <section className="space-y-3">
+          <h3 className="font-bold text-foreground">Som da Roleta</h3>
+          <p className="text-xs text-muted-foreground">
+            Envie um MP3/WAV. O giro acompanhará automaticamente a duração do áudio. Sem áudio = sem som.
+          </p>
+          <Field label="Arquivo de áudio">
+            <AudioUpload
+              value={config.spinSoundUrl}
+              onChange={(v) => update('spinSoundUrl', v)}
+              folder="battle/spin-sound"
+            />
+          </Field>
+          <Field label={`Volume — ${Math.round(((config.spinSoundVolume ?? 0.85) * 100))}%`}>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={config.spinSoundVolume ?? 0.85}
+              onChange={(e) => update('spinSoundVolume', Number(e.target.value))}
+              className="w-full accent-primary"
+            />
+          </Field>
         </section>
 
         {/* Background */}

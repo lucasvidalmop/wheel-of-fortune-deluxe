@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { playSpinSound, stopSpinSound } from '@/lib/spinSound';
+import { playSpinSound, stopSpinSound, getCustomAudioDuration } from '@/lib/spinSound';
 import type { BattleConfig, BattleParticipant } from './battleTypes';
 
 interface Props {
@@ -17,8 +17,24 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<BattleParticipant | null>(null);
   const [winnerScoreInput, setWinnerScoreInput] = useState<string>('');
+  const [spinAudioDurationMs, setSpinAudioDurationMs] = useState<number | null>(null);
 
   useEffect(() => () => stopSpinSound(), []);
+
+  // Preload custom spin audio duration whenever it changes, so the wheel
+  // animation matches the audio length.
+  useEffect(() => {
+    let cancelled = false;
+    const url = config.spinSoundUrl;
+    if (!url) {
+      setSpinAudioDurationMs(null);
+      return;
+    }
+    getCustomAudioDuration(url).then((ms) => {
+      if (!cancelled) setSpinAudioDurationMs(ms > 0 ? ms : null);
+    });
+    return () => { cancelled = true; };
+  }, [config.spinSoundUrl]);
 
   const segCount = participants.length;
 
@@ -120,7 +136,15 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
     if (spinning || segCount === 0) return;
     setWinner(null);
     setSpinning(true);
-    playSpinSound(5000);
+
+    // Spin duration follows the configured audio duration when available;
+    // otherwise default to 5s. Clamped to [2s, 20s] for safety.
+    const audioMs = spinAudioDurationMs ?? 0;
+    const duration = audioMs > 0
+      ? Math.max(2000, Math.min(20000, audioMs))
+      : 5000;
+
+    playSpinSound(duration, config.spinSoundUrl, config.spinSoundVolume ?? 0.85);
 
     // Pick a random segment index (uniform). Weights kept for compatibility.
     const weights = segments.map((s) => Math.max(1, s.participant.weight ?? 1));
@@ -149,7 +173,6 @@ export default function BattleWheel({ config, participants, onWinner, onUpdateSc
     const finalRotation = startRot + baseTurns * TAU + delta;
 
     const start = performance.now();
-    const duration = 5000;
 
     const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
