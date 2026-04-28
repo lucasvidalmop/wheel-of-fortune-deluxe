@@ -1991,6 +1991,20 @@ function Dashboard() {
     const groups = [...new Set([...fromContacts, ...manualGroups])];
     setContactGroups(groups);
   }, [csvContacts, manualGroups]);
+
+  useEffect(() => {
+    if (!session?.user?.id || !configHydratedRef.current || !configId) return;
+    const groups = contactGroups.filter(Boolean);
+    const timeoutId = window.setTimeout(async () => {
+      const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).maybeSingle();
+      const dbConfig = dbRow?.config || {};
+      await (supabase as any).from('wheel_configs').update({
+        config: { ...dbConfig, dashboardSettings: { ...(dbConfig.dashboardSettings || {}), csvContactGroups: groups } },
+        updated_at: new Date().toISOString(),
+      }).eq('id', configId);
+    }, 400);
+    return () => window.clearTimeout(timeoutId);
+  }, [session?.user?.id, configId, contactGroups]);
   
 
   const handleSaveUser = async (e: React.FormEvent) => {
