@@ -1739,6 +1739,7 @@ function Dashboard() {
       } else {
         toast.success('Configuração salva!');
         lastConfigUpdatedAtRef.current = updated.updated_at || lastConfigUpdatedAtRef.current;
+        configDirtyRef.current = false;
         // Sync local state with what was actually saved in DB
         setWheelConfig({ ...defaultConfig, ...updated.config });
         setDashboardTheme({ ...defaultTheme, ...(updated.config?.dashboardTheme || {}) });
