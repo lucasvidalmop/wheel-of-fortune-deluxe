@@ -1909,6 +1909,7 @@ function Dashboard() {
     if (newName === oldName) { setEditingGroup(null); return; }
     if (contactGroups.includes(newName)) { toast.error('Grupo já existe'); return; }
     setCsvContacts(prev => prev.map(c => c.group_name === oldName ? { ...c, group_name: newName } : c));
+    setManualGroups(prev => prev.map(g => g === oldName ? newName : g));
     if (selectedGroup === oldName) setSelectedGroup(newName);
     if (importTargetGroup === oldName) setImportTargetGroup(newName);
     if (session?.user?.id) {
@@ -1920,6 +1921,7 @@ function Dashboard() {
 
   const handleDeleteGroup = async (groupName: string) => {
     setCsvContacts(prev => prev.filter(c => c.group_name !== groupName));
+    setManualGroups(prev => prev.filter(g => g !== groupName));
     setSelectedCsvContacts(prev => {
       const numsInGroup = new Set(csvContacts.filter(c => c.group_name === groupName).map(c => c.numero));
       return prev.filter(n => !numsInGroup.has(n));
