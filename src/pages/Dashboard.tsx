@@ -29,6 +29,7 @@ import BulkSendProgress from '@/components/casino/BulkSendProgress';
 import BulkSendControls from '@/components/casino/BulkSendControls';
 import { useBulkSendControl } from '@/hooks/useBulkSendControl';
 import MoneyInput from '@/components/casino/MoneyInput';
+import { ConfigBackupPanel } from '@/components/casino/ConfigBackupPanel';
 
 interface WheelUser {
   id: string;
@@ -9126,6 +9127,7 @@ function Dashboard() {
 
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
+              <ConfigBackupPanel />
               {/* Probabilidade do Sorteio */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">

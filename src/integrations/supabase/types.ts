@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      config_backups: {
+        Row: {
+          created_at: string
+          email_templates: Json
+          id: string
+          label: string
+          referral_links: Json
+          trigger: string
+          user_id: string
+          whatsapp_share_templates: Json
+          wheel_configs: Json
+        }
+        Insert: {
+          created_at?: string
+          email_templates?: Json
+          id?: string
+          label?: string
+          referral_links?: Json
+          trigger?: string
+          user_id: string
+          whatsapp_share_templates?: Json
+          wheel_configs?: Json
+        }
+        Update: {
+          created_at?: string
+          email_templates?: Json
+          id?: string
+          label?: string
+          referral_links?: Json
+          trigger?: string
+          user_id?: string
+          whatsapp_share_templates?: Json
+          wheel_configs?: Json
+        }
+        Relationships: []
+      }
       edpay_transactions: {
         Row: {
           amount: number | null
@@ -1273,6 +1309,10 @@ export type Database = {
           spins_available: number
         }[]
       }
+      create_config_backup: {
+        Args: { _label?: string; _trigger?: string }
+        Returns: string
+      }
       create_prize_payment:
         | {
             Args: {
@@ -1462,6 +1502,7 @@ export type Database = {
             }
             Returns: Json
           }
+      restore_config_backup: { Args: { _backup_id: string }; Returns: Json }
       segment_is_paying_prize: { Args: { p_segment: Json }; Returns: boolean }
     }
     Enums: {
