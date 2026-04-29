@@ -1547,6 +1547,7 @@ function Dashboard() {
       const latestSerialized = JSON.stringify(latestSettings);
       if (latestSerialized === lastPersistedSettingsRef.current) {
         savingInFlightRef.current = false;
+        settingsDirtyRef.current = false;
         return;
       }
 
@@ -1599,6 +1600,7 @@ function Dashboard() {
     twilioAccountSid,
     twilioAuthToken,
     twilioPhoneNumber,
+    mobizonSender,
     smsCsMessage,
     clicksendUsername,
     clicksendApiKey,
@@ -1608,6 +1610,9 @@ function Dashboard() {
     evolutionApiUrl,
     evolutionApiKey,
     evolutionInstance,
+    evolutionApiUrl2,
+    evolutionApiKey2,
+    evolutionInstance2,
     spinWhatsappEnabled,
     spinWhatsappTemplate,
     spinWhatsappCustomMsg,
