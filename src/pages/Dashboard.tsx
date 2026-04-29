@@ -1197,6 +1197,10 @@ function Dashboard() {
   const [wheelConfig, setWheelConfig] = useState<WheelConfig>(defaultConfig);
   const [configId, setConfigId] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+  const updateWheelConfig = (next: WheelConfig | ((prev: WheelConfig) => WheelConfig)) => {
+    configDirtyRef.current = true;
+    setWheelConfig(next as any);
+  };
 
   // Auto-load BS deposit stats whenever the operator opens the BS deposit tab
   useEffect(() => {
