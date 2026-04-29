@@ -1,7 +1,15 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode, Wrench } from 'lucide-react';
+import { Mail, Upload, Send, FileText, Eye, Loader2, Search, CheckSquare, Square, Image as ImageIcon, FileCode, Wrench, Clock, Calendar as CalendarIcon, Trash2, RefreshCw } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import BulkSendProgress from '@/components/casino/BulkSendProgress';
 import {
