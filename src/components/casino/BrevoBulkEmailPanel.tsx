@@ -983,6 +983,93 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+        <DialogContent className="border-white/[0.08] bg-background/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <Clock size={18} className="text-primary" /> Agendar disparo Brevo
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              O envio será disparado automaticamente na data/hora escolhida usando os destinatários selecionados.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Data *</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Hora *</label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Recorrência</label>
+              <select
+                value={scheduleRecurrence}
+                onChange={(e) => setScheduleRecurrence(e.target.value as any)}
+                className="w-full mt-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                <option value="none">Único (não repete)</option>
+                <option value="daily">Diário</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+              </select>
+            </div>
+
+            <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-3 text-[11px] text-muted-foreground space-y-1">
+              <div>Assunto: <span className="text-foreground">{subject || '—'}</span></div>
+              <div>
+                Destinatários:{' '}
+                <span className="text-primary font-semibold">
+                  {source === 'csv' ? csvRecipients.length : selectedEmails.size}
+                </span>{' '}
+                <span className="text-muted-foreground">
+                  ({source === 'csv' ? 'CSV' : source === 'wheel_users' ? 'Inscritos da roleta' : 'Contatos importados'})
+                </span>
+              </div>
+              {source !== 'csv' && (
+                <div className="text-amber-300/80">
+                  Para fontes dinâmicas, os destinatários serão recalculados no momento do envio (apenas os que ainda estiverem selecionados/válidos).
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="mt-2">
+            <button
+              type="button"
+              onClick={() => setScheduleOpen(false)}
+              className="px-4 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-sm text-foreground hover:bg-white/[0.08]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={submitSchedule}
+              disabled={scheduling}
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {scheduling ? <Loader2 size={14} className="animate-spin" /> : <Clock size={14} />}
+              {scheduling ? 'Agendando...' : 'Agendar disparo'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
