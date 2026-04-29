@@ -221,6 +221,7 @@ function Dashboard() {
   const savingInFlightRef = useRef(false);
   const configDirtyRef = useRef(false);
   const settingsDirtyRef = useRef(false);
+  const settingsUserEditedRef = useRef(false);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
@@ -1208,6 +1209,23 @@ function Dashboard() {
     configDirtyRef.current = true;
     setWheelConfig(next as any);
   };
+
+  useEffect(() => {
+    const markUserEdit = (event: Event) => {
+      if (!configHydratedRef.current) return;
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable) {
+        settingsUserEditedRef.current = true;
+      }
+    };
+    document.addEventListener('input', markUserEdit, true);
+    document.addEventListener('change', markUserEdit, true);
+    return () => {
+      document.removeEventListener('input', markUserEdit, true);
+      document.removeEventListener('change', markUserEdit, true);
+    };
+  }, []);
 
   // Auto-load BS deposit stats whenever the operator opens the BS deposit tab
   useEffect(() => {
