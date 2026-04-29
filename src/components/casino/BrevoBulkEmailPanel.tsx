@@ -830,14 +830,86 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
         />
       )}
 
-      <button
-        onClick={handleSend}
-        disabled={loading}
-        className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
-      >
-        {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-        {loading ? 'Enviando...' : 'Disparar via Brevo'}
-      </button>
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <button
+          onClick={handleSend}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+        >
+          {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+          {loading ? 'Enviando...' : 'Disparar via Brevo'}
+        </button>
+        <button
+          onClick={openSchedule}
+          disabled={loading}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/[0.12] bg-white/[0.04] text-foreground font-semibold text-sm hover:bg-white/[0.08] transition disabled:opacity-50"
+        >
+          <Clock size={16} /> Agendar
+        </button>
+      </div>
+
+      <GlassCard className="p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CalendarIcon size={16} className="text-primary" /> Agendamentos
+          </h3>
+          <button
+            type="button"
+            onClick={loadScheduled}
+            className="text-[11px] text-primary hover:underline flex items-center gap-1"
+          >
+            <RefreshCw size={12} /> Atualizar
+          </button>
+        </div>
+        {scheduledLoading ? (
+          <div className="flex items-center justify-center py-6 text-muted-foreground text-xs">
+            <Loader2 size={14} className="animate-spin mr-2" /> Carregando...
+          </div>
+        ) : scheduledList.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground py-4 text-center">
+            Nenhum disparo agendado.
+          </p>
+        ) : (
+          <div className="divide-y divide-white/[0.05] rounded-lg border border-white/[0.08] bg-white/[0.02]">
+            {scheduledList.map((s) => {
+              const when = s.next_run_at ? new Date(s.next_run_at) : new Date(s.scheduled_at);
+              const recLabel = s.recurrence === 'none' ? 'Único' :
+                s.recurrence === 'daily' ? 'Diário' :
+                s.recurrence === 'weekly' ? 'Semanal' :
+                s.recurrence === 'monthly' ? 'Mensal' : s.recurrence;
+              const statusColor =
+                s.status === 'sent' ? 'text-emerald-400' :
+                s.status === 'failed' ? 'text-rose-400' :
+                s.status === 'processing' ? 'text-amber-300' : 'text-primary';
+              return (
+                <div key={s.id} className="flex items-start gap-3 px-3 py-2.5 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-foreground font-medium">{s.subject}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      {when.toLocaleString('pt-BR')} • {recLabel} •{' '}
+                      <span className={statusColor}>{s.status}</span>
+                      {s.last_result?.sent != null && (
+                        <> • <span className="text-emerald-400">{s.last_result.sent} enviados</span></>
+                      )}
+                      {s.last_result?.failed > 0 && (
+                        <> • <span className="text-rose-400">{s.last_result.failed} falhas</span></>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => deleteScheduled(s.id)}
+                    className="p-1.5 rounded-md text-rose-300 hover:bg-rose-500/10 transition"
+                    title="Remover agendamento"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </GlassCard>
 
       {lastResult && (
         <GlassCard className="p-4">
