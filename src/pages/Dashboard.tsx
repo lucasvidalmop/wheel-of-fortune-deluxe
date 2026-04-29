@@ -5360,7 +5360,12 @@ function Dashboard() {
                 <GlassCard className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><CalendarIcon size={16} className="text-primary" /> SMS Agendados (CS)</h3>
-                    <button onClick={fetchSmsCsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                    <div className="flex items-center gap-3">
+                      {smsCsScheduledList.some((m: any) => m.status === 'pending') && (
+                        <button onClick={cancelAllSmsCsSchedules} className="text-xs text-red-400 hover:text-red-300 transition font-semibold">Cancelar todos</button>
+                      )}
+                      <button onClick={fetchSmsCsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                    </div>
                   </div>
                   {smsCsScheduledList.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-4">Nenhum SMS agendado</p>
