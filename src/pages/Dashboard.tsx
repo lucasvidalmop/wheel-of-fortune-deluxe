@@ -172,6 +172,12 @@ const normalizePanelCasaUrl = (value: string): string => {
   return 'https://' + trimmed;
 };
 
+const hasWheelVisualConfig = (value: any): boolean => {
+  if (!value || typeof value !== 'object') return false;
+  if (Array.isArray(value.segments) && value.segments.length > 0) return true;
+  return ['pageTitle', 'pageSubtitle', 'glowColor', 'buttonColor', 'authTitle', 'headerMode'].some((key) => value[key] !== undefined);
+};
+
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
     {children}
