@@ -172,12 +172,6 @@ const normalizePanelCasaUrl = (value: string): string => {
   return 'https://' + trimmed;
 };
 
-const hasWheelVisualConfig = (value: any): boolean => {
-  if (!value || typeof value !== 'object') return false;
-  if (Array.isArray(value.segments) && value.segments.length > 0) return true;
-  return ['pageTitle', 'pageSubtitle', 'glowColor', 'buttonColor', 'authTitle', 'headerMode'].some((key) => value[key] !== undefined);
-};
-
 const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={`rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${className}`} {...props}>
     {children}
@@ -1550,11 +1544,6 @@ function Dashboard() {
         .maybeSingle();
 
       const dbConfig = dbRow?.config || {};
-      if (!hasWheelVisualConfig(dbConfig) && !hasWheelVisualConfig(wheelConfig)) {
-        savingInFlightRef.current = false;
-        toast.error('Configuração visual da roleta não encontrada. Salvamento automático pausado para evitar sobrescrever dados.');
-        return;
-      }
       const newUpdatedAt = new Date().toISOString();
       const { error } = await (supabase as any)
         .from('wheel_configs')
@@ -1729,12 +1718,6 @@ function Dashboard() {
   const handleSaveConfig = async () => {
     setSavingConfig(true);
     try {
-      if (!hasWheelVisualConfig(wheelConfig)) {
-        toast.error('Configuração visual da roleta não encontrada. Salvamento bloqueado para evitar sobrescrever dados.');
-        setSavingConfig(false);
-        return;
-      }
-
       const { segments, ...rest } = wheelConfig;
       const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
         ...s,
@@ -2065,7 +2048,6 @@ function Dashboard() {
     const timeoutId = window.setTimeout(async () => {
       const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).maybeSingle();
       const dbConfig = dbRow?.config || {};
-      if (!hasWheelVisualConfig(dbConfig) && !hasWheelVisualConfig(wheelConfig)) return;
       await (supabase as any).from('wheel_configs').update({
         config: { ...dbConfig, dashboardSettings: { ...(dbConfig.dashboardSettings || {}), csvContactGroups: groups } },
         updated_at: new Date().toISOString(),
