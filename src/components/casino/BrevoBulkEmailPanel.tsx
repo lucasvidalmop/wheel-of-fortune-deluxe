@@ -440,7 +440,79 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     }
   };
 
-  const previewContent = useMemo(() => {
+  const openSchedule = () => {
+    const body = contentMode === 'html' ? htmlContent : textContent;
+    if (!senderEmail.trim() || !subject.trim() || !body.trim()) {
+      toast.error('Preencha remetente, assunto e conteúdo antes de agendar.');
+      return;
+    }
+    if (source === 'csv' && csvRecipients.length === 0) {
+      toast.error('Adicione destinatários no CSV.');
+      return;
+    }
+    if (source !== 'csv' && selectedEmails.size === 0) {
+      toast.error('Selecione ao menos um destinatário.');
+      return;
+    }
+    // default: now + 1h
+    const d = new Date(Date.now() + 60 * 60 * 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setScheduleDate(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    setScheduleTime(`${pad(d.getHours())}:${pad(d.getMinutes())}`);
+    setScheduleRecurrence('none');
+    setScheduleOpen(true);
+  };
+
+  const submitSchedule = async () => {
+    if (!ownerId) { toast.error('Sem usuário autenticado.'); return; }
+    if (!scheduleDate || !scheduleTime) { toast.error('Informe data e hora.'); return; }
+    const when = new Date(`${scheduleDate}T${scheduleTime}`);
+    if (Number.isNaN(when.getTime())) { toast.error('Data/hora inválida.'); return; }
+    if (when.getTime() < Date.now() - 60_000 && scheduleRecurrence === 'none') {
+      toast.error('A data/hora deve estar no futuro.');
+      return;
+    }
+
+    setScheduling(true);
+    try {
+      const payload: any = {
+        owner_id: ownerId,
+        sender_email: senderEmail.trim(),
+        sender_name: senderName.trim() || senderEmail.trim(),
+        reply_to: replyTo.trim() || null,
+        subject: subject.trim(),
+        html_content: contentMode === 'html' ? htmlContent : null,
+        text_content: contentMode === 'text' ? textContent : null,
+        source,
+        csv_recipients: source === 'csv' ? csvRecipients : [],
+        selected_emails: source !== 'csv' ? Array.from(selectedEmails) : [],
+        scheduled_at: when.toISOString(),
+        recurrence: scheduleRecurrence,
+      };
+      const { error } = await supabase.from('scheduled_brevo_emails').insert(payload);
+      if (error) throw error;
+      toast.success('Agendamento criado com sucesso.');
+      setScheduleOpen(false);
+      loadScheduled();
+    } catch (e: any) {
+      toast.error(`Erro ao agendar: ${e?.message || 'falha desconhecida'}`);
+    } finally {
+      setScheduling(false);
+    }
+  };
+
+  const deleteScheduled = async (id: string) => {
+    try {
+      const { error } = await supabase.from('scheduled_brevo_emails').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Agendamento removido.');
+      loadScheduled();
+    } catch (e: any) {
+      toast.error(`Erro ao remover: ${e?.message || 'falha desconhecida'}`);
+    }
+  };
+
+
     const sample = csvRecipients[0] || { email: 'exemplo@email.com', name: 'Exemplo' };
     const raw = contentMode === 'html' ? htmlContent : textContent;
     return raw
