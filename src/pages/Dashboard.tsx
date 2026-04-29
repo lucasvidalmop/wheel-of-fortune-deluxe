@@ -1550,6 +1550,11 @@ function Dashboard() {
         .maybeSingle();
 
       const dbConfig = dbRow?.config || {};
+      if (!hasWheelVisualConfig(dbConfig) && !hasWheelVisualConfig(wheelConfig)) {
+        savingInFlightRef.current = false;
+        toast.error('Configuração visual da roleta não encontrada. Salvamento automático pausado para evitar sobrescrever dados.');
+        return;
+      }
       const newUpdatedAt = new Date().toISOString();
       const { error } = await (supabase as any)
         .from('wheel_configs')
