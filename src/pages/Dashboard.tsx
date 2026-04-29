@@ -1092,6 +1092,21 @@ function Dashboard() {
     fetchSmsCsScheduled();
   };
 
+  const cancelAllSmsCsSchedules = async () => {
+    if (!session?.user?.id) return;
+    const pending = smsCsScheduledList.filter((m: any) => m.status === 'pending');
+    if (pending.length === 0) { toast.info('Nenhum agendamento pendente'); return; }
+    if (!window.confirm(`Cancelar ${pending.length} agendamento(s) de SMS (CS) pendente(s)?`)) return;
+    const { error } = await supabase.from('scheduled_messages')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() } as any)
+      .eq('owner_id', session.user.id)
+      .eq('status', 'pending')
+      .eq('channel', 'sms_cs' as any);
+    if (error) { toast.error('Erro ao cancelar em lote'); return; }
+    toast.success(`${pending.length} agendamento(s) cancelado(s)`);
+    fetchSmsCsScheduled();
+  };
+
   const fetchBulkSentPhones = async () => {
     if (!session?.user?.id) return;
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
