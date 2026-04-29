@@ -1541,7 +1541,13 @@ function Dashboard() {
         .from('wheel_configs')
         .select('config')
         .eq('id', configId)
+        .eq('user_id', session.user.id)
         .maybeSingle();
+
+      if (!dbRow) {
+        savingInFlightRef.current = false;
+        return;
+      }
 
       const dbConfig = dbRow?.config || {};
       const newUpdatedAt = new Date().toISOString();
@@ -1551,7 +1557,8 @@ function Dashboard() {
           config: { ...dbConfig, dashboardSettings: latestSettings },
           updated_at: newUpdatedAt,
         })
-        .eq('id', configId);
+        .eq('id', configId)
+        .eq('user_id', session.user.id);
 
       if (!error) {
         lastPersistedSettingsRef.current = latestSerialized;
@@ -2046,12 +2053,13 @@ function Dashboard() {
     if (!session?.user?.id || !configHydratedRef.current || !configId) return;
     const groups = contactGroups.filter(Boolean);
     const timeoutId = window.setTimeout(async () => {
-      const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).maybeSingle();
+      const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).eq('user_id', session.user.id).maybeSingle();
+      if (!dbRow) return;
       const dbConfig = dbRow?.config || {};
       await (supabase as any).from('wheel_configs').update({
         config: { ...dbConfig, dashboardSettings: { ...(dbConfig.dashboardSettings || {}), csvContactGroups: groups } },
         updated_at: new Date().toISOString(),
-      }).eq('id', configId);
+      }).eq('id', configId).eq('user_id', session.user.id);
     }, 400);
     return () => window.clearTimeout(timeoutId);
   }, [session?.user?.id, configId, contactGroups]);
