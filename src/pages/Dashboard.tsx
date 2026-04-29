@@ -2065,6 +2065,7 @@ function Dashboard() {
     const timeoutId = window.setTimeout(async () => {
       const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).maybeSingle();
       const dbConfig = dbRow?.config || {};
+      if (!hasWheelVisualConfig(dbConfig) && !hasWheelVisualConfig(wheelConfig)) return;
       await (supabase as any).from('wheel_configs').update({
         config: { ...dbConfig, dashboardSettings: { ...(dbConfig.dashboardSettings || {}), csvContactGroups: groups } },
         updated_at: new Date().toISOString(),
