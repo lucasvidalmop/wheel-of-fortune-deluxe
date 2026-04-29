@@ -649,6 +649,72 @@ export type Database = {
           },
         ]
       }
+      scheduled_brevo_emails: {
+        Row: {
+          created_at: string
+          csv_recipients: Json
+          html_content: string | null
+          id: string
+          last_result: Json | null
+          last_sent_at: string | null
+          next_run_at: string | null
+          owner_id: string
+          recurrence: string
+          reply_to: string | null
+          scheduled_at: string
+          selected_emails: Json
+          sender_email: string
+          sender_name: string
+          source: string
+          status: string
+          subject: string
+          text_content: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          csv_recipients?: Json
+          html_content?: string | null
+          id?: string
+          last_result?: Json | null
+          last_sent_at?: string | null
+          next_run_at?: string | null
+          owner_id: string
+          recurrence?: string
+          reply_to?: string | null
+          scheduled_at: string
+          selected_emails?: Json
+          sender_email: string
+          sender_name?: string
+          source?: string
+          status?: string
+          subject: string
+          text_content?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          csv_recipients?: Json
+          html_content?: string | null
+          id?: string
+          last_result?: Json | null
+          last_sent_at?: string | null
+          next_run_at?: string | null
+          owner_id?: string
+          recurrence?: string
+          reply_to?: string | null
+          scheduled_at?: string
+          selected_emails?: Json
+          sender_email?: string
+          sender_name?: string
+          source?: string
+          status?: string
+          subject?: string
+          text_content?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scheduled_messages: {
         Row: {
           channel: string
