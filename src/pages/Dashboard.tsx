@@ -1643,6 +1643,7 @@ function Dashboard() {
 
     const syncIfNeeded = () => {
       if (document.visibilityState === 'hidden') return;
+      if (isEditingFormField()) return;
       void syncDashboardConfig(session.user.id);
     };
 
