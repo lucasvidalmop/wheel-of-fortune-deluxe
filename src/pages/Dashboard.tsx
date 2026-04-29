@@ -1729,6 +1729,12 @@ function Dashboard() {
   const handleSaveConfig = async () => {
     setSavingConfig(true);
     try {
+      if (!hasWheelVisualConfig(wheelConfig)) {
+        toast.error('Configuração visual da roleta não encontrada. Salvamento bloqueado para evitar sobrescrever dados.');
+        setSavingConfig(false);
+        return;
+      }
+
       const { segments, ...rest } = wheelConfig;
       const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
         ...s,
