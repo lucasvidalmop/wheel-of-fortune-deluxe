@@ -8009,7 +8009,7 @@ function Dashboard() {
                         value={gorjetaRef}
                         onChange={e => {
                           const val = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '');
-                          setWheelConfig((prev: any) => ({ ...prev, gorjetaRef: val }));
+                          updateWheelConfig((prev: any) => ({ ...prev, gorjetaRef: val }));
                         }}
                         placeholder="Ex: meucafe"
                         className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all font-mono tracking-wider"
@@ -8045,7 +8045,7 @@ function Dashboard() {
                             <ExternalLink size={14} /> Abrir Página
                           </button>
                           <button
-                            onClick={() => setWheelConfig((prev: any) => ({ ...prev, gorjetaShowQr: !showQr }))}
+                            onClick={() => updateWheelConfig((prev: any) => ({ ...prev, gorjetaShowQr: !showQr }))}
                             className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-all flex items-center gap-1.5"
                           >
                             <Eye size={14} /> {showQr ? 'Esconder QR Code' : 'Mostrar QR Code'}
@@ -8101,7 +8101,7 @@ function Dashboard() {
                   <GorjetaPageEditor
                     userId={session.user.id}
                     currentConfig={(wheelConfig as any).gorjetaPageConfig || {}}
-                    onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
+                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
                   />
                 )}
 
@@ -8109,14 +8109,14 @@ function Dashboard() {
                   <InfluencerPageEditor
                     userId={session.user.id}
                     currentConfig={(wheelConfig as any).influencerPageConfig || {}}
-                    onSaved={(cfg) => setWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
+                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
                   />
                 )}
 
                 {gorjetaSubTab === 'seo' && (() => {
                   const seoConfig = (wheelConfig as any).gorjetaSeo || {};
                   const updateSeo = (field: string, value: string) => {
-                    setWheelConfig((prev: any) => ({
+                    updateWheelConfig((prev: any) => ({
                       ...prev,
                       gorjetaSeo: { ...(prev.gorjetaSeo || {}), [field]: value },
                     }));
@@ -8586,7 +8586,7 @@ function Dashboard() {
             const dc = (wheelConfig as any).depositConfig || { enabled: false, tag: '', accountIdLabel: 'ID da Conta', presetValues: [10, 20, 50, 100], minimumValue: 10, allowCustomValue: true, description: 'Selecione um valor para depósito', bgColor: '#0a0a0f', accentColor: '#10b981', textColor: '#ffffff', logoUrl: '', bgImageUrl: '', seoTitle: '', seoDescription: '', seoFaviconUrl: '', seoOgImageUrl: '', pixelFacebook: '', pixelGoogle: '', pixelTiktok: '', customHeadScript: '', confirmationTitle: 'Pagamento Confirmado!', confirmationMessage: 'Seu depósito foi recebido com sucesso.', confirmationLogoUrl: '', confirmationButtonText: 'Acessar →', confirmationButtonUrl: '', confirmationButtonColor: '', showNewDepositButton: true };
             const updateDc = (patch: any) => {
               configDirtyRef.current = true;
-              setWheelConfig((prev: any) => {
+              updateWheelConfig((prev: any) => {
                 const prevDc = prev.depositConfig || dc;
                 return { ...prev, depositConfig: { ...prevDc, ...patch } };
               });
@@ -8604,7 +8604,7 @@ function Dashboard() {
             const updateDcv = (patch: any) => {
               if (!isBs) { updateDc(patch); return; }
               configDirtyRef.current = true;
-              setWheelConfig((prev: any) => {
+              updateWheelConfig((prev: any) => {
                 const prevDc = prev.depositConfig || dc;
                 const prevOv = (prevDc.bsOverrides || {}) as Record<string, any>;
                 return {
@@ -9151,7 +9151,7 @@ function Dashboard() {
                     min={0}
                     max={100}
                     value={(wheelConfig as any).drawProbability ?? 0}
-                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, drawProbability: Number(e.target.value) }))}
+                    onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, drawProbability: Number(e.target.value) }))}
                     className="w-full h-2 rounded-full appearance-none cursor-pointer accent-primary bg-white/[0.08]"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
@@ -9164,7 +9164,7 @@ function Dashboard() {
                       min={0}
                       max={100}
                       value={(wheelConfig as any).drawProbability ?? 0}
-                      onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, drawProbability: Math.max(0, Math.min(100, Number(e.target.value))) }))}
+                      onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, drawProbability: Math.max(0, Math.min(100, Number(e.target.value))) }))}
                       className="w-20 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                     />
                     <span className="text-sm text-muted-foreground">%</span>
@@ -9181,7 +9181,7 @@ function Dashboard() {
                       type="number"
                       min={0}
                       value={(wheelConfig as any).minRealWinners ?? 0}
-                      onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, minRealWinners: Math.max(0, Number(e.target.value)) }))}
+                      onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, minRealWinners: Math.max(0, Number(e.target.value)) }))}
                       className="w-20 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                     />
                     <span className="text-sm text-muted-foreground">pessoas reais mínimas</span>
@@ -9203,7 +9203,7 @@ function Dashboard() {
                     type="number"
                     min={1}
                     value={(wheelConfig as any).maxWinsPerDay ?? 1}
-                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, maxWinsPerDay: Math.max(1, Number(e.target.value)) }))}
+                    onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, maxWinsPerDay: Math.max(1, Number(e.target.value)) }))}
                     className="w-20 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                   />
                   <span className="text-sm text-muted-foreground">vitória(s) máximas por 24h</span>
@@ -9248,7 +9248,7 @@ function Dashboard() {
                       const val = Math.max(0, Number(e.target.value));
                       const unit = (wheelConfig as any).spinExpirationUnit ?? 'minutes';
                       const mins = unit === 'days' ? val * 1440 : unit === 'hours' ? val * 60 : val;
-                      setWheelConfig((prev: any) => ({ ...prev, spinExpirationMinutes: mins }));
+                      updateWheelConfig((prev: any) => ({ ...prev, spinExpirationMinutes: mins }));
                     }}
                     className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                   />
@@ -9259,7 +9259,7 @@ function Dashboard() {
                       const newUnit = e.target.value;
                       const mins = (wheelConfig as any).spinExpirationMinutes ?? 0;
                       // Keep the same total minutes, just change display unit
-                      setWheelConfig((prev: any) => ({ ...prev, spinExpirationUnit: newUnit }));
+                      updateWheelConfig((prev: any) => ({ ...prev, spinExpirationUnit: newUnit }));
                     }}
                     className="px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                   >
@@ -9305,14 +9305,14 @@ function Dashboard() {
                       const val = Math.max(0, Number(e.target.value));
                       const unit = (wheelConfig as any).autoPaymentCooldownUnit ?? 'minutes';
                       const mins = unit === 'days' ? val * 1440 : unit === 'hours' ? val * 60 : val;
-                      setWheelConfig((prev: any) => ({ ...prev, autoPaymentCooldownMinutes: mins }));
+                      updateWheelConfig((prev: any) => ({ ...prev, autoPaymentCooldownMinutes: mins }));
                     }}
                     className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                   />
                   <select
                     value={(wheelConfig as any).autoPaymentCooldownUnit ?? 'minutes'}
                     onChange={(e) => {
-                      setWheelConfig((prev: any) => ({ ...prev, autoPaymentCooldownUnit: e.target.value }));
+                      updateWheelConfig((prev: any) => ({ ...prev, autoPaymentCooldownUnit: e.target.value }));
                     }}
                     className="px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                   >
@@ -9342,7 +9342,7 @@ function Dashboard() {
                     <h3 className="text-base font-bold text-foreground">Prêmio da Blacklist</h3>
                   </div>
                   <button
-                    onClick={() => setWheelConfig((prev: any) => ({ ...prev, blacklistFixedSegmentEnabled: !(prev.blacklistFixedSegmentEnabled ?? false) }))}
+                    onClick={() => updateWheelConfig((prev: any) => ({ ...prev, blacklistFixedSegmentEnabled: !(prev.blacklistFixedSegmentEnabled ?? false) }))}
                     className={`px-3 py-1 rounded-full text-xs font-semibold transition ${(wheelConfig as any).blacklistFixedSegmentEnabled ? 'bg-destructive/20 text-destructive' : 'bg-white/[0.06] text-muted-foreground'}`}
                   >
                     {(wheelConfig as any).blacklistFixedSegmentEnabled ? '🔴 Ativo' : 'Desativado'}
@@ -9356,7 +9356,7 @@ function Dashboard() {
                     <label className="text-sm font-medium text-foreground">Segmento fixo para blacklist</label>
                     <select
                       value={(wheelConfig as any).blacklistFixedSegment ?? ''}
-                      onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, blacklistFixedSegment: e.target.value === '' ? null : Number(e.target.value) }))}
+                      onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, blacklistFixedSegment: e.target.value === '' ? null : Number(e.target.value) }))}
                       className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                     >
                       <option value="">Selecione um segmento</option>
@@ -9388,7 +9388,7 @@ function Dashboard() {
                   type="text"
                   placeholder="Ex: LUCASBSB"
                   value={(wheelConfig as any).influencerLabel ?? ''}
-                  onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, influencerLabel: e.target.value }))}
+                  onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, influencerLabel: e.target.value }))}
                   className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
@@ -9407,7 +9407,7 @@ function Dashboard() {
                     type="number"
                     min={1}
                     value={(wheelConfig as any).influencerDailyLimit ?? 500}
-                    onChange={(e) => setWheelConfig((prev: any) => ({ ...prev, influencerDailyLimit: Math.max(1, Number(e.target.value)) }))}
+                    onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, influencerDailyLimit: Math.max(1, Number(e.target.value)) }))}
                     className="w-24 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                   />
                   <span className="text-sm text-muted-foreground">prêmios por dia</span>
@@ -9428,7 +9428,7 @@ function Dashboard() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Ativar efeito glass</span>
                   <button
-                    onClick={() => setWheelConfig((prev: any) => ({ ...prev, influencerGlassEnabled: !(prev.influencerGlassEnabled ?? true) }))}
+                    onClick={() => updateWheelConfig((prev: any) => ({ ...prev, influencerGlassEnabled: !(prev.influencerGlassEnabled ?? true) }))}
                     className={`w-11 h-6 rounded-full transition-all relative ${(wheelConfig as any).influencerGlassEnabled !== false ? 'bg-primary' : 'bg-white/[0.1]'}`}
                   >
                     <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${(wheelConfig as any).influencerGlassEnabled !== false ? 'left-5' : 'left-0.5'}`} />
@@ -9444,7 +9444,7 @@ function Dashboard() {
                         <input
                           type="range" min="0" max="40"
                           value={(wheelConfig as any).influencerGlassBlur ?? 16}
-                          onChange={e => setWheelConfig((prev: any) => ({ ...prev, influencerGlassBlur: parseInt(e.target.value) }))}
+                          onChange={e => updateWheelConfig((prev: any) => ({ ...prev, influencerGlassBlur: parseInt(e.target.value) }))}
                           className="w-28 accent-primary h-1.5"
                         />
                         <span className="text-xs font-mono text-muted-foreground w-10 text-right">{(wheelConfig as any).influencerGlassBlur ?? 16}px</span>
@@ -9458,7 +9458,7 @@ function Dashboard() {
                         <input
                           type="range" min="0" max="100"
                           value={(wheelConfig as any).influencerCardBgOpacity ?? 95}
-                          onChange={e => setWheelConfig((prev: any) => ({ ...prev, influencerCardBgOpacity: parseInt(e.target.value) }))}
+                          onChange={e => updateWheelConfig((prev: any) => ({ ...prev, influencerCardBgOpacity: parseInt(e.target.value) }))}
                           className="w-28 accent-primary h-1.5"
                         />
                         <span className="text-xs font-mono text-muted-foreground w-10 text-right">{(wheelConfig as any).influencerCardBgOpacity ?? 95}%</span>
@@ -9487,7 +9487,7 @@ function Dashboard() {
                         const names = ghostUserName.split(',').map(n => n.trim()).filter(Boolean);
                         if (names.length === 0) return;
                         const current: string[] = (wheelConfig as any).ghostUsers || [];
-                        setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ...names] }));
+                        updateWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ...names] }));
                         setGhostUserName('');
                       }
                     }}
@@ -9498,7 +9498,7 @@ function Dashboard() {
                       const names = ghostUserName.split(',').map(n => n.trim()).filter(Boolean);
                       if (names.length === 0) return;
                       const current: string[] = (wheelConfig as any).ghostUsers || [];
-                      setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ...names] }));
+                      updateWheelConfig((prev: any) => ({ ...prev, ghostUsers: [...current, ...names] }));
                       setGhostUserName('');
                     }}
                     className="px-4 py-2.5 rounded-xl bg-accent/20 border border-accent/30 text-accent-foreground hover:bg-accent/30 transition text-sm font-medium"
@@ -9510,7 +9510,7 @@ function Dashboard() {
                 {((wheelConfig as any).ghostUsers || []).length > 0 && (
                   <div className="flex justify-end">
                     <button
-                      onClick={() => setWheelConfig((prev: any) => ({ ...prev, ghostUsers: [] }))}
+                      onClick={() => updateWheelConfig((prev: any) => ({ ...prev, ghostUsers: [] }))}
                       className="text-xs text-destructive hover:underline"
                     >
                       Remover todos
@@ -9532,7 +9532,7 @@ function Dashboard() {
                             onClick={() => {
                               const current: string[] = [...((wheelConfig as any).ghostUsers || [])];
                               current.splice(idx, 1);
-                              setWheelConfig((prev: any) => ({ ...prev, ghostUsers: current }));
+                              updateWheelConfig((prev: any) => ({ ...prev, ghostUsers: current }));
                             }}
                             className="text-muted-foreground hover:text-destructive transition ml-0.5"
                           >
