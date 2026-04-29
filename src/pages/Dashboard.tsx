@@ -1534,6 +1534,7 @@ function Dashboard() {
     if (serialized === lastPersistedSettingsRef.current) return;
 
     savingInFlightRef.current = true;
+    settingsDirtyRef.current = true;
 
     const timeoutId = window.setTimeout(async () => {
       const latestSettings = buildPersistedDashboardSettings();
@@ -1569,6 +1570,7 @@ function Dashboard() {
       if (!error) {
         lastPersistedSettingsRef.current = latestSerialized;
         lastConfigUpdatedAtRef.current = newUpdatedAt;
+        settingsDirtyRef.current = false;
       }
       savingInFlightRef.current = false;
     }, 400);
