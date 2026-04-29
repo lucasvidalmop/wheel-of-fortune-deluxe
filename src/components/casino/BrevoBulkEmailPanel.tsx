@@ -95,6 +95,36 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
   const [pendingRecipients, setPendingRecipients] = useState<Recipient[]>([]);
   const htmlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // ─── Agendamento ───
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleRecurrence, setScheduleRecurrence] = useState<'none' | 'daily' | 'weekly' | 'monthly'>('none');
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduledList, setScheduledList] = useState<any[]>([]);
+  const [scheduledLoading, setScheduledLoading] = useState(false);
+
+  const loadScheduled = useCallback(async () => {
+    if (!ownerId) { setScheduledList([]); return; }
+    setScheduledLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('scheduled_brevo_emails')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('next_run_at', { ascending: true })
+        .limit(50);
+      if (error) throw error;
+      setScheduledList(data ?? []);
+    } catch (e: any) {
+      toast.error(`Falha ao carregar agendamentos: ${e?.message || 'erro'}`);
+    } finally {
+      setScheduledLoading(false);
+    }
+  }, [ownerId]);
+
+  useEffect(() => { loadScheduled(); }, [loadScheduled]);
+
   const replaceOrInsertHtmlImage = (publicUrl: string) => {
     const imgSrcRegex = /(<img\b[^>]*\bsrc\s*=\s*)(["'])([^"']*)(\2)([^>]*>)/i;
     const tag = `<img src="${publicUrl}" alt="" style="max-width:100%;height:auto;display:block;" />`;
