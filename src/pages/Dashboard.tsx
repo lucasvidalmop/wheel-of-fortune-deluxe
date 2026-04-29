@@ -214,6 +214,7 @@ function Dashboard() {
   const lastConfigUpdatedAtRef = useRef<string | null>(null);
   const savingInFlightRef = useRef(false);
   const configDirtyRef = useRef(false);
+  const settingsDirtyRef = useRef(false);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
@@ -1390,7 +1391,7 @@ function Dashboard() {
   };
 
   const syncDashboardConfig = async (userId: string, force = false) => {
-    if (!force && configDirtyRef.current) return;
+    if (!force && (configDirtyRef.current || settingsDirtyRef.current)) return;
 
     const { data: latest } = await (supabase as any)
       .from('wheel_configs')
@@ -1401,7 +1402,7 @@ function Dashboard() {
     if (!latest) return;
     if (!force && lastConfigUpdatedAtRef.current && latest.updated_at === lastConfigUpdatedAtRef.current) return;
     if (savingInFlightRef.current) return;
-    if (!force && configDirtyRef.current) return;
+    if (!force && (configDirtyRef.current || settingsDirtyRef.current)) return;
 
     configHydratedRef.current = false;
     hydrateDashboardConfig(latest);
