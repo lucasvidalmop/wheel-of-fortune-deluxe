@@ -3737,8 +3737,8 @@ function Dashboard() {
           {/* ══════ WHEEL CONFIG ══════ */}
           {activeTab === 'wheel' && (
             <div className="max-w-2xl space-y-4">
-              <CustomizationPanel config={wheelConfig} onChange={setWheelConfig} />
-              <DialogConfigPanel config={wheelConfig} onChange={setWheelConfig} />
+              <CustomizationPanel config={wheelConfig} onChange={updateWheelConfig} />
+              <DialogConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
               <button
                 onClick={handleSaveConfig}
                 disabled={savingConfig}
@@ -3757,7 +3757,7 @@ function Dashboard() {
           {/* ══════ AUTH CONFIG ══════ */}
           {activeTab === 'auth' && (
             <div className="max-w-lg space-y-4">
-              <AuthConfigPanel config={wheelConfig} onChange={setWheelConfig} />
+              <AuthConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
               <button
                 onClick={handleSaveConfig}
                 disabled={savingConfig}
