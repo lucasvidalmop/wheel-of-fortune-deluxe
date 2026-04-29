@@ -987,6 +987,21 @@ function Dashboard() {
     fetchSmsScheduled();
   };
 
+  const cancelAllSmsSchedules = async () => {
+    if (!session?.user?.id) return;
+    const pending = smsScheduledList.filter((m: any) => m.status === 'pending');
+    if (pending.length === 0) { toast.info('Nenhum agendamento pendente'); return; }
+    if (!window.confirm(`Cancelar ${pending.length} agendamento(s) de SMS pendente(s)?`)) return;
+    const { error } = await supabase.from('scheduled_messages')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() } as any)
+      .eq('owner_id', session.user.id)
+      .eq('status', 'pending')
+      .in('channel', ['sms', 'sms_mb'] as any);
+    if (error) { toast.error('Erro ao cancelar em lote'); return; }
+    toast.success(`${pending.length} agendamento(s) cancelado(s)`);
+    fetchSmsScheduled();
+  };
+
   // ═══ ClickSend (SMS API CS) helpers — log: sms_cs_message_log, channel: 'sms_cs' ═══
   const fetchSmsCsLogs = async () => {
     if (!session?.user?.id) return;
@@ -1074,6 +1089,21 @@ function Dashboard() {
   const cancelSmsCsSchedule = async (id: string) => {
     await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).eq('id', id);
     toast.success('Agendamento cancelado');
+    fetchSmsCsScheduled();
+  };
+
+  const cancelAllSmsCsSchedules = async () => {
+    if (!session?.user?.id) return;
+    const pending = smsCsScheduledList.filter((m: any) => m.status === 'pending');
+    if (pending.length === 0) { toast.info('Nenhum agendamento pendente'); return; }
+    if (!window.confirm(`Cancelar ${pending.length} agendamento(s) de SMS (CS) pendente(s)?`)) return;
+    const { error } = await supabase.from('scheduled_messages')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() } as any)
+      .eq('owner_id', session.user.id)
+      .eq('status', 'pending')
+      .eq('channel', 'sms_cs' as any);
+    if (error) { toast.error('Erro ao cancelar em lote'); return; }
+    toast.success(`${pending.length} agendamento(s) cancelado(s)`);
     fetchSmsCsScheduled();
   };
 
@@ -5039,7 +5069,12 @@ function Dashboard() {
                 <GlassCard className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><CalendarIcon size={16} className="text-primary" /> SMS Agendados</h3>
-                    <button onClick={fetchSmsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                    <div className="flex items-center gap-3">
+                      {smsScheduledList.some((m: any) => m.status === 'pending') && (
+                        <button onClick={cancelAllSmsSchedules} className="text-xs text-red-400 hover:text-red-300 transition font-semibold">Cancelar todos</button>
+                      )}
+                      <button onClick={fetchSmsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                    </div>
                   </div>
                   {smsScheduledList.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-4">Nenhum SMS agendado</p>
@@ -5325,7 +5360,12 @@ function Dashboard() {
                 <GlassCard className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><CalendarIcon size={16} className="text-primary" /> SMS Agendados (CS)</h3>
-                    <button onClick={fetchSmsCsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                    <div className="flex items-center gap-3">
+                      {smsCsScheduledList.some((m: any) => m.status === 'pending') && (
+                        <button onClick={cancelAllSmsCsSchedules} className="text-xs text-red-400 hover:text-red-300 transition font-semibold">Cancelar todos</button>
+                      )}
+                      <button onClick={fetchSmsCsScheduled} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                    </div>
                   </div>
                   {smsCsScheduledList.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-4">Nenhum SMS agendado</p>
