@@ -512,7 +512,7 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     }
   };
 
-
+  const previewContent = useMemo(() => {
     const sample = csvRecipients[0] || { email: 'exemplo@email.com', name: 'Exemplo' };
     const raw = contentMode === 'html' ? htmlContent : textContent;
     return raw
