@@ -1556,6 +1556,7 @@ function Dashboard() {
     syncLegacyIntegrationStorage(settings);
 
     if (serialized === lastPersistedSettingsRef.current) return;
+    if (!settingsUserEditedRef.current) return;
 
     savingInFlightRef.current = true;
     settingsDirtyRef.current = true;
@@ -1596,6 +1597,7 @@ function Dashboard() {
         lastPersistedSettingsRef.current = latestSerialized;
         lastConfigUpdatedAtRef.current = newUpdatedAt;
         settingsDirtyRef.current = false;
+        settingsUserEditedRef.current = false;
       }
       savingInFlightRef.current = false;
     }, 400);
