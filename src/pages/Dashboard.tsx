@@ -987,6 +987,21 @@ function Dashboard() {
     fetchSmsScheduled();
   };
 
+  const cancelAllSmsSchedules = async () => {
+    if (!session?.user?.id) return;
+    const pending = smsScheduledList.filter((m: any) => m.status === 'pending');
+    if (pending.length === 0) { toast.info('Nenhum agendamento pendente'); return; }
+    if (!window.confirm(`Cancelar ${pending.length} agendamento(s) de SMS pendente(s)?`)) return;
+    const { error } = await supabase.from('scheduled_messages')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() } as any)
+      .eq('owner_id', session.user.id)
+      .eq('status', 'pending')
+      .in('channel', ['sms', 'sms_mb'] as any);
+    if (error) { toast.error('Erro ao cancelar em lote'); return; }
+    toast.success(`${pending.length} agendamento(s) cancelado(s)`);
+    fetchSmsScheduled();
+  };
+
   // ═══ ClickSend (SMS API CS) helpers — log: sms_cs_message_log, channel: 'sms_cs' ═══
   const fetchSmsCsLogs = async () => {
     if (!session?.user?.id) return;
