@@ -1217,6 +1217,7 @@ function Dashboard() {
       if (!target) return;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable) {
         settingsUserEditedRef.current = true;
+        settingsDirtyRef.current = true;
       }
     };
     document.addEventListener('input', markUserEdit, true);
@@ -1663,25 +1664,8 @@ function Dashboard() {
     panelCasaUrl,
   ]);
 
-  useEffect(() => {
-    if (!session?.user?.id || !configId) return;
-
-    const syncIfNeeded = () => {
-      if (document.visibilityState === 'hidden') return;
-      if (isEditingFormField()) return;
-      void syncDashboardConfig(session.user.id);
-    };
-
-    const intervalId = window.setInterval(syncIfNeeded, 5000);
-    window.addEventListener('focus', syncIfNeeded);
-    document.addEventListener('visibilitychange', syncIfNeeded);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', syncIfNeeded);
-      document.removeEventListener('visibilitychange', syncIfNeeded);
-    };
-  }, [session?.user?.id, configId]);
+  // Não re-hidrata automaticamente depois do carregamento inicial.
+  // O polling anterior buscava uma versão antiga do banco e sobrescrevia campos enquanto o operador editava.
 
   const fetchUsers = async (userId?: string) => {
     const uid = userId || session?.user?.id;
