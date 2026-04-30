@@ -1595,24 +1595,11 @@ function Dashboard() {
         return;
       }
 
-      const { data: dbRow } = await (supabase as any)
-        .from('wheel_configs')
-        .select('config')
-        .eq('id', configId)
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-
-      if (!dbRow) {
-        savingInFlightRef.current = false;
-        return;
-      }
-
-      const dbConfig = dbRow?.config || {};
       const newUpdatedAt = new Date().toISOString();
       const { error } = await (supabase as any)
         .from('wheel_configs')
         .update({
-          config: { ...dbConfig, dashboardSettings: latestSettings },
+          config: buildPersistableWheelConfig(latestSettings),
           updated_at: newUpdatedAt,
         })
         .eq('id', configId)
