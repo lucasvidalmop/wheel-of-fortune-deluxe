@@ -1217,6 +1217,7 @@ function Dashboard() {
       if (!target) return;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable) {
         settingsUserEditedRef.current = true;
+        settingsDirtyRef.current = true;
       }
     };
     document.addEventListener('input', markUserEdit, true);
@@ -1327,6 +1328,30 @@ function Dashboard() {
     panelCasaUrl: normalizePanelCasaUrl(panelCasaUrl),
     csvContactGroups: contactGroups,
   });
+
+  const buildPersistableWheelConfig = (
+    settings: PersistedDashboardSettings = buildPersistedDashboardSettings(),
+    theme: ThemeSettings | undefined = dashboardTheme,
+  ): Record<string, any> => {
+    const { segments = [], ...rest } = wheelConfig as any;
+    const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
+      ...s,
+      imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
+    }));
+    const cleanConfig: Record<string, any> = {
+      ...rest,
+      segments: cleanSegments,
+      dashboardTheme: theme || undefined,
+      dashboardSettings: settings,
+    };
+    ['authLogoUrl', 'authBgImageUrl', 'authBgImageMobileUrl', 'headerImageUrl', 'backgroundImageUrl', 'centerImageUrl'].forEach(key => {
+      if (typeof cleanConfig[key] === 'string' && cleanConfig[key].startsWith('data:')) cleanConfig[key] = '';
+    });
+    Object.keys(cleanConfig).forEach(k => {
+      if (cleanConfig[k] === undefined) delete cleanConfig[k];
+    });
+    return cleanConfig;
+  };
 
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
     // IMPORTANT: do NOT fall back to localStorage for per-operator API credentials —
@@ -1570,24 +1595,11 @@ function Dashboard() {
         return;
       }
 
-      const { data: dbRow } = await (supabase as any)
-        .from('wheel_configs')
-        .select('config')
-        .eq('id', configId)
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-
-      if (!dbRow) {
-        savingInFlightRef.current = false;
-        return;
-      }
-
-      const dbConfig = dbRow?.config || {};
       const newUpdatedAt = new Date().toISOString();
       const { error } = await (supabase as any)
         .from('wheel_configs')
         .update({
-          config: { ...dbConfig, dashboardSettings: latestSettings },
+          config: buildPersistableWheelConfig(latestSettings),
           updated_at: newUpdatedAt,
         })
         .eq('id', configId)
@@ -1663,25 +1675,8 @@ function Dashboard() {
     panelCasaUrl,
   ]);
 
-  useEffect(() => {
-    if (!session?.user?.id || !configId) return;
-
-    const syncIfNeeded = () => {
-      if (document.visibilityState === 'hidden') return;
-      if (isEditingFormField()) return;
-      void syncDashboardConfig(session.user.id);
-    };
-
-    const intervalId = window.setInterval(syncIfNeeded, 5000);
-    window.addEventListener('focus', syncIfNeeded);
-    document.addEventListener('visibilitychange', syncIfNeeded);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', syncIfNeeded);
-      document.removeEventListener('visibilitychange', syncIfNeeded);
-    };
-  }, [session?.user?.id, configId]);
+  // Não re-hidrata automaticamente depois do carregamento inicial.
+  // O polling anterior buscava uma versão antiga do banco e sobrescrevia campos enquanto o operador editava.
 
   const fetchUsers = async (userId?: string) => {
     const uid = userId || session?.user?.id;
@@ -1765,46 +1760,10 @@ function Dashboard() {
   const handleSaveConfig = async () => {
     setSavingConfig(true);
     try {
-      const { segments, ...rest } = wheelConfig;
-      const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
-        ...s,
-        imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
-      }));
-
-      // Build config from local state only (source of truth)
-      const cleanConfig: Record<string, any> = {
-        ...rest,
-        segments: cleanSegments,
-        dashboardTheme: dashboardTheme || undefined,
-        dashboardSettings: buildPersistedDashboardSettings(),
-      };
-
-      // Strip data: URLs for image fields
-      ['authLogoUrl', 'authBgImageUrl', 'authBgImageMobileUrl', 'headerImageUrl', 'backgroundImageUrl', 'centerImageUrl'].forEach(key => {
-        if (typeof cleanConfig[key] === 'string' && cleanConfig[key].startsWith('data:')) {
-          cleanConfig[key] = '';
-        }
-      });
-
-      // Remove undefined keys so they don't erase DB values
-      Object.keys(cleanConfig).forEach(k => {
-        if (cleanConfig[k] === undefined) delete cleanConfig[k];
-      });
-
-      // Read current DB config to preserve any keys not in local state (e.g. dashboardTheme set by admin)
-      const { data: dbRow } = await (supabase as any)
-        .from('wheel_configs')
-        .select('config')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      const dbConfig = dbRow?.config || {};
-
-      // Merge: DB values as base, local changes on top
-      const mergedConfig = { ...dbConfig, ...cleanConfig };
-
+      const cleanConfig = buildPersistableWheelConfig();
       const { data: updated, error } = await (supabase as any)
         .from('wheel_configs')
-        .update({ config: mergedConfig, updated_at: new Date().toISOString() })
+        .update({ config: cleanConfig, updated_at: new Date().toISOString() })
         .eq('user_id', session.user.id)
         .select('config, updated_at')
         .maybeSingle();
@@ -2093,11 +2052,9 @@ function Dashboard() {
     if (!session?.user?.id || !configHydratedRef.current || !configId) return;
     const groups = contactGroups.filter(Boolean);
     const timeoutId = window.setTimeout(async () => {
-      const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).eq('user_id', session.user.id).maybeSingle();
-      if (!dbRow) return;
-      const dbConfig = dbRow?.config || {};
+      const latestSettings = { ...buildPersistedDashboardSettings(), csvContactGroups: groups };
       await (supabase as any).from('wheel_configs').update({
-        config: { ...dbConfig, dashboardSettings: { ...(dbConfig.dashboardSettings || {}), csvContactGroups: groups } },
+        config: buildPersistableWheelConfig(latestSettings),
         updated_at: new Date().toISOString(),
       }).eq('id', configId).eq('user_id', session.user.id);
     }, 400);
@@ -2754,15 +2711,9 @@ function Dashboard() {
     setDashboardTheme(newTheme);
     if (!session?.user?.id) return;
     try {
-      const { data: cfg } = await (supabase as any)
-        .from('wheel_configs')
-        .select('config')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      const currentConfig = cfg?.config || {};
       await (supabase as any)
         .from('wheel_configs')
-        .update({ config: { ...currentConfig, dashboardTheme: newTheme }, updated_at: new Date().toISOString() })
+        .update({ config: buildPersistableWheelConfig(buildPersistedDashboardSettings(), newTheme), updated_at: new Date().toISOString() })
         .eq('user_id', session.user.id);
     } catch {}
   };
