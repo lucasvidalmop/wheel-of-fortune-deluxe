@@ -483,8 +483,13 @@ function Dashboard() {
   const fetchScheduledMessages = async () => {
     if (!session?.user?.id) return;
     setScheduledLoading(true);
-    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).order('next_run_at', { ascending: true });
-    setScheduledMessages(data || []);
+    // Busca pendentes de TODOS os canais whatsapp + últimos enviados/cancelados (limitado para não bater no limite de 1000 linhas)
+    const [pendingRes, recentRes] = await Promise.all([
+      supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['whatsapp', 'whatsapp2'] as any).eq('status', 'pending').order('next_run_at', { ascending: true }).limit(500),
+      supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['whatsapp', 'whatsapp2'] as any).neq('status', 'pending').order('scheduled_at', { ascending: false }).limit(200),
+    ]);
+    const merged = [...(pendingRes.data || []), ...(recentRes.data || [])];
+    setScheduledMessages(merged);
     setScheduledLoading(false);
   };
 
