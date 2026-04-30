@@ -2052,11 +2052,9 @@ function Dashboard() {
     if (!session?.user?.id || !configHydratedRef.current || !configId) return;
     const groups = contactGroups.filter(Boolean);
     const timeoutId = window.setTimeout(async () => {
-      const { data: dbRow } = await (supabase as any).from('wheel_configs').select('config').eq('id', configId).eq('user_id', session.user.id).maybeSingle();
-      if (!dbRow) return;
-      const dbConfig = dbRow?.config || {};
+      const latestSettings = { ...buildPersistedDashboardSettings(), csvContactGroups: groups };
       await (supabase as any).from('wheel_configs').update({
-        config: { ...dbConfig, dashboardSettings: { ...(dbConfig.dashboardSettings || {}), csvContactGroups: groups } },
+        config: buildPersistableWheelConfig(latestSettings),
         updated_at: new Date().toISOString(),
       }).eq('id', configId).eq('user_id', session.user.id);
     }, 400);
@@ -2713,15 +2711,9 @@ function Dashboard() {
     setDashboardTheme(newTheme);
     if (!session?.user?.id) return;
     try {
-      const { data: cfg } = await (supabase as any)
-        .from('wheel_configs')
-        .select('config')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      const currentConfig = cfg?.config || {};
       await (supabase as any)
         .from('wheel_configs')
-        .update({ config: { ...currentConfig, dashboardTheme: newTheme }, updated_at: new Date().toISOString() })
+        .update({ config: buildPersistableWheelConfig(buildPersistedDashboardSettings(), newTheme), updated_at: new Date().toISOString() })
         .eq('user_id', session.user.id);
     } catch {}
   };
