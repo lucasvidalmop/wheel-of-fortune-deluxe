@@ -1247,10 +1247,10 @@ function Dashboard() {
       fetchScheduledMessages();
     }
     if (activeTab === 'sms') {
-      try { fetchScheduledSmsMessages?.(); } catch {}
+      try { fetchSmsScheduled?.(); } catch {}
     }
     if (activeTab === 'sms_cs') {
-      try { fetchScheduledSmsCsMessages?.(); } catch {}
+      try { fetchSmsCsScheduled?.(); } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, session?.user?.id]);
