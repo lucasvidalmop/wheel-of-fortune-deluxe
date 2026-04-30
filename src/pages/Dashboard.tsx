@@ -1760,46 +1760,10 @@ function Dashboard() {
   const handleSaveConfig = async () => {
     setSavingConfig(true);
     try {
-      const { segments, ...rest } = wheelConfig;
-      const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
-        ...s,
-        imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
-      }));
-
-      // Build config from local state only (source of truth)
-      const cleanConfig: Record<string, any> = {
-        ...rest,
-        segments: cleanSegments,
-        dashboardTheme: dashboardTheme || undefined,
-        dashboardSettings: buildPersistedDashboardSettings(),
-      };
-
-      // Strip data: URLs for image fields
-      ['authLogoUrl', 'authBgImageUrl', 'authBgImageMobileUrl', 'headerImageUrl', 'backgroundImageUrl', 'centerImageUrl'].forEach(key => {
-        if (typeof cleanConfig[key] === 'string' && cleanConfig[key].startsWith('data:')) {
-          cleanConfig[key] = '';
-        }
-      });
-
-      // Remove undefined keys so they don't erase DB values
-      Object.keys(cleanConfig).forEach(k => {
-        if (cleanConfig[k] === undefined) delete cleanConfig[k];
-      });
-
-      // Read current DB config to preserve any keys not in local state (e.g. dashboardTheme set by admin)
-      const { data: dbRow } = await (supabase as any)
-        .from('wheel_configs')
-        .select('config')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      const dbConfig = dbRow?.config || {};
-
-      // Merge: DB values as base, local changes on top
-      const mergedConfig = { ...dbConfig, ...cleanConfig };
-
+      const cleanConfig = buildPersistableWheelConfig();
       const { data: updated, error } = await (supabase as any)
         .from('wheel_configs')
-        .update({ config: mergedConfig, updated_at: new Date().toISOString() })
+        .update({ config: cleanConfig, updated_at: new Date().toISOString() })
         .eq('user_id', session.user.id)
         .select('config, updated_at')
         .maybeSingle();
