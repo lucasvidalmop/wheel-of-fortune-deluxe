@@ -1329,6 +1329,30 @@ function Dashboard() {
     csvContactGroups: contactGroups,
   });
 
+  const buildPersistableWheelConfig = (
+    settings: PersistedDashboardSettings = buildPersistedDashboardSettings(),
+    theme: ThemeSettings | undefined = dashboardTheme,
+  ): Record<string, any> => {
+    const { segments = [], ...rest } = wheelConfig as any;
+    const cleanSegments = segments?.map(({ imageUrl, ...s }: any) => ({
+      ...s,
+      imageUrl: typeof imageUrl === 'string' && imageUrl.startsWith('data:') ? '' : imageUrl,
+    }));
+    const cleanConfig: Record<string, any> = {
+      ...rest,
+      segments: cleanSegments,
+      dashboardTheme: theme || undefined,
+      dashboardSettings: settings,
+    };
+    ['authLogoUrl', 'authBgImageUrl', 'authBgImageMobileUrl', 'headerImageUrl', 'backgroundImageUrl', 'centerImageUrl'].forEach(key => {
+      if (typeof cleanConfig[key] === 'string' && cleanConfig[key].startsWith('data:')) cleanConfig[key] = '';
+    });
+    Object.keys(cleanConfig).forEach(k => {
+      if (cleanConfig[k] === undefined) delete cleanConfig[k];
+    });
+    return cleanConfig;
+  };
+
   const applyPersistedDashboardSettings = (rawSettings?: Partial<PersistedDashboardSettings>) => {
     // IMPORTANT: do NOT fall back to localStorage for per-operator API credentials —
     // localStorage is shared across all operators on the same browser and was the root
