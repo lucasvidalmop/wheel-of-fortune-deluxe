@@ -1240,6 +1240,21 @@ function Dashboard() {
       });
   }, [activeTab, depositVariant, session?.user?.id, (wheelConfig as any)?.depositConfig?.bsLimitsResetAt]);
 
+  // Auto-load scheduled messages when WhatsApp/WhatsApp2/SMS tabs are opened
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    if (activeTab === 'whatsapp' || activeTab === 'whatsapp2') {
+      fetchScheduledMessages();
+    }
+    if (activeTab === 'sms') {
+      try { fetchSmsScheduled?.(); } catch {}
+    }
+    if (activeTab === 'sms_cs') {
+      try { fetchSmsCsScheduled?.(); } catch {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, session?.user?.id]);
+
   // Grant spin modal
   const [grantSpinUser, setGrantSpinUser] = useState<WheelUser | null>(null);
   const [grantSpinMode, setGrantSpinMode] = useState<'random' | 'fixed'>('random');
