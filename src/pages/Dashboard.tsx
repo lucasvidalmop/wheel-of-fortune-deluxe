@@ -7327,16 +7327,16 @@ function Dashboard() {
                                 </span>
                               </div>
                               <p className="text-muted-foreground line-clamp-2">{m.message}</p>
-                              <div className="flex justify-between items-center text-muted-foreground">
-                                <span>📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleString('pt-BR')} {m.recurrence !== 'none' && `• 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
+                              <div className="flex flex-wrap justify-between items-center gap-2 text-muted-foreground">
+                                <span className="min-w-0 break-words flex-1">📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleString('pt-BR')} {m.recurrence !== 'none' && `• 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
                                 {m.status === 'pending' && (
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-shrink-0">
                                     <button onClick={() => startEditSchedule(m)} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><Pencil size={12} /> Editar</button>
                                     <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
                                   </div>
                                 )}
                                 {(m.status === 'failed' || m.status === 'cancelled') && (
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-shrink-0">
                                     <button onClick={async () => {
                                       const nextRun = new Date();
                                       nextRun.setMinutes(nextRun.getMinutes() + 1);
