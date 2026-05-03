@@ -2037,7 +2037,46 @@ function Dashboard() {
     toast.success(`Grupo "${groupName}" removido`);
   };
 
-  const fetchWaContacts = async () => {
+  const handleDeleteContact = async (numero: string, group_name: string, isWa: boolean) => {
+    if (!confirm(`Remover contato ${numero}?`)) return;
+    if (isWa) {
+      setWaContacts(prev => prev.filter(c => c.numero !== numero));
+    } else {
+      setCsvContacts(prev => prev.filter(c => !(c.numero === numero && (c.group_name || '') === (group_name || ''))));
+    }
+    setSelectedCsvContacts(prev => prev.filter(n => n !== numero));
+    if (!isWa && session?.user?.id) {
+      try {
+        await (supabase as any).from('imported_contacts').delete().eq('owner_id', session.user.id).eq('numero', numero).eq('group_name', group_name || '');
+      } catch (e: any) {
+        toast.error(`Erro ao remover: ${e.message || e}`);
+        return;
+      }
+    }
+    toast.success('Contato removido');
+  };
+
+  const handleSaveEditContact = async (oldNumero: string, group_name: string, isWa: boolean) => {
+    const newLead = editingContactLead.trim();
+    const newNumero = editingContactNumero.replace(/\D/g, '');
+    if (newNumero.length < 10) { toast.error('Número inválido'); return; }
+    if (isWa) {
+      setWaContacts(prev => prev.map(c => c.numero === oldNumero ? { lead: newLead, numero: newNumero } : c));
+    } else {
+      setCsvContacts(prev => prev.map(c => (c.numero === oldNumero && (c.group_name || '') === (group_name || '')) ? { ...c, lead: newLead, numero: newNumero } : c));
+      if (session?.user?.id) {
+        try {
+          await (supabase as any).from('imported_contacts').update({ lead: newLead, numero: newNumero }).eq('owner_id', session.user.id).eq('numero', oldNumero).eq('group_name', group_name || '');
+        } catch (e: any) {
+          toast.error(`Erro ao salvar: ${e.message || e}`);
+          return;
+        }
+      }
+    }
+    setSelectedCsvContacts(prev => prev.map(n => n === oldNumero ? newNumero : n));
+    setEditingContactKey(null);
+    toast.success('Contato atualizado');
+  };
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure a Evolution API primeiro'); return; }
     setWaContactsLoading(true);
     try {
