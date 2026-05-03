@@ -2077,6 +2077,8 @@ function Dashboard() {
     setEditingContactKey(null);
     toast.success('Contato atualizado');
   };
+
+  const fetchWaContacts = async () => {
     if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) { toast.error('Configure a Evolution API primeiro'); return; }
     setWaContactsLoading(true);
     try {
