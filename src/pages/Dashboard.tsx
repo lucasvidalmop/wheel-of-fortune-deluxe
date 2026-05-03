@@ -1830,6 +1830,11 @@ function Dashboard() {
   const [waContacts, setWaContacts] = useState<{ lead: string; numero: string }[]>([]);
   const [waContactsLoading, setWaContactsLoading] = useState(false);
   const [selectedWaContacts, setSelectedWaContacts] = useState<string[]>([]);
+
+  // Inline edit state for individual contacts (csv + wa)
+  const [editingContactKey, setEditingContactKey] = useState<string | null>(null);
+  const [editingContactLead, setEditingContactLead] = useState('');
+  const [editingContactNumero, setEditingContactNumero] = useState('');
   const [waContactSearch, setWaContactSearch] = useState('');
 
   const getSelectedExternalPhoneList = (): { phone: string; name: string }[] => {
