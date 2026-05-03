@@ -5994,14 +5994,35 @@ function Dashboard() {
                               <span className="text-xs text-muted-foreground ml-auto">{selectedCsvContacts.filter(n => filtered.some(c => c.numero === n)).length}/{merged.length}</span>
                             </label>
                             <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
-                              {filtered.map((c, i) => (
-                                <label key={`${c.numero}-${i}`} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
-                                  <input type="checkbox" checked={selectedCsvContacts.includes(c.numero)} onChange={e => { if (e.target.checked) setSelectedCsvContacts(prev => [...prev, c.numero]); else setSelectedCsvContacts(prev => prev.filter(n => n !== c.numero)); }} className="rounded border-white/20" />
-                                  <span className="text-sm text-foreground">{c.lead || 'Sem nome'}</span>
-                                  {c.group_name && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{c.group_name}</span>}
-                                  <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
-                                </label>
-                              ))}
+                              {filtered.map((c, i) => {
+                                const rowKey = `${c.numero}__${c.group_name || ''}`;
+                                const isWa = !csvContacts.some(x => x.numero === c.numero && (x.group_name || '') === (c.group_name || ''));
+                                const isEditing = editingContactKey === rowKey;
+                                if (isEditing) {
+                                  return (
+                                    <div key={`${rowKey}-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
+                                      <input type="text" value={editingContactLead} onChange={e => setEditingContactLead(e.target.value)} placeholder="Nome" className="flex-1 min-w-0 px-2 py-1 rounded border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                      <input type="text" value={editingContactNumero} onChange={e => setEditingContactNumero(e.target.value)} placeholder="Número" className="w-32 px-2 py-1 rounded border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                      <button onClick={() => handleSaveEditContact(c.numero, c.group_name || '', isWa)} className="p-1.5 rounded text-primary hover:bg-primary/10 transition" title="Salvar"><CheckCircle2 size={14} /></button>
+                                      <button onClick={() => setEditingContactKey(null)} className="p-1.5 rounded text-muted-foreground hover:text-foreground transition" title="Cancelar"><X size={14} /></button>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <div key={`${rowKey}-${i}`} className="group/row flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
+                                    <label className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer">
+                                      <input type="checkbox" checked={selectedCsvContacts.includes(c.numero)} onChange={e => { if (e.target.checked) setSelectedCsvContacts(prev => [...prev, c.numero]); else setSelectedCsvContacts(prev => prev.filter(n => n !== c.numero)); }} className="rounded border-white/20" />
+                                      <span className="text-sm text-foreground truncate">{c.lead || 'Sem nome'}</span>
+                                      {c.group_name && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{c.group_name}</span>}
+                                      <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                                    </label>
+                                    <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition">
+                                      <button onClick={() => { setEditingContactKey(rowKey); setEditingContactLead(c.lead || ''); setEditingContactNumero(c.numero); }} className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Editar"><Pencil size={12} /></button>
+                                      <button onClick={() => handleDeleteContact(c.numero, c.group_name || '', isWa)} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition" title="Remover"><Trash2 size={12} /></button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
