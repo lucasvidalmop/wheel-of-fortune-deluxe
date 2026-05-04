@@ -191,6 +191,7 @@ type ScheduledMessageLike = {
   status?: string | null;
   next_run_at?: string | null;
   scheduled_at?: string | null;
+  created_at?: string | null;
   recurrence?: string | null;
   message?: string | null;
   recipient_label?: string | null;
@@ -202,7 +203,7 @@ const groupScheduledMessages = <T extends ScheduledMessageLike>(messages: T[]) =
   const byKey = new Map<string, typeof batches[number]>();
 
   for (const msg of messages) {
-    const key = [msg.channel || '', msg.status || '', msg.next_run_at || msg.scheduled_at || '', msg.recurrence || 'none', msg.message || ''].join('||');
+    const key = [msg.channel || '', msg.status || '', msg.created_at || '', msg.next_run_at || msg.scheduled_at || '', msg.recurrence || 'none', msg.message || ''].join('||');
     let batch = byKey.get(key);
     if (!batch) {
       batch = { key, ids: [], count: 0, sample: msg, recipients: [] };
