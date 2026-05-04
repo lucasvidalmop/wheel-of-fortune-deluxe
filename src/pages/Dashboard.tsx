@@ -1295,8 +1295,26 @@ function Dashboard() {
 
   const cancelSmsCsScheduleBatch = async (ids: string[]) => {
     if (ids.length === 0) return;
-    await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).in('id', ids);
+    const { error } = await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).in('id', ids);
+    if (error) { toast.error('Erro ao cancelar lote'); console.error(error); return; }
     toast.success(`${ids.length} SMS cancelado(s)`);
+    fetchSmsCsScheduled();
+  };
+
+  const cancelSmsCsScheduleBatchByGroup = async (batch: ScheduledBatch<any>) => {
+    if (!session?.user?.id) return;
+    const m = batch.sample;
+    const { error } = await supabase.from('scheduled_messages')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() } as any)
+      .eq('owner_id', session.user.id)
+      .eq('channel', 'sms_cs' as any)
+      .eq('status', 'pending')
+      .eq('created_at', m.created_at)
+      .eq('next_run_at', m.next_run_at)
+      .eq('recurrence', m.recurrence || 'none')
+      .eq('message', m.message || '');
+    if (error) { toast.error('Erro ao cancelar lote'); console.error(error); return; }
+    toast.success(`${batch.count} SMS cancelado(s)`);
     fetchSmsCsScheduled();
   };
 
@@ -5711,7 +5729,7 @@ function Dashboard() {
                             <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                               <button onClick={() => resendSmsCsScheduleBatch(batch)} className="text-primary hover:text-primary/80 transition text-[10px] font-bold">Reenviar</button>
                               {m.status === 'pending' && <button onClick={() => editSmsCsScheduleBatch(batch)} className="text-muted-foreground hover:text-foreground transition text-[10px] font-bold">Editar</button>}
-                              {m.status === 'pending' && <button onClick={() => cancelSmsCsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>}
+                              {m.status === 'pending' && <button onClick={() => cancelSmsCsScheduleBatchByGroup(batch)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>}
                             </div>
                           </div>
                         </div>
