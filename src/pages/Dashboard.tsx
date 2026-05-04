@@ -347,6 +347,7 @@ function Dashboard() {
   const [smsSchedSaving, setSmsSchedSaving] = useState(false);
   const [smsScheduledList, setSmsScheduledList] = useState<any[]>([]);
   const [showSmsScheduledList, setShowSmsScheduledList] = useState(false);
+  const [editingSmsScheduleIds, setEditingSmsScheduleIds] = useState<string[]>([]);
   // Twilio credentials are scoped per operator via wheel_configs (NEVER localStorage — would leak across operators on the same browser)
   const [twilioAccountSid, setTwilioAccountSid] = useState('');
   const [twilioAuthToken, setTwilioAuthToken] = useState('');
@@ -370,6 +371,7 @@ function Dashboard() {
   const [smsCsSchedSaving, setSmsCsSchedSaving] = useState(false);
   const [smsCsScheduledList, setSmsCsScheduledList] = useState<any[]>([]);
   const [showSmsCsScheduledList, setShowSmsCsScheduledList] = useState(false);
+  const [editingSmsCsScheduleIds, setEditingSmsCsScheduleIds] = useState<string[]>([]);
   const [smsCsSourceMode, setSmsCsSourceMode] = useState<'base' | 'csv'>('base');
   const [clicksendUsername, setClicksendUsername] = useState('');
   const [clicksendApiKey, setClicksendApiKey] = useState('');
