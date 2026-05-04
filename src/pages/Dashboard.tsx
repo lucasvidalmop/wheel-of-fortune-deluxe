@@ -5202,11 +5202,15 @@ function Dashboard() {
                     <p className="text-xs text-muted-foreground text-center py-4">Nenhum SMS agendado</p>
                   ) : (
                     <div className="space-y-2 max-h-80 overflow-y-auto">
-                      {smsScheduledList.map((m: any) => (
-                        <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
+                      {groupScheduledMessages(smsScheduledList).map((batch) => {
+                        const m = batch.sample;
+                        const previewRecipients = batch.recipients.slice(0, 4).map(r => r.label || r.value).filter(Boolean).join(', ');
+                        return (
+                        <div key={batch.key} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
                           <div className="flex justify-between items-start">
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-foreground truncate">{m.recipient_label || m.recipient_value}</p>
+                              <p className="font-semibold text-foreground truncate">Lote com {batch.count} SMS agendado(s)</p>
+                              <p className="text-muted-foreground truncate mt-0.5">{previewRecipients}{batch.count > 4 ? ` +${batch.count - 4}` : ''}</p>
                               <p className="text-muted-foreground line-clamp-2 mt-0.5">{m.message}</p>
                             </div>
                             <div className="flex items-center gap-1 ml-2 flex-shrink-0">
@@ -5221,11 +5225,11 @@ function Dashboard() {
                               {m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}
                             </span>
                             {m.status === 'pending' && (
-                              <button onClick={() => cancelSmsSchedule(m.id)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>
+                              <button onClick={() => cancelSmsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar lote</button>
                             )}
                           </div>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </GlassCard>
