@@ -5497,11 +5497,15 @@ function Dashboard() {
                     <p className="text-xs text-muted-foreground text-center py-4">Nenhum SMS agendado</p>
                   ) : (
                     <div className="space-y-2 max-h-80 overflow-y-auto">
-                      {smsCsScheduledList.map((m: any) => (
-                        <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
+                      {groupScheduledMessages(smsCsScheduledList).map((batch) => {
+                        const m = batch.sample;
+                        const previewRecipients = batch.recipients.slice(0, 4).map(r => r.label || r.value).filter(Boolean).join(', ');
+                        return (
+                        <div key={batch.key} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
                           <div className="flex justify-between items-start">
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-foreground truncate">{m.recipient_label || m.recipient_value}</p>
+                              <p className="font-semibold text-foreground truncate">Lote com {batch.count} SMS agendado(s)</p>
+                              <p className="text-muted-foreground truncate mt-0.5">{previewRecipients}{batch.count > 4 ? ` +${batch.count - 4}` : ''}</p>
                               <p className="text-muted-foreground line-clamp-2 mt-0.5">{m.message}</p>
                             </div>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 flex-shrink-0 ${m.status === 'pending' ? 'bg-primary/20 text-primary' : m.status === 'sent' ? 'bg-green-500/20 text-green-400' : m.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' : 'bg-red-500/20 text-red-400'}`}>
@@ -5510,10 +5514,10 @@ function Dashboard() {
                           </div>
                           <div className="flex justify-between items-center pt-1">
                             <span className="text-muted-foreground">📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleDateString('pt-BR')} {new Date(m.next_run_at || m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
-                            {m.status === 'pending' && <button onClick={() => cancelSmsCsSchedule(m.id)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>}
+                            {m.status === 'pending' && <button onClick={() => cancelSmsCsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar lote</button>}
                           </div>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </GlassCard>
