@@ -1008,6 +1008,7 @@ function Dashboard() {
     setSmsSchedSaving(false);
     if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
     toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    setShowSmsScheduledList(true);
     setSmsScheduleMode(false);
     setSmsSchedDate(undefined);
     setSmsSchedTime('12:00');
@@ -1120,6 +1121,7 @@ function Dashboard() {
     setSmsCsSchedSaving(false);
     if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
     toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    setShowSmsCsScheduledList(true);
     setSmsCsScheduleMode(false);
     setSmsCsSchedDate(undefined);
     setSmsCsSchedTime('12:00');
