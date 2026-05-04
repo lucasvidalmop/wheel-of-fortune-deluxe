@@ -185,8 +185,20 @@ const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<
   </div>
 );
 
-const groupScheduledMessages = (messages: any[]) => {
-  const batches: { key: string; ids: string[]; count: number; sample: any; recipients: { label: string; value: string }[] }[] = [];
+type ScheduledMessageLike = {
+  id: string;
+  channel?: string | null;
+  status?: string | null;
+  next_run_at?: string | null;
+  scheduled_at?: string | null;
+  recurrence?: string | null;
+  message?: string | null;
+  recipient_label?: string | null;
+  recipient_value?: string | null;
+};
+
+const groupScheduledMessages = <T extends ScheduledMessageLike>(messages: T[]) => {
+  const batches: { key: string; ids: string[]; count: number; sample: T; recipients: { label: string; value: string }[] }[] = [];
   const byKey = new Map<string, typeof batches[number]>();
 
   for (const msg of messages) {
