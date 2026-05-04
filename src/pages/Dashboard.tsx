@@ -1021,6 +1021,13 @@ function Dashboard() {
     fetchSmsScheduled();
   };
 
+  const cancelSmsScheduleBatch = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).in('id', ids);
+    toast.success(`${ids.length} SMS cancelado(s)`);
+    fetchSmsScheduled();
+  };
+
   const cancelAllSmsSchedules = async () => {
     if (!session?.user?.id) return;
     const pending = smsScheduledList.filter((m: any) => m.status === 'pending');
@@ -1123,6 +1130,13 @@ function Dashboard() {
   const cancelSmsCsSchedule = async (id: string) => {
     await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).eq('id', id);
     toast.success('Agendamento cancelado');
+    fetchSmsCsScheduled();
+  };
+
+  const cancelSmsCsScheduleBatch = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).in('id', ids);
+    toast.success(`${ids.length} SMS cancelado(s)`);
     fetchSmsCsScheduled();
   };
 
