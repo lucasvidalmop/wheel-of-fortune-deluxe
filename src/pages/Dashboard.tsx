@@ -1008,23 +1008,31 @@ function Dashboard() {
     const [h, m] = smsSchedTime.split(':').map(Number);
     const scheduledAt = new Date(smsSchedDate);
     scheduledAt.setHours(h, m, 0, 0);
-    const rows = targetPhones.map(t => ({
-      owner_id: session.user.id,
+    const scheduleData = {
       message: smsMessage,
-      recipient_type: 'individual',
-      recipient_value: t.phone,
-      recipient_label: t.name,
       scheduled_at: scheduledAt.toISOString(),
       next_run_at: scheduledAt.toISOString(),
       recurrence: smsSchedRecurrence,
       channel: smsProvider === 'mobizon' ? 'sms_mb' : 'sms',
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    };
+    const rows = targetPhones.map(t => ({
+      owner_id: session.user.id,
+      recipient_type: 'individual',
+      recipient_value: t.phone,
+      recipient_label: t.name,
+      ...scheduleData,
     }));
-    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    const { error } = editingSmsScheduleIds.length > 0
+      ? await supabase.from('scheduled_messages').update(scheduleData as any).in('id', editingSmsScheduleIds)
+      : await supabase.from('scheduled_messages').insert(rows as any);
     setSmsSchedSaving(false);
     if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
-    toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    toast.success(editingSmsScheduleIds.length > 0 ? `${editingSmsScheduleIds.length} SMS atualizado(s)!` : `${targetPhones.length} SMS agendado(s)!`);
     setShowSmsScheduledList(true);
     setSmsScheduleMode(false);
+    setEditingSmsScheduleIds([]);
     setSmsSchedDate(undefined);
     setSmsSchedTime('12:00');
     setSmsSchedRecurrence('none');
