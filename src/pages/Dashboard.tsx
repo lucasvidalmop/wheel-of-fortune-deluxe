@@ -237,6 +237,12 @@ const sortScheduledMessages = <T extends ScheduledMessageLike>(messages: T[]) =>
   });
 };
 
+const mergeUniqueScheduledMessages = <T extends ScheduledMessageLike>(groups: T[][]) => {
+  const byId = new Map<string, T>();
+  groups.flat().forEach(message => byId.set(message.id, message));
+  return sortScheduledMessages(Array.from(byId.values()));
+};
+
 const WHATSAPP_SPIN_TEMPLATES = [
   { id: 'welcome', label: '🎉 Boas-vindas', message: 'Olá {nome}! Você recebeu {giros} giro(s) na nossa roleta! Acesse agora: {link}' },
   { id: 'vip', label: '⭐ VIP', message: '🌟 Parabéns {nome}! Como cliente VIP, você ganhou {giros} giro(s) exclusivo(s)! Jogue agora: {link}' },
