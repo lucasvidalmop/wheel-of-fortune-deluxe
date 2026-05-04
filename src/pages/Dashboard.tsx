@@ -1160,13 +1160,15 @@ function Dashboard() {
     if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
     if (!smsCsSchedDate) { toast.error('Selecione a data'); return; }
     let targetPhones: { phone: string; name: string }[] = [];
-    if (smsCsSourceMode === 'csv') {
-      targetPhones = getSelectedExternalPhoneList();
-    } else {
-      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-      targetPhones = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+    if (editingSmsCsScheduleIds.length === 0) {
+      if (smsCsSourceMode === 'csv') {
+        targetPhones = getSelectedExternalPhoneList();
+      } else {
+        const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+        targetPhones = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+      }
     }
-    if (targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
+    if (editingSmsCsScheduleIds.length === 0 && targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
     setSmsCsSchedSaving(true);
     const [h, m] = smsCsSchedTime.split(':').map(Number);
     const scheduledAt = new Date(smsCsSchedDate);
