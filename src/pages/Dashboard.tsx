@@ -1169,23 +1169,31 @@ function Dashboard() {
     const [h, m] = smsCsSchedTime.split(':').map(Number);
     const scheduledAt = new Date(smsCsSchedDate);
     scheduledAt.setHours(h, m, 0, 0);
-    const rows = targetPhones.map(t => ({
-      owner_id: session.user.id,
+    const scheduleData = {
       message: smsCsMessage,
-      recipient_type: 'individual',
-      recipient_value: t.phone,
-      recipient_label: t.name,
       scheduled_at: scheduledAt.toISOString(),
       next_run_at: scheduledAt.toISOString(),
       recurrence: smsCsSchedRecurrence,
       channel: 'sms_cs',
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    };
+    const rows = targetPhones.map(t => ({
+      owner_id: session.user.id,
+      recipient_type: 'individual',
+      recipient_value: t.phone,
+      recipient_label: t.name,
+      ...scheduleData,
     }));
-    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    const { error } = editingSmsCsScheduleIds.length > 0
+      ? await supabase.from('scheduled_messages').update(scheduleData as any).in('id', editingSmsCsScheduleIds)
+      : await supabase.from('scheduled_messages').insert(rows as any);
     setSmsCsSchedSaving(false);
     if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
-    toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    toast.success(editingSmsCsScheduleIds.length > 0 ? `${editingSmsCsScheduleIds.length} SMS atualizado(s)!` : `${targetPhones.length} SMS agendado(s)!`);
     setShowSmsCsScheduledList(true);
     setSmsCsScheduleMode(false);
+    setEditingSmsCsScheduleIds([]);
     setSmsCsSchedDate(undefined);
     setSmsCsSchedTime('12:00');
     setSmsCsSchedRecurrence('none');
