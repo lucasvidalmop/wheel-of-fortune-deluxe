@@ -226,6 +226,23 @@ const groupScheduledMessages = <T extends ScheduledMessageLike>(messages: T[]) =
   return batches;
 };
 
+const sortScheduledMessages = <T extends ScheduledMessageLike>(messages: T[]) => {
+  const priority: Record<string, number> = { pending: 0, failed: 1, sent: 2, cancelled: 3 };
+  return [...messages].sort((a, b) => {
+    const statusDiff = (priority[a.status || ''] ?? 4) - (priority[b.status || ''] ?? 4);
+    if (statusDiff !== 0) return statusDiff;
+    const aTime = new Date(a.next_run_at || a.scheduled_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.next_run_at || b.scheduled_at || b.created_at || 0).getTime();
+    return a.status === 'pending' ? aTime - bTime : bTime - aTime;
+  });
+};
+
+const mergeUniqueScheduledMessages = <T extends ScheduledMessageLike>(groups: T[][]) => {
+  const byId = new Map<string, T>();
+  groups.flat().forEach(message => byId.set(message.id, message));
+  return sortScheduledMessages(Array.from(byId.values()));
+};
+
 const WHATSAPP_SPIN_TEMPLATES = [
   { id: 'welcome', label: '🎉 Boas-vindas', message: 'Olá {nome}! Você recebeu {giros} giro(s) na nossa roleta! Acesse agora: {link}' },
   { id: 'vip', label: '⭐ VIP', message: '🌟 Parabéns {nome}! Como cliente VIP, você ganhou {giros} giro(s) exclusivo(s)! Jogue agora: {link}' },
@@ -996,8 +1013,32 @@ function Dashboard() {
 
   const fetchSmsScheduled = async () => {
     if (!session?.user?.id) return;
-    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['sms', 'sms_mb'] as any).order('next_run_at', { ascending: true });
-    setSmsScheduledList(data || []);
+    const PAGE_SIZE = 1000;
+    const pages = [0, 1, 2, 3];
+    const [pendingResults, historyResults] = await Promise.all([
+      Promise.all(pages.map(page => supabase
+        .from('scheduled_messages')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .in('channel', ['sms', 'sms_mb'] as any)
+        .eq('status', 'pending')
+        .order('next_run_at', { ascending: true })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+      )),
+      Promise.all(pages.map(page => supabase
+        .from('scheduled_messages')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .in('channel', ['sms', 'sms_mb'] as any)
+        .neq('status', 'pending')
+        .order('next_run_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+      )),
+    ]);
+    setSmsScheduledList(mergeUniqueScheduledMessages([
+      pendingResults.flatMap(result => result.data || []),
+      historyResults.flatMap(result => result.data || []),
+    ]));
   };
 
   const saveSmsSchedule = async () => {
@@ -1151,8 +1192,32 @@ function Dashboard() {
 
   const fetchSmsCsScheduled = async () => {
     if (!session?.user?.id) return;
-    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).eq('channel', 'sms_cs' as any).order('next_run_at', { ascending: true });
-    setSmsCsScheduledList(data || []);
+    const PAGE_SIZE = 1000;
+    const pages = [0, 1, 2, 3];
+    const [pendingResults, historyResults] = await Promise.all([
+      Promise.all(pages.map(page => supabase
+        .from('scheduled_messages')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .eq('channel', 'sms_cs' as any)
+        .eq('status', 'pending')
+        .order('next_run_at', { ascending: true })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+      )),
+      Promise.all(pages.map(page => supabase
+        .from('scheduled_messages')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .eq('channel', 'sms_cs' as any)
+        .neq('status', 'pending')
+        .order('next_run_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+      )),
+    ]);
+    setSmsCsScheduledList(mergeUniqueScheduledMessages([
+      pendingResults.flatMap(result => result.data || []),
+      historyResults.flatMap(result => result.data || []),
+    ]));
   };
 
   const saveSmsCsSchedule = async () => {
