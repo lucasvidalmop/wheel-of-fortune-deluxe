@@ -198,8 +198,16 @@ type ScheduledMessageLike = {
   recipient_value?: string | null;
 };
 
+type ScheduledBatch<T extends ScheduledMessageLike = ScheduledMessageLike> = {
+  key: string;
+  ids: string[];
+  count: number;
+  sample: T;
+  recipients: { label: string; value: string }[];
+};
+
 const groupScheduledMessages = <T extends ScheduledMessageLike>(messages: T[]) => {
-  const batches: { key: string; ids: string[]; count: number; sample: T; recipients: { label: string; value: string }[] }[] = [];
+  const batches: ScheduledBatch<T>[] = [];
   const byKey = new Map<string, typeof batches[number]>();
 
   for (const msg of messages) {
@@ -347,6 +355,7 @@ function Dashboard() {
   const [smsSchedSaving, setSmsSchedSaving] = useState(false);
   const [smsScheduledList, setSmsScheduledList] = useState<any[]>([]);
   const [showSmsScheduledList, setShowSmsScheduledList] = useState(false);
+  const [editingSmsScheduleIds, setEditingSmsScheduleIds] = useState<string[]>([]);
   // Twilio credentials are scoped per operator via wheel_configs (NEVER localStorage — would leak across operators on the same browser)
   const [twilioAccountSid, setTwilioAccountSid] = useState('');
   const [twilioAuthToken, setTwilioAuthToken] = useState('');
@@ -370,6 +379,7 @@ function Dashboard() {
   const [smsCsSchedSaving, setSmsCsSchedSaving] = useState(false);
   const [smsCsScheduledList, setSmsCsScheduledList] = useState<any[]>([]);
   const [showSmsCsScheduledList, setShowSmsCsScheduledList] = useState(false);
+  const [editingSmsCsScheduleIds, setEditingSmsCsScheduleIds] = useState<string[]>([]);
   const [smsCsSourceMode, setSmsCsSourceMode] = useState<'base' | 'csv'>('base');
   const [clicksendUsername, setClicksendUsername] = useState('');
   const [clicksendApiKey, setClicksendApiKey] = useState('');
@@ -995,34 +1005,44 @@ function Dashboard() {
     if (!smsMessage.trim()) { toast.error('Digite a mensagem'); return; }
     if (!smsSchedDate) { toast.error('Selecione a data'); return; }
     let targetPhones: { phone: string; name: string }[] = [];
-    if (smsSourceMode === 'csv') {
-      targetPhones = getSelectedExternalPhoneList();
-    } else {
-      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-      targetPhones = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+    if (editingSmsScheduleIds.length === 0) {
+      if (smsSourceMode === 'csv') {
+        targetPhones = getSelectedExternalPhoneList();
+      } else {
+        const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+        targetPhones = (smsTarget === 'all' ? usersWithPhone : users.filter(u => selectedPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+      }
     }
-    if (targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
+    if (editingSmsScheduleIds.length === 0 && targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
     setSmsSchedSaving(true);
     const [h, m] = smsSchedTime.split(':').map(Number);
     const scheduledAt = new Date(smsSchedDate);
     scheduledAt.setHours(h, m, 0, 0);
-    const rows = targetPhones.map(t => ({
-      owner_id: session.user.id,
+    const scheduleData = {
       message: smsMessage,
-      recipient_type: 'individual',
-      recipient_value: t.phone,
-      recipient_label: t.name,
       scheduled_at: scheduledAt.toISOString(),
       next_run_at: scheduledAt.toISOString(),
       recurrence: smsSchedRecurrence,
       channel: smsProvider === 'mobizon' ? 'sms_mb' : 'sms',
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    };
+    const rows = targetPhones.map(t => ({
+      owner_id: session.user.id,
+      recipient_type: 'individual',
+      recipient_value: t.phone,
+      recipient_label: t.name,
+      ...scheduleData,
     }));
-    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    const { error } = editingSmsScheduleIds.length > 0
+      ? await supabase.from('scheduled_messages').update(scheduleData as any).in('id', editingSmsScheduleIds)
+      : await supabase.from('scheduled_messages').insert(rows as any);
     setSmsSchedSaving(false);
     if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
-    toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    toast.success(editingSmsScheduleIds.length > 0 ? `${editingSmsScheduleIds.length} SMS atualizado(s)!` : `${targetPhones.length} SMS agendado(s)!`);
     setShowSmsScheduledList(true);
     setSmsScheduleMode(false);
+    setEditingSmsScheduleIds([]);
     setSmsSchedDate(undefined);
     setSmsSchedTime('12:00');
     setSmsSchedRecurrence('none');
@@ -1039,6 +1059,38 @@ function Dashboard() {
     if (ids.length === 0) return;
     await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).in('id', ids);
     toast.success(`${ids.length} SMS cancelado(s)`);
+    fetchSmsScheduled();
+  };
+
+  const editSmsScheduleBatch = (batch: ScheduledBatch<any>) => {
+    const m = batch.sample;
+    const dt = new Date(m.next_run_at || m.scheduled_at);
+    setSmsMessage(m.message || '');
+    setSmsProvider(m.channel === 'sms_mb' ? 'mobizon' : 'twilio');
+    setSmsSchedDate(dt);
+    setSmsSchedTime(`${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`);
+    setSmsSchedRecurrence((m.recurrence || 'none') as any);
+    setEditingSmsScheduleIds(batch.ids);
+    setSmsScheduleMode(true);
+    toast.info(`Editando lote com ${batch.count} SMS`);
+  };
+
+  const resendSmsScheduleBatch = async (batch: ScheduledBatch<any>) => {
+    const rows = batch.recipients.map(r => ({
+      owner_id: session.user.id,
+      message: batch.sample.message || '',
+      recipient_type: 'individual',
+      recipient_value: r.value,
+      recipient_label: r.label,
+      scheduled_at: new Date(Date.now() + 2 * 60000).toISOString(),
+      next_run_at: new Date(Date.now() + 2 * 60000).toISOString(),
+      recurrence: 'none',
+      channel: batch.sample.channel === 'sms_mb' ? 'sms_mb' : 'sms',
+      status: 'pending',
+    }));
+    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    if (error) { toast.error('Erro ao reenviar lote'); return; }
+    toast.success(`${rows.length} SMS reagendado(s) para daqui 2 minutos`);
     fetchSmsScheduled();
   };
 
@@ -1108,34 +1160,44 @@ function Dashboard() {
     if (!smsCsMessage.trim()) { toast.error('Digite a mensagem'); return; }
     if (!smsCsSchedDate) { toast.error('Selecione a data'); return; }
     let targetPhones: { phone: string; name: string }[] = [];
-    if (smsCsSourceMode === 'csv') {
-      targetPhones = getSelectedExternalPhoneList();
-    } else {
-      const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
-      targetPhones = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+    if (editingSmsCsScheduleIds.length === 0) {
+      if (smsCsSourceMode === 'csv') {
+        targetPhones = getSelectedExternalPhoneList();
+      } else {
+        const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10);
+        targetPhones = (smsCsTarget === 'all' ? usersWithPhone : users.filter(u => selectedSmsCsPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+      }
     }
-    if (targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
+    if (editingSmsCsScheduleIds.length === 0 && targetPhones.length === 0) { toast.error('Nenhum destinatário'); return; }
     setSmsCsSchedSaving(true);
     const [h, m] = smsCsSchedTime.split(':').map(Number);
     const scheduledAt = new Date(smsCsSchedDate);
     scheduledAt.setHours(h, m, 0, 0);
-    const rows = targetPhones.map(t => ({
-      owner_id: session.user.id,
+    const scheduleData = {
       message: smsCsMessage,
-      recipient_type: 'individual',
-      recipient_value: t.phone,
-      recipient_label: t.name,
       scheduled_at: scheduledAt.toISOString(),
       next_run_at: scheduledAt.toISOString(),
       recurrence: smsCsSchedRecurrence,
       channel: 'sms_cs',
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    };
+    const rows = targetPhones.map(t => ({
+      owner_id: session.user.id,
+      recipient_type: 'individual',
+      recipient_value: t.phone,
+      recipient_label: t.name,
+      ...scheduleData,
     }));
-    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    const { error } = editingSmsCsScheduleIds.length > 0
+      ? await supabase.from('scheduled_messages').update(scheduleData as any).in('id', editingSmsCsScheduleIds)
+      : await supabase.from('scheduled_messages').insert(rows as any);
     setSmsCsSchedSaving(false);
     if (error) { toast.error('Erro ao agendar'); console.error(error); return; }
-    toast.success(`${targetPhones.length} SMS agendado(s)!`);
+    toast.success(editingSmsCsScheduleIds.length > 0 ? `${editingSmsCsScheduleIds.length} SMS atualizado(s)!` : `${targetPhones.length} SMS agendado(s)!`);
     setShowSmsCsScheduledList(true);
     setSmsCsScheduleMode(false);
+    setEditingSmsCsScheduleIds([]);
     setSmsCsSchedDate(undefined);
     setSmsCsSchedTime('12:00');
     setSmsCsSchedRecurrence('none');
@@ -1152,6 +1214,38 @@ function Dashboard() {
     if (ids.length === 0) return;
     await supabase.from('scheduled_messages').update({ status: 'cancelled', updated_at: new Date().toISOString() } as any).in('id', ids);
     toast.success(`${ids.length} SMS cancelado(s)`);
+    fetchSmsCsScheduled();
+  };
+
+  const editSmsCsScheduleBatch = (batch: ScheduledBatch<any>) => {
+    const m = batch.sample;
+    const dt = new Date(m.next_run_at || m.scheduled_at);
+    setSmsCsMessage(m.message || '');
+    setSmsCsSchedDate(dt);
+    setSmsCsSchedTime(`${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`);
+    setSmsCsSchedRecurrence((m.recurrence || 'none') as any);
+    setEditingSmsCsScheduleIds(batch.ids);
+    setSmsCsScheduleMode(true);
+    toast.info(`Editando lote com ${batch.count} SMS`);
+  };
+
+  const resendSmsCsScheduleBatch = async (batch: ScheduledBatch<any>) => {
+    const runAt = new Date(Date.now() + 2 * 60000).toISOString();
+    const rows = batch.recipients.map(r => ({
+      owner_id: session.user.id,
+      message: batch.sample.message || '',
+      recipient_type: 'individual',
+      recipient_value: r.value,
+      recipient_label: r.label,
+      scheduled_at: runAt,
+      next_run_at: runAt,
+      recurrence: 'none',
+      channel: 'sms_cs',
+      status: 'pending',
+    }));
+    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    if (error) { toast.error('Erro ao reenviar lote'); return; }
+    toast.success(`${rows.length} SMS reagendado(s) para daqui 2 minutos`);
     fetchSmsCsScheduled();
   };
 
@@ -5115,7 +5209,7 @@ function Dashboard() {
                   disabled={smsSchedSaving}
                   className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                 >
-                  {smsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
+                  {smsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Salvando...</> : <><CalendarIcon size={16} /> {editingSmsScheduleIds.length > 0 ? `Salvar edição do lote (${editingSmsScheduleIds.length})` : 'Agendar SMS'}</>}
                 </button>
               ) : (
               <button
@@ -5217,6 +5311,7 @@ function Dashboard() {
                     <div className="space-y-2 max-h-80 overflow-y-auto">
                       {groupScheduledMessages(smsScheduledList).map((batch) => {
                         const m = batch.sample;
+                        const scheduledDate = new Date(m.next_run_at || m.scheduled_at);
                         const previewRecipients = batch.recipients.slice(0, 4).map(r => r.label || r.value).filter(Boolean).join(', ');
                         return (
                         <div key={batch.key} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
@@ -5234,12 +5329,14 @@ function Dashboard() {
                           </div>
                           <div className="flex justify-between items-center pt-1">
                             <span className="text-muted-foreground">
-                              📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleDateString('pt-BR')} {new Date(m.next_run_at || m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              📅 {scheduledDate.toLocaleDateString('pt-BR')} {scheduledDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                               {m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}
                             </span>
-                            {m.status === 'pending' && (
-                              <button onClick={() => cancelSmsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar lote</button>
-                            )}
+                            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                              <button onClick={() => resendSmsScheduleBatch(batch)} className="text-primary hover:text-primary/80 transition text-[10px] font-bold">Reenviar</button>
+                              {m.status === 'pending' && <button onClick={() => editSmsScheduleBatch(batch)} className="text-muted-foreground hover:text-foreground transition text-[10px] font-bold">Editar</button>}
+                              {m.status === 'pending' && <button onClick={() => cancelSmsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>}
+                            </div>
                           </div>
                         </div>
                       )})}
@@ -5429,7 +5526,7 @@ function Dashboard() {
 
               {smsCsScheduleMode ? (
                 <button onClick={saveSmsCsSchedule} disabled={smsCsSchedSaving} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-                  {smsCsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
+                  {smsCsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Salvando...</> : <><CalendarIcon size={16} /> {editingSmsCsScheduleIds.length > 0 ? `Salvar edição do lote (${editingSmsCsScheduleIds.length})` : 'Agendar SMS'}</>}
                 </button>
               ) : (
                 <button
@@ -5512,6 +5609,7 @@ function Dashboard() {
                     <div className="space-y-2 max-h-80 overflow-y-auto">
                       {groupScheduledMessages(smsCsScheduledList).map((batch) => {
                         const m = batch.sample;
+                        const scheduledDate = new Date(m.next_run_at || m.scheduled_at);
                         const previewRecipients = batch.recipients.slice(0, 4).map(r => r.label || r.value).filter(Boolean).join(', ');
                         return (
                         <div key={batch.key} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
@@ -5526,8 +5624,12 @@ function Dashboard() {
                             </span>
                           </div>
                           <div className="flex justify-between items-center pt-1">
-                            <span className="text-muted-foreground">📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleDateString('pt-BR')} {new Date(m.next_run_at || m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
-                            {m.status === 'pending' && <button onClick={() => cancelSmsCsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar lote</button>}
+                            <span className="text-muted-foreground">📅 {scheduledDate.toLocaleDateString('pt-BR')} {scheduledDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
+                            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                              <button onClick={() => resendSmsCsScheduleBatch(batch)} className="text-primary hover:text-primary/80 transition text-[10px] font-bold">Reenviar</button>
+                              {m.status === 'pending' && <button onClick={() => editSmsCsScheduleBatch(batch)} className="text-muted-foreground hover:text-foreground transition text-[10px] font-bold">Editar</button>}
+                              {m.status === 'pending' && <button onClick={() => cancelSmsCsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>}
+                            </div>
                           </div>
                         </div>
                       )})}
