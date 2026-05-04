@@ -5209,7 +5209,7 @@ function Dashboard() {
                   disabled={smsSchedSaving}
                   className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                 >
-                  {smsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
+                  {smsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Salvando...</> : <><CalendarIcon size={16} /> {editingSmsScheduleIds.length > 0 ? `Salvar edição do lote (${editingSmsScheduleIds.length})` : 'Agendar SMS'}</>}
                 </button>
               ) : (
               <button
@@ -5526,7 +5526,7 @@ function Dashboard() {
 
               {smsCsScheduleMode ? (
                 <button onClick={saveSmsCsSchedule} disabled={smsCsSchedSaving} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-                  {smsCsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Agendando...</> : <><CalendarIcon size={16} /> Agendar SMS</>}
+                  {smsCsSchedSaving ? <><div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> Salvando...</> : <><CalendarIcon size={16} /> {editingSmsCsScheduleIds.length > 0 ? `Salvar edição do lote (${editingSmsCsScheduleIds.length})` : 'Agendar SMS'}</>}
                 </button>
               ) : (
                 <button
