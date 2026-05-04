@@ -1007,8 +1007,19 @@ function Dashboard() {
 
   const fetchSmsScheduled = async () => {
     if (!session?.user?.id) return;
-    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['sms', 'sms_mb'] as any).order('next_run_at', { ascending: true });
-    setSmsScheduledList(data || []);
+    const PAGE_SIZE = 1000;
+    const pages = [0, 1, 2, 3];
+    const results = await Promise.all(pages.map(page => supabase
+      .from('scheduled_messages')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .in('channel', ['sms', 'sms_mb'] as any)
+      .order('status', { ascending: false })
+      .order('next_run_at', { ascending: true })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+    ));
+    const rows = results.flatMap(result => result.data || []);
+    setSmsScheduledList(sortScheduledMessages(rows));
   };
 
   const saveSmsSchedule = async () => {
@@ -1162,8 +1173,19 @@ function Dashboard() {
 
   const fetchSmsCsScheduled = async () => {
     if (!session?.user?.id) return;
-    const { data } = await supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).eq('channel', 'sms_cs' as any).order('next_run_at', { ascending: true });
-    setSmsCsScheduledList(data || []);
+    const PAGE_SIZE = 1000;
+    const pages = [0, 1, 2, 3];
+    const results = await Promise.all(pages.map(page => supabase
+      .from('scheduled_messages')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .eq('channel', 'sms_cs' as any)
+      .order('status', { ascending: false })
+      .order('next_run_at', { ascending: true })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+    ));
+    const rows = results.flatMap(result => result.data || []);
+    setSmsCsScheduledList(sortScheduledMessages(rows));
   };
 
   const saveSmsCsSchedule = async () => {
