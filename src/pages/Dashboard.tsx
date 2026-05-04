@@ -1213,6 +1213,38 @@ function Dashboard() {
     fetchSmsCsScheduled();
   };
 
+  const editSmsCsScheduleBatch = (batch: ScheduledBatch<any>) => {
+    const m = batch.sample;
+    const dt = new Date(m.next_run_at || m.scheduled_at);
+    setSmsCsMessage(m.message || '');
+    setSmsCsSchedDate(dt);
+    setSmsCsSchedTime(`${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`);
+    setSmsCsSchedRecurrence((m.recurrence || 'none') as any);
+    setEditingSmsCsScheduleIds(batch.ids);
+    setSmsCsScheduleMode(true);
+    toast.info(`Editando lote com ${batch.count} SMS`);
+  };
+
+  const resendSmsCsScheduleBatch = async (batch: ScheduledBatch<any>) => {
+    const runAt = new Date(Date.now() + 2 * 60000).toISOString();
+    const rows = batch.recipients.map(r => ({
+      owner_id: session.user.id,
+      message: batch.sample.message || '',
+      recipient_type: 'individual',
+      recipient_value: r.value,
+      recipient_label: r.label,
+      scheduled_at: runAt,
+      next_run_at: runAt,
+      recurrence: 'none',
+      channel: 'sms_cs',
+      status: 'pending',
+    }));
+    const { error } = await supabase.from('scheduled_messages').insert(rows as any);
+    if (error) { toast.error('Erro ao reenviar lote'); return; }
+    toast.success(`${rows.length} SMS reagendado(s) para daqui 2 minutos`);
+    fetchSmsCsScheduled();
+  };
+
   const cancelAllSmsCsSchedules = async () => {
     if (!session?.user?.id) return;
     const pending = smsCsScheduledList.filter((m: any) => m.status === 'pending');
