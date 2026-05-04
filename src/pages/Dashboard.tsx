@@ -5311,6 +5311,7 @@ function Dashboard() {
                     <div className="space-y-2 max-h-80 overflow-y-auto">
                       {groupScheduledMessages(smsScheduledList).map((batch) => {
                         const m = batch.sample;
+                        const scheduledDate = new Date(m.next_run_at || m.scheduled_at);
                         const previewRecipients = batch.recipients.slice(0, 4).map(r => r.label || r.value).filter(Boolean).join(', ');
                         return (
                         <div key={batch.key} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
@@ -5328,12 +5329,14 @@ function Dashboard() {
                           </div>
                           <div className="flex justify-between items-center pt-1">
                             <span className="text-muted-foreground">
-                              📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleDateString('pt-BR')} {new Date(m.next_run_at || m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              📅 {scheduledDate.toLocaleDateString('pt-BR')} {scheduledDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                               {m.recurrence !== 'none' && ` · 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}
                             </span>
-                            {m.status === 'pending' && (
-                              <button onClick={() => cancelSmsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar lote</button>
-                            )}
+                            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                              <button onClick={() => resendSmsScheduleBatch(batch)} className="text-primary hover:text-primary/80 transition text-[10px] font-bold">Reenviar</button>
+                              {m.status === 'pending' && <button onClick={() => editSmsScheduleBatch(batch)} className="text-muted-foreground hover:text-foreground transition text-[10px] font-bold">Editar</button>}
+                              {m.status === 'pending' && <button onClick={() => cancelSmsScheduleBatch(batch.ids)} className="text-red-400 hover:text-red-300 transition text-[10px] font-bold">Cancelar</button>}
+                            </div>
                           </div>
                         </div>
                       )})}
