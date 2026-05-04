@@ -1060,7 +1060,7 @@ function Dashboard() {
     fetchSmsScheduled();
   };
 
-  const editSmsScheduleBatch = (batch: ReturnType<typeof groupScheduledMessages<any>>[number]) => {
+  const editSmsScheduleBatch = (batch: ScheduledBatch<any>) => {
     const m = batch.sample;
     const dt = new Date(m.next_run_at || m.scheduled_at);
     setSmsMessage(m.message || '');
@@ -1073,7 +1073,7 @@ function Dashboard() {
     toast.info(`Editando lote com ${batch.count} SMS`);
   };
 
-  const resendSmsScheduleBatch = async (batch: ReturnType<typeof groupScheduledMessages<any>>[number]) => {
+  const resendSmsScheduleBatch = async (batch: ScheduledBatch<any>) => {
     const rows = batch.recipients.map(r => ({
       owner_id: session.user.id,
       message: batch.sample.message || '',
