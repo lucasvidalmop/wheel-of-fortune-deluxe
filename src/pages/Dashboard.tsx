@@ -198,8 +198,16 @@ type ScheduledMessageLike = {
   recipient_value?: string | null;
 };
 
+type ScheduledBatch<T extends ScheduledMessageLike = ScheduledMessageLike> = {
+  key: string;
+  ids: string[];
+  count: number;
+  sample: T;
+  recipients: { label: string; value: string }[];
+};
+
 const groupScheduledMessages = <T extends ScheduledMessageLike>(messages: T[]) => {
-  const batches: { key: string; ids: string[]; count: number; sample: T; recipients: { label: string; value: string }[] }[] = [];
+  const batches: ScheduledBatch<T>[] = [];
   const byKey = new Map<string, typeof batches[number]>();
 
   for (const msg of messages) {
