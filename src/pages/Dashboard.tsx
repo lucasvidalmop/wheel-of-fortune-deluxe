@@ -185,6 +185,26 @@ const GlassCard = ({ children, className = '', ...props }: React.HTMLAttributes<
   </div>
 );
 
+const groupScheduledMessages = (messages: any[]) => {
+  const batches: { key: string; ids: string[]; count: number; sample: any; recipients: { label: string; value: string }[] }[] = [];
+  const byKey = new Map<string, typeof batches[number]>();
+
+  for (const msg of messages) {
+    const key = [msg.channel || '', msg.status || '', msg.next_run_at || msg.scheduled_at || '', msg.recurrence || 'none', msg.message || ''].join('||');
+    let batch = byKey.get(key);
+    if (!batch) {
+      batch = { key, ids: [], count: 0, sample: msg, recipients: [] };
+      byKey.set(key, batch);
+      batches.push(batch);
+    }
+    batch.ids.push(msg.id);
+    batch.count += 1;
+    batch.recipients.push({ label: msg.recipient_label || '', value: msg.recipient_value || '' });
+  }
+
+  return batches;
+};
+
 const WHATSAPP_SPIN_TEMPLATES = [
   { id: 'welcome', label: '🎉 Boas-vindas', message: 'Olá {nome}! Você recebeu {giros} giro(s) na nossa roleta! Acesse agora: {link}' },
   { id: 'vip', label: '⭐ VIP', message: '🌟 Parabéns {nome}! Como cliente VIP, você ganhou {giros} giro(s) exclusivo(s)! Jogue agora: {link}' },
