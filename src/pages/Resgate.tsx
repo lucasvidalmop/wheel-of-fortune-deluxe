@@ -44,6 +44,7 @@ const Resgate = ({ tag }: { tag?: string }) => {
         const defaultCfg = rpcData?.defaultReferralPageConfig || {};
         const individualCfg = link.page_config && Object.keys(link.page_config).length > 0 ? link.page_config : {};
         setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
+        setSlotCfg(rpcData?.gorjetaPageConfig || {});
       }
       setLoading(false);
     };
