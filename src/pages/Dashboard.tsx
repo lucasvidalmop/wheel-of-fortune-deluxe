@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
+import RedemptionPagesPanel from '@/components/casino/RedemptionPagesPanel';
 import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
@@ -316,7 +317,7 @@ function Dashboard() {
   const [customizingReferral, setCustomizingReferral] = useState<any>(null);
   const [analyticsReferral, setAnalyticsReferral] = useState<any>(null);
   const [sharingReferral, setSharingReferral] = useState<any>(null);
-  const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style'>('links');
+  const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style' | 'redemption'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -7913,6 +7914,7 @@ function Dashboard() {
               <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
                 {([
                   { key: 'links' as const, label: '🔗 Links', icon: Link2 },
+                  { key: 'redemption' as const, label: '🎟️ Resgate por Código', icon: Link2 },
                   { key: 'analytics' as const, label: '📊 Analytics', icon: BarChart3 },
                   { key: 'default_style' as const, label: '🎨 Visual Padrão', icon: Palette },
                 ] as const).map(tab => (
@@ -7929,6 +7931,12 @@ function Dashboard() {
                   </button>
                 ))}
               </div>
+
+              {referralSubTab === 'redemption' && (
+                <GlassCard className="p-5">
+                  <RedemptionPagesPanel ownerId={session.user.id} />
+                </GlassCard>
+              )}
 
               {referralSubTab === 'default_style' && (
                 <GlassCard className="p-5">
