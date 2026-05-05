@@ -51,6 +51,52 @@ const Resgate = ({ tag }: { tag?: string }) => {
     fetchPage();
   }, [tag]);
 
+  // SEO: title, description, favicon (usa o padrão do link de referência do operador)
+  useEffect(() => {
+    if (!cfg) return;
+    const cleanups: (() => void)[] = [];
+    const addMeta = (property: string, content: string) => {
+      if (!content) return;
+      let el = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement('meta');
+        if (property.startsWith('og:') || property.startsWith('twitter:')) el.setAttribute('property', property);
+        else el.setAttribute('name', property);
+        document.head.appendChild(el);
+        cleanups.push(() => el?.remove());
+      }
+      el.setAttribute('content', content);
+    };
+
+    const prevTitle = document.title;
+    const pageTitle = (cfg as any).seoTitle || cfg.titleText || linkData?.label || 'Resgate de Giros';
+    document.title = pageTitle;
+    cleanups.push(() => { document.title = prevTitle; });
+
+    addMeta('description', (cfg as any).seoDescription || '');
+    addMeta('og:title', pageTitle);
+    addMeta('og:description', (cfg as any).seoDescription || '');
+    if ((cfg as any).seoOgImageUrl) addMeta('og:image', (cfg as any).seoOgImageUrl);
+    addMeta('twitter:card', 'summary_large_image');
+    addMeta('twitter:title', pageTitle);
+    addMeta('twitter:description', (cfg as any).seoDescription || '');
+    if ((cfg as any).seoOgImageUrl) addMeta('twitter:image', (cfg as any).seoOgImageUrl);
+
+    if ((cfg as any).seoFaviconUrl) {
+      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+      const hadExisting = !!link;
+      const oldHref = link?.href;
+      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+      link.href = (cfg as any).seoFaviconUrl;
+      cleanups.push(() => {
+        if (!hadExisting) link?.remove();
+        else if (link && oldHref) link.href = oldHref;
+      });
+    }
+
+    return () => cleanups.forEach(fn => fn());
+  }, [cfg, linkData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim() || !email.trim() || !accountId.trim()) {
