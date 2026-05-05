@@ -26,6 +26,7 @@ const Resgate = ({ tag }: { tag?: string }) => {
   const [spinsGranted, setSpinsGranted] = useState(0);
   const [wheelSlug, setWheelSlug] = useState('');
   const [cfg, setCfg] = useState<ReferralPageConfig>(defaultPageConfig);
+  const [slotCfg, setSlotCfg] = useState<any>({});
 
   useEffect(() => {
     const fetchPage = async () => {
