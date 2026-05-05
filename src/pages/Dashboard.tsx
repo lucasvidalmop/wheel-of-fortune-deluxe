@@ -7913,6 +7913,7 @@ function Dashboard() {
               <div className="flex gap-2 overflow-x-auto pb-1 [touch-action:pan-x]" style={{ scrollbarWidth: 'none' }}>
                 {([
                   { key: 'links' as const, label: '🔗 Links', icon: Link2 },
+                  { key: 'redemption' as const, label: '🎟️ Resgate por Código', icon: Link2 },
                   { key: 'analytics' as const, label: '📊 Analytics', icon: BarChart3 },
                   { key: 'default_style' as const, label: '🎨 Visual Padrão', icon: Palette },
                 ] as const).map(tab => (
@@ -7929,6 +7930,12 @@ function Dashboard() {
                   </button>
                 ))}
               </div>
+
+              {referralSubTab === 'redemption' && (
+                <GlassCard className="p-5">
+                  <RedemptionPagesPanel ownerId={session.user.id} />
+                </GlassCard>
+              )}
 
               {referralSubTab === 'default_style' && (
                 <GlassCard className="p-5">
