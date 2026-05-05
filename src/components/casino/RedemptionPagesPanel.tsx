@@ -141,10 +141,14 @@ const RedemptionPagesPanel = ({ ownerId }: Props) => {
                 <option value="unique">Códigos únicos (1 uso cada)</option>
               </select>
             </div>
-            {form.mode === 'shared' && (
+            {form.mode === 'shared' ? (
               <div>
                 <label className="block text-xs font-medium mb-1 text-muted-foreground">Código compartilhado</label>
                 <input value={form.shared_code} onChange={e => setForm({ ...form, shared_code: e.target.value.toUpperCase() })} placeholder="EX: BSB2026" className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm uppercase font-mono" />
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-[11px] text-muted-foreground">
+                💡 Os códigos únicos serão <strong className="text-foreground">gerados em lote depois</strong> de criar a página, no botão <strong className="text-primary">"Gerar códigos"</strong> que aparece no card. Você poderá exportar todos em CSV.
               </div>
             )}
           </div>
