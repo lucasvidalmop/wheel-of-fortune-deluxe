@@ -14,6 +14,7 @@ import Influencer from "./pages/Influencer.tsx";
 import Deposit from "./pages/Deposit.tsx";
 import DepositBS from "./pages/DepositBS.tsx";
 import Batalha from "./pages/Batalha.tsx";
+import Resgate from "./pages/Resgate.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
