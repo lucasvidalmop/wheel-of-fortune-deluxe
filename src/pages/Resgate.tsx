@@ -161,8 +161,13 @@ const Resgate = ({ tag }: { tag?: string }) => {
         successTitle={cfg.successTitle || 'Giro Liberado!'}
         successSubtitle={cfg.successSubtitle || `Você recebeu ${spinsGranted} giro(s) na roleta!`}
         successBtnText={cfg.successBtnText || '🎰 Ir para a Roleta'}
-        successBgColor={cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
-        slotMatchIcon="🎉"
+        successBgColor={slotCfg.successBgColor || cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
+        slotMatchIcon={slotCfg.slotMatchIcon || '🎉'}
+        slotReelImages={[slotCfg.slotReelImage1, slotCfg.slotReelImage2, slotCfg.slotReelImage3].filter(Boolean)}
+        slotLuckyText={slotCfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
+        slotReelBgColor={slotCfg.slotReelBgColor}
+        slotFrameBgColor={slotCfg.slotFrameBgColor}
+        slotFrameBorderColor={slotCfg.slotFrameBorderColor}
         ctaUrl={undefined}
         onCtaClick={wheelSlug ? () => navigate(`/${wheelSlug}`) : undefined}
         showCta={!!wheelSlug}
