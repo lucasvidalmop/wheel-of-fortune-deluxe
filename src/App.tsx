@@ -29,6 +29,10 @@ const SlugRouter = () => {
     const tag = slug.substring(4);
     return <Deposit tag={tag} />;
   }
+  if (slug && slug.startsWith('resgate=')) {
+    const tag = slug.substring(8);
+    return <Resgate tag={tag} />;
+  }
   return <Roleta />;
 };
 
