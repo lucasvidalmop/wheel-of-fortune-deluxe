@@ -26,6 +26,7 @@ const Resgate = ({ tag }: { tag?: string }) => {
   const [spinsGranted, setSpinsGranted] = useState(0);
   const [wheelSlug, setWheelSlug] = useState('');
   const [cfg, setCfg] = useState<ReferralPageConfig>(defaultPageConfig);
+  const [slotCfg, setSlotCfg] = useState<any>({});
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -43,6 +44,7 @@ const Resgate = ({ tag }: { tag?: string }) => {
         const defaultCfg = rpcData?.defaultReferralPageConfig || {};
         const individualCfg = link.page_config && Object.keys(link.page_config).length > 0 ? link.page_config : {};
         setCfg({ ...defaultPageConfig, ...defaultCfg, ...individualCfg });
+        setSlotCfg(rpcData?.gorjetaPageConfig || {});
       }
       setLoading(false);
     };
@@ -159,8 +161,13 @@ const Resgate = ({ tag }: { tag?: string }) => {
         successTitle={cfg.successTitle || 'Giro Liberado!'}
         successSubtitle={cfg.successSubtitle || `Você recebeu ${spinsGranted} giro(s) na roleta!`}
         successBtnText={cfg.successBtnText || '🎰 Ir para a Roleta'}
-        successBgColor={cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
-        slotMatchIcon="🎉"
+        successBgColor={slotCfg.successBgColor || cfg.bgColor || `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)`}
+        slotMatchIcon={slotCfg.slotMatchIcon || '🎉'}
+        slotReelImages={[slotCfg.slotReelImage1, slotCfg.slotReelImage2, slotCfg.slotReelImage3].filter(Boolean)}
+        slotLuckyText={slotCfg.slotLuckyText || '🎰 BOA SORTE! 🎰'}
+        slotReelBgColor={slotCfg.slotReelBgColor}
+        slotFrameBgColor={slotCfg.slotFrameBgColor}
+        slotFrameBorderColor={slotCfg.slotFrameBorderColor}
         ctaUrl={undefined}
         onCtaClick={wheelSlug ? () => navigate(`/${wheelSlug}`) : undefined}
         showCta={!!wheelSlug}
