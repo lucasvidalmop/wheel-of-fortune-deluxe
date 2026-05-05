@@ -581,6 +581,91 @@ export type Database = {
           },
         ]
       }
+      redemption_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          owner_id: string
+          redemption_page_id: string
+          used_at: string | null
+          used_by_account_id: string | null
+          used_by_email: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          redemption_page_id: string
+          used_at?: string | null
+          used_by_account_id?: string | null
+          used_by_email?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          redemption_page_id?: string
+          used_at?: string | null
+          used_by_account_id?: string | null
+          used_by_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemption_codes_redemption_page_id_fkey"
+            columns: ["redemption_page_id"]
+            isOneToOne: false
+            referencedRelation: "redemption_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redemption_pages: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          mode: string
+          owner_id: string
+          referral_link_id: string
+          shared_code: string | null
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mode?: string
+          owner_id: string
+          referral_link_id: string
+          shared_code?: string | null
+          tag: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mode?: string
+          owner_id?: string
+          referral_link_id?: string
+          shared_code?: string | null
+          tag?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemption_pages_referral_link_id_fkey"
+            columns: ["referral_link_id"]
+            isOneToOne: false
+            referencedRelation: "referral_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_links: {
         Row: {
           auto_payment: boolean
@@ -1402,6 +1487,7 @@ export type Database = {
         Args: { p_edpay_id: string }
         Returns: string
       }
+      get_redemption_page_by_tag: { Args: { p_tag: string }; Returns: Json }
       get_referral_page_data: { Args: { p_code: string }; Returns: Json }
       get_wheel_config_by_slug: {
         Args: { p_slug: string }
@@ -1475,6 +1561,20 @@ export type Database = {
           p_phone?: string
           p_pix_key?: string
           p_pix_key_type?: string
+        }
+        Returns: Json
+      }
+      register_via_redemption: {
+        Args: {
+          p_account_id: string
+          p_code: string
+          p_cpf?: string
+          p_email: string
+          p_name?: string
+          p_phone?: string
+          p_pix_key?: string
+          p_pix_key_type?: string
+          p_tag: string
         }
         Returns: Json
       }
