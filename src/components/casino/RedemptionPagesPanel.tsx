@@ -178,7 +178,7 @@ const RedemptionPagesPanel = ({ ownerId }: Props) => {
                     {p.is_active ? 'ATIVA' : 'PAUSADA'}
                   </span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground">
-                    {p.mode === 'shared' ? 'CÓDIGO ÚNICO' : 'CÓDIGOS INDIVIDUAIS'}
+                    {p.mode === 'shared' ? 'CÓDIGO COMPARTILHADO' : 'CÓDIGOS ÚNICOS'}
                   </span>
                 </div>
                 <div className="text-[11px] text-muted-foreground flex items-center gap-1">
