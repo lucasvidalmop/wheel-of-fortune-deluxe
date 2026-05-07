@@ -23,6 +23,8 @@ interface LuckyConfig {
   id: string;
   tag: string;
   tokens_symbol: string;
+  coin_name?: string;
+  coin_icon_url?: string;
   page_config: any;
   owner_id: string;
 }
