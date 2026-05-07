@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Coins, LogOut, Package, Sparkles, X } from 'lucide-react';
+import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 
 interface CasePrize {
   label: string;
@@ -52,6 +52,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   // Opening
   const [openingCase, setOpeningCase] = useState<LuckyCase | null>(null);
+  const [prizesPreview, setPrizesPreview] = useState<LuckyCase | null>(null);
   
   const [reelPrizes, setReelPrizes] = useState<CasePrize[]>([]);
   const [reelOffset, setReelOffset] = useState(0);
@@ -354,40 +355,52 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {cases.map(c => (
-              <button
-                key={c.id}
-                onClick={() => {
-                  setOpeningCase(c);
-                  setWinner(null);
-                  setPhase('idle');
-                  // pre-fill reel with random preview prizes
-                  const preview: CasePrize[] = [];
-                  for (let i = 0; i < 30; i++) preview.push(c.prizes[Math.floor(Math.random() * c.prizes.length)] || { label: '?' });
-                  setReelPrizes(preview);
-                  setReelOffset(0);
-                  setReelTransition('none');
-                }}
-                disabled={authedUser.tokens_balance < c.price_tokens}
-                className="group relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.02] p-4 transition hover:scale-[1.03] hover:border-white/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ boxShadow: `inset 0 0 0 1px ${rarityColor(c.rarity)}22` }}
-              >
+            {cases.map(c => {
+              const cantAfford = authedUser.tokens_balance < c.price_tokens;
+              return (
                 <div
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition pointer-events-none"
-                  style={{ boxShadow: `0 0 30px ${rarityColor(c.rarity)}66`, background: `radial-gradient(circle at center, ${rarityColor(c.rarity)}22, transparent 70%)` }}
-                />
-                <div className="aspect-square flex items-center justify-center mb-3 relative">
-                  {c.image_url
-                    ? <img src={c.image_url} alt={c.name} className="max-w-full max-h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]" />
-                    : <Package size={64} style={{ color: rarityColor(c.rarity) }} />}
+                  key={c.id}
+                  className="group relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.02] p-4 transition hover:border-white/30"
+                  style={{ boxShadow: `inset 0 0 0 1px ${rarityColor(c.rarity)}22` }}
+                >
+                  <div
+                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition pointer-events-none"
+                    style={{ boxShadow: `0 0 30px ${rarityColor(c.rarity)}66`, background: `radial-gradient(circle at center, ${rarityColor(c.rarity)}22, transparent 70%)` }}
+                  />
+                  <button
+                    onClick={() => {
+                      setOpeningCase(c);
+                      setWinner(null);
+                      setPhase('idle');
+                      const preview: CasePrize[] = [];
+                      for (let i = 0; i < 30; i++) preview.push(c.prizes[Math.floor(Math.random() * c.prizes.length)] || { label: '?' });
+                      setReelPrizes(preview);
+                      setReelOffset(0);
+                      setReelTransition('none');
+                    }}
+                    disabled={cantAfford}
+                    className="block w-full disabled:opacity-50 disabled:cursor-not-allowed transition hover:scale-[1.02]"
+                  >
+                    <div className="aspect-square flex items-center justify-center mb-3 relative">
+                      {c.image_url
+                        ? <img src={c.image_url} alt={c.name} className="max-w-full max-h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]" />
+                        : <Package size={64} style={{ color: rarityColor(c.rarity) }} />}
+                    </div>
+                    <div className="text-center text-sm font-semibold">{c.name}</div>
+                    <div className="text-center mt-2 flex items-center justify-center gap-1 text-base font-bold" style={{ color: accent }}>
+                      <Coins size={14} />
+                      {c.price_tokens} <span className="text-xs opacity-70">{cfg.tokens_symbol || 'T'}</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setPrizesPreview(c); }}
+                    className="relative z-10 mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-medium transition"
+                  >
+                    <Eye size={13} /> Ver prêmios
+                  </button>
                 </div>
-                <div className="text-center text-sm font-semibold">{c.name}</div>
-                <div className="text-center mt-2 flex items-center justify-center gap-1 text-base font-bold" style={{ color: accent }}>
-                  <Coins size={14} />
-                  {c.price_tokens} <span className="text-xs opacity-70">{cfg.tokens_symbol || 'T'}</span>
-                </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
@@ -493,6 +506,46 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Prizes preview modal */}
+      {prizesPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4" onClick={() => setPrizesPreview(null)}>
+          <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/60 p-6 shadow-[0_8px_60px_rgba(0,0,0,0.8)]" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPrizesPreview(null)} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+              <X size={18} />
+            </button>
+            <div className="text-center mb-5">
+              <h3 className="text-xl font-bold">{prizesPreview.name}</h3>
+              <p className="text-xs opacity-60 mt-1">{prizesPreview.prizes.length} prêmios possíveis</p>
+            </div>
+            <div className="overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pr-1">
+              {prizesPreview.prizes.map((p, i) => {
+                const totalWeight = prizesPreview.prizes.reduce((s, x) => s + (x.weight || 1), 0);
+                const chance = ((p.weight || 1) / totalWeight) * 100;
+                return (
+                  <div
+                    key={i}
+                    className="rounded-xl border p-3 flex flex-col items-center gap-2 relative overflow-hidden"
+                    style={{
+                      borderColor: rarityColor(p.rarity) + '66',
+                      background: `linear-gradient(180deg, ${rarityColor(p.rarity)}22 0%, rgba(0,0,0,0.4) 100%)`,
+                    }}
+                  >
+                    <div className="h-16 flex items-center justify-center">
+                      {p.image
+                        ? <img src={p.image} alt={p.label} className="max-h-full max-w-full object-contain" />
+                        : <div className="text-3xl">🎁</div>}
+                    </div>
+                    <div className="text-xs font-semibold text-center line-clamp-2">{p.label}</div>
+                    <div className="text-[10px] opacity-70">{chance.toFixed(2)}%</div>
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: rarityColor(p.rarity) }} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
