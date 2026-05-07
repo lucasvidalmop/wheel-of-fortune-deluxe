@@ -43,6 +43,7 @@ export interface WheelSegment {
   postSpinMessage?: string;
   postSpinEmoji?: string;
   autoPayment?: boolean;
+  rewardType?: 'money' | 'token';
 }
 
 export interface WheelConfig {
