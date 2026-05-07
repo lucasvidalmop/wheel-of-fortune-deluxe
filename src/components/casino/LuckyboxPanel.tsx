@@ -240,7 +240,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       <div className="flex flex-wrap gap-2">
         {[
           { k: 'cases', l: 'Caixas' },
-          { k: 'tag', l: 'Tag e Tokens' },
+          { k: 'tag', l: 'Tag e Moeda' },
           { k: 'visual', l: 'Visual' },
           { k: 'tokens', l: 'Saldo de usuários' },
         ].map(t => (
