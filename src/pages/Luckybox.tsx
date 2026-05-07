@@ -316,6 +316,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   // Main grid
   const accent = pc.accentColor || '#22d3ee';
+  const coinName = cfg.coin_name || 'Coins';
+  const coinIconUrl = cfg.coin_icon_url || '';
+  const CoinIcon = ({ size = 16, color }: { size?: number; color?: string }) =>
+    coinIconUrl
+      ? <img src={coinIconUrl} alt="" style={{ width: size, height: size }} className="object-contain inline-block" />
+      : <Coins size={size} style={color ? { color } : undefined} />;
   return (
     <div className="min-h-screen text-white" style={bgStyle}>
       {/* Header */}
