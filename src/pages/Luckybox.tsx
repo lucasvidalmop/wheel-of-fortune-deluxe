@@ -217,12 +217,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           // jitter so it doesn't always land in dead center
           const jitter = (Math.random() - 0.5) * 80;
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
-          setReelTransition('transform 6s cubic-bezier(0.05, 0.8, 0.15, 1)');
+          setReelTransition('transform 10s cubic-bezier(0.05, 0.8, 0.15, 1)');
           setReelOffset(offset);
           setTimeout(() => {
             setWinner(prize);
             setPhase('done');
-          }, 6200);
+          }, 10200);
         }, 50);
       });
     } catch (err: any) {
