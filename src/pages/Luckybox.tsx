@@ -413,7 +413,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             </div>
 
             {/* Reel */}
-            <div className="relative h-44 overflow-hidden rounded-xl border border-white/10 bg-black/60 mb-6">
+            <div id="luckybox-reel-viewport" className="relative h-44 overflow-hidden rounded-xl border border-white/10 bg-black/60 mb-6">
               {/* Center marker */}
               <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -translate-x-1/2 z-10" style={{ background: accent, boxShadow: `0 0 16px ${accent}` }} />
               <div className="absolute left-1/2 top-0 -translate-x-1/2 z-10" style={{ borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: `10px solid ${accent}` }} />
