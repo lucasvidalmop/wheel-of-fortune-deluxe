@@ -170,7 +170,15 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
     });
     if (error) { toast.error(error.message); return; }
     setTokenUsers(prev => prev.map(u => u.id === userId ? { ...u, tokens_balance: data } : u));
-    toast.success(delta > 0 ? `+${delta} T` : `${delta} T`);
+    const lbl = cfg?.coin_name || 'Coins';
+    toast.success(delta > 0 ? `+${delta} ${lbl}` : `${delta} ${lbl}`);
+  };
+
+  const handleUploadCoinIcon = async (file: File) => {
+    try {
+      const res = await uploadAppAsset(file, 'luckybox');
+      await saveCfg({ coin_icon_url: res.publicUrl });
+    } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
   };
 
   const filteredTokenUsers = useMemo(() => {
