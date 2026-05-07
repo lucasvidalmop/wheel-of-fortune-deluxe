@@ -23,6 +23,8 @@ interface LuckyConfig {
   id: string;
   tag: string;
   tokens_symbol: string;
+  coin_name?: string;
+  coin_icon_url?: string;
   page_config: any;
   owner_id: string;
 }
@@ -175,7 +177,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const handleOpenCase = async (c: LuckyCase) => {
     if (!authedUser) return;
     if (authedUser.tokens_balance < c.price_tokens) {
-      toast.error('Tokens insuficientes');
+      toast.error(`${cfg.coin_name || 'Coins'} insuficientes`);
       return;
     }
     setOpeningCase(c);
@@ -314,6 +316,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   // Main grid
   const accent = pc.accentColor || '#22d3ee';
+  const coinName = cfg.coin_name || 'Coins';
+  const coinIconUrl = cfg.coin_icon_url || '';
+  const CoinIcon = ({ size = 16, color }: { size?: number; color?: string }) =>
+    coinIconUrl
+      ? <img src={coinIconUrl} alt="" style={{ width: size, height: size }} className="object-contain inline-block" />
+      : <Coins size={size} style={color ? { color } : undefined} />;
   return (
     <div className="min-h-screen text-white" style={bgStyle}>
       {/* Header */}
@@ -327,9 +335,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5">
-              <Coins size={16} style={{ color: accent }} />
+              <CoinIcon size={16} color={accent} />
               <span className="font-bold tabular-nums">{authedUser.tokens_balance}</span>
-              <span className="text-xs opacity-70">{cfg.tokens_symbol || 'T'}</span>
+              <span className="text-xs opacity-70">{coinName}</span>
             </div>
             <button
               onClick={() => { sessionStorage.removeItem(`luckybox_user_${cfg.tag}`); setAuthedUser(null); }}
@@ -388,8 +396,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     </div>
                     <div className="text-center text-sm font-semibold">{c.name}</div>
                     <div className="text-center mt-2 flex items-center justify-center gap-1 text-base font-bold" style={{ color: accent }}>
-                      <Coins size={14} />
-                      {c.price_tokens} <span className="text-xs opacity-70">{cfg.tokens_symbol || 'T'}</span>
+                      <CoinIcon size={14} />
+                      {c.price_tokens} <span className="text-xs opacity-70">{coinName}</span>
                     </div>
                   </button>
                   <button
@@ -421,7 +429,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   ? 'Abrindo caixa...'
                   : phase === 'done'
                   ? 'Você ganhou!'
-                  : `Custo: ${openingCase.price_tokens} ${cfg.tokens_symbol || 'T'} · Saldo: ${authedUser.tokens_balance} ${cfg.tokens_symbol || 'T'}`}
+                  : `Custo: ${openingCase.price_tokens} ${coinName} · Saldo: ${authedUser.tokens_balance} ${coinName}`}
               </p>
             </div>
 
@@ -474,8 +482,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}55` }}
                 >
                   {authedUser.tokens_balance < openingCase.price_tokens
-                    ? 'Tokens insuficientes'
-                    : `Sortear · ${openingCase.price_tokens} ${cfg.tokens_symbol || 'T'}`}
+                    ? `${coinName} insuficientes`
+                    : `Sortear · ${openingCase.price_tokens} ${coinName}`}
                 </button>
               </div>
             )}
