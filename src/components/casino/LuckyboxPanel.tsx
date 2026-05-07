@@ -484,6 +484,68 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
           </div>
         </div>
       )}
+
+      {/* === ADJUST TOKENS MODAL === */}
+      {adjustModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setAdjustModal(null)}>
+          <div onClick={e => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-b from-background to-background/80 p-6 shadow-[0_8px_60px_rgba(0,0,0,0.6)]">
+            <button onClick={() => setAdjustModal(null)} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+              <X size={18} />
+            </button>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                <Coins size={20} className="text-primary" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold">Ajustar Tokens</h3>
+                <p className="text-xs opacity-70">{adjustModal.user.name} · saldo atual: <span className="font-bold">{adjustModal.user.tokens_balance ?? 0} {cfg.tokens_symbol}</span></p>
+              </div>
+            </div>
+            <label className="block text-xs font-medium mb-2 opacity-80">Quantidade (use valores negativos para remover)</label>
+            <input
+              type="number"
+              autoFocus
+              value={adjustModal.value}
+              onChange={e => setAdjustModal({ ...adjustModal, value: e.target.value })}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  const n = parseInt(adjustModal.value, 10);
+                  if (Number.isFinite(n) && n !== 0) { adjustTokens(adjustModal.user.id, n); setAdjustModal(null); }
+                }
+              }}
+              placeholder="Ex: 100 ou -50"
+              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-base font-medium focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <div className="flex flex-wrap gap-2 mt-3">
+              {[-100, -50, -10, 10, 50, 100, 500].map(v => (
+                <button
+                  key={v}
+                  onClick={() => setAdjustModal({ ...adjustModal, value: String(v) })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${v > 0 ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/20' : 'border-rose-400/30 bg-rose-400/10 text-rose-300 hover:bg-rose-400/20'}`}
+                >
+                  {v > 0 ? `+${v}` : v}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button onClick={() => setAdjustModal(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-medium hover:bg-white/10 transition">
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  const n = parseInt(adjustModal.value, 10);
+                  if (!Number.isFinite(n) || n === 0) { toast.error('Informe um valor válido'); return; }
+                  adjustTokens(adjustModal.user.id, n);
+                  setAdjustModal(null);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
