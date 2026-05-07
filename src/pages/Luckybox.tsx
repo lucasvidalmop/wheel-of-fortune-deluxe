@@ -52,6 +52,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   // Opening
   const [openingCase, setOpeningCase] = useState<LuckyCase | null>(null);
+  const [prizesPreview, setPrizesPreview] = useState<LuckyCase | null>(null);
   
   const [reelPrizes, setReelPrizes] = useState<CasePrize[]>([]);
   const [reelOffset, setReelOffset] = useState(0);
