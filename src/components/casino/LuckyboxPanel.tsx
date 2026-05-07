@@ -467,21 +467,39 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Valor em dinheiro (R$) <span className="opacity-70">— deixe 0 se não pagar</span></label>
-                          <input type="number" step="0.01" min={0} value={p.amount ?? 0} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], amount: parseFloat(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="0.00" className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
+                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Valor em dinheiro (R$) <span className="opacity-70">— deixe vazio se não pagar</span></label>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={p.amount ? String(p.amount).replace('.', ',') : ''}
+                            onChange={e => {
+                              const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                              const num = raw === '' ? 0 : parseFloat(raw);
+                              const arr = [...editingCase.prizes];
+                              arr[i] = { ...arr[i], amount: Number.isFinite(num) ? num : 0 };
+                              setEditingCase({ ...editingCase, prizes: arr });
+                            }}
+                            placeholder="Ex: 10 ou 10,50"
+                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">
-                            Chance de sair <span className="opacity-70">— 0 = nunca · 0.00000001 = raríssimo</span>
+                            Chance de sair <span className="opacity-70">— vazio = nunca · 0,00000001 = raríssimo</span>
                           </label>
                           <div className="relative">
                             <input
-                              type="number"
-                              step="any"
-                              min={0}
-                              value={p.weight ?? 0}
-                              onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], weight: parseFloat(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }}
-                              placeholder="Ex: 50, 0.5 ou 0.00000001"
+                              type="text"
+                              inputMode="decimal"
+                              value={p.weight ? String(p.weight).replace('.', ',') : ''}
+                              onChange={e => {
+                                const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                                const num = raw === '' ? 0 : parseFloat(raw);
+                                const arr = [...editingCase.prizes];
+                                arr[i] = { ...arr[i], weight: Number.isFinite(num) ? num : 0 };
+                                setEditingCase({ ...editingCase, prizes: arr });
+                              }}
+                              placeholder="Ex: 50, 0,5 ou 0,00000001"
                               className="w-full px-3 py-2 pr-16 rounded-lg border border-white/10 bg-white/5 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono opacity-60">
