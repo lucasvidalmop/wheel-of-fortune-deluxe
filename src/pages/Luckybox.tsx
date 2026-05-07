@@ -209,11 +209,11 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       // Animate
       requestAnimationFrame(() => {
         setTimeout(() => {
-          const itemWidth = 168; // px (160 width + 8 gap roughly)
-          const containerCenter = 0;
+          const itemWidth = 168; // px (160 width + 8 gap)
+          const cardHalf = 80; // half of card width to center under marker
           // jitter so it doesn't always land in dead center
           const jitter = (Math.random() - 0.5) * 80;
-          const offset = -(targetIndex * itemWidth) + containerCenter + jitter;
+          const offset = -(targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition('transform 6s cubic-bezier(0.05, 0.8, 0.15, 1)');
           setReelOffset(offset);
           setTimeout(() => {
