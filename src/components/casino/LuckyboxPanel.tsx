@@ -419,12 +419,8 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                   {RARITIES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 opacity-70">Modo de sorteio</label>
-                <select value={editingCase.mode} onChange={e => setEditingCase({ ...editingCase, mode: e.target.value as any })} className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm">
-                  <option value="probability">Probabilidade (peso)</option>
-                  <option value="pool">Pool fixo (estoque garantido)</option>
-                </select>
+              <div className="md:col-span-2 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
+                💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores muito pequenos como <b>0.00000001</b> para raridade máxima. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium mb-1 opacity-70">Imagem da caixa <span className="opacity-50 font-normal">· ideal 512×512px (PNG transparente)</span></label>
@@ -446,38 +442,68 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                   <Plus size={12} /> Prêmio
                 </button>
               </div>
-              {editingCase.prizes.map((p, i) => (
-                <div key={i} className="rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono opacity-60">#{i}</span>
-                    <button onClick={() => setEditingCase({ ...editingCase, prizes: editingCase.prizes.filter((_, j) => j !== i) })} className="text-red-400 text-xs hover:underline">Remover</button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                    <input value={p.label} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], label: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="Nome do prêmio" className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm md:col-span-2" />
-                    <input type="number" step="0.01" value={p.amount ?? 0} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], amount: parseFloat(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="R$ (se for $)" className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
-                    <select value={p.rarity || 'common'} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], rarity: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm">
-                      {RARITIES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <div className="md:col-span-2 space-y-1">
-                      <div className="text-[10px] uppercase tracking-wider opacity-50">Imagem do prêmio · ideal 256×256px (PNG transparente)</div>
-                      <div className="flex items-center gap-2">
-                        <input value={p.image || ''} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], image: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="URL da imagem" className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
-                        <label className="px-2 py-2 rounded-lg border border-white/10 bg-white/5 text-xs cursor-pointer hover:bg-white/10">
-                          <Upload size={12} />
-                          <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleUploadPrizeImage(e.target.files[0], i)} />
-                        </label>
+              {(() => {
+                const totalWeight = editingCase.prizes.reduce((s, x) => s + (Number(x.weight) || 0), 0);
+                return editingCase.prizes.map((p, i) => {
+                  const w = Number(p.weight) || 0;
+                  const pct = totalWeight > 0 ? (w / totalWeight) * 100 : 0;
+                  return (
+                    <div key={i} className="rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono opacity-60">Prêmio #{i + 1}</span>
+                        <button onClick={() => setEditingCase({ ...editingCase, prizes: editingCase.prizes.filter((_, j) => j !== i) })} className="text-red-400 text-xs hover:underline">Remover</button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div className="md:col-span-2">
+                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Nome do prêmio</label>
+                          <input value={p.label} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], label: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="Ex: R$ 50, Camisa, etc" className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Raridade (visual)</label>
+                          <select value={p.rarity || 'common'} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], rarity: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm">
+                            {RARITIES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Valor em dinheiro (R$) <span className="opacity-70">— deixe 0 se não pagar</span></label>
+                          <input type="number" step="0.01" min={0} value={p.amount ?? 0} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], amount: parseFloat(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="0.00" className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">
+                            Chance de sair <span className="opacity-70">— 0 = nunca · 0.00000001 = raríssimo</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="any"
+                              min={0}
+                              value={p.weight ?? 0}
+                              onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], weight: parseFloat(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }}
+                              placeholder="Ex: 50, 0.5 ou 0.00000001"
+                              className="w-full px-3 py-2 pr-16 rounded-lg border border-white/10 bg-white/5 text-sm"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono opacity-60">
+                              ≈ {pct < 0.0001 && pct > 0 ? pct.toExponential(2) : pct.toFixed(4)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Imagem do prêmio · ideal 256×256px (PNG transparente)</label>
+                        <div className="flex items-center gap-2">
+                          <input value={p.image || ''} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], image: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="URL da imagem" className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
+                          <label className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-xs cursor-pointer hover:bg-white/10 flex items-center gap-1">
+                            <Upload size={12} /> Upload
+                            <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleUploadPrizeImage(e.target.files[0], i)} />
+                          </label>
+                        </div>
                       </div>
                     </div>
-                    {editingCase.mode === 'probability' ? (
-                      <input type="number" step="0.01" min={0} value={p.weight ?? 1} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], weight: parseFloat(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="Peso (probabilidade)" className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
-                    ) : (
-                      <input type="number" min={0} value={p.count ?? 0} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], count: parseInt(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="Quantidade no pool" className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
-                    )}
-                  </div>
-                </div>
-              ))}
+                  );
+                });
+              })()}
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
