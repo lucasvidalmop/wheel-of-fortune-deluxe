@@ -414,7 +414,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                       <td className="p-3">{u.name}</td>
                       <td className="p-3 opacity-70">{u.email}</td>
                       <td className="p-3 font-mono text-xs">{u.account_id}</td>
-                      <td className="p-3 text-right font-bold tabular-nums">{u.tokens_balance ?? 0} {cfg.tokens_symbol}</td>
+                      <td className="p-3 text-right font-bold tabular-nums">{u.tokens_balance ?? 0} {cfg.coin_name || 'Coins'}</td>
                       <td className="p-3 text-right">
                         <div className="inline-flex gap-1">
                           {[10, 50, 100].map(v => (
