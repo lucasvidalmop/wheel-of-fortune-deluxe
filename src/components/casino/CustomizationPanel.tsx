@@ -1098,18 +1098,42 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                       <label className="text-[10px] text-muted-foreground font-medium">Porcentagem (%)</label>
                       <input type="number" min={0} max={100} value={seg.percentage} onChange={e => updateSegment(i, 'percentage', Math.max(0, parseInt(e.target.value) || 0))} className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground" />
                     </div>
-                    <div className="flex items-center justify-between py-1">
-                      <div>
-                        <label className="text-[10px] text-muted-foreground font-medium">💸 Pagamento automático</label>
-                        <p className="text-[9px] text-muted-foreground">Paga automaticamente via PIX ao ganhar este segmento</p>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium">Tipo de prêmio</label>
+                      <div className="flex gap-1 mt-1">
+                        <button
+                          type="button"
+                          onClick={() => updateSegment(i, 'rewardType', 'money')}
+                          className={`flex-1 text-xs px-2 py-1.5 rounded-lg border transition ${(seg.rewardType ?? 'money') === 'money' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 font-bold' : 'border-border bg-background text-muted-foreground'}`}
+                        >
+                          R$ Dinheiro
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateSegment(i, 'rewardType', 'token')}
+                          className={`flex-1 text-xs px-2 py-1.5 rounded-lg border transition ${seg.rewardType === 'token' ? 'bg-amber-500/20 border-amber-500 text-amber-400 font-bold' : 'border-border bg-background text-muted-foreground'}`}
+                        >
+                          T Tokens
+                        </button>
                       </div>
-                      <button
-                        onClick={() => updateSegment(i, 'autoPayment', !seg.autoPayment)}
-                        className={`w-10 h-5 rounded-full transition-all relative ${seg.autoPayment ? 'bg-emerald-500' : 'bg-white/10'}`}
-                      >
-                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${seg.autoPayment ? 'left-5' : 'left-0.5'}`} />
-                      </button>
+                      <p className="text-[9px] text-muted-foreground mt-1">
+                        {seg.rewardType === 'token' ? 'Credita tokens no saldo Luckybox do usuário' : 'Gera pagamento PIX normal'}
+                      </p>
                     </div>
+                    {(seg.rewardType ?? 'money') === 'money' && (
+                      <div className="flex items-center justify-between py-1">
+                        <div>
+                          <label className="text-[10px] text-muted-foreground font-medium">💸 Pagamento automático</label>
+                          <p className="text-[9px] text-muted-foreground">Paga automaticamente via PIX ao ganhar este segmento</p>
+                        </div>
+                        <button
+                          onClick={() => updateSegment(i, 'autoPayment', !seg.autoPayment)}
+                          className={`w-10 h-5 rounded-full transition-all relative ${seg.autoPayment ? 'bg-emerald-500' : 'bg-white/10'}`}
+                        >
+                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${seg.autoPayment ? 'left-5' : 'left-0.5'}`} />
+                        </button>
+                      </div>
+                    )}
                     <div>
                       <label className="text-[10px] text-muted-foreground font-medium">Emoji pós-giro</label>
                       <input
