@@ -182,17 +182,17 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const handleUploadCaseImage = async (file: File) => {
     if (!editingCase) return;
     try {
-      const url = await uploadAppAsset(file, ownerId);
-      setEditingCase({ ...editingCase, image_url: url });
+      const res = await uploadAppAsset(file, 'luckybox');
+      setEditingCase({ ...editingCase, image_url: res.publicUrl });
     } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
   };
 
   const handleUploadPrizeImage = async (file: File, idx: number) => {
     if (!editingCase) return;
     try {
-      const url = await uploadAppAsset(file, ownerId);
+      const res = await uploadAppAsset(file, 'luckybox');
       const prizes = [...editingCase.prizes];
-      prizes[idx] = { ...prizes[idx], image: url };
+      prizes[idx] = { ...prizes[idx], image: res.publicUrl };
       setEditingCase({ ...editingCase, prizes });
     } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
   };
