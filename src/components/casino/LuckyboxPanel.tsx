@@ -419,12 +419,8 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                   {RARITIES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 opacity-70">Modo de sorteio</label>
-                <select value={editingCase.mode} onChange={e => setEditingCase({ ...editingCase, mode: e.target.value as any })} className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm">
-                  <option value="probability">Probabilidade (peso)</option>
-                  <option value="pool">Pool fixo (estoque garantido)</option>
-                </select>
+              <div className="md:col-span-2 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
+                💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores muito pequenos como <b>0.00000001</b> para raridade máxima. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium mb-1 opacity-70">Imagem da caixa <span className="opacity-50 font-normal">· ideal 512×512px (PNG transparente)</span></label>
