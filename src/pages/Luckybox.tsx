@@ -177,7 +177,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const handleOpenCase = async (c: LuckyCase) => {
     if (!authedUser) return;
     if (authedUser.tokens_balance < c.price_tokens) {
-      toast.error('Tokens insuficientes');
+      toast.error(`${cfg.coin_name || 'Coins'} insuficientes`);
       return;
     }
     setOpeningCase(c);
