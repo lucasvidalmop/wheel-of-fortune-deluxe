@@ -1482,10 +1482,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      adjust_luckybox_tokens: {
-        Args: { p_delta: number; p_owner_id: string; p_wheel_user_id: string }
-        Returns: number
-      }
+      adjust_luckybox_tokens:
+        | {
+            Args: { p_account_id: string; p_delta: number; p_owner_id: string }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_delta: number
+              p_owner_id: string
+              p_wheel_user_id: string
+            }
+            Returns: number
+          }
       authenticate_wheel_user: {
         Args: { p_account_id: string; p_email: string; p_owner_id?: string }
         Returns: {
