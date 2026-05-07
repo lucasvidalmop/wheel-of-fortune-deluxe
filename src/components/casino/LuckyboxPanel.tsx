@@ -49,6 +49,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const [tokenUsers, setTokenUsers] = useState<any[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
   const [tokensSearch, setTokensSearch] = useState('');
+  const [adjustModal, setAdjustModal] = useState<{ user: any; value: string } | null>(null);
 
   const baseUrl = window.location.origin;
 
