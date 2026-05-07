@@ -414,17 +414,19 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 {reelPrizes.map((p, i) => (
                   <div
                     key={i}
-                    className="w-40 h-36 shrink-0 rounded-xl border flex flex-col items-center justify-center p-3 relative overflow-hidden"
+                    className="w-40 h-36 shrink-0 rounded-xl border flex flex-col items-center justify-between p-2 relative overflow-hidden"
                     style={{
                       borderColor: rarityColor(p.rarity) + '66',
                       background: `linear-gradient(180deg, ${rarityColor(p.rarity)}22 0%, rgba(0,0,0,0.4) 100%)`,
                     }}
                   >
                     <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: rarityColor(p.rarity) }} />
-                    {p.image
-                      ? <img src={p.image} alt={p.label} className="max-w-full max-h-16 object-contain mb-2" />
-                      : <div className="text-3xl mb-1">🎁</div>}
-                    <div className="text-xs font-semibold text-center line-clamp-2">{p.label}</div>
+                    <div className="flex-1 w-full flex items-center justify-center min-h-0">
+                      {p.image
+                        ? <img src={p.image} alt={p.label} className="max-w-full max-h-full object-contain" />
+                        : <div className="text-4xl">🎁</div>}
+                    </div>
+                    <div className="text-xs font-semibold text-center line-clamp-1 w-full pt-1">{p.label}</div>
                   </div>
                 ))}
               </div>
