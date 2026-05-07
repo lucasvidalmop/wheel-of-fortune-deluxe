@@ -15,6 +15,7 @@ import Deposit from "./pages/Deposit.tsx";
 import DepositBS from "./pages/DepositBS.tsx";
 import Batalha from "./pages/Batalha.tsx";
 import Resgate from "./pages/Resgate.tsx";
+import Luckybox from "./pages/Luckybox.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,10 @@ const SlugRouter = () => {
   if (slug && slug.startsWith('resgate=')) {
     const tag = slug.substring(8);
     return <Resgate tag={tag} />;
+  }
+  if (slug && slug.startsWith('luckybox=')) {
+    const tag = slug.substring(9);
+    return <Luckybox tag={tag} />;
   }
   return <Roleta />;
 };
