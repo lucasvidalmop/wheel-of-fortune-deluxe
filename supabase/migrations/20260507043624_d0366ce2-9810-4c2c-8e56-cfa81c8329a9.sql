@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.create_prize_payment(uuid, text, text, text, text, numeric, uuid);

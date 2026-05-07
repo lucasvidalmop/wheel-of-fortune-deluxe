@@ -1555,32 +1555,19 @@ export type Database = {
         Args: { _label?: string; _trigger?: string }
         Returns: string
       }
-      create_prize_payment:
-        | {
-            Args: {
-              p_account_id?: string
-              p_amount?: number
-              p_owner_id: string
-              p_prize?: string
-              p_spin_result_id?: string
-              p_user_email?: string
-              p_user_name?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_account_id?: string
-              p_amount?: number
-              p_force_auto?: boolean
-              p_owner_id: string
-              p_prize?: string
-              p_spin_result_id?: string
-              p_user_email?: string
-              p_user_name?: string
-            }
-            Returns: Json
-          }
+      create_prize_payment: {
+        Args: {
+          p_account_id?: string
+          p_amount?: number
+          p_force_auto?: boolean
+          p_owner_id: string
+          p_prize?: string
+          p_spin_result_id?: string
+          p_user_email?: string
+          p_user_name?: string
+        }
+        Returns: Json
+      }
       decrement_claimed_spin: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
