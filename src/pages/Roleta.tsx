@@ -486,7 +486,18 @@ const Roleta = () => {
 
       // Create prize_payment record via security definer function
       const prizeValue = extractPrizeAmount(seg);
-      if (ownerId && prizeValue > 0) {
+      const isTokenReward = seg.rewardType === 'token';
+      if (ownerId && prizeValue > 0 && isTokenReward) {
+        try {
+          await (supabase as any).rpc('adjust_luckybox_tokens', {
+            p_account_id: accountId,
+            p_owner_id: ownerId,
+            p_delta: Math.round(prizeValue),
+          });
+        } catch (e) {
+          console.error('Failed to credit tokens:', e);
+        }
+      } else if (ownerId && prizeValue > 0) {
         try {
           const { data: ppResult, error: ppError } = await (supabase as any).rpc('create_prize_payment', {
             p_owner_id: ownerId,
