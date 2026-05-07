@@ -316,12 +316,37 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             <p className="text-xs opacity-60 mt-1">A URL pública será /luckybox={cfg.tag}</p>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1 opacity-70">Símbolo dos Tokens</label>
+            <label className="block text-xs font-medium mb-1 opacity-70">Nome da moeda</label>
             <input
-              defaultValue={cfg.tokens_symbol}
-              onBlur={e => { const v = e.target.value.trim() || 'T'; if (v !== cfg.tokens_symbol) saveCfg({ tokens_symbol: v }); }}
-              className="w-32 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-mono"
+              defaultValue={cfg.coin_name || 'Coins'}
+              onBlur={e => { const v = e.target.value.trim() || 'Coins'; if (v !== (cfg.coin_name || 'Coins')) saveCfg({ coin_name: v }); }}
+              className="w-full max-w-xs px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+              placeholder="Ex: Coins, Gemas, Fichas..."
             />
+            <p className="text-xs opacity-60 mt-1">Substitui o termo padrão "Coins" em toda a página.</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1 opacity-70">
+              Ícone da moeda <span className="opacity-50 font-normal">· ideal 128×128px (PNG transparente)</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
+                {cfg.coin_icon_url
+                  ? <img src={cfg.coin_icon_url} alt="" className="max-w-full max-h-full object-contain" />
+                  : <Coins size={22} className="opacity-40" />}
+              </div>
+              <input
+                value={cfg.coin_icon_url || ''}
+                onChange={e => setCfg({ ...cfg, coin_icon_url: e.target.value })}
+                onBlur={e => { const v = e.target.value.trim(); if (v !== (cfg.coin_icon_url || '')) saveCfg({ coin_icon_url: v }); }}
+                placeholder="URL da imagem"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+              />
+              <label className="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm flex items-center gap-1 cursor-pointer hover:bg-white/10">
+                <Upload size={14} /> Upload
+                <input type="file" accept="image/png,image/webp,image/svg+xml,image/*" hidden onChange={e => e.target.files?.[0] && handleUploadCoinIcon(e.target.files[0])} />
+              </label>
+            </div>
           </div>
         </div>
       )}
