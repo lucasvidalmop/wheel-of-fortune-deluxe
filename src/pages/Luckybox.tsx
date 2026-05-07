@@ -395,9 +395,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                         : <Package size={64} style={{ color: rarityColor(c.rarity) }} />}
                     </div>
                     <div className="text-center text-sm font-semibold">{c.name}</div>
-                    <div className="text-center mt-2 flex items-center justify-center gap-1 text-base font-bold" style={{ color: accent }}>
-                      <CoinIcon size={14} />
-                      {c.price_tokens} <span className="text-xs opacity-70">{coinName}</span>
+                    <div className="text-center mt-2 flex items-center justify-center gap-1.5 text-base font-bold" style={{ color: accent }}>
+                      <CoinIcon size={20} color={accent} />
+                      <span>{c.price_tokens}</span>
+                      <span className="text-xs opacity-70 font-normal">{coinName}</span>
                     </div>
                   </button>
                   <button
