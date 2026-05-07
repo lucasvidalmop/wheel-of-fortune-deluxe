@@ -427,7 +427,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium mb-1 opacity-70">Imagem da caixa</label>
+                <label className="block text-xs font-medium mb-1 opacity-70">Imagem da caixa <span className="opacity-50 font-normal">· ideal 512×512px (PNG transparente)</span></label>
                 <div className="flex items-center gap-3">
                   <input value={editingCase.image_url} onChange={e => setEditingCase({ ...editingCase, image_url: e.target.value })} placeholder="URL da imagem" className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
                   <label className="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm flex items-center gap-1 cursor-pointer hover:bg-white/10">
