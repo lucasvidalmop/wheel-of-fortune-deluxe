@@ -210,10 +210,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       requestAnimationFrame(() => {
         setTimeout(() => {
           const itemWidth = 168; // px (160 width + 8 gap)
-          const cardHalf = 80; // half of card width to center under marker
+          const cardHalf = 80; // half of card width
+          const reelEl = document.getElementById('luckybox-reel-viewport');
+          const halfViewport = reelEl ? reelEl.clientWidth / 2 : 0;
           // jitter so it doesn't always land in dead center
           const jitter = (Math.random() - 0.5) * 80;
-          const offset = -(targetIndex * itemWidth) - cardHalf + jitter;
+          const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition('transform 6s cubic-bezier(0.05, 0.8, 0.15, 1)');
           setReelOffset(offset);
           setTimeout(() => {
@@ -411,7 +413,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             </div>
 
             {/* Reel */}
-            <div className="relative h-44 overflow-hidden rounded-xl border border-white/10 bg-black/60 mb-6">
+            <div id="luckybox-reel-viewport" className="relative h-44 overflow-hidden rounded-xl border border-white/10 bg-black/60 mb-6">
               {/* Center marker */}
               <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -translate-x-1/2 z-10" style={{ background: accent, boxShadow: `0 0 16px ${accent}` }} />
               <div className="absolute left-1/2 top-0 -translate-x-1/2 z-10" style={{ borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: `10px solid ${accent}` }} />
@@ -422,7 +424,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.95), transparent)' }} />
 
               <div
-                className="absolute inset-y-0 left-1/2 flex items-center gap-2 will-change-transform"
+                className="absolute inset-y-0 left-0 flex items-center gap-2 will-change-transform"
                 style={{
                   transform: `translateX(${reelOffset}px)`,
                   transition: reelTransition,
