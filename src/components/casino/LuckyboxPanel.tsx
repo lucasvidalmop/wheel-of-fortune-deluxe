@@ -448,7 +448,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 <input value={editingCase.name} onChange={e => setEditingCase({ ...editingCase, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1 opacity-70">Preço ({cfg.tokens_symbol})</label>
+                <label className="block text-xs font-medium mb-1 opacity-70">Preço ({cfg.coin_name || 'Coins'})</label>
                 <input type="number" min={0} value={editingCase.price_tokens} onChange={e => setEditingCase({ ...editingCase, price_tokens: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
               </div>
               <div>
