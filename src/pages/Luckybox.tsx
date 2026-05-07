@@ -429,7 +429,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   ? 'Abrindo caixa...'
                   : phase === 'done'
                   ? 'Você ganhou!'
-                  : `Custo: ${openingCase.price_tokens} ${cfg.tokens_symbol || 'T'} · Saldo: ${authedUser.tokens_balance} ${cfg.tokens_symbol || 'T'}`}
+                  : `Custo: ${openingCase.price_tokens} ${coinName} · Saldo: ${authedUser.tokens_balance} ${coinName}`}
               </p>
             </div>
 
