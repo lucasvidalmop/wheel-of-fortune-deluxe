@@ -287,6 +287,141 @@ export type Database = {
         }
         Relationships: []
       }
+      luckybox_cases: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          is_active: boolean
+          mode: string
+          name: string
+          owner_id: string
+          position: number
+          price_tokens: number
+          prize_pool: Json | null
+          prizes: Json
+          rarity: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          mode?: string
+          name?: string
+          owner_id: string
+          position?: number
+          price_tokens?: number
+          prize_pool?: Json | null
+          prizes?: Json
+          rarity?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          mode?: string
+          name?: string
+          owner_id?: string
+          position?: number
+          price_tokens?: number
+          prize_pool?: Json | null
+          prizes?: Json
+          rarity?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      luckybox_configs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          owner_id: string
+          page_config: Json
+          tag: string
+          tokens_symbol: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id: string
+          page_config?: Json
+          tag: string
+          tokens_symbol?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id?: string
+          page_config?: Json
+          tag?: string
+          tokens_symbol?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      luckybox_openings: {
+        Row: {
+          account_id: string
+          case_id: string | null
+          case_name: string
+          created_at: string
+          id: string
+          owner_id: string
+          price_tokens: number
+          prize_amount: number
+          prize_image: string
+          prize_index: number | null
+          prize_label: string
+          prize_payment_id: string | null
+          user_email: string
+          user_name: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          case_id?: string | null
+          case_name?: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          price_tokens?: number
+          prize_amount?: number
+          prize_image?: string
+          prize_index?: number | null
+          prize_label?: string
+          prize_payment_id?: string | null
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          case_id?: string | null
+          case_name?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          price_tokens?: number
+          prize_amount?: number
+          prize_image?: string
+          prize_index?: number | null
+          prize_label?: string
+          prize_payment_id?: string | null
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: []
+      }
       operator_permissions: {
         Row: {
           analytics: boolean
@@ -300,6 +435,7 @@ export type Database = {
           gorjeta: boolean
           history: boolean
           inscritos: boolean
+          luckybox: boolean
           msg_analytics: boolean
           notificacoes: boolean
           painel_casa: boolean
@@ -325,6 +461,7 @@ export type Database = {
           gorjeta?: boolean
           history?: boolean
           inscritos?: boolean
+          luckybox?: boolean
           msg_analytics?: boolean
           notificacoes?: boolean
           painel_casa?: boolean
@@ -350,6 +487,7 @@ export type Database = {
           gorjeta?: boolean
           history?: boolean
           inscritos?: boolean
+          luckybox?: boolean
           msg_analytics?: boolean
           notificacoes?: boolean
           painel_casa?: boolean
@@ -378,6 +516,7 @@ export type Database = {
           history: boolean
           id: number
           inscritos: boolean
+          luckybox: boolean
           msg_analytics: boolean
           notificacoes: boolean
           painel_casa: boolean
@@ -402,6 +541,7 @@ export type Database = {
           history?: boolean
           id?: number
           inscritos?: boolean
+          luckybox?: boolean
           msg_analytics?: boolean
           notificacoes?: boolean
           painel_casa?: boolean
@@ -426,6 +566,7 @@ export type Database = {
           history?: boolean
           id?: number
           inscritos?: boolean
+          luckybox?: boolean
           msg_analytics?: boolean
           notificacoes?: boolean
           painel_casa?: boolean
@@ -1272,6 +1413,7 @@ export type Database = {
           responsible: string | null
           spins_available: number
           spins_expire_at: string | null
+          tokens_balance: number
           updated_at: string | null
           user_type: string | null
         }
@@ -1296,6 +1438,7 @@ export type Database = {
           responsible?: string | null
           spins_available?: number
           spins_expire_at?: string | null
+          tokens_balance?: number
           updated_at?: string | null
           user_type?: string | null
         }
@@ -1320,6 +1463,7 @@ export type Database = {
           responsible?: string | null
           spins_available?: number
           spins_expire_at?: string | null
+          tokens_balance?: number
           updated_at?: string | null
           user_type?: string | null
         }
@@ -1338,6 +1482,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_luckybox_tokens: {
+        Args: { p_delta: number; p_owner_id: string; p_wheel_user_id: string }
+        Returns: number
+      }
       authenticate_wheel_user: {
         Args: { p_account_id: string; p_email: string; p_owner_id?: string }
         Returns: {
@@ -1475,6 +1623,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_luckybox_page_by_tag: { Args: { p_tag: string }; Returns: Json }
       get_prize_history: {
         Args: { p_account_id: string; p_owner_id: string }
         Returns: {
@@ -1528,6 +1677,10 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      open_luckybox_case: {
+        Args: { p_account_id: string; p_case_id: string; p_owner_id: string }
+        Returns: Json
       }
       pop_link_prize_pool: {
         Args: { p_count: number; p_link_id: string }
