@@ -337,6 +337,8 @@ export type Database = {
       }
       luckybox_configs: {
         Row: {
+          coin_icon_url: string
+          coin_name: string
           created_at: string
           id: string
           is_active: boolean
@@ -347,6 +349,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          coin_icon_url?: string
+          coin_name?: string
           created_at?: string
           id?: string
           is_active?: boolean
@@ -357,6 +361,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          coin_icon_url?: string
+          coin_name?: string
           created_at?: string
           id?: string
           is_active?: boolean
