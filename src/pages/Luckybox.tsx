@@ -335,9 +335,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5">
-              <Coins size={16} style={{ color: accent }} />
+              <CoinIcon size={16} color={accent} />
               <span className="font-bold tabular-nums">{authedUser.tokens_balance}</span>
-              <span className="text-xs opacity-70">{cfg.tokens_symbol || 'T'}</span>
+              <span className="text-xs opacity-70">{coinName}</span>
             </div>
             <button
               onClick={() => { sessionStorage.removeItem(`luckybox_user_${cfg.tag}`); setAuthedUser(null); }}
