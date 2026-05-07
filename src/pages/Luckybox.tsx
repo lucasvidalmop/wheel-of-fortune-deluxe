@@ -482,8 +482,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}55` }}
                 >
                   {authedUser.tokens_balance < openingCase.price_tokens
-                    ? 'Tokens insuficientes'
-                    : `Sortear · ${openingCase.price_tokens} ${cfg.tokens_symbol || 'T'}`}
+                    ? `${coinName} insuficientes`
+                    : `Sortear · ${openingCase.price_tokens} ${coinName}`}
                 </button>
               </div>
             )}
