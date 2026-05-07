@@ -360,36 +360,212 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
 
       {/* === VISUAL === */}
       {tab === 'visual' && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 space-y-4 max-w-2xl">
-          {[
-            { k: 'title', l: 'Título', type: 'text' },
-            { k: 'subtitle', l: 'Subtítulo (login)', type: 'text' },
-            { k: 'gridTitle', l: 'Título da grade de caixas', type: 'text' },
-            { k: 'gridSubtitle', l: 'Subtítulo da grade', type: 'text' },
-            { k: 'loginBtnText', l: 'Texto do botão de login', type: 'text' },
-            { k: 'logoUrl', l: 'URL do logo', type: 'text' },
-            { k: 'bgImage', l: 'URL da imagem de fundo', type: 'text' },
-            { k: 'bgColor', l: 'Cor de fundo (CSS)', type: 'text' },
-            { k: 'bgGradientFrom', l: 'Gradiente — cor inicial', type: 'color' },
-            { k: 'bgGradientTo', l: 'Gradiente — cor final', type: 'color' },
-            { k: 'accentColor', l: 'Cor de destaque', type: 'color' },
-            { k: 'titleColor', l: 'Cor do título', type: 'color' },
-            { k: 'subtitleColor', l: 'Cor do subtítulo', type: 'color' },
-            { k: 'btnTextColor', l: 'Cor do texto dos botões', type: 'color' },
-            { k: 'seoTitle', l: 'SEO — Título da aba', type: 'text' },
-            { k: 'seoDescription', l: 'SEO — Descrição', type: 'text' },
-            { k: 'seoFaviconUrl', l: 'SEO — URL do favicon', type: 'text' },
-          ].map(f => (
-            <div key={f.k}>
-              <label className="block text-xs font-medium mb-1 opacity-70">{f.l}</label>
-              <input
-                type={f.type}
-                defaultValue={pc[f.k] || ''}
-                onBlur={e => { const v = e.target.value; if (v !== (pc[f.k] || '')) updatePageConfig({ [f.k]: v }); }}
-                className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
-              />
+        <div className="space-y-6 max-w-3xl">
+          {/* Section: Page identity / SEO */}
+          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-300">Identidade da página</h3>
+              <p className="text-xs opacity-60 mt-1">Nome que aparece na aba do navegador, descrição para SEO e favicon.</p>
             </div>
-          ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1 opacity-70">Título da aba (SEO)</label>
+                <input
+                  defaultValue={pc.seoTitle || ''}
+                  onBlur={e => { const v = e.target.value; if (v !== (pc.seoTitle || '')) updatePageConfig({ seoTitle: v }); }}
+                  placeholder="Ex: Luckybox · Minha Casa"
+                  className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1 opacity-70">Descrição (SEO)</label>
+                <input
+                  defaultValue={pc.seoDescription || ''}
+                  onBlur={e => { const v = e.target.value; if (v !== (pc.seoDescription || '')) updatePageConfig({ seoDescription: v }); }}
+                  placeholder="Descrição curta do que é a página"
+                  className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium mb-1 opacity-70">
+                  Favicon <span className="opacity-50 font-normal">· ideal 64×64px (PNG ou ICO)</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
+                    {pc.seoFaviconUrl
+                      ? <img src={pc.seoFaviconUrl} alt="" className="max-w-full max-h-full object-contain" />
+                      : <span className="text-xs opacity-40">—</span>}
+                  </div>
+                  <input
+                    defaultValue={pc.seoFaviconUrl || ''}
+                    onBlur={e => { const v = e.target.value; if (v !== (pc.seoFaviconUrl || '')) updatePageConfig({ seoFaviconUrl: v }); }}
+                    placeholder="URL do favicon"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+                  />
+                  <label className="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm flex items-center gap-1 cursor-pointer hover:bg-white/10">
+                    <Upload size={14} /> Upload
+                    <input type="file" accept="image/png,image/x-icon,image/vnd.microsoft.icon,image/svg+xml" hidden onChange={e => e.target.files?.[0] && handleUploadPageAsset(e.target.files[0], 'seoFaviconUrl')} />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section: Textos da página */}
+          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-300">Textos da página</h3>
+              <p className="text-xs opacity-60 mt-1">Títulos exibidos para os usuários.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { k: 'title', l: 'Título principal', ph: 'Ex: LUCKYBOX' },
+                { k: 'subtitle', l: 'Subtítulo da tela de login', ph: 'Ex: Faça login para abrir caixas' },
+                { k: 'gridTitle', l: 'Título da grade de caixas', ph: 'Ex: Escolha sua caixa' },
+                { k: 'gridSubtitle', l: 'Subtítulo da grade', ph: 'Texto secundário' },
+                { k: 'loginBtnText', l: 'Texto do botão de login', ph: 'Ex: Entrar' },
+              ].map(f => (
+                <div key={f.k}>
+                  <label className="block text-xs font-medium mb-1 opacity-70">{f.l}</label>
+                  <input
+                    defaultValue={pc[f.k] || ''}
+                    onBlur={e => { const v = e.target.value; if (v !== (pc[f.k] || '')) updatePageConfig({ [f.k]: v }); }}
+                    placeholder={f.ph}
+                    className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Section: Imagens */}
+          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-300">Imagens</h3>
+              <p className="text-xs opacity-60 mt-1">Logo da página e imagem de fundo.</p>
+            </div>
+
+            {/* Logo */}
+            <div>
+              <label className="block text-xs font-medium mb-1 opacity-70">
+                Logo <span className="opacity-50 font-normal">· ideal 512×512px (PNG transparente)</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
+                  {pc.logoUrl
+                    ? <img src={pc.logoUrl} alt="" className="max-w-full max-h-full object-contain" />
+                    : <span className="text-xs opacity-40">—</span>}
+                </div>
+                <input
+                  defaultValue={pc.logoUrl || ''}
+                  onBlur={e => { const v = e.target.value; if (v !== (pc.logoUrl || '')) updatePageConfig({ logoUrl: v }); }}
+                  placeholder="URL do logo"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+                />
+                <label className="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm flex items-center gap-1 cursor-pointer hover:bg-white/10">
+                  <Upload size={14} /> Upload
+                  <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleUploadPageAsset(e.target.files[0], 'logoUrl')} />
+                </label>
+              </div>
+            </div>
+
+            {/* Background image */}
+            <div>
+              <label className="block text-xs font-medium mb-1 opacity-70">
+                Imagem de fundo <span className="opacity-50 font-normal">· ideal 1920×1080px</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-14 rounded-xl border border-white/10 bg-black/40 overflow-hidden shrink-0">
+                  {pc.bgImage && <img src={pc.bgImage} alt="" className="w-full h-full object-cover" />}
+                </div>
+                <input
+                  defaultValue={pc.bgImage || ''}
+                  onBlur={e => { const v = e.target.value; if (v !== (pc.bgImage || '')) updatePageConfig({ bgImage: v }); }}
+                  placeholder="URL da imagem"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+                />
+                <label className="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm flex items-center gap-1 cursor-pointer hover:bg-white/10">
+                  <Upload size={14} /> Upload
+                  <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleUploadPageAsset(e.target.files[0], 'bgImage')} />
+                </label>
+              </div>
+              {pc.bgImage && (
+                <button
+                  onClick={() => updatePageConfig({ bgImage: '' })}
+                  className="mt-2 text-xs text-rose-300 hover:underline"
+                >Remover imagem de fundo</button>
+              )}
+            </div>
+          </section>
+
+          {/* Section: Cores */}
+          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-300">Cores</h3>
+              <p className="text-xs opacity-60 mt-1">Paleta de cores da página. Use o seletor ou cole um valor (hex/rgb/hsl).</p>
+            </div>
+
+            <div>
+              <h4 className="text-[11px] uppercase tracking-wider opacity-60 mb-2">Fundo</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { k: 'bgColor', l: 'Cor sólida' },
+                  { k: 'bgGradientFrom', l: 'Gradiente — início' },
+                  { k: 'bgGradientTo', l: 'Gradiente — fim' },
+                ].map(f => (
+                  <div key={f.k}>
+                    <label className="block text-[11px] font-medium mb-1 opacity-70">{f.l}</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={(pc[f.k] && /^#[0-9a-f]{6}$/i.test(pc[f.k])) ? pc[f.k] : '#000000'}
+                        onChange={e => updatePageConfig({ [f.k]: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0"
+                      />
+                      <input
+                        defaultValue={pc[f.k] || ''}
+                        onBlur={e => { const v = e.target.value; if (v !== (pc[f.k] || '')) updatePageConfig({ [f.k]: v }); }}
+                        placeholder="#000000"
+                        className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] opacity-50 mt-2">Se a imagem de fundo estiver definida, ela tem prioridade sobre as cores.</p>
+            </div>
+
+            <div>
+              <h4 className="text-[11px] uppercase tracking-wider opacity-60 mb-2">Texto e destaque</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { k: 'accentColor', l: 'Cor de destaque (botões/preço)' },
+                  { k: 'titleColor', l: 'Cor do título' },
+                  { k: 'subtitleColor', l: 'Cor do subtítulo' },
+                  { k: 'btnTextColor', l: 'Cor do texto dos botões' },
+                ].map(f => (
+                  <div key={f.k}>
+                    <label className="block text-[11px] font-medium mb-1 opacity-70">{f.l}</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={(pc[f.k] && /^#[0-9a-f]{6}$/i.test(pc[f.k])) ? pc[f.k] : '#ffffff'}
+                        onChange={e => updatePageConfig({ [f.k]: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0"
+                      />
+                      <input
+                        defaultValue={pc[f.k] || ''}
+                        onBlur={e => { const v = e.target.value; if (v !== (pc[f.k] || '')) updatePageConfig({ [f.k]: v }); }}
+                        placeholder="#ffffff"
+                        className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {savingCfg && <div className="text-xs opacity-60">Salvando...</div>}
         </div>
       )}
