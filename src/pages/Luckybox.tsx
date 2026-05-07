@@ -384,9 +384,11 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       {openingCase && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
           <div className="relative w-full max-w-3xl rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/40 p-6 shadow-[0_8px_60px_rgba(0,0,0,0.8)]">
-            <button onClick={closeOpening} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
-              <X size={18} />
-            </button>
+            {phase === 'done' && (
+              <button onClick={closeOpening} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                <X size={18} />
+              </button>
+            )}
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold">{openingCase.name}</h3>
               <p className="text-xs opacity-60 mt-1">
