@@ -509,6 +509,46 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           </div>
         </div>
       )}
+
+      {/* Prizes preview modal */}
+      {prizesPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4" onClick={() => setPrizesPreview(null)}>
+          <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/60 p-6 shadow-[0_8px_60px_rgba(0,0,0,0.8)]" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPrizesPreview(null)} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+              <X size={18} />
+            </button>
+            <div className="text-center mb-5">
+              <h3 className="text-xl font-bold">{prizesPreview.name}</h3>
+              <p className="text-xs opacity-60 mt-1">{prizesPreview.prizes.length} prêmios possíveis</p>
+            </div>
+            <div className="overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pr-1">
+              {prizesPreview.prizes.map((p, i) => {
+                const totalWeight = prizesPreview.prizes.reduce((s, x) => s + (x.weight || 1), 0);
+                const chance = ((p.weight || 1) / totalWeight) * 100;
+                return (
+                  <div
+                    key={i}
+                    className="rounded-xl border p-3 flex flex-col items-center gap-2 relative overflow-hidden"
+                    style={{
+                      borderColor: rarityColor(p.rarity) + '66',
+                      background: `linear-gradient(180deg, ${rarityColor(p.rarity)}22 0%, rgba(0,0,0,0.4) 100%)`,
+                    }}
+                  >
+                    <div className="h-16 flex items-center justify-center">
+                      {p.image
+                        ? <img src={p.image} alt={p.label} className="max-h-full max-w-full object-contain" />
+                        : <div className="text-3xl">🎁</div>}
+                    </div>
+                    <div className="text-xs font-semibold text-center line-clamp-2">{p.label}</div>
+                    <div className="text-[10px] opacity-70">{chance.toFixed(2)}%</div>
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: rarityColor(p.rarity) }} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
