@@ -382,12 +382,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                           {[10, 50, 100].map(v => (
                             <button key={v} onClick={() => adjustTokens(u.id, v)} className="px-2 py-1 rounded border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 text-xs hover:bg-emerald-400/20">+{v}</button>
                           ))}
-                          <button onClick={() => {
-                            const v = prompt('Quantidade de tokens (use - para remover):', '0');
-                            if (v == null) return;
-                            const n = parseInt(v, 10); if (!Number.isFinite(n) || n === 0) return;
-                            adjustTokens(u.id, n);
-                          }} className="px-2 py-1 rounded border border-white/10 bg-white/5 text-xs hover:bg-white/10">±</button>
+                          <button onClick={() => setAdjustModal({ user: u, value: '' })} className="px-2 py-1 rounded border border-white/10 bg-white/5 text-xs hover:bg-white/10">±</button>
                         </div>
                       </td>
                     </tr>
