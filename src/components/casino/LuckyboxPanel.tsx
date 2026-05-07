@@ -583,7 +583,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
               </div>
               <div>
                 <h3 className="text-base font-bold">Ajustar Tokens</h3>
-                <p className="text-xs opacity-70">{adjustModal.user.name} · saldo atual: <span className="font-bold">{adjustModal.user.tokens_balance ?? 0} {cfg.tokens_symbol}</span></p>
+                <p className="text-xs opacity-70">{adjustModal.user.name} · saldo atual: <span className="font-bold">{adjustModal.user.tokens_balance ?? 0} {cfg.coin_name || 'Coins'}</span></p>
               </div>
             </div>
             <label className="block text-xs font-medium mb-2 opacity-80">Quantidade (use valores negativos para remover)</label>
