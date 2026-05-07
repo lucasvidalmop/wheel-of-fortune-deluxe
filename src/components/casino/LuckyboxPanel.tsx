@@ -278,7 +278,10 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                     <div className="flex-1 min-w-0">
                       <div className="font-bold truncate">{c.name}</div>
                       <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
-                        <Coins size={12} /> {c.price_tokens} {cfg.tokens_symbol}
+                        {cfg.coin_icon_url
+                          ? <img src={cfg.coin_icon_url} alt="" className="w-3 h-3 object-contain" />
+                          : <Coins size={12} />}
+                        {c.price_tokens} {cfg.coin_name || 'Coins'}
                       </div>
                       <div className="text-[10px] uppercase tracking-wider mt-1 opacity-60">
                         {c.mode === 'pool' ? 'Pool fixo' : 'Probabilidade'} · {(c.prizes || []).length} prêmios
