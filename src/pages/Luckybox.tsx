@@ -396,8 +396,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     </div>
                     <div className="text-center text-sm font-semibold">{c.name}</div>
                     <div className="text-center mt-2 flex items-center justify-center gap-1 text-base font-bold" style={{ color: accent }}>
-                      <Coins size={14} />
-                      {c.price_tokens} <span className="text-xs opacity-70">{cfg.tokens_symbol || 'T'}</span>
+                      <CoinIcon size={14} />
+                      {c.price_tokens} <span className="text-xs opacity-70">{coinName}</span>
                     </div>
                   </button>
                   <button
