@@ -427,7 +427,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium mb-1 opacity-70">Imagem da caixa</label>
+                <label className="block text-xs font-medium mb-1 opacity-70">Imagem da caixa <span className="opacity-50 font-normal">· ideal 512×512px (PNG transparente)</span></label>
                 <div className="flex items-center gap-3">
                   <input value={editingCase.image_url} onChange={e => setEditingCase({ ...editingCase, image_url: e.target.value })} placeholder="URL da imagem" className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
                   <label className="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm flex items-center gap-1 cursor-pointer hover:bg-white/10">
@@ -460,12 +460,15 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                     </select>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <div className="md:col-span-2 flex items-center gap-2">
-                      <input value={p.image || ''} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], image: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="URL da imagem" className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
-                      <label className="px-2 py-2 rounded-lg border border-white/10 bg-white/5 text-xs cursor-pointer hover:bg-white/10">
-                        <Upload size={12} />
-                        <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleUploadPrizeImage(e.target.files[0], i)} />
-                      </label>
+                    <div className="md:col-span-2 space-y-1">
+                      <div className="text-[10px] uppercase tracking-wider opacity-50">Imagem do prêmio · ideal 256×256px (PNG transparente)</div>
+                      <div className="flex items-center gap-2">
+                        <input value={p.image || ''} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], image: e.target.value }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="URL da imagem" className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
+                        <label className="px-2 py-2 rounded-lg border border-white/10 bg-white/5 text-xs cursor-pointer hover:bg-white/10">
+                          <Upload size={12} />
+                          <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleUploadPrizeImage(e.target.files[0], i)} />
+                        </label>
+                      </div>
                     </div>
                     {editingCase.mode === 'probability' ? (
                       <input type="number" step="0.01" min={0} value={p.weight ?? 1} onChange={e => { const arr = [...editingCase.prizes]; arr[i] = { ...arr[i], weight: parseFloat(e.target.value) || 0 }; setEditingCase({ ...editingCase, prizes: arr }); }} placeholder="Peso (probabilidade)" className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm" />
