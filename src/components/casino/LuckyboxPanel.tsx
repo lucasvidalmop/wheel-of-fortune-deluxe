@@ -181,6 +181,13 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
     } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
   };
 
+  const handleUploadPageAsset = async (file: File, key: string) => {
+    try {
+      const res = await uploadAppAsset(file, 'luckybox');
+      updatePageConfig({ [key]: res.publicUrl });
+    } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
+  };
+
   const filteredTokenUsers = useMemo(() => {
     const q = tokensSearch.trim().toLowerCase();
     if (!q) return tokenUsers;
