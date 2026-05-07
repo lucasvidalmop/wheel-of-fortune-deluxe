@@ -66,7 +66,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
         owner_id: ownerId,
         tag: defaultTag,
         is_active: true,
-        tokens_symbol: 'T',
+        tokens_symbol: 'C',
+        coin_name: 'Coins',
+        coin_icon_url: '',
         page_config: {},
       }).select().single();
       setCfg(created);
