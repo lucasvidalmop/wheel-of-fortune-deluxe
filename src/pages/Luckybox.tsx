@@ -464,6 +464,57 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           </div>
         </div>
       )}
+
+      {/* Purchase confirmation modal */}
+      {confirmCase && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4" onClick={() => setConfirmCase(null)}>
+          <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/60 p-6 shadow-[0_8px_60px_rgba(0,0,0,0.8)]" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setConfirmCase(null)} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+              <X size={16} />
+            </button>
+            <div className="text-center space-y-4">
+              <div className="aspect-square w-32 mx-auto flex items-center justify-center">
+                {confirmCase.image_url
+                  ? <img src={confirmCase.image_url} alt={confirmCase.name} className="max-w-full max-h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]" />
+                  : <Package size={64} style={{ color: rarityColor(confirmCase.rarity) }} />}
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">{confirmCase.name}</h3>
+                <p className="text-xs opacity-70 mt-1">Confirmar abertura desta caixa?</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="opacity-70">Custo</span>
+                  <span className="font-bold flex items-center gap-1" style={{ color: accent }}>
+                    <Coins size={14} /> {confirmCase.price_tokens} {cfg.tokens_symbol || 'T'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="opacity-70">Seu saldo</span>
+                  <span className="font-bold tabular-nums">{authedUser.tokens_balance} {cfg.tokens_symbol || 'T'}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-white/10 pt-2">
+                  <span className="opacity-70">Saldo após</span>
+                  <span className="font-bold tabular-nums">{authedUser.tokens_balance - confirmCase.price_tokens} {cfg.tokens_symbol || 'T'}</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmCase(null)} className="flex-1 py-2.5 rounded-xl font-semibold border border-white/10 bg-white/5 hover:bg-white/10 transition text-sm">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { const c = confirmCase; setConfirmCase(null); handleOpenCase(c); }}
+                  disabled={authedUser.tokens_balance < confirmCase.price_tokens}
+                  className="flex-1 py-2.5 rounded-xl font-semibold transition disabled:opacity-50 text-sm"
+                  style={{ background: accent, color: pc.btnTextColor || '#000' }}
+                >
+                  Abrir caixa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
