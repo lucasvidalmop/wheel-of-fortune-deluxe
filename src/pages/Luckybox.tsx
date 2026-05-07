@@ -55,7 +55,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   
   const [reelPrizes, setReelPrizes] = useState<CasePrize[]>([]);
   const [reelOffset, setReelOffset] = useState(0);
-  const reelRef = useRef<HTMLDivElement>(null);
   const [reelTransition, setReelTransition] = useState('none');
   const [winner, setWinner] = useState<CasePrize | null>(null);
   const [phase, setPhase] = useState<'idle' | 'spinning' | 'done'>('idle');
