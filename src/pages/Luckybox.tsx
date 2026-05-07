@@ -355,7 +355,17 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             {cases.map(c => (
               <button
                 key={c.id}
-                onClick={() => setConfirmCase(c)}
+                onClick={() => {
+                  setOpeningCase(c);
+                  setWinner(null);
+                  setPhase('idle');
+                  // pre-fill reel with random preview prizes
+                  const preview: CasePrize[] = [];
+                  for (let i = 0; i < 30; i++) preview.push(c.prizes[Math.floor(Math.random() * c.prizes.length)] || { label: '?' });
+                  setReelPrizes(preview);
+                  setReelOffset(0);
+                  setReelTransition('none');
+                }}
                 disabled={authedUser.tokens_balance < c.price_tokens}
                 className="group relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.02] p-4 transition hover:scale-[1.03] hover:border-white/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 style={{ boxShadow: `inset 0 0 0 1px ${rarityColor(c.rarity)}22` }}
