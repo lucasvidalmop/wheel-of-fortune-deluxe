@@ -501,13 +501,21 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {cases.map(c => {
-              const cantAfford = authedUser.tokens_balance < c.price_tokens;
+              const grantQty = (authedUser.case_grants?.[c.id] || 0);
+              const isFree = grantQty > 0;
+              const cantAfford = !isFree && authedUser.tokens_balance < c.price_tokens;
               return (
                 <div
                   key={c.id}
                   className="group relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.02] p-4 transition hover:border-white/30"
                   style={{ boxShadow: `inset 0 0 0 1px ${rarityColor(c.rarity)}22` }}
                 >
+                  {isFree && (
+                    <div className="absolute -top-2 -right-2 z-20 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg"
+                      style={{ background: accent, color: '#000' }}>
+                      🎁 Grátis ×{grantQty}
+                    </div>
+                  )}
                   <div
                     className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition pointer-events-none"
                     style={{ boxShadow: `0 0 30px ${rarityColor(c.rarity)}66`, background: `radial-gradient(circle at center, ${rarityColor(c.rarity)}22, transparent 70%)` }}
@@ -533,9 +541,15 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     </div>
                     <div className="text-center text-sm font-semibold">{c.name}</div>
                     <div className="text-center mt-2 flex items-center justify-center gap-1.5 text-base font-bold" style={{ color: accent }}>
-                      <CoinIcon size={20} color={accent} />
-                      <span>{c.price_tokens}</span>
-                      <span className="text-xs opacity-70 font-normal">{coinName}</span>
+                      {isFree ? (
+                        <span className="text-sm">🎁 Abrir grátis</span>
+                      ) : (
+                        <>
+                          <CoinIcon size={20} color={accent} />
+                          <span>{c.price_tokens}</span>
+                          <span className="text-xs opacity-70 font-normal">{coinName}</span>
+                        </>
+                      )}
                     </div>
                   </button>
                   <button
