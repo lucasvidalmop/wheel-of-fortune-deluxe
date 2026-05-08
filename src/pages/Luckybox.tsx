@@ -584,14 +584,18 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             )}
 
             {/* Winner reveal */}
-            {phase === 'done' && winner && (
+            {phase === 'done' && winner && (() => {
+              const final = scratchWinner || winner;
+              const finalAmount = (scratchWinner?.amount ?? winner.amount) || 0;
+              return (
               <div className="text-center space-y-3 animate-fade-in">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10" style={{ background: rarityColor(winner.rarity) + '22', color: rarityColor(winner.rarity) }}>
                   <Sparkles size={16} />
-                  <span className="text-sm font-bold uppercase tracking-wider">{winner.rarity || 'Prêmio'}</span>
+                  <span className="text-sm font-bold uppercase tracking-wider">{scratchWinner ? '🎟️ Raspadinha' : (winner.rarity || 'Prêmio')}</span>
                 </div>
-                <div className="text-2xl font-bold">{winner.label}</div>
-                {(winner.amount || 0) > 0 && (
+                {final.image && <img src={final.image} alt={final.label} className="mx-auto max-h-24 object-contain" />}
+                <div className="text-2xl font-bold">{final.label}</div>
+                {finalAmount > 0 && (
                   <div className="text-sm opacity-80">Será pago em PIX automaticamente quando aprovado.</div>
                 )}
                 <div className="flex gap-3 justify-center pt-2">
