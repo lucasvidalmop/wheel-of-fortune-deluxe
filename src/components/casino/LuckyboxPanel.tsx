@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import SendCasesTab from './LuckyboxSendCases';
+import LuckyboxHistoryTab from './LuckyboxHistoryTab';
 
 interface ScratchPrize {
   label: string;
