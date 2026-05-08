@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload } from 'lucide-react';
+import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import SendCasesTab from './LuckyboxSendCases';
 
@@ -54,6 +54,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const [savingCfg, setSavingCfg] = useState(false);
   const [editingCase, setEditingCase] = useState<LuckyCase | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [collapsedPrizes, setCollapsedPrizes] = useState<Set<number>>(new Set());
   const [tab, setTab] = useState<'cases' | 'tag' | 'visual' | 'tokens' | 'send'>('cases');
   const [tokenUsers, setTokenUsers] = useState<any[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
@@ -700,10 +701,47 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                   const pct = totalWeight > 0 ? (w / totalWeight) * 100 : 0;
                   return (
                     <div key={i} className="rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono opacity-60">Prêmio #{i + 1}</span>
-                        <button onClick={() => setEditingCase({ ...editingCase, prizes: editingCase.prizes.filter((_, j) => j !== i) })} className="text-red-400 text-xs hover:underline">Remover</button>
+                      <div className="flex items-center justify-between gap-2">
+                        <button
+                          onClick={() => {
+                            const next = new Set(collapsedPrizes);
+                            if (next.has(i)) next.delete(i); else next.add(i);
+                            setCollapsedPrizes(next);
+                          }}
+                          className="flex items-center gap-2 text-xs font-mono opacity-80 hover:opacity-100"
+                          title={collapsedPrizes.has(i) ? 'Expandir' : 'Minimizar'}
+                        >
+                          {collapsedPrizes.has(i) ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                          <span>Prêmio #{i + 1}</span>
+                          {collapsedPrizes.has(i) && (
+                            <span className="opacity-70 truncate max-w-[180px]">· {p.label}</span>
+                          )}
+                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            disabled={i === 0}
+                            onClick={() => {
+                              const arr = [...editingCase.prizes];
+                              [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+                              setEditingCase({ ...editingCase, prizes: arr });
+                            }}
+                            className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Mover para cima"
+                          ><ChevronUp size={14} /></button>
+                          <button
+                            disabled={i === editingCase.prizes.length - 1}
+                            onClick={() => {
+                              const arr = [...editingCase.prizes];
+                              [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]];
+                              setEditingCase({ ...editingCase, prizes: arr });
+                            }}
+                            className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Mover para baixo"
+                          ><ChevronDown size={14} /></button>
+                          <button onClick={() => setEditingCase({ ...editingCase, prizes: editingCase.prizes.filter((_, j) => j !== i) })} className="text-red-400 text-xs hover:underline ml-2">Remover</button>
+                        </div>
                       </div>
+                      {!collapsedPrizes.has(i) && (<>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <div className="md:col-span-2">
                           <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Nome do prêmio</label>
@@ -919,6 +957,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                           </div>
                         )}
                       </div>
+                      </>)}
                     </div>
                   );
                 });
