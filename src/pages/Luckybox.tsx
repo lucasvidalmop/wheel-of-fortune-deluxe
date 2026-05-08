@@ -295,12 +295,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
-          // Inicia o áudio exatamente quando a animação do reel começa
-          }
           setTimeout(() => {
             setWinner(prize);
-            // Stop mystery sound when reel lands
-            }
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
               const sub: ScratchPrize = data.scratch_prize;
