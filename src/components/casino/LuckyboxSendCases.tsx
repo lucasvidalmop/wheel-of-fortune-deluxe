@@ -60,7 +60,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       const { data } = await (supabase as any)
         .from('wheel_configs')
         .select('config')
-        .eq('owner_id', ownerId)
+        .eq('user_id', ownerId)
         .limit(1)
         .maybeSingle();
       const ds = data?.config?.dashboardSettings || {};
