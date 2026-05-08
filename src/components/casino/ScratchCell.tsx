@@ -103,12 +103,14 @@ export default function ScratchCell({ revealed, onReveal, accent, children }: Pr
 
   const onDown = (e: React.PointerEvent) => {
     if (revealed) return;
+    e.preventDefault();
     drawing.current = true;
     (e.target as Element).setPointerCapture?.(e.pointerId);
     eraseAt(e.clientX, e.clientY);
   };
   const onMove = (e: React.PointerEvent) => {
     if (!drawing.current || revealed) return;
+    e.preventDefault();
     eraseAt(e.clientX, e.clientY);
   };
   const onUp = () => {
