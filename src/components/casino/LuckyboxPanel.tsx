@@ -830,6 +830,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                             className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
                                           />
                                         </div>
+                                        <div className="text-[10px] opacity-60 -mb-1">Imagem · ideal 256×256px (PNG transparente)</div>
                                         <div className="flex items-center gap-2">
                                           <input
                                             value={sp.image || ''}
