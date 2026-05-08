@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Coins, Eye, LogOut, Package, Sparkles, X, Volume2, VolumeX } from 'lucide-react';
+import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
 
 interface ScratchPrize {
@@ -78,16 +78,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchCells, setScratchCells] = useState<ScratchPrize[]>([]);
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
 
-  // Mystery box sound
-  const MYSTERY_SOUND_URL = '/sounds/luckybox-mystery.mp3';
-  const spinAudioRef = useRef<HTMLAudioElement | null>(null);
-  const [muted, setMuted] = useState<boolean>(() => {
-    try { return localStorage.getItem('luckybox_muted') === '1'; } catch { return false; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem('luckybox_muted', muted ? '1' : '0'); } catch {}
-    if (spinAudioRef.current) spinAudioRef.current.muted = muted;
-  }, [muted]);
 
   const pc = cfg?.page_config || {};
 
@@ -262,29 +252,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
-    // Detect mystery box (rarity mystery or has scratch prize)
-    const isMystery = (c.rarity || '').toLowerCase() === 'mystery' || c.prizes?.some(p => p.scratch);
-    let spinDurationMs = 10000;
-    if (isMystery) {
-      try {
-        const audio = new Audio(MYSTERY_SOUND_URL);
-        audio.muted = muted;
-        audio.preload = 'auto';
-        spinAudioRef.current = audio;
-        await new Promise<void>((resolve) => {
-          const done = () => resolve();
-          if (audio.readyState >= 1 && isFinite(audio.duration) && audio.duration > 0) { resolve(); return; }
-          audio.addEventListener('loadedmetadata', done, { once: true });
-          audio.addEventListener('canplaythrough', done, { once: true });
-          audio.addEventListener('error', done, { once: true });
-          setTimeout(done, 2500);
-        });
-        if (isFinite(audio.duration) && audio.duration > 0) {
-          spinDurationMs = Math.round(audio.duration * 1000);
-        }
-        // NÃO toca aqui — toca junto com o início da animação para sincronizar
-      } catch {}
-    }
+    const spinDurationMs = 10000;
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
@@ -297,7 +265,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         toast.error(data?.error || 'Erro ao abrir caixa');
         setOpeningCase(null);
         setPhase('idle');
-        if (spinAudioRef.current) { try { spinAudioRef.current.pause(); } catch {} }
         return;
       }
       const winIndex = data.prize_index ?? 0;
@@ -328,16 +295,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
-          // Inicia o áudio exatamente quando a animação do reel começa
-          if (spinAudioRef.current) {
-            try { spinAudioRef.current.currentTime = 0; spinAudioRef.current.play().catch(() => {}); } catch {}
-          }
           setTimeout(() => {
             setWinner(prize);
-            // Stop mystery sound when reel lands
-            if (spinAudioRef.current) {
-              try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch {}
-            }
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
               const sub: ScratchPrize = data.scratch_prize;
@@ -394,7 +353,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       toast.error(err.message || 'Erro');
       setOpeningCase(null);
       setPhase('idle');
-      if (spinAudioRef.current) { try { spinAudioRef.current.pause(); } catch {} }
     }
   };
 
@@ -696,15 +654,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             {phase !== 'spinning' && phase !== 'scratch' && (
               <button onClick={closeOpening} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
                 <X size={18} />
-              </button>
-            )}
-            {((openingCase.rarity || '').toLowerCase() === 'mystery' || openingCase.prizes?.some(p => p.scratch)) && (
-              <button
-                onClick={() => setMuted(m => !m)}
-                title={muted ? 'Ativar som' : 'Silenciar'}
-                className="absolute top-3 left-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition"
-              >
-                {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
               </button>
             )}
             <div className="text-center mb-6">
