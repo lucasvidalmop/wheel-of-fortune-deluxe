@@ -49,6 +49,10 @@ const RARITY_COLOR: Record<string, string> = {
   mystery: '#EC4899',
 };
 const rarityColor = (r?: string) => RARITY_COLOR[(r || 'common').toLowerCase()] || '#9CA3AF';
+const DEFAULT_LUCKYBOX_OPEN_AUDIO_URL = '/sounds/luckybox-open-default.mp3';
+const SYNCED_LUCKYBOX_AUDIO_DURATION_MS = 11389;
+const SYNCED_LUCKYBOX_AUDIO_STEPS = 37;
+const SYNCED_LUCKYBOX_AUDIO_EASING = 'linear(0 0%, 0.0270 0.70%, 0.0541 3.51%, 0.0811 5.88%, 0.1081 7.90%, 0.1351 9.57%, 0.1622 11.06%, 0.1892 13.96%, 0.2162 16.07%, 0.2432 17.38%, 0.2703 18.53%, 0.2973 19.58%, 0.3243 20.81%, 0.3514 22.13%, 0.3784 23.18%, 0.4054 24.41%, 0.4324 25.73%, 0.4595 26.60%, 0.4865 27.92%, 0.5135 33.89%, 0.5405 40.21%, 0.5676 41.97%, 0.5946 43.64%, 0.6216 45.57%, 0.6486 47.32%, 0.6757 49.43%, 0.7027 51.45%, 0.7297 53.73%, 0.7568 56.28%, 0.7838 58.91%, 0.8108 61.55%, 0.8378 64.71%, 0.8649 68.13%, 0.8919 72.00%, 0.9189 76.39%, 0.9459 81.74%, 0.9730 88.06%, 1.0000 97.20%, 1 100%)';
 
 const Luckybox = ({ tag }: { tag?: string }) => {
   const [loading, setLoading] = useState(true);
@@ -245,14 +249,14 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authedUser?.id, pendingCode]);
 
-  const buildReel = (prizes: CasePrize[], winnerIndex: number): { reel: CasePrize[]; targetIndex: number } => {
+  const buildReel = (prizes: CasePrize[], winnerIndex: number, syncedSteps?: number): { reel: CasePrize[]; targetIndex: number } => {
     // Build a long reel of ~60 random prizes + ensure winner sits at a specific index near the end
     const n = 60;
     const reel: CasePrize[] = [];
     for (let i = 0; i < n; i++) {
       reel.push(prizes[Math.floor(Math.random() * prizes.length)]);
     }
-    const target = n - 8;
+    const target = syncedSteps ? Math.min(n - 8, Math.max(8, syncedSteps)) : n - 8;
     reel[target] = prizes[winnerIndex];
     return { reel, targetIndex: target };
   };
@@ -270,7 +274,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
     let spinDurationMs = 10000;
     let spinAudio: HTMLAudioElement | null = null;
-    const openingAudioUrl: string | undefined = pc?.spinAudioUrl || '/sounds/luckybox-open-default.mp3';
+    const openingAudioUrl: string | undefined = pc?.spinAudioUrl || DEFAULT_LUCKYBOX_OPEN_AUDIO_URL;
 
     if (openingAudioUrl) {
       try {
@@ -315,7 +319,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       }
       const winIndex = data.prize_index ?? 0;
       const prize = c.prizes[winIndex] || data.prize;
-      const { reel, targetIndex } = buildReel(c.prizes, winIndex);
+      const syncedToDefaultAudio = Math.abs(spinDurationMs - SYNCED_LUCKYBOX_AUDIO_DURATION_MS) < 700;
+      const { reel, targetIndex } = buildReel(c.prizes, winIndex, syncedToDefaultAudio ? SYNCED_LUCKYBOX_AUDIO_STEPS : undefined);
       setReelPrizes(reel);
       setReelOffset(0);
       setReelTransition('none');
@@ -376,7 +381,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           // jitter so it doesn't always land in dead center
           const jitter = (Math.random() - 0.5) * 80;
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
-          setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
+          const timingFunction = syncedToDefaultAudio ? SYNCED_LUCKYBOX_AUDIO_EASING : 'cubic-bezier(0.08, 0.55, 0.16, 1)';
+          setReelTransition(`transform ${spinDurationMs}ms ${timingFunction}`);
           setReelOffset(offset);
 
           try {
