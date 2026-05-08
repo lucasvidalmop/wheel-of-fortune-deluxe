@@ -780,7 +780,18 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                       setWinner(null);
                       setPhase('idle');
                       const preview: CasePrize[] = [];
-                      for (let i = 0; i < 30; i++) preview.push(c.prizes[Math.floor(Math.random() * c.prizes.length)] || { label: '?' });
+                      let previewSource: CasePrize[] = c.prizes;
+                      if (c.mode === 'case_pool') {
+                        const poolItems = (c.prize_pool?.items || []) as CasePoolItem[];
+                        const poolCases = poolItems
+                          .map(it => cases.find(x => x.id === it.case_id))
+                          .filter(Boolean) as LuckyCase[];
+                        previewSource = poolCases.map(rc => ({
+                          label: rc.name, image: rc.image_url, rarity: rc.rarity,
+                        }));
+                      }
+                      if (previewSource.length === 0) previewSource = [{ label: '?' }];
+                      for (let i = 0; i < 30; i++) preview.push(previewSource[Math.floor(Math.random() * previewSource.length)]);
                       setReelPrizes(preview);
                       setReelOffset(0);
                       setReelTransition('none');
