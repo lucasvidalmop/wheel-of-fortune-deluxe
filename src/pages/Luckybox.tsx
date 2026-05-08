@@ -3,6 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 
+interface ScratchPrize {
+  label: string;
+  amount?: number;
+  image?: string;
+  weight?: number;
+}
 interface CasePrize {
   label: string;
   amount?: number;
@@ -10,6 +16,8 @@ interface CasePrize {
   rarity?: string;
   weight?: number;
   count?: number;
+  scratch?: boolean;
+  scratchPrizes?: ScratchPrize[];
 }
 interface LuckyCase {
   id: string;
