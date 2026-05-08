@@ -957,6 +957,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                           </div>
                         )}
                       </div>
+                      </>)}
                     </div>
                   );
                 });
