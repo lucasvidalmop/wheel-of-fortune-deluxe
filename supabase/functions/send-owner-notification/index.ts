@@ -100,6 +100,9 @@ Deno.serve(async (req) => {
       payment_pending: !!ds.notifyPendingPaymentEnabled,
       payment_auto: !!ds.notifyAutoPaymentEnabled,
       deposit_confirmed: !!ds.notifyDepositEnabled,
+      luckybox_purchased: !!ds.notifyLuckyboxPurchasedEnabled,
+      luckybox_redeemed: !!ds.notifyLuckyboxRedeemedEnabled,
+      luckybox_prize: !!ds.notifyLuckyboxPrizeEnabled,
     } as const;
 
     if (!enabledMap[type]) {
