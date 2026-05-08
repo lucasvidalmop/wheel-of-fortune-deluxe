@@ -164,9 +164,15 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       return;
     }
 
+    const qty = Math.max(1, Number(quantity) || 1);
+    const forcedPrizes = buildForcedPrizes(forcedMode, forcedFixed, forcedList, qty);
+    if (forcedPrizes.length !== qty || forcedPrizes.some(e => !e || (Object.keys(e).length === 0))) {
+      setSending(false);
+      toast.error('Defina o prêmio garantido para todas as aberturas antes de enviar');
+      return;
+    }
     setSending(true);
     const targets = users.filter(u => selected.has(u.id));
-    const qty = Math.max(1, Number(quantity) || 1);
     let okCount = 0, waOk = 0, waErr = 0;
 
     for (const u of targets) {
@@ -183,6 +189,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         code,
         quantity: qty,
         status: 'pending',
+        forced_prizes: forcedPrizes,
       }).select().single();
 
       if (error) { console.error(error); continue; }
