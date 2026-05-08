@@ -746,9 +746,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   <div
                     className="mx-auto max-w-xs rounded-2xl border p-5 flex flex-col items-center gap-3"
                     style={{
-                      borderColor: rarityColor(final.rarity) + '88',
-                      background: `linear-gradient(180deg, ${rarityColor(final.rarity)}22 0%, rgba(0,0,0,0.5) 100%)`,
-                      boxShadow: `0 0 30px ${rarityColor(final.rarity)}44`,
+                      borderColor: rarityColor(winner.rarity) + '88',
+                      background: `linear-gradient(180deg, ${rarityColor(winner.rarity)}22 0%, rgba(0,0,0,0.5) 100%)`,
+                      boxShadow: `0 0 30px ${rarityColor(winner.rarity)}44`,
                     }}
                   >
                     {final.image
