@@ -731,38 +731,54 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               </div>
             )}
 
-            {/* Winner reveal */}
+            {/* Winner reveal — popup overlay on top of opening modal */}
             {phase === 'done' && winner && (() => {
               const final = scratchWinner || winner;
               const finalAmount = (scratchWinner?.amount ?? winner.amount) || 0;
               return (
-              <div className="text-center space-y-3 animate-fade-in">
-                {scratchWinner ? (
-                  <>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10" style={{ background: rarityColor(winner.rarity) + '22', color: rarityColor(winner.rarity) }}>
-                      <Sparkles size={16} />
-                      <span className="text-sm font-bold uppercase tracking-wider">🎟️ Raspadinha</span>
+                <div
+                  className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+                  onClick={closeOpening}
+                >
+                  <div
+                    className="relative w-full max-w-md rounded-3xl border p-8 text-center shadow-[0_20px_80px_rgba(0,0,0,0.9)]"
+                    style={{
+                      borderColor: rarityColor(winner.rarity) + 'aa',
+                      background: `radial-gradient(circle at top, ${rarityColor(winner.rarity)}33, rgba(10,10,15,0.98) 70%)`,
+                      boxShadow: `0 0 60px ${rarityColor(winner.rarity)}66`,
+                    }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <button onClick={closeOpening} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                      <X size={18} />
+                    </button>
+
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 mb-4" style={{ background: rarityColor(winner.rarity) + '22', color: rarityColor(winner.rarity) }}>
+                      <Sparkles size={14} />
+                      <span className="text-xs font-bold uppercase tracking-wider">{scratchWinner ? '🎟️ Raspadinha' : 'Você ganhou!'}</span>
                     </div>
-                    {final.image && <img src={final.image} alt={final.label} className="mx-auto max-h-24 object-contain" />}
-                    <div className="text-2xl font-bold">{final.label}</div>
-                  </>
-                ) : (
-                  <>
-                    {final.image
-                      ? <img src={final.image} alt={final.label} className="mx-auto max-h-28 object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.6)]" />
-                      : <div className="text-6xl">🎁</div>}
-                    <div className="text-2xl font-bold">{final.label}</div>
-                  </>
-                )}
-                {finalAmount > 0 && (
-                  <div className="text-sm opacity-80">Será pago em PIX automaticamente quando aprovado.</div>
-                )}
-                <div className="flex gap-3 justify-center pt-2">
-                  <button onClick={closeOpening} className="px-5 py-2.5 rounded-xl font-semibold border border-white/10 bg-white/5 hover:bg-white/10 transition">
-                    Resgatar
-                  </button>
+
+                    <div className="flex items-center justify-center min-h-[140px] mb-4">
+                      {final.image
+                        ? <img src={final.image} alt={final.label} className="max-h-32 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.25)]" />
+                        : <div className="text-7xl">🎁</div>}
+                    </div>
+
+                    <div className="text-3xl font-bold mb-2">{final.label}</div>
+
+                    {finalAmount > 0 && (
+                      <div className="text-sm opacity-80 mb-5">Será pago em PIX automaticamente quando aprovado.</div>
+                    )}
+
+                    <button
+                      onClick={closeOpening}
+                      className="px-8 py-3 rounded-xl font-bold text-base transition shadow-lg"
+                      style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}66` }}
+                    >
+                      Resgatar
+                    </button>
+                  </div>
                 </div>
-              </div>
               );
             })()}
           </div>
