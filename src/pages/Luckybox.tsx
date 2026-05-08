@@ -366,7 +366,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             setWinner(prize);
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
-              // sound will play after scratch reveal
+              // sound plays when scratch reveals the win
             } else {
               playPrizeWinSound();
             }
