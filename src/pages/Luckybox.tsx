@@ -300,19 +300,15 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               const allPrizes: ScratchPrize[] = (prize.scratchPrizes || []);
               // Distractor pool: only OTHER sub-prizes (never the winner) so 3-match logic stays valid
               let pool: ScratchPrize[] = allPrizes.filter(x => x.label !== sub.label);
-              // If no other sub-prizes are configured, fabricate generic distractors (also from other case prizes if any)
+              // If no other sub-prizes are configured, use neutral symbol distractors
+              // (NEVER fall back to the case's main prizes — scratch grid must only show pre-defined scratch prizes)
               if (pool.length === 0) {
-                const siblings: ScratchPrize[] = (openingCase?.prizes || [])
-                  .filter(p => p.label !== sub.label)
-                  .map(p => ({ label: p.label, image: p.image, amount: p.amount }));
-                pool = siblings.length > 0
-                  ? siblings
-                  : [
-                      { label: '✦', image: '' },
-                      { label: '★', image: '' },
-                      { label: '✪', image: '' },
-                      { label: '❖', image: '' },
-                    ];
+                pool = [
+                  { label: '✦', image: '' },
+                  { label: '★', image: '' },
+                  { label: '✪', image: '' },
+                  { label: '❖', image: '' },
+                ];
               }
               const cells: ScratchPrize[] = [];
               // Exactly 3 winner cells
