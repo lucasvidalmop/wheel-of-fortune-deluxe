@@ -8,7 +8,7 @@ import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
 import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import BattleConfigPanel from '@/components/casino/BattleConfigPanel';
-import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus, RefreshCw, CheckCircle2, Swords } from 'lucide-react';
+import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus, RefreshCw, CheckCircle2, Swords, Package, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -95,6 +95,9 @@ interface PersistedDashboardSettings {
   notifyReferralEnabled: boolean;
   notifyPendingPaymentEnabled: boolean;
   notifyDepositEnabled: boolean;
+  notifyLuckyboxPurchasedEnabled: boolean;
+  notifyLuckyboxRedeemedEnabled: boolean;
+  notifyLuckyboxPrizeEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
@@ -151,6 +154,9 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyReferralEnabled: false,
   notifyPendingPaymentEnabled: false,
   notifyDepositEnabled: false,
+  notifyLuckyboxPurchasedEnabled: false,
+  notifyLuckyboxRedeemedEnabled: false,
+  notifyLuckyboxPrizeEnabled: false,
   notifyGroupJid: '',
   notifyGroupName: '',
   notifySelectedGroups: [],
@@ -471,6 +477,9 @@ function Dashboard() {
   const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
   const [notifyDepositEnabled, setNotifyDepositEnabled] = useState(false);
+  const [notifyLuckyboxPurchasedEnabled, setNotifyLuckyboxPurchasedEnabled] = useState(false);
+  const [notifyLuckyboxRedeemedEnabled, setNotifyLuckyboxRedeemedEnabled] = useState(false);
+  const [notifyLuckyboxPrizeEnabled, setNotifyLuckyboxPrizeEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
@@ -1582,6 +1591,9 @@ function Dashboard() {
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
     notifyDepositEnabled,
+    notifyLuckyboxPurchasedEnabled,
+    notifyLuckyboxRedeemedEnabled,
+    notifyLuckyboxPrizeEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
@@ -1670,6 +1682,9 @@ function Dashboard() {
     setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
     setNotifyDepositEnabled(!!settings.notifyDepositEnabled);
+    setNotifyLuckyboxPurchasedEnabled(!!settings.notifyLuckyboxPurchasedEnabled);
+    setNotifyLuckyboxRedeemedEnabled(!!settings.notifyLuckyboxRedeemedEnabled);
+    setNotifyLuckyboxPrizeEnabled(!!settings.notifyLuckyboxPrizeEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
@@ -1929,6 +1944,9 @@ function Dashboard() {
     notifyReferralEnabled,
     notifyPendingPaymentEnabled,
     notifyDepositEnabled,
+    notifyLuckyboxPurchasedEnabled,
+    notifyLuckyboxRedeemedEnabled,
+    notifyLuckyboxPrizeEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
@@ -7844,8 +7862,74 @@ function Dashboard() {
                 </div>
               </GlassCard>
 
+              {/* Toggle: Caixa comprada (Luckybox) */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 flex items-center justify-center">
+                      <Package size={20} className="text-fuchsia-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Caixa Aberta (Luckybox)</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um inscrito abrir uma caixa</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyLuckyboxPurchasedEnabled(!notifyLuckyboxPurchasedEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxPurchasedEnabled ? 'bg-fuchsia-500 shadow-lg shadow-fuchsia-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxPurchasedEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Toggle: Código de caixa resgatado */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                      <Link2 size={20} className="text-violet-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Código de Caixa Resgatado</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um inscrito resgatar um código de caixa</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyLuckyboxRedeemedEnabled(!notifyLuckyboxRedeemedEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxRedeemedEnabled ? 'bg-violet-500 shadow-lg shadow-violet-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxRedeemedEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Toggle: Prêmio de caixa ganho */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                      <Sparkles size={20} className="text-yellow-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Prêmio de Caixa Ganho</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um inscrito ganhar um prêmio na caixa</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyLuckyboxPrizeEnabled(!notifyLuckyboxPrizeEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxPrizeEnabled ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxPrizeEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
               {/* Configuração WhatsApp para Notificações */}
-              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled || notifyDepositEnabled) && (
+              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled || notifyDepositEnabled || notifyLuckyboxPurchasedEnabled || notifyLuckyboxRedeemedEnabled || notifyLuckyboxPrizeEnabled) && (
                 <GlassCard className="p-5 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">

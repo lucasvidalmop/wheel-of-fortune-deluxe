@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   ownerId: z.string().uuid(),
-  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed"]),
+  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed", "luckybox_purchased", "luckybox_redeemed", "luckybox_prize"]),
   payload: z.record(z.any()).default({}),
 });
 
@@ -27,6 +27,18 @@ const buildMessage = (type: z.infer<typeof BodySchema>["type"], payload: Record<
 
   if (type === "payment_auto") {
     return `💰 *Pagamento automático realizado*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🎁 *Prêmio:* ${payload.prize || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🔑 *PIX:* ${payload.pixKey || "-"}\n🕐 *Data:* ${now}`;
+  }
+
+  if (type === "luckybox_purchased") {
+    return `📦 *Caixa comprada (Luckybox)*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n💰 *Custo:* ${payload.priceTokens || 0} ${payload.coinName || "tokens"}\n🕐 *Data:* ${now}`;
+  }
+
+  if (type === "luckybox_redeemed") {
+    return `🎟️ *Código de caixa resgatado*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n📦 *Quantidade:* ${payload.quantity || 1}\n🔑 *Código:* ${payload.code || "-"}\n🕐 *Data:* ${now}`;
+  }
+
+  if (type === "luckybox_prize") {
+    return `🏆 *Prêmio de caixa ganho*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n✨ *Prêmio:* ${payload.prizeLabel || "-"}${payload.prizeAmount ? `\n💵 *Valor:* ${formatCurrency(payload.prizeAmount)}` : ""}\n🕐 *Data:* ${now}`;
   }
 
   // deposit_confirmed
@@ -88,6 +100,9 @@ Deno.serve(async (req) => {
       payment_pending: !!ds.notifyPendingPaymentEnabled,
       payment_auto: !!ds.notifyAutoPaymentEnabled,
       deposit_confirmed: !!ds.notifyDepositEnabled,
+      luckybox_purchased: !!ds.notifyLuckyboxPurchasedEnabled,
+      luckybox_redeemed: !!ds.notifyLuckyboxRedeemedEnabled,
+      luckybox_prize: !!ds.notifyLuckyboxPrizeEnabled,
     } as const;
 
     if (!enabledMap[type]) {

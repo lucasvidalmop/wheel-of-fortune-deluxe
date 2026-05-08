@@ -205,6 +205,22 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       if (error) throw error;
       if (!data?.success) { toast.error(data?.error || 'Falha no resgate'); return; }
       toast.success(`🎁 ${data.quantity}× ${data.case_name} liberada!`);
+      try {
+        supabase.functions.invoke('send-owner-notification', {
+          body: {
+            ownerId: cfg.owner_id,
+            type: 'luckybox_redeemed',
+            payload: {
+              userName: authedUser.name,
+              userEmail: authedUser.email,
+              accountId: authedUser.account_id,
+              caseName: data.case_name,
+              quantity: data.quantity,
+              code,
+            },
+          },
+        });
+      } catch {}
       setRedeemCode('');
       setPendingCode(null);
       // Clear ?code= from URL without reload
@@ -282,6 +298,43 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       };
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
+
+      // Notify owner: purchased/opened
+      try {
+        supabase.functions.invoke('send-owner-notification', {
+          body: {
+            ownerId: cfg!.owner_id,
+            type: 'luckybox_purchased',
+            payload: {
+              userName: authedUser.name,
+              userEmail: authedUser.email,
+              accountId: authedUser.account_id,
+              caseName: c.name,
+              priceTokens: data.used_grant ? 0 : c.price_tokens,
+              coinName: cfg?.coin_name || 'Coins',
+            },
+          },
+        });
+      } catch {}
+
+      // Notify owner: prize won (use scratch sub-prize when applicable)
+      try {
+        const finalPrize: any = (prize?.scratch && data.scratch_prize) ? data.scratch_prize : prize;
+        supabase.functions.invoke('send-owner-notification', {
+          body: {
+            ownerId: cfg!.owner_id,
+            type: 'luckybox_prize',
+            payload: {
+              userName: authedUser.name,
+              userEmail: authedUser.email,
+              accountId: authedUser.account_id,
+              caseName: c.name,
+              prizeLabel: finalPrize?.label || '',
+              prizeAmount: finalPrize?.amount || 0,
+            },
+          },
+        });
+      } catch {}
 
       // Animate
       requestAnimationFrame(() => {
