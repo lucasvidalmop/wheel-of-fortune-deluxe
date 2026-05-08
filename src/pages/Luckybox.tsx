@@ -332,6 +332,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           if (spinAudioRef.current) {
             try { spinAudioRef.current.currentTime = 0; spinAudioRef.current.play().catch(() => {}); } catch {}
           }
+          setTimeout(() => {
             setWinner(prize);
             // Stop mystery sound when reel lands
             if (spinAudioRef.current) {
