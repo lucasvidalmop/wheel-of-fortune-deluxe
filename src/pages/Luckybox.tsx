@@ -290,9 +290,97 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     }
     setOpeningCase(c);
     setWinner(null);
+    setDrawnCases([]);
     setPhase('spinning');
 
     const spinDurationMs = 10000;
+
+    // ===== CASE POOL MODE: opens a "box of boxes" =====
+    if (c.mode === 'case_pool') {
+      try {
+        const { data, error } = await (supabase as any).rpc('open_luckybox_case_pool', {
+          p_owner_id: cfg!.owner_id,
+          p_account_id: authedUser.account_id,
+          p_case_id: c.id,
+        });
+        if (error) throw error;
+        if (!data?.success) {
+          toast.error(data?.error || 'Erro ao abrir caixa');
+          setOpeningCase(null);
+          setPhase('idle');
+          return;
+        }
+        const drawn: DrawnCase[] = data.drawn || [];
+        // Update tokens + grants
+        const updated = {
+          ...authedUser,
+          tokens_balance: data.tokens_balance ?? authedUser.tokens_balance,
+          case_grants: (data.case_grants as Record<string, number>) || authedUser.case_grants || {},
+        };
+        setAuthedUser(updated);
+        sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
+
+        // Build a reel of cases (treat each case as a CasePrize-like item)
+        const poolItems = (c.prize_pool?.items || []) as CasePoolItem[];
+        const poolCases: LuckyCase[] = poolItems
+          .map(it => cases.find(x => x.id === it.case_id))
+          .filter(Boolean) as LuckyCase[];
+        const reelSource: LuckyCase[] = poolCases.length > 0 ? poolCases : (drawn.map(d => ({
+          id: d.case_id, name: d.name, image_url: d.image_url, rarity: d.rarity, price_tokens: d.price_tokens, prizes: [],
+        })) as any);
+
+        const target = drawn[0];
+        const fakePrizes: CasePrize[] = reelSource.map(rc => ({
+          label: rc.name, image: rc.image_url, rarity: rc.rarity,
+        }));
+        const winIdx = Math.max(0, reelSource.findIndex(rc => rc.id === target?.case_id));
+        const { reel, targetIndex } = buildReel(fakePrizes, winIdx);
+        setReelPrizes(reel);
+        setReelOffset(0);
+        setReelTransition('none');
+
+        try {
+          supabase.functions.invoke('send-owner-notification', {
+            body: {
+              ownerId: cfg!.owner_id,
+              type: 'luckybox_purchased',
+              payload: {
+                userName: authedUser.name,
+                userEmail: authedUser.email,
+                accountId: authedUser.account_id,
+                caseName: c.name,
+                priceTokens: data.used_grant ? 0 : c.price_tokens,
+                coinName: cfg?.coin_name || 'Coins',
+              },
+            },
+          });
+        } catch {}
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const itemWidth = 168;
+            const cardHalf = 80;
+            const reelEl = document.getElementById('luckybox-reel-viewport');
+            const halfViewport = reelEl ? reelEl.clientWidth / 2 : 0;
+            const jitter = (Math.random() - 0.5) * 80;
+            const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
+            setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
+            setReelOffset(offset);
+            setTimeout(() => {
+              playPrizeWinSound();
+              setDrawnCases(drawn);
+              setWinner({ label: c.name, image: c.image_url, rarity: c.rarity } as any);
+              setPhase('done');
+            }, spinDurationMs + 200);
+          }, 50);
+        });
+      } catch (err: any) {
+        toast.error(err.message || 'Erro');
+        setOpeningCase(null);
+        setPhase('idle');
+      }
+      return;
+    }
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
