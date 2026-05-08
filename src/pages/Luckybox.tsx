@@ -78,16 +78,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchCells, setScratchCells] = useState<ScratchPrize[]>([]);
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
 
-  // Mystery box sound
-  const MYSTERY_SOUND_URL = '/sounds/luckybox-mystery.mp3';
-  const spinAudioRef = useRef<HTMLAudioElement | null>(null);
-  const [muted, setMuted] = useState<boolean>(() => {
-    try { return localStorage.getItem('luckybox_muted') === '1'; } catch { return false; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem('luckybox_muted', muted ? '1' : '0'); } catch {}
-    if (spinAudioRef.current) spinAudioRef.current.muted = muted;
-  }, [muted]);
 
   const pc = cfg?.page_config || {};
 
