@@ -787,6 +787,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.95), transparent)' }} />
 
               <div
+                id="luckybox-reel-inner"
                 className="absolute inset-y-0 left-0 flex items-center gap-2 will-change-transform"
                 style={{
                   transform: `translateX(${reelOffset}px)`,
