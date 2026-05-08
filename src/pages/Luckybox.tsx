@@ -745,7 +745,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     style={{
                       borderColor: rarityColor(winner.rarity) + 'aa',
                       background: `radial-gradient(circle at top, ${rarityColor(winner.rarity)}33, rgba(10,10,15,0.98) 70%)`,
-                      boxShadow: `0 0 60px ${rarityColor(winner.rarity)}66`,
+                      
                     }}
                     onClick={e => e.stopPropagation()}
                   >
