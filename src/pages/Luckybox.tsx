@@ -540,6 +540,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setScratchCells([]);
     setScratchedIdx(new Set());
     setScratchWinner(null);
+    setDrawnCases([]);
     refreshTokens();
   };
 
