@@ -42,10 +42,10 @@ const RARITY_COLOR: Record<string, string> = {
   common: '#9CA3AF',
   uncommon: '#22C55E',
   rare: '#3B82F6',
-  epic: '#A855F7',
-  legendary: '#F59E0B',
+  epic: '#60A5FA',
+  legendary: '#A855F7',
   mythic: '#EF4444',
-  supreme: '#22D3EE',
+  supreme: '#FACC15',
 };
 const rarityColor = (r?: string) => RARITY_COLOR[(r || 'common').toLowerCase()] || '#9CA3AF';
 
