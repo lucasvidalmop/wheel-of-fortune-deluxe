@@ -374,6 +374,66 @@ export type Database = {
         }
         Relationships: []
       }
+      luckybox_grants: {
+        Row: {
+          case_id: string
+          case_name: string
+          code: string
+          created_at: string
+          id: string
+          owner_id: string
+          quantity: number
+          recipient_account_id: string
+          recipient_email: string
+          recipient_name: string
+          recipient_phone: string
+          redeemed_at: string | null
+          status: string
+          updated_at: string
+          whatsapp_error: string | null
+          whatsapp_status: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          case_id: string
+          case_name?: string
+          code: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          quantity?: number
+          recipient_account_id?: string
+          recipient_email?: string
+          recipient_name?: string
+          recipient_phone?: string
+          redeemed_at?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_error?: string | null
+          whatsapp_status?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          case_id?: string
+          case_name?: string
+          code?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          quantity?: number
+          recipient_account_id?: string
+          recipient_email?: string
+          recipient_name?: string
+          recipient_phone?: string
+          redeemed_at?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_error?: string | null
+          whatsapp_status?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: []
+      }
       luckybox_openings: {
         Row: {
           account_id: string
@@ -1403,6 +1463,7 @@ export type Database = {
           archived: boolean
           auto_payment: boolean
           blacklisted: boolean
+          case_grants: Json
           created_at: string | null
           email: string
           fixed_prize_enabled: boolean
@@ -1428,6 +1489,7 @@ export type Database = {
           archived?: boolean
           auto_payment?: boolean
           blacklisted?: boolean
+          case_grants?: Json
           created_at?: string | null
           email: string
           fixed_prize_enabled?: boolean
@@ -1453,6 +1515,7 @@ export type Database = {
           archived?: boolean
           auto_payment?: boolean
           blacklisted?: boolean
+          case_grants?: Json
           created_at?: string | null
           email?: string
           fixed_prize_enabled?: boolean
@@ -1705,6 +1768,15 @@ export type Database = {
           p_user_name: string
         }
         Returns: string
+      }
+      redeem_luckybox_grant: {
+        Args: {
+          p_account_id: string
+          p_code: string
+          p_email: string
+          p_owner_id: string
+        }
+        Returns: Json
       }
       register_via_gorjeta: {
         Args: {
