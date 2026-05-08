@@ -549,7 +549,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                         : <div className="text-3xl">🎁</div>}
                     </div>
                     <div className="text-xs font-semibold text-center line-clamp-2">{p.label}</div>
-                    <div className="text-[10px] opacity-70">{chance.toFixed(2)}%</div>
                     <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: rarityColor(p.rarity) }} />
                   </div>
                 );
