@@ -56,10 +56,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [disabled, setDisabled] = useState(false);
 
   // Auth
-  const [authedUser, setAuthedUser] = useState<{ id: string; name: string; account_id: string; email: string; tokens_balance: number } | null>(null);
+  const [authedUser, setAuthedUser] = useState<{ id: string; name: string; account_id: string; email: string; tokens_balance: number; case_grants?: Record<string, number> } | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginAccount, setLoginAccount] = useState('');
   const [logging, setLogging] = useState(false);
+  const [redeemCode, setRedeemCode] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
 
   // Opening
   const [openingCase, setOpeningCase] = useState<LuckyCase | null>(null);
@@ -147,14 +150,15 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         toast.error('Conta não encontrada');
         return;
       }
-      // fetch tokens balance
-      const { data: u } = await supabase.from('wheel_users').select('tokens_balance,name,email,account_id').eq('id', user.id).maybeSingle();
+      // fetch tokens balance + case_grants
+      const { data: u } = await (supabase as any).from('wheel_users').select('tokens_balance,name,email,account_id,case_grants').eq('id', user.id).maybeSingle();
       const sess = {
         id: user.id,
         name: u?.name || user.name || '',
         account_id: u?.account_id || loginAccount.trim(),
         email: u?.email || loginEmail.trim(),
         tokens_balance: u?.tokens_balance ?? 0,
+        case_grants: (u?.case_grants as Record<string, number>) || {},
       };
       setAuthedUser(sess);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(sess));
@@ -166,13 +170,62 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   const refreshTokens = async () => {
     if (!authedUser) return;
-    const { data } = await supabase.from('wheel_users').select('tokens_balance').eq('id', authedUser.id).maybeSingle();
+    const { data } = await (supabase as any).from('wheel_users').select('tokens_balance,case_grants').eq('id', authedUser.id).maybeSingle();
     if (data) {
-      const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? 0 };
+      const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? 0, case_grants: (data.case_grants as Record<string, number>) || {} };
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
     }
   };
+
+  // Capture ?code= from URL on first load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const c = params.get('code');
+    if (c) {
+      setPendingCode(c.toUpperCase());
+      setRedeemCode(c.toUpperCase());
+    }
+  }, []);
+
+  const doRedeem = async (codeOverride?: string) => {
+    if (!authedUser || !cfg) return;
+    const code = (codeOverride ?? redeemCode).trim();
+    if (!code) { toast.error('Digite um código'); return; }
+    setRedeeming(true);
+    try {
+      const { data, error } = await (supabase as any).rpc('redeem_luckybox_grant', {
+        p_owner_id: cfg.owner_id,
+        p_account_id: authedUser.account_id,
+        p_email: authedUser.email,
+        p_code: code,
+      });
+      if (error) throw error;
+      if (!data?.success) { toast.error(data?.error || 'Falha no resgate'); return; }
+      toast.success(`🎁 ${data.quantity}× ${data.case_name} liberada!`);
+      setRedeemCode('');
+      setPendingCode(null);
+      // Clear ?code= from URL without reload
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('code');
+        window.history.replaceState({}, '', url.toString());
+      } catch {}
+      await refreshTokens();
+    } catch (e: any) {
+      toast.error(e.message || 'Erro');
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
+  // Auto-redeem after login if pendingCode present
+  useEffect(() => {
+    if (authedUser && pendingCode && !redeeming) {
+      doRedeem(pendingCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authedUser?.id, pendingCode]);
 
   const buildReel = (prizes: CasePrize[], winnerIndex: number): { reel: CasePrize[]; targetIndex: number } => {
     // Build a long reel of ~60 random prizes + ensure winner sits at a specific index near the end
@@ -188,7 +241,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   const handleOpenCase = async (c: LuckyCase) => {
     if (!authedUser) return;
-    if (authedUser.tokens_balance < c.price_tokens) {
+    const grantQty = (authedUser.case_grants?.[c.id] || 0);
+    if (grantQty <= 0 && authedUser.tokens_balance < c.price_tokens) {
       toast.error(`${cfg.coin_name || 'Coins'} insuficientes`);
       return;
     }
@@ -216,8 +270,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       setReelOffset(0);
       setReelTransition('none');
 
-      // Update tokens
-      const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? authedUser.tokens_balance - c.price_tokens };
+      // Update tokens + case_grants
+      const updated = {
+        ...authedUser,
+        tokens_balance: data.tokens_balance ?? (data.used_grant ? authedUser.tokens_balance : authedUser.tokens_balance - c.price_tokens),
+        case_grants: (data.case_grants as Record<string, number>) || authedUser.case_grants || {},
+      };
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
 
@@ -404,6 +462,37 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Redeem code */}
+        <div className="mb-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <div className="text-sm font-bold flex items-center gap-2">
+                🎟️ Resgatar código de presente
+              </div>
+              <div className="text-xs opacity-70 mt-0.5">
+                Recebeu uma caixa por WhatsApp? Digite o código abaixo para liberar.
+              </div>
+            </div>
+            <input
+              value={redeemCode}
+              onChange={e => setRedeemCode(e.target.value.toUpperCase())}
+              onKeyDown={e => { if (e.key === 'Enter') doRedeem(); }}
+              placeholder="Ex: A2B4C6D8"
+              className="px-3 py-2 rounded-lg border border-white/10 bg-black/40 text-sm font-mono uppercase tracking-wider"
+              style={{ minWidth: 180 }}
+              maxLength={20}
+            />
+            <button
+              onClick={() => doRedeem()}
+              disabled={redeeming || !redeemCode.trim()}
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition disabled:opacity-50"
+              style={{ background: accent, color: '#000' }}
+            >
+              {redeeming ? 'Resgatando...' : 'Resgatar'}
+            </button>
+          </div>
+        </div>
+
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-1">{pc.gridTitle || 'Escolha sua caixa'}</h2>
           <p className="text-sm opacity-70">{pc.gridSubtitle || 'Cada caixa contém prêmios diferentes. Boa sorte!'}</p>
@@ -417,13 +506,21 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {cases.map(c => {
-              const cantAfford = authedUser.tokens_balance < c.price_tokens;
+              const grantQty = (authedUser.case_grants?.[c.id] || 0);
+              const isFree = grantQty > 0;
+              const cantAfford = !isFree && authedUser.tokens_balance < c.price_tokens;
               return (
                 <div
                   key={c.id}
                   className="group relative rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.02] p-4 transition hover:border-white/30"
                   style={{ boxShadow: `inset 0 0 0 1px ${rarityColor(c.rarity)}22` }}
                 >
+                  {isFree && (
+                    <div className="absolute -top-2 -right-2 z-20 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg"
+                      style={{ background: accent, color: '#000' }}>
+                      🎁 Grátis ×{grantQty}
+                    </div>
+                  )}
                   <div
                     className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition pointer-events-none"
                     style={{ boxShadow: `0 0 30px ${rarityColor(c.rarity)}66`, background: `radial-gradient(circle at center, ${rarityColor(c.rarity)}22, transparent 70%)` }}
@@ -449,9 +546,15 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     </div>
                     <div className="text-center text-sm font-semibold">{c.name}</div>
                     <div className="text-center mt-2 flex items-center justify-center gap-1.5 text-base font-bold" style={{ color: accent }}>
-                      <CoinIcon size={20} color={accent} />
-                      <span>{c.price_tokens}</span>
-                      <span className="text-xs opacity-70 font-normal">{coinName}</span>
+                      {isFree ? (
+                        <span className="text-sm">🎁 Abrir grátis</span>
+                      ) : (
+                        <>
+                          <CoinIcon size={20} color={accent} />
+                          <span>{c.price_tokens}</span>
+                          <span className="text-xs opacity-70 font-normal">{coinName}</span>
+                        </>
+                      )}
                     </div>
                   </button>
                   <button
@@ -570,16 +673,25 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             {/* Idle: ready to spin */}
             {phase === 'idle' && (
               <div className="text-center pt-2">
-                <button
-                  onClick={() => handleOpenCase(openingCase)}
-                  disabled={authedUser.tokens_balance < openingCase.price_tokens}
-                  className="px-8 py-3 rounded-xl font-bold text-base transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                  style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}55` }}
-                >
-                  {authedUser.tokens_balance < openingCase.price_tokens
-                    ? `${coinName} insuficientes`
-                    : `Sortear · ${openingCase.price_tokens} ${coinName}`}
-                </button>
+                {(() => {
+                  const gq = authedUser.case_grants?.[openingCase.id] || 0;
+                  const free = gq > 0;
+                  const cant = !free && authedUser.tokens_balance < openingCase.price_tokens;
+                  return (
+                    <button
+                      onClick={() => handleOpenCase(openingCase)}
+                      disabled={cant}
+                      className="px-8 py-3 rounded-xl font-bold text-base transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                      style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}55` }}
+                    >
+                      {cant
+                        ? `${coinName} insuficientes`
+                        : free
+                        ? `🎁 Abrir grátis (${gq} restante${gq > 1 ? 's' : ''})`
+                        : `Sortear · ${openingCase.price_tokens} ${coinName}`}
+                    </button>
+                  );
+                })()}
               </div>
             )}
 
