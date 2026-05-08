@@ -364,7 +364,11 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     }
   };
 
+  const scratchStorageKey = (uid: string) => `luckybox_pending_scratch_${cfg?.tag}_${uid}`;
+
   const closeOpening = () => {
+    if (phase === 'scratch') return; // não permite fechar durante raspadinha
+    if (authedUser && cfg) sessionStorage.removeItem(scratchStorageKey(authedUser.id));
     setOpeningCase(null);
     setWinner(null);
     setPhase('idle');
@@ -380,9 +384,53 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setScratchedIdx(prev => {
       const next = new Set(prev);
       next.add(idx);
+      // persist progress
+      if (authedUser && cfg && openingCase && scratchWinner) {
+        sessionStorage.setItem(scratchStorageKey(authedUser.id), JSON.stringify({
+          caseId: openingCase.id,
+          cells: scratchCells,
+          scratched: Array.from(next),
+          winner,
+          scratchWinner,
+        }));
+      }
       return next;
     });
   };
+
+  // Persist scratch state when entering scratch phase
+  useEffect(() => {
+    if (phase === 'scratch' && authedUser && cfg && openingCase && scratchWinner && scratchCells.length === 9) {
+      sessionStorage.setItem(scratchStorageKey(authedUser.id), JSON.stringify({
+        caseId: openingCase.id,
+        cells: scratchCells,
+        scratched: Array.from(scratchedIdx),
+        winner,
+        scratchWinner,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, scratchCells, scratchWinner]);
+
+  // Restore unfinished scratch on mount/login
+  useEffect(() => {
+    if (!authedUser || !cfg || cases.length === 0) return;
+    if (phase !== 'idle') return;
+    const raw = sessionStorage.getItem(scratchStorageKey(authedUser.id));
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      const c = cases.find(x => x.id === data.caseId);
+      if (!c || !data.cells || !data.scratchWinner) return;
+      setOpeningCase(c);
+      setScratchCells(data.cells);
+      setScratchedIdx(new Set(data.scratched || []));
+      setWinner(data.winner);
+      setScratchWinner(data.scratchWinner);
+      setPhase('scratch');
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authedUser?.id, cases.length]);
 
   useEffect(() => {
     if (phase === 'scratch' && scratchedIdx.size >= 9) {
