@@ -29,6 +29,7 @@ interface CasePrize {
   scratch?: boolean;
   scratchPrizes?: ScratchPrize[];
 }
+interface CasePoolItem { case_id: string; weight: number }
 interface LuckyCase {
   id: string;
   name: string;
@@ -36,6 +37,15 @@ interface LuckyCase {
   image_url: string;
   rarity: string;
   prizes: CasePrize[];
+  mode?: 'probability' | 'pool' | 'case_pool';
+  prize_pool?: { quantity?: number; items?: CasePoolItem[] } | any;
+}
+interface DrawnCase {
+  case_id: string;
+  name: string;
+  image_url: string;
+  rarity: string;
+  price_tokens: number;
 }
 interface LuckyConfig {
   id: string;
