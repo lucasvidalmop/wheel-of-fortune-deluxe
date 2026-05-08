@@ -252,29 +252,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
-    // Detect mystery box (rarity mystery or has scratch prize)
-    const isMystery = (c.rarity || '').toLowerCase() === 'mystery' || c.prizes?.some(p => p.scratch);
-    let spinDurationMs = 10000;
-    if (isMystery) {
-      try {
-        const audio = new Audio(MYSTERY_SOUND_URL);
-        audio.muted = muted;
-        audio.preload = 'auto';
-        spinAudioRef.current = audio;
-        await new Promise<void>((resolve) => {
-          const done = () => resolve();
-          if (audio.readyState >= 1 && isFinite(audio.duration) && audio.duration > 0) { resolve(); return; }
-          audio.addEventListener('loadedmetadata', done, { once: true });
-          audio.addEventListener('canplaythrough', done, { once: true });
-          audio.addEventListener('error', done, { once: true });
-          setTimeout(done, 2500);
-        });
-        if (isFinite(audio.duration) && audio.duration > 0) {
-          spinDurationMs = Math.round(audio.duration * 1000);
-        }
-        // NÃO toca aqui — toca junto com o início da animação para sincronizar
-      } catch {}
-    }
+    const spinDurationMs = 10000;
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
