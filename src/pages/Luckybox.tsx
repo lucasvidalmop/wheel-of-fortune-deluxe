@@ -527,6 +527,45 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 ))}
               </div>
             </div>
+            )}
+
+            {/* Scratch card */}
+            {phase === 'scratch' && (
+              <div className="mb-6">
+                <div className="grid grid-cols-3 gap-2 max-w-sm mx-auto">
+                  {scratchCells.map((cell, idx) => {
+                    const revealed = scratchedIdx.has(idx);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleScratchCell(idx)}
+                        disabled={revealed}
+                        className="aspect-square rounded-xl relative overflow-hidden border border-white/10 transition active:scale-95"
+                        style={{
+                          background: revealed
+                            ? `linear-gradient(180deg, ${accent}22 0%, rgba(0,0,0,0.4) 100%)`
+                            : 'linear-gradient(135deg, #4a4a4a, #2a2a2a)',
+                        }}
+                      >
+                        {revealed ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center p-1 animate-fade-in">
+                            {cell.image
+                              ? <img src={cell.image} alt={cell.label} className="max-h-[60%] max-w-[80%] object-contain" />
+                              : <div className="text-3xl">🎁</div>}
+                            <div className="text-[10px] font-bold mt-1 text-center line-clamp-1 px-1">{cell.label}</div>
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-2xl font-black">?</div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="text-center mt-4 text-xs opacity-60">
+                  {scratchedIdx.size}/9 raspadas — clique em todas as áreas
+                </div>
+              </div>
+            )}
 
             {/* Idle: ready to spin */}
             {phase === 'idle' && (
