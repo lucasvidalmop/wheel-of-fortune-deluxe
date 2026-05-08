@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Send, Search, Check, Copy, MessageCircle, Trash2, RefreshCw } from 'lucide-react';
+import ForcedPrizePicker, { ForcedEntry, buildForcedPrizes } from './ForcedPrizePicker';
 
 interface Props {
   ownerId: string;
@@ -48,6 +49,19 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [grantsLoading, setGrantsLoading] = useState(false);
   const [template, setTemplate] = useState<string>(() => localStorage.getItem('luckybox_grant_template') || DEFAULT_TEMPLATE);
   const [sendWhats, setSendWhats] = useState(true);
+
+  // Forced prize selection (send-to-users)
+  const [forcedMode, setForcedMode] = useState<'fixed' | 'list'>('fixed');
+  const [forcedFixed, setForcedFixed] = useState<ForcedEntry | null>(null);
+  const [forcedList, setForcedList] = useState<(ForcedEntry | null)[]>([]);
+  const selectedCaseObj = useMemo(() => cases.find(c => c.id === caseId), [cases, caseId]);
+  // Reset forced state when case changes
+  useEffect(() => { setForcedFixed(null); setForcedList([]); }, [caseId]);
+
+  // Forced prize selection (bulk codes)
+  const [bulkForcedMode, setBulkForcedMode] = useState<'fixed' | 'list'>('fixed');
+  const [bulkForcedFixed, setBulkForcedFixed] = useState<ForcedEntry | null>(null);
+  const [bulkForcedList, setBulkForcedList] = useState<(ForcedEntry | null)[]>([]);
 
   const baseUrl = window.location.origin;
 
@@ -150,9 +164,15 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       return;
     }
 
+    const qty = Math.max(1, Number(quantity) || 1);
+    const forcedPrizes = buildForcedPrizes(forcedMode, forcedFixed, forcedList, qty);
+    if (forcedPrizes.length !== qty || forcedPrizes.some(e => !e || (Object.keys(e).length === 0))) {
+      setSending(false);
+      toast.error('Defina o prêmio garantido para todas as aberturas antes de enviar');
+      return;
+    }
     setSending(true);
     const targets = users.filter(u => selected.has(u.id));
-    const qty = Math.max(1, Number(quantity) || 1);
     let okCount = 0, waOk = 0, waErr = 0;
 
     for (const u of targets) {
@@ -169,6 +189,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         code,
         quantity: qty,
         status: 'pending',
+        forced_prizes: forcedPrizes,
       }).select().single();
 
       if (error) { console.error(error); continue; }
@@ -216,6 +237,8 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
   const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
+  const bulkSelectedCase = useMemo(() => cases.find(c => c.id === bulkCaseId), [cases, bulkCaseId]);
+  useEffect(() => { setBulkForcedFixed(null); setBulkForcedList([]); }, [bulkCaseId]);
 
   const toggleGrant = (id: string) => {
     const next = new Set(selectedGrants);
@@ -244,6 +267,11 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     if (!selectedCase) { toast.error('Caixa inválida'); return; }
     const n = Math.max(1, Math.min(2000, Number(bulkCount) || 0));
     const qty = Math.max(1, Number(bulkQty) || 1);
+    const forcedPrizes = buildForcedPrizes(bulkForcedMode, bulkForcedFixed, bulkForcedList, qty);
+    if (forcedPrizes.length !== qty || forcedPrizes.some(e => !e || Object.keys(e).length === 0)) {
+      toast.error('Defina o prêmio garantido para todas as aberturas antes de gerar');
+      return;
+    }
     setBulkGenerating(true);
     const rows = Array.from({ length: n }).map(() => ({
       owner_id: ownerId,
@@ -257,6 +285,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       code: generateCode(),
       quantity: qty,
       status: 'pending',
+      forced_prizes: forcedPrizes,
     }));
     const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code');
     setBulkGenerating(false);
@@ -367,6 +396,17 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
           </div>
         </div>
 
+        {selectedCaseObj && (
+          <ForcedPrizePicker
+            selectedCase={selectedCaseObj}
+            allCases={cases}
+            openingsCount={Math.max(1, Number(quantity) || 1)}
+            mode={forcedMode} setMode={setForcedMode}
+            fixed={forcedFixed} setFixed={setForcedFixed}
+            list={forcedList} setList={setForcedList}
+          />
+        )}
+
         {sendWhats && (
           <div>
             <label className="block text-xs font-medium mb-1 opacity-70">
@@ -474,6 +514,16 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
             </button>
           </div>
         </div>
+        {bulkSelectedCase && (
+          <ForcedPrizePicker
+            selectedCase={bulkSelectedCase}
+            allCases={cases}
+            openingsCount={Math.max(1, Number(bulkQty) || 1)}
+            mode={bulkForcedMode} setMode={setBulkForcedMode}
+            fixed={bulkForcedFixed} setFixed={setBulkForcedFixed}
+            list={bulkForcedList} setList={setBulkForcedList}
+          />
+        )}
         {lastBulkCodes.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-black/30 p-3 space-y-2">
             <div className="flex items-center justify-between">

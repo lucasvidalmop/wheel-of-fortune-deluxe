@@ -380,6 +380,7 @@ export type Database = {
           case_name: string
           code: string
           created_at: string
+          forced_prizes: Json | null
           id: string
           owner_id: string
           quantity: number
@@ -399,6 +400,7 @@ export type Database = {
           case_name?: string
           code: string
           created_at?: string
+          forced_prizes?: Json | null
           id?: string
           owner_id: string
           quantity?: number
@@ -418,6 +420,7 @@ export type Database = {
           case_name?: string
           code?: string
           created_at?: string
+          forced_prizes?: Json | null
           id?: string
           owner_id?: string
           quantity?: number
@@ -1469,6 +1472,7 @@ export type Database = {
           fixed_prize_enabled: boolean
           fixed_prize_queue: Json
           fixed_prize_segment: number | null
+          forced_prize_queue: Json
           guaranteed_next_win: boolean
           id: string
           name: string
@@ -1495,6 +1499,7 @@ export type Database = {
           fixed_prize_enabled?: boolean
           fixed_prize_queue?: Json
           fixed_prize_segment?: number | null
+          forced_prize_queue?: Json
           guaranteed_next_win?: boolean
           id?: string
           name: string
@@ -1521,6 +1526,7 @@ export type Database = {
           fixed_prize_enabled?: boolean
           fixed_prize_queue?: Json
           fixed_prize_segment?: number | null
+          forced_prize_queue?: Json
           guaranteed_next_win?: boolean
           id?: string
           name?: string
