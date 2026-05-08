@@ -68,7 +68,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [reelOffset, setReelOffset] = useState(0);
   const [reelTransition, setReelTransition] = useState('none');
   const [winner, setWinner] = useState<CasePrize | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'spinning' | 'done'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'spinning' | 'scratch' | 'done'>('idle');
+  const [scratchWinner, setScratchWinner] = useState<ScratchPrize | null>(null);
+  const [scratchCells, setScratchCells] = useState<ScratchPrize[]>([]);
+  const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
 
   const pc = cfg?.page_config || {};
 
