@@ -3,6 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 
+interface ScratchPrize {
+  label: string;
+  amount?: number;
+  image?: string;
+  weight?: number;
+}
 interface CasePrize {
   label: string;
   amount?: number;
@@ -10,6 +16,8 @@ interface CasePrize {
   rarity?: string;
   weight?: number;
   count?: number;
+  scratch?: boolean;
+  scratchPrizes?: ScratchPrize[];
 }
 interface LuckyCase {
   id: string;
@@ -60,7 +68,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [reelOffset, setReelOffset] = useState(0);
   const [reelTransition, setReelTransition] = useState('none');
   const [winner, setWinner] = useState<CasePrize | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'spinning' | 'done'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'spinning' | 'scratch' | 'done'>('idle');
+  const [scratchWinner, setScratchWinner] = useState<ScratchPrize | null>(null);
+  const [scratchCells, setScratchCells] = useState<ScratchPrize[]>([]);
+  const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
 
   const pc = cfg?.page_config || {};
 
@@ -223,7 +234,30 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           setReelOffset(offset);
           setTimeout(() => {
             setWinner(prize);
-            setPhase('done');
+            // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
+            if (prize?.scratch && data.scratch_prize) {
+              const sub: ScratchPrize = data.scratch_prize;
+              const pool: ScratchPrize[] = (prize.scratchPrizes || []).filter(x => x.label !== sub.label);
+              if (pool.length === 0) pool.push({ label: '—', weight: 1 });
+              const cells: ScratchPrize[] = [];
+              // 3 winner cells
+              for (let i = 0; i < 3; i++) cells.push(sub);
+              // 6 distractors (use other sub-prizes, randomized; ensure no 3 of any other are equal)
+              while (cells.length < 9) {
+                cells.push(pool[Math.floor(Math.random() * pool.length)]);
+              }
+              // shuffle
+              for (let i = cells.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cells[i], cells[j]] = [cells[j], cells[i]];
+              }
+              setScratchCells(cells);
+              setScratchedIdx(new Set());
+              setScratchWinner(sub);
+              setPhase('scratch');
+            } else {
+              setPhase('done');
+            }
           }, 10200);
         }, 50);
       });
@@ -240,8 +274,26 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setPhase('idle');
     setReelOffset(0);
     setReelPrizes([]);
+    setScratchCells([]);
+    setScratchedIdx(new Set());
+    setScratchWinner(null);
     refreshTokens();
   };
+
+  const handleScratchCell = (idx: number) => {
+    setScratchedIdx(prev => {
+      const next = new Set(prev);
+      next.add(idx);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (phase === 'scratch' && scratchedIdx.size >= 9) {
+      const t = setTimeout(() => setPhase('done'), 800);
+      return () => clearTimeout(t);
+    }
+  }, [phase, scratchedIdx]);
 
   // Background style
   const bgStyle: React.CSSProperties = useMemo(() => ({
@@ -428,13 +480,16 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               <p className="text-xs opacity-60 mt-1">
                 {phase === 'spinning'
                   ? 'Abrindo caixa...'
+                  : phase === 'scratch'
+                  ? 'Raspe as 9 áreas — 3 iguais revelam seu prêmio!'
                   : phase === 'done'
                   ? 'Você ganhou!'
                   : `Custo: ${openingCase.price_tokens} ${coinName} · Saldo: ${authedUser.tokens_balance} ${coinName}`}
               </p>
             </div>
 
-            {/* Reel */}
+            {/* Reel (hidden during scratch) */}
+            {phase !== 'scratch' && (
             <div id="luckybox-reel-viewport" className="relative h-44 overflow-hidden rounded-xl border border-white/10 bg-black/60 mb-6">
               {/* Center marker */}
               <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -translate-x-1/2 z-10" style={{ background: accent, boxShadow: `0 0 16px ${accent}` }} />
@@ -472,6 +527,45 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 ))}
               </div>
             </div>
+            )}
+
+            {/* Scratch card */}
+            {phase === 'scratch' && (
+              <div className="mb-6">
+                <div className="grid grid-cols-3 gap-2 max-w-sm mx-auto">
+                  {scratchCells.map((cell, idx) => {
+                    const revealed = scratchedIdx.has(idx);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleScratchCell(idx)}
+                        disabled={revealed}
+                        className="aspect-square rounded-xl relative overflow-hidden border border-white/10 transition active:scale-95"
+                        style={{
+                          background: revealed
+                            ? `linear-gradient(180deg, ${accent}22 0%, rgba(0,0,0,0.4) 100%)`
+                            : 'linear-gradient(135deg, #4a4a4a, #2a2a2a)',
+                        }}
+                      >
+                        {revealed ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center p-1 animate-fade-in">
+                            {cell.image
+                              ? <img src={cell.image} alt={cell.label} className="max-h-[60%] max-w-[80%] object-contain" />
+                              : <div className="text-3xl">🎁</div>}
+                            <div className="text-[10px] font-bold mt-1 text-center line-clamp-1 px-1">{cell.label}</div>
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-2xl font-black">?</div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="text-center mt-4 text-xs opacity-60">
+                  {scratchedIdx.size}/9 raspadas — clique em todas as áreas
+                </div>
+              </div>
+            )}
 
             {/* Idle: ready to spin */}
             {phase === 'idle' && (
@@ -490,14 +584,18 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             )}
 
             {/* Winner reveal */}
-            {phase === 'done' && winner && (
+            {phase === 'done' && winner && (() => {
+              const final = scratchWinner || winner;
+              const finalAmount = (scratchWinner?.amount ?? winner.amount) || 0;
+              return (
               <div className="text-center space-y-3 animate-fade-in">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10" style={{ background: rarityColor(winner.rarity) + '22', color: rarityColor(winner.rarity) }}>
                   <Sparkles size={16} />
-                  <span className="text-sm font-bold uppercase tracking-wider">{winner.rarity || 'Prêmio'}</span>
+                  <span className="text-sm font-bold uppercase tracking-wider">{scratchWinner ? '🎟️ Raspadinha' : (winner.rarity || 'Prêmio')}</span>
                 </div>
-                <div className="text-2xl font-bold">{winner.label}</div>
-                {(winner.amount || 0) > 0 && (
+                {final.image && <img src={final.image} alt={final.label} className="mx-auto max-h-24 object-contain" />}
+                <div className="text-2xl font-bold">{final.label}</div>
+                {finalAmount > 0 && (
                   <div className="text-sm opacity-80">Será pago em PIX automaticamente quando aprovado.</div>
                 )}
                 <div className="flex gap-3 justify-center pt-2">
@@ -514,7 +612,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   </button>
                 </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}

@@ -4,6 +4,12 @@ import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
+interface ScratchPrize {
+  label: string;
+  amount?: number;
+  image?: string;
+  weight?: number;
+}
 interface CasePrize {
   label: string;
   amount?: number;
@@ -11,6 +17,8 @@ interface CasePrize {
   rarity?: string;
   weight?: number;
   count?: number;
+  scratch?: boolean;
+  scratchPrizes?: ScratchPrize[];
 }
 
 interface LuckyCase {
@@ -738,6 +746,134 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                             <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleUploadPrizeImage(e.target.files[0], i)} />
                           </label>
                         </div>
+                      </div>
+
+                      {/* Mystery scratch toggle */}
+                      <div className="rounded-lg border border-purple-400/20 bg-purple-400/5 p-3 space-y-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={!!p.scratch}
+                            onChange={e => {
+                              const arr = [...editingCase.prizes];
+                              arr[i] = { ...arr[i], scratch: e.target.checked, scratchPrizes: arr[i].scratchPrizes || [{ label: 'Sub-prêmio', amount: 0, image: '', weight: 1 }] };
+                              setEditingCase({ ...editingCase, prizes: arr });
+                            }}
+                          />
+                          <span className="text-sm font-semibold">🎟️ Prêmio misterioso (raspadinha)</span>
+                          <span className="text-[10px] opacity-60">Ao ganhar este prêmio, abre uma raspadinha 3×3 com sub-prêmios.</span>
+                        </label>
+                        {p.scratch && (
+                          <div className="space-y-2 pt-2 border-t border-white/5">
+                            {(() => {
+                              const subs = p.scratchPrizes || [];
+                              const subTotal = subs.reduce((s, x) => s + (Number(x.weight) || 0), 0);
+                              return (
+                                <>
+                                  {subs.map((sp, si) => {
+                                    const sw = Number(sp.weight) || 0;
+                                    const sPct = subTotal > 0 ? (sw / subTotal) * 100 : 0;
+                                    return (
+                                      <div key={si} className="rounded-md border border-white/10 bg-black/20 p-2 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[10px] font-mono opacity-60">Sub #{si + 1} ≈ {sPct.toFixed(2)}%</span>
+                                          <button
+                                            onClick={() => {
+                                              const arr = [...editingCase.prizes];
+                                              const next = [...subs]; next.splice(si, 1);
+                                              arr[i] = { ...arr[i], scratchPrizes: next };
+                                              setEditingCase({ ...editingCase, prizes: arr });
+                                            }}
+                                            className="text-red-400 text-[10px] hover:underline"
+                                          >Remover</button>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                          <input
+                                            value={sp.label}
+                                            onChange={e => {
+                                              const arr = [...editingCase.prizes];
+                                              const next = [...subs]; next[si] = { ...next[si], label: e.target.value };
+                                              arr[i] = { ...arr[i], scratchPrizes: next };
+                                              setEditingCase({ ...editingCase, prizes: arr });
+                                            }}
+                                            placeholder="Nome"
+                                            className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
+                                          />
+                                          <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={sp.amount ? String(sp.amount).replace('.', ',') : ''}
+                                            onChange={e => {
+                                              const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                                              const num = raw === '' ? 0 : parseFloat(raw);
+                                              const arr = [...editingCase.prizes];
+                                              const next = [...subs]; next[si] = { ...next[si], amount: Number.isFinite(num) ? num : 0 };
+                                              arr[i] = { ...arr[i], scratchPrizes: next };
+                                              setEditingCase({ ...editingCase, prizes: arr });
+                                            }}
+                                            placeholder="R$"
+                                            className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
+                                          />
+                                          <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={sp.weight ? String(sp.weight).replace('.', ',') : ''}
+                                            onChange={e => {
+                                              const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                                              const num = raw === '' ? 0 : parseFloat(raw);
+                                              const arr = [...editingCase.prizes];
+                                              const next = [...subs]; next[si] = { ...next[si], weight: Number.isFinite(num) ? num : 0 };
+                                              arr[i] = { ...arr[i], scratchPrizes: next };
+                                              setEditingCase({ ...editingCase, prizes: arr });
+                                            }}
+                                            placeholder="Chance"
+                                            className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
+                                          />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            value={sp.image || ''}
+                                            onChange={e => {
+                                              const arr = [...editingCase.prizes];
+                                              const next = [...subs]; next[si] = { ...next[si], image: e.target.value };
+                                              arr[i] = { ...arr[i], scratchPrizes: next };
+                                              setEditingCase({ ...editingCase, prizes: arr });
+                                            }}
+                                            placeholder="URL imagem (opcional)"
+                                            className="flex-1 px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
+                                          />
+                                          <label className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-[10px] cursor-pointer hover:bg-white/10 flex items-center gap-1">
+                                            <Upload size={10} />
+                                            <input type="file" accept="image/*" hidden onChange={async e => {
+                                              const file = e.target.files?.[0]; if (!file) return;
+                                              try {
+                                                const res = await uploadAppAsset(file, 'luckybox');
+                                                const arr = [...editingCase.prizes];
+                                                const next = [...subs]; next[si] = { ...next[si], image: res.publicUrl };
+                                                arr[i] = { ...arr[i], scratchPrizes: next };
+                                                setEditingCase({ ...editingCase, prizes: arr });
+                                              } catch (err: any) { toast.error(err.message || 'Falha no upload'); }
+                                            }} />
+                                          </label>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  <button
+                                    onClick={() => {
+                                      const arr = [...editingCase.prizes];
+                                      arr[i] = { ...arr[i], scratchPrizes: [...subs, { label: 'Sub-prêmio', amount: 0, image: '', weight: 1 }] };
+                                      setEditingCase({ ...editingCase, prizes: arr });
+                                    }}
+                                    className="w-full px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs hover:bg-purple-500/25 flex items-center justify-center gap-1"
+                                  >
+                                    <Plus size={12} /> Sub-prêmio
+                                  </button>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
