@@ -260,6 +260,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
         {[
           { k: 'cases', l: 'Caixas' },
           { k: 'send', l: 'Enviar caixas' },
+          { k: 'history', l: 'Histórico' },
           { k: 'tag', l: 'Tag e Moeda' },
           { k: 'visual', l: 'Visual' },
           { k: 'tokens', l: 'Saldo de usuários' },
@@ -271,6 +272,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       </div>
 
       {tab === 'send' && <SendCasesTab ownerId={ownerId} cases={cases} cfg={cfg} />}
+      {tab === 'history' && <LuckyboxHistoryTab ownerId={ownerId} />}
 
       {/* === CASES === */}
       {tab === 'cases' && (
