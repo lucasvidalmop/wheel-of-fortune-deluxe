@@ -851,7 +851,6 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                             </div>
                                           </div>
                                         </div>
-                                        </div>
                                         <div className="text-[10px] opacity-60 -mb-1">Imagem · ideal 256×256px (PNG transparente)</div>
                                         <div className="flex items-center gap-2">
                                           <input
