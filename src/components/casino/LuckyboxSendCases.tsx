@@ -50,6 +50,19 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [template, setTemplate] = useState<string>(() => localStorage.getItem('luckybox_grant_template') || DEFAULT_TEMPLATE);
   const [sendWhats, setSendWhats] = useState(true);
 
+  // Forced prize selection (send-to-users)
+  const [forcedMode, setForcedMode] = useState<'fixed' | 'list'>('fixed');
+  const [forcedFixed, setForcedFixed] = useState<ForcedEntry | null>(null);
+  const [forcedList, setForcedList] = useState<(ForcedEntry | null)[]>([]);
+  const selectedCaseObj = useMemo(() => cases.find(c => c.id === caseId), [cases, caseId]);
+  // Reset forced state when case changes
+  useEffect(() => { setForcedFixed(null); setForcedList([]); }, [caseId]);
+
+  // Forced prize selection (bulk codes)
+  const [bulkForcedMode, setBulkForcedMode] = useState<'fixed' | 'list'>('fixed');
+  const [bulkForcedFixed, setBulkForcedFixed] = useState<ForcedEntry | null>(null);
+  const [bulkForcedList, setBulkForcedList] = useState<(ForcedEntry | null)[]>([]);
+
   const baseUrl = window.location.origin;
 
   const [evolutionApiUrl, setEvolutionApiUrl] = useState('');
