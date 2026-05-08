@@ -170,13 +170,62 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   const refreshTokens = async () => {
     if (!authedUser) return;
-    const { data } = await supabase.from('wheel_users').select('tokens_balance').eq('id', authedUser.id).maybeSingle();
+    const { data } = await (supabase as any).from('wheel_users').select('tokens_balance,case_grants').eq('id', authedUser.id).maybeSingle();
     if (data) {
-      const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? 0 };
+      const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? 0, case_grants: (data.case_grants as Record<string, number>) || {} };
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
     }
   };
+
+  // Capture ?code= from URL on first load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const c = params.get('code');
+    if (c) {
+      setPendingCode(c.toUpperCase());
+      setRedeemCode(c.toUpperCase());
+    }
+  }, []);
+
+  const doRedeem = async (codeOverride?: string) => {
+    if (!authedUser || !cfg) return;
+    const code = (codeOverride ?? redeemCode).trim();
+    if (!code) { toast.error('Digite um código'); return; }
+    setRedeeming(true);
+    try {
+      const { data, error } = await (supabase as any).rpc('redeem_luckybox_grant', {
+        p_owner_id: cfg.owner_id,
+        p_account_id: authedUser.account_id,
+        p_email: authedUser.email,
+        p_code: code,
+      });
+      if (error) throw error;
+      if (!data?.success) { toast.error(data?.error || 'Falha no resgate'); return; }
+      toast.success(`🎁 ${data.quantity}× ${data.case_name} liberada!`);
+      setRedeemCode('');
+      setPendingCode(null);
+      // Clear ?code= from URL without reload
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('code');
+        window.history.replaceState({}, '', url.toString());
+      } catch {}
+      await refreshTokens();
+    } catch (e: any) {
+      toast.error(e.message || 'Erro');
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
+  // Auto-redeem after login if pendingCode present
+  useEffect(() => {
+    if (authedUser && pendingCode && !redeeming) {
+      doRedeem(pendingCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authedUser?.id, pendingCode]);
 
   const buildReel = (prizes: CasePrize[], winnerIndex: number): { reel: CasePrize[]; targetIndex: number } => {
     // Build a long reel of ~60 random prizes + ensure winner sits at a specific index near the end
