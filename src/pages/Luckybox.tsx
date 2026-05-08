@@ -270,7 +270,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
     let spinDurationMs = 10000;
     let spinAudio: HTMLAudioElement | null = null;
-    const openingAudioUrl: string | undefined = pc?.spinAudioUrl;
+    const openingAudioUrl: string | undefined = pc?.spinAudioUrl || '/sounds/luckybox-open-default.mp3';
 
     if (openingAudioUrl) {
       try {
