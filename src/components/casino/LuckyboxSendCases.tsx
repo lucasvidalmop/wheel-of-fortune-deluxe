@@ -521,9 +521,10 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
           ) : (
             <div className="space-y-2">
               {grants.map(g => (
-                <div key={g.id} className="rounded-xl border border-white/10 bg-black/20 p-3 flex flex-wrap items-center gap-2">
+                <div key={g.id} className={`rounded-xl border p-3 flex flex-wrap items-center gap-2 ${selectedGrants.has(g.id) ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-black/20'}`}>
+                  <input type="checkbox" checked={selectedGrants.has(g.id)} onChange={() => toggleGrant(g.id)} className="cursor-pointer" />
                   <div className="flex-1 min-w-[200px]">
-                    <div className="text-sm font-semibold">{g.recipient_name || g.recipient_email}</div>
+                    <div className="text-sm font-semibold">{g.recipient_name || g.recipient_email || <span className="opacity-50">— avulso —</span>}</div>
                     <div className="text-xs opacity-60 truncate">{g.case_name} · qtd {g.quantity}</div>
                   </div>
                   <div className="flex items-center gap-1">
