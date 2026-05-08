@@ -255,6 +255,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       <div className="flex flex-wrap gap-2">
         {[
           { k: 'cases', l: 'Caixas' },
+          { k: 'send', l: 'Enviar caixas' },
           { k: 'tag', l: 'Tag e Moeda' },
           { k: 'visual', l: 'Visual' },
           { k: 'tokens', l: 'Saldo de usuários' },
@@ -264,6 +265,8 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
           </button>
         ))}
       </div>
+
+      {tab === 'send' && <SendCasesTab ownerId={ownerId} cases={cases} cfg={cfg} />}
 
       {/* === CASES === */}
       {tab === 'cases' && (
