@@ -475,6 +475,8 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm">Histórico de envios</h3>
           <button onClick={loadGrants} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1">
             <RefreshCw size={12} /> Atualizar
           </button>
