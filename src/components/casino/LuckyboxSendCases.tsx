@@ -175,7 +175,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       okCount++;
 
       if (sendWhats && u.phone) {
-        const link = `${baseUrl}/luckybox=${cfg.tag}?code=${code}`;
+        const link = `${baseUrl}/luckybox=${cfg.tag}`;
         const msg = template
           .replace(/\{nome\}/g, u.name || '')
           .replace(/\{caixa\}/g, selectedCase.name)
@@ -230,7 +230,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       toast.error('Configure a API do WhatsApp');
       return;
     }
-    const link = `${baseUrl}/luckybox=${cfg.tag}?code=${g.code}`;
+    const link = `${baseUrl}/luckybox=${cfg.tag}`;
     const msg = template
       .replace(/\{nome\}/g, g.recipient_name || '')
       .replace(/\{caixa\}/g, g.case_name)
@@ -255,7 +255,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     toast.success('Código copiado');
   };
   const copyLink = (code: string) => {
-    navigator.clipboard.writeText(`${baseUrl}/luckybox=${cfg.tag}?code=${code}`);
+    navigator.clipboard.writeText(`${baseUrl}/luckybox=${cfg.tag}`);
     toast.success('Link copiado');
   };
 
