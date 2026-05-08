@@ -215,6 +215,28 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
+  const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
+
+  const toggleGrant = (id: string) => {
+    const next = new Set(selectedGrants);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedGrants(next);
+  };
+  const allGrantsSelected = grants.length > 0 && grants.every(g => selectedGrants.has(g.id));
+  const toggleAllGrants = () => {
+    if (allGrantsSelected) setSelectedGrants(new Set());
+    else setSelectedGrants(new Set(grants.map(g => g.id)));
+  };
+  const deleteSelectedGrants = async () => {
+    if (selectedGrants.size === 0) return;
+    if (!confirm(`Excluir ${selectedGrants.size} código(s) selecionado(s)?`)) return;
+    const ids = Array.from(selectedGrants);
+    const { error } = await (supabase as any).from('luckybox_grants').delete().in('id', ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} excluído(s)`);
+    setSelectedGrants(new Set());
+    loadGrants();
+  };
 
   const handleGenerateBulk = async () => {
     if (!bulkCaseId) { toast.error('Selecione uma caixa'); return; }
@@ -475,11 +497,21 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="font-semibold text-sm">Histórico de envios</h3>
-          <button onClick={loadGrants} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1">
-            <RefreshCw size={12} /> Atualizar
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={toggleAllGrants} className="text-xs px-2 py-1 rounded border border-white/10 bg-white/5 hover:bg-white/10">
+              {allGrantsSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+            </button>
+            {selectedGrants.size > 0 && (
+              <button onClick={deleteSelectedGrants} className="text-xs px-2 py-1 rounded border border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 flex items-center gap-1">
+                <Trash2 size={12} /> Excluir {selectedGrants.size}
+              </button>
+            )}
+            <button onClick={loadGrants} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1">
+              <RefreshCw size={12} /> Atualizar
+            </button>
+          </div>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {grantsLoading ? (
@@ -489,9 +521,10 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
           ) : (
             <div className="space-y-2">
               {grants.map(g => (
-                <div key={g.id} className="rounded-xl border border-white/10 bg-black/20 p-3 flex flex-wrap items-center gap-2">
+                <div key={g.id} className={`rounded-xl border p-3 flex flex-wrap items-center gap-2 ${selectedGrants.has(g.id) ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-black/20'}`}>
+                  <input type="checkbox" checked={selectedGrants.has(g.id)} onChange={() => toggleGrant(g.id)} className="cursor-pointer" />
                   <div className="flex-1 min-w-[200px]">
-                    <div className="text-sm font-semibold">{g.recipient_name || g.recipient_email}</div>
+                    <div className="text-sm font-semibold">{g.recipient_name || g.recipient_email || <span className="opacity-50">— avulso —</span>}</div>
                     <div className="text-xs opacity-60 truncate">{g.case_name} · qtd {g.quantity}</div>
                   </div>
                   <div className="flex items-center gap-1">
