@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload, ChevronUp, ChevronDown, ChevronsUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import SendCasesTab from './LuckyboxSendCases';
 import LuckyboxHistoryTab from './LuckyboxHistoryTab';
@@ -180,6 +180,21 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
     else { toast.success('Excluída'); load(); }
   };
 
+  const moveCase = async (id: string, dir: -1 | 1) => {
+    const sorted = [...cases].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    const idx = sorted.findIndex(c => c.id === id);
+    const swapIdx = idx + dir;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= sorted.length) return;
+    const a = sorted[idx], b = sorted[swapIdx];
+    [sorted[idx], sorted[swapIdx]] = [b, a];
+    const updated = sorted.map((c, i) => ({ ...c, position: i }));
+    setCases(updated);
+    await Promise.all([
+      (supabase as any).from('luckybox_cases').update({ position: updated.findIndex(x => x.id === a.id) }).eq('id', a.id),
+      (supabase as any).from('luckybox_cases').update({ position: updated.findIndex(x => x.id === b.id) }).eq('id', b.id),
+    ]);
+  };
+
   const loadTokenUsers = async () => {
     setTokensLoading(true);
     const { data } = await (supabase as any).from('wheel_users')
@@ -308,7 +323,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {cases.map(c => (
+              {[...cases].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c, idx, arr) => (
                  <div key={c.id} className={`rounded-2xl border bg-white/[0.04] p-4 space-y-3 transition ${c.is_active === false ? 'border-white/5 opacity-60' : 'border-white/10'}`}>
                    <div className="flex items-start gap-3">
                      <div className="w-20 h-20 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
@@ -356,6 +371,24 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                      <button onClick={() => deleteCase(c.id)} className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs">
                        <Trash2 size={12} />
                      </button>
+                     <div className="flex flex-col gap-1 ml-1">
+                       <button
+                         onClick={() => moveCase(c.id, -1)}
+                         disabled={idx === 0}
+                         title="Mover para cima"
+                         className="p-1 rounded border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                       >
+                         <ArrowUp size={12} />
+                       </button>
+                       <button
+                         onClick={() => moveCase(c.id, 1)}
+                         disabled={idx === arr.length - 1}
+                         title="Mover para baixo"
+                         className="p-1 rounded border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                       >
+                         <ArrowDown size={12} />
+                       </button>
+                     </div>
                    </div>
                  </div>
               ))}
