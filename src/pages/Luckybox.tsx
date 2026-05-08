@@ -381,8 +381,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           // jitter so it doesn't always land in dead center
           const jitter = (Math.random() - 0.5) * 80;
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
-          const timingFunction = syncedToDefaultAudio ? SYNCED_LUCKYBOX_AUDIO_EASING : 'cubic-bezier(0.08, 0.55, 0.16, 1)';
-          setReelTransition(`transform ${spinDurationMs}ms ${timingFunction}`);
+          setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
           setReelOffset(offset);
 
           try {
