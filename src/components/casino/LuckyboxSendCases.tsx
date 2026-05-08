@@ -51,9 +51,24 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
 
   const baseUrl = window.location.origin;
 
-  const evolutionApiUrl = localStorage.getItem('evolution_api_url') || '';
-  const evolutionApiKey = localStorage.getItem('evolution_api_key') || '';
-  const evolutionInstance = localStorage.getItem('evolution_instance') || '';
+  const [evolutionApiUrl, setEvolutionApiUrl] = useState('');
+  const [evolutionApiKey, setEvolutionApiKey] = useState('');
+  const [evolutionInstance, setEvolutionInstance] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('wheel_configs')
+        .select('config')
+        .eq('owner_id', ownerId)
+        .limit(1)
+        .maybeSingle();
+      const ds = data?.config?.dashboardSettings || {};
+      setEvolutionApiUrl(ds.evolutionApiUrl || localStorage.getItem('evolution_api_url') || '');
+      setEvolutionApiKey(ds.evolutionApiKey || localStorage.getItem('evolution_api_key') || '');
+      setEvolutionInstance(ds.evolutionInstance || localStorage.getItem('evolution_instance') || '');
+    })();
+  }, [ownerId]);
 
   const loadUsers = async () => {
     setUsersLoading(true);
