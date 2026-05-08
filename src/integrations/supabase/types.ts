@@ -1747,6 +1747,10 @@ export type Database = {
         Args: { p_account_id: string; p_case_id: string; p_owner_id: string }
         Returns: Json
       }
+      open_luckybox_case_pool: {
+        Args: { p_account_id: string; p_case_id: string; p_owner_id: string }
+        Returns: Json
+      }
       pop_link_prize_pool: {
         Args: { p_count: number; p_link_id: string }
         Returns: Json
