@@ -738,10 +738,14 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               return (
               <div className="text-center space-y-3 animate-fade-in">
                 {scratchWinner ? (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10" style={{ background: rarityColor(winner.rarity) + '22', color: rarityColor(winner.rarity) }}>
-                    <Sparkles size={16} />
-                    <span className="text-sm font-bold uppercase tracking-wider">🎟️ Raspadinha</span>
-                  </div>
+                  <>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10" style={{ background: rarityColor(winner.rarity) + '22', color: rarityColor(winner.rarity) }}>
+                      <Sparkles size={16} />
+                      <span className="text-sm font-bold uppercase tracking-wider">🎟️ Raspadinha</span>
+                    </div>
+                    {final.image && <img src={final.image} alt={final.label} className="mx-auto max-h-24 object-contain" />}
+                    <div className="text-2xl font-bold">{final.label}</div>
+                  </>
                 ) : (
                   <div
                     className="mx-auto max-w-xs rounded-2xl border p-5 flex flex-col items-center gap-3"
