@@ -480,6 +480,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               <p className="text-xs opacity-60 mt-1">
                 {phase === 'spinning'
                   ? 'Abrindo caixa...'
+                  : phase === 'scratch'
+                  ? 'Raspe as 9 áreas — 3 iguais revelam seu prêmio!'
                   : phase === 'done'
                   ? 'Você ganhou!'
                   : `Custo: ${openingCase.price_tokens} ${coinName} · Saldo: ${authedUser.tokens_balance} ${coinName}`}
