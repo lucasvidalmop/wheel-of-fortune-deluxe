@@ -120,7 +120,7 @@ export default function ScratchCell({ revealed, onReveal, accent, children }: Pr
   };
 
   return (
-    <div ref={wrapRef} className="absolute inset-0">
+    <div ref={wrapRef} className="absolute inset-0 select-none" style={{ touchAction: 'none' }}>
       {children}
       {!revealed && (
         <canvas
@@ -130,8 +130,10 @@ export default function ScratchCell({ revealed, onReveal, accent, children }: Pr
           onPointerUp={onUp}
           onPointerLeave={onUp}
           onPointerCancel={onUp}
-          className={`absolute inset-0 touch-none cursor-grab active:cursor-grabbing transition-opacity duration-300 ${autoHide ? 'opacity-0' : 'opacity-100'}`}
-          style={{ borderRadius: 'inherit', boxShadow: `inset 0 0 18px ${accent}22` }}
+          onDragStart={(e) => e.preventDefault()}
+          onContextMenu={(e) => e.preventDefault()}
+          className={`absolute inset-0 touch-none select-none cursor-grab active:cursor-grabbing transition-opacity duration-300 ${autoHide ? 'opacity-0' : 'opacity-100'}`}
+          style={{ borderRadius: 'inherit', boxShadow: `inset 0 0 18px ${accent}22`, WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
         />
       )}
     </div>
