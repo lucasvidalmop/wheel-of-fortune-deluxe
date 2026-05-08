@@ -396,6 +396,17 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
           </div>
         </div>
 
+        {selectedCaseObj && (
+          <ForcedPrizePicker
+            selectedCase={selectedCaseObj}
+            allCases={cases}
+            openingsCount={Math.max(1, Number(quantity) || 1)}
+            mode={forcedMode} setMode={setForcedMode}
+            fixed={forcedFixed} setFixed={setForcedFixed}
+            list={forcedList} setList={setForcedList}
+          />
+        )}
+
         {sendWhats && (
           <div>
             <label className="block text-xs font-medium mb-1 opacity-70">
