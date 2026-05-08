@@ -289,8 +289,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       }
       const winIndex = data.prize_index ?? 0;
       const prize = c.prizes[winIndex] || data.prize;
-      const syncedToDefaultAudio = Math.abs(spinDurationMs - SYNCED_LUCKYBOX_AUDIO_DURATION_MS) < 700;
-      const { reel, targetIndex } = buildReel(c.prizes, winIndex, syncedToDefaultAudio ? SYNCED_LUCKYBOX_AUDIO_STEPS : undefined);
+      const { reel, targetIndex } = buildReel(c.prizes, winIndex);
       setReelPrizes(reel);
       setReelOffset(0);
       setReelTransition('none');
