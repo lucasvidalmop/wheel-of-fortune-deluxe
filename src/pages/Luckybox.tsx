@@ -268,27 +268,33 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
-    // Determine spin duration from custom audio (if configured), otherwise default 10s
-    const audioUrl: string | undefined = pc?.spinAudioUrl;
-    let spinDurationMs = 10000;
-    let spinAudio: HTMLAudioElement | null = null;
-    if (audioUrl) {
+    const spinDurationMs = 10000;
+
+    // Preload tick sound (short MP3) into an AudioBuffer for low-latency overlapping playback
+    const tickUrl: string | undefined = pc?.spinAudioUrl;
+    let tickCtx: AudioContext | null = null;
+    let tickBuffer: AudioBuffer | null = null;
+    if (tickUrl) {
       try {
-        spinAudio = new Audio(audioUrl);
-        spinAudio.preload = 'auto';
-        const ms = await new Promise<number>((resolve) => {
-          const a = spinAudio!;
-          const done = (v: number) => resolve(Math.max(1500, Math.round(v)));
-          if (a.readyState >= 1 && isFinite(a.duration) && a.duration > 0) {
-            done(a.duration * 1000); return;
-          }
-          a.addEventListener('loadedmetadata', () => done((a.duration || 10) * 1000), { once: true });
-          a.addEventListener('error', () => done(10000), { once: true });
-          setTimeout(() => done((a.duration || 10) * 1000), 4000);
-        });
-        spinDurationMs = ms;
-      } catch { spinDurationMs = 10000; }
+        const AC: typeof AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
+        tickCtx = new AC();
+        if (tickCtx.state === 'suspended') { try { await tickCtx.resume(); } catch {} }
+        const res = await fetch(tickUrl);
+        const arr = await res.arrayBuffer();
+        tickBuffer = await tickCtx.decodeAudioData(arr.slice(0));
+      } catch { tickCtx = null; tickBuffer = null; }
     }
+    const playTick = () => {
+      if (!tickCtx || !tickBuffer) return;
+      try {
+        const src = tickCtx.createBufferSource();
+        src.buffer = tickBuffer;
+        const gain = tickCtx.createGain();
+        gain.gain.value = 0.85;
+        src.connect(gain).connect(tickCtx.destination);
+        src.start(0);
+      } catch {}
+    };
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
