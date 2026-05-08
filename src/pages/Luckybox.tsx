@@ -750,14 +750,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   <button onClick={closeOpening} className="px-5 py-2.5 rounded-xl font-semibold border border-white/10 bg-white/5 hover:bg-white/10 transition">
                     Resgatar
                   </button>
-                  <button
-                    onClick={() => { closeOpening(); setTimeout(() => handleOpenCase(openingCase), 100); }}
-                    disabled={authedUser.tokens_balance < openingCase.price_tokens}
-                    className="px-5 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
-                    style={{ background: accent, color: pc.btnTextColor || '#000' }}
-                  >
-                    Abrir outra
-                  </button>
                 </div>
               </div>
               );
