@@ -30,11 +30,16 @@ interface LuckyCase {
   price_tokens: number;
   image_url: string;
   rarity: string;
-  mode: 'probability' | 'pool';
+  mode: 'probability' | 'pool' | 'case_pool';
   prizes: CasePrize[];
+  prize_pool?: any;
   position: number;
   is_active: boolean;
 }
+
+interface CasePoolItem { case_id: string; weight: number }
+interface CasePoolConfig { quantity: number; items: CasePoolItem[] }
+const emptyCasePool = (): CasePoolConfig => ({ quantity: 3, items: [] });
 
 const RARITIES = [
   { key: 'common', label: 'Comum', color: '#9CA3AF' },
