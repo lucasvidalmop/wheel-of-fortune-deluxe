@@ -673,16 +673,25 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             {/* Idle: ready to spin */}
             {phase === 'idle' && (
               <div className="text-center pt-2">
-                <button
-                  onClick={() => handleOpenCase(openingCase)}
-                  disabled={authedUser.tokens_balance < openingCase.price_tokens}
-                  className="px-8 py-3 rounded-xl font-bold text-base transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                  style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}55` }}
-                >
-                  {authedUser.tokens_balance < openingCase.price_tokens
-                    ? `${coinName} insuficientes`
-                    : `Sortear · ${openingCase.price_tokens} ${coinName}`}
-                </button>
+                {(() => {
+                  const gq = authedUser.case_grants?.[openingCase.id] || 0;
+                  const free = gq > 0;
+                  const cant = !free && authedUser.tokens_balance < openingCase.price_tokens;
+                  return (
+                    <button
+                      onClick={() => handleOpenCase(openingCase)}
+                      disabled={cant}
+                      className="px-8 py-3 rounded-xl font-bold text-base transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                      style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}55` }}
+                    >
+                      {cant
+                        ? `${coinName} insuficientes`
+                        : free
+                        ? `🎁 Abrir grátis (${gq} restante${gq > 1 ? 's' : ''})`
+                        : `Sortear · ${openingCase.price_tokens} ${coinName}`}
+                    </button>
+                  );
+                })()}
               </div>
             )}
 
