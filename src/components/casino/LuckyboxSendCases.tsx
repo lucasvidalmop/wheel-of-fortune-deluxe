@@ -268,7 +268,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         </div>
         <p className="text-xs opacity-60">
           Selecione uma caixa, escolha os inscritos e envie. Cada inscrito recebe um código único de resgate
-          (não custa tokens). O código pode ser usado uma única vez na página da Luckybox.
+          (não custa tokens). O código pode ser usado uma única vez na página da Caixa Misteriosa.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
