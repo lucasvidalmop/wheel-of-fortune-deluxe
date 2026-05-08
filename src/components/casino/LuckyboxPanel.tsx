@@ -43,6 +43,7 @@ const RARITIES = [
   { key: 'legendary', label: 'Lendário', color: '#A855F7' },
   { key: 'mythic', label: 'Mítico', color: '#EF4444' },
   { key: 'supreme', label: 'Supremo', color: '#FACC15' },
+  { key: 'mystery', label: 'Misterioso', color: '#EC4899' },
 ];
 
 const newPrize = (): CasePrize => ({ label: 'Prêmio', amount: 0, image: '', rarity: 'common', weight: 1, count: 1 });
