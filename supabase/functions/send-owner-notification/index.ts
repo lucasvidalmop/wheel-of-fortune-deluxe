@@ -29,6 +29,18 @@ const buildMessage = (type: z.infer<typeof BodySchema>["type"], payload: Record<
     return `💰 *Pagamento automático realizado*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🎁 *Prêmio:* ${payload.prize || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🔑 *PIX:* ${payload.pixKey || "-"}\n🕐 *Data:* ${now}`;
   }
 
+  if (type === "luckybox_purchased") {
+    return `📦 *Caixa comprada (Luckybox)*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n💰 *Custo:* ${payload.priceTokens || 0} ${payload.coinName || "tokens"}\n🕐 *Data:* ${now}`;
+  }
+
+  if (type === "luckybox_redeemed") {
+    return `🎟️ *Código de caixa resgatado*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n📦 *Quantidade:* ${payload.quantity || 1}\n🔑 *Código:* ${payload.code || "-"}\n🕐 *Data:* ${now}`;
+  }
+
+  if (type === "luckybox_prize") {
+    return `🏆 *Prêmio de caixa ganho*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n✨ *Prêmio:* ${payload.prizeLabel || "-"}${payload.prizeAmount ? `\n💵 *Valor:* ${formatCurrency(payload.prizeAmount)}` : ""}\n🕐 *Data:* ${now}`;
+  }
+
   // deposit_confirmed
   return `✅ *Depósito PIX confirmado*\n\n👤 *Nome:* ${payload.userName || "-"}\n📱 *WhatsApp:* ${payload.userPhone || "-"}\n🆔 *ID da conta:* ${payload.userAccountId || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🕐 *Data:* ${now}`;
 };
