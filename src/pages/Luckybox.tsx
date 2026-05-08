@@ -150,14 +150,15 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         toast.error('Conta não encontrada');
         return;
       }
-      // fetch tokens balance
-      const { data: u } = await supabase.from('wheel_users').select('tokens_balance,name,email,account_id').eq('id', user.id).maybeSingle();
+      // fetch tokens balance + case_grants
+      const { data: u } = await (supabase as any).from('wheel_users').select('tokens_balance,name,email,account_id,case_grants').eq('id', user.id).maybeSingle();
       const sess = {
         id: user.id,
         name: u?.name || user.name || '',
         account_id: u?.account_id || loginAccount.trim(),
         email: u?.email || loginEmail.trim(),
         tokens_balance: u?.tokens_balance ?? 0,
+        case_grants: (u?.case_grants as Record<string, number>) || {},
       };
       setAuthedUser(sess);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(sess));
