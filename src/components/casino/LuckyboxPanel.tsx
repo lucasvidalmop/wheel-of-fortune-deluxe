@@ -535,7 +535,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             {/* Spin audio (mp3) */}
             <div>
               <label className="block text-xs font-medium mb-1 opacity-70">
-                Áudio da animação (MP3) <span className="opacity-50 font-normal">· a duração da animação será igual à duração do áudio</span>
+                Som de tique do sorteio (MP3 curto) <span className="opacity-50 font-normal">· toca a cada item que passa pelo ponteiro, acompanhando a desaceleração</span>
               </label>
               <div className="flex items-center gap-3">
                 <div className="w-24 h-14 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0 text-[10px] opacity-60">

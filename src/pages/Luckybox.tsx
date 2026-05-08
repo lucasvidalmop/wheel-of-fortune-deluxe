@@ -268,27 +268,33 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
-    // Determine spin duration from custom audio (if configured), otherwise default 10s
-    const audioUrl: string | undefined = pc?.spinAudioUrl;
-    let spinDurationMs = 10000;
-    let spinAudio: HTMLAudioElement | null = null;
-    if (audioUrl) {
+    const spinDurationMs = 10000;
+
+    // Preload tick sound (short MP3) into an AudioBuffer for low-latency overlapping playback
+    const tickUrl: string | undefined = pc?.spinAudioUrl;
+    let tickCtx: AudioContext | null = null;
+    let tickBuffer: AudioBuffer | null = null;
+    if (tickUrl) {
       try {
-        spinAudio = new Audio(audioUrl);
-        spinAudio.preload = 'auto';
-        const ms = await new Promise<number>((resolve) => {
-          const a = spinAudio!;
-          const done = (v: number) => resolve(Math.max(1500, Math.round(v)));
-          if (a.readyState >= 1 && isFinite(a.duration) && a.duration > 0) {
-            done(a.duration * 1000); return;
-          }
-          a.addEventListener('loadedmetadata', () => done((a.duration || 10) * 1000), { once: true });
-          a.addEventListener('error', () => done(10000), { once: true });
-          setTimeout(() => done((a.duration || 10) * 1000), 4000);
-        });
-        spinDurationMs = ms;
-      } catch { spinDurationMs = 10000; }
+        const AC: typeof AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
+        tickCtx = new AC();
+        if (tickCtx.state === 'suspended') { try { await tickCtx.resume(); } catch {} }
+        const res = await fetch(tickUrl);
+        const arr = await res.arrayBuffer();
+        tickBuffer = await tickCtx.decodeAudioData(arr.slice(0));
+      } catch { tickCtx = null; tickBuffer = null; }
     }
+    const playTick = () => {
+      if (!tickCtx || !tickBuffer) return;
+      try {
+        const src = tickCtx.createBufferSource();
+        src.buffer = tickBuffer;
+        const gain = tickCtx.createGain();
+        gain.gain.value = 0.85;
+        src.connect(gain).connect(tickCtx.destination);
+        src.start(0);
+      } catch {}
+    };
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
@@ -368,12 +374,31 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
-          // Start audio in sync with animation
-          if (spinAudio) {
-            try { spinAudio.currentTime = 0; spinAudio.play().catch(() => {}); } catch {}
-            window.setTimeout(() => {
-              try { spinAudio!.pause(); spinAudio!.currentTime = 0; } catch {}
-            }, spinDurationMs);
+
+          // Per-item tick: watch the actual transform each frame and play a tick
+          // when the item passing the center pointer changes. This stays in sync
+          // with the CSS easing automatically (including the deceleration).
+          if (tickBuffer) {
+            const reelInner = document.getElementById('luckybox-reel-inner') || (reelEl?.firstElementChild as HTMLElement | null);
+            const startTs = performance.now();
+            let lastIdx: number | null = null;
+            const tick = () => {
+              const now = performance.now();
+              const elapsed = now - startTs;
+              if (!reelInner) { if (elapsed < spinDurationMs) requestAnimationFrame(tick); return; }
+              const m = new DOMMatrixReadOnly(getComputedStyle(reelInner).transform);
+              const tx = m.m41; // current translateX in px
+              // Item index currently aligned with the center pointer
+              const centerIdx = Math.round((halfViewport - tx - cardHalf) / itemWidth);
+              if (lastIdx === null) lastIdx = centerIdx;
+              else if (centerIdx !== lastIdx) {
+                playTick();
+                lastIdx = centerIdx;
+              }
+              if (elapsed < spinDurationMs + 50) requestAnimationFrame(tick);
+              else { try { tickCtx?.close(); } catch {} }
+            };
+            requestAnimationFrame(tick);
           }
           setTimeout(() => {
             setWinner(prize);
@@ -762,6 +787,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.95), transparent)' }} />
 
               <div
+                id="luckybox-reel-inner"
                 className="absolute inset-y-0 left-0 flex items-center gap-2 will-change-transform"
                 style={{
                   transform: `translateX(${reelOffset}px)`,
