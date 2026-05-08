@@ -262,6 +262,27 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
+    // Detect mystery box (rarity mystery or has scratch prize)
+    const isMystery = (c.rarity || '').toLowerCase() === 'mystery' || c.prizes?.some(p => p.scratch);
+    let spinDurationMs = 10000;
+    if (isMystery) {
+      try {
+        const audio = new Audio(MYSTERY_SOUND_URL);
+        audio.muted = muted;
+        spinAudioRef.current = audio;
+        await new Promise<void>((resolve) => {
+          const done = () => resolve();
+          audio.addEventListener('loadedmetadata', done, { once: true });
+          audio.addEventListener('error', done, { once: true });
+          setTimeout(done, 1500);
+        });
+        if (isFinite(audio.duration) && audio.duration > 0) {
+          spinDurationMs = Math.round(audio.duration * 1000);
+        }
+        audio.play().catch(() => {});
+      } catch {}
+    }
+
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
         p_owner_id: cfg!.owner_id,
@@ -273,6 +294,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         toast.error(data?.error || 'Erro ao abrir caixa');
         setOpeningCase(null);
         setPhase('idle');
+        if (spinAudioRef.current) { try { spinAudioRef.current.pause(); } catch {} }
         return;
       }
       const winIndex = data.prize_index ?? 0;
