@@ -134,6 +134,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
 
   const saveCase = async () => {
     if (!editingCase) return;
+    const isCasePool = editingCase.mode === 'case_pool';
     const payload: any = {
       owner_id: ownerId,
       name: editingCase.name,
@@ -141,13 +142,24 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       image_url: editingCase.image_url || '',
       rarity: editingCase.rarity || 'common',
       mode: editingCase.mode || 'probability',
-      prizes: editingCase.prizes || [],
+      prizes: isCasePool ? [] : (editingCase.prizes || []),
       position: editingCase.position ?? 0,
       is_active: editingCase.is_active !== false,
     };
+    if (isCasePool) {
+      const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
+      payload.prize_pool = {
+        quantity: Math.max(1, Math.min(10, Number(pool.quantity) || 1)),
+        items: (pool.items || []).filter(it => it.case_id),
+      };
+      if (!payload.prize_pool.items.length) {
+        toast.error('Adicione ao menos uma caixa ao pool');
+        return;
+      }
+    } else if (editingCase.mode === 'pool') {
+      payload.prize_pool = null;
+    }
     if (editingCase.id) {
-      // reset pool when prizes change for pool mode
-      if (editingCase.mode === 'pool') payload.prize_pool = null;
       const { error } = await (supabase as any).from('luckybox_cases').update(payload).eq('id', editingCase.id);
       if (error) { toast.error(error.message); return; }
       toast.success('Caixa atualizada');
