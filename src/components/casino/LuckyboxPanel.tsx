@@ -4,6 +4,12 @@ import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
+interface ScratchPrize {
+  label: string;
+  amount?: number;
+  image?: string;
+  weight?: number;
+}
 interface CasePrize {
   label: string;
   amount?: number;
@@ -11,6 +17,8 @@ interface CasePrize {
   rarity?: string;
   weight?: number;
   count?: number;
+  scratch?: boolean;
+  scratchPrizes?: ScratchPrize[];
 }
 
 interface LuckyCase {
