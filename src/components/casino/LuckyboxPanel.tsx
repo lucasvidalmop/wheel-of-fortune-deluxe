@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import SendCasesTab from './LuckyboxSendCases';
 
 interface ScratchPrize {
   label: string;
