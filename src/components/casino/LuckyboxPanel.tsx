@@ -828,7 +828,8 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                               arr[i] = { ...arr[i], scratchPrizes: next };
                                               setEditingCase({ ...editingCase, prizes: arr });
                                             }}
-                                            placeholder="Chance"
+                                            placeholder="Chance (0 = nunca)"
+                                            title="Peso da chance. 0 = nunca sai. Quanto maior em relação aos outros, mais chance."
                                             className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
                                           />
                                         </div>
