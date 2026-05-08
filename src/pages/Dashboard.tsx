@@ -95,6 +95,9 @@ interface PersistedDashboardSettings {
   notifyReferralEnabled: boolean;
   notifyPendingPaymentEnabled: boolean;
   notifyDepositEnabled: boolean;
+  notifyLuckyboxPurchasedEnabled: boolean;
+  notifyLuckyboxRedeemedEnabled: boolean;
+  notifyLuckyboxPrizeEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
