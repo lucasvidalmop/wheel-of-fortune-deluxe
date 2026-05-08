@@ -7862,8 +7862,74 @@ function Dashboard() {
                 </div>
               </GlassCard>
 
+              {/* Toggle: Caixa comprada (Luckybox) */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 flex items-center justify-center">
+                      <Package size={20} className="text-fuchsia-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Caixa Aberta (Luckybox)</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um inscrito abrir uma caixa</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyLuckyboxPurchasedEnabled(!notifyLuckyboxPurchasedEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxPurchasedEnabled ? 'bg-fuchsia-500 shadow-lg shadow-fuchsia-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxPurchasedEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Toggle: Código de caixa resgatado */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                      <Link2 size={20} className="text-violet-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Código de Caixa Resgatado</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um inscrito resgatar um código de caixa</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyLuckyboxRedeemedEnabled(!notifyLuckyboxRedeemedEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxRedeemedEnabled ? 'bg-violet-500 shadow-lg shadow-violet-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxRedeemedEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Toggle: Prêmio de caixa ganho */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                      <Sparkles size={20} className="text-yellow-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Prêmio de Caixa Ganho</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um inscrito ganhar um prêmio na caixa</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifyLuckyboxPrizeEnabled(!notifyLuckyboxPrizeEnabled)}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxPrizeEnabled ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxPrizeEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
               {/* Configuração WhatsApp para Notificações */}
-              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled || notifyDepositEnabled) && (
+              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled || notifyDepositEnabled || notifyLuckyboxPurchasedEnabled || notifyLuckyboxRedeemedEnabled || notifyLuckyboxPrizeEnabled) && (
                 <GlassCard className="p-5 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
