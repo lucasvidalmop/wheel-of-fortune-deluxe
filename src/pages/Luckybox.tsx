@@ -205,6 +205,22 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       if (error) throw error;
       if (!data?.success) { toast.error(data?.error || 'Falha no resgate'); return; }
       toast.success(`🎁 ${data.quantity}× ${data.case_name} liberada!`);
+      try {
+        supabase.functions.invoke('send-owner-notification', {
+          body: {
+            ownerId: cfg.owner_id,
+            type: 'luckybox_redeemed',
+            payload: {
+              userName: authedUser.name,
+              userEmail: authedUser.email,
+              accountId: authedUser.account_id,
+              caseName: data.case_name,
+              quantity: data.quantity,
+              code,
+            },
+          },
+        });
+      } catch {}
       setRedeemCode('');
       setPendingCode(null);
       // Clear ?code= from URL without reload
