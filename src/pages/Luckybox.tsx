@@ -296,15 +296,25 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
               const sub: ScratchPrize = data.scratch_prize;
-              const pool: ScratchPrize[] = (prize.scratchPrizes || []).filter(x => x.label !== sub.label);
-              if (pool.length === 0) pool.push({ label: '—', weight: 1 });
+              const allPrizes: ScratchPrize[] = (prize.scratchPrizes || []);
+              // Distractor pool: prefer other sub-prizes; if none, reuse all sub-prizes (still safe — we cap repeats below)
+              let pool: ScratchPrize[] = allPrizes.filter(x => x.label !== sub.label);
+              if (pool.length === 0) pool = allPrizes.length > 0 ? [...allPrizes] : [sub];
               const cells: ScratchPrize[] = [];
               // 3 winner cells
               for (let i = 0; i < 3; i++) cells.push(sub);
-              // 6 distractors (use other sub-prizes, randomized; ensure no 3 of any other are equal)
-              while (cells.length < 9) {
-                cells.push(pool[Math.floor(Math.random() * pool.length)]);
+              // 6 distractors — cap each non-winner label at 2 occurrences to avoid false 3-match
+              const counts: Record<string, number> = {};
+              let safety = 0;
+              while (cells.length < 9 && safety++ < 200) {
+                const cand = pool[Math.floor(Math.random() * pool.length)];
+                const key = cand.label;
+                if ((counts[key] || 0) >= 2) continue;
+                counts[key] = (counts[key] || 0) + 1;
+                cells.push(cand);
               }
+              // Final fallback: pad with winner image (won't create extra 3-match because we already have exactly 3)
+              while (cells.length < 9) cells.push(sub);
               // shuffle
               for (let i = cells.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
