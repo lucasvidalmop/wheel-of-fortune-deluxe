@@ -330,7 +330,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                          {c.price_tokens} {cfg.coin_name || 'Coins'}
                        </div>
                        <div className="text-[10px] uppercase tracking-wider mt-1 opacity-60">
-                         {c.mode === 'pool' ? 'Pool fixo' : 'Probabilidade'} · {(c.prizes || []).length} prêmios
+                         {c.mode === 'case_pool'
+                           ? `🎁 Sorteia caixas · ${(c.prize_pool?.quantity ?? 1)}× de ${(c.prize_pool?.items?.length ?? 0)}`
+                           : `${c.mode === 'pool' ? 'Pool fixo' : 'Probabilidade'} · ${(c.prizes || []).length} prêmios`}
                        </div>
                      </div>
                    </div>
