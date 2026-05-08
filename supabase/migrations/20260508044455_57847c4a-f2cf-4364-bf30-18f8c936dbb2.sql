@@ -1,0 +1,1 @@
+CREATE POLICY "Owners delete own luckybox_openings" ON public.luckybox_openings FOR DELETE TO authenticated USING ((owner_id = auth.uid()) OR has_role(auth.uid(), 'admin'::app_role));
