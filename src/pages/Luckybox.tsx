@@ -966,7 +966,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     <Sparkles size={14} />
                     <span className="text-xs font-bold uppercase tracking-wider">📦 Você ganhou {drawnCases.length} caixa{drawnCases.length > 1 ? 's' : ''}!</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-5">
+                  <div className="flex flex-wrap justify-center gap-3 mb-5">
                     {drawnCases.map((d, i) => (
                       <div
                         key={i}
