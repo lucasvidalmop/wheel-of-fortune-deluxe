@@ -272,37 +272,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
-    let spinDurationMs = 10000;
-    let spinAudio: HTMLAudioElement | null = null;
-    const openingAudioUrl: string | undefined = pc?.spinAudioUrl || DEFAULT_LUCKYBOX_OPEN_AUDIO_URL;
-
-    if (openingAudioUrl) {
-      try {
-        spinAudio = new Audio(openingAudioUrl);
-        spinAudio.preload = 'auto';
-        spinAudio.volume = 0.85;
-        await new Promise<void>((resolve) => {
-          if (!spinAudio) { resolve(); return; }
-          if (Number.isFinite(spinAudio.duration) && spinAudio.duration > 0) { resolve(); return; }
-          let settled = false;
-          const done = () => {
-            if (settled) return;
-            settled = true;
-            spinAudio?.removeEventListener('loadedmetadata', done);
-            spinAudio?.removeEventListener('error', done);
-            resolve();
-          };
-          const timeout = window.setTimeout(done, 2500);
-          const finish = () => { window.clearTimeout(timeout); done(); };
-          spinAudio.addEventListener('loadedmetadata', finish, { once: true });
-          spinAudio.addEventListener('error', finish, { once: true });
-          spinAudio.load();
-        });
-        if (Number.isFinite(spinAudio.duration) && spinAudio.duration > 0) {
-          spinDurationMs = Math.round(spinAudio.duration * 1000);
-        }
-      } catch { spinAudio = null; spinDurationMs = 10000; }
-    }
+    const spinDurationMs = 10000;
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
