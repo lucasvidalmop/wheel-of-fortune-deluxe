@@ -272,37 +272,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
-    let spinDurationMs = 10000;
-    let spinAudio: HTMLAudioElement | null = null;
-    const openingAudioUrl: string | undefined = pc?.spinAudioUrl || DEFAULT_LUCKYBOX_OPEN_AUDIO_URL;
-
-    if (openingAudioUrl) {
-      try {
-        spinAudio = new Audio(openingAudioUrl);
-        spinAudio.preload = 'auto';
-        spinAudio.volume = 0.85;
-        await new Promise<void>((resolve) => {
-          if (!spinAudio) { resolve(); return; }
-          if (Number.isFinite(spinAudio.duration) && spinAudio.duration > 0) { resolve(); return; }
-          let settled = false;
-          const done = () => {
-            if (settled) return;
-            settled = true;
-            spinAudio?.removeEventListener('loadedmetadata', done);
-            spinAudio?.removeEventListener('error', done);
-            resolve();
-          };
-          const timeout = window.setTimeout(done, 2500);
-          const finish = () => { window.clearTimeout(timeout); done(); };
-          spinAudio.addEventListener('loadedmetadata', finish, { once: true });
-          spinAudio.addEventListener('error', finish, { once: true });
-          spinAudio.load();
-        });
-        if (Number.isFinite(spinAudio.duration) && spinAudio.duration > 0) {
-          spinDurationMs = Math.round(spinAudio.duration * 1000);
-        }
-      } catch { spinAudio = null; spinDurationMs = 10000; }
-    }
+    const spinDurationMs = 10000;
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
@@ -319,8 +289,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       }
       const winIndex = data.prize_index ?? 0;
       const prize = c.prizes[winIndex] || data.prize;
-      const syncedToDefaultAudio = Math.abs(spinDurationMs - SYNCED_LUCKYBOX_AUDIO_DURATION_MS) < 700;
-      const { reel, targetIndex } = buildReel(c.prizes, winIndex, syncedToDefaultAudio ? SYNCED_LUCKYBOX_AUDIO_STEPS : undefined);
+      const { reel, targetIndex } = buildReel(c.prizes, winIndex);
       setReelPrizes(reel);
       setReelOffset(0);
       setReelTransition('none');
@@ -384,20 +353,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
           setReelOffset(offset);
 
-          try {
-            if (spinAudio) {
-              spinAudio.pause();
-              spinAudio.currentTime = 0;
-              void spinAudio.play().catch(() => {});
-            }
-          } catch {}
           setTimeout(() => {
-            try {
-              if (spinAudio) {
-                spinAudio.pause();
-                spinAudio.currentTime = 0;
-              }
-            } catch {}
             setWinner(prize);
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
