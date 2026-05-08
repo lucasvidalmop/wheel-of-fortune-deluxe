@@ -234,7 +234,30 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           setReelOffset(offset);
           setTimeout(() => {
             setWinner(prize);
-            setPhase('done');
+            // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
+            if (prize?.scratch && data.scratch_prize) {
+              const sub: ScratchPrize = data.scratch_prize;
+              const pool: ScratchPrize[] = (prize.scratchPrizes || []).filter(x => x.label !== sub.label);
+              if (pool.length === 0) pool.push({ label: '—', weight: 1 });
+              const cells: ScratchPrize[] = [];
+              // 3 winner cells
+              for (let i = 0; i < 3; i++) cells.push(sub);
+              // 6 distractors (use other sub-prizes, randomized; ensure no 3 of any other are equal)
+              while (cells.length < 9) {
+                cells.push(pool[Math.floor(Math.random() * pool.length)]);
+              }
+              // shuffle
+              for (let i = cells.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cells[i], cells[j]] = [cells[j], cells[i]];
+              }
+              setScratchCells(cells);
+              setScratchedIdx(new Set());
+              setScratchWinner(sub);
+              setPhase('scratch');
+            } else {
+              setPhase('done');
+            }
           }, 10200);
         }, 50);
       });
