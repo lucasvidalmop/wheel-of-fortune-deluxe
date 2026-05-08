@@ -1682,6 +1682,9 @@ function Dashboard() {
     setNotifyReferralEnabled(!!settings.notifyReferralEnabled);
     setNotifyPendingPaymentEnabled(!!settings.notifyPendingPaymentEnabled);
     setNotifyDepositEnabled(!!settings.notifyDepositEnabled);
+    setNotifyLuckyboxPurchasedEnabled(!!settings.notifyLuckyboxPurchasedEnabled);
+    setNotifyLuckyboxRedeemedEnabled(!!settings.notifyLuckyboxRedeemedEnabled);
+    setNotifyLuckyboxPrizeEnabled(!!settings.notifyLuckyboxPrizeEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
