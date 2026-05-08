@@ -970,7 +970,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     {drawnCases.map((d, i) => (
                       <div
                         key={i}
-                        className="rounded-xl border p-3 flex flex-col items-center gap-2 relative overflow-hidden"
+                        className="rounded-xl border p-3 flex flex-col items-center gap-2 relative overflow-hidden w-36"
                         style={{
                           borderColor: rarityColor(d.rarity) + '88',
                           background: `linear-gradient(180deg, ${rarityColor(d.rarity)}22 0%, rgba(0,0,0,0.5) 100%)`,
