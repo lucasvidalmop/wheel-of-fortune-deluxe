@@ -368,6 +368,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
+          // Start audio in sync with animation
+          if (spinAudio) {
+            try { spinAudio.currentTime = 0; spinAudio.play().catch(() => {}); } catch {}
+            window.setTimeout(() => {
+              try { spinAudio!.pause(); spinAudio!.currentTime = 0; } catch {}
+            }, spinDurationMs);
+          }
           setTimeout(() => {
             setWinner(prize);
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
