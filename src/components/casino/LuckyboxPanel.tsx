@@ -741,7 +741,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                           <button onClick={() => setEditingCase({ ...editingCase, prizes: editingCase.prizes.filter((_, j) => j !== i) })} className="text-red-400 text-xs hover:underline ml-2">Remover</button>
                         </div>
                       </div>
-                      {!collapsedPrizes.has(i) && (<></>)}
+                      {!collapsedPrizes.has(i) && (<>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <div className="md:col-span-2">
                           <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Nome do prêmio</label>
