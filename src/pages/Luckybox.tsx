@@ -966,11 +966,11 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     <Sparkles size={14} />
                     <span className="text-xs font-bold uppercase tracking-wider">📦 Você ganhou {drawnCases.length} caixa{drawnCases.length > 1 ? 's' : ''}!</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-5">
+                  <div className="flex flex-wrap justify-center gap-3 mb-5">
                     {drawnCases.map((d, i) => (
                       <div
                         key={i}
-                        className="rounded-xl border p-3 flex flex-col items-center gap-2 relative overflow-hidden"
+                        className="rounded-xl border p-3 flex flex-col items-center gap-2 relative overflow-hidden w-36"
                         style={{
                           borderColor: rarityColor(d.rarity) + '88',
                           background: `linear-gradient(180deg, ${rarityColor(d.rarity)}22 0%, rgba(0,0,0,0.5) 100%)`,
