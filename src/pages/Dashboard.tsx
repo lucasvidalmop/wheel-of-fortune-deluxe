@@ -7876,7 +7876,7 @@ function Dashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setNotifyLuckyboxPurchasedEnabled(!notifyLuckyboxPurchasedEnabled)}
+                    onClick={() => { settingsUserEditedRef.current = true; setNotifyLuckyboxPurchasedEnabled(!notifyLuckyboxPurchasedEnabled); }}
                     className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxPurchasedEnabled ? 'bg-fuchsia-500 shadow-lg shadow-fuchsia-500/30' : 'bg-white/[0.1]'}`}
                   >
                     <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxPurchasedEnabled ? 'left-[26px]' : 'left-1'}`} />
@@ -7898,7 +7898,7 @@ function Dashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setNotifyLuckyboxRedeemedEnabled(!notifyLuckyboxRedeemedEnabled)}
+                    onClick={() => { settingsUserEditedRef.current = true; setNotifyLuckyboxRedeemedEnabled(!notifyLuckyboxRedeemedEnabled); }}
                     className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxRedeemedEnabled ? 'bg-violet-500 shadow-lg shadow-violet-500/30' : 'bg-white/[0.1]'}`}
                   >
                     <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxRedeemedEnabled ? 'left-[26px]' : 'left-1'}`} />
@@ -7920,7 +7920,7 @@ function Dashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setNotifyLuckyboxPrizeEnabled(!notifyLuckyboxPrizeEnabled)}
+                    onClick={() => { settingsUserEditedRef.current = true; setNotifyLuckyboxPrizeEnabled(!notifyLuckyboxPrizeEnabled); }}
                     className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyLuckyboxPrizeEnabled ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30' : 'bg-white/[0.1]'}`}
                   >
                     <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyLuckyboxPrizeEnabled ? 'left-[26px]' : 'left-1'}`} />
