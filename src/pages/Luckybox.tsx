@@ -4,6 +4,15 @@ import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
 
+const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
+const playPrizeWinSound = () => {
+  try {
+    const a = new Audio(PRIZE_WIN_SOUND_URL);
+    a.volume = 0.85;
+    a.play().catch(() => {});
+  } catch { /* noop */ }
+};
+
 interface ScratchPrize {
   label: string;
   amount?: number;
