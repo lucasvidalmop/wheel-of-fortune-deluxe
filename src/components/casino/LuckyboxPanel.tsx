@@ -765,6 +765,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         </label>
                         {p.scratch && (
                           <div className="space-y-2 pt-2 border-t border-white/5">
+                            <div className="text-[10px] opacity-70 leading-relaxed">
+                              Defina o peso de cada sub-prêmio em <b>Chance</b>. A % real é calculada proporcionalmente ao total. <b>0 = nunca vai sair</b>.
+                            </div>
                             {(() => {
                               const subs = p.scratchPrizes || [];
                               const subTotal = subs.reduce((s, x) => s + (Number(x.weight) || 0), 0);
@@ -774,9 +777,11 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                     const sw = Number(sp.weight) || 0;
                                     const sPct = subTotal > 0 ? (sw / subTotal) * 100 : 0;
                                     return (
-                                      <div key={si} className="rounded-md border border-white/10 bg-black/20 p-2 space-y-2">
+                                       <div key={si} className={`rounded-md border p-2 space-y-2 ${sw === 0 ? 'border-red-400/30 bg-red-500/5' : 'border-white/10 bg-black/20'}`}>
                                         <div className="flex items-center justify-between">
-                                          <span className="text-[10px] font-mono opacity-60">Sub #{si + 1} ≈ {sPct.toFixed(2)}%</span>
+                                          <span className="text-[10px] font-mono opacity-60">
+                                            Sub #{si + 1} · {sw === 0 ? <span className="text-red-300">desativado (0%)</span> : <>chance real ≈ {sPct.toFixed(2)}%</>}
+                                          </span>
                                           <button
                                             onClick={() => {
                                               const arr = [...editingCase.prizes];
@@ -826,7 +831,8 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                               arr[i] = { ...arr[i], scratchPrizes: next };
                                               setEditingCase({ ...editingCase, prizes: arr });
                                             }}
-                                            placeholder="Chance"
+                                            placeholder="Chance (0 = nunca)"
+                                            title="Peso da chance. 0 = nunca sai. Quanto maior em relação aos outros, mais chance."
                                             className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
                                           />
                                         </div>
