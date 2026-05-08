@@ -209,6 +209,57 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     loadGrants();
   };
 
+  // ===== Bulk standalone codes (first-come-first-served) =====
+  const [bulkCount, setBulkCount] = useState(10);
+  const [bulkQty, setBulkQty] = useState(1);
+  const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
+
+  const handleGenerateBulk = async () => {
+    if (!bulkCaseId) { toast.error('Selecione uma caixa'); return; }
+    const selectedCase = cases.find(c => c.id === bulkCaseId);
+    if (!selectedCase) { toast.error('Caixa inválida'); return; }
+    const n = Math.max(1, Math.min(2000, Number(bulkCount) || 0));
+    const qty = Math.max(1, Number(bulkQty) || 1);
+    setBulkGenerating(true);
+    const rows = Array.from({ length: n }).map(() => ({
+      owner_id: ownerId,
+      case_id: bulkCaseId,
+      case_name: selectedCase.name,
+      wheel_user_id: null,
+      recipient_name: '',
+      recipient_phone: '',
+      recipient_email: '',
+      recipient_account_id: '',
+      code: generateCode(),
+      quantity: qty,
+      status: 'pending',
+    }));
+    const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code');
+    setBulkGenerating(false);
+    if (error) { toast.error(error.message); return; }
+    const codes = (data || []).map((r: any) => r.code);
+    setLastBulkCodes(codes);
+    toast.success(`${codes.length} código(s) gerado(s)`);
+    loadGrants();
+  };
+
+  const copyAllBulk = () => {
+    if (lastBulkCodes.length === 0) return;
+    navigator.clipboard.writeText(lastBulkCodes.join('\n'));
+    toast.success('Códigos copiados');
+  };
+
+  const exportBulkCsv = () => {
+    if (lastBulkCodes.length === 0) return;
+    const link = `${baseUrl}/luckybox=${cfg.tag}`;
+    const csv = ['code,link', ...lastBulkCodes.map(c => `${c},${link}?code=${c}`)].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `codigos-${cfg.tag}-${Date.now()}.csv`; a.click();
+  };
+
   const cancelGrant = async (id: string) => {
     if (!confirm('Cancelar este código?')) return;
     const { error } = await (supabase as any).from('luckybox_grants').update({ status: 'cancelled' }).eq('id', id);
