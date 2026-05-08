@@ -270,8 +270,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       setReelOffset(0);
       setReelTransition('none');
 
-      // Update tokens
-      const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? authedUser.tokens_balance - c.price_tokens };
+      // Update tokens + case_grants
+      const updated = {
+        ...authedUser,
+        tokens_balance: data.tokens_balance ?? (data.used_grant ? authedUser.tokens_balance : authedUser.tokens_balance - c.price_tokens),
+        case_grants: (data.case_grants as Record<string, number>) || authedUser.case_grants || {},
+      };
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
 
