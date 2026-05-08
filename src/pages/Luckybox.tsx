@@ -612,7 +612,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   </button>
                 </div>
               </div>
-            )}
+              </div>
+              );
+            })()}
           </div>
         </div>
       )}
