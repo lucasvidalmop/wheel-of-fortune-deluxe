@@ -415,9 +415,66 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         </div>
       </div>
 
+      {/* Bulk standalone codes */}
+      <div className="rounded-2xl border border-fuchsia-500/20 bg-fuchsia-500/[0.04] p-5 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Copy size={18} className="text-fuchsia-400" />
+          <h3 className="font-semibold">Gerar códigos avulsos (quem pegar, pegou)</h3>
+        </div>
+        <p className="text-xs opacity-60">
+          Gera códigos sem destinatário. Distribua como quiser (post, grupo, stream) — qualquer usuário logado na página da Caixa pode resgatar, mas cada código só funciona uma vez.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs font-medium mb-1 opacity-70">Caixa</label>
+            <select value={bulkCaseId} onChange={e => setBulkCaseId(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm">
+              {cases.length === 0 && <option value="">Nenhuma caixa</option>}
+              {cases.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1 opacity-70">Qtd. de códigos</label>
+            <input type="number" min={1} max={2000} value={bulkCount}
+              onChange={e => setBulkCount(Math.max(1, Number(e.target.value) || 1))}
+              className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1 opacity-70">Caixas por código</label>
+            <input type="number" min={1} value={bulkQty}
+              onChange={e => setBulkQty(Math.max(1, Number(e.target.value) || 1))}
+              className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm" />
+          </div>
+          <div className="flex items-end">
+            <button onClick={handleGenerateBulk} disabled={bulkGenerating || !bulkCaseId}
+              className="w-full px-4 py-2.5 rounded-xl bg-fuchsia-500 text-black font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-40 hover:brightness-110">
+              {bulkGenerating ? 'Gerando...' : 'Gerar códigos'}
+            </button>
+          </div>
+        </div>
+        {lastBulkCodes.length > 0 && (
+          <div className="rounded-xl border border-white/10 bg-black/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-xs opacity-70">{lastBulkCodes.length} código(s) gerado(s) agora</div>
+              <div className="flex gap-2">
+                <button onClick={copyAllBulk} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-xs flex items-center gap-1">
+                  <Copy size={12} /> Copiar todos
+                </button>
+                <button onClick={exportBulkCsv} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-xs">
+                  Exportar CSV
+                </button>
+              </div>
+            </div>
+            <div className="max-h-40 overflow-auto font-mono text-xs grid grid-cols-2 md:grid-cols-4 gap-1">
+              {lastBulkCodes.map(c => (
+                <div key={c} className="px-2 py-1 rounded bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-200">{c}</div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm">Histórico de envios</h3>
           <button onClick={loadGrants} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1">
             <RefreshCw size={12} /> Atualizar
           </button>
