@@ -766,18 +766,21 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         {p.scratch && (
                           <div className="space-y-2 pt-2 border-t border-white/5">
                             <div className="text-[10px] opacity-70 leading-relaxed">
-                              Defina o peso de cada sub-prêmio em <b>Chance</b>. A % real é calculada proporcionalmente ao total. <b>0 = nunca vai sair</b>.
+                              Defina a <b>% de chance</b> de cada sub-prêmio. <b>0 = nunca vai sair</b>. O ideal é que a soma dê 100%.
                             </div>
                             {(() => {
                               const subs = p.scratchPrizes || [];
                               const subTotal = subs.reduce((s, x) => s + (Number(x.weight) || 0), 0);
                               return (
                                 <>
+                                  <div className={`text-[10px] font-mono px-2 py-1 rounded ${Math.abs(subTotal - 100) < 0.01 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+                                    Soma das chances: {subTotal.toFixed(2)}% {Math.abs(subTotal - 100) < 0.01 ? '✓' : '(recomendado: 100%)'}
+                                  </div>
                                   {subs.map((sp, si) => {
                                     const sw = Number(sp.weight) || 0;
                                     const sPct = subTotal > 0 ? (sw / subTotal) * 100 : 0;
                                     return (
-                                       <div key={si} className={`rounded-md border p-2 space-y-2 ${sw === 0 ? 'border-red-400/30 bg-red-500/5' : 'border-white/10 bg-black/20'}`}>
+                                      <div key={si} className={`rounded-md border p-2 space-y-2 ${sw === 0 ? 'border-red-400/30 bg-red-500/5' : 'border-white/10 bg-black/20'}`}>
                                         <div className="flex items-center justify-between">
                                           <span className="text-[10px] font-mono opacity-60">
                                             Sub #{si + 1} · {sw === 0 ? <span className="text-red-300">desativado (0%)</span> : <>chance real ≈ {sPct.toFixed(2)}%</>}
