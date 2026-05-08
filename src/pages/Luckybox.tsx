@@ -269,17 +269,20 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       try {
         const audio = new Audio(MYSTERY_SOUND_URL);
         audio.muted = muted;
+        audio.preload = 'auto';
         spinAudioRef.current = audio;
         await new Promise<void>((resolve) => {
           const done = () => resolve();
+          if (audio.readyState >= 1 && isFinite(audio.duration) && audio.duration > 0) { resolve(); return; }
           audio.addEventListener('loadedmetadata', done, { once: true });
+          audio.addEventListener('canplaythrough', done, { once: true });
           audio.addEventListener('error', done, { once: true });
-          setTimeout(done, 1500);
+          setTimeout(done, 2500);
         });
         if (isFinite(audio.duration) && audio.duration > 0) {
           spinDurationMs = Math.round(audio.duration * 1000);
         }
-        audio.play().catch(() => {});
+        // NÃO toca aqui — toca junto com o início da animação para sincronizar
       } catch {}
     }
 
