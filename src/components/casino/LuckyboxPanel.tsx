@@ -774,6 +774,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
               </div>
             </div>
 
+            {editingCase.mode !== 'case_pool' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm">Prêmios</h4>
