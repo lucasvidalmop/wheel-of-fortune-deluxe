@@ -180,7 +180,25 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
     else { toast.success('Excluída'); load(); }
   };
 
-  const loadTokenUsers = async () => {
+  const moveCase = async (id: string, dir: -1 | 1) => {
+    const sorted = [...cases].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    const idx = sorted.findIndex(c => c.id === id);
+    const swapIdx = idx + dir;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= sorted.length) return;
+    const a = sorted[idx], b = sorted[swapIdx];
+    // Reassign positions for the whole list to guarantee uniqueness/consistency
+    [sorted[idx], sorted[swapIdx]] = [b, a];
+    const updated = sorted.map((c, i) => ({ ...c, position: i }));
+    setCases(updated);
+    const { error } = await (supabase as any).rpc('noop'); // placeholder removed below
+    void error;
+    // Persist both swapped positions
+    await Promise.all([
+      (supabase as any).from('luckybox_cases').update({ position: updated.findIndex(x => x.id === a.id) }).eq('id', a.id),
+      (supabase as any).from('luckybox_cases').update({ position: updated.findIndex(x => x.id === b.id) }).eq('id', b.id),
+    ]);
+  };
+
     setTokensLoading(true);
     const { data } = await (supabase as any).from('wheel_users')
       .select('id,name,email,account_id,tokens_balance')
