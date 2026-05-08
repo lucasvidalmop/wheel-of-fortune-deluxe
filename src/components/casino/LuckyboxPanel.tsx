@@ -371,6 +371,24 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                      <button onClick={() => deleteCase(c.id)} className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs">
                        <Trash2 size={12} />
                      </button>
+                     <div className="flex flex-col gap-1 ml-1">
+                       <button
+                         onClick={() => moveCase(c.id, -1)}
+                         disabled={idx === 0}
+                         title="Mover para cima"
+                         className="p-1 rounded border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                       >
+                         <ArrowUp size={12} />
+                       </button>
+                       <button
+                         onClick={() => moveCase(c.id, 1)}
+                         disabled={idx === arr.length - 1}
+                         title="Mover para baixo"
+                         className="p-1 rounded border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                       >
+                         <ArrowDown size={12} />
+                       </button>
+                     </div>
                    </div>
                  </div>
               ))}
