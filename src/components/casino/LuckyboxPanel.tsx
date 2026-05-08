@@ -766,18 +766,21 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         {p.scratch && (
                           <div className="space-y-2 pt-2 border-t border-white/5">
                             <div className="text-[10px] opacity-70 leading-relaxed">
-                              Defina o peso de cada sub-prêmio em <b>Chance</b>. A % real é calculada proporcionalmente ao total. <b>0 = nunca vai sair</b>.
+                              Defina a <b>% de chance</b> de cada sub-prêmio. <b>0 = nunca vai sair</b>. O ideal é que a soma dê 100%.
                             </div>
                             {(() => {
                               const subs = p.scratchPrizes || [];
                               const subTotal = subs.reduce((s, x) => s + (Number(x.weight) || 0), 0);
                               return (
                                 <>
+                                  <div className={`text-[10px] font-mono px-2 py-1 rounded ${Math.abs(subTotal - 100) < 0.01 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+                                    Soma das chances: {subTotal.toFixed(2)}% {Math.abs(subTotal - 100) < 0.01 ? '✓' : '(recomendado: 100%)'}
+                                  </div>
                                   {subs.map((sp, si) => {
                                     const sw = Number(sp.weight) || 0;
                                     const sPct = subTotal > 0 ? (sw / subTotal) * 100 : 0;
                                     return (
-                                       <div key={si} className={`rounded-md border p-2 space-y-2 ${sw === 0 ? 'border-red-400/30 bg-red-500/5' : 'border-white/10 bg-black/20'}`}>
+                                      <div key={si} className={`rounded-md border p-2 space-y-2 ${sw === 0 ? 'border-red-400/30 bg-red-500/5' : 'border-white/10 bg-black/20'}`}>
                                         <div className="flex items-center justify-between">
                                           <span className="text-[10px] font-mono opacity-60">
                                             Sub #{si + 1} · {sw === 0 ? <span className="text-red-300">desativado (0%)</span> : <>chance real ≈ {sPct.toFixed(2)}%</>}
@@ -793,48 +796,60 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                           >Remover</button>
                                         </div>
                                         <div className="grid grid-cols-3 gap-2">
-                                          <input
-                                            value={sp.label}
-                                            onChange={e => {
-                                              const arr = [...editingCase.prizes];
-                                              const next = [...subs]; next[si] = { ...next[si], label: e.target.value };
-                                              arr[i] = { ...arr[i], scratchPrizes: next };
-                                              setEditingCase({ ...editingCase, prizes: arr });
-                                            }}
-                                            placeholder="Nome"
-                                            className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
-                                          />
-                                          <input
-                                            type="text"
-                                            inputMode="decimal"
-                                            value={sp.amount ? String(sp.amount).replace('.', ',') : ''}
-                                            onChange={e => {
-                                              const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                                              const num = raw === '' ? 0 : parseFloat(raw);
-                                              const arr = [...editingCase.prizes];
-                                              const next = [...subs]; next[si] = { ...next[si], amount: Number.isFinite(num) ? num : 0 };
-                                              arr[i] = { ...arr[i], scratchPrizes: next };
-                                              setEditingCase({ ...editingCase, prizes: arr });
-                                            }}
-                                            placeholder="R$"
-                                            className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
-                                          />
-                                          <input
-                                            type="text"
-                                            inputMode="decimal"
-                                            value={sp.weight ? String(sp.weight).replace('.', ',') : ''}
-                                            onChange={e => {
-                                              const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                                              const num = raw === '' ? 0 : parseFloat(raw);
-                                              const arr = [...editingCase.prizes];
-                                              const next = [...subs]; next[si] = { ...next[si], weight: Number.isFinite(num) ? num : 0 };
-                                              arr[i] = { ...arr[i], scratchPrizes: next };
-                                              setEditingCase({ ...editingCase, prizes: arr });
-                                            }}
-                                            placeholder="Chance (0 = nunca)"
-                                            title="Peso da chance. 0 = nunca sai. Quanto maior em relação aos outros, mais chance."
-                                            className="px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
-                                          />
+                                          <div className="space-y-1">
+                                            <div className="text-[9px] uppercase tracking-wide opacity-60">Nome</div>
+                                            <input
+                                              value={sp.label}
+                                              onChange={e => {
+                                                const arr = [...editingCase.prizes];
+                                                const next = [...subs]; next[si] = { ...next[si], label: e.target.value };
+                                                arr[i] = { ...arr[i], scratchPrizes: next };
+                                                setEditingCase({ ...editingCase, prizes: arr });
+                                              }}
+                                              placeholder="Nome"
+                                              className="w-full px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <div className="text-[9px] uppercase tracking-wide opacity-60">Valor (R$)</div>
+                                            <input
+                                              type="text"
+                                              inputMode="decimal"
+                                              value={sp.amount ? String(sp.amount).replace('.', ',') : ''}
+                                              onChange={e => {
+                                                const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                                                const num = raw === '' ? 0 : parseFloat(raw);
+                                                const arr = [...editingCase.prizes];
+                                                const next = [...subs]; next[si] = { ...next[si], amount: Number.isFinite(num) ? num : 0 };
+                                                arr[i] = { ...arr[i], scratchPrizes: next };
+                                                setEditingCase({ ...editingCase, prizes: arr });
+                                              }}
+                                              placeholder="0,00"
+                                              className="w-full px-2 py-1.5 rounded border border-white/10 bg-white/5 text-xs"
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <div className="text-[9px] uppercase tracking-wide opacity-60">% Chance</div>
+                                            <div className="relative">
+                                              <input
+                                                type="text"
+                                                inputMode="decimal"
+                                                value={sp.weight !== undefined && sp.weight !== null ? String(sp.weight).replace('.', ',') : ''}
+                                                onChange={e => {
+                                                  const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                                                  const num = raw === '' ? 0 : parseFloat(raw);
+                                                  const arr = [...editingCase.prizes];
+                                                  const next = [...subs]; next[si] = { ...next[si], weight: Number.isFinite(num) ? num : 0 };
+                                                  arr[i] = { ...arr[i], scratchPrizes: next };
+                                                  setEditingCase({ ...editingCase, prizes: arr });
+                                                }}
+                                                placeholder="0 = nunca"
+                                                title="% de chance deste sub-prêmio. 0 = nunca sai."
+                                                className="w-full px-2 py-1.5 pr-6 rounded border border-white/10 bg-white/5 text-xs"
+                                              />
+                                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] opacity-50 pointer-events-none">%</span>
+                                            </div>
+                                          </div>
                                         </div>
                                         <div className="text-[10px] opacity-60 -mb-1">Imagem · ideal 256×256px (PNG transparente)</div>
                                         <div className="flex items-center gap-2">
