@@ -268,7 +268,27 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setWinner(null);
     setPhase('spinning');
 
-    const spinDurationMs = 10000;
+    // Determine spin duration from custom audio (if configured), otherwise default 10s
+    const audioUrl: string | undefined = pc?.spinAudioUrl;
+    let spinDurationMs = 10000;
+    let spinAudio: HTMLAudioElement | null = null;
+    if (audioUrl) {
+      try {
+        spinAudio = new Audio(audioUrl);
+        spinAudio.preload = 'auto';
+        const ms = await new Promise<number>((resolve) => {
+          const a = spinAudio!;
+          const done = (v: number) => resolve(Math.max(1500, Math.round(v)));
+          if (a.readyState >= 1 && isFinite(a.duration) && a.duration > 0) {
+            done(a.duration * 1000); return;
+          }
+          a.addEventListener('loadedmetadata', () => done((a.duration || 10) * 1000), { once: true });
+          a.addEventListener('error', () => done(10000), { once: true });
+          setTimeout(() => done((a.duration || 10) * 1000), 4000);
+        });
+        spinDurationMs = ms;
+      } catch { spinDurationMs = 10000; }
+    }
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
@@ -348,6 +368,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
+          // Start audio in sync with animation
+          if (spinAudio) {
+            try { spinAudio.currentTime = 0; spinAudio.play().catch(() => {}); } catch {}
+            window.setTimeout(() => {
+              try { spinAudio!.pause(); spinAudio!.currentTime = 0; } catch {}
+            }, spinDurationMs);
+          }
           setTimeout(() => {
             setWinner(prize);
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
