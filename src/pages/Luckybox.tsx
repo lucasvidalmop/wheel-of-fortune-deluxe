@@ -274,8 +274,26 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setPhase('idle');
     setReelOffset(0);
     setReelPrizes([]);
+    setScratchCells([]);
+    setScratchedIdx(new Set());
+    setScratchWinner(null);
     refreshTokens();
   };
+
+  const handleScratchCell = (idx: number) => {
+    setScratchedIdx(prev => {
+      const next = new Set(prev);
+      next.add(idx);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (phase === 'scratch' && scratchedIdx.size >= 9) {
+      const t = setTimeout(() => setPhase('done'), 800);
+      return () => clearTimeout(t);
+    }
+  }, [phase, scratchedIdx]);
 
   // Background style
   const bgStyle: React.CSSProperties = useMemo(() => ({
