@@ -536,28 +536,27 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   {scratchCells.map((cell, idx) => {
                     const revealed = scratchedIdx.has(idx);
                     return (
-                      <button
+                      <div
                         key={idx}
-                        onClick={() => handleScratchCell(idx)}
-                        disabled={revealed}
-                        className="aspect-square rounded-xl relative overflow-hidden border border-white/10 transition active:scale-95"
+                        className="aspect-square rounded-xl relative overflow-hidden border border-white/10"
                         style={{
-                          background: revealed
-                            ? `linear-gradient(180deg, ${accent}22 0%, rgba(0,0,0,0.4) 100%)`
-                            : 'linear-gradient(135deg, #4a4a4a, #2a2a2a)',
+                          background: `linear-gradient(180deg, ${accent}22 0%, rgba(0,0,0,0.4) 100%)`,
                         }}
                       >
-                        {revealed ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-1 animate-fade-in">
-                            {cell.image
-                              ? <img src={cell.image} alt={cell.label} className="max-h-[60%] max-w-[80%] object-contain" />
-                              : <div className="text-3xl">🎁</div>}
-                            <div className="text-[10px] font-bold mt-1 text-center line-clamp-1 px-1">{cell.label}</div>
-                          </div>
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-2xl font-black">?</div>
-                        )}
-                      </button>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
+                          {cell.image
+                            ? <img src={cell.image} alt={cell.label} className="max-h-[60%] max-w-[80%] object-contain" />
+                            : <div className="text-3xl">🎁</div>}
+                          <div className="text-[10px] font-bold mt-1 text-center line-clamp-1 px-1">{cell.label}</div>
+                        </div>
+                        <ScratchCell
+                          revealed={revealed}
+                          accent={accent}
+                          onReveal={() => handleScratchCell(idx)}
+                        >
+                          <></>
+                        </ScratchCell>
+                      </div>
                     );
                   })}
                 </div>
