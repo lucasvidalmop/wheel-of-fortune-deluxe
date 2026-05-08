@@ -297,29 +297,55 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             if (prize?.scratch && data.scratch_prize) {
               const sub: ScratchPrize = data.scratch_prize;
               const allPrizes: ScratchPrize[] = (prize.scratchPrizes || []);
-              // Distractor pool: prefer other sub-prizes; if none, reuse all sub-prizes (still safe — we cap repeats below)
+              // Distractor pool: only OTHER sub-prizes (never the winner) so 3-match logic stays valid
               let pool: ScratchPrize[] = allPrizes.filter(x => x.label !== sub.label);
-              if (pool.length === 0) pool = allPrizes.length > 0 ? [...allPrizes] : [sub];
+              // If no other sub-prizes are configured, fabricate generic distractors (also from other case prizes if any)
+              if (pool.length === 0) {
+                const siblings: ScratchPrize[] = (openingCase?.prizes || [])
+                  .filter(p => p.label !== sub.label)
+                  .map(p => ({ label: p.label, image: p.image, amount: p.amount }));
+                pool = siblings.length > 0
+                  ? siblings
+                  : [
+                      { label: '✦', image: '' },
+                      { label: '★', image: '' },
+                      { label: '✪', image: '' },
+                      { label: '❖', image: '' },
+                    ];
+              }
               const cells: ScratchPrize[] = [];
-              // 3 winner cells
+              // Exactly 3 winner cells
               for (let i = 0; i < 3; i++) cells.push(sub);
-              // 6 distractors — cap each non-winner label at 2 occurrences to avoid false 3-match
+              // 6 distractors — cap each non-winner label at 2 to avoid an accidental 3-match
               const counts: Record<string, number> = {};
               let safety = 0;
-              while (cells.length < 9 && safety++ < 200) {
+              while (cells.length < 9 && safety++ < 500) {
                 const cand = pool[Math.floor(Math.random() * pool.length)];
-                const key = cand.label;
-                if ((counts[key] || 0) >= 2) continue;
-                counts[key] = (counts[key] || 0) + 1;
+                if (cand.label === sub.label) continue;
+                if ((counts[cand.label] || 0) >= 2) continue;
+                counts[cand.label] = (counts[cand.label] || 0) + 1;
                 cells.push(cand);
               }
-              // Final fallback: pad with winner image (won't create extra 3-match because we already have exactly 3)
-              while (cells.length < 9) cells.push(sub);
-              // shuffle
-              for (let i = cells.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [cells[i], cells[j]] = [cells[j], cells[i]];
-              }
+              // Last-resort pad with a neutral placeholder (NEVER the winner — would break the 3-match rule)
+              while (cells.length < 9) cells.push({ label: '✦', image: '' });
+              // Fisher-Yates shuffle, then ensure winners are not all aligned in a row/column/diagonal
+              const shuffle = (arr: ScratchPrize[]) => {
+                for (let i = arr.length - 1; i > 0; i--) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+              };
+              const lines = [
+                [0,1,2],[3,4,5],[6,7,8], // rows
+                [0,3,6],[1,4,7],[2,5,8], // cols
+                [0,4,8],[2,4,6],         // diagonals
+              ];
+              const winnerAligned = () => {
+                const idxs = cells.map((c, i) => c.label === sub.label ? i : -1).filter(i => i >= 0);
+                return lines.some(line => line.every(i => idxs.includes(i)));
+              };
+              let tries = 0;
+              do { shuffle(cells); tries++; } while (winnerAligned() && tries < 50);
               setScratchCells(cells);
               setScratchedIdx(new Set());
               setScratchWinner(sub);
