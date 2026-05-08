@@ -531,6 +531,37 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 >Remover imagem de fundo</button>
               )}
             </div>
+
+            {/* Spin audio (mp3) */}
+            <div>
+              <label className="block text-xs font-medium mb-1 opacity-70">
+                Áudio da animação (MP3) <span className="opacity-50 font-normal">· a duração da animação será igual à duração do áudio</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-14 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0 text-[10px] opacity-60">
+                  {pc.spinAudioUrl ? 'MP3' : '—'}
+                </div>
+                <input
+                  defaultValue={pc.spinAudioUrl || ''}
+                  onBlur={e => { const v = e.target.value; if (v !== (pc.spinAudioUrl || '')) updatePageConfig({ spinAudioUrl: v }); }}
+                  placeholder="URL do áudio (mp3)"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+                />
+                <label className="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm flex items-center gap-1 cursor-pointer hover:bg-white/10">
+                  <Upload size={14} /> Upload
+                  <input type="file" accept="audio/mpeg,audio/mp3,.mp3" hidden onChange={e => e.target.files?.[0] && handleUploadPageAsset(e.target.files[0], 'spinAudioUrl')} />
+                </label>
+              </div>
+              {pc.spinAudioUrl && (
+                <div className="mt-2 flex items-center gap-3">
+                  <audio src={pc.spinAudioUrl} controls className="h-8" />
+                  <button
+                    onClick={() => updatePageConfig({ spinAudioUrl: '' })}
+                    className="text-xs text-rose-300 hover:underline"
+                  >Remover áudio</button>
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Section: Cores */}
