@@ -323,7 +323,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {cases.map(c => (
+              {[...cases].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c, idx, arr) => (
                  <div key={c.id} className={`rounded-2xl border bg-white/[0.04] p-4 space-y-3 transition ${c.is_active === false ? 'border-white/5 opacity-60' : 'border-white/10'}`}>
                    <div className="flex items-start gap-3">
                      <div className="w-20 h-20 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
