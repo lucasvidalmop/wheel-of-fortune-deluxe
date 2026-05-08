@@ -747,19 +747,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     <div className="text-2xl font-bold">{final.label}</div>
                   </>
                 ) : (
-                  <div
-                    className="mx-auto max-w-xs rounded-2xl border p-5 flex flex-col items-center gap-3"
-                    style={{
-                      borderColor: rarityColor(winner.rarity) + '88',
-                      background: `linear-gradient(180deg, ${rarityColor(winner.rarity)}22 0%, rgba(0,0,0,0.5) 100%)`,
-                      boxShadow: `0 0 30px ${rarityColor(winner.rarity)}44`,
-                    }}
-                  >
+                  <>
                     {final.image
-                      ? <img src={final.image} alt={final.label} className="max-h-24 object-contain" />
-                      : <div className="text-5xl">🎁</div>}
+                      ? <img src={final.image} alt={final.label} className="mx-auto max-h-28 object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.6)]" />
+                      : <div className="text-6xl">🎁</div>}
                     <div className="text-2xl font-bold">{final.label}</div>
-                  </div>
+                  </>
                 )}
                 {finalAmount > 0 && (
                   <div className="text-sm opacity-80">Será pago em PIX automaticamente quando aprovado.</div>
