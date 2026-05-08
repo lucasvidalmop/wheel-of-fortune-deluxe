@@ -323,18 +323,19 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           // jitter so it doesn't always land in dead center
           const jitter = (Math.random() - 0.5) * 80;
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
-          setReelTransition('transform 10s cubic-bezier(0.05, 0.8, 0.15, 1)');
+          setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
           setTimeout(() => {
             setWinner(prize);
+            // Stop mystery sound when reel lands
+            if (spinAudioRef.current) {
+              try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch {}
+            }
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
               const sub: ScratchPrize = data.scratch_prize;
               const allPrizes: ScratchPrize[] = (prize.scratchPrizes || []);
-              // Distractor pool: only OTHER sub-prizes (never the winner) so 3-match logic stays valid
               let pool: ScratchPrize[] = allPrizes.filter(x => x.label !== sub.label);
-              // If no other sub-prizes are configured, use neutral symbol distractors
-              // (NEVER fall back to the case's main prizes — scratch grid must only show pre-defined scratch prizes)
               if (pool.length === 0) {
                 pool = [
                   { label: '✦', image: '' },
@@ -344,9 +345,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 ];
               }
               const cells: ScratchPrize[] = [];
-              // Exactly 3 winner cells
               for (let i = 0; i < 3; i++) cells.push(sub);
-              // 6 distractors — cap each non-winner label at 2 to avoid an accidental 3-match
               const counts: Record<string, number> = {};
               let safety = 0;
               while (cells.length < 9 && safety++ < 500) {
@@ -356,9 +355,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 counts[cand.label] = (counts[cand.label] || 0) + 1;
                 cells.push(cand);
               }
-              // Last-resort pad with a neutral placeholder (NEVER the winner — would break the 3-match rule)
               while (cells.length < 9) cells.push({ label: '✦', image: '' });
-              // Fisher-Yates shuffle, then ensure winners are not all aligned in a row/column/diagonal
               const shuffle = (arr: ScratchPrize[]) => {
                 for (let i = arr.length - 1; i > 0; i--) {
                   const j = Math.floor(Math.random() * (i + 1));
@@ -366,9 +363,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 }
               };
               const lines = [
-                [0,1,2],[3,4,5],[6,7,8], // rows
-                [0,3,6],[1,4,7],[2,5,8], // cols
-                [0,4,8],[2,4,6],         // diagonals
+                [0,1,2],[3,4,5],[6,7,8],
+                [0,3,6],[1,4,7],[2,5,8],
+                [0,4,8],[2,4,6],
               ];
               const winnerAligned = () => {
                 const idxs = cells.map((c, i) => c.label === sub.label ? i : -1).filter(i => i >= 0);
@@ -383,13 +380,14 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             } else {
               setPhase('done');
             }
-          }, 10200);
+          }, spinDurationMs + 200);
         }, 50);
       });
     } catch (err: any) {
       toast.error(err.message || 'Erro');
       setOpeningCase(null);
       setPhase('idle');
+      if (spinAudioRef.current) { try { spinAudioRef.current.pause(); } catch {} }
     }
   };
 
