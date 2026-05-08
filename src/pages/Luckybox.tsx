@@ -4,6 +4,15 @@ import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
 
+const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
+const playPrizeWinSound = () => {
+  try {
+    const a = new Audio(PRIZE_WIN_SOUND_URL);
+    a.volume = 0.85;
+    a.play().catch(() => {});
+  } catch { /* noop */ }
+};
+
 interface ScratchPrize {
   label: string;
   amount?: number;
@@ -357,6 +366,11 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             setWinner(prize);
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
+              // sound plays when scratch reveals the win
+            } else {
+              playPrizeWinSound();
+            }
+            if (prize?.scratch && data.scratch_prize) {
               const sub: ScratchPrize = data.scratch_prize;
               const allPrizes: ScratchPrize[] = (prize.scratchPrizes || []);
               let pool: ScratchPrize[] = allPrizes.filter(x => x.label !== sub.label);
@@ -484,7 +498,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   useEffect(() => {
     if (phase === 'scratch' && scratchedIdx.size >= 9) {
-      const t = setTimeout(() => setPhase('done'), 800);
+      const t = setTimeout(() => { playPrizeWinSound(); setPhase('done'); }, 800);
       return () => clearTimeout(t);
     }
   }, [phase, scratchedIdx]);
