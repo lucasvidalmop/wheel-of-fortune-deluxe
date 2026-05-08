@@ -457,6 +457,37 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Redeem code */}
+        <div className="mb-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <div className="text-sm font-bold flex items-center gap-2">
+                🎟️ Resgatar código de presente
+              </div>
+              <div className="text-xs opacity-70 mt-0.5">
+                Recebeu uma caixa por WhatsApp? Digite o código abaixo para liberar.
+              </div>
+            </div>
+            <input
+              value={redeemCode}
+              onChange={e => setRedeemCode(e.target.value.toUpperCase())}
+              onKeyDown={e => { if (e.key === 'Enter') doRedeem(); }}
+              placeholder="Ex: A2B4C6D8"
+              className="px-3 py-2 rounded-lg border border-white/10 bg-black/40 text-sm font-mono uppercase tracking-wider"
+              style={{ minWidth: 180 }}
+              maxLength={20}
+            />
+            <button
+              onClick={() => doRedeem()}
+              disabled={redeeming || !redeemCode.trim()}
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition disabled:opacity-50"
+              style={{ background: accent, color: '#000' }}
+            >
+              {redeeming ? 'Resgatando...' : 'Resgatar'}
+            </button>
+          </div>
+        </div>
+
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-1">{pc.gridTitle || 'Escolha sua caixa'}</h2>
           <p className="text-sm opacity-70">{pc.gridSubtitle || 'Cada caixa contém prêmios diferentes. Boa sorte!'}</p>
