@@ -774,9 +774,11 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                     const sw = Number(sp.weight) || 0;
                                     const sPct = subTotal > 0 ? (sw / subTotal) * 100 : 0;
                                     return (
-                                      <div key={si} className="rounded-md border border-white/10 bg-black/20 p-2 space-y-2">
+                                       <div key={si} className={`rounded-md border p-2 space-y-2 ${sw === 0 ? 'border-red-400/30 bg-red-500/5' : 'border-white/10 bg-black/20'}`}>
                                         <div className="flex items-center justify-between">
-                                          <span className="text-[10px] font-mono opacity-60">Sub #{si + 1} ≈ {sPct.toFixed(2)}%</span>
+                                          <span className="text-[10px] font-mono opacity-60">
+                                            Sub #{si + 1} · {sw === 0 ? <span className="text-red-300">desativado (0%)</span> : <>chance real ≈ {sPct.toFixed(2)}%</>}
+                                          </span>
                                           <button
                                             onClick={() => {
                                               const arr = [...editingCase.prizes];
