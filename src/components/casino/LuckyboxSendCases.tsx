@@ -514,6 +514,16 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
             </button>
           </div>
         </div>
+        {bulkSelectedCase && (
+          <ForcedPrizePicker
+            selectedCase={bulkSelectedCase}
+            allCases={cases}
+            openingsCount={Math.max(1, Number(bulkQty) || 1)}
+            mode={bulkForcedMode} setMode={setBulkForcedMode}
+            fixed={bulkForcedFixed} setFixed={setBulkForcedFixed}
+            list={bulkForcedList} setList={setBulkForcedList}
+          />
+        )}
         {lastBulkCodes.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-black/30 p-3 space-y-2">
             <div className="flex items-center justify-between">
