@@ -498,7 +498,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   useEffect(() => {
     if (phase === 'scratch' && scratchedIdx.size >= 9) {
-      const t = setTimeout(() => setPhase('done'), 800);
+      const t = setTimeout(() => { playPrizeWinSound(); setPhase('done'); }, 800);
       return () => clearTimeout(t);
     }
   }, [phase, scratchedIdx]);
