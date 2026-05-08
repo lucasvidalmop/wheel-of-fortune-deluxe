@@ -54,6 +54,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const [savingCfg, setSavingCfg] = useState(false);
   const [editingCase, setEditingCase] = useState<LuckyCase | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [collapsedPrizes, setCollapsedPrizes] = useState<Set<number>>(new Set());
   const [tab, setTab] = useState<'cases' | 'tag' | 'visual' | 'tokens' | 'send'>('cases');
   const [tokenUsers, setTokenUsers] = useState<any[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
