@@ -497,11 +497,21 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="font-semibold text-sm">Histórico de envios</h3>
-          <button onClick={loadGrants} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1">
-            <RefreshCw size={12} /> Atualizar
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={toggleAllGrants} className="text-xs px-2 py-1 rounded border border-white/10 bg-white/5 hover:bg-white/10">
+              {allGrantsSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+            </button>
+            {selectedGrants.size > 0 && (
+              <button onClick={deleteSelectedGrants} className="text-xs px-2 py-1 rounded border border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 flex items-center gap-1">
+                <Trash2 size={12} /> Excluir {selectedGrants.size}
+              </button>
+            )}
+            <button onClick={loadGrants} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1">
+              <RefreshCw size={12} /> Atualizar
+            </button>
+          </div>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {grantsLoading ? (
