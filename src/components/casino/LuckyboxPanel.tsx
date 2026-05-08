@@ -710,6 +710,33 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             <button onClick={() => { setShowForm(false); setEditingCase(null); }} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10"><X size={18} /></button>
             <h3 className="text-lg font-bold">{editingCase.id ? 'Editar' : 'Nova'} caixa</h3>
 
+            {/* Tipo de caixa */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="text-[11px] uppercase tracking-wider opacity-70 mb-2">Tipo de caixa</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingCase({ ...editingCase, mode: 'probability' })}
+                  className={`text-left px-3 py-2 rounded-lg border text-xs transition ${editingCase.mode !== 'case_pool' ? 'border-cyan-400/40 bg-cyan-400/10 text-cyan-100' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                >
+                  <div className="font-bold mb-0.5">🎁 Sorteio de prêmios</div>
+                  <div className="opacity-70">Caixa normal: ao abrir, sorteia 1 prêmio entre os configurados.</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingCase({
+                    ...editingCase,
+                    mode: 'case_pool',
+                    prize_pool: editingCase.prize_pool || emptyCasePool(),
+                  })}
+                  className={`text-left px-3 py-2 rounded-lg border text-xs transition ${editingCase.mode === 'case_pool' ? 'border-purple-400/40 bg-purple-400/10 text-purple-100' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                >
+                  <div className="font-bold mb-0.5">📦 Sorteio de caixas</div>
+                  <div className="opacity-70">Ao abrir, sorteia várias outras caixas e adiciona ao inventário do usuário.</div>
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium mb-1 opacity-70">Nome</label>
