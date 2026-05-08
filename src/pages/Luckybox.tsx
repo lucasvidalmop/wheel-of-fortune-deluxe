@@ -265,7 +265,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         toast.error(data?.error || 'Erro ao abrir caixa');
         setOpeningCase(null);
         setPhase('idle');
-        if (spinAudioRef.current) { try { spinAudioRef.current.pause(); } catch {} }
         return;
       }
       const winIndex = data.prize_index ?? 0;
@@ -297,14 +296,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
           // Inicia o áudio exatamente quando a animação do reel começa
-          if (spinAudioRef.current) {
-            try { spinAudioRef.current.currentTime = 0; spinAudioRef.current.play().catch(() => {}); } catch {}
           }
           setTimeout(() => {
             setWinner(prize);
             // Stop mystery sound when reel lands
-            if (spinAudioRef.current) {
-              try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch {}
             }
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
@@ -362,7 +357,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       toast.error(err.message || 'Erro');
       setOpeningCase(null);
       setPhase('idle');
-      if (spinAudioRef.current) { try { spinAudioRef.current.pause(); } catch {} }
     }
   };
 
