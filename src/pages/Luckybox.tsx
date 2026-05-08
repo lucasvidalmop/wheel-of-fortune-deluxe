@@ -374,12 +374,31 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
-          // Start audio in sync with animation
-          if (spinAudio) {
-            try { spinAudio.currentTime = 0; spinAudio.play().catch(() => {}); } catch {}
-            window.setTimeout(() => {
-              try { spinAudio!.pause(); spinAudio!.currentTime = 0; } catch {}
-            }, spinDurationMs);
+
+          // Per-item tick: watch the actual transform each frame and play a tick
+          // when the item passing the center pointer changes. This stays in sync
+          // with the CSS easing automatically (including the deceleration).
+          if (tickBuffer) {
+            const reelInner = document.getElementById('luckybox-reel-inner') || (reelEl?.firstElementChild as HTMLElement | null);
+            const startTs = performance.now();
+            let lastIdx: number | null = null;
+            const tick = () => {
+              const now = performance.now();
+              const elapsed = now - startTs;
+              if (!reelInner) { if (elapsed < spinDurationMs) requestAnimationFrame(tick); return; }
+              const m = new DOMMatrixReadOnly(getComputedStyle(reelInner).transform);
+              const tx = m.m41; // current translateX in px
+              // Item index currently aligned with the center pointer
+              const centerIdx = Math.round((halfViewport - tx - cardHalf) / itemWidth);
+              if (lastIdx === null) lastIdx = centerIdx;
+              else if (centerIdx !== lastIdx) {
+                playTick();
+                lastIdx = centerIdx;
+              }
+              if (elapsed < spinDurationMs + 50) requestAnimationFrame(tick);
+              else { try { tickCtx?.close(); } catch {} }
+            };
+            requestAnimationFrame(tick);
           }
           setTimeout(() => {
             setWinner(prize);
