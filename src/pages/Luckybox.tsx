@@ -748,7 +748,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 )}
                 <div className="flex gap-3 justify-center pt-2">
                   <button onClick={closeOpening} className="px-5 py-2.5 rounded-xl font-semibold border border-white/10 bg-white/5 hover:bg-white/10 transition">
-                    Continuar
+                    Resgatar
                   </button>
                   <button
                     onClick={() => { closeOpening(); setTimeout(() => handleOpenCase(openingCase), 100); }}
