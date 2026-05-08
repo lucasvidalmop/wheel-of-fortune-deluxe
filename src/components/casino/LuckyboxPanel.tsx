@@ -765,6 +765,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         </label>
                         {p.scratch && (
                           <div className="space-y-2 pt-2 border-t border-white/5">
+                            <div className="text-[10px] opacity-70 leading-relaxed">
+                              Defina o peso de cada sub-prêmio em <b>Chance</b>. A % real é calculada proporcionalmente ao total. <b>0 = nunca vai sair</b>.
+                            </div>
                             {(() => {
                               const subs = p.scratchPrizes || [];
                               const subTotal = subs.reduce((s, x) => s + (Number(x.weight) || 0), 0);
