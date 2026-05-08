@@ -353,20 +353,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
           setReelOffset(offset);
 
-          try {
-            if (spinAudio) {
-              spinAudio.pause();
-              spinAudio.currentTime = 0;
-              void spinAudio.play().catch(() => {});
-            }
-          } catch {}
           setTimeout(() => {
-            try {
-              if (spinAudio) {
-                spinAudio.pause();
-                spinAudio.currentTime = 0;
-              }
-            } catch {}
             setWinner(prize);
             // Mystery scratch prize: build 3x3 grid with the winner sub-prize as 3 matches
             if (prize?.scratch && data.scratch_prize) {
