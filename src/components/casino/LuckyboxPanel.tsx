@@ -1051,6 +1051,100 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 });
               })()}
             </div>
+            )}
+
+            {editingCase.mode === 'case_pool' && (() => {
+              const pool: CasePoolConfig = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
+              const items = pool.items || [];
+              const totalW = items.reduce((s, it) => s + (Number(it.weight) || 0), 0);
+              const availableCases = cases.filter(c => c.id !== editingCase.id && c.mode !== 'case_pool');
+              const updatePool = (next: CasePoolConfig) => setEditingCase({ ...editingCase, prize_pool: next });
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-end gap-3 flex-wrap">
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wider opacity-60 mb-1">Quantas caixas sortear por abertura</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={pool.quantity}
+                        onChange={e => updatePool({ ...pool, quantity: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)) })}
+                        className="w-28 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      />
+                    </div>
+                    <div className="text-[11px] opacity-60">Mínimo 1, máximo 10.</div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Pool de caixas sorteáveis</h4>
+                    <select
+                      value=""
+                      onChange={e => {
+                        const id = e.target.value;
+                        if (!id) return;
+                        if (items.some(it => it.case_id === id)) { toast.error('Caixa já adicionada'); return; }
+                        updatePool({ ...pool, items: [...items, { case_id: id, weight: 50 }] });
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs border border-white/10"
+                    >
+                      <option value="">+ Adicionar caixa…</option>
+                      {availableCases.filter(c => !items.some(it => it.case_id === c.id)).map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {items.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed border-white/10 rounded-xl text-xs opacity-60">
+                      Adicione caixas ao pool usando o seletor acima.
+                    </div>
+                  ) : items.map((it, i) => {
+                    const c = cases.find(x => x.id === it.case_id);
+                    const w = Number(it.weight) || 0;
+                    const pct = totalW > 0 ? (w / totalW) * 100 : 0;
+                    return (
+                      <div key={it.case_id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3 flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
+                          {c?.image_url
+                            ? <img src={c.image_url} alt="" className="max-w-full max-h-full object-contain" />
+                            : <Package size={20} className="opacity-40" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate">{c?.name || '(caixa removida)'}</div>
+                          <div className="text-[10px] opacity-60">{c?.price_tokens ?? 0} {cfg.coin_name || 'Coins'}</div>
+                        </div>
+                        <div className="w-32 shrink-0">
+                          <label className="block text-[9px] uppercase tracking-wide opacity-60 mb-1">Chance</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={it.weight}
+                              onChange={e => {
+                                const next = [...items];
+                                next[i] = { ...next[i], weight: parseFloat(e.target.value) || 0 };
+                                updatePool({ ...pool, items: next });
+                              }}
+                              className="w-full px-2 py-1.5 pr-12 rounded border border-white/10 bg-white/5 text-xs"
+                            />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] opacity-60 font-mono">≈{pct.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => updatePool({ ...pool, items: items.filter((_, j) => j !== i) })}
+                          className="p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                          title="Remover"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
               <button onClick={() => { setShowForm(false); setEditingCase(null); }} className="px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-sm hover:bg-white/10">Cancelar</button>
