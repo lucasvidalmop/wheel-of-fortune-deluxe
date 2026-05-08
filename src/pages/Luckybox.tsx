@@ -100,7 +100,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     if (!cfg) return;
     const cleanups: (() => void)[] = [];
     const prevTitle = document.title;
-    document.title = pc.seoTitle || pc.title || `Luckybox ${cfg.tag}`;
+    document.title = pc.seoTitle || pc.title || `Caixa Misteriosa ${cfg.tag}`;
     cleanups.push(() => { document.title = prevTitle; });
     const ensureMeta = (name: string, content: string) => {
       if (!content) return;
@@ -409,7 +409,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-3">
           <div className="text-6xl">🔒</div>
-          <h1 className="text-xl font-bold">Luckybox indisponível</h1>
+          <h1 className="text-xl font-bold">Caixa Misteriosa indisponível</h1>
           <p className="text-muted-foreground text-sm">Esta funcionalidade não está habilitada para este operador.</p>
         </div>
       </div>
@@ -422,7 +422,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         <div className="text-center space-y-3">
           <div className="text-6xl">🚫</div>
           <h1 className="text-xl font-bold">Página inválida</h1>
-          <p className="text-muted-foreground text-sm">Esta página de Luckybox não existe ou foi desativada.</p>
+          <p className="text-muted-foreground text-sm">Esta página de Caixa Misteriosa não existe ou foi desativada.</p>
         </div>
       </div>
     );
@@ -438,7 +438,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             {pc.logoUrl
               ? <img src={pc.logoUrl} alt="logo" className="max-h-20 mx-auto object-contain" />
               : <div className="text-4xl">🎁</div>}
-            <h1 className="text-xl font-bold" style={{ color: pc.titleColor || '#fff' }}>{pc.title || 'Luckybox'}</h1>
+            <h1 className="text-xl font-bold" style={{ color: pc.titleColor || '#fff' }}>{pc.title || 'Caixa Misteriosa'}</h1>
             <p className="text-sm" style={{ color: pc.subtitleColor || 'rgba(255,255,255,0.7)' }}>
               {pc.subtitle || 'Entre para abrir suas caixas'}
             </p>
@@ -478,7 +478,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             {pc.logoUrl
               ? <img src={pc.logoUrl} alt="logo" className="h-9 object-contain" />
               : <div className="text-2xl">🎁</div>}
-            <h1 className="text-lg font-bold" style={{ color: pc.titleColor || '#fff' }}>{pc.title || 'Luckybox'}</h1>
+            <h1 className="text-lg font-bold" style={{ color: pc.titleColor || '#fff' }}>{pc.title || 'Caixa Misteriosa'}</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5">
