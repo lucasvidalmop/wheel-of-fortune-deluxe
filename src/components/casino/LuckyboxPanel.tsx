@@ -287,35 +287,53 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cases.map(c => (
-                <div key={c.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-20 h-20 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
-                      {c.image_url
-                        ? <img src={c.image_url} alt={c.name} className="max-w-full max-h-full object-contain" />
-                        : <Package size={32} className="text-muted-foreground" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold truncate">{c.name}</div>
-                      <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
-                        {cfg.coin_icon_url
-                          ? <img src={cfg.coin_icon_url} alt="" className="w-3 h-3 object-contain" />
-                          : <Coins size={12} />}
-                        {c.price_tokens} {cfg.coin_name || 'Coins'}
-                      </div>
-                      <div className="text-[10px] uppercase tracking-wider mt-1 opacity-60">
-                        {c.mode === 'pool' ? 'Pool fixo' : 'Probabilidade'} · {(c.prizes || []).length} prêmios
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => editCase(c)} className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs flex items-center justify-center gap-1">
-                      <Pencil size={12} /> Editar
-                    </button>
-                    <button onClick={() => deleteCase(c.id)} className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs">
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                </div>
+                 <div key={c.id} className={`rounded-2xl border bg-white/[0.04] p-4 space-y-3 transition ${c.is_active === false ? 'border-white/5 opacity-60' : 'border-white/10'}`}>
+                   <div className="flex items-start gap-3">
+                     <div className="w-20 h-20 rounded-xl border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
+                       {c.image_url
+                         ? <img src={c.image_url} alt={c.name} className="max-w-full max-h-full object-contain" />
+                         : <Package size={32} className="text-muted-foreground" />}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <div className="flex items-center gap-2">
+                         <div className="font-bold truncate">{c.name}</div>
+                         <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0 ${c.is_active === false ? 'bg-red-500/20 text-red-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                           {c.is_active === false ? 'Off' : 'On'}
+                         </span>
+                       </div>
+                       <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
+                         {cfg.coin_icon_url
+                           ? <img src={cfg.coin_icon_url} alt="" className="w-3 h-3 object-contain" />
+                           : <Coins size={12} />}
+                         {c.price_tokens} {cfg.coin_name || 'Coins'}
+                       </div>
+                       <div className="text-[10px] uppercase tracking-wider mt-1 opacity-60">
+                         {c.mode === 'pool' ? 'Pool fixo' : 'Probabilidade'} · {(c.prizes || []).length} prêmios
+                       </div>
+                     </div>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <button
+                       onClick={async () => {
+                         const next = !(c.is_active !== false);
+                         const { error } = await (supabase as any).from('luckybox_cases').update({ is_active: next }).eq('id', c.id);
+                         if (error) { toast.error(error.message); return; }
+                         setCases(prev => prev.map(x => x.id === c.id ? { ...x, is_active: next } : x));
+                         toast.success(next ? 'Caixa ativada' : 'Caixa desativada');
+                       }}
+                       className={`px-3 py-2 rounded-lg border text-xs font-medium transition ${c.is_active === false ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'}`}
+                       title={c.is_active === false ? 'Ativar caixa' : 'Desativar caixa'}
+                     >
+                       {c.is_active === false ? 'Ativar' : 'Desativar'}
+                     </button>
+                     <button onClick={() => editCase(c)} className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs flex items-center justify-center gap-1">
+                       <Pencil size={12} /> Editar
+                     </button>
+                     <button onClick={() => deleteCase(c.id)} className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs">
+                       <Trash2 size={12} />
+                     </button>
+                   </div>
+                 </div>
               ))}
             </div>
           )}
