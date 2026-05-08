@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import SendCasesTab from './LuckyboxSendCases';
+import LuckyboxHistoryTab from './LuckyboxHistoryTab';
 
 interface ScratchPrize {
   label: string;
@@ -56,7 +57,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const [editingCase, setEditingCase] = useState<LuckyCase | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [collapsedPrizes, setCollapsedPrizes] = useState<Set<number>>(new Set());
-  const [tab, setTab] = useState<'cases' | 'tag' | 'visual' | 'tokens' | 'send'>('cases');
+  const [tab, setTab] = useState<'cases' | 'tag' | 'visual' | 'tokens' | 'send' | 'history'>('cases');
   const [tokenUsers, setTokenUsers] = useState<any[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
   const [tokensSearch, setTokensSearch] = useState('');
@@ -259,6 +260,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
         {[
           { k: 'cases', l: 'Caixas' },
           { k: 'send', l: 'Enviar caixas' },
+          { k: 'history', l: 'Histórico' },
           { k: 'tag', l: 'Tag e Moeda' },
           { k: 'visual', l: 'Visual' },
           { k: 'tokens', l: 'Saldo de usuários' },
@@ -270,6 +272,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       </div>
 
       {tab === 'send' && <SendCasesTab ownerId={ownerId} cases={cases} cfg={cfg} />}
+      {tab === 'history' && <LuckyboxHistoryTab ownerId={ownerId} />}
 
       {/* === CASES === */}
       {tab === 'cases' && (
