@@ -215,6 +215,28 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
+  const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
+
+  const toggleGrant = (id: string) => {
+    const next = new Set(selectedGrants);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedGrants(next);
+  };
+  const allGrantsSelected = grants.length > 0 && grants.every(g => selectedGrants.has(g.id));
+  const toggleAllGrants = () => {
+    if (allGrantsSelected) setSelectedGrants(new Set());
+    else setSelectedGrants(new Set(grants.map(g => g.id)));
+  };
+  const deleteSelectedGrants = async () => {
+    if (selectedGrants.size === 0) return;
+    if (!confirm(`Excluir ${selectedGrants.size} código(s) selecionado(s)?`)) return;
+    const ids = Array.from(selectedGrants);
+    const { error } = await (supabase as any).from('luckybox_grants').delete().in('id', ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} excluído(s)`);
+    setSelectedGrants(new Set());
+    loadGrants();
+  };
 
   const handleGenerateBulk = async () => {
     if (!bulkCaseId) { toast.error('Selecione uma caixa'); return; }
