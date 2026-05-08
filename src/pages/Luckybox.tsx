@@ -29,6 +29,7 @@ interface CasePrize {
   scratch?: boolean;
   scratchPrizes?: ScratchPrize[];
 }
+interface CasePoolItem { case_id: string; weight: number }
 interface LuckyCase {
   id: string;
   name: string;
@@ -36,6 +37,15 @@ interface LuckyCase {
   image_url: string;
   rarity: string;
   prizes: CasePrize[];
+  mode?: 'probability' | 'pool' | 'case_pool';
+  prize_pool?: { quantity?: number; items?: CasePoolItem[] } | any;
+}
+interface DrawnCase {
+  case_id: string;
+  name: string;
+  image_url: string;
+  rarity: string;
+  price_tokens: number;
 }
 interface LuckyConfig {
   id: string;
@@ -90,6 +100,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchWinner, setScratchWinner] = useState<ScratchPrize | null>(null);
   const [scratchCells, setScratchCells] = useState<ScratchPrize[]>([]);
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
+  const [drawnCases, setDrawnCases] = useState<DrawnCase[]>([]);
 
 
   const pc = cfg?.page_config || {};
@@ -279,9 +290,97 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     }
     setOpeningCase(c);
     setWinner(null);
+    setDrawnCases([]);
     setPhase('spinning');
 
     const spinDurationMs = 10000;
+
+    // ===== CASE POOL MODE: opens a "box of boxes" =====
+    if (c.mode === 'case_pool') {
+      try {
+        const { data, error } = await (supabase as any).rpc('open_luckybox_case_pool', {
+          p_owner_id: cfg!.owner_id,
+          p_account_id: authedUser.account_id,
+          p_case_id: c.id,
+        });
+        if (error) throw error;
+        if (!data?.success) {
+          toast.error(data?.error || 'Erro ao abrir caixa');
+          setOpeningCase(null);
+          setPhase('idle');
+          return;
+        }
+        const drawn: DrawnCase[] = data.drawn || [];
+        // Update tokens + grants
+        const updated = {
+          ...authedUser,
+          tokens_balance: data.tokens_balance ?? authedUser.tokens_balance,
+          case_grants: (data.case_grants as Record<string, number>) || authedUser.case_grants || {},
+        };
+        setAuthedUser(updated);
+        sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
+
+        // Build a reel of cases (treat each case as a CasePrize-like item)
+        const poolItems = (c.prize_pool?.items || []) as CasePoolItem[];
+        const poolCases: LuckyCase[] = poolItems
+          .map(it => cases.find(x => x.id === it.case_id))
+          .filter(Boolean) as LuckyCase[];
+        const reelSource: LuckyCase[] = poolCases.length > 0 ? poolCases : (drawn.map(d => ({
+          id: d.case_id, name: d.name, image_url: d.image_url, rarity: d.rarity, price_tokens: d.price_tokens, prizes: [],
+        })) as any);
+
+        const target = drawn[0];
+        const fakePrizes: CasePrize[] = reelSource.map(rc => ({
+          label: rc.name, image: rc.image_url, rarity: rc.rarity,
+        }));
+        const winIdx = Math.max(0, reelSource.findIndex(rc => rc.id === target?.case_id));
+        const { reel, targetIndex } = buildReel(fakePrizes, winIdx);
+        setReelPrizes(reel);
+        setReelOffset(0);
+        setReelTransition('none');
+
+        try {
+          supabase.functions.invoke('send-owner-notification', {
+            body: {
+              ownerId: cfg!.owner_id,
+              type: 'luckybox_purchased',
+              payload: {
+                userName: authedUser.name,
+                userEmail: authedUser.email,
+                accountId: authedUser.account_id,
+                caseName: c.name,
+                priceTokens: data.used_grant ? 0 : c.price_tokens,
+                coinName: cfg?.coin_name || 'Coins',
+              },
+            },
+          });
+        } catch {}
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const itemWidth = 168;
+            const cardHalf = 80;
+            const reelEl = document.getElementById('luckybox-reel-viewport');
+            const halfViewport = reelEl ? reelEl.clientWidth / 2 : 0;
+            const jitter = (Math.random() - 0.5) * 80;
+            const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
+            setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
+            setReelOffset(offset);
+            setTimeout(() => {
+              playPrizeWinSound();
+              setDrawnCases(drawn);
+              setWinner({ label: c.name, image: c.image_url, rarity: c.rarity } as any);
+              setPhase('done');
+            }, spinDurationMs + 200);
+          }, 50);
+        });
+      } catch (err: any) {
+        toast.error(err.message || 'Erro');
+        setOpeningCase(null);
+        setPhase('idle');
+      }
+      return;
+    }
 
     try {
       const { data, error } = await (supabase as any).rpc('open_luckybox_case', {
@@ -441,6 +540,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     setScratchCells([]);
     setScratchedIdx(new Set());
     setScratchWinner(null);
+    setDrawnCases([]);
     refreshTokens();
   };
 
@@ -845,8 +945,61 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               </div>
             )}
 
+            {/* Case-pool reveal: list all drawn cases */}
+            {phase === 'done' && drawnCases.length > 0 && (
+              <div
+                className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+                onClick={closeOpening}
+              >
+                <div
+                  className="relative w-full max-w-2xl rounded-3xl border p-6 text-center shadow-[0_20px_80px_rgba(0,0,0,0.9)] max-h-[85vh] overflow-y-auto"
+                  style={{
+                    borderColor: accent + 'aa',
+                    background: `radial-gradient(circle at top, ${accent}22, rgba(10,10,15,0.98) 70%)`,
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <button onClick={closeOpening} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                    <X size={18} />
+                  </button>
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 mb-4" style={{ background: accent + '22', color: accent }}>
+                    <Sparkles size={14} />
+                    <span className="text-xs font-bold uppercase tracking-wider">📦 Você ganhou {drawnCases.length} caixa{drawnCases.length > 1 ? 's' : ''}!</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-5">
+                    {drawnCases.map((d, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl border p-3 flex flex-col items-center gap-2 relative overflow-hidden"
+                        style={{
+                          borderColor: rarityColor(d.rarity) + '88',
+                          background: `linear-gradient(180deg, ${rarityColor(d.rarity)}22 0%, rgba(0,0,0,0.5) 100%)`,
+                        }}
+                      >
+                        <div className="h-20 flex items-center justify-center">
+                          {d.image_url
+                            ? <img src={d.image_url} alt={d.name} className="max-h-full max-w-full object-contain drop-shadow-[0_0_16px_rgba(255,255,255,0.2)]" />
+                            : <Package size={36} style={{ color: rarityColor(d.rarity) }} />}
+                        </div>
+                        <div className="text-xs font-bold text-center line-clamp-2">{d.name}</div>
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: rarityColor(d.rarity) }} />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs opacity-70 mb-4">As caixas foram adicionadas ao seu inventário. Feche para abri-las!</p>
+                  <button
+                    onClick={closeOpening}
+                    className="px-8 py-3 rounded-xl font-bold text-base transition shadow-lg"
+                    style={{ background: accent, color: pc.btnTextColor || '#000', boxShadow: `0 0 24px ${accent}66` }}
+                  >
+                    Continuar
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Winner reveal — popup overlay on top of opening modal */}
-            {phase === 'done' && winner && (() => {
+            {phase === 'done' && winner && drawnCases.length === 0 && (() => {
               const final = scratchWinner || winner;
               const finalAmount = (scratchWinner?.amount ?? winner.amount) || 0;
               return (

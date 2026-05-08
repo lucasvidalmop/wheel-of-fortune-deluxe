@@ -30,11 +30,16 @@ interface LuckyCase {
   price_tokens: number;
   image_url: string;
   rarity: string;
-  mode: 'probability' | 'pool';
+  mode: 'probability' | 'pool' | 'case_pool';
   prizes: CasePrize[];
+  prize_pool?: any;
   position: number;
   is_active: boolean;
 }
+
+interface CasePoolItem { case_id: string; weight: number }
+interface CasePoolConfig { quantity: number; items: CasePoolItem[] }
+const emptyCasePool = (): CasePoolConfig => ({ quantity: 3, items: [] });
 
 const RARITIES = [
   { key: 'common', label: 'Comum', color: '#9CA3AF' },
@@ -129,6 +134,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
 
   const saveCase = async () => {
     if (!editingCase) return;
+    const isCasePool = editingCase.mode === 'case_pool';
     const payload: any = {
       owner_id: ownerId,
       name: editingCase.name,
@@ -136,13 +142,24 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       image_url: editingCase.image_url || '',
       rarity: editingCase.rarity || 'common',
       mode: editingCase.mode || 'probability',
-      prizes: editingCase.prizes || [],
+      prizes: isCasePool ? [] : (editingCase.prizes || []),
       position: editingCase.position ?? 0,
       is_active: editingCase.is_active !== false,
     };
+    if (isCasePool) {
+      const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
+      payload.prize_pool = {
+        quantity: Math.max(1, Math.min(10, Number(pool.quantity) || 1)),
+        items: (pool.items || []).filter(it => it.case_id),
+      };
+      if (!payload.prize_pool.items.length) {
+        toast.error('Adicione ao menos uma caixa ao pool');
+        return;
+      }
+    } else if (editingCase.mode === 'pool') {
+      payload.prize_pool = null;
+    }
     if (editingCase.id) {
-      // reset pool when prizes change for pool mode
-      if (editingCase.mode === 'pool') payload.prize_pool = null;
       const { error } = await (supabase as any).from('luckybox_cases').update(payload).eq('id', editingCase.id);
       if (error) { toast.error(error.message); return; }
       toast.success('Caixa atualizada');
@@ -313,7 +330,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                          {c.price_tokens} {cfg.coin_name || 'Coins'}
                        </div>
                        <div className="text-[10px] uppercase tracking-wider mt-1 opacity-60">
-                         {c.mode === 'pool' ? 'Pool fixo' : 'Probabilidade'} · {(c.prizes || []).length} prêmios
+                         {c.mode === 'case_pool'
+                           ? `🎁 Sorteia caixas · ${(c.prize_pool?.quantity ?? 1)}× de ${(c.prize_pool?.items?.length ?? 0)}`
+                           : `${c.mode === 'pool' ? 'Pool fixo' : 'Probabilidade'} · ${(c.prizes || []).length} prêmios`}
                        </div>
                      </div>
                    </div>
@@ -691,6 +710,33 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             <button onClick={() => { setShowForm(false); setEditingCase(null); }} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10"><X size={18} /></button>
             <h3 className="text-lg font-bold">{editingCase.id ? 'Editar' : 'Nova'} caixa</h3>
 
+            {/* Tipo de caixa */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="text-[11px] uppercase tracking-wider opacity-70 mb-2">Tipo de caixa</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingCase({ ...editingCase, mode: 'probability' })}
+                  className={`text-left px-3 py-2 rounded-lg border text-xs transition ${editingCase.mode !== 'case_pool' ? 'border-cyan-400/40 bg-cyan-400/10 text-cyan-100' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                >
+                  <div className="font-bold mb-0.5">🎁 Sorteio de prêmios</div>
+                  <div className="opacity-70">Caixa normal: ao abrir, sorteia 1 prêmio entre os configurados.</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingCase({
+                    ...editingCase,
+                    mode: 'case_pool',
+                    prize_pool: editingCase.prize_pool || emptyCasePool(),
+                  })}
+                  className={`text-left px-3 py-2 rounded-lg border text-xs transition ${editingCase.mode === 'case_pool' ? 'border-purple-400/40 bg-purple-400/10 text-purple-100' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                >
+                  <div className="font-bold mb-0.5">📦 Sorteio de caixas</div>
+                  <div className="opacity-70">Ao abrir, sorteia várias outras caixas e adiciona ao inventário do usuário.</div>
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium mb-1 opacity-70">Nome</label>
@@ -706,9 +752,15 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                   {RARITIES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
                 </select>
               </div>
-              <div className="md:col-span-2 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
-                💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores muito pequenos como <b>0.00000001</b> para raridade máxima. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
-              </div>
+              {editingCase.mode === 'case_pool' ? (
+                <div className="md:col-span-2 rounded-xl border border-purple-400/20 bg-purple-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
+                  📦 <b>Caixa de caixas:</b> escolha quais caixas existentes podem ser sorteadas e quantas serão entregues por abertura. Cada caixa sorteada é adicionada ao inventário do usuário (aparece como "🎁 Grátis ×N").
+                </div>
+              ) : (
+                <div className="md:col-span-2 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
+                  💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores muito pequenos como <b>0.00000001</b> para raridade máxima. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
+                </div>
+              )}
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium mb-1 opacity-70">Imagem da caixa <span className="opacity-50 font-normal">· ideal 512×512px (PNG transparente)</span></label>
                 <div className="flex items-center gap-3">
@@ -722,6 +774,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
               </div>
             </div>
 
+            {editingCase.mode !== 'case_pool' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm">Prêmios</h4>
@@ -998,6 +1051,100 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 });
               })()}
             </div>
+            )}
+
+            {editingCase.mode === 'case_pool' && (() => {
+              const pool: CasePoolConfig = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
+              const items = pool.items || [];
+              const totalW = items.reduce((s, it) => s + (Number(it.weight) || 0), 0);
+              const availableCases = cases.filter(c => c.id !== editingCase.id && c.mode !== 'case_pool');
+              const updatePool = (next: CasePoolConfig) => setEditingCase({ ...editingCase, prize_pool: next });
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-end gap-3 flex-wrap">
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wider opacity-60 mb-1">Quantas caixas sortear por abertura</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={pool.quantity}
+                        onChange={e => updatePool({ ...pool, quantity: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)) })}
+                        className="w-28 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      />
+                    </div>
+                    <div className="text-[11px] opacity-60">Mínimo 1, máximo 10.</div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Pool de caixas sorteáveis</h4>
+                    <select
+                      value=""
+                      onChange={e => {
+                        const id = e.target.value;
+                        if (!id) return;
+                        if (items.some(it => it.case_id === id)) { toast.error('Caixa já adicionada'); return; }
+                        updatePool({ ...pool, items: [...items, { case_id: id, weight: 50 }] });
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs border border-white/10"
+                    >
+                      <option value="">+ Adicionar caixa…</option>
+                      {availableCases.filter(c => !items.some(it => it.case_id === c.id)).map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {items.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed border-white/10 rounded-xl text-xs opacity-60">
+                      Adicione caixas ao pool usando o seletor acima.
+                    </div>
+                  ) : items.map((it, i) => {
+                    const c = cases.find(x => x.id === it.case_id);
+                    const w = Number(it.weight) || 0;
+                    const pct = totalW > 0 ? (w / totalW) * 100 : 0;
+                    return (
+                      <div key={it.case_id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3 flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden shrink-0">
+                          {c?.image_url
+                            ? <img src={c.image_url} alt="" className="max-w-full max-h-full object-contain" />
+                            : <Package size={20} className="opacity-40" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate">{c?.name || '(caixa removida)'}</div>
+                          <div className="text-[10px] opacity-60">{c?.price_tokens ?? 0} {cfg.coin_name || 'Coins'}</div>
+                        </div>
+                        <div className="w-32 shrink-0">
+                          <label className="block text-[9px] uppercase tracking-wide opacity-60 mb-1">Chance</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={it.weight}
+                              onChange={e => {
+                                const next = [...items];
+                                next[i] = { ...next[i], weight: parseFloat(e.target.value) || 0 };
+                                updatePool({ ...pool, items: next });
+                              }}
+                              className="w-full px-2 py-1.5 pr-12 rounded border border-white/10 bg-white/5 text-xs"
+                            />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] opacity-60 font-mono">≈{pct.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => updatePool({ ...pool, items: items.filter((_, j) => j !== i) })}
+                          className="p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                          title="Remover"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
               <button onClick={() => { setShowForm(false); setEditingCase(null); }} className="px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-sm hover:bg-white/10">Cancelar</button>
