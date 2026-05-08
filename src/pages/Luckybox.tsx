@@ -269,17 +269,20 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       try {
         const audio = new Audio(MYSTERY_SOUND_URL);
         audio.muted = muted;
+        audio.preload = 'auto';
         spinAudioRef.current = audio;
         await new Promise<void>((resolve) => {
           const done = () => resolve();
+          if (audio.readyState >= 1 && isFinite(audio.duration) && audio.duration > 0) { resolve(); return; }
           audio.addEventListener('loadedmetadata', done, { once: true });
+          audio.addEventListener('canplaythrough', done, { once: true });
           audio.addEventListener('error', done, { once: true });
-          setTimeout(done, 1500);
+          setTimeout(done, 2500);
         });
         if (isFinite(audio.duration) && audio.duration > 0) {
           spinDurationMs = Math.round(audio.duration * 1000);
         }
-        audio.play().catch(() => {});
+        // NÃO toca aqui — toca junto com o início da animação para sincronizar
       } catch {}
     }
 
@@ -325,6 +328,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
+          // Inicia o áudio exatamente quando a animação do reel começa
+          if (spinAudioRef.current) {
+            try { spinAudioRef.current.currentTime = 0; spinAudioRef.current.play().catch(() => {}); } catch {}
+          }
           setTimeout(() => {
             setWinner(prize);
             // Stop mystery sound when reel lands
