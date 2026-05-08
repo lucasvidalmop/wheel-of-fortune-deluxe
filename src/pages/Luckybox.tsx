@@ -56,10 +56,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [disabled, setDisabled] = useState(false);
 
   // Auth
-  const [authedUser, setAuthedUser] = useState<{ id: string; name: string; account_id: string; email: string; tokens_balance: number } | null>(null);
+  const [authedUser, setAuthedUser] = useState<{ id: string; name: string; account_id: string; email: string; tokens_balance: number; case_grants?: Record<string, number> } | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginAccount, setLoginAccount] = useState('');
   const [logging, setLogging] = useState(false);
+  const [redeemCode, setRedeemCode] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
 
   // Opening
   const [openingCase, setOpeningCase] = useState<LuckyCase | null>(null);
