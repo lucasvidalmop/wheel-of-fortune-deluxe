@@ -46,6 +46,7 @@ const RARITY_COLOR: Record<string, string> = {
   legendary: '#A855F7',
   mythic: '#EF4444',
   supreme: '#FACC15',
+  mystery: '#EC4899',
 };
 const rarityColor = (r?: string) => RARITY_COLOR[(r || 'common').toLowerCase()] || '#9CA3AF';
 
