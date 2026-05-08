@@ -660,15 +660,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 <X size={18} />
               </button>
             )}
-            {((openingCase.rarity || '').toLowerCase() === 'mystery' || openingCase.prizes?.some(p => p.scratch)) && (
-              <button
-                onClick={() => setMuted(m => !m)}
-                title={muted ? 'Ativar som' : 'Silenciar'}
-                className="absolute top-3 left-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition"
-              >
-                {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-              </button>
-            )}
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold">{openingCase.name}</h3>
               <p className="text-xs opacity-60 mt-1">
