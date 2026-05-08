@@ -100,6 +100,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchWinner, setScratchWinner] = useState<ScratchPrize | null>(null);
   const [scratchCells, setScratchCells] = useState<ScratchPrize[]>([]);
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
+  const [drawnCases, setDrawnCases] = useState<DrawnCase[]>([]);
 
 
   const pc = cfg?.page_config || {};
