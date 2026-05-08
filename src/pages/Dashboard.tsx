@@ -477,6 +477,9 @@ function Dashboard() {
   const [notifyReferralEnabled, setNotifyReferralEnabled] = useState(false);
   const [notifyPendingPaymentEnabled, setNotifyPendingPaymentEnabled] = useState(false);
   const [notifyDepositEnabled, setNotifyDepositEnabled] = useState(false);
+  const [notifyLuckyboxPurchasedEnabled, setNotifyLuckyboxPurchasedEnabled] = useState(false);
+  const [notifyLuckyboxRedeemedEnabled, setNotifyLuckyboxRedeemedEnabled] = useState(false);
+  const [notifyLuckyboxPrizeEnabled, setNotifyLuckyboxPrizeEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
