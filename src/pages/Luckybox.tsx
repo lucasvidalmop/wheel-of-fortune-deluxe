@@ -328,7 +328,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.05, 0.8, 0.15, 1)`);
           setReelOffset(offset);
-          setTimeout(() => {
+          // Inicia o áudio exatamente quando a animação do reel começa
+          if (spinAudioRef.current) {
+            try { spinAudioRef.current.currentTime = 0; spinAudioRef.current.play().catch(() => {}); } catch {}
+          }
             setWinner(prize);
             // Stop mystery sound when reel lands
             if (spinAudioRef.current) {
