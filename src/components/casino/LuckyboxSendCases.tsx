@@ -267,6 +267,11 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     if (!selectedCase) { toast.error('Caixa inválida'); return; }
     const n = Math.max(1, Math.min(2000, Number(bulkCount) || 0));
     const qty = Math.max(1, Number(bulkQty) || 1);
+    const forcedPrizes = buildForcedPrizes(bulkForcedMode, bulkForcedFixed, bulkForcedList, qty);
+    if (forcedPrizes.length !== qty || forcedPrizes.some(e => !e || Object.keys(e).length === 0)) {
+      toast.error('Defina o prêmio garantido para todas as aberturas antes de gerar');
+      return;
+    }
     setBulkGenerating(true);
     const rows = Array.from({ length: n }).map(() => ({
       owner_id: ownerId,
@@ -280,6 +285,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       code: generateCode(),
       quantity: qty,
       status: 'pending',
+      forced_prizes: forcedPrizes,
     }));
     const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code');
     setBulkGenerating(false);
