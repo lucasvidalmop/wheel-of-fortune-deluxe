@@ -39,10 +39,10 @@ const RARITIES = [
   { key: 'common', label: 'Comum', color: '#9CA3AF' },
   { key: 'uncommon', label: 'Incomum', color: '#22C55E' },
   { key: 'rare', label: 'Raro', color: '#3B82F6' },
-  { key: 'epic', label: 'Épico', color: '#A855F7' },
-  { key: 'legendary', label: 'Lendário', color: '#F59E0B' },
+  { key: 'epic', label: 'Épico', color: '#60A5FA' },
+  { key: 'legendary', label: 'Lendário', color: '#A855F7' },
   { key: 'mythic', label: 'Mítico', color: '#EF4444' },
-  { key: 'supreme', label: 'Supremo', color: '#22D3EE' },
+  { key: 'supreme', label: 'Supremo', color: '#FACC15' },
 ];
 
 const newPrize = (): CasePrize => ({ label: 'Prêmio', amount: 0, image: '', rarity: 'common', weight: 1, count: 1 });
