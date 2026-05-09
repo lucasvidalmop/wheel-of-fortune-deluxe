@@ -413,6 +413,14 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
             setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
             setReelOffset(offset);
+            scheduleCaseTicks({
+              durationMs: spinDurationMs,
+              finalOffset: offset,
+              itemWidth,
+              cardHalf,
+              itemCount: reel.length,
+              halfViewport,
+            });
             setTimeout(() => {
               playPrizeWinSound();
               setDrawnCases(drawn);
