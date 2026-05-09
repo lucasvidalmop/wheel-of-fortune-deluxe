@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
+import { scheduleCaseTicks, cancelCaseTicks } from '@/lib/caseTickSound';
 
 const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
 const playPrizeWinSound = () => {
@@ -412,6 +413,14 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
             setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
             setReelOffset(offset);
+            scheduleCaseTicks({
+              durationMs: spinDurationMs,
+              finalOffset: offset,
+              itemWidth,
+              cardHalf,
+              itemCount: reel.length,
+              halfViewport,
+            });
             setTimeout(() => {
               playPrizeWinSound();
               setDrawnCases(drawn);
@@ -506,6 +515,14 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           const offset = halfViewport - (targetIndex * itemWidth) - cardHalf + jitter;
           setReelTransition(`transform ${spinDurationMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`);
           setReelOffset(offset);
+          scheduleCaseTicks({
+            durationMs: spinDurationMs,
+            finalOffset: offset,
+            itemWidth,
+            cardHalf,
+            itemCount: reel.length,
+            halfViewport,
+          });
 
           setTimeout(() => {
             setWinner(prize);
