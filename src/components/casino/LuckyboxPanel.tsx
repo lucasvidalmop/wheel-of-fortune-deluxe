@@ -6,6 +6,54 @@ import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import SendCasesTab from './LuckyboxSendCases';
 import LuckyboxHistoryTab from './LuckyboxHistoryTab';
 
+// Free-typing weight/percentage input. Keeps a local draft so partial
+// values like "0,", "0,0", "0,001" don't get clobbered when parsed to 0.
+const WeightInput = ({
+  value,
+  onChange,
+  placeholder,
+  className,
+  title,
+}: {
+  value: number | undefined | null;
+  onChange: (n: number) => void;
+  placeholder?: string;
+  className?: string;
+  title?: string;
+}) => {
+  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState('');
+  const display = focused
+    ? draft
+    : (value !== undefined && value !== null && value !== 0 ? String(value).replace('.', ',') : (value === 0 ? '0' : ''));
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={display}
+      title={title}
+      placeholder={placeholder}
+      className={className}
+      onFocus={() => {
+        setFocused(true);
+        setDraft(value !== undefined && value !== null ? String(value).replace('.', ',') : '');
+      }}
+      onChange={e => {
+        const cleaned = e.target.value.replace(/[^0-9.,]/g, '');
+        setDraft(cleaned);
+        const raw = cleaned.replace(',', '.');
+        if (raw === '' || raw === '.') { onChange(0); return; }
+        const num = parseFloat(raw);
+        if (Number.isFinite(num)) onChange(num);
+      }}
+      onBlur={() => {
+        setFocused(false);
+        setDraft('');
+      }}
+    />
+  );
+};
+
 interface ScratchPrize {
   label: string;
   amount?: number;
