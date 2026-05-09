@@ -540,6 +540,9 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
             mode={bulkForcedMode} setMode={setBulkForcedMode}
             fixed={bulkForcedFixed} setFixed={setBulkForcedFixed}
             list={bulkForcedList} setList={setBulkForcedList}
+            allowPool
+            pool={bulkForcedPool} setPool={setBulkForcedPool}
+            poolLabel={`Cada um dos ${Math.max(1, Number(bulkCount) || 1)} código(s) sorteia ${Math.max(1, Number(bulkQty) || 1) > 1 ? `${Math.max(1, Number(bulkQty) || 1)} prêmios` : '1 prêmio'} aleatório(s) desta lista no momento da geração:`}
           />
         )}
         {lastBulkCodes.length > 0 && (
