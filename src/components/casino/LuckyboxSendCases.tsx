@@ -51,7 +51,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [sendWhats, setSendWhats] = useState(true);
 
   // Forced prize selection (send-to-users)
-  const [forcedMode, setForcedMode] = useState<'fixed' | 'list'>('fixed');
+  const [forcedMode, setForcedMode] = useState<ForcedMode>('fixed');
   const [forcedFixed, setForcedFixed] = useState<ForcedEntry | null>(null);
   const [forcedList, setForcedList] = useState<(ForcedEntry | null)[]>([]);
   const selectedCaseObj = useMemo(() => cases.find(c => c.id === caseId), [cases, caseId]);
@@ -59,9 +59,10 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   useEffect(() => { setForcedFixed(null); setForcedList([]); }, [caseId]);
 
   // Forced prize selection (bulk codes)
-  const [bulkForcedMode, setBulkForcedMode] = useState<'fixed' | 'list'>('fixed');
+  const [bulkForcedMode, setBulkForcedMode] = useState<ForcedMode>('fixed');
   const [bulkForcedFixed, setBulkForcedFixed] = useState<ForcedEntry | null>(null);
   const [bulkForcedList, setBulkForcedList] = useState<(ForcedEntry | null)[]>([]);
+  const [bulkForcedPool, setBulkForcedPool] = useState<ForcedEntry[]>([]);
 
   const baseUrl = window.location.origin;
 
