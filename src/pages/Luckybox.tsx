@@ -242,8 +242,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         toast.error('Conta não encontrada');
         return;
       }
-      // fetch tokens balance + case_grants
-      const { data: u } = await (supabase as any).from('wheel_users').select('tokens_balance,name,email,account_id,case_grants').eq('id', user.id).maybeSingle();
+      // fetch tokens balance + case_grants via RPC (works for anon users)
+      const { data: uData } = await (supabase as any).rpc('get_luckybox_user_state', { p_user_id: user.id });
+      const u = uData?.found ? uData : null;
       // Strict validation: email AND account_id must match exactly
       const inputEmail = loginEmail.trim().toLowerCase();
       const inputAccount = loginAccount.trim();
