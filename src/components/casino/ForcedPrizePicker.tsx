@@ -226,9 +226,9 @@ const ForcedPrizePicker = ({
       {mode === 'pool' && setPool && (
         <div className="space-y-2">
           <div className="text-xs opacity-70">
-            {poolLabel || 'Cada código sorteia 1 prêmio aleatório desta lista no momento da geração:'}
+            {poolLabel || 'Defina quantos códigos receberão cada prêmio. O total de códigos gerados = soma das quantidades.'}
           </div>
-          <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
             {pool.map((entry, i) => (
               <div key={i} className="flex items-start gap-2">
                 <div className="flex-1">
@@ -238,9 +238,22 @@ const ForcedPrizePicker = ({
                     value={entry}
                     onChange={(v) => {
                       const next = pool.slice();
-                      next[i] = v;
+                      next[i] = { ...v, count: entry?.count ?? 1 };
                       setPool(next);
                     }}
+                  />
+                </div>
+                <div className="w-24">
+                  <div className="text-[10px] opacity-60 mb-1">Qtd. códigos</div>
+                  <input
+                    type="number" min={1}
+                    value={entry?.count ?? 1}
+                    onChange={e => {
+                      const next = pool.slice();
+                      next[i] = { ...entry, count: Math.max(1, Number(e.target.value) || 1) };
+                      setPool(next);
+                    }}
+                    className="w-full px-2 py-2 rounded-xl border border-white/10 bg-white/5 text-sm"
                   />
                 </div>
                 {pool.length > 1 && (
@@ -254,11 +267,16 @@ const ForcedPrizePicker = ({
               </div>
             ))}
           </div>
-          <button type="button"
-            onClick={() => setPool([...pool, defaultEntry])}
-            className="px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 text-xs flex items-center gap-1 hover:bg-cyan-500/20">
-            <Plus size={12} /> Adicionar prêmio possível
-          </button>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <button type="button"
+              onClick={() => setPool([...pool, { ...defaultEntry, count: 1 }])}
+              className="px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 text-xs flex items-center gap-1 hover:bg-cyan-500/20">
+              <Plus size={12} /> Adicionar prêmio possível
+            </button>
+            <div className="text-xs text-cyan-300 font-semibold">
+              Total: {pool.reduce((s, e) => s + Math.max(1, Number(e?.count) || 1), 0)} código(s)
+            </div>
+          </div>
         </div>
       )}
     </div>
