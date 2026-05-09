@@ -11550,7 +11550,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
                     <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Recebido por</p>
                     <p className="text-sm font-bold" style={{ color: rFont }}>{rOperator}</p>
-                    <p className="text-xs" style={{ color: '#888' }}>Plataforma EdPay · https://api.edpay.me/</p>
+                    
                   </div>
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
                     <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Pagador</p>
