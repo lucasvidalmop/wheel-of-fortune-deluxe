@@ -911,8 +911,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
                           {cell.image
                             ? <img src={cell.image} alt={cell.label} draggable={false} className="max-h-[60%] max-w-[80%] object-contain pointer-events-none select-none" />
-                            : <div className="text-3xl">🎁</div>}
-                          <div className="text-[10px] font-bold mt-1 text-center line-clamp-1 px-1">{cell.label}</div>
+                            : <div className="text-4xl font-black leading-none" style={{ color: accent }}>{cell.label}</div>}
+                          {cell.image && <div className="text-[10px] font-bold mt-1 text-center line-clamp-1 px-1">{cell.label}</div>}
                         </div>
                         <ScratchCell
                           revealed={revealed}
