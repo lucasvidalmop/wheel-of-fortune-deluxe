@@ -11446,7 +11446,6 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
 
                   {/* Transaction Info */}
                   <div className="section" style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
-                  </div>
 
                     {receiptPayment.spin_result_id && (
                       <div className="row flex justify-between text-sm py-1">
