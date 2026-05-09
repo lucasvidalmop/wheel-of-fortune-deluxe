@@ -239,7 +239,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
   const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
   const bulkSelectedCase = useMemo(() => cases.find(c => c.id === bulkCaseId), [cases, bulkCaseId]);
-  useEffect(() => { setBulkForcedFixed(null); setBulkForcedList([]); }, [bulkCaseId]);
+  useEffect(() => { setBulkForcedFixed(null); setBulkForcedList([]); setBulkForcedPool([]); }, [bulkCaseId]);
 
   const toggleGrant = (id: string) => {
     const next = new Set(selectedGrants);
