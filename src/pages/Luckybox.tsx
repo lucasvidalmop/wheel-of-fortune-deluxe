@@ -508,7 +508,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 [0,4,8],[2,4,6],
               ];
               const winnerAligned = () => {
-                const idxs = cells.map((c, i) => c.label === sub.label ? i : -1).filter(i => i >= 0);
+                const idxs = cells.map((c, i) => scratchPrizeKey(c) === winnerKey ? i : -1).filter(i => i >= 0);
                 return lines.some(line => line.every(i => idxs.includes(i)));
               };
               let tries = 0;
