@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Send, Search, Check, Copy, MessageCircle, Trash2, RefreshCw } from 'lucide-react';
-import ForcedPrizePicker, { ForcedEntry, ForcedMode, buildForcedPrizes } from './ForcedPrizePicker';
+import ForcedPrizePicker, { ForcedEntry, ForcedMode, buildForcedPrizes, buildPoolDistribution } from './ForcedPrizePicker';
 
 interface Props {
   ownerId: string;
