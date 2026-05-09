@@ -102,6 +102,7 @@ export const defaultGorjetaConfig: GorjetaPageConfig = {
   limitTitle: 'Inscrições Esgotadas',
   limitSubtitle: 'Este link atingiu o limite máximo de inscrições.',
   casinoName: '',
+  accountIdMode: 'alphanumeric',
   ctaBtnText: 'CRIE SUA CONTA PARA PARTICIPAR DE TODOS OS SORTEIOS!',
   ctaBtnUrl: '',
   ctaBtnBgColor: '#ffffff',
