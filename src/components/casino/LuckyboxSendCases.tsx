@@ -236,6 +236,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkQty, setBulkQty] = useState(1);
   const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
   const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkOnePerUser, setBulkOnePerUser] = useState(false);
   const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
   const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
   const bulkSelectedCase = useMemo(() => cases.find(c => c.id === bulkCaseId), [cases, bulkCaseId]);
