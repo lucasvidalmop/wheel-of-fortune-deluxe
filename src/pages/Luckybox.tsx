@@ -358,6 +358,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   const handleOpenCase = async (c: LuckyCase) => {
     if (!authedUser) return;
+    // Prime audio inside the user gesture so the very first opening plays
+    // sounds without delay (browsers block audio until user interacts).
+    primeCaseTicks();
+    primePrizeWinSound();
     const grantQty = (authedUser.case_grants?.[c.id] || 0);
     if (grantQty <= 0 && authedUser.tokens_balance < c.price_tokens) {
       toast.error(`${cfg.coin_name || 'Coins'} insuficientes`);
