@@ -1056,15 +1056,11 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                           <div className="space-y-1">
                                             <div className="text-[9px] uppercase tracking-wide opacity-60">% Chance</div>
                                             <div className="relative">
-                                              <input
-                                                type="text"
-                                                inputMode="decimal"
-                                                value={sp.weight !== undefined && sp.weight !== null ? String(sp.weight).replace('.', ',') : ''}
-                                                onChange={e => {
-                                                  const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                                                  const num = raw === '' ? 0 : parseFloat(raw);
+                                              <WeightInput
+                                                value={sp.weight}
+                                                onChange={(num) => {
                                                   const arr = [...editingCase.prizes];
-                                                  const next = [...subs]; next[si] = { ...next[si], weight: Number.isFinite(num) ? num : 0 };
+                                                  const next = [...subs]; next[si] = { ...next[si], weight: num };
                                                   arr[i] = { ...arr[i], scratchPrizes: next };
                                                   setEditingCase({ ...editingCase, prizes: arr });
                                                 }}
