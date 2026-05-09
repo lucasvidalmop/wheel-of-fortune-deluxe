@@ -273,12 +273,44 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const buildReel = (prizes: CasePrize[], winnerIndex: number, syncedSteps?: number): { reel: CasePrize[]; targetIndex: number } => {
     // Build a long reel of ~60 random prizes + ensure winner sits at a specific index near the end
     const n = 60;
+
+    // Identify the highest-value prize to create the "almost won the jackpot" suspense
+    const prizeValue = (p: CasePrize) => {
+      const direct = Number((p as any)?.amount) || 0;
+      const subs = Array.isArray((p as any)?.scratchPrizes) ? (p as any).scratchPrizes : [];
+      const subMax = subs.reduce((m: number, s: any) => Math.max(m, Number(s?.amount) || 0), 0);
+      return Math.max(direct, subMax);
+    };
+    let bestIdx = 0;
+    let bestVal = -Infinity;
+    prizes.forEach((p, i) => {
+      const v = prizeValue(p);
+      if (v > bestVal) { bestVal = v; bestIdx = i; }
+    });
+
+    // Weighted pool: prizes appear in the reel proportional to value (good prizes show more often)
+    const weights = prizes.map(p => Math.max(1, prizeValue(p)));
+    const totalW = weights.reduce((a, b) => a + b, 0);
+    const pickWeighted = () => {
+      let r = Math.random() * totalW;
+      for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return prizes[i];
+      }
+      return prizes[prizes.length - 1];
+    };
+
     const reel: CasePrize[] = [];
-    for (let i = 0; i < n; i++) {
-      reel.push(prizes[Math.floor(Math.random() * prizes.length)]);
-    }
+    for (let i = 0; i < n; i++) reel.push(pickWeighted());
+
     const target = syncedSteps ? Math.min(n - 8, Math.max(8, syncedSteps)) : n - 8;
     reel[target] = prizes[winnerIndex];
+
+    // Place the best prize right next to the winner (suspense neighbors)
+    if (prizes.length > 1 && bestIdx !== winnerIndex) {
+      if (target - 1 >= 0) reel[target - 1] = prizes[bestIdx];
+      if (target + 1 < n) reel[target + 1] = prizes[bestIdx];
+    }
     return { reel, targetIndex: target };
   };
 
