@@ -102,6 +102,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchCells, setScratchCells] = useState<ScratchPrize[]>([]);
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
   const [drawnCases, setDrawnCases] = useState<DrawnCase[]>([]);
+  const [signupRefCode, setSignupRefCode] = useState<string>('');
 
 
   const pc = cfg?.page_config || {};
@@ -119,6 +120,18 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       setCfg(data.config);
       setCases(data.cases || []);
       setLoading(false);
+      // Fetch a default referral code for this operator so the signup link tracks them
+      if (data.config?.owner_id) {
+        const { data: refRow } = await (supabase as any)
+          .from('referral_links')
+          .select('code')
+          .eq('owner_id', data.config.owner_id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (refRow?.code) setSignupRefCode(refRow.code);
+      }
     })();
   }, [tag]);
 
