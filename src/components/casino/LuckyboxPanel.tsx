@@ -890,6 +890,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                           {collapsedPrizes.has(i) && (
                             <span className="opacity-70 truncate max-w-[180px]">· {p.label}</span>
                           )}
+                          <span className="text-cyan-400 font-semibold text-[11px] tabular-nums">
+                            {pct.toFixed(pct < 1 && pct > 0 ? 3 : 2)}%
+                          </span>
                         </button>
                         <div className="flex items-center gap-1">
                           <button
