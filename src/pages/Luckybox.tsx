@@ -139,6 +139,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [redeemCode, setRedeemCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [showRules, setShowRules] = useState(false);
 
   // Opening
   const [openingCase, setOpeningCase] = useState<LuckyCase | null>(null);
