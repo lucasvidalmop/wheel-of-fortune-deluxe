@@ -11534,7 +11534,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                   <div className="text-center space-y-1">
                     <div className="text-2xl">💰</div>
                     <h2 className="text-lg font-extrabold tracking-wider uppercase" style={{ color: rFont }}>Comprovante de Recebimento</h2>
-                    <p className="text-xs" style={{ color: '#888' }}>Depósito PIX via EdPay</p>
+                    <p className="text-xs" style={{ color: '#888' }}>Depósito PIX</p>
                     <div className="mt-3">
                       <span style={{ display: 'inline-block', padding: '6px 20px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: isPaid ? '#d1fae5' : '#fee2e2', color: isPaid ? '#047857' : '#b91c1c', border: `1px solid ${isPaid ? '#6ee7b7' : '#fca5a5'}` }}>
                         {isPaid ? '✓ DEPÓSITO CONFIRMADO' : '⏳ AGUARDANDO PAGAMENTO'}
