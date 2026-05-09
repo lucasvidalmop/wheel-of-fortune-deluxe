@@ -41,6 +41,8 @@ export interface GorjetaPageConfig {
   limitSubtitle: string;
   // Casino name
   casinoName: string;
+  // ID input mode: 'numeric' or 'alphanumeric'
+  accountIdMode: 'numeric' | 'alphanumeric';
   // CTA button
   ctaBtnText: string;
   ctaBtnUrl: string;
