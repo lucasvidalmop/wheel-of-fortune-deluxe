@@ -862,6 +862,16 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             <h1 className="text-lg font-bold" style={{ color: pc.titleColor || '#fff' }}>{pc.title || 'Caixa Misteriosa'}</h1>
           </div>
           <div className="flex items-center gap-3">
+            {pc.rulesText && (
+              <button
+                onClick={() => setShowRules(true)}
+                className="w-8 h-8 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition flex items-center justify-center"
+                title={pc.rulesTitle || 'Regras'}
+                aria-label="Ver regras"
+              >
+                <HelpCircle size={16} />
+              </button>
+            )}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5">
               <CoinIcon size={16} color={accent} />
               <span className="font-bold tabular-nums">{authedUser.tokens_balance}</span>
