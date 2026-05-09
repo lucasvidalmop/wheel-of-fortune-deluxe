@@ -42,6 +42,28 @@ const playPrizeWinSound = () => {
 };
 ensurePrizeWinAudio();
 
+// Preload a list of image URLs in parallel. Resolves when all complete (or
+// after `timeoutMs`), so the reel never starts spinning over blank cards.
+const preloadImages = (urls: (string | undefined | null)[], timeoutMs = 2500): Promise<void> => {
+  const unique = Array.from(new Set(urls.filter(Boolean) as string[]));
+  if (unique.length === 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    let remaining = unique.length;
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    const tick = () => { remaining--; if (remaining <= 0) finish(); };
+    unique.forEach((src) => {
+      const img = new Image();
+      img.decoding = 'async';
+      (img as any).fetchPriority = 'high';
+      img.onload = tick;
+      img.onerror = tick;
+      img.src = src;
+    });
+    setTimeout(finish, timeoutMs);
+  });
+};
+
 interface ScratchPrize {
   label: string;
   amount?: number;
@@ -435,6 +457,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           });
         } catch {}
 
+        // Wait for all reel images to finish loading so the animation
+        // doesn't start over blank cards on slow mobile networks.
+        await preloadImages(reel.map(p => p.image));
+
         requestAnimationFrame(() => {
           setTimeout(() => {
             const itemWidth = 168;
@@ -534,6 +560,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           },
         });
       } catch {}
+
+      // Preload reel + scratch images so the animation starts smoothly on mobile.
+      await preloadImages([
+        ...reel.map(p => p.image),
+        ...((prize?.scratchPrizes || []).map((s: any) => s?.image)),
+      ]);
 
       // Animate
       requestAnimationFrame(() => {
@@ -957,7 +989,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
       {/* Opening modal */}
       {openingCase && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 sm:backdrop-blur-md">
           <div className="relative w-full max-w-3xl rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/40 p-6 shadow-[0_8px_60px_rgba(0,0,0,0.8)]">
             {phase !== 'spinning' && phase !== 'scratch' && (
               <button onClick={closeOpening} className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
@@ -993,8 +1025,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 id="luckybox-reel-inner"
                 className="absolute inset-y-0 left-0 flex items-center gap-2 will-change-transform"
                 style={{
-                  transform: `translateX(${reelOffset}px)`,
+                  transform: `translate3d(${reelOffset}px, 0, 0)`,
                   transition: reelTransition,
+                  backfaceVisibility: 'hidden',
                 }}
               >
                 {reelPrizes.map((p, i) => (
@@ -1008,7 +1041,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   >
                     <div className="flex items-center justify-center p-2 min-h-0 overflow-hidden">
                       {p.image
-                        ? <img src={p.image} alt={p.label} className="max-h-full max-w-full object-contain" />
+                        ? <img src={p.image} alt={p.label} loading="eager" decoding="async" fetchPriority="high" className="max-h-full max-w-full object-contain" />
                         : <div className="text-4xl leading-none">🎁</div>}
                     </div>
                     <div className="text-[11px] font-semibold text-center line-clamp-1 px-2 py-1.5 border-t border-white/5 bg-black/30">{p.label}</div>
