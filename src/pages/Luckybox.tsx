@@ -230,7 +230,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     }
     setLogging(true);
     try {
-      const { data, error } = await (supabase as any).rpc('authenticate_wheel_user', {
+      const { data, error } = await (supabase as any).rpc('authenticate_luckybox_user', {
         p_email: loginEmail.trim(),
         p_account_id: loginAccount.trim(),
         p_owner_id: cfg!.owner_id,
