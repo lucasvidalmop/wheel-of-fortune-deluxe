@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Sparkles, Layers, Package } from 'lucide-react';
+import { Sparkles, Layers, Package, Shuffle, Plus, Trash2 } from 'lucide-react';
 
 export interface ForcedEntry {
   prize_index?: number;
@@ -7,16 +7,23 @@ export interface ForcedEntry {
   case_ids?: string[];
 }
 
+export type ForcedMode = 'fixed' | 'list' | 'pool';
+
 interface Props {
   selectedCase: any;
   allCases: any[];
   openingsCount: number;
-  mode: 'fixed' | 'list';
-  setMode: (m: 'fixed' | 'list') => void;
+  mode: ForcedMode;
+  setMode: (m: ForcedMode) => void;
   fixed: ForcedEntry | null;
   setFixed: (e: ForcedEntry | null) => void;
   list: (ForcedEntry | null)[];
   setList: (l: (ForcedEntry | null)[]) => void;
+  // Pool mode (optional — enable with allowPool)
+  allowPool?: boolean;
+  pool?: ForcedEntry[];
+  setPool?: (p: ForcedEntry[]) => void;
+  poolLabel?: string;
 }
 
 const PrizeRow = ({
