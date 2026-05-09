@@ -3,16 +3,44 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
-import { scheduleCaseTicks, cancelCaseTicks } from '@/lib/caseTickSound';
+import { scheduleCaseTicks, cancelCaseTicks, primeCaseTicks } from '@/lib/caseTickSound';
 
 const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
-const playPrizeWinSound = () => {
+let prizeWinAudio: HTMLAudioElement | null = null;
+let prizeWinPrimed = false;
+const ensurePrizeWinAudio = () => {
+  if (prizeWinAudio) return prizeWinAudio;
+  if (typeof window === 'undefined') return null;
+  prizeWinAudio = new Audio(PRIZE_WIN_SOUND_URL);
+  prizeWinAudio.preload = 'auto';
+  prizeWinAudio.volume = 0.85;
+  try { prizeWinAudio.load(); } catch { /* noop */ }
+  return prizeWinAudio;
+};
+const primePrizeWinSound = () => {
+  const a = ensurePrizeWinAudio();
+  if (!a || prizeWinPrimed) return;
+  prizeWinPrimed = true;
   try {
-    const a = new Audio(PRIZE_WIN_SOUND_URL);
-    a.volume = 0.85;
+    a.muted = true;
+    const p = a.play();
+    if (p && typeof p.then === 'function') {
+      p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; })
+        .catch(() => { a.muted = false; });
+    } else {
+      a.pause(); a.currentTime = 0; a.muted = false;
+    }
+  } catch { /* noop */ }
+};
+const playPrizeWinSound = () => {
+  const a = ensurePrizeWinAudio();
+  if (!a) return;
+  try {
+    a.currentTime = 0;
     a.play().catch(() => {});
   } catch { /* noop */ }
 };
+ensurePrizeWinAudio();
 
 interface ScratchPrize {
   label: string;
@@ -330,6 +358,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   const handleOpenCase = async (c: LuckyCase) => {
     if (!authedUser) return;
+    // Prime audio inside the user gesture so the very first opening plays
+    // sounds without delay (browsers block audio until user interacts).
+    primeCaseTicks();
+    primePrizeWinSound();
     const grantQty = (authedUser.case_grants?.[c.id] || 0);
     if (grantQty <= 0 && authedUser.tokens_balance < c.price_tokens) {
       toast.error(`${cfg.coin_name || 'Coins'} insuficientes`);
