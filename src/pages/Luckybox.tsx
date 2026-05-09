@@ -888,6 +888,36 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         </div>
       </header>
 
+      {showRules && pc.rulesText && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowRules(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0f1a] p-5 shadow-2xl"
+            style={{ borderColor: (pc.accentColor || '#22d3ee') + '40' }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <HelpCircle size={18} style={{ color: pc.accentColor || '#22d3ee' }} />
+                {pc.rulesTitle || 'Regras'}
+              </h3>
+              <button
+                onClick={() => setShowRules(false)}
+                className="p-1.5 rounded-lg hover:bg-white/10 transition"
+                aria-label="Fechar"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="text-sm whitespace-pre-wrap opacity-90 leading-relaxed max-h-[60vh] overflow-y-auto">
+              {pc.rulesText}
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Redeem code */}
         <div className="mb-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4">
