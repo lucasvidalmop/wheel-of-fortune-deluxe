@@ -242,8 +242,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         toast.error('Conta não encontrada');
         return;
       }
-      // fetch tokens balance + case_grants
-      const { data: u } = await (supabase as any).from('wheel_users').select('tokens_balance,name,email,account_id,case_grants').eq('id', user.id).maybeSingle();
+      // fetch tokens balance + case_grants via RPC (works for anon users)
+      const { data: uData } = await (supabase as any).rpc('get_luckybox_user_state', { p_user_id: user.id });
+      const u = uData?.found ? uData : null;
       // Strict validation: email AND account_id must match exactly
       const inputEmail = loginEmail.trim().toLowerCase();
       const inputAccount = loginAccount.trim();
@@ -272,8 +273,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
   const refreshTokens = async () => {
     if (!authedUser) return;
-    const { data } = await (supabase as any).from('wheel_users').select('tokens_balance,case_grants').eq('id', authedUser.id).maybeSingle();
-    if (data) {
+    const { data } = await (supabase as any).rpc('get_luckybox_user_state', { p_user_id: authedUser.id });
+    if (data?.found) {
       const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? 0, case_grants: (data.case_grants as Record<string, number>) || {} };
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
