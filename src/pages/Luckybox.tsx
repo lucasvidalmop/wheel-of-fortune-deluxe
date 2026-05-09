@@ -632,11 +632,17 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   }, [authedUser?.id, cases.length]);
 
   useEffect(() => {
-    if (phase === 'scratch' && scratchedIdx.size >= 9) {
+    if (phase !== 'scratch') return;
+    // Auto-finish: if the 3 winning cells are already revealed, no need to scratch the rest
+    const winnerKey = scratchPrizeKey(scratchWinner);
+    const winnerRevealed = scratchCells.length === 9 && winnerKey
+      ? scratchCells.every((c, i) => scratchPrizeKey(c) !== winnerKey || scratchedIdx.has(i))
+      : false;
+    if (winnerRevealed || scratchedIdx.size >= 9) {
       const t = setTimeout(() => { playPrizeWinSound(); setPhase('done'); }, 800);
       return () => clearTimeout(t);
     }
-  }, [phase, scratchedIdx]);
+  }, [phase, scratchedIdx, scratchCells, scratchWinner]);
 
   // Background style
   const bgStyle: React.CSSProperties = useMemo(() => ({
