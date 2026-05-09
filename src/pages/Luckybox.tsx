@@ -742,6 +742,22 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     coinIconUrl
       ? <img src={coinIconUrl} alt="" style={{ width: size, height: size }} className="object-contain inline-block" />
       : <Coins size={size} style={color ? { color } : undefined} />;
+  const getPreviewPrizes = (caseData: LuckyCase): CasePrize[] => {
+    if (caseData.mode !== 'case_pool') return caseData.prizes || [];
+    const poolItems = (caseData.prize_pool?.items || []) as CasePoolItem[];
+    return poolItems
+      .map(item => {
+        const pooledCase = cases.find(x => x.id === item.case_id);
+        if (!pooledCase) return null;
+        return {
+          label: pooledCase.name,
+          image: pooledCase.image_url,
+          rarity: pooledCase.rarity,
+          weight: item.weight,
+        } as CasePrize;
+      })
+      .filter(Boolean) as CasePrize[];
+  };
   return (
     <div className="min-h-screen text-white" style={bgStyle}>
       {/* Header */}
@@ -1132,11 +1148,14 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             </button>
             <div className="text-center mb-5">
               <h3 className="text-xl font-bold">{prizesPreview.name}</h3>
-              <p className="text-xs opacity-60 mt-1">{prizesPreview.prizes.length} prêmios possíveis</p>
+              <p className="text-xs opacity-60 mt-1">
+                {getPreviewPrizes(prizesPreview).length} {prizesPreview.mode === 'case_pool' ? 'caixas possíveis' : 'prêmios possíveis'}
+              </p>
             </div>
             <div className="overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pr-1">
-              {prizesPreview.prizes.map((p, i) => {
-                const totalWeight = prizesPreview.prizes.reduce((s, x) => s + (x.weight || 1), 0);
+              {getPreviewPrizes(prizesPreview).map((p, i) => {
+                const previewPrizes = getPreviewPrizes(prizesPreview);
+                const totalWeight = previewPrizes.reduce((s, x) => s + (x.weight || 1), 0);
                 const chance = ((p.weight || 1) / totalWeight) * 100;
                 return (
                   <div
