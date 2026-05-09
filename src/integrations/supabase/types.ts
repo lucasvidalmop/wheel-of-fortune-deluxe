@@ -1576,6 +1576,17 @@ export type Database = {
             }
             Returns: number
           }
+      authenticate_luckybox_user: {
+        Args: { p_account_id: string; p_email: string; p_owner_id: string }
+        Returns: {
+          account_id: string
+          blacklisted: boolean
+          email: string
+          id: string
+          name: string
+          owner_id: string
+        }[]
+      }
       authenticate_wheel_user: {
         Args: { p_account_id: string; p_email: string; p_owner_id?: string }
         Returns: {
