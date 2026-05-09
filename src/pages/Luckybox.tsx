@@ -42,6 +42,28 @@ const playPrizeWinSound = () => {
 };
 ensurePrizeWinAudio();
 
+// Preload a list of image URLs in parallel. Resolves when all complete (or
+// after `timeoutMs`), so the reel never starts spinning over blank cards.
+const preloadImages = (urls: (string | undefined | null)[], timeoutMs = 2500): Promise<void> => {
+  const unique = Array.from(new Set(urls.filter(Boolean) as string[]));
+  if (unique.length === 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    let remaining = unique.length;
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    const tick = () => { remaining--; if (remaining <= 0) finish(); };
+    unique.forEach((src) => {
+      const img = new Image();
+      img.decoding = 'async';
+      (img as any).fetchPriority = 'high';
+      img.onload = tick;
+      img.onerror = tick;
+      img.src = src;
+    });
+    setTimeout(finish, timeoutMs);
+  });
+};
+
 interface ScratchPrize {
   label: string;
   amount?: number;
