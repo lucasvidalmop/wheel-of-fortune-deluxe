@@ -561,6 +561,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         });
       } catch {}
 
+      // Preload reel + scratch images so the animation starts smoothly on mobile.
+      await preloadImages([
+        ...reel.map(p => p.image),
+        ...((prize?.scratchPrizes || []).map((s: any) => s?.image)),
+      ]);
+
       // Animate
       requestAnimationFrame(() => {
         setTimeout(() => {
