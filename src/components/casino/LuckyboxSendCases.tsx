@@ -286,6 +286,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     }
 
     setBulkGenerating(true);
+    const batchId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : undefined;
     const rows = Array.from({ length: totalCodes }).map((_, idx) => {
       let forcedPrizes: ForcedEntry[];
       if (bulkForcedMode === 'pool' && perCodeForcedEntry) {
@@ -307,6 +308,8 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         quantity: qty,
         status: 'pending',
         forced_prizes: forcedPrizes,
+        batch_id: batchId,
+        one_per_user: bulkOnePerUser,
       };
     });
 
