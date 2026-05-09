@@ -735,6 +735,32 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 ))}
               </div>
             </div>
+
+            <div>
+              <h4 className="text-[11px] uppercase tracking-wider opacity-60 mb-2">Regras (botão "?" ao lado das coins)</h4>
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium mb-1 opacity-70">Título do modal</label>
+                  <input
+                    defaultValue={pc.rulesTitle || ''}
+                    onBlur={e => { const v = e.target.value; if (v !== (pc.rulesTitle || '')) updatePageConfig({ rulesTitle: v }); }}
+                    placeholder="Regras"
+                    className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium mb-1 opacity-70">Texto das regras</label>
+                  <textarea
+                    defaultValue={pc.rulesText || ''}
+                    onBlur={e => { const v = e.target.value; if (v !== (pc.rulesText || '')) updatePageConfig({ rulesText: v }); }}
+                    placeholder="Descreva as regras que o usuário verá ao clicar no botão ? ao lado das coins..."
+                    rows={6}
+                    className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm resize-y"
+                  />
+                  <p className="text-[11px] opacity-50 mt-1">Deixe vazio para ocultar o botão "?".</p>
+                </div>
+              </div>
+            </div>
           </section>
 
           {savingCfg && <div className="text-xs opacity-60">Salvando...</div>}

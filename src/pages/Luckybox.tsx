@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
+import { Coins, Eye, LogOut, Package, Sparkles, X, HelpCircle } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
 import { scheduleCaseTicks, cancelCaseTicks, primeCaseTicks } from '@/lib/caseTickSound';
 
@@ -139,6 +139,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [redeemCode, setRedeemCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [showRules, setShowRules] = useState(false);
 
   // Opening
   const [openingCase, setOpeningCase] = useState<LuckyCase | null>(null);
@@ -861,6 +862,16 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             <h1 className="text-lg font-bold" style={{ color: pc.titleColor || '#fff' }}>{pc.title || 'Caixa Misteriosa'}</h1>
           </div>
           <div className="flex items-center gap-3">
+            {pc.rulesText && (
+              <button
+                onClick={() => setShowRules(true)}
+                className="w-8 h-8 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition flex items-center justify-center"
+                title={pc.rulesTitle || 'Regras'}
+                aria-label="Ver regras"
+              >
+                <HelpCircle size={16} />
+              </button>
+            )}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5">
               <CoinIcon size={16} color={accent} />
               <span className="font-bold tabular-nums">{authedUser.tokens_balance}</span>
@@ -876,6 +887,36 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           </div>
         </div>
       </header>
+
+      {showRules && pc.rulesText && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowRules(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0f1a] p-5 shadow-2xl"
+            style={{ borderColor: (pc.accentColor || '#22d3ee') + '40' }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <HelpCircle size={18} style={{ color: pc.accentColor || '#22d3ee' }} />
+                {pc.rulesTitle || 'Regras'}
+              </h3>
+              <button
+                onClick={() => setShowRules(false)}
+                className="p-1.5 rounded-lg hover:bg-white/10 transition"
+                aria-label="Fechar"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="text-sm whitespace-pre-wrap opacity-90 leading-relaxed max-h-[60vh] overflow-y-auto">
+              {pc.rulesText}
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Redeem code */}
