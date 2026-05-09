@@ -236,6 +236,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkQty, setBulkQty] = useState(1);
   const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
   const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkOnePerUser, setBulkOnePerUser] = useState(false);
   const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
   const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
   const bulkSelectedCase = useMemo(() => cases.find(c => c.id === bulkCaseId), [cases, bulkCaseId]);
@@ -285,6 +286,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     }
 
     setBulkGenerating(true);
+    const batchId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : undefined;
     const rows = Array.from({ length: totalCodes }).map((_, idx) => {
       let forcedPrizes: ForcedEntry[];
       if (bulkForcedMode === 'pool' && perCodeForcedEntry) {
@@ -306,6 +308,8 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         quantity: qty,
         status: 'pending',
         forced_prizes: forcedPrizes,
+        batch_id: batchId,
+        one_per_user: bulkOnePerUser,
       };
     });
 
@@ -546,6 +550,24 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
               {bulkGenerating ? 'Gerando...' : 'Gerar códigos'}
             </button>
           </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={bulkOnePerUser}
+              onChange={e => setBulkOnePerUser(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-fuchsia-500"
+            />
+            <div>
+              <div className="text-sm font-medium">Limitar a 1 código por pessoa neste lote</div>
+              <div className="text-xs opacity-60 mt-0.5">
+                {bulkOnePerUser
+                  ? 'Cada usuário (e-mail/ID) só conseguirá resgatar 1 código deste lote. Os demais códigos do lote ficam bloqueados para essa pessoa.'
+                  : 'A mesma pessoa pode resgatar vários códigos deste lote.'}
+              </div>
+            </div>
+          </label>
         </div>
         {bulkSelectedCase && (
           <ForcedPrizePicker
