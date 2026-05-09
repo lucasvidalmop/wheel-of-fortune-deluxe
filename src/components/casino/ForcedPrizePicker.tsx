@@ -298,12 +298,37 @@ export function buildForcedPrizes(
     return Array.from({ length: openingsCount }).map(() => ({ ...fixed }));
   }
   if (mode === 'pool') {
-    const validPool = (pool || []).filter(e => e && Object.keys(e).length > 0);
+    const validPool = (pool || []).filter(e => e && (e.prize_index !== undefined || e.case_ids));
     if (validPool.length === 0) return [];
     return Array.from({ length: openingsCount }).map(() => {
       const pick = validPool[Math.floor(Math.random() * validPool.length)];
-      return { ...pick };
+      const { count, ...rest } = pick;
+      return { ...rest };
     });
   }
   return Array.from({ length: openingsCount }).map((_, i) => list[i] || {});
+}
+
+/**
+ * Pool mode helper: builds an exact, shuffled distribution of prize entries
+ * — one per code — based on the `count` of each pool item.
+ * Returns `null` if the pool is empty/invalid.
+ */
+export function buildPoolDistribution(pool: ForcedEntry[]): ForcedEntry[] | null {
+  const valid = (pool || []).filter(e => e && (e.prize_index !== undefined || e.case_ids));
+  if (valid.length === 0) return null;
+  const expanded: ForcedEntry[] = [];
+  for (const e of valid) {
+    const n = Math.max(1, Number(e.count) || 1);
+    for (let i = 0; i < n; i++) {
+      const { count, ...rest } = e;
+      expanded.push({ ...rest });
+    }
+  }
+  // Fisher-Yates shuffle
+  for (let i = expanded.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [expanded[i], expanded[j]] = [expanded[j], expanded[i]];
+  }
+  return expanded;
 }
