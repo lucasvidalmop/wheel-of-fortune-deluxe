@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
+import { scheduleCaseTicks, cancelCaseTicks } from '@/lib/caseTickSound';
 
 const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
 const playPrizeWinSound = () => {
