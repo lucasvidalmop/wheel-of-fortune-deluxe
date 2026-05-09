@@ -11431,7 +11431,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                   <div className="text-center space-y-1">
                     <div className="text-2xl">💳</div>
                     <h2 className="text-lg font-extrabold tracking-wider uppercase" style={{ color: rFont }}>Comprovante de Pagamento</h2>
-                    <p className="text-xs" style={{ color: '#888' }}>Transferência PIX via EdPay</p>
+                    <p className="text-xs" style={{ color: '#888' }}>Transferência PIX</p>
                     <div className="mt-3">
                       <span style={{
                         display: 'inline-block', padding: '6px 20px', borderRadius: 20, fontSize: 12, fontWeight: 700,
