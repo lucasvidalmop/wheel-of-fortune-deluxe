@@ -946,18 +946,14 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                             Chance de sair <span className="opacity-70">— vazio = nunca · 0,00000001 = raríssimo</span>
                           </label>
                           <div className="relative">
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={p.weight ? String(p.weight).replace('.', ',') : ''}
-                              onChange={e => {
-                                const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                                const num = raw === '' ? 0 : parseFloat(raw);
+                            <WeightInput
+                              value={p.weight}
+                              onChange={(num) => {
                                 const arr = [...editingCase.prizes];
-                                arr[i] = { ...arr[i], weight: Number.isFinite(num) ? num : 0 };
+                                arr[i] = { ...arr[i], weight: num };
                                 setEditingCase({ ...editingCase, prizes: arr });
                               }}
-                              placeholder="Ex: 50, 0,5 ou 0,00000001"
+                              placeholder="Ex: 50, 0,5 ou 0,001"
                               className="w-full px-3 py-2 pr-16 rounded-lg border border-white/10 bg-white/5 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono opacity-60">
