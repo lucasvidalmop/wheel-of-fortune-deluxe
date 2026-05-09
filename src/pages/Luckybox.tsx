@@ -725,7 +725,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           </button>
           <p className="text-center text-xs" style={{ color: pc.subtitleColor || 'rgba(255,255,255,0.7)' }}>
             Não tem conta ainda?{' '}
-            <a href="/gorjeta" className="font-semibold underline-offset-2 hover:underline" style={{ color: accent }}>
+            <a href={signupRefCode ? `/gorjeta?ref=${signupRefCode}` : '/gorjeta'} className="font-semibold underline-offset-2 hover:underline" style={{ color: accent }}>
               Clique aqui
             </a>
           </p>
