@@ -1040,7 +1040,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   >
                     <div className="flex items-center justify-center p-2 min-h-0 overflow-hidden">
                       {p.image
-                        ? <img src={p.image} alt={p.label} className="max-h-full max-w-full object-contain" />
+                        ? <img src={p.image} alt={p.label} loading="eager" decoding="async" fetchPriority="high" className="max-h-full max-w-full object-contain" />
                         : <div className="text-4xl leading-none">🎁</div>}
                     </div>
                     <div className="text-[11px] font-semibold text-center line-clamp-1 px-2 py-1.5 border-t border-white/5 bg-black/30">{p.label}</div>
