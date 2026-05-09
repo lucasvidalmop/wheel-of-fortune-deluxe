@@ -710,6 +710,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           <button type="submit" disabled={logging} className="w-full py-3 rounded-xl font-bold text-sm transition disabled:opacity-50" style={{ background: accent, color: pc.btnTextColor || '#000' }}>
             {logging ? 'Entrando...' : (pc.loginBtnText || 'Entrar')}
           </button>
+          <p className="text-center text-xs" style={{ color: pc.subtitleColor || 'rgba(255,255,255,0.7)' }}>
+            Não tem conta ainda?{' '}
+            <a href="/gorjeta" className="font-semibold underline-offset-2 hover:underline" style={{ color: accent }}>
+              Clique aqui
+            </a>
+          </p>
         </form>
       </div>
     );
