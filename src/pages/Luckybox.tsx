@@ -243,6 +243,15 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       }
       // fetch tokens balance + case_grants
       const { data: u } = await (supabase as any).from('wheel_users').select('tokens_balance,name,email,account_id,case_grants').eq('id', user.id).maybeSingle();
+      // Strict validation: email AND account_id must match exactly
+      const inputEmail = loginEmail.trim().toLowerCase();
+      const inputAccount = loginAccount.trim();
+      const dbEmail = (u?.email || user.email || '').trim().toLowerCase();
+      const dbAccount = (u?.account_id || user.account_id || '').trim();
+      if (dbEmail !== inputEmail || dbAccount !== inputAccount) {
+        toast.error('E-mail ou ID da Conta inválidos');
+        return;
+      }
       const sess = {
         id: user.id,
         name: u?.name || user.name || '',
