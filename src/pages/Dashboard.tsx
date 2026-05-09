@@ -11431,7 +11431,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                   <div className="text-center space-y-1">
                     <div className="text-2xl">💳</div>
                     <h2 className="text-lg font-extrabold tracking-wider uppercase" style={{ color: rFont }}>Comprovante de Pagamento</h2>
-                    <p className="text-xs" style={{ color: '#888' }}>Transferência PIX via EdPay</p>
+                    <p className="text-xs" style={{ color: '#888' }}>Transferência PIX</p>
                     <div className="mt-3">
                       <span style={{
                         display: 'inline-block', padding: '6px 20px', borderRadius: 20, fontSize: 12, fontWeight: 700,
@@ -11446,12 +11446,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
 
                   {/* Transaction Info */}
                   <div className="section" style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
-                    {receiptPayment.edpay_transaction_id && (
-                      <div className="row flex justify-between text-sm py-1">
-                        <span style={{ color: '#888' }}>ID EdPay</span>
-                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{receiptPayment.edpay_transaction_id}</span>
-                      </div>
-                    )}
+
                     {receiptPayment.spin_result_id && (
                       <div className="row flex justify-between text-sm py-1">
                         <span style={{ color: '#888' }}>ID do Sorteio</span>
@@ -11470,7 +11465,6 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
                     <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Enviado por</p>
                     <p className="text-sm font-bold" style={{ color: rFont }}>{rOperator}</p>
-                    <p className="text-xs" style={{ color: '#888' }}>Plataforma EdPay · https://api.edpay.me/</p>
                   </div>
 
                   {/* Receiver */}
@@ -11540,7 +11534,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                   <div className="text-center space-y-1">
                     <div className="text-2xl">💰</div>
                     <h2 className="text-lg font-extrabold tracking-wider uppercase" style={{ color: rFont }}>Comprovante de Recebimento</h2>
-                    <p className="text-xs" style={{ color: '#888' }}>Depósito PIX via EdPay</p>
+                    <p className="text-xs" style={{ color: '#888' }}>Depósito PIX</p>
                     <div className="mt-3">
                       <span style={{ display: 'inline-block', padding: '6px 20px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: isPaid ? '#d1fae5' : '#fee2e2', color: isPaid ? '#047857' : '#b91c1c', border: `1px solid ${isPaid ? '#6ee7b7' : '#fca5a5'}` }}>
                         {isPaid ? '✓ DEPÓSITO CONFIRMADO' : '⏳ AGUARDANDO PAGAMENTO'}
@@ -11548,12 +11542,6 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                     </div>
                   </div>
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
-                    {depositReceipt.edpay_id && (
-                      <div className="flex justify-between text-sm py-1">
-                        <span style={{ color: '#888' }}>ID EdPay</span>
-                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{depositReceipt.edpay_id}</span>
-                      </div>
-                    )}
                     <div className="flex justify-between text-sm py-1">
                       <span style={{ color: '#888' }}>Data/Hora</span>
                       <span className="font-semibold" style={{ color: rFont }}>{new Date(depositReceipt.created_at).toLocaleString('pt-BR')}</span>
@@ -11562,7 +11550,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
                     <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Recebido por</p>
                     <p className="text-sm font-bold" style={{ color: rFont }}>{rOperator}</p>
-                    <p className="text-xs" style={{ color: '#888' }}>Plataforma EdPay · https://api.edpay.me/</p>
+                    
                   </div>
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
                     <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: '#999' }}>Pagador</p>
