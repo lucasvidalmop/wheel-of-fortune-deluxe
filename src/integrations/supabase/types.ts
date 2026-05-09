@@ -376,12 +376,14 @@ export type Database = {
       }
       luckybox_grants: {
         Row: {
+          batch_id: string | null
           case_id: string
           case_name: string
           code: string
           created_at: string
           forced_prizes: Json | null
           id: string
+          one_per_user: boolean
           owner_id: string
           quantity: number
           recipient_account_id: string
@@ -396,12 +398,14 @@ export type Database = {
           wheel_user_id: string | null
         }
         Insert: {
+          batch_id?: string | null
           case_id: string
           case_name?: string
           code: string
           created_at?: string
           forced_prizes?: Json | null
           id?: string
+          one_per_user?: boolean
           owner_id: string
           quantity?: number
           recipient_account_id?: string
@@ -416,12 +420,14 @@ export type Database = {
           wheel_user_id?: string | null
         }
         Update: {
+          batch_id?: string | null
           case_id?: string
           case_name?: string
           code?: string
           created_at?: string
           forced_prizes?: Json | null
           id?: string
+          one_per_user?: boolean
           owner_id?: string
           quantity?: number
           recipient_account_id?: string
