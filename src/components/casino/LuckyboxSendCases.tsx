@@ -266,21 +266,33 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     if (!bulkCaseId) { toast.error('Selecione uma caixa'); return; }
     const selectedCase = cases.find(c => c.id === bulkCaseId);
     if (!selectedCase) { toast.error('Caixa inválida'); return; }
-    const n = Math.max(1, Math.min(2000, Number(bulkCount) || 0));
     const qty = Math.max(1, Number(bulkQty) || 1);
 
-    // Validate pool mode upfront (each code is randomized below)
+    // In pool mode, the number of codes = sum of per-prize counts (shuffled distribution)
+    let perCodeForcedEntry: ForcedEntry[] | null = null;
+    let totalCodes = Math.max(1, Math.min(2000, Number(bulkCount) || 0));
     if (bulkForcedMode === 'pool') {
-      const validPool = bulkForcedPool.filter(e => e && Object.keys(e).length > 0);
-      if (validPool.length === 0) {
+      perCodeForcedEntry = buildPoolDistribution(bulkForcedPool);
+      if (!perCodeForcedEntry || perCodeForcedEntry.length === 0) {
         toast.error('Adicione ao menos um prêmio possível ao sorteio');
+        return;
+      }
+      totalCodes = perCodeForcedEntry.length;
+      if (totalCodes > 2000) {
+        toast.error('Limite de 2000 códigos por lote');
         return;
       }
     }
 
     setBulkGenerating(true);
-    const rows = Array.from({ length: n }).map(() => {
-      const forcedPrizes = buildForcedPrizes(bulkForcedMode, bulkForcedFixed, bulkForcedList, qty, bulkForcedPool);
+    const rows = Array.from({ length: totalCodes }).map((_, idx) => {
+      let forcedPrizes: ForcedEntry[];
+      if (bulkForcedMode === 'pool' && perCodeForcedEntry) {
+        const entry = perCodeForcedEntry[idx];
+        forcedPrizes = Array.from({ length: qty }).map(() => ({ ...entry }));
+      } else {
+        forcedPrizes = buildForcedPrizes(bulkForcedMode, bulkForcedFixed, bulkForcedList, qty, bulkForcedPool);
+      }
       return {
         owner_id: ownerId,
         case_id: bulkCaseId,
