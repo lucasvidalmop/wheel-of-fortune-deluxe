@@ -26,6 +26,11 @@ const WeightInput = ({
   const display = focused
     ? draft
     : (value !== undefined && value !== null && value !== 0 ? String(value).replace('.', ',') : (value === 0 ? '0' : ''));
+  const normalizeDecimalInput = (text: string) => {
+    const cleaned = text.replace(/[^0-9.,]/g, '').replace(/\./g, ',');
+    const [head, ...tail] = cleaned.split(',');
+    return tail.length ? `${head},${tail.join('')}` : head;
+  };
   return (
     <input
       type="text"
@@ -39,7 +44,7 @@ const WeightInput = ({
         setDraft(value !== undefined && value !== null ? String(value).replace('.', ',') : '');
       }}
       onChange={e => {
-        const cleaned = e.target.value.replace(/[^0-9.,]/g, '');
+        const cleaned = normalizeDecimalInput(e.target.value);
         setDraft(cleaned);
         const raw = cleaned.replace(',', '.');
         if (raw === '' || raw === '.') { onChange(0); return; }
@@ -839,7 +844,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 </div>
               ) : (
                 <div className="md:col-span-2 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
-                  💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores muito pequenos como <b>0.00000001</b> para raridade máxima. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
+                  💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores como <b>2,5</b> e <b>0,001</b> para chances fracionadas. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
                 </div>
               )}
               <div className="md:col-span-2">
@@ -953,7 +958,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                 arr[i] = { ...arr[i], weight: num };
                                 setEditingCase({ ...editingCase, prizes: arr });
                               }}
-                              placeholder="Ex: 50, 0,5 ou 0,001"
+                              placeholder="Ex: 50, 2,5 ou 0,001"
                               className="w-full px-3 py-2 pr-16 rounded-lg border border-white/10 bg-white/5 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono opacity-60">
@@ -1190,16 +1195,14 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         <div className="w-32 shrink-0">
                           <label className="block text-[9px] uppercase tracking-wide opacity-60 mb-1">Chance</label>
                           <div className="relative">
-                            <input
-                              type="number"
-                              min={0}
-                              step="0.01"
+                            <WeightInput
                               value={it.weight}
-                              onChange={e => {
+                              onChange={(num) => {
                                 const next = [...items];
-                                next[i] = { ...next[i], weight: parseFloat(e.target.value) || 0 };
+                                next[i] = { ...next[i], weight: num };
                                 updatePool({ ...pool, items: next });
                               }}
+                              placeholder="Ex: 2,5"
                               className="w-full px-2 py-1.5 pr-12 rounded border border-white/10 bg-white/5 text-xs"
                             />
                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] opacity-60 font-mono">≈{pct.toFixed(1)}%</span>
