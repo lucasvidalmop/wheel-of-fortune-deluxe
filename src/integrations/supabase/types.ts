@@ -1712,6 +1712,7 @@ export type Database = {
         }[]
       }
       get_luckybox_page_by_tag: { Args: { p_tag: string }; Returns: Json }
+      get_luckybox_user_state: { Args: { p_user_id: string }; Returns: Json }
       get_prize_history: {
         Args: { p_account_id: string; p_owner_id: string }
         Returns: {
