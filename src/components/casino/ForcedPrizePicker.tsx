@@ -5,6 +5,7 @@ export interface ForcedEntry {
   prize_index?: number;
   scratch_index?: number;
   case_ids?: string[];
+  count?: number; // pool mode: how many codes get this prize
 }
 
 export type ForcedMode = 'fixed' | 'list' | 'pool';
