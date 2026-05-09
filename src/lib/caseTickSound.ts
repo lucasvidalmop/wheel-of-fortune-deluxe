@@ -8,6 +8,7 @@ const POOL_SIZE = 8;
 let pool: HTMLAudioElement[] = [];
 let poolIdx = 0;
 let scheduled: number[] = [];
+let unlocked = false;
 
 function ensurePool() {
   if (pool.length > 0) return;
@@ -15,7 +16,36 @@ function ensurePool() {
     const a = new Audio(TICK_URL);
     a.preload = 'auto';
     a.volume = 0.7;
+    try { a.load(); } catch { /* noop */ }
     pool.push(a);
+  }
+}
+
+/**
+ * Warm up the audio pool inside a user gesture so the very first tick plays
+ * without delay. Browsers block .play() until the user interacts; calling
+ * play()+pause() here primes each element so subsequent plays are instant.
+ */
+export function primeCaseTicks() {
+  ensurePool();
+  if (unlocked) return;
+  unlocked = true;
+  for (const a of pool) {
+    try {
+      a.muted = true;
+      const p = a.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          a.pause();
+          a.currentTime = 0;
+          a.muted = false;
+        }).catch(() => { a.muted = false; });
+      } else {
+        a.pause();
+        a.currentTime = 0;
+        a.muted = false;
+      }
+    } catch { /* noop */ }
   }
 }
 
@@ -28,6 +58,12 @@ function playTick() {
     a.play().catch(() => {});
   } catch { /* noop */ }
 }
+
+// Preload as soon as the module is imported.
+if (typeof window !== 'undefined') {
+  ensurePool();
+}
+
 
 // Cubic-bezier solver (matches CSS transition-timing-function).
 function cubicBezier(p1x: number, p1y: number, p2x: number, p2y: number) {
