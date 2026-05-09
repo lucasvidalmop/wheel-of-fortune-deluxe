@@ -26,6 +26,11 @@ const WeightInput = ({
   const display = focused
     ? draft
     : (value !== undefined && value !== null && value !== 0 ? String(value).replace('.', ',') : (value === 0 ? '0' : ''));
+  const normalizeDecimalInput = (text: string) => {
+    const cleaned = text.replace(/[^0-9.,]/g, '').replace(/\./g, ',');
+    const [head, ...tail] = cleaned.split(',');
+    return tail.length ? `${head},${tail.join('')}` : head;
+  };
   return (
     <input
       type="text"
@@ -39,7 +44,7 @@ const WeightInput = ({
         setDraft(value !== undefined && value !== null ? String(value).replace('.', ',') : '');
       }}
       onChange={e => {
-        const cleaned = e.target.value.replace(/[^0-9.,]/g, '');
+        const cleaned = normalizeDecimalInput(e.target.value);
         setDraft(cleaned);
         const raw = cleaned.replace(',', '.');
         if (raw === '' || raw === '.') { onChange(0); return; }
