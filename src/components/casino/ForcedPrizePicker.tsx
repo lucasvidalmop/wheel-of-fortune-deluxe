@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Sparkles, Layers, Package } from 'lucide-react';
+import { Sparkles, Layers, Package, Shuffle, Plus, Trash2 } from 'lucide-react';
 
 export interface ForcedEntry {
   prize_index?: number;
@@ -7,16 +7,23 @@ export interface ForcedEntry {
   case_ids?: string[];
 }
 
+export type ForcedMode = 'fixed' | 'list' | 'pool';
+
 interface Props {
   selectedCase: any;
   allCases: any[];
   openingsCount: number;
-  mode: 'fixed' | 'list';
-  setMode: (m: 'fixed' | 'list') => void;
+  mode: ForcedMode;
+  setMode: (m: ForcedMode) => void;
   fixed: ForcedEntry | null;
   setFixed: (e: ForcedEntry | null) => void;
   list: (ForcedEntry | null)[];
   setList: (l: (ForcedEntry | null)[]) => void;
+  // Pool mode (optional — enable with allowPool)
+  allowPool?: boolean;
+  pool?: ForcedEntry[];
+  setPool?: (p: ForcedEntry[]) => void;
+  poolLabel?: string;
 }
 
 const PrizeRow = ({
@@ -111,6 +118,7 @@ const PrizeRow = ({
 const ForcedPrizePicker = ({
   selectedCase, allCases, openingsCount,
   mode, setMode, fixed, setFixed, list, setList,
+  allowPool = false, pool = [], setPool, poolLabel,
 }: Props) => {
   const isCasePool = selectedCase?.mode === 'case_pool';
   const poolQty = isCasePool ? Math.max(1, Math.min(10, Number(selectedCase?.prize_pool?.quantity) || 1)) : 0;
@@ -145,6 +153,12 @@ const ForcedPrizePicker = ({
     if (next.length !== list.length) setList(next);
   }, [mode, openingsCount, defaultEntry]);
 
+  // Initialize pool with one entry
+  useEffect(() => {
+    if (mode !== 'pool' || !setPool) return;
+    if (pool.length === 0) setPool([defaultEntry]);
+  }, [mode, defaultEntry]);
+
   if (!selectedCase) return null;
   const empty = (isCasePool && poolCases.length === 0) || (!isCasePool && prizes.length === 0);
   if (empty) {
@@ -173,6 +187,13 @@ const ForcedPrizePicker = ({
             className={`px-3 py-1.5 flex items-center gap-1 border-l border-white/10 ${mode === 'list' ? 'bg-cyan-500/20 text-cyan-200' : 'opacity-60 hover:opacity-100'}`}>
             <Layers size={12} /> Uma por uma ({openingsCount})
           </button>
+          {allowPool && setPool && (
+            <button type="button"
+              onClick={() => setMode('pool')}
+              className={`px-3 py-1.5 flex items-center gap-1 border-l border-white/10 ${mode === 'pool' ? 'bg-cyan-500/20 text-cyan-200' : 'opacity-60 hover:opacity-100'}`}>
+              <Shuffle size={12} /> Sorteio entre prêmios
+            </button>
+          )}
         </div>
       </div>
 
@@ -200,6 +221,45 @@ const ForcedPrizePicker = ({
           ))}
         </div>
       )}
+
+      {mode === 'pool' && setPool && (
+        <div className="space-y-2">
+          <div className="text-xs opacity-70">
+            {poolLabel || 'Cada código sorteia 1 prêmio aleatório desta lista no momento da geração:'}
+          </div>
+          <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+            {pool.map((entry, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <div className="flex-1">
+                  <PrizeRow
+                    selectedCase={selectedCase} allCases={allCases}
+                    label={`Prêmio possível #${i + 1}`}
+                    value={entry}
+                    onChange={(v) => {
+                      const next = pool.slice();
+                      next[i] = v;
+                      setPool(next);
+                    }}
+                  />
+                </div>
+                {pool.length > 1 && (
+                  <button type="button"
+                    onClick={() => setPool(pool.filter((_, idx) => idx !== i))}
+                    className="mt-6 p-2 rounded-lg border border-red-500/30 text-red-300 hover:bg-red-500/10"
+                    title="Remover">
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <button type="button"
+            onClick={() => setPool([...pool, defaultEntry])}
+            className="px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 text-xs flex items-center gap-1 hover:bg-cyan-500/20">
+            <Plus size={12} /> Adicionar prêmio possível
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -208,14 +268,23 @@ export default ForcedPrizePicker;
 
 // Helpers used by the parent: build full forced_prizes array for a grant
 export function buildForcedPrizes(
-  mode: 'fixed' | 'list',
+  mode: ForcedMode,
   fixed: ForcedEntry | null,
   list: (ForcedEntry | null)[],
   openingsCount: number,
+  pool?: ForcedEntry[],
 ): ForcedEntry[] {
   if (mode === 'fixed') {
     if (!fixed) return [];
     return Array.from({ length: openingsCount }).map(() => ({ ...fixed }));
+  }
+  if (mode === 'pool') {
+    const validPool = (pool || []).filter(e => e && Object.keys(e).length > 0);
+    if (validPool.length === 0) return [];
+    return Array.from({ length: openingsCount }).map(() => {
+      const pick = validPool[Math.floor(Math.random() * validPool.length)];
+      return { ...pick };
+    });
   }
   return Array.from({ length: openingsCount }).map((_, i) => list[i] || {});
 }
