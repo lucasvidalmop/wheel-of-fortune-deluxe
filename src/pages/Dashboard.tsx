@@ -11542,12 +11542,6 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                     </div>
                   </div>
                   <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
-                    {depositReceipt.edpay_id && (
-                      <div className="flex justify-between text-sm py-1">
-                        <span style={{ color: '#888' }}>ID EdPay</span>
-                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{depositReceipt.edpay_id}</span>
-                      </div>
-                    )}
                     <div className="flex justify-between text-sm py-1">
                       <span style={{ color: '#888' }}>Data/Hora</span>
                       <span className="font-semibold" style={{ color: rFont }}>{new Date(depositReceipt.created_at).toLocaleString('pt-BR')}</span>
