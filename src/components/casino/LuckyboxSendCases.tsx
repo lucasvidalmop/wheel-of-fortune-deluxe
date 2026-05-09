@@ -526,10 +526,13 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1 opacity-70">Qtd. de códigos</label>
+            <label className="block text-xs font-medium mb-1 opacity-70">
+              Qtd. de códigos {bulkForcedMode === 'pool' && <span className="text-cyan-400">(definido pelo sorteio)</span>}
+            </label>
             <input type="number" min={1} max={2000} value={bulkCount}
+              disabled={bulkForcedMode === 'pool'}
               onChange={e => setBulkCount(Math.max(1, Number(e.target.value) || 1))}
-              className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm" />
+              className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm disabled:opacity-40" />
           </div>
           <div>
             <label className="block text-xs font-medium mb-1 opacity-70">Caixas por código</label>
