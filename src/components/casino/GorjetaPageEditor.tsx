@@ -41,6 +41,8 @@ export interface GorjetaPageConfig {
   limitSubtitle: string;
   // Casino name
   casinoName: string;
+  // ID input mode: 'numeric' or 'alphanumeric'
+  accountIdMode: 'numeric' | 'alphanumeric';
   // CTA button
   ctaBtnText: string;
   ctaBtnUrl: string;
@@ -100,6 +102,7 @@ export const defaultGorjetaConfig: GorjetaPageConfig = {
   limitTitle: 'Inscrições Esgotadas',
   limitSubtitle: 'Este link atingiu o limite máximo de inscrições.',
   casinoName: '',
+  accountIdMode: 'alphanumeric',
   ctaBtnText: 'CRIE SUA CONTA PARA PARTICIPAR DE TODOS OS SORTEIOS!',
   ctaBtnUrl: '',
   ctaBtnBgColor: '#ffffff',
@@ -267,6 +270,22 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
       <Section icon={<Gift size={14} className="text-primary" />} title="Nome do Cassino">
         <TextField label="Nome do cassino (ex: 1PRA1)" value={config.casinoName} onChange={v => update({ casinoName: v })} placeholder="Nome do Cassino" />
         <p className="text-[10px] text-muted-foreground">Aparece em: "ID da Conta *NOME", "Confirmo que os dados são da minha conta *NOME", rodapé e botão CTA.</p>
+        <div className="pt-2 border-t border-white/5">
+          <label className="block text-xs font-medium mb-1.5">Formato do campo "ID da Conta"</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => update({ accountIdMode: 'alphanumeric' })}
+              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${config.accountIdMode !== 'numeric' ? 'bg-primary text-primary-foreground border-primary' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+            >Letras e números</button>
+            <button
+              type="button"
+              onClick={() => update({ accountIdMode: 'numeric' })}
+              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${config.accountIdMode === 'numeric' ? 'bg-primary text-primary-foreground border-primary' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+            >Apenas números</button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5">Define o que o participante pode digitar no campo de ID da Conta.</p>
+        </div>
       </Section>
 
       <Section icon={<MousePointer size={14} className="text-primary" />} title="Botão CTA (Link Externo)">
