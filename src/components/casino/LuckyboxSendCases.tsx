@@ -268,26 +268,43 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     if (!selectedCase) { toast.error('Caixa inválida'); return; }
     const n = Math.max(1, Math.min(2000, Number(bulkCount) || 0));
     const qty = Math.max(1, Number(bulkQty) || 1);
-    const forcedPrizes = buildForcedPrizes(bulkForcedMode, bulkForcedFixed, bulkForcedList, qty);
-    if (forcedPrizes.length !== qty || forcedPrizes.some(e => !e || Object.keys(e).length === 0)) {
+
+    // Validate pool mode upfront (each code is randomized below)
+    if (bulkForcedMode === 'pool') {
+      const validPool = bulkForcedPool.filter(e => e && Object.keys(e).length > 0);
+      if (validPool.length === 0) {
+        toast.error('Adicione ao menos um prêmio possível ao sorteio');
+        return;
+      }
+    }
+
+    setBulkGenerating(true);
+    const rows = Array.from({ length: n }).map(() => {
+      const forcedPrizes = buildForcedPrizes(bulkForcedMode, bulkForcedFixed, bulkForcedList, qty, bulkForcedPool);
+      return {
+        owner_id: ownerId,
+        case_id: bulkCaseId,
+        case_name: selectedCase.name,
+        wheel_user_id: null,
+        recipient_name: '',
+        recipient_phone: '',
+        recipient_email: '',
+        recipient_account_id: '',
+        code: generateCode(),
+        quantity: qty,
+        status: 'pending',
+        forced_prizes: forcedPrizes,
+      };
+    });
+
+    // Validate that every row got valid forced prizes
+    const invalid = rows.find(r => r.forced_prizes.length !== qty || r.forced_prizes.some((e: any) => !e || Object.keys(e).length === 0));
+    if (invalid) {
+      setBulkGenerating(false);
       toast.error('Defina o prêmio garantido para todas as aberturas antes de gerar');
       return;
     }
-    setBulkGenerating(true);
-    const rows = Array.from({ length: n }).map(() => ({
-      owner_id: ownerId,
-      case_id: bulkCaseId,
-      case_name: selectedCase.name,
-      wheel_user_id: null,
-      recipient_name: '',
-      recipient_phone: '',
-      recipient_email: '',
-      recipient_account_id: '',
-      code: generateCode(),
-      quantity: qty,
-      status: 'pending',
-      forced_prizes: forcedPrizes,
-    }));
+
     const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code');
     setBulkGenerating(false);
     if (error) { toast.error(error.message); return; }
