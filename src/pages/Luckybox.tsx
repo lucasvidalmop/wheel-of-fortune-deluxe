@@ -68,6 +68,7 @@ const RARITY_COLOR: Record<string, string> = {
   mystery: '#EC4899',
 };
 const rarityColor = (r?: string) => RARITY_COLOR[(r || 'common').toLowerCase()] || '#9CA3AF';
+const scratchPrizeKey = (p?: ScratchPrize | null) => `${p?.image || ''}|${p?.label || ''}|${p?.amount ?? ''}`;
 const DEFAULT_LUCKYBOX_OPEN_AUDIO_URL = '/sounds/luckybox-open-default.mp3';
 const SYNCED_LUCKYBOX_AUDIO_DURATION_MS = 11389;
 const SYNCED_LUCKYBOX_AUDIO_STEPS = 37;
@@ -472,7 +473,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             if (prize?.scratch && data.scratch_prize) {
               const sub: ScratchPrize = data.scratch_prize;
               const allPrizes: ScratchPrize[] = (prize.scratchPrizes || []);
-              let pool: ScratchPrize[] = allPrizes.filter(x => x.label !== sub.label);
+              const winnerKey = scratchPrizeKey(sub);
+              let pool: ScratchPrize[] = allPrizes.filter(x => scratchPrizeKey(x) !== winnerKey);
               if (pool.length === 0) {
                 pool = [
                   { label: '✦', image: '' },
@@ -487,9 +489,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               let safety = 0;
               while (cells.length < 9 && safety++ < 500) {
                 const cand = pool[Math.floor(Math.random() * pool.length)];
-                if (cand.label === sub.label) continue;
-                if ((counts[cand.label] || 0) >= 2) continue;
-                counts[cand.label] = (counts[cand.label] || 0) + 1;
+                const candKey = scratchPrizeKey(cand);
+                if (candKey === winnerKey) continue;
+                if ((counts[candKey] || 0) >= 2) continue;
+                counts[candKey] = (counts[candKey] || 0) + 1;
                 cells.push(cand);
               }
               while (cells.length < 9) cells.push({ label: '✦', image: '' });
