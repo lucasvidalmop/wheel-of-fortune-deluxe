@@ -11446,12 +11446,8 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
 
                   {/* Transaction Info */}
                   <div className="section" style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
-                    {receiptPayment.edpay_transaction_id && (
-                      <div className="row flex justify-between text-sm py-1">
-                        <span style={{ color: '#888' }}>ID EdPay</span>
-                        <span className="font-mono text-xs font-semibold" style={{ color: rFont }}>{receiptPayment.edpay_transaction_id}</span>
-                      </div>
-                    )}
+                  </div>
+
                     {receiptPayment.spin_result_id && (
                       <div className="row flex justify-between text-sm py-1">
                         <span style={{ color: '#888' }}>ID do Sorteio</span>
