@@ -844,7 +844,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 </div>
               ) : (
                 <div className="md:col-span-2 rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
-                  💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores muito pequenos como <b>0.00000001</b> para raridade máxima. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
+                  💡 <b>Como funciona o sorteio:</b> cada prêmio tem uma <b>Chance (%)</b>. Use <b>0</b> para o prêmio nunca sair, ou valores como <b>2,5</b> e <b>0,001</b> para chances fracionadas. Não precisa somar 100 — o sistema normaliza automaticamente entre todos os prêmios.
                 </div>
               )}
               <div className="md:col-span-2">
@@ -958,7 +958,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                 arr[i] = { ...arr[i], weight: num };
                                 setEditingCase({ ...editingCase, prizes: arr });
                               }}
-                              placeholder="Ex: 50, 0,5 ou 0,001"
+                              placeholder="Ex: 50, 2,5 ou 0,001"
                               className="w-full px-3 py-2 pr-16 rounded-lg border border-white/10 bg-white/5 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono opacity-60">
