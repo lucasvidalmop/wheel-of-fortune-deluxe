@@ -457,6 +457,10 @@ const Luckybox = ({ tag }: { tag?: string }) => {
           });
         } catch {}
 
+        // Wait for all reel images to finish loading so the animation
+        // doesn't start over blank cards on slow mobile networks.
+        await preloadImages(reel.map(p => p.image));
+
         requestAnimationFrame(() => {
           setTimeout(() => {
             const itemWidth = 168;
