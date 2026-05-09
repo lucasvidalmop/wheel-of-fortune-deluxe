@@ -466,7 +466,13 @@ const Registration = () => {
             <div className="relative">
               <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: `${labelColor}` }} />
               <input
-                type="text" value={accountId} onChange={e => setAccountId(e.target.value)}
+                type="text"
+                inputMode={cfg.accountIdMode === 'numeric' ? 'numeric' : 'text'}
+                value={accountId}
+                onChange={e => {
+                  const v = cfg.accountIdMode === 'numeric' ? e.target.value.replace(/\D/g, '') : e.target.value;
+                  setAccountId(v);
+                }}
                 placeholder={cfg.casinoName ? `Seu ID de usuário ${cfg.casinoName}` : 'Seu ID de usuário'}
                 required
                 className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all placeholder:opacity-40"
