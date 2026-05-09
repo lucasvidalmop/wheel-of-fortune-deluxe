@@ -1,71 +1,92 @@
 // Plays a tick sound each time a case/prize tile crosses the center line
-// during the Luckybox reel animation. Uses the CSS cubic-bezier curve to
-// compute the exact time of each crossing, then schedules playback.
+// during the Luckybox reel animation. Uses the Web Audio API so playback is
+// instant on mobile (no HTMLAudioElement pool, no first-play delay).
 
 const TICK_URL = '/sounds/case-tick.mp3';
-const POOL_SIZE = 8;
 
-let pool: HTMLAudioElement[] = [];
-let poolIdx = 0;
+let ctx: AudioContext | null = null;
+let buffer: AudioBuffer | null = null;
+let bufferPromise: Promise<AudioBuffer | null> | null = null;
 let scheduled: number[] = [];
 let unlocked = false;
+let volume = 0.7;
 
-function ensurePool() {
-  if (pool.length > 0) return;
-  for (let i = 0; i < POOL_SIZE; i++) {
-    const a = new Audio(TICK_URL);
-    a.preload = 'auto';
-    a.volume = 0.7;
-    try { a.load(); } catch { /* noop */ }
-    pool.push(a);
-  }
+function getCtx(): AudioContext | null {
+  if (ctx) return ctx;
+  if (typeof window === 'undefined') return null;
+  const Ctor = (window as any).AudioContext || (window as any).webkitAudioContext;
+  if (!Ctor) return null;
+  ctx = new Ctor();
+  return ctx;
+}
+
+async function loadBuffer(): Promise<AudioBuffer | null> {
+  if (buffer) return buffer;
+  if (bufferPromise) return bufferPromise;
+  const c = getCtx();
+  if (!c) return null;
+  bufferPromise = (async () => {
+    try {
+      const res = await fetch(TICK_URL);
+      const arr = await res.arrayBuffer();
+      const decoded = await new Promise<AudioBuffer>((resolve, reject) => {
+        // Safari needs the callback form.
+        try {
+          c.decodeAudioData(arr, resolve, reject);
+        } catch (e) { reject(e); }
+      });
+      buffer = decoded;
+      return decoded;
+    } catch {
+      return null;
+    }
+  })();
+  return bufferPromise;
 }
 
 /**
- * Warm up the audio pool inside a user gesture so the very first tick plays
- * without delay. Browsers block .play() until the user interacts; calling
- * play()+pause() here primes each element so subsequent plays are instant.
+ * Warm up audio inside the user gesture so subsequent ticks are instant.
+ * Resumes the AudioContext (required on iOS) and triggers buffer decode.
  */
 export function primeCaseTicks() {
-  ensurePool();
-  if (unlocked) return;
-  unlocked = true;
-  for (const a of pool) {
+  const c = getCtx();
+  if (!c) return;
+  if (c.state === 'suspended') {
+    c.resume().catch(() => {});
+  }
+  if (!unlocked) {
+    unlocked = true;
+    // Play a 1-sample silent buffer to fully unlock on iOS.
     try {
-      a.muted = true;
-      const p = a.play();
-      if (p && typeof p.then === 'function') {
-        p.then(() => {
-          a.pause();
-          a.currentTime = 0;
-          a.muted = false;
-        }).catch(() => { a.muted = false; });
-      } else {
-        a.pause();
-        a.currentTime = 0;
-        a.muted = false;
-      }
+      const silent = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource();
+      src.buffer = silent;
+      src.connect(c.destination);
+      src.start(0);
     } catch { /* noop */ }
   }
+  loadBuffer();
 }
 
 function playTick() {
-  ensurePool();
-  const a = pool[poolIdx % pool.length];
-  poolIdx++;
+  const c = getCtx();
+  if (!c || !buffer) return;
   try {
-    a.currentTime = 0;
-    a.play().catch(() => {});
+    const src = c.createBufferSource();
+    src.buffer = buffer;
+    const gain = c.createGain();
+    gain.gain.value = volume;
+    src.connect(gain).connect(c.destination);
+    src.start(0);
   } catch { /* noop */ }
 }
 
-// Preload as soon as the module is imported.
-if (typeof window !== 'undefined') {
-  ensurePool();
+export function cancelCaseTicks() {
+  for (const id of scheduled) clearTimeout(id);
+  scheduled = [];
 }
 
-
-// Cubic-bezier solver (matches CSS transition-timing-function).
+// Cubic-bezier solver matching the CSS transition easing.
 function cubicBezier(p1x: number, p1y: number, p2x: number, p2y: number) {
   const A = (a1: number, a2: number) => 1 - 3 * a2 + 3 * a1;
   const B = (a1: number, a2: number) => 3 * a2 - 6 * a1;
@@ -74,8 +95,6 @@ function cubicBezier(p1x: number, p1y: number, p2x: number, p2y: number) {
     ((A(a1, a2) * t + B(a1, a2)) * t + C(a1)) * t;
   const slope = (t: number, a1: number, a2: number) =>
     3 * A(a1, a2) * t * t + 2 * B(a1, a2) * t + C(a1);
-
-  // Solve calc(t, p1x, p2x) = x for t (Newton-Raphson + bisection fallback).
   function tForX(x: number) {
     let t = x;
     for (let i = 0; i < 8; i++) {
@@ -94,7 +113,6 @@ function cubicBezier(p1x: number, p1y: number, p2x: number, p2y: number) {
     }
     return mid;
   }
-
   return (x: number) => {
     if (x <= 0) return 0;
     if (x >= 1) return 1;
@@ -104,41 +122,28 @@ function cubicBezier(p1x: number, p1y: number, p2x: number, p2y: number) {
 
 const easing = cubicBezier(0.16, 0.84, 0.3, 1);
 
-export function cancelCaseTicks() {
-  for (const id of scheduled) clearTimeout(id);
-  scheduled = [];
-}
-
-/**
- * Schedule a tick sound for every item that crosses the center line while
- * the reel animates from offset 0 to `finalOffset` over `durationMs`.
- */
 export function scheduleCaseTicks(opts: {
   durationMs: number;
-  finalOffset: number; // typically negative (reel slides left)
+  finalOffset: number;
   itemWidth: number;
   cardHalf: number;
   itemCount: number;
   halfViewport: number;
 }) {
   cancelCaseTicks();
-  ensurePool();
+  // Make sure the buffer is decoding (no-op if already loaded).
+  loadBuffer();
 
   const { durationMs, finalOffset, itemWidth, cardHalf, itemCount, halfViewport } = opts;
-
-  // Item i is centered (in reel-local coords) at i*itemWidth + cardHalf.
-  // Displayed center = currentOffset + i*itemWidth + cardHalf.
-  // Crossing the viewport center means currentOffset = halfViewport - i*itemWidth - cardHalf.
   const lo = Math.min(0, finalOffset);
   const hi = Math.max(0, finalOffset);
 
   for (let i = 0; i < itemCount; i++) {
     const targetOffset = halfViewport - i * itemWidth - cardHalf;
     if (targetOffset < lo || targetOffset > hi) continue;
-    const progress = finalOffset === 0 ? 0 : targetOffset / finalOffset; // 0..1 of distance covered
+    const progress = finalOffset === 0 ? 0 : targetOffset / finalOffset;
     if (progress <= 0 || progress > 1) continue;
 
-    // Invert easing: find x such that easing(x) = progress.
     let xLo = 0, xHi = 1, x = progress;
     for (let k = 0; k < 28; k++) {
       x = (xLo + xHi) / 2;
@@ -151,4 +156,10 @@ export function scheduleCaseTicks(opts: {
       scheduled.push(window.setTimeout(playTick, delay));
     }
   }
+}
+
+// Kick off the buffer fetch on import so it's cached when the user interacts.
+if (typeof window !== 'undefined') {
+  // Defer slightly so it doesn't compete with critical resources.
+  setTimeout(() => { loadBuffer(); }, 800);
 }
