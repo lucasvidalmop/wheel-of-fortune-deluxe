@@ -1025,8 +1025,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                 id="luckybox-reel-inner"
                 className="absolute inset-y-0 left-0 flex items-center gap-2 will-change-transform"
                 style={{
-                  transform: `translateX(${reelOffset}px)`,
+                  transform: `translate3d(${reelOffset}px, 0, 0)`,
                   transition: reelTransition,
+                  backfaceVisibility: 'hidden',
                 }}
               >
                 {reelPrizes.map((p, i) => (
