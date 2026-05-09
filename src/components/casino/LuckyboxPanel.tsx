@@ -6,6 +6,54 @@ import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import SendCasesTab from './LuckyboxSendCases';
 import LuckyboxHistoryTab from './LuckyboxHistoryTab';
 
+// Free-typing weight/percentage input. Keeps a local draft so partial
+// values like "0,", "0,0", "0,001" don't get clobbered when parsed to 0.
+const WeightInput = ({
+  value,
+  onChange,
+  placeholder,
+  className,
+  title,
+}: {
+  value: number | undefined | null;
+  onChange: (n: number) => void;
+  placeholder?: string;
+  className?: string;
+  title?: string;
+}) => {
+  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState('');
+  const display = focused
+    ? draft
+    : (value !== undefined && value !== null && value !== 0 ? String(value).replace('.', ',') : (value === 0 ? '0' : ''));
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={display}
+      title={title}
+      placeholder={placeholder}
+      className={className}
+      onFocus={() => {
+        setFocused(true);
+        setDraft(value !== undefined && value !== null ? String(value).replace('.', ',') : '');
+      }}
+      onChange={e => {
+        const cleaned = e.target.value.replace(/[^0-9.,]/g, '');
+        setDraft(cleaned);
+        const raw = cleaned.replace(',', '.');
+        if (raw === '' || raw === '.') { onChange(0); return; }
+        const num = parseFloat(raw);
+        if (Number.isFinite(num)) onChange(num);
+      }}
+      onBlur={() => {
+        setFocused(false);
+        setDraft('');
+      }}
+    />
+  );
+};
+
 interface ScratchPrize {
   label: string;
   amount?: number;
@@ -898,18 +946,14 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                             Chance de sair <span className="opacity-70">— vazio = nunca · 0,00000001 = raríssimo</span>
                           </label>
                           <div className="relative">
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={p.weight ? String(p.weight).replace('.', ',') : ''}
-                              onChange={e => {
-                                const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                                const num = raw === '' ? 0 : parseFloat(raw);
+                            <WeightInput
+                              value={p.weight}
+                              onChange={(num) => {
                                 const arr = [...editingCase.prizes];
-                                arr[i] = { ...arr[i], weight: Number.isFinite(num) ? num : 0 };
+                                arr[i] = { ...arr[i], weight: num };
                                 setEditingCase({ ...editingCase, prizes: arr });
                               }}
-                              placeholder="Ex: 50, 0,5 ou 0,00000001"
+                              placeholder="Ex: 50, 0,5 ou 0,001"
                               className="w-full px-3 py-2 pr-16 rounded-lg border border-white/10 bg-white/5 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono opacity-60">
@@ -1012,15 +1056,11 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                                           <div className="space-y-1">
                                             <div className="text-[9px] uppercase tracking-wide opacity-60">% Chance</div>
                                             <div className="relative">
-                                              <input
-                                                type="text"
-                                                inputMode="decimal"
-                                                value={sp.weight !== undefined && sp.weight !== null ? String(sp.weight).replace('.', ',') : ''}
-                                                onChange={e => {
-                                                  const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                                                  const num = raw === '' ? 0 : parseFloat(raw);
+                                              <WeightInput
+                                                value={sp.weight}
+                                                onChange={(num) => {
                                                   const arr = [...editingCase.prizes];
-                                                  const next = [...subs]; next[si] = { ...next[si], weight: Number.isFinite(num) ? num : 0 };
+                                                  const next = [...subs]; next[si] = { ...next[si], weight: num };
                                                   arr[i] = { ...arr[i], scratchPrizes: next };
                                                   setEditingCase({ ...editingCase, prizes: arr });
                                                 }}
