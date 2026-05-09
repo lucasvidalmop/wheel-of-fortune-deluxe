@@ -264,8 +264,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(sess));
     } catch (err: any) {
       toast.error(err.message || 'Erro ao entrar');
+    } finally {
+      setLogging(false);
     }
-    setLogging(false);
   };
 
   const refreshTokens = async () => {
