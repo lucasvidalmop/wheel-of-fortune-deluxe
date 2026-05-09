@@ -1195,16 +1195,14 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         <div className="w-32 shrink-0">
                           <label className="block text-[9px] uppercase tracking-wide opacity-60 mb-1">Chance</label>
                           <div className="relative">
-                            <input
-                              type="number"
-                              min={0}
-                              step="0.01"
+                            <WeightInput
                               value={it.weight}
-                              onChange={e => {
+                              onChange={(num) => {
                                 const next = [...items];
-                                next[i] = { ...next[i], weight: parseFloat(e.target.value) || 0 };
+                                next[i] = { ...next[i], weight: num };
                                 updatePool({ ...pool, items: next });
                               }}
+                              placeholder="Ex: 2,5"
                               className="w-full px-2 py-1.5 pr-12 rounded border border-white/10 bg-white/5 text-xs"
                             />
                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] opacity-60 font-mono">≈{pct.toFixed(1)}%</span>
