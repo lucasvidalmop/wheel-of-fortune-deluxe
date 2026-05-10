@@ -339,7 +339,7 @@ const Roleta = () => {
         supabase.functions.invoke('track-pageview', {
           body: { session_id: sessionId, action: 'update_duration', duration_seconds: seconds },
         }).catch(() => {});
-      }, 30000);
+      }, 120000);
 
       // Final duration on unload
       const handleUnload = () => {
