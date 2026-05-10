@@ -33,6 +33,14 @@ interface Grant {
   whatsapp_error?: string;
   created_at: string;
   redeemed_at?: string;
+  redeemed_ip?: string | null;
+  redeemed_user_agent?: string | null;
+  redeemed_city?: string | null;
+  redeemed_region?: string | null;
+  redeemed_country?: string | null;
+  redeemed_device?: string | null;
+  redeemed_os?: string | null;
+  redeemed_browser?: string | null;
 }
 
 const DEFAULT_TEMPLATE = '🎁 Olá {nome}! Você recebeu uma *{caixa}* de presente!\n\nResgate o seu código exclusivo:\n*{codigo}*\n\nOu abra direto pelo link:\n{link}';
