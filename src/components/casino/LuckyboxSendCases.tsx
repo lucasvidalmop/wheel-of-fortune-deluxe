@@ -33,6 +33,14 @@ interface Grant {
   whatsapp_error?: string;
   created_at: string;
   redeemed_at?: string;
+  redeemed_ip?: string | null;
+  redeemed_user_agent?: string | null;
+  redeemed_city?: string | null;
+  redeemed_region?: string | null;
+  redeemed_country?: string | null;
+  redeemed_device?: string | null;
+  redeemed_os?: string | null;
+  redeemed_browser?: string | null;
 }
 
 const DEFAULT_TEMPLATE = '🎁 Olá {nome}! Você recebeu uma *{caixa}* de presente!\n\nResgate o seu código exclusivo:\n*{codigo}*\n\nOu abra direto pelo link:\n{link}';
@@ -629,55 +637,69 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
           ) : (
             <div className="space-y-2">
               {grants.map(g => (
-                <div key={g.id} className={`rounded-xl border p-3 flex flex-wrap items-center gap-2 ${selectedGrants.has(g.id) ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-black/20'}`}>
-                  <input type="checkbox" checked={selectedGrants.has(g.id)} onChange={() => toggleGrant(g.id)} className="cursor-pointer" />
-                  <div className="flex-1 min-w-[200px]">
-                    <div className="text-sm font-semibold">{g.recipient_name || g.recipient_email || <span className="opacity-50">— avulso —</span>}</div>
-                    <div className="text-xs opacity-60 truncate">{g.case_name} · qtd {g.quantity}</div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <code className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 font-mono text-xs">{g.code}</code>
-                    <button onClick={() => copyCode(g.code)} className="p-1.5 rounded hover:bg-white/10" title="Copiar código">
-                      <Copy size={12} />
-                    </button>
-                    <button onClick={() => copyLink(g.code)} className="p-1.5 rounded hover:bg-white/10" title="Copiar link direto">
-                      🔗
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {g.status === 'redeemed' ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/30 text-green-300 flex items-center gap-1">
-                        <Check size={10} /> Resgatado
-                      </span>
-                    ) : g.status === 'cancelled' ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300">Cancelado</span>
-                    ) : (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300">Pendente</span>
-                    )}
-                    {g.whatsapp_status === 'sent' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
-                        <MessageCircle size={10} /> Enviado
-                      </span>
-                    )}
-                    {g.whatsapp_status === 'error' && (
-                      <span title={g.whatsapp_error || ''} className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300">WA erro</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {g.recipient_phone && (
-                      <button onClick={() => resendWhats(g)} className="p-1.5 rounded border border-white/10 hover:bg-white/10" title="Reenviar WhatsApp">
-                        <MessageCircle size={12} />
+                <div key={g.id} className={`rounded-xl border p-3 ${selectedGrants.has(g.id) ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-black/20'}`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input type="checkbox" checked={selectedGrants.has(g.id)} onChange={() => toggleGrant(g.id)} className="cursor-pointer" />
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="text-sm font-semibold">{g.recipient_name || g.recipient_email || <span className="opacity-50">— avulso —</span>}</div>
+                      <div className="text-xs opacity-60 truncate">{g.case_name} · qtd {g.quantity}</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <code className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 font-mono text-xs">{g.code}</code>
+                      <button onClick={() => copyCode(g.code)} className="p-1.5 rounded hover:bg-white/10" title="Copiar código">
+                        <Copy size={12} />
                       </button>
-                    )}
-                    {g.status === 'pending' && (
-                      <button onClick={() => cancelGrant(g.id)} className="p-1.5 rounded border border-amber-500/30 text-amber-300 hover:bg-amber-500/10" title="Cancelar código">
-                        <X size={12} />
+                      <button onClick={() => copyLink(g.code)} className="p-1.5 rounded hover:bg-white/10" title="Copiar link direto">
+                        🔗
                       </button>
-                    )}
-                    <button onClick={() => deleteGrant(g.id)} className="p-1.5 rounded border border-red-500/30 text-red-300 hover:bg-red-500/10" title="Excluir">
-                      <Trash2 size={12} />
-                    </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {g.status === 'redeemed' ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/30 text-green-300 flex items-center gap-1">
+                          <Check size={10} /> Resgatado
+                        </span>
+                      ) : g.status === 'cancelled' ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300">Cancelado</span>
+                      ) : (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300">Pendente</span>
+                      )}
+                      {g.whatsapp_status === 'sent' && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
+                          <MessageCircle size={10} /> Enviado
+                        </span>
+                      )}
+                      {g.whatsapp_status === 'error' && (
+                        <span title={g.whatsapp_error || ''} className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300">WA erro</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {g.recipient_phone && (
+                        <button onClick={() => resendWhats(g)} className="p-1.5 rounded border border-white/10 hover:bg-white/10" title="Reenviar WhatsApp">
+                          <MessageCircle size={12} />
+                        </button>
+                      )}
+                      {g.status === 'pending' && (
+                        <button onClick={() => cancelGrant(g.id)} className="p-1.5 rounded border border-amber-500/30 text-amber-300 hover:bg-amber-500/10" title="Cancelar código">
+                          <X size={12} />
+                        </button>
+                      )}
+                      <button onClick={() => deleteGrant(g.id)} className="p-1.5 rounded border border-red-500/30 text-red-300 hover:bg-red-500/10" title="Excluir">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </div>
+                  {g.status === 'redeemed' && (
+                    <div className="mt-2 pt-2 border-t border-white/5 text-[11px] opacity-80 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1">
+                      <div><span className="opacity-50">Email:</span> <span className="font-mono">{g.recipient_email || '—'}</span></div>
+                      <div><span className="opacity-50">IP:</span> <span className="font-mono">{g.redeemed_ip || '—'}</span></div>
+                      <div><span className="opacity-50">Local:</span> {[g.redeemed_city, g.redeemed_region, g.redeemed_country].filter(Boolean).join(', ') || '—'}</div>
+                      <div><span className="opacity-50">Dispositivo:</span> {g.redeemed_device || '—'}</div>
+                      <div><span className="opacity-50">OS:</span> {g.redeemed_os || '—'}</div>
+                      <div><span className="opacity-50">Navegador:</span> {g.redeemed_browser || '—'}</div>
+                      <div><span className="opacity-50">Data:</span> {g.redeemed_at ? new Date(g.redeemed_at).toLocaleDateString('pt-BR') : '—'}</div>
+                      <div><span className="opacity-50">Hora:</span> {g.redeemed_at ? new Date(g.redeemed_at).toLocaleTimeString('pt-BR') : '—'}</div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

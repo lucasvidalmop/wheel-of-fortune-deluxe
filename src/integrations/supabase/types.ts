@@ -391,6 +391,14 @@ export type Database = {
           recipient_name: string
           recipient_phone: string
           redeemed_at: string | null
+          redeemed_browser: string | null
+          redeemed_city: string | null
+          redeemed_country: string | null
+          redeemed_device: string | null
+          redeemed_ip: string | null
+          redeemed_os: string | null
+          redeemed_region: string | null
+          redeemed_user_agent: string | null
           status: string
           updated_at: string
           whatsapp_error: string | null
@@ -413,6 +421,14 @@ export type Database = {
           recipient_name?: string
           recipient_phone?: string
           redeemed_at?: string | null
+          redeemed_browser?: string | null
+          redeemed_city?: string | null
+          redeemed_country?: string | null
+          redeemed_device?: string | null
+          redeemed_ip?: string | null
+          redeemed_os?: string | null
+          redeemed_region?: string | null
+          redeemed_user_agent?: string | null
           status?: string
           updated_at?: string
           whatsapp_error?: string | null
@@ -435,6 +451,14 @@ export type Database = {
           recipient_name?: string
           recipient_phone?: string
           redeemed_at?: string | null
+          redeemed_browser?: string | null
+          redeemed_city?: string | null
+          redeemed_country?: string | null
+          redeemed_device?: string | null
+          redeemed_ip?: string | null
+          redeemed_os?: string | null
+          redeemed_region?: string | null
+          redeemed_user_agent?: string | null
           status?: string
           updated_at?: string
           whatsapp_error?: string | null
@@ -1797,15 +1821,33 @@ export type Database = {
         }
         Returns: string
       }
-      redeem_luckybox_grant: {
-        Args: {
-          p_account_id: string
-          p_code: string
-          p_email: string
-          p_owner_id: string
-        }
-        Returns: Json
-      }
+      redeem_luckybox_grant:
+        | {
+            Args: {
+              p_account_id: string
+              p_code: string
+              p_email: string
+              p_owner_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_account_id: string
+              p_browser?: string
+              p_city?: string
+              p_code: string
+              p_country?: string
+              p_device?: string
+              p_email: string
+              p_ip?: string
+              p_os?: string
+              p_owner_id: string
+              p_region?: string
+              p_user_agent?: string
+            }
+            Returns: Json
+          }
       register_via_gorjeta: {
         Args: {
           p_account_id: string
