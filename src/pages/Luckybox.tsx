@@ -297,11 +297,47 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     if (!code) { toast.error('Digite um código'); return; }
     setRedeeming(true);
     try {
+      // Collect fraud-prevention metadata (best-effort, never blocks redemption)
+      const ua = navigator.userAgent || '';
+      const parseUA = (s: string) => {
+        let browser = 'Desconhecido', os = 'Desconhecido', device = 'Desktop';
+        if (s.includes('Firefox/')) browser = 'Firefox';
+        else if (s.includes('Edg/')) browser = 'Edge';
+        else if (s.includes('OPR/') || s.includes('Opera')) browser = 'Opera';
+        else if (s.includes('Chrome/')) browser = 'Chrome';
+        else if (s.includes('Safari/')) browser = 'Safari';
+        if (s.includes('Windows')) os = 'Windows';
+        else if (s.includes('Mac OS')) os = 'macOS';
+        else if (s.includes('Android')) os = 'Android';
+        else if (s.includes('iPhone') || s.includes('iPad') || s.includes('iOS')) os = 'iOS';
+        else if (s.includes('Linux')) os = 'Linux';
+        if (/iPad|Tablet/i.test(s)) device = 'Tablet';
+        else if (/Mobile|Android|iPhone/i.test(s)) device = 'Mobile';
+        return { browser, os, device };
+      };
+      const { browser, os, device } = parseUA(ua);
+      let ip: string | null = null, city: string | null = null, region: string | null = null, country: string | null = null;
+      try {
+        const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3500) });
+        if (r.ok) {
+          const j = await r.json();
+          ip = j.ip || null; city = j.city || null; region = j.region || null; country = j.country_name || null;
+        }
+      } catch {}
+
       const { data, error } = await (supabase as any).rpc('redeem_luckybox_grant', {
         p_owner_id: cfg.owner_id,
         p_account_id: authedUser.account_id,
         p_email: authedUser.email,
         p_code: code,
+        p_ip: ip,
+        p_user_agent: ua,
+        p_city: city,
+        p_region: region,
+        p_country: country,
+        p_device: device,
+        p_os: os,
+        p_browser: browser,
       });
       if (error) throw error;
       if (!data?.success) { toast.error(data?.error || 'Falha no resgate'); return; }
