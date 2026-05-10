@@ -109,7 +109,7 @@ const Registration = () => {
       supabase.functions.invoke('track-pageview', {
         body: { session_id: sessionId, action: 'update_duration', duration_seconds: seconds },
       }).catch(() => {});
-    }, 30000);
+    }, 120000);
 
     const handleUnload = () => {
       const seconds = Math.round((Date.now() - startTime) / 1000);
