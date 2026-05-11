@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   ownerId: z.string().uuid(),
-  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed", "luckybox_purchased", "luckybox_redeemed", "luckybox_prize"]),
+  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed", "luckybox_purchased", "luckybox_redeemed", "luckybox_prize", "luckybox_opened"]),
   payload: z.record(z.any()).default({}),
 });
 
@@ -39,6 +39,12 @@ const buildMessage = (type: z.infer<typeof BodySchema>["type"], payload: Record<
 
   if (type === "luckybox_prize") {
     return `🏆 *Prêmio de caixa ganho*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n✨ *Prêmio:* ${payload.prizeLabel || "-"}${payload.prizeAmount ? `\n💵 *Valor:* ${formatCurrency(payload.prizeAmount)}` : ""}\n🕐 *Data:* ${now}`;
+  }
+
+  if (type === "luckybox_opened") {
+    const valorLine = payload.prizeAmount ? `\n💵 *Valor:* ${formatCurrency(payload.prizeAmount)}` : "";
+    const custoLine = `\n💰 *Custo:* ${payload.priceTokens || 0} ${payload.coinName || "tokens"}`;
+    return `🎁 *Caixa aberta (Luckybox)*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n📦 *Caixa:* ${payload.caseName || "-"}${custoLine}\n✨ *Prêmio:* ${payload.prizeLabel || "-"}${valorLine}\n🕐 *Data:* ${now}`;
   }
 
   // deposit_confirmed
@@ -103,6 +109,7 @@ Deno.serve(async (req) => {
       luckybox_purchased: !!ds.notifyLuckyboxPurchasedEnabled,
       luckybox_redeemed: !!ds.notifyLuckyboxRedeemedEnabled,
       luckybox_prize: !!ds.notifyLuckyboxPrizeEnabled,
+      luckybox_opened: !!ds.notifyLuckyboxPurchasedEnabled || !!ds.notifyLuckyboxPrizeEnabled,
     } as const;
 
     if (!enabledMap[type]) {
