@@ -245,7 +245,29 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [bulkOnePerUser, setBulkOnePerUser] = useState(false);
-  const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
+  const [lastBulkCodes, setLastBulkCodes] = useState<{ code: string; prizes: string[] }[]>([]);
+
+  const describeForcedEntry = (entry: any, caseObj: any): string => {
+    if (!entry) return '—';
+    if (Array.isArray(entry.case_ids) && entry.case_ids.length > 0) {
+      return entry.case_ids
+        .map((id: string) => cases.find(c => c.id === id)?.name || 'caixa')
+        .join(' + ');
+    }
+    const prizes = caseObj?.prizes || [];
+    const p = prizes[entry.prize_index ?? 0];
+    if (!p) return `Prêmio ${(entry.prize_index ?? 0) + 1}`;
+    let label = p.label || `Prêmio ${(entry.prize_index ?? 0) + 1}`;
+    if (p.amount) label += ` (R$ ${Number(p.amount).toFixed(2)})`;
+    if (p.scratch && Array.isArray(p.scratchPrizes) && entry.scratch_index !== undefined) {
+      const sp = p.scratchPrizes[entry.scratch_index];
+      if (sp) {
+        label += ` · ${sp.label || `Sub ${entry.scratch_index + 1}`}`;
+        if (sp.amount) label += ` (R$ ${Number(sp.amount).toFixed(2)})`;
+      }
+    }
+    return label;
+  };
   const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
   const bulkSelectedCase = useMemo(() => cases.find(c => c.id === bulkCaseId), [cases, bulkCaseId]);
   useEffect(() => { setBulkForcedFixed(null); setBulkForcedList([]); setBulkForcedPool([]); }, [bulkCaseId]);
@@ -329,25 +351,28 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       return;
     }
 
-    const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code');
+    const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code, forced_prizes');
     setBulkGenerating(false);
     if (error) { toast.error(error.message); return; }
-    const codes = (data || []).map((r: any) => r.code);
-    setLastBulkCodes(codes);
-    toast.success(`${codes.length} código(s) gerado(s)`);
+    const items = (data || []).map((r: any) => ({
+      code: r.code,
+      prizes: (r.forced_prizes || []).map((e: any) => describeForcedEntry(e, selectedCase)),
+    }));
+    setLastBulkCodes(items);
+    toast.success(`${items.length} código(s) gerado(s)`);
     loadGrants();
   };
 
   const copyAllBulk = () => {
     if (lastBulkCodes.length === 0) return;
-    navigator.clipboard.writeText(lastBulkCodes.join('\n'));
+    navigator.clipboard.writeText(lastBulkCodes.map(c => c.code).join('\n'));
     toast.success('Códigos copiados');
   };
 
   const exportBulkCsv = () => {
     if (lastBulkCodes.length === 0) return;
     const link = `${baseUrl}/luckybox=${cfg.tag}`;
-    const csv = ['code,link', ...lastBulkCodes.map(c => `${c},${link}?code=${c}`)].join('\n');
+    const csv = ['code,link,prizes', ...lastBulkCodes.map(c => `${c.code},${link}?code=${c.code},"${c.prizes.join(' | ').replace(/"/g, '""')}"`)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `codigos-${cfg.tag}-${Date.now()}.csv`; a.click();
@@ -603,9 +628,16 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
                 </button>
               </div>
             </div>
-            <div className="max-h-40 overflow-auto font-mono text-xs grid grid-cols-2 md:grid-cols-4 gap-1">
+            <div className="max-h-60 overflow-auto text-xs grid grid-cols-1 md:grid-cols-2 gap-1.5">
               {lastBulkCodes.map(c => (
-                <div key={c} className="px-2 py-1 rounded bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-200">{c}</div>
+                <div key={c.code} className="px-2 py-1.5 rounded bg-fuchsia-500/10 border border-fuchsia-500/20">
+                  <div className="font-mono text-fuchsia-200 font-semibold">{c.code}</div>
+                  {c.prizes.length > 0 && (
+                    <div className="text-[10px] opacity-80 text-fuchsia-100/80 mt-0.5">
+                      🎁 {c.prizes.join(' + ')}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
