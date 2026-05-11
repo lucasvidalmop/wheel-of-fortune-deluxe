@@ -245,7 +245,29 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [bulkOnePerUser, setBulkOnePerUser] = useState(false);
-  const [lastBulkCodes, setLastBulkCodes] = useState<string[]>([]);
+  const [lastBulkCodes, setLastBulkCodes] = useState<{ code: string; prizes: string[] }[]>([]);
+
+  const describeForcedEntry = (entry: any, caseObj: any): string => {
+    if (!entry) return '—';
+    if (Array.isArray(entry.case_ids) && entry.case_ids.length > 0) {
+      return entry.case_ids
+        .map((id: string) => cases.find(c => c.id === id)?.name || 'caixa')
+        .join(' + ');
+    }
+    const prizes = caseObj?.prizes || [];
+    const p = prizes[entry.prize_index ?? 0];
+    if (!p) return `Prêmio ${(entry.prize_index ?? 0) + 1}`;
+    let label = p.label || `Prêmio ${(entry.prize_index ?? 0) + 1}`;
+    if (p.amount) label += ` (R$ ${Number(p.amount).toFixed(2)})`;
+    if (p.scratch && Array.isArray(p.scratchPrizes) && entry.scratch_index !== undefined) {
+      const sp = p.scratchPrizes[entry.scratch_index];
+      if (sp) {
+        label += ` · ${sp.label || `Sub ${entry.scratch_index + 1}`}`;
+        if (sp.amount) label += ` (R$ ${Number(sp.amount).toFixed(2)})`;
+      }
+    }
+    return label;
+  };
   const [selectedGrants, setSelectedGrants] = useState<Set<string>>(new Set());
   const bulkSelectedCase = useMemo(() => cases.find(c => c.id === bulkCaseId), [cases, bulkCaseId]);
   useEffect(() => { setBulkForcedFixed(null); setBulkForcedList([]); setBulkForcedPool([]); }, [bulkCaseId]);
