@@ -351,25 +351,28 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       return;
     }
 
-    const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code');
+    const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code, forced_prizes');
     setBulkGenerating(false);
     if (error) { toast.error(error.message); return; }
-    const codes = (data || []).map((r: any) => r.code);
-    setLastBulkCodes(codes);
-    toast.success(`${codes.length} código(s) gerado(s)`);
+    const items = (data || []).map((r: any) => ({
+      code: r.code,
+      prizes: (r.forced_prizes || []).map((e: any) => describeForcedEntry(e, selectedCase)),
+    }));
+    setLastBulkCodes(items);
+    toast.success(`${items.length} código(s) gerado(s)`);
     loadGrants();
   };
 
   const copyAllBulk = () => {
     if (lastBulkCodes.length === 0) return;
-    navigator.clipboard.writeText(lastBulkCodes.join('\n'));
+    navigator.clipboard.writeText(lastBulkCodes.map(c => c.code).join('\n'));
     toast.success('Códigos copiados');
   };
 
   const exportBulkCsv = () => {
     if (lastBulkCodes.length === 0) return;
     const link = `${baseUrl}/luckybox=${cfg.tag}`;
-    const csv = ['code,link', ...lastBulkCodes.map(c => `${c},${link}?code=${c}`)].join('\n');
+    const csv = ['code,link,prizes', ...lastBulkCodes.map(c => `${c.code},${link}?code=${c.code},"${c.prizes.join(' | ').replace(/"/g, '""')}"`)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `codigos-${cfg.tag}-${Date.now()}.csv`; a.click();
