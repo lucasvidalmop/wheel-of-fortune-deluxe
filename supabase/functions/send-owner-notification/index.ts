@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   ownerId: z.string().uuid(),
-  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed", "luckybox_purchased", "luckybox_redeemed", "luckybox_prize"]),
+  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed", "luckybox_purchased", "luckybox_redeemed", "luckybox_prize", "luckybox_opened"]),
   payload: z.record(z.any()).default({}),
 });
 
