@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
       luckybox_purchased: !!ds.notifyLuckyboxPurchasedEnabled,
       luckybox_redeemed: !!ds.notifyLuckyboxRedeemedEnabled,
       luckybox_prize: !!ds.notifyLuckyboxPrizeEnabled,
+      luckybox_opened: !!ds.notifyLuckyboxPurchasedEnabled || !!ds.notifyLuckyboxPrizeEnabled,
     } as const;
 
     if (!enabledMap[type]) {
