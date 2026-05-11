@@ -41,6 +41,12 @@ const buildMessage = (type: z.infer<typeof BodySchema>["type"], payload: Record<
     return `🏆 *Prêmio de caixa ganho*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n🎁 *Caixa:* ${payload.caseName || "-"}\n✨ *Prêmio:* ${payload.prizeLabel || "-"}${payload.prizeAmount ? `\n💵 *Valor:* ${formatCurrency(payload.prizeAmount)}` : ""}\n🕐 *Data:* ${now}`;
   }
 
+  if (type === "luckybox_opened") {
+    const valorLine = payload.prizeAmount ? `\n💵 *Valor:* ${formatCurrency(payload.prizeAmount)}` : "";
+    const custoLine = `\n💰 *Custo:* ${payload.priceTokens || 0} ${payload.coinName || "tokens"}`;
+    return `🎁 *Caixa aberta (Luckybox)*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n📦 *Caixa:* ${payload.caseName || "-"}${custoLine}\n✨ *Prêmio:* ${payload.prizeLabel || "-"}${valorLine}\n🕐 *Data:* ${now}`;
+  }
+
   // deposit_confirmed
   return `✅ *Depósito PIX confirmado*\n\n👤 *Nome:* ${payload.userName || "-"}\n📱 *WhatsApp:* ${payload.userPhone || "-"}\n🆔 *ID da conta:* ${payload.userAccountId || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🕐 *Data:* ${now}`;
 };
