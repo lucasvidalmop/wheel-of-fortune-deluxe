@@ -572,12 +572,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
 
-      // Notify owner: purchased/opened
+      // Notify owner: caixa aberta (compra + prêmio em uma única mensagem)
       try {
+        const finalPrize: any = (prize?.scratch && data.scratch_prize) ? data.scratch_prize : prize;
         supabase.functions.invoke('send-owner-notification', {
           body: {
             ownerId: cfg!.owner_id,
-            type: 'luckybox_purchased',
+            type: 'luckybox_opened',
             payload: {
               userName: authedUser.name,
               userEmail: authedUser.email,
@@ -585,23 +586,6 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               caseName: c.name,
               priceTokens: data.used_grant ? 0 : c.price_tokens,
               coinName: cfg?.coin_name || 'Coins',
-            },
-          },
-        });
-      } catch {}
-
-      // Notify owner: prize won (use scratch sub-prize when applicable)
-      try {
-        const finalPrize: any = (prize?.scratch && data.scratch_prize) ? data.scratch_prize : prize;
-        supabase.functions.invoke('send-owner-notification', {
-          body: {
-            ownerId: cfg!.owner_id,
-            type: 'luckybox_prize',
-            payload: {
-              userName: authedUser.name,
-              userEmail: authedUser.email,
-              accountId: authedUser.account_id,
-              caseName: c.name,
               prizeLabel: finalPrize?.label || '',
               prizeAmount: finalPrize?.amount || 0,
             },
