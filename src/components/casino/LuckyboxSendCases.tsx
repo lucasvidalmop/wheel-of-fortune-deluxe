@@ -628,9 +628,16 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
                 </button>
               </div>
             </div>
-            <div className="max-h-40 overflow-auto font-mono text-xs grid grid-cols-2 md:grid-cols-4 gap-1">
+            <div className="max-h-60 overflow-auto text-xs grid grid-cols-1 md:grid-cols-2 gap-1.5">
               {lastBulkCodes.map(c => (
-                <div key={c} className="px-2 py-1 rounded bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-200">{c}</div>
+                <div key={c.code} className="px-2 py-1.5 rounded bg-fuchsia-500/10 border border-fuchsia-500/20">
+                  <div className="font-mono text-fuchsia-200 font-semibold">{c.code}</div>
+                  {c.prizes.length > 0 && (
+                    <div className="text-[10px] opacity-80 text-fuchsia-100/80 mt-0.5">
+                      🎁 {c.prizes.join(' + ')}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
