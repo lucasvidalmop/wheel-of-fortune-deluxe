@@ -83,6 +83,15 @@ const Registration = () => {
     fetchLink();
   }, [code]);
 
+  // Block right-click for all operators
+  useEffect(() => {
+    const blockRightClick = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+    document.addEventListener('contextmenu', blockRightClick);
+    return () => document.removeEventListener('contextmenu', blockRightClick);
+  }, []);
+
   // Track pageview
   useEffect(() => {
     if (!linkData) return;
