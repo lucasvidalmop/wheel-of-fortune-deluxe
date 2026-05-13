@@ -1728,6 +1728,10 @@ export type Database = {
               total_count: number
             }[]
           }
+      get_default_referral_code: {
+        Args: { p_owner_id: string }
+        Returns: string
+      }
       get_deposit_config_by_tag: {
         Args: { p_tag: string }
         Returns: {
