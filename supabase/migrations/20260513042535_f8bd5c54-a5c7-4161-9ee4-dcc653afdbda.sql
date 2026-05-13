@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anyone can read active luckybox_configs" ON public.luckybox_configs;
