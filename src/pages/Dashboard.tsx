@@ -418,9 +418,9 @@ function Dashboard() {
   const [selectedWhatsappPhones, setSelectedWhatsappPhones] = useState<string[]>([]);
   const [whatsappSearch, setWhatsappSearch] = useState('');
   const [showWhatsappConfig, setShowWhatsappConfig] = useState(false);
-  const [evolutionApiUrl, setEvolutionApiUrl] = useState(() => localStorage.getItem('evolution_api_url') || '');
-  const [evolutionApiKey, setEvolutionApiKey] = useState(() => localStorage.getItem('evolution_api_key') || '');
-  const [evolutionInstance, setEvolutionInstance] = useState(() => localStorage.getItem('evolution_instance') || '');
+  const [evolutionApiUrl, setEvolutionApiUrl] = useState('');
+  const [evolutionApiKey, setEvolutionApiKey] = useState('');
+  const [evolutionInstance, setEvolutionInstance] = useState('');
   const [instanceStatus, setInstanceStatus] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
   const [instanceQrCode, setInstanceQrCode] = useState<string | null>(null);
   const [creatingInstance, setCreatingInstance] = useState(false);
