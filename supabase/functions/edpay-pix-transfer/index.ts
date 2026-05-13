@@ -64,8 +64,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If not auto-payment, verify the caller is the owner
-    if (!autoPayment) {
+    // If autoPayment is requested, the payment record itself must already be
+    // flagged as an eligible auto-payment AND still pending. This prevents an
+    // attacker from triggering arbitrary PIX transfers by guessing payment IDs.
+    if (autoPayment) {
+      if (payment.auto_payment !== true) {
+        return new Response(
+          JSON.stringify({ error: "Pagamento não é elegível para auto-pagamento" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (payment.status && !["pending", "processing"].includes(String(payment.status))) {
+        return new Response(
+          JSON.stringify({ error: "Pagamento não está pendente" }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else {
+      // Manual flow: verify the caller is the owner of the payment.
       const authHeader = req.headers.get("Authorization");
       if (!authHeader?.startsWith("Bearer ")) {
         return new Response(JSON.stringify({ error: "Não autorizado" }), {

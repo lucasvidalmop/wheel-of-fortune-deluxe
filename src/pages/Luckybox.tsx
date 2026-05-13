@@ -174,15 +174,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       setLoading(false);
       // Fetch a default referral code for this operator so the signup link tracks them
       if (data.config?.owner_id) {
-        const { data: refRow } = await (supabase as any)
-          .from('referral_links')
-          .select('code')
-          .eq('owner_id', data.config.owner_id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (refRow?.code) setSignupRefCode(refRow.code);
+        const { data: refCode } = await (supabase as any)
+          .rpc('get_default_referral_code', { p_owner_id: data.config.owner_id });
+        if (refCode) setSignupRefCode(refCode);
       }
     })();
   }, [tag]);
