@@ -418,9 +418,9 @@ function Dashboard() {
   const [selectedWhatsappPhones, setSelectedWhatsappPhones] = useState<string[]>([]);
   const [whatsappSearch, setWhatsappSearch] = useState('');
   const [showWhatsappConfig, setShowWhatsappConfig] = useState(false);
-  const [evolutionApiUrl, setEvolutionApiUrl] = useState(() => localStorage.getItem('evolution_api_url') || '');
-  const [evolutionApiKey, setEvolutionApiKey] = useState(() => localStorage.getItem('evolution_api_key') || '');
-  const [evolutionInstance, setEvolutionInstance] = useState(() => localStorage.getItem('evolution_instance') || '');
+  const [evolutionApiUrl, setEvolutionApiUrl] = useState('');
+  const [evolutionApiKey, setEvolutionApiKey] = useState('');
+  const [evolutionInstance, setEvolutionInstance] = useState('');
   const [instanceStatus, setInstanceStatus] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
   const [instanceQrCode, setInstanceQrCode] = useState<string | null>(null);
   const [creatingInstance, setCreatingInstance] = useState(false);
@@ -5781,15 +5781,15 @@ function Dashboard() {
                   <p className="text-[10px] text-muted-foreground">Configure sua instância da <a href="https://doc.evolution-api.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Evolution API</a></p>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">URL da API</label>
-                    <input type="text" value={evolutionApiUrl} onChange={e => { setEvolutionApiUrl(e.target.value); localStorage.setItem('evolution_api_url', e.target.value); }} placeholder="https://sua-api.com" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={evolutionApiUrl} onChange={e => setEvolutionApiUrl(e.target.value)} placeholder="https://sua-api.com" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">API Key</label>
-                    <input type="password" value={evolutionApiKey} onChange={e => { setEvolutionApiKey(e.target.value); localStorage.setItem('evolution_api_key', e.target.value); }} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="password" value={evolutionApiKey} onChange={e => setEvolutionApiKey(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Nome da Instância</label>
-                    <input type="text" value={evolutionInstance} onChange={e => { setEvolutionInstance(e.target.value); localStorage.setItem('evolution_instance', e.target.value); }} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <input type="text" value={evolutionInstance} onChange={e => setEvolutionInstance(e.target.value)} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
                   </div>
 
                   <div className="border-t border-white/[0.06] pt-4 space-y-3">
