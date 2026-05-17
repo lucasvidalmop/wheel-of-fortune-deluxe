@@ -72,7 +72,7 @@ const UpdateRegistration = ({ tag }: Props) => {
 
   const [step, setStep] = useState<'lookup' | 'edit' | 'success'>('lookup');
   const [lookupEmail, setLookupEmail] = useState('');
-  const [lookupAccount, setLookupAccount] = useState('');
+  const [lookupCpf, setLookupCpf] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [name, setName] = useState('');
