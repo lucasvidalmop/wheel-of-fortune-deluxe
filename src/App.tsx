@@ -39,6 +39,10 @@ const SlugRouter = () => {
     const tag = slug.substring(9);
     return <Luckybox tag={tag} />;
   }
+  if (slug && slug.startsWith('atualizar=')) {
+    const tag = slug.substring(10);
+    return <UpdateRegistration tag={tag} />;
+  }
   return <Roleta />;
 };
 
