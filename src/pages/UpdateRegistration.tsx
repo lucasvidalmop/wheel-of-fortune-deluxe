@@ -154,7 +154,6 @@ const UpdateRegistration = ({ tag }: Props) => {
         p_cpf: lookupCpf.replace(/\D/g, ''),
         p_name: allowed.name ? name.trim() : null,
         p_phone: allowed.phone ? phone.replace(/\D/g, '') : null,
-        p_cpf: allowed.cpf ? cpf.replace(/\D/g, '') : null,
         p_pix_key: allowed.pixKey ? pixKey.trim() : null,
         p_pix_key_type: allowed.pixKey ? pixKeyType : null,
         p_new_account_id: allowed.accountId ? newAccountId.trim() : null,
