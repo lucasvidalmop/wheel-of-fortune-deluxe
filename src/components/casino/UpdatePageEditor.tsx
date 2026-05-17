@@ -176,7 +176,7 @@ const UpdatePageEditor = ({ userId, currentConfig, onSaved }: Props) => {
       {/* Campos liberados */}
       <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
         <h3 className="text-sm font-bold text-foreground">Campos que o participante pode atualizar</h3>
-        <p className="text-[11px] text-muted-foreground -mt-1">O e-mail é usado para localizar o cadastro e nunca pode ser alterado.</p>
+        <p className="text-[11px] text-muted-foreground -mt-1">O participante se identifica por e-mail + CPF (validados contra o cadastro original). Esses dois campos nunca podem ser alterados.</p>
         <div className="grid sm:grid-cols-2 gap-2">
           {fieldRow('name', 'Nome completo')}
           {fieldRow('phone', 'WhatsApp / Celular')}

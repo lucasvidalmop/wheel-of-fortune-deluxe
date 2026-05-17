@@ -72,7 +72,7 @@ const UpdateRegistration = ({ tag }: Props) => {
 
   const [step, setStep] = useState<'lookup' | 'edit' | 'success'>('lookup');
   const [lookupEmail, setLookupEmail] = useState('');
-  const [lookupAccount, setLookupAccount] = useState('');
+  const [lookupCpf, setLookupCpf] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [name, setName] = useState('');
@@ -111,8 +111,9 @@ const UpdateRegistration = ({ tag }: Props) => {
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lookupEmail.trim() || !lookupAccount.trim()) {
-      toast.error('Informe e-mail e ID da conta');
+    const cpfDigits = lookupCpf.replace(/\D/g, '');
+    if (!lookupEmail.trim() || cpfDigits.length < 11) {
+      toast.error('Informe e-mail e CPF válidos');
       return;
     }
     if (!ownerId) return;
@@ -121,7 +122,7 @@ const UpdateRegistration = ({ tag }: Props) => {
       const { data, error } = await (supabase as any).rpc('update_wheel_user_self', {
         p_owner_id: ownerId,
         p_email: lookupEmail.trim(),
-        p_account_id: lookupAccount.trim(),
+        p_cpf: cpfDigits,
         p_mode: 'lookup',
       });
       if (error) throw error;
@@ -150,10 +151,9 @@ const UpdateRegistration = ({ tag }: Props) => {
       const { data, error } = await (supabase as any).rpc('update_wheel_user_self', {
         p_owner_id: ownerId,
         p_email: lookupEmail.trim(),
-        p_account_id: lookupAccount.trim(),
+        p_cpf: lookupCpf.replace(/\D/g, ''),
         p_name: allowed.name ? name.trim() : null,
         p_phone: allowed.phone ? phone.replace(/\D/g, '') : null,
-        p_cpf: allowed.cpf ? cpf.replace(/\D/g, '') : null,
         p_pix_key: allowed.pixKey ? pixKey.trim() : null,
         p_pix_key_type: allowed.pixKey ? pixKeyType : null,
         p_new_account_id: allowed.accountId ? newAccountId.trim() : null,
@@ -272,22 +272,20 @@ const UpdateRegistration = ({ tag }: Props) => {
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>
-                ID da Conta {cfg.casinoName && <span style={{ color: accentColor }}>{cfg.casinoName}</span>}
-              </label>
+              <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>CPF</label>
               <div className="relative">
-                <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }} />
+                <Shield size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }} />
                 <input
                   type="text"
-                  inputMode={cfg.accountIdMode === 'numeric' ? 'numeric' : 'text'}
-                  value={lookupAccount}
-                  onChange={e => setLookupAccount(cfg.accountIdMode === 'numeric' ? e.target.value.replace(/\D/g, '') : e.target.value)}
-                  placeholder={cfg.casinoName ? `Seu ID na ${cfg.casinoName}` : 'Seu ID de usuário'}
+                  inputMode="numeric"
+                  value={lookupCpf}
+                  onChange={e => setLookupCpf(maskCpf(e.target.value))}
+                  placeholder="000.000.000-00"
                   required
                   className={inputCls}
                   style={inputStyle}
                 />
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: lookupAccount ? accentColor : 'rgba(255,255,255,0.15)' }} />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: lookupCpf ? accentColor : 'rgba(255,255,255,0.15)' }} />
               </div>
             </div>
 
@@ -319,7 +317,7 @@ const UpdateRegistration = ({ tag }: Props) => {
             <div className="p-3 rounded-xl text-xs space-y-1"
               style={{ backgroundColor: withAlpha(accentColor, 0.031), border: `1px solid ${withAlpha(accentColor, 0.082)}` }}>
               <div style={{ color: subtitleColor }}><span style={{ color: accentColor }} className="font-semibold">E-mail:</span> {lookupEmail}</div>
-              <div style={{ color: subtitleColor }}><span style={{ color: accentColor }} className="font-semibold">ID:</span> {lookupAccount}</div>
+              <div style={{ color: subtitleColor }}><span style={{ color: accentColor }} className="font-semibold">CPF:</span> {lookupCpf}</div>
             </div>
 
             {allowed.name && (
