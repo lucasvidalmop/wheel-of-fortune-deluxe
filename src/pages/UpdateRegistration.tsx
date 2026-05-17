@@ -272,22 +272,20 @@ const UpdateRegistration = ({ tag }: Props) => {
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>
-                ID da Conta {cfg.casinoName && <span style={{ color: accentColor }}>{cfg.casinoName}</span>}
-              </label>
+              <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>CPF</label>
               <div className="relative">
-                <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }} />
+                <Shield size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }} />
                 <input
                   type="text"
-                  inputMode={cfg.accountIdMode === 'numeric' ? 'numeric' : 'text'}
-                  value={lookupAccount}
-                  onChange={e => setLookupAccount(cfg.accountIdMode === 'numeric' ? e.target.value.replace(/\D/g, '') : e.target.value)}
-                  placeholder={cfg.casinoName ? `Seu ID na ${cfg.casinoName}` : 'Seu ID de usuário'}
+                  inputMode="numeric"
+                  value={lookupCpf}
+                  onChange={e => setLookupCpf(maskCpf(e.target.value))}
+                  placeholder="000.000.000-00"
                   required
                   className={inputCls}
                   style={inputStyle}
                 />
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: lookupAccount ? accentColor : 'rgba(255,255,255,0.15)' }} />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: lookupCpf ? accentColor : 'rgba(255,255,255,0.15)' }} />
               </div>
             </div>
 
