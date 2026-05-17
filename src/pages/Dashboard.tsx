@@ -2429,7 +2429,7 @@ function Dashboard() {
       }
       setShowForm(false);
       setEditingUser(null);
-      setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
+      setForm({ account_id: '', email: '', name: '', phone: '', cpf: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
       fetchUsers();
     } finally {
       setSavingUser(false);
@@ -2438,13 +2438,13 @@ function Dashboard() {
 
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
-    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '', auto_payment: user.auto_payment ?? false });
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', cpf: user.cpf || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '', auto_payment: user.auto_payment ?? false });
     setShowForm(true);
   };
 
   const openNew = () => {
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
+    setForm({ account_id: '', email: '', name: '', phone: '', cpf: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
     setShowForm(true);
   };
 
