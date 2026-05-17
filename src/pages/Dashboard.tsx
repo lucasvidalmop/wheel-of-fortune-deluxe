@@ -21,6 +21,7 @@ import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
 import InfluencerPageEditor from '@/components/casino/InfluencerPageEditor';
+import UpdatePageEditor from '@/components/casino/UpdatePageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
@@ -306,7 +307,7 @@ function Dashboard() {
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
   const [gorjetaDateFilter, setGorjetaDateFilter] = useState<string>(''); // YYYY-MM-DD or '' for all
   const [gorjetaStatusFilter, setGorjetaStatusFilter] = useState<'all' | 'paid' | 'pending' | 'failed'>('all');
-  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer' | 'seo'>('link');
+  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer' | 'update' | 'seo'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
@@ -8448,6 +8449,7 @@ function Dashboard() {
                     { key: 'link' as const, label: '🔗 Link', icon: Link2 },
                     { key: 'visual' as const, label: '🎨 Visual', icon: Palette },
                     { key: 'influencer' as const, label: '🎯 Visual Influencer', icon: Target },
+                    { key: 'update' as const, label: '✏️ Atualização', icon: RefreshCw },
                     { key: 'seo' as const, label: '📊 SEO & Pixel', icon: Globe },
                   ] as const).map(tab => (
                     <button
@@ -8583,6 +8585,14 @@ function Dashboard() {
                     userId={session.user.id}
                     currentConfig={(wheelConfig as any).influencerPageConfig || {}}
                     onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
+                  />
+                )}
+
+                {gorjetaSubTab === 'update' && session?.user?.id && (
+                  <UpdatePageEditor
+                    userId={session.user.id}
+                    currentConfig={(wheelConfig as any).updatePageConfig || {}}
+                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, updatePageConfig: cfg }))}
                   />
                 )}
 

@@ -16,6 +16,7 @@ import DepositBS from "./pages/DepositBS.tsx";
 import Batalha from "./pages/Batalha.tsx";
 import Resgate from "./pages/Resgate.tsx";
 import Luckybox from "./pages/Luckybox.tsx";
+import UpdateRegistration from "./pages/UpdateRegistration.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,10 @@ const SlugRouter = () => {
   if (slug && slug.startsWith('luckybox=')) {
     const tag = slug.substring(9);
     return <Luckybox tag={tag} />;
+  }
+  if (slug && slug.startsWith('atualizar=')) {
+    const tag = slug.substring(10);
+    return <UpdateRegistration tag={tag} />;
   }
   return <Roleta />;
 };
