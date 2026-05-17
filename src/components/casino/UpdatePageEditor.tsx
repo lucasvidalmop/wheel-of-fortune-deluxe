@@ -3,6 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Copy, Check, ExternalLink } from 'lucide-react';
 
+export interface UpdateSeoConfig {
+  pageTitle?: string;
+  faviconUrl?: string;
+  pageDescription?: string;
+  ogImage?: string;
+  keywords?: string;
+  facebookPixelId?: string;
+  googleAnalyticsId?: string;
+  gtmId?: string;
+  tiktokPixelId?: string;
+  customHeadScript?: string;
+}
+
 export interface UpdatePageConfig {
   enabled?: boolean;
   tag?: string;
@@ -20,6 +33,7 @@ export interface UpdatePageConfig {
   successSubtitle?: string;
   notFoundText?: string;
   lookupBtnText?: string;
+  seo?: UpdateSeoConfig;
 }
 
 export const defaultUpdatePageConfig: UpdatePageConfig = {
@@ -32,6 +46,7 @@ export const defaultUpdatePageConfig: UpdatePageConfig = {
   successSubtitle: 'Seus novos dados foram salvos com sucesso.',
   notFoundText: 'Não encontramos um cadastro com esse e-mail e ID. Confira os dados e tente novamente.',
   lookupBtnText: 'BUSCAR CADASTRO',
+  seo: {},
 };
 
 interface Props {
