@@ -133,6 +133,7 @@ const UpdateRegistration = ({ tag }: Props) => {
         setPhone(r.user.phone ? maskPhone(r.user.phone) : '');
         setPixKey(r.user.pix_key || '');
         setPixKeyType(r.user.pix_key_type || '');
+        setNewAccountId(r.user.account_id || '');
         setStep('edit');
       }
     } catch (err: any) {
