@@ -2438,7 +2438,9 @@ function Dashboard() {
 
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
-    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', cpf: user.cpf || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '', auto_payment: user.auto_payment ?? false });
+    const cpfDigits = (user.cpf || '').replace(/\D/g, '').slice(0, 11);
+    const cpfMasked = cpfDigits.length > 9 ? `${cpfDigits.slice(0,3)}.${cpfDigits.slice(3,6)}.${cpfDigits.slice(6,9)}-${cpfDigits.slice(9,11)}` : cpfDigits.length > 6 ? `${cpfDigits.slice(0,3)}.${cpfDigits.slice(3,6)}.${cpfDigits.slice(6)}` : cpfDigits.length > 3 ? `${cpfDigits.slice(0,3)}.${cpfDigits.slice(3)}` : cpfDigits;
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', cpf: cpfMasked, fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '', auto_payment: user.auto_payment ?? false });
     setShowForm(true);
   };
 
