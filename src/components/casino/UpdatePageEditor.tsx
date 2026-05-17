@@ -143,6 +143,21 @@ const UpdatePageEditor = ({ userId, currentConfig, onSaved }: Props) => {
           </label>
         </div>
 
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Tag personalizada (URL)</label>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground shrink-0">/atualizar=</span>
+            <input
+              type="text"
+              value={cfg.tag || ''}
+              onChange={e => setCfg(p => ({ ...p, tag: slugify(e.target.value) }))}
+              placeholder={wheelSlug || 'minha-tag'}
+              className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Letras minúsculas, números e hífen. Se vazio, usa o slug da roleta ({wheelSlug || '—'}).</p>
+        </div>
+
         {publicUrl ? (
           <div className="flex gap-2">
             <input value={publicUrl} readOnly className="flex-1 px-3 py-2 rounded-lg bg-black/30 border border-white/[0.08] text-xs text-foreground" />
@@ -154,7 +169,7 @@ const UpdatePageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             </a>
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Defina o slug da sua roleta para gerar a URL pública.</p>
+          <p className="text-xs text-muted-foreground">Defina uma tag acima ou o slug da sua roleta para gerar a URL pública.</p>
         )}
       </div>
 
