@@ -2402,7 +2402,7 @@ function Dashboard() {
       if (editingUser) {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment })
+          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, cpf: form.cpf.replace(/\D/g, ''), fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment })
           .eq('id', editingUser.id);
         if (error) {
           if (error.message?.includes('duplicate') || error.code === '23505') {
