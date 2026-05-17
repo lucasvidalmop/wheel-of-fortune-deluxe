@@ -23,7 +23,7 @@ export interface UpdatePageConfig {
 
 export const defaultUpdatePageConfig: UpdatePageConfig = {
   enabled: false,
-  fields: { name: true, phone: true, cpf: false, pixKey: true },
+  fields: { name: true, phone: true, cpf: false, pixKey: true, accountId: false },
   titleText: 'Atualizar Cadastro',
   subtitleText: 'Mantenha seus dados sempre atualizados.',
   btnText: 'SALVAR ATUALIZAÇÃO',
