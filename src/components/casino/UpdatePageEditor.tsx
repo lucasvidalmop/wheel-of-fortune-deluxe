@@ -40,21 +40,25 @@ interface Props {
   onSaved: (cfg: UpdatePageConfig) => void;
 }
 
+const slugify = (v: string) =>
+  v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+
 const UpdatePageEditor = ({ userId, currentConfig, onSaved }: Props) => {
   const [cfg, setCfg] = useState<UpdatePageConfig>({ ...defaultUpdatePageConfig, ...currentConfig, fields: { ...defaultUpdatePageConfig.fields, ...(currentConfig.fields || {}) } });
-  const [slug, setSlug] = useState('');
+  const [wheelSlug, setWheelSlug] = useState('');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from('wheel_configs').select('slug').eq('user_id', userId).maybeSingle();
-      if (data?.slug) setSlug(data.slug);
+      if (data?.slug) setWheelSlug(data.slug);
     })();
   }, [userId]);
 
+  const effectiveTag = (cfg.tag && cfg.tag.trim()) || wheelSlug;
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const publicUrl = slug ? `${baseUrl}/atualizar=${slug}` : '';
+  const publicUrl = effectiveTag ? `${baseUrl}/atualizar=${effectiveTag}` : '';
 
   const setField = (k: keyof NonNullable<UpdatePageConfig['fields']>, v: boolean) =>
     setCfg(p => ({ ...p, fields: { ...(p.fields || {}), [k]: v } }));
