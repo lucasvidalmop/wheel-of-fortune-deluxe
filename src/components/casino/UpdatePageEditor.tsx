@@ -156,10 +156,11 @@ const UpdatePageEditor = ({ userId, currentConfig, onSaved }: Props) => {
       {/* Campos liberados */}
       <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
         <h3 className="text-sm font-bold text-foreground">Campos que o participante pode atualizar</h3>
-        <p className="text-[11px] text-muted-foreground -mt-1">E-mail e ID da conta são usados apenas para localizar o cadastro e nunca podem ser alterados.</p>
+        <p className="text-[11px] text-muted-foreground -mt-1">O e-mail é usado para localizar o cadastro e nunca pode ser alterado.</p>
         <div className="grid sm:grid-cols-2 gap-2">
           {fieldRow('name', 'Nome completo')}
           {fieldRow('phone', 'WhatsApp / Celular')}
+          {fieldRow('accountId', 'ID da conta', 'Permite trocar o ID. Rejeitado se o novo ID já estiver em uso.')}
           {fieldRow('cpf', 'CPF', 'Visível apenas como referência — não é salvo se a base não tiver coluna.')}
           {fieldRow('pixKey', 'Chave PIX', 'Inclui o tipo (CPF, e-mail, celular, aleatória).')}
         </div>
