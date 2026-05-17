@@ -151,7 +151,7 @@ const UpdateRegistration = ({ tag }: Props) => {
       const { data, error } = await (supabase as any).rpc('update_wheel_user_self', {
         p_owner_id: ownerId,
         p_email: lookupEmail.trim(),
-        p_account_id: lookupAccount.trim(),
+        p_cpf: lookupCpf.replace(/\D/g, ''),
         p_name: allowed.name ? name.trim() : null,
         p_phone: allowed.phone ? phone.replace(/\D/g, '') : null,
         p_cpf: allowed.cpf ? cpf.replace(/\D/g, '') : null,
