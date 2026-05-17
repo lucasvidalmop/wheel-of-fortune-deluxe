@@ -156,6 +156,7 @@ const UpdateRegistration = ({ tag }: Props) => {
         p_cpf: allowed.cpf ? cpf.replace(/\D/g, '') : null,
         p_pix_key: allowed.pixKey ? pixKey.trim() : null,
         p_pix_key_type: allowed.pixKey ? pixKeyType : null,
+        p_new_account_id: allowed.accountId ? newAccountId.trim() : null,
         p_allowed_fields: allowed,
         p_mode: 'update',
       });
@@ -164,7 +165,10 @@ const UpdateRegistration = ({ tag }: Props) => {
       if (r?.success) {
         setStep('success');
       } else {
-        toast.error(r?.error || 'Erro ao atualizar');
+        const msg = r?.error === 'account_id_taken'
+          ? 'Esse ID já está em uso em outro cadastro.'
+          : r?.error || 'Erro ao atualizar';
+        toast.error(msg);
       }
     } catch (err: any) {
       toast.error(err.message || 'Erro ao atualizar');
