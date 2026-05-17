@@ -223,10 +223,73 @@ const UpdatePageEditor = ({ userId, currentConfig, onSaved }: Props) => {
 
         <div className="grid sm:grid-cols-2 gap-3">
           {textRow('Título da aba', cfg.seo?.pageTitle, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), pageTitle: v } })), 'Ex: Atualizar Cadastro')}
-          {textRow('Favicon (URL)', cfg.seo?.faviconUrl, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), faviconUrl: v } })), 'https://exemplo.com/favicon.ico')}
-          {textRow('Imagem social (og:image)', cfg.seo?.ogImage, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), ogImage: v } })), 'https://exemplo.com/og.jpg')}
           {textRow('Palavras-chave', cfg.seo?.keywords, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), keywords: v } })), 'atualizar, cadastro, pix')}
         </div>
+
+        {/* Favicon with upload */}
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Favicon (ícone da aba)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={cfg.seo?.faviconUrl || ''}
+              onChange={e => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), faviconUrl: e.target.value } }))}
+              placeholder="https://exemplo.com/favicon.ico"
+              className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <label className="shrink-0 cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.06] hover:bg-white/[0.12] px-3 py-2 text-xs font-semibold text-foreground transition flex items-center gap-1.5">
+              <Upload size={14} /> Upload
+              <input type="file" accept="image/*,.ico,.svg" className="hidden" onChange={async (e) => {
+                const file = e.target.files?.[0]; if (!file) return;
+                try {
+                  const { publicUrl } = await uploadAppAsset(file, 'favicon');
+                  setCfg(p => ({ ...p, seo: { ...(p.seo || {}), faviconUrl: publicUrl } }));
+                  toast.success('Favicon enviado!');
+                } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+                e.target.value = '';
+              }} />
+            </label>
+          </div>
+          {cfg.seo?.faviconUrl && (
+            <div className="mt-2 flex items-center gap-2">
+              <img src={cfg.seo.faviconUrl} alt="Favicon" className="w-6 h-6 rounded object-contain bg-white/10 p-0.5" onError={e => (e.currentTarget.style.display = 'none')} />
+              <button type="button" onClick={() => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), faviconUrl: '' } }))} className="text-xs text-destructive hover:text-destructive/80"><Trash2 size={12} /></button>
+            </div>
+          )}
+        </div>
+
+        {/* OG Image with upload */}
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Imagem social (og:image)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={cfg.seo?.ogImage || ''}
+              onChange={e => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), ogImage: e.target.value } }))}
+              placeholder="https://exemplo.com/og.jpg"
+              className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <label className="shrink-0 cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.06] hover:bg-white/[0.12] px-3 py-2 text-xs font-semibold text-foreground transition flex items-center gap-1.5">
+              <Upload size={14} /> Upload
+              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                const file = e.target.files?.[0]; if (!file) return;
+                try {
+                  const { publicUrl } = await uploadAppAsset(file, 'og-images');
+                  setCfg(p => ({ ...p, seo: { ...(p.seo || {}), ogImage: publicUrl } }));
+                  toast.success('Imagem enviada!');
+                } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+                e.target.value = '';
+              }} />
+            </label>
+          </div>
+          {cfg.seo?.ogImage && (
+            <div className="mt-2 rounded-lg overflow-hidden border border-white/[0.08] max-w-xs relative">
+              <img src={cfg.seo.ogImage} alt="OG preview" className="w-full h-auto object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+              <button type="button" onClick={() => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), ogImage: '' } }))} className="absolute top-1 right-1 bg-black/60 rounded-full p-1 text-destructive hover:text-destructive/80"><Trash2 size={12} /></button>
+            </div>
+          )}
+        </div>
+
         {textRow('Descrição (meta description)', cfg.seo?.pageDescription, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), pageDescription: v } })), 'Atualize seus dados para continuar participando.', true)}
 
         <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-white/[0.06]">
