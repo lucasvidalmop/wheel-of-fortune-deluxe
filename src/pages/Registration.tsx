@@ -600,26 +600,7 @@ const Registration = () => {
           </div>
         </form>
 
-        {/* CTA Button */}
-        {cfg.ctaBtnShow !== false && cfg.ctaBtnUrl && (
-          <div className="px-6 pb-4">
-            <a
-              href={cfg.ctaBtnUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider text-center transition-all hover:brightness-110"
-              style={{
-                backgroundColor: cfg.ctaBtnBgColor || '#ffffff',
-                color: cfg.ctaBtnTextColor || '#000000',
-                border: `1px solid ${cfg.ctaBtnBorderColor || 'rgba(255,255,255,0.1)'}`,
-              }}
-            >
-              {cfg.ctaBtnText
-                ? cfg.ctaBtnText.replace('{casino}', cfg.casinoName || '')
-                : `CRIE SUA CONTA NA ${cfg.casinoName || 'PLATAFORMA'} PARA PARTICIPAR DE TODOS OS SORTEIOS!`}
-            </a>
-          </div>
-        )}
+        {/* CTA Button removido */}
 
         {/* Footer */}
         <div className="px-6 pb-5 text-center space-y-3">
