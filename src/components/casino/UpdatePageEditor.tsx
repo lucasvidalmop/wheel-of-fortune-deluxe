@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Copy, Check, ExternalLink } from 'lucide-react';
+import { Copy, Check, ExternalLink, Upload, Trash2 } from 'lucide-react';
+import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 export interface UpdateSeoConfig {
   pageTitle?: string;
