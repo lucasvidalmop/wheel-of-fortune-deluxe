@@ -80,6 +80,7 @@ const UpdateRegistration = ({ tag }: Props) => {
   const [cpf, setCpf] = useState('');
   const [pixKey, setPixKey] = useState('');
   const [pixKeyType, setPixKeyType] = useState('');
+  const [newAccountId, setNewAccountId] = useState('');
 
   useEffect(() => {
     const load = async () => {
