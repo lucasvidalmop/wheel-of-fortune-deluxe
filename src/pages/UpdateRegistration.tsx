@@ -333,6 +333,27 @@ const UpdateRegistration = ({ tag }: Props) => {
               </div>
             )}
 
+            {allowed.accountId && (
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>
+                  Novo ID da Conta {cfg.casinoName && <span style={{ color: accentColor }}>{cfg.casinoName}</span>}
+                </label>
+                <div className="relative">
+                  <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }} />
+                  <input
+                    type="text"
+                    inputMode={cfg.accountIdMode === 'numeric' ? 'numeric' : 'text'}
+                    value={newAccountId}
+                    onChange={e => setNewAccountId(cfg.accountIdMode === 'numeric' ? e.target.value.replace(/\D/g, '') : e.target.value)}
+                    placeholder="Novo ID"
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: newAccountId ? accentColor : 'rgba(255,255,255,0.15)' }} />
+                </div>
+              </div>
+            )}
+
             {allowed.phone && (
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>Celular / WhatsApp</label>
