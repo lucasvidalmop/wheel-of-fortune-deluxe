@@ -28,12 +28,25 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
-    const { data: wc, error } = await supabase
+    // 1) try custom tag stored in config.updatePageConfig.tag
+    let { data: wc, error } = await supabase
       .from("wheel_configs")
       .select("user_id, slug, config")
-      .eq("slug", tag)
+      .eq("config->updatePageConfig->>tag", tag)
       .maybeSingle();
     if (error) throw error;
+
+    // 2) fallback: wheel slug
+    if (!wc) {
+      const fb = await supabase
+        .from("wheel_configs")
+        .select("user_id, slug, config")
+        .eq("slug", tag)
+        .maybeSingle();
+      if (fb.error) throw fb.error;
+      wc = fb.data;
+    }
+
     if (!wc) {
       return new Response(JSON.stringify({ found: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
