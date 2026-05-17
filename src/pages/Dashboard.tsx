@@ -46,6 +46,7 @@ interface WheelUser {
   fixed_prize_segment: number | null;
   pix_key_type: string;
   pix_key: string;
+  cpf: string;
   user_type: string;
   responsible: string;
   auto_payment: boolean;
