@@ -215,6 +215,28 @@ const UpdatePageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         </div>
       </div>
 
+      {/* SEO & Pixels */}
+      <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+        <h3 className="text-sm font-bold text-foreground">SEO & Pixels</h3>
+        <p className="text-[11px] text-muted-foreground -mt-1">Meta tags e pixels de rastreamento aplicados especificamente na página de atualização.</p>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          {textRow('Título da aba', cfg.seo?.pageTitle, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), pageTitle: v } })), 'Ex: Atualizar Cadastro')}
+          {textRow('Favicon (URL)', cfg.seo?.faviconUrl, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), faviconUrl: v } })), 'https://exemplo.com/favicon.ico')}
+          {textRow('Imagem social (og:image)', cfg.seo?.ogImage, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), ogImage: v } })), 'https://exemplo.com/og.jpg')}
+          {textRow('Palavras-chave', cfg.seo?.keywords, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), keywords: v } })), 'atualizar, cadastro, pix')}
+        </div>
+        {textRow('Descrição (meta description)', cfg.seo?.pageDescription, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), pageDescription: v } })), 'Atualize seus dados para continuar participando.', true)}
+
+        <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-white/[0.06]">
+          {textRow('Facebook Pixel ID', cfg.seo?.facebookPixelId, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), facebookPixelId: v } })), '123456789012345')}
+          {textRow('Google Analytics (GA4)', cfg.seo?.googleAnalyticsId, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), googleAnalyticsId: v } })), 'G-XXXXXXXXXX')}
+          {textRow('Google Tag Manager', cfg.seo?.gtmId, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), gtmId: v } })), 'GTM-XXXXXXX')}
+          {textRow('TikTok Pixel ID', cfg.seo?.tiktokPixelId, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), tiktokPixelId: v } })), 'CXXXXXXXXXXXXXXXXX')}
+        </div>
+        {textRow('Script personalizado (head)', cfg.seo?.customHeadScript, v => setCfg(p => ({ ...p, seo: { ...(p.seo || {}), customHeadScript: v } })), '<!-- script personalizado -->', true)}
+      </div>
+
       <button
         onClick={save}
         disabled={saving}
