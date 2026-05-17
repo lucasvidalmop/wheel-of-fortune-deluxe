@@ -80,6 +80,7 @@ const UpdateRegistration = ({ tag }: Props) => {
   const [cpf, setCpf] = useState('');
   const [pixKey, setPixKey] = useState('');
   const [pixKeyType, setPixKeyType] = useState('');
+  const [newAccountId, setNewAccountId] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -106,7 +107,7 @@ const UpdateRegistration = ({ tag }: Props) => {
   }, []);
 
   const allowed = upd.fields || {};
-  const anyFieldAllowed = !!(allowed.name || allowed.phone || allowed.cpf || allowed.pixKey);
+  const anyFieldAllowed = !!(allowed.name || allowed.phone || allowed.cpf || allowed.pixKey || allowed.accountId);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,6 +133,7 @@ const UpdateRegistration = ({ tag }: Props) => {
         setPhone(r.user.phone ? maskPhone(r.user.phone) : '');
         setPixKey(r.user.pix_key || '');
         setPixKeyType(r.user.pix_key_type || '');
+        setNewAccountId(r.user.account_id || '');
         setStep('edit');
       }
     } catch (err: any) {
@@ -154,6 +156,7 @@ const UpdateRegistration = ({ tag }: Props) => {
         p_cpf: allowed.cpf ? cpf.replace(/\D/g, '') : null,
         p_pix_key: allowed.pixKey ? pixKey.trim() : null,
         p_pix_key_type: allowed.pixKey ? pixKeyType : null,
+        p_new_account_id: allowed.accountId ? newAccountId.trim() : null,
         p_allowed_fields: allowed,
         p_mode: 'update',
       });
@@ -162,7 +165,10 @@ const UpdateRegistration = ({ tag }: Props) => {
       if (r?.success) {
         setStep('success');
       } else {
-        toast.error(r?.error || 'Erro ao atualizar');
+        const msg = r?.error === 'account_id_taken'
+          ? 'Esse ID já está em uso em outro cadastro.'
+          : r?.error || 'Erro ao atualizar';
+        toast.error(msg);
       }
     } catch (err: any) {
       toast.error(err.message || 'Erro ao atualizar');
@@ -323,6 +329,27 @@ const UpdateRegistration = ({ tag }: Props) => {
                   <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }} />
                   <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" className={inputCls} style={inputStyle} />
                   <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: name ? accentColor : 'rgba(255,255,255,0.15)' }} />
+                </div>
+              </div>
+            )}
+
+            {allowed.accountId && (
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>
+                  Novo ID da Conta {cfg.casinoName && <span style={{ color: accentColor }}>{cfg.casinoName}</span>}
+                </label>
+                <div className="relative">
+                  <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }} />
+                  <input
+                    type="text"
+                    inputMode={cfg.accountIdMode === 'numeric' ? 'numeric' : 'text'}
+                    value={newAccountId}
+                    onChange={e => setNewAccountId(cfg.accountIdMode === 'numeric' ? e.target.value.replace(/\D/g, '') : e.target.value)}
+                    placeholder="Novo ID"
+                    className={inputCls}
+                    style={inputStyle}
+                  />
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ backgroundColor: newAccountId ? accentColor : 'rgba(255,255,255,0.15)' }} />
                 </div>
               </div>
             )}
