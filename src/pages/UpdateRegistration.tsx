@@ -111,8 +111,9 @@ const UpdateRegistration = ({ tag }: Props) => {
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lookupEmail.trim() || !lookupAccount.trim()) {
-      toast.error('Informe e-mail e ID da conta');
+    const cpfDigits = lookupCpf.replace(/\D/g, '');
+    if (!lookupEmail.trim() || cpfDigits.length < 11) {
+      toast.error('Informe e-mail e CPF válidos');
       return;
     }
     if (!ownerId) return;
@@ -121,7 +122,7 @@ const UpdateRegistration = ({ tag }: Props) => {
       const { data, error } = await (supabase as any).rpc('update_wheel_user_self', {
         p_owner_id: ownerId,
         p_email: lookupEmail.trim(),
-        p_account_id: lookupAccount.trim(),
+        p_cpf: cpfDigits,
         p_mode: 'lookup',
       });
       if (error) throw error;
