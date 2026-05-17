@@ -8588,6 +8588,14 @@ function Dashboard() {
                   />
                 )}
 
+                {gorjetaSubTab === 'update' && session?.user?.id && (
+                  <UpdatePageEditor
+                    userId={session.user.id}
+                    currentConfig={(wheelConfig as any).updatePageConfig || {}}
+                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, updatePageConfig: cfg }))}
+                  />
+                )}
+
                 {gorjetaSubTab === 'seo' && (() => {
                   const seoConfig = (wheelConfig as any).gorjetaSeo || {};
                   const updateSeo = (field: string, value: string) => {
