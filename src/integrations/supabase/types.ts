@@ -1908,21 +1908,38 @@ export type Database = {
           }
       restore_config_backup: { Args: { _backup_id: string }; Returns: Json }
       segment_is_paying_prize: { Args: { p_segment: Json }; Returns: boolean }
-      update_wheel_user_self: {
-        Args: {
-          p_account_id: string
-          p_allowed_fields?: Json
-          p_cpf?: string
-          p_email: string
-          p_mode?: string
-          p_name?: string
-          p_owner_id: string
-          p_phone?: string
-          p_pix_key?: string
-          p_pix_key_type?: string
-        }
-        Returns: Json
-      }
+      update_wheel_user_self:
+        | {
+            Args: {
+              p_account_id: string
+              p_allowed_fields?: Json
+              p_cpf?: string
+              p_email: string
+              p_mode?: string
+              p_name?: string
+              p_owner_id: string
+              p_phone?: string
+              p_pix_key?: string
+              p_pix_key_type?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_account_id: string
+              p_allowed_fields?: Json
+              p_cpf?: string
+              p_email: string
+              p_mode?: string
+              p_name?: string
+              p_new_account_id?: string
+              p_owner_id: string
+              p_phone?: string
+              p_pix_key?: string
+              p_pix_key_type?: string
+            }
+            Returns: Json
+          }
     }
     Enums: {
       app_role: "admin" | "user"
