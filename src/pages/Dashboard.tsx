@@ -8449,6 +8449,7 @@ function Dashboard() {
                     { key: 'link' as const, label: '🔗 Link', icon: Link2 },
                     { key: 'visual' as const, label: '🎨 Visual', icon: Palette },
                     { key: 'influencer' as const, label: '🎯 Visual Influencer', icon: Target },
+                    { key: 'update' as const, label: '✏️ Atualização', icon: RefreshCw },
                     { key: 'seo' as const, label: '📊 SEO & Pixel', icon: Globe },
                   ] as const).map(tab => (
                     <button
