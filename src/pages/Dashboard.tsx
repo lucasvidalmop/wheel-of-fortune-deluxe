@@ -307,7 +307,7 @@ function Dashboard() {
   const [gorjetaDetailUser, setGorjetaDetailUser] = useState<any>(null);
   const [gorjetaDateFilter, setGorjetaDateFilter] = useState<string>(''); // YYYY-MM-DD or '' for all
   const [gorjetaStatusFilter, setGorjetaStatusFilter] = useState<'all' | 'paid' | 'pending' | 'failed'>('all');
-  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer' | 'seo'>('link');
+  const [gorjetaSubTab, setGorjetaSubTab] = useState<'link' | 'visual' | 'influencer' | 'update' | 'seo'>('link');
   const [ghostUserName, setGhostUserName] = useState('');
   const [referralLinks, setReferralLinks] = useState<any[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
