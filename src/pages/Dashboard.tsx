@@ -46,6 +46,7 @@ interface WheelUser {
   fixed_prize_segment: number | null;
   pix_key_type: string;
   pix_key: string;
+  cpf: string;
   user_type: string;
   responsible: string;
   auto_payment: boolean;
@@ -340,7 +341,7 @@ function Dashboard() {
   const [showDisableAutoPayModal, setShowDisableAutoPayModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<WheelUser | null>(null);
-  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
+  const [form, setForm] = useState({ account_id: '', email: '', name: '', phone: '', cpf: '', fixed_prize_enabled: false, fixed_prize_segment: null as number | null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
   const [spinResults, setSpinResults] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [viewingUserData, setViewingUserData] = useState<WheelUser | null>(null);
@@ -2401,7 +2402,7 @@ function Dashboard() {
       if (editingUser) {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment })
+          .update({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, cpf: form.cpf.replace(/\D/g, ''), fixed_prize_enabled: form.fixed_prize_enabled, fixed_prize_segment: form.fixed_prize_enabled ? form.fixed_prize_segment : null, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment })
           .eq('id', editingUser.id);
         if (error) {
           if (error.message?.includes('duplicate') || error.code === '23505') {
@@ -2415,7 +2416,7 @@ function Dashboard() {
       } else {
         const { error } = await (supabase as any)
           .from('wheel_users')
-          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment });
+          .insert({ account_id: form.account_id, email: form.email, name: form.name, phone: form.phone, cpf: form.cpf.replace(/\D/g, ''), owner_id: session.user.id, pix_key_type: form.pix_key_type, pix_key: form.pix_key, user_type: form.user_type, responsible: form.responsible, auto_payment: form.auto_payment });
         if (error) {
           if (error.message?.includes('duplicate') || error.code === '23505') {
             toast.error('Já existe um inscrito com esse e-mail ou ID de conta.');
@@ -2428,7 +2429,7 @@ function Dashboard() {
       }
       setShowForm(false);
       setEditingUser(null);
-      setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
+      setForm({ account_id: '', email: '', name: '', phone: '', cpf: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
       fetchUsers();
     } finally {
       setSavingUser(false);
@@ -2437,13 +2438,15 @@ function Dashboard() {
 
   const openEdit = (user: WheelUser) => {
     setEditingUser(user);
-    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '', auto_payment: user.auto_payment ?? false });
+    const cpfDigits = (user.cpf || '').replace(/\D/g, '').slice(0, 11);
+    const cpfMasked = cpfDigits.length > 9 ? `${cpfDigits.slice(0,3)}.${cpfDigits.slice(3,6)}.${cpfDigits.slice(6,9)}-${cpfDigits.slice(9,11)}` : cpfDigits.length > 6 ? `${cpfDigits.slice(0,3)}.${cpfDigits.slice(3,6)}.${cpfDigits.slice(6)}` : cpfDigits.length > 3 ? `${cpfDigits.slice(0,3)}.${cpfDigits.slice(3)}` : cpfDigits;
+    setForm({ account_id: user.account_id, email: user.email, name: user.name, phone: user.phone || '', cpf: cpfMasked, fixed_prize_enabled: user.fixed_prize_enabled ?? false, fixed_prize_segment: user.fixed_prize_segment ?? null, pix_key_type: user.pix_key_type || '', pix_key: user.pix_key || '', user_type: user.user_type || '', responsible: user.responsible || '', auto_payment: user.auto_payment ?? false });
     setShowForm(true);
   };
 
   const openNew = () => {
     setEditingUser(null);
-    setForm({ account_id: '', email: '', name: '', phone: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
+    setForm({ account_id: '', email: '', name: '', phone: '', cpf: '', fixed_prize_enabled: false, fixed_prize_segment: null, pix_key_type: '', pix_key: '', user_type: '', responsible: '', auto_payment: false });
     setShowForm(true);
   };
 
@@ -3623,10 +3626,24 @@ function Dashboard() {
                                 className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
                             </div>
                           </div>
-                          <div>
-                            <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Responsável</label>
-                            <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável"
-                              className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">CPF</label>
+                              <input type="text" value={form.cpf} onChange={e => {
+                                const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                let m = d;
+                                if (d.length > 3) m = d.slice(0, 3) + '.' + d.slice(3);
+                                if (d.length > 6) m = d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+                                if (d.length > 9) m = d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9, 11);
+                                setForm({ ...form, cpf: m });
+                              }} placeholder="000.000.000-00"
+                                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Responsável</label>
+                              <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável"
+                                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
                           </div>
                         </div>
                       </div>
