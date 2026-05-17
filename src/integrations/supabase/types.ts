@@ -1500,6 +1500,7 @@ export type Database = {
           auto_payment: boolean
           blacklisted: boolean
           case_grants: Json
+          cpf: string
           created_at: string | null
           email: string
           fixed_prize_enabled: boolean
@@ -1527,6 +1528,7 @@ export type Database = {
           auto_payment?: boolean
           blacklisted?: boolean
           case_grants?: Json
+          cpf?: string
           created_at?: string | null
           email: string
           fixed_prize_enabled?: boolean
@@ -1554,6 +1556,7 @@ export type Database = {
           auto_payment?: boolean
           blacklisted?: boolean
           case_grants?: Json
+          cpf?: string
           created_at?: string | null
           email?: string
           fixed_prize_enabled?: boolean
