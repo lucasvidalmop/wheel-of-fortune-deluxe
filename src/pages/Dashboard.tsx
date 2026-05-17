@@ -3624,10 +3624,24 @@ function Dashboard() {
                                 className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
                             </div>
                           </div>
-                          <div>
-                            <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Responsável</label>
-                            <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável"
-                              className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">CPF</label>
+                              <input type="text" value={form.cpf} onChange={e => {
+                                const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                let m = d;
+                                if (d.length > 3) m = d.slice(0, 3) + '.' + d.slice(3);
+                                if (d.length > 6) m = d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+                                if (d.length > 9) m = d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9, 11);
+                                setForm({ ...form, cpf: m });
+                              }} placeholder="000.000.000-00"
+                                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] text-white/40 font-medium mb-1.5 uppercase tracking-wider">Responsável</label>
+                              <input type="text" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} placeholder="Nome do responsável"
+                                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                            </div>
                           </div>
                         </div>
                       </div>
