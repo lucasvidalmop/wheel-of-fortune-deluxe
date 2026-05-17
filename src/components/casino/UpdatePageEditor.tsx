@@ -5,6 +5,7 @@ import { Copy, Check, ExternalLink } from 'lucide-react';
 
 export interface UpdatePageConfig {
   enabled?: boolean;
+  tag?: string;
   fields?: {
     name?: boolean;
     phone?: boolean;
