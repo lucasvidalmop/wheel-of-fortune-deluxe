@@ -107,7 +107,7 @@ const UpdateRegistration = ({ tag }: Props) => {
   }, []);
 
   const allowed = upd.fields || {};
-  const anyFieldAllowed = !!(allowed.name || allowed.phone || allowed.cpf || allowed.pixKey);
+  const anyFieldAllowed = !!(allowed.name || allowed.phone || allowed.cpf || allowed.pixKey || allowed.accountId);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
