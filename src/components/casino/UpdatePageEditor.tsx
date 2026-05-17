@@ -10,6 +10,7 @@ export interface UpdatePageConfig {
     phone?: boolean;
     cpf?: boolean;
     pixKey?: boolean;
+    accountId?: boolean;
   };
   titleText?: string;
   subtitleText?: string;
