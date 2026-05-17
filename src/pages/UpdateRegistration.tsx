@@ -317,7 +317,7 @@ const UpdateRegistration = ({ tag }: Props) => {
             <div className="p-3 rounded-xl text-xs space-y-1"
               style={{ backgroundColor: withAlpha(accentColor, 0.031), border: `1px solid ${withAlpha(accentColor, 0.082)}` }}>
               <div style={{ color: subtitleColor }}><span style={{ color: accentColor }} className="font-semibold">E-mail:</span> {lookupEmail}</div>
-              <div style={{ color: subtitleColor }}><span style={{ color: accentColor }} className="font-semibold">ID:</span> {lookupAccount}</div>
+              <div style={{ color: subtitleColor }}><span style={{ color: accentColor }} className="font-semibold">CPF:</span> {lookupCpf}</div>
             </div>
 
             {allowed.name && (
