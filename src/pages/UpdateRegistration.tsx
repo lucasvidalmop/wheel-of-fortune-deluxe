@@ -255,6 +255,38 @@ const UpdateRegistration = ({ tag }: Props) => {
       if (error) throw error;
       const r = typeof data === 'string' ? JSON.parse(data) : data;
       if (r?.success) {
+        // Detect which fields actually changed and log
+        try {
+          const orig = lookupOriginal || {};
+          const newPhone = allowed.phone ? phone.replace(/\D/g, '') : orig.phone;
+          const newName = allowed.name ? name.trim() : orig.name;
+          const newPix = allowed.pixKey ? pixKey.trim() : orig.pix_key;
+          const newPixType = allowed.pixKey ? pixKeyType : orig.pix_key_type;
+          const newAcc = allowed.accountId ? newAccountId.trim() : orig.account_id;
+          const changed: string[] = [];
+          const before: any = {}; const after: any = {};
+          if (allowed.name && (newName || '') !== (orig.name || '')) { changed.push('name'); before.name = orig.name; after.name = newName; }
+          if (allowed.phone && (newPhone || '') !== (orig.phone || '')) { changed.push('phone'); before.phone = orig.phone; after.phone = newPhone; }
+          if (allowed.pixKey && ((newPix || '') !== (orig.pix_key || '') || (newPixType || '') !== (orig.pix_key_type || ''))) {
+            changed.push('pix_key'); before.pix_key = orig.pix_key; after.pix_key = newPix; before.pix_key_type = orig.pix_key_type; after.pix_key_type = newPixType;
+          }
+          if (allowed.accountId && (newAcc || '') !== (orig.account_id || '')) { changed.push('account_id'); before.account_id = orig.account_id; after.account_id = newAcc; }
+          supabase.functions.invoke('log-registration-update', {
+            body: {
+              owner_id: ownerId,
+              wheel_user_id: orig.wheel_user_id || null,
+              user_email: lookupEmail.trim(),
+              user_name: newName || orig.name || '',
+              account_id: newAcc || orig.account_id || '',
+              changed_fields: changed,
+              before_data: before,
+              after_data: after,
+              referrer: document.referrer || null,
+              page_url: window.location.href,
+              session_id: sessionIdRef,
+            },
+          });
+        } catch { /* best-effort */ }
         setStep('success');
       } else {
         const msg = r?.error === 'account_id_taken'
