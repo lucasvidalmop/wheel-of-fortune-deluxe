@@ -498,12 +498,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <Field label="Encerra apostas em" type="datetime-local"
                 value={editingEvent.closes_at ? new Date(editingEvent.closes_at).toISOString().slice(0, 16) : ''}
                 onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? new Date(v).toISOString() : null }))} />
-              <Field label="Aposta mínima" type="number" value={String(editingEvent.min_bet ?? 1)}
-                onChange={v => setEditingEvent(p => ({ ...p!, min_bet: Math.max(1, Number(v) || 1) }))} />
-              <Field label="Aposta máxima (0=sem)" type="number" value={String(editingEvent.max_bet ?? 0)}
-                onChange={v => setEditingEvent(p => ({ ...p!, max_bet: Math.max(0, Number(v) || 0) }))} />
-              <Field label="Apostas por usuário (0=ilimitado)" type="number" value={String(editingEvent.max_bets_per_user ?? 0)}
-                onChange={v => setEditingEvent(p => ({ ...p!, max_bets_per_user: Math.max(0, Math.floor(Number(v) || 0)) }))} />
+              <NumberField label="Aposta mínima" value={editingEvent.min_bet ?? null}
+                onChange={n => setEditingEvent(p => ({ ...p!, min_bet: n ?? 1 }))} />
+              <NumberField label="Aposta máxima (0=sem)" value={editingEvent.max_bet ?? null}
+                onChange={n => setEditingEvent(p => ({ ...p!, max_bet: n ?? 0 }))} />
+              <NumberField label="Apostas por usuário (0=ilimitado)" value={editingEvent.max_bets_per_user ?? null}
+                onChange={n => setEditingEvent(p => ({ ...p!, max_bets_per_user: n == null ? 0 : Math.max(0, Math.floor(n)) }))} />
             </div>
             <div className="p-3 rounded-lg bg-muted/50 space-y-2">
               <label className="text-sm font-medium">Tipo de prêmio</label>
@@ -525,9 +525,9 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       {cases.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-                  <Field label="Caixas por unidade" type="number"
-                    value={String(editingEvent.payout_case_qty_per_unit ?? 1)}
-                    onChange={v => setEditingEvent(p => ({ ...p!, payout_case_qty_per_unit: Math.max(0.001, Number(v) || 1) }))} />
+                  <NumberField label="Caixas por unidade"
+                    value={editingEvent.payout_case_qty_per_unit ?? null}
+                    onChange={n => setEditingEvent(p => ({ ...p!, payout_case_qty_per_unit: n ?? 1 }))} />
                 </div>
               )}
             </div>
@@ -543,8 +543,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                   <input value={o.label} placeholder="Resultado (ex.: Casa)"
                     onChange={e => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
                     className="flex-1 px-3 py-1.5 rounded bg-muted text-sm" />
-                  <input type="number" step="0.01" min="1.01" value={o.odd}
-                    onChange={e => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, odd: Number(e.target.value) } : x))}
+                  <NumberField value={o.odd}
+                    onChange={n => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, odd: n ?? 0 } : x))}
                     className="w-24 px-3 py-1.5 rounded bg-muted text-sm tabular-nums" />
                   <button onClick={() => setEditingOutcomes(arr => arr.filter((_, j) => j !== i))} className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
                 </div>
@@ -586,12 +586,18 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 };
 
 function Field({ label, value, onChange, type = 'text', upload }: { label: string; value: string; onChange: (v: string) => void; type?: string; upload?: (f: File) => Promise<void> }) {
+  const isNumber = type === 'number';
   return (
     <div>
       <label className="text-xs font-medium block mb-1">{label}</label>
       <div className="flex gap-1">
-        <input type={type} value={value} onChange={e => onChange(e.target.value)}
-          className="flex-1 px-3 py-2 rounded-lg bg-muted text-sm w-full" />
+        <input
+          type={isNumber ? 'text' : type}
+          inputMode={isNumber ? 'decimal' : undefined}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="flex-1 px-3 py-2 rounded-lg bg-muted text-sm w-full"
+        />
         {upload && (
           <label className="px-2 py-2 rounded-lg bg-muted cursor-pointer text-xs hover:bg-muted/80 flex items-center">
             Upload
@@ -600,6 +606,56 @@ function Field({ label, value, onChange, type = 'text', upload }: { label: strin
           </label>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Free-typing number input: stores raw string locally, emits numeric value to parent only when parseable.
+ *  Never overwrites what the user is typing (so "1.", "", "-" are allowed mid-edit). */
+function NumberField({ label, value, onChange, placeholder, className, allowEmpty = true }: {
+  label?: string; value: number | null | undefined; onChange: (n: number | null) => void;
+  placeholder?: string; className?: string; allowEmpty?: boolean;
+}) {
+  const [raw, setRaw] = useState<string>(value == null ? '' : String(value));
+  const [focused, setFocused] = useState(false);
+  // Sync from parent when not focused (avoids overwrite while typing)
+  useEffect(() => {
+    if (!focused) setRaw(value == null ? '' : String(value));
+  }, [value, focused]);
+  const input = (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={raw}
+      placeholder={placeholder}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false);
+        if (raw.trim() === '') {
+          if (allowEmpty) onChange(null);
+          else { setRaw(value == null ? '' : String(value)); }
+          return;
+        }
+        const n = Number(raw.replace(',', '.'));
+        if (isNaN(n)) { setRaw(value == null ? '' : String(value)); return; }
+        onChange(n);
+        setRaw(String(n));
+      }}
+      onChange={e => {
+        const v = e.target.value;
+        setRaw(v);
+        if (v.trim() === '') { if (allowEmpty) onChange(null); return; }
+        const n = Number(v.replace(',', '.'));
+        if (!isNaN(n)) onChange(n);
+      }}
+      className={className || 'flex-1 px-3 py-2 rounded-lg bg-muted text-sm w-full'}
+    />
+  );
+  if (!label) return input;
+  return (
+    <div>
+      <label className="text-xs font-medium block mb-1">{label}</label>
+      {input}
     </div>
   );
 }
