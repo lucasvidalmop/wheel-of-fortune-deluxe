@@ -407,8 +407,18 @@ const Bets = ({ tag }: BetsPageProps) => {
             const timeExpired = isBetDateTimeExpired(ev.closes_at);
             const closed = ev.status !== 'open' || timeExpired;
             const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
+            const evCat = ev.category_id ? cats.find(x => x.id === ev.category_id) : null;
+            const catBg = evCat?.background_url || '';
+            const cardStyle: React.CSSProperties = catBg
+              ? {
+                  backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.85) 100%), url(${catBg})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  border: `1px solid ${ev.is_hot ? '#f9731688' : accent + '22'}`,
+                }
+              : { background: cardBg, border: `1px solid ${ev.is_hot ? '#f9731688' : accent + '22'}` };
             return (
-              <article key={ev.id} className="rounded-2xl p-4 sm:p-5" style={{ background: cardBg, border: `1px solid ${ev.is_hot ? '#f9731688' : accent + '22'}` }}>
+              <article key={ev.id} className="rounded-2xl p-4 sm:p-5 overflow-hidden" style={cardStyle}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
