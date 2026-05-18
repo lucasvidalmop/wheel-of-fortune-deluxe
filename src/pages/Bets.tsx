@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, LogOut, Wallet, X, Check, Clock } from 'lucide-react';
+import { Loader2, LogOut, Wallet, X, Check, Clock, Store } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 
 interface BetsPageProps { tag: string }
@@ -308,6 +308,28 @@ const Bets = ({ tag }: BetsPageProps) => {
               <span className="font-bold tabular-nums">{authed.tokens_balance}</span>
               <span className="text-xs" style={{ color: muted }}>{coinName}</span>
             </div>
+            <button
+              onClick={() => {
+                const luckyTag = (cfg.luckyboxTag || tag).toString().trim();
+                try {
+                  const sess = {
+                    id: authed.id,
+                    name: authed.name,
+                    account_id: authed.account_id,
+                    email: authed.email,
+                    tokens_balance: authed.tokens_balance,
+                    case_grants: {},
+                  };
+                  sessionStorage.setItem(`luckybox_user_${luckyTag}`, JSON.stringify(sess));
+                } catch {}
+                window.location.href = `/luckybox${luckyTag}`;
+              }}
+              title="Loja"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-90"
+              style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: text }}>
+              <Store size={14} />
+              <span>Loja</span>
+            </button>
             <button onClick={() => { setAuthed(null); setMyWagers([]); }} title="Sair"
               className="p-2 rounded-lg" style={{ background: '#00000033' }}>
               <LogOut size={16} />
