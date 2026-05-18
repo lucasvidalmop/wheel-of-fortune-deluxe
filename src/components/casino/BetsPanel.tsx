@@ -716,6 +716,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                 onChange={n => setEditingEvent(p => ({ ...p!, max_bet: n ?? 0 }))} />
               <NumberField label="Apostas por usuário (0=ilimitado)" value={editingEvent.max_bets_per_user ?? null}
                 onChange={n => setEditingEvent(p => ({ ...p!, max_bets_per_user: n == null ? 0 : Math.max(0, Math.floor(n)) }))} />
+              <div className="col-span-2">
+                <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted cursor-pointer">
+                  <input type="checkbox" checked={!!editingEvent.is_hot}
+                    onChange={e => setEditingEvent(p => ({ ...p!, is_hot: e.target.checked }))} />
+                  <span className="text-sm font-medium">🔥 Evento quente</span>
+                  <span className="text-xs text-muted-foreground">(aparece em destaque, fora do filtro de categoria)</span>
+                </label>
+              </div>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 space-y-2">
               <label className="text-sm font-medium">Tipo de prêmio</label>
