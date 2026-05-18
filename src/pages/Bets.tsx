@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, LogOut, Wallet, X, Check, Clock, Store } from 'lucide-react';
+import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2 } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
+import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
 
 interface BetsPageProps { tag: string }
 
@@ -42,6 +43,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [tab, setTab] = useState<'events' | 'mine'>('events');
   const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
   const [myEvents, setMyEvents] = useState<any[]>([]);
+  const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
 
   // load page
   useEffect(() => {
@@ -444,20 +446,54 @@ const Bets = ({ tag }: BetsPageProps) => {
               const statusColor: Record<string, string> = {
                 pending: muted, won: '#22c55e', lost: '#ef4444', refunded: '#eab308', cancelled: muted,
               };
+              const outcome = (page?.outcomes || []).find((o: OutcomeRow) => o.id === w.outcome_id);
+              const canShare = cfg.ticketEnabled !== false && (w.status === 'won' || w.status === 'lost' || w.status === 'pending');
+              const openShare = () => {
+                if (!ev) return;
+                const payout = w.status === 'won'
+                  ? w.payout_coins
+                  : w.status === 'lost'
+                    ? 0
+                    : Math.round(w.amount_coins * Number(w.odd_snapshot));
+                setShareWager({
+                  userName: authed?.name || '',
+                  eventTitle: ev.title,
+                  outcomeLabel: outcome?.label || '—',
+                  odd: Number(w.odd_snapshot),
+                  amount: w.amount_coins,
+                  payout,
+                  status: w.status,
+                  payoutMode: w.payout_mode,
+                  coinName,
+                  createdAt: w.created_at,
+                });
+              };
               return (
                 <div key={w.id} className="rounded-xl p-4 flex items-center justify-between gap-3"
                   style={{ background: cardBg, border: `1px solid ${accent}22` }}>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{ev?.title || w.event_id.slice(0, 8)}</div>
                     <div className="text-xs mt-0.5" style={{ color: muted }}>
                       {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
                       {w.payout_mode === 'case' ? ' · Prêmio: caixa' : ` · Retorno: ${Math.round(w.amount_coins * Number(w.odd_snapshot))} ${coinName}`}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold" style={{ color: statusColor[w.status] }}>{statusLabel[w.status]}</div>
-                    {w.status === 'won' && w.payout_mode === 'coins' && (
-                      <div className="text-xs" style={{ color: muted }}>+{w.payout_coins}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="text-sm font-bold" style={{ color: statusColor[w.status] }}>{statusLabel[w.status]}</div>
+                      {w.status === 'won' && w.payout_mode === 'coins' && (
+                        <div className="text-xs" style={{ color: muted }}>+{w.payout_coins}</div>
+                      )}
+                    </div>
+                    {canShare && (
+                      <button
+                        onClick={openShare}
+                        title="Compartilhar bilhete"
+                        className="p-2 rounded-lg transition hover:opacity-80"
+                        style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: accent }}
+                      >
+                        <Share2 size={14} />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -466,6 +502,15 @@ const Bets = ({ tag }: BetsPageProps) => {
           </div>
         )}
       </main>
+
+      {shareWager && (
+        <ShareTicket
+          open={!!shareWager}
+          onClose={() => setShareWager(null)}
+          data={shareWager}
+          config={cfg.ticket || {}}
+        />
+      )}
 
       {/* Bet slip */}
       {slip && (
