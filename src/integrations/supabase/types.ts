@@ -119,10 +119,47 @@ export type Database = {
         }
         Relationships: []
       }
+      bet_categories: {
+        Row: {
+          bets_config_id: string
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          owner_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          bets_config_id: string
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          owner_id: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          bets_config_id?: string
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bet_events: {
         Row: {
           bets_config_id: string
           category: string
+          category_id: string | null
           closes_at: string | null
           created_at: string
           id: string
@@ -146,6 +183,7 @@ export type Database = {
         Insert: {
           bets_config_id: string
           category?: string
+          category_id?: string | null
           closes_at?: string | null
           created_at?: string
           id?: string
@@ -169,6 +207,7 @@ export type Database = {
         Update: {
           bets_config_id?: string
           category?: string
+          category_id?: string | null
           closes_at?: string | null
           created_at?: string
           id?: string
@@ -2294,6 +2333,7 @@ export type Database = {
       }
       restore_config_backup: { Args: { _backup_id: string }; Returns: Json }
       segment_is_paying_prize: { Args: { p_segment: Json }; Returns: boolean }
+      tick_bet_events: { Args: never; Returns: Json }
       update_wheel_user_self: {
         Args: {
           p_allowed_fields?: Json

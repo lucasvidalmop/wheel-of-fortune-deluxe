@@ -14,22 +14,25 @@ interface BetsConfig {
 }
 interface BetEvent {
   id: string; bets_config_id: string; title: string; subtitle: string; category: string;
+  category_id: string | null;
   image_url: string; starts_at: string | null; closes_at: string | null;
-  status: 'open'|'closed'|'resolved'|'cancelled';
+  status: 'scheduled'|'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
 }
 interface BetOutcome { id: string; event_id: string; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
+interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number }
 interface LbCase { id: string; name: string; image_url: string }
 
 const emptyOutcome = () => ({ id: '', label: '', odd: 1.5, position: 0 });
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
-  const [tab, setTab] = useState<'config'|'events'|'wagers'|'analytics'>('config');
+  const [tab, setTab] = useState<'config'|'events'|'categories'|'wagers'|'analytics'>('config');
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
   const [outcomes, setOutcomes] = useState<BetOutcome[]>([]);
+  const [categories, setCategories] = useState<BetCategory[]>([]);
   const [cases, setCases] = useState<LbCase[]>([]);
   const [wagers, setWagers] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
@@ -50,12 +53,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       setConfig(cfg as any);
       setCases((cs || []) as LbCase[]);
       if (cfg?.id) {
-        const [{ data: evs }, { data: outs }] = await Promise.all([
+        const [{ data: evs }, { data: outs }, { data: catz }] = await Promise.all([
           supabase.from('bet_events').select('*').eq('bets_config_id', cfg.id).order('created_at', { ascending: false }),
           supabase.from('bet_outcomes').select('*').eq('owner_id', ownerId).order('position'),
+          supabase.from('bet_categories').select('*').eq('bets_config_id', cfg.id).order('position'),
         ]);
         setEvents((evs || []) as BetEvent[]);
         setOutcomes((outs || []) as BetOutcome[]);
+        setCategories((catz || []) as BetCategory[]);
       }
     } catch (e: any) {
       toast.error('Erro ao carregar dados');
@@ -104,7 +109,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   const openNewEvent = () => {
     setEditingEvent({
-      title: '', subtitle: '', category: '', image_url: '',
+      title: '', subtitle: '', category: '', category_id: null, image_url: '',
       starts_at: null, closes_at: null, status: 'open',
       payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
       min_bet: 10, max_bet: 0, max_bets_per_user: 1,
@@ -126,16 +131,24 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     setSaving(true);
     try {
       let eventId = (editingEvent as BetEvent).id;
+      const catObj = editingEvent.category_id ? categories.find(c => c.id === editingEvent.category_id) : null;
+      // Auto-schedule: if starts_at is in the future, force status='scheduled'
+      const startsAtIso = editingEvent.starts_at || null;
+      let status = editingEvent.status || 'open';
+      if (startsAtIso && new Date(startsAtIso).getTime() > Date.now() && status === 'open') {
+        status = 'scheduled' as any;
+      }
       const payload = {
         owner_id: ownerId,
         bets_config_id: config.id,
         title: editingEvent.title.trim(),
         subtitle: editingEvent.subtitle?.trim() || '',
-        category: editingEvent.category?.trim() || '',
+        category: catObj?.name || editingEvent.category?.trim() || '',
+        category_id: editingEvent.category_id || null,
         image_url: editingEvent.image_url || '',
-        starts_at: editingEvent.starts_at || null,
+        starts_at: startsAtIso,
         closes_at: editingEvent.closes_at || null,
-        status: editingEvent.status || 'open',
+        status,
         payout_mode: editingEvent.payout_mode || 'coins',
         payout_case_id: editingEvent.payout_mode === 'case' ? (editingEvent.payout_case_id || null) : null,
         payout_case_qty_per_unit: editingEvent.payout_case_qty_per_unit ?? 1,
@@ -223,6 +236,32 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     }
   };
 
+  // ------- Categories CRUD -------
+  const addCategory = async () => {
+    if (!config) return;
+    const name = prompt('Nome da categoria (ex.: Futebol, eSports):')?.trim();
+    if (!name) return;
+    const { error } = await supabase.from('bet_categories').insert({
+      owner_id: ownerId, bets_config_id: config.id, name,
+      color: '#22d3ee', icon: '', position: categories.length,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success('Categoria criada');
+    loadAll();
+  };
+  const updateCategory = async (id: string, patch: Partial<BetCategory>) => {
+    setCategories(arr => arr.map(c => c.id === id ? { ...c, ...patch } : c));
+    const { error } = await supabase.from('bet_categories').update(patch).eq('id', id);
+    if (error) toast.error(error.message);
+  };
+  const deleteCategory = async (c: BetCategory) => {
+    if (!confirm(`Excluir categoria "${c.name}"? Eventos vinculados ficarão sem categoria.`)) return;
+    const { error } = await supabase.from('bet_categories').delete().eq('id', c.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Removida');
+    loadAll();
+  };
+
   const loadWagers = async () => {
     if (!config) return;
     const { data } = await supabase
@@ -267,6 +306,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         {([
           ['config', 'Configuração'],
           ['events', `Eventos (${events.length})`],
+          ['categories', `Categorias (${categories.length})`],
           ['wagers', 'Apostas'],
           ['analytics', 'Analytics'],
         ] as const).map(([k, l]) => (
@@ -460,22 +500,30 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           {events.map(ev => {
             const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
             const c = ev.payout_case_id ? cases.find(x => x.id === ev.payout_case_id) : null;
+            const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
+            const catLabel = cat?.name || ev.category;
+            const catColor = cat?.color || 'hsl(var(--primary))';
+            const statusLabels: Record<string,string> = { scheduled: 'Agendado', open: 'Aberto', closed: 'Fechado', resolved: 'Resolvido', cancelled: 'Cancelado' };
             return (
               <div key={ev.id} className="p-4 rounded-xl bg-card border border-border">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="min-w-0">
-                    {ev.category && <div className="text-xs uppercase text-primary mb-0.5">{ev.category}</div>}
+                    {catLabel && <div className="text-xs uppercase mb-0.5 flex items-center gap-1" style={{ color: catColor }}>{cat?.icon && <span>{cat.icon}</span>}{catLabel}</div>}
                     <div className="font-bold">{ev.title}</div>
                     {ev.subtitle && <div className="text-sm text-muted-foreground">{ev.subtitle}</div>}
                     <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
-                      <span className="px-2 py-0.5 rounded-full bg-muted">{ev.status}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-muted">{statusLabels[ev.status] || ev.status}</span>
                       <span>{ev.payout_mode === 'case' ? `Caixa: ${c?.name || '?'} (${ev.payout_case_qty_per_unit}×)` : `Coins × odd`}</span>
+                      {ev.starts_at && ev.status === 'scheduled' && <span>Abre: {formatBetDateTime(ev.starts_at)}</span>}
                       {ev.closes_at && <span>Encerra: {formatBetDateTime(ev.closes_at)}</span>}
                       <span>Min: {ev.min_bet}{ev.max_bet > 0 ? ` · Max: ${ev.max_bet}` : ''}{ev.max_bets_per_user > 0 ? ` · ${ev.max_bets_per_user}/usuário` : ''}</span>
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <button onClick={() => openEditEvent(ev)} title="Editar" className="p-1.5 rounded hover:bg-muted"><Edit2 size={14} /></button>
+                    {ev.status === 'scheduled' && (
+                      <button onClick={() => setEventStatus(ev, 'open')} title="Abrir agora" className="p-1.5 rounded hover:bg-muted text-green-500"><Play size={14} /></button>
+                    )}
                     {ev.status === 'open' && (
                       <button onClick={() => setEventStatus(ev, 'closed')} title="Fechar apostas" className="p-1.5 rounded hover:bg-muted"><Ban size={14} /></button>
                     )}
@@ -502,6 +550,49 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {tab === 'categories' && (
+        <div className="space-y-3 max-w-3xl">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Crie categorias para agrupar seus eventos (ex.: Futebol, eSports, Política).</p>
+            <button onClick={addCategory}
+              className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium flex items-center gap-2">
+              <Plus size={14} /> Nova categoria
+            </button>
+          </div>
+          {categories.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhuma categoria ainda.</p>}
+          {categories.map((c, idx) => (
+            <div key={c.id} className="p-3 rounded-xl bg-card border border-border flex items-end gap-3 flex-wrap">
+              <div className="flex-1 min-w-[180px]">
+                <label className="text-xs font-medium block mb-1">Nome</label>
+                <input value={c.name} onChange={e => updateCategory(c.id, { name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+              </div>
+              <div className="w-24">
+                <label className="text-xs font-medium block mb-1">Ícone</label>
+                <input value={c.icon} placeholder="⚽" onChange={e => updateCategory(c.id, { icon: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm text-center" />
+              </div>
+              <div className="w-32">
+                <label className="text-xs font-medium block mb-1">Cor</label>
+                <div className="flex gap-1">
+                  <input type="color" value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
+                    className="w-10 h-10 rounded cursor-pointer" />
+                  <input value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
+                    className="flex-1 px-2 py-2 rounded bg-muted text-xs tabular-nums w-0" />
+                </div>
+              </div>
+              <div className="w-20">
+                <label className="text-xs font-medium block mb-1">Ordem</label>
+                <input type="number" value={c.position}
+                  onChange={e => updateCategory(c.id, { position: Number(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm tabular-nums" />
+              </div>
+              <button onClick={() => deleteCategory(c)} className="p-2 rounded hover:bg-muted text-red-500"><Trash2 size={16} /></button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -559,13 +650,35 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título" value={editingEvent.title || ''} onChange={v => setEditingEvent(p => ({ ...p!, title: v }))} />
-              <Field label="Categoria" value={editingEvent.category || ''} onChange={v => setEditingEvent(p => ({ ...p!, category: v }))} />
+              <div>
+                <label className="text-xs font-medium block mb-1">Categoria</label>
+                <select value={editingEvent.category_id || ''}
+                  onChange={e => setEditingEvent(p => ({ ...p!, category_id: e.target.value || null }))}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm">
+                  <option value="">— Sem categoria —</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>)}
+                </select>
+              </div>
               <Field label="Subtítulo" value={editingEvent.subtitle || ''} onChange={v => setEditingEvent(p => ({ ...p!, subtitle: v }))} />
               <ImageUploadField label="Imagem do evento" hint="800×450 px (16:9)" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
                 upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); setEditingEvent(p => ({ ...p!, image_url: r.publicUrl })); }} />
+              <Field label="Abre apostas em (vazio = agora)" type="datetime-local"
+                value={betIsoToDateTimeLocal(editingEvent.starts_at)}
+                onChange={v => setEditingEvent(p => ({ ...p!, starts_at: v ? dateTimeLocalToBetIso(v) : null }))} />
               <Field label="Encerra apostas em" type="datetime-local"
                 value={betIsoToDateTimeLocal(editingEvent.closes_at)}
                 onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? dateTimeLocalToBetIso(v) : null }))} />
+              <div>
+                <label className="text-xs font-medium block mb-1">Status</label>
+                <select value={editingEvent.status || 'open'}
+                  onChange={e => setEditingEvent(p => ({ ...p!, status: e.target.value as any }))}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm">
+                  <option value="scheduled">Agendado (abre na data)</option>
+                  <option value="open">Aberto</option>
+                  <option value="closed">Fechado</option>
+                </select>
+                <p className="text-[10px] text-muted-foreground mt-1">Se "Abre em" for futura, será agendado automaticamente.</p>
+              </div>
               <NumberField label="Aposta mínima" value={editingEvent.min_bet ?? null}
                 onChange={n => setEditingEvent(p => ({ ...p!, min_bet: n ?? 1 }))} />
               <NumberField label="Aposta máxima (0=sem)" value={editingEvent.max_bet ?? null}
