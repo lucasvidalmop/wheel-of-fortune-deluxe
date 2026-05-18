@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Coins, Eye, LogOut, Package, Sparkles, X, HelpCircle } from 'lucide-react';
 import ScratchCell from '@/components/casino/ScratchCell';
 import { scheduleCaseTicks, cancelCaseTicks, primeCaseTicks } from '@/lib/caseTickSound';
+import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 
 const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
 let prizeWinAudio: HTMLAudioElement | null = null;
