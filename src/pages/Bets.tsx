@@ -322,7 +322,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   };
                   sessionStorage.setItem(`luckybox_user_${luckyTag}`, JSON.stringify(sess));
                 } catch {}
-                window.location.href = `/luckybox${luckyTag}`;
+                window.location.href = `/luckybox=${luckyTag}`;
               }}
               title="Loja"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-90"
