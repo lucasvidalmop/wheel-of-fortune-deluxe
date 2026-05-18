@@ -118,7 +118,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       title: '', subtitle: '', category: '', category_id: null, image_url: '',
       starts_at: null, closes_at: null, status: 'open',
       payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
-      min_bet: 10, max_bet: 0, max_bets_per_user: 1,
+      min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
     });
     setEditingOutcomes([{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }]);
   };
