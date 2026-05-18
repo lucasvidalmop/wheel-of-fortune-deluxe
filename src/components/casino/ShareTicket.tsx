@@ -164,7 +164,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
           <div className="relative flex items-center justify-between mb-5">
             <div className="flex items-center gap-2 min-w-0">
               {config.logoUrl ? (
-                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-8 object-contain" />
+                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-16 max-w-[180px] object-contain" />
               ) : brandName ? (
                 <span className="font-black text-base tracking-tight truncate" style={{ color: accent }}>
                   {brandName}
