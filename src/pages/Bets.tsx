@@ -57,6 +57,22 @@ const Bets = ({ tag }: BetsPageProps) => {
     })();
   }, [tag]);
 
+  // restore persisted session
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(`bets_user_${tag}`);
+      if (raw) setAuthed(JSON.parse(raw));
+    } catch {}
+  }, [tag]);
+
+  // persist authed user across navigations
+  useEffect(() => {
+    try {
+      if (authed) sessionStorage.setItem(`bets_user_${tag}`, JSON.stringify(authed));
+      else sessionStorage.removeItem(`bets_user_${tag}`);
+    } catch {}
+  }, [authed, tag]);
+
   // SEO/pixels injection
   useEffect(() => {
     const seo: any = page?.pageConfig?.seo;
