@@ -20,8 +20,8 @@ export interface ShareTicketData {
 const maskId = (id?: string) => {
   if (!id) return '***';
   const clean = String(id).replace(/-/g, '');
-  if (clean.length <= 4) return `***${clean}`;
-  return `${clean.slice(0, 4)}***${clean.slice(-4)}`;
+  if (clean.length <= 6) return `${clean.slice(0, 2)}***${clean.slice(-2)}`;
+  return `${clean.slice(0, 6)}***${clean.slice(-4)}`;
 };
 
 export interface TicketConfig {
