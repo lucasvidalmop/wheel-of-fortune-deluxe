@@ -4468,6 +4468,7 @@ function Dashboard() {
                   { key: 'roleta', label: 'Roleta' },
                   { key: 'referral', label: 'Referral' },
                   { key: 'gorjeta', label: 'Gorjeta' },
+                  { key: 'atualizacao', label: 'Atualização' },
                 ] as const).map(f => (
                   <button
                     key={f.key}
