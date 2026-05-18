@@ -17,6 +17,7 @@ import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
 import RedemptionPagesPanel from '@/components/casino/RedemptionPagesPanel';
 import LuckyboxPanel from '@/components/casino/LuckyboxPanel';
 import BetsPanel from '@/components/casino/BetsPanel';
+import AuthNoticePanel from '@/components/casino/AuthNoticePanel';
 import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
