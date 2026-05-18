@@ -417,7 +417,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       <span className="px-2 py-0.5 rounded-full bg-muted">{ev.status}</span>
                       <span>{ev.payout_mode === 'case' ? `Caixa: ${c?.name || '?'} (${ev.payout_case_qty_per_unit}×)` : `Coins × odd`}</span>
                       {ev.closes_at && <span>Encerra: {new Date(ev.closes_at).toLocaleString('pt-BR')}</span>}
-                      <span>Min: {ev.min_bet}{ev.max_bet > 0 ? ` · Max: ${ev.max_bet}` : ''}</span>
+                      <span>Min: {ev.min_bet}{ev.max_bet > 0 ? ` · Max: ${ev.max_bet}` : ''}{ev.max_bets_per_user > 0 ? ` · ${ev.max_bets_per_user}/usuário` : ''}</span>
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
