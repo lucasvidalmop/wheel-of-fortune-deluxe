@@ -32,6 +32,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
   const [outcomes, setOutcomes] = useState<BetOutcome[]>([]);
+  const [categories, setCategories] = useState<BetCategory[]>([]);
   const [cases, setCases] = useState<LbCase[]>([]);
   const [wagers, setWagers] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
