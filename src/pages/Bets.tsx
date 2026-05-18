@@ -373,68 +373,162 @@ const Bets = ({ tag }: BetsPageProps) => {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6">
-        {tab === 'events' && (
-          <div className="space-y-4">
-            {events.length === 0 && (
-              <div className="text-center py-16" style={{ color: muted }}>
-                Nenhum evento disponível no momento.
-              </div>
-            )}
-            {events.map(ev => {
-              const outs = outcomesByEvent[ev.id] || [];
-              const timeExpired = isBetDateTimeExpired(ev.closes_at);
-              const closed = ev.status !== 'open' || timeExpired;
-              const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
-              return (
-                <article key={ev.id} className="rounded-2xl p-4 sm:p-5" style={{ background: cardBg, border: `1px solid ${accent}22` }}>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="min-w-0">
-                      {ev.category && <div className="text-xs uppercase tracking-wider mb-1" style={{ color: accent }}>{ev.category}</div>}
-                      <h2 className="font-bold text-lg sm:text-xl truncate">{ev.title}</h2>
-                      {ev.subtitle && <p className="text-sm mt-0.5" style={{ color: muted }}>{ev.subtitle}</p>}
-                      <div className="flex items-center gap-3 mt-2 text-xs flex-wrap" style={{ color: muted }}>
-                        {ev.closes_at && (
-                          <span className="flex items-center gap-1"><Clock size={12} /> Encerra: {formatBetDateTime(ev.closes_at)}</span>
-                        )}
-                        <span className="px-2 py-0.5 rounded-full" style={{ background: '#00000044' }}>{eventStatusBadge(ev.status)}</span>
-                        {ev.status === 'open' && timeExpired && (
-                          <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</span>
-                        )}
-                      </div>
+        {tab === 'events' && (() => {
+          const cats: CategoryRow[] = page?.categories || [];
+          const hotEvents = events.filter(e => e.is_hot);
+          const nonHot = events.filter(e => !e.is_hot);
+          // categories present in non-hot events
+          const usedCatIds = new Set(nonHot.map(e => e.category_id).filter(Boolean) as string[]);
+          const visibleCats = cats.filter(c => usedCatIds.has(c.id));
+          const hasUncategorized = nonHot.some(e => !e.category_id);
+          const filtered = categoryFilter === 'all'
+            ? nonHot
+            : categoryFilter === 'uncategorized'
+              ? nonHot.filter(e => !e.category_id)
+              : nonHot.filter(e => e.category_id === categoryFilter);
+          // group filtered by category, preserving category order
+          const grouped: Array<{ cat: CategoryRow | null; items: EventRow[] }> = [];
+          if (categoryFilter === 'all') {
+            visibleCats.forEach(c => {
+              const items = filtered.filter(e => e.category_id === c.id);
+              if (items.length) grouped.push({ cat: c, items });
+            });
+            const unc = filtered.filter(e => !e.category_id);
+            if (unc.length) grouped.push({ cat: null, items: unc });
+          } else if (categoryFilter === 'uncategorized') {
+            if (filtered.length) grouped.push({ cat: null, items: filtered });
+          } else {
+            const c = cats.find(x => x.id === categoryFilter) || null;
+            if (filtered.length) grouped.push({ cat: c, items: filtered });
+          }
+
+          const renderEvent = (ev: EventRow) => {
+            const outs = outcomesByEvent[ev.id] || [];
+            const timeExpired = isBetDateTimeExpired(ev.closes_at);
+            const closed = ev.status !== 'open' || timeExpired;
+            const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
+            return (
+              <article key={ev.id} className="rounded-2xl p-4 sm:p-5" style={{ background: cardBg, border: `1px solid ${ev.is_hot ? '#f9731688' : accent + '22'}` }}>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      {ev.is_hot && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: '#f9731633', color: '#f97316' }}>🔥 Quente</span>}
+                      {ev.category && <span className="text-xs uppercase tracking-wider" style={{ color: accent }}>{ev.category}</span>}
                     </div>
-                    {ev.image_url && <img src={ev.image_url} alt="" className="w-28 h-16 sm:w-36 sm:h-20 rounded-lg object-cover flex-shrink-0" />}
+                    <h2 className="font-bold text-lg sm:text-xl truncate">{ev.title}</h2>
+                    {ev.subtitle && <p className="text-sm mt-0.5" style={{ color: muted }}>{ev.subtitle}</p>}
+                    <div className="flex items-center gap-3 mt-2 text-xs flex-wrap" style={{ color: muted }}>
+                      {ev.closes_at && (
+                        <span className="flex items-center gap-1"><Clock size={12} /> Encerra: {formatBetDateTime(ev.closes_at)}</span>
+                      )}
+                      <span className="px-2 py-0.5 rounded-full" style={{ background: '#00000044' }}>{eventStatusBadge(ev.status)}</span>
+                      {ev.status === 'open' && timeExpired && (
+                        <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</span>
+                      )}
+                    </div>
                   </div>
-                  {ev.payout_mode === 'case' && c && (
-                    <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: '#00000044' }}>
-                      {c.image_url && <img src={c.image_url} className="w-8 h-8 rounded" alt="" />}
-                      <span className="text-xs">Prêmio: caixa <b>{c.name}</b> ({ev.payout_case_qty_per_unit}× por unidade apostada)</span>
-                    </div>
-                  )}
-                  <div className={`grid gap-2 ${outs.length === 2 ? 'grid-cols-2' : outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
-                    {outs.map(o => {
-                      const isWinner = ev.status === 'resolved' && o.is_winner;
-                      const isLoser = ev.status === 'resolved' && !o.is_winner;
+                  {ev.image_url && <img src={ev.image_url} alt="" className="w-28 h-16 sm:w-36 sm:h-20 rounded-lg object-cover flex-shrink-0" />}
+                </div>
+                {ev.payout_mode === 'case' && c && (
+                  <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: '#00000044' }}>
+                    {c.image_url && <img src={c.image_url} className="w-8 h-8 rounded" alt="" />}
+                    <span className="text-xs">Prêmio: caixa <b>{c.name}</b> ({ev.payout_case_qty_per_unit}× por unidade apostada)</span>
+                  </div>
+                )}
+                <div className={`grid gap-2 ${outs.length === 2 ? 'grid-cols-2' : outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                  {outs.map(o => {
+                    const isWinner = ev.status === 'resolved' && o.is_winner;
+                    const isLoser = ev.status === 'resolved' && !o.is_winner;
+                    return (
+                      <button key={o.id}
+                        onClick={() => openSlip(ev, o)}
+                        disabled={!!closed}
+                        className="px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+                        style={{
+                          background: isWinner ? `${accent}33` : '#00000033',
+                          border: `1px solid ${isWinner ? accent : `${accent}33`}`,
+                          color: isLoser ? muted : text,
+                        }}>
+                        <div className="text-xs uppercase tracking-wider mb-1" style={{ color: muted }}>{o.label}</div>
+                        <div className="text-xl font-bold tabular-nums" style={{ color: isWinner ? accent : text }}>{Number(o.odd).toFixed(2)}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          };
+
+          return (
+            <div className="space-y-6">
+              {events.length === 0 && (
+                <div className="text-center py-16" style={{ color: muted }}>
+                  Nenhum evento disponível no momento.
+                </div>
+              )}
+
+              {/* Hot events — always shown on top, ignore filter */}
+              {hotEvents.length > 0 && (
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🔥</span>
+                    <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
+                    <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
+                  </div>
+                  <div className="space-y-3">{hotEvents.map(renderEvent)}</div>
+                </section>
+              )}
+
+              {/* Category filter chips */}
+              {(visibleCats.length > 0 || hasUncategorized) && (
+                <div className="flex flex-wrap gap-2 sticky top-[108px] z-10 py-2" style={{ background: 'transparent' }}>
+                  {(() => {
+                    const chip = (key: string, label: string, color?: string, icon?: string) => {
+                      const active = categoryFilter === key;
                       return (
-                        <button key={o.id}
-                          onClick={() => openSlip(ev, o)}
-                          disabled={!!closed}
-                          className="px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+                        <button key={key} onClick={() => setCategoryFilter(key)}
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition whitespace-nowrap"
                           style={{
-                            background: isWinner ? `${accent}33` : '#00000033',
-                            border: `1px solid ${isWinner ? accent : `${accent}33`}`,
-                            color: isLoser ? muted : text,
+                            background: active ? (color || accent) : '#00000055',
+                            color: active ? '#000' : (color || text),
+                            border: `1px solid ${active ? (color || accent) : (color || accent) + '55'}`,
                           }}>
-                          <div className="text-xs uppercase tracking-wider mb-1" style={{ color: muted }}>{o.label}</div>
-                          <div className="text-xl font-bold tabular-nums" style={{ color: isWinner ? accent : text }}>{Number(o.odd).toFixed(2)}</div>
+                          {icon ? `${icon} ` : ''}{label}
                         </button>
                       );
-                    })}
+                    };
+                    return [
+                      chip('all', 'Todas'),
+                      ...visibleCats.map(c => chip(c.id, c.name, c.color, c.icon)),
+                      ...(hasUncategorized ? [chip('uncategorized', 'Outros')] : []),
+                    ];
+                  })()}
+                </div>
+              )}
+
+              {/* Grouped events */}
+              {grouped.map((g, i) => (
+                <section key={g.cat?.id || `unc-${i}`} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    {g.cat?.icon && <span>{g.cat.icon}</span>}
+                    <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: g.cat?.color || muted }}>
+                      {g.cat?.name || 'Outros'}
+                    </h3>
+                    <div className="flex-1 h-px" style={{ background: (g.cat?.color || accent) + '33' }} />
+                    <span className="text-xs" style={{ color: muted }}>{g.items.length}</span>
                   </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
+                  <div className="space-y-3">{g.items.map(renderEvent)}</div>
+                </section>
+              ))}
+
+              {hotEvents.length === 0 && grouped.length === 0 && events.length > 0 && (
+                <div className="text-center py-16" style={{ color: muted }}>
+                  Nenhum evento nesta categoria.
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {tab === 'mine' && (
           <div className="space-y-2">
