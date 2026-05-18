@@ -10,7 +10,7 @@ interface EventRow {
   id: string; title: string; subtitle: string; category: string; image_url: string;
   starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
-  min_bet: number; max_bet: number; position: number; winning_outcome_id: string | null;
+  min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
 }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
 interface WagerRow {
