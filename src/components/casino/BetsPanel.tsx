@@ -521,6 +521,9 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <button onClick={() => openEditEvent(ev)} title="Editar" className="p-1.5 rounded hover:bg-muted"><Edit2 size={14} /></button>
+                    {ev.status === 'scheduled' && (
+                      <button onClick={() => setEventStatus(ev, 'open')} title="Abrir agora" className="p-1.5 rounded hover:bg-muted text-green-500"><Play size={14} /></button>
+                    )}
                     {ev.status === 'open' && (
                       <button onClick={() => setEventStatus(ev, 'closed')} title="Fechar apostas" className="p-1.5 rounded hover:bg-muted"><Ban size={14} /></button>
                     )}
