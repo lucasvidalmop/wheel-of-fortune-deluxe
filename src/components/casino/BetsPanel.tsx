@@ -296,8 +296,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título" value={cfg.title || ''} onChange={v => setCfgField('title', v)} />
               <Field label="Subtítulo" value={cfg.subtitle || ''} onChange={v => setCfgField('subtitle', v)} />
-              <Field label="Logo URL" value={cfg.logoUrl || ''} onChange={v => setCfgField('logoUrl', v)}
-                upload={async f => { const r = await uploadAppAsset(f, 'bets-logo'); const url = r.publicUrl; setCfgField('logoUrl', url); }} />
+              <ImageUploadField label="Logo" value={cfg.logoUrl || ''} onChange={v => setCfgField('logoUrl', v)}
+                upload={async f => { const r = await uploadAppAsset(f, 'bets-logo'); setCfgField('logoUrl', r.publicUrl); }} />
               <ColorField label="Fundo" value={cfg.bgColor || '#0b0b14'} onChange={v => setCfgField('bgColor', v)} />
               <ColorField label="Card" value={cfg.cardBg || '#141425'} onChange={v => setCfgField('cardBg', v)} />
               <ColorField label="Destaque (odd)" value={cfg.accentColor || '#22d3ee'} onChange={v => setCfgField('accentColor', v)} />
@@ -310,7 +310,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             <h3 className="font-bold">Moeda</h3>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Nome da moeda" value={config.coin_name} onChange={v => setConfig({ ...config, coin_name: v })} />
-              <Field label="Ícone (URL)" value={config.coin_icon_url} onChange={v => setConfig({ ...config, coin_icon_url: v })} />
+              <ImageUploadField label="Ícone da moeda" value={config.coin_icon_url} onChange={v => setConfig({ ...config, coin_icon_url: v })}
+                upload={async f => { const r = await uploadAppAsset(f, 'bets-coin'); setConfig(c => c ? { ...c, coin_icon_url: r.publicUrl } : c); }} />
             </div>
           </div>
 
@@ -418,8 +419,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <Field label="Título" value={editingEvent.title || ''} onChange={v => setEditingEvent(p => ({ ...p!, title: v }))} />
               <Field label="Categoria" value={editingEvent.category || ''} onChange={v => setEditingEvent(p => ({ ...p!, category: v }))} />
               <Field label="Subtítulo" value={editingEvent.subtitle || ''} onChange={v => setEditingEvent(p => ({ ...p!, subtitle: v }))} />
-              <Field label="Imagem URL" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
-                upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); const url = r.publicUrl; setEditingEvent(p => ({ ...p!, image_url: url })); }} />
+              <ImageUploadField label="Imagem do evento" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
+                upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); setEditingEvent(p => ({ ...p!, image_url: r.publicUrl })); }} />
               <Field label="Encerra apostas em" type="datetime-local"
                 value={editingEvent.closes_at ? new Date(editingEvent.closes_at).toISOString().slice(0, 16) : ''}
                 onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? new Date(v).toISOString() : null }))} />
@@ -521,6 +522,33 @@ function Field({ label, value, onChange, type = 'text', upload }: { label: strin
             <input type="file" accept="image/*" className="hidden"
               onChange={async e => { const f = e.target.files?.[0]; if (f) await upload(f); e.target.value = ''; }} />
           </label>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ImageUploadField({ label, value, onChange, upload }: { label: string; value: string; onChange: (v: string) => void; upload: (f: File) => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <div>
+      <label className="text-xs font-medium block mb-1">{label}</label>
+      <div className="flex items-center gap-2">
+        {value ? (
+          <img src={value} alt="" className="w-12 h-12 rounded object-cover bg-muted border border-border" />
+        ) : (
+          <div className="w-12 h-12 rounded bg-muted border border-dashed border-border" />
+        )}
+        <label className={`px-3 py-2 rounded-lg bg-muted cursor-pointer text-xs hover:bg-muted/80 flex items-center gap-1 ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+          {busy ? 'Enviando...' : value ? 'Trocar' : 'Upload'}
+          <input type="file" accept="image/*" className="hidden"
+            onChange={async e => {
+              const f = e.target.files?.[0]; if (!f) return;
+              setBusy(true); try { await upload(f); } finally { setBusy(false); e.currentTarget.value = ''; }
+            }} />
+        </label>
+        {value && (
+          <button type="button" onClick={() => onChange('')} className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground">Remover</button>
         )}
       </div>
     </div>
