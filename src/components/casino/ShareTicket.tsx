@@ -137,9 +137,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
     if (!cardRef.current) return;
     setSharing(true);
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2, cacheBust: true, backgroundColor: bgFrom,
-      });
+      const dataUrl = await renderPng();
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], 'bilhete.png', { type: 'image/png' });
       const shareText = isWin
