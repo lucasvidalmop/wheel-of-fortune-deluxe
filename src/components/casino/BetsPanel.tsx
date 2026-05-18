@@ -296,8 +296,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título" value={cfg.title || ''} onChange={v => setCfgField('title', v)} />
               <Field label="Subtítulo" value={cfg.subtitle || ''} onChange={v => setCfgField('subtitle', v)} />
-              <Field label="Logo URL" value={cfg.logoUrl || ''} onChange={v => setCfgField('logoUrl', v)}
-                upload={async f => { const r = await uploadAppAsset(f, 'bets-logo'); const url = r.publicUrl; setCfgField('logoUrl', url); }} />
+              <ImageUploadField label="Logo" value={cfg.logoUrl || ''} onChange={v => setCfgField('logoUrl', v)}
+                upload={async f => { const r = await uploadAppAsset(f, 'bets-logo'); setCfgField('logoUrl', r.publicUrl); }} />
               <ColorField label="Fundo" value={cfg.bgColor || '#0b0b14'} onChange={v => setCfgField('bgColor', v)} />
               <ColorField label="Card" value={cfg.cardBg || '#141425'} onChange={v => setCfgField('cardBg', v)} />
               <ColorField label="Destaque (odd)" value={cfg.accentColor || '#22d3ee'} onChange={v => setCfgField('accentColor', v)} />
