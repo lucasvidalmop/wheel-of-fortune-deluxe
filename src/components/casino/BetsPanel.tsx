@@ -543,8 +543,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                   <input value={o.label} placeholder="Resultado (ex.: Casa)"
                     onChange={e => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
                     className="flex-1 px-3 py-1.5 rounded bg-muted text-sm" />
-                  <input type="number" step="0.01" min="1.01" value={o.odd}
-                    onChange={e => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, odd: Number(e.target.value) } : x))}
+                  <NumberField value={o.odd}
+                    onChange={n => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, odd: n ?? 0 } : x))}
                     className="w-24 px-3 py-1.5 rounded bg-muted text-sm tabular-nums" />
                   <button onClick={() => setEditingOutcomes(arr => arr.filter((_, j) => j !== i))} className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
                 </div>
