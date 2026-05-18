@@ -139,6 +139,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         payout_case_qty_per_unit: editingEvent.payout_case_qty_per_unit ?? 1,
         min_bet: editingEvent.min_bet ?? 1,
         max_bet: editingEvent.max_bet ?? 0,
+        max_bets_per_user: editingEvent.max_bets_per_user ?? 0,
         position: editingEvent.position ?? 0,
       };
       if (eventId) {
