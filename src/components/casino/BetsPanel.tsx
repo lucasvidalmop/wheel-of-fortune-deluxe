@@ -53,12 +53,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       setConfig(cfg as any);
       setCases((cs || []) as LbCase[]);
       if (cfg?.id) {
-        const [{ data: evs }, { data: outs }] = await Promise.all([
+        const [{ data: evs }, { data: outs }, { data: catz }] = await Promise.all([
           supabase.from('bet_events').select('*').eq('bets_config_id', cfg.id).order('created_at', { ascending: false }),
           supabase.from('bet_outcomes').select('*').eq('owner_id', ownerId).order('position'),
+          supabase.from('bet_categories').select('*').eq('bets_config_id', cfg.id).order('position'),
         ]);
         setEvents((evs || []) as BetEvent[]);
         setOutcomes((outs || []) as BetOutcome[]);
+        setCategories((catz || []) as BetCategory[]);
       }
     } catch (e: any) {
       toast.error('Erro ao carregar dados');
