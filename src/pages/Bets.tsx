@@ -1,0 +1,428 @@
+import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Loader2, LogOut, Wallet, X, Check, Clock } from 'lucide-react';
+
+interface BetsPageProps { tag: string }
+
+interface OutcomeRow { id: string; event_id: string; label: string; odd: number; position: number; is_winner: boolean }
+interface EventRow {
+  id: string; title: string; subtitle: string; category: string; image_url: string;
+  starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
+  payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
+  min_bet: number; max_bet: number; position: number; winning_outcome_id: string | null;
+}
+interface CaseRow { id: string; name: string; image_url: string; rarity: string }
+interface WagerRow {
+  id: string; event_id: string; outcome_id: string; amount_coins: number; odd_snapshot: number;
+  payout_mode: 'coins'|'case'; status: 'pending'|'won'|'lost'|'refunded'|'cancelled';
+  payout_coins: number; payout_grant_id: string | null; created_at: string; resolved_at: string | null;
+}
+
+interface AuthedUser { id: string; name: string; email: string; account_id: string; tokens_balance: number }
+
+const Bets = ({ tag }: BetsPageProps) => {
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState<any | null>(null);
+  const [authed, setAuthed] = useState<AuthedUser | null>(null);
+
+  // auth screen
+  const [authEmail, setAuthEmail] = useState('');
+  const [authAccountId, setAuthAccountId] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // bet slip
+  const [slip, setSlip] = useState<{ event: EventRow; outcome: OutcomeRow } | null>(null);
+  const [amount, setAmount] = useState('');
+  const [placing, setPlacing] = useState(false);
+
+  // my bets
+  const [tab, setTab] = useState<'events' | 'mine'>('events');
+  const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
+  const [myEvents, setMyEvents] = useState<any[]>([]);
+
+  // load page
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-bets-page', { body: { tag } });
+        if (error) throw error;
+        setPage(data);
+      } catch (e: any) {
+        toast.error('Erro ao carregar página');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [tag]);
+
+  // SEO/pixels injection
+  useEffect(() => {
+    const seo = page?.pageConfig?.seo;
+    if (!seo) return;
+    if (seo.pageTitle) document.title = seo.pageTitle;
+    if (seo.faviconUrl) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+      link.href = seo.faviconUrl;
+    }
+    const setMeta = (name: string, content: string, isProp = false) => {
+      if (!content) return;
+      const attr = isProp ? 'property' : 'name';
+      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.content = content;
+    };
+    setMeta('description', seo.pageDescription || '');
+    setMeta('keywords', seo.keywords || '');
+    setMeta('og:title', seo.pageTitle || '', true);
+    setMeta('og:description', seo.pageDescription || '', true);
+    setMeta('og:image', seo.ogImage || '', true);
+  }, [page]);
+
+  const cfg = page?.pageConfig || {};
+  const bg = cfg.bgColor || '#0b0b14';
+  const accent = cfg.accentColor || '#22d3ee';
+  const cardBg = cfg.cardBg || '#141425';
+  const text = cfg.textColor || '#ffffff';
+  const muted = cfg.mutedColor || '#a0a0c0';
+  const coinName = page?.coinName || 'Coins';
+  const coinIcon = page?.coinIconUrl || '';
+
+  const events: EventRow[] = page?.events || [];
+  const outcomesByEvent = useMemo(() => {
+    const m: Record<string, OutcomeRow[]> = {};
+    (page?.outcomes || []).forEach((o: OutcomeRow) => { (m[o.event_id] ||= []).push(o); });
+    return m;
+  }, [page]);
+  const casesById = useMemo(() => {
+    const m: Record<string, CaseRow> = {};
+    (page?.cases || []).forEach((c: CaseRow) => { m[c.id] = c; });
+    return m;
+  }, [page]);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = authEmail.trim().toLowerCase();
+    const accountId = authAccountId.trim();
+    if (!email || !accountId) { toast.error('Preencha e-mail e ID'); return; }
+    setAuthLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-user-bets', { body: { tag, email, accountId } });
+      if (error) throw error;
+      if (!data?.found) { toast.error('Cadastro não encontrado'); return; }
+      if (data.user.blacklisted) { toast.error('Conta bloqueada'); return; }
+      setAuthed(data.user);
+      setMyWagers(data.wagers || []);
+      setMyEvents(data.events || []);
+    } catch (err: any) {
+      toast.error('Falha ao buscar cadastro');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const refreshMine = async () => {
+    if (!authed) return;
+    const { data } = await supabase.functions.invoke('get-user-bets', {
+      body: { tag, email: authed.email, accountId: authed.account_id },
+    });
+    if (data?.found) {
+      setAuthed(prev => prev ? { ...prev, tokens_balance: data.user.tokens_balance } : prev);
+      setMyWagers(data.wagers || []);
+      setMyEvents(data.events || []);
+    }
+  };
+
+  const openSlip = (event: EventRow, outcome: OutcomeRow) => {
+    if (!authed) { toast.error('Faça login para apostar'); return; }
+    if (event.status !== 'open') { toast.error('Evento fechado'); return; }
+    if (event.closes_at && new Date(event.closes_at) < new Date()) { toast.error('Apostas encerradas'); return; }
+    setSlip({ event, outcome });
+    setAmount(String(event.min_bet || 10));
+  };
+
+  const placeBet = async () => {
+    if (!slip || !authed) return;
+    const amt = Math.floor(Number(amount));
+    if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
+    if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
+    setPlacing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('place-bet', {
+        body: {
+          tag, email: authed.email, accountId: authed.account_id,
+          eventId: slip.event.id, outcomeId: slip.outcome.id, amount: amt,
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) {
+        toast.error(`Falha: ${data?.error || 'erro desconhecido'}`);
+        return;
+      }
+      toast.success('Aposta confirmada!');
+      setAuthed(prev => prev ? { ...prev, tokens_balance: data.tokens_balance } : prev);
+      setSlip(null);
+      refreshMine();
+    } catch (err: any) {
+      toast.error('Falha ao apostar');
+    } finally {
+      setPlacing(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: bg, color: text }}>
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!page?.found || !page?.isActive) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg, color: text }}>
+        <div className="text-center max-w-md p-8 rounded-2xl" style={{ background: cardBg }}>
+          <h1 className="text-2xl font-bold mb-2">Apostas indisponíveis</h1>
+          <p style={{ color: muted }}>Esta página não está disponível no momento.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Auth screen
+  if (!authed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg, color: text }}>
+        <div className="w-full max-w-md p-8 rounded-2xl border" style={{ background: cardBg, borderColor: `${accent}40` }}>
+          {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="mx-auto mb-4 h-16 object-contain" />}
+          <h1 className="text-2xl font-bold text-center mb-1">{cfg.title || 'Apostas'}</h1>
+          <p className="text-center text-sm mb-6" style={{ color: muted }}>
+            {cfg.subtitle || 'Informe e-mail e ID da conta para começar'}
+          </p>
+          <form onSubmit={handleAuth} className="space-y-3">
+            <input
+              type="email" placeholder="E-mail" value={authEmail}
+              onChange={e => setAuthEmail(e.target.value)} required maxLength={200}
+              className="w-full px-4 py-3 rounded-lg outline-none"
+              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
+            />
+            <input
+              type="text" placeholder="ID da conta" value={authAccountId}
+              onChange={e => setAuthAccountId(e.target.value)} required maxLength={50}
+              className="w-full px-4 py-3 rounded-lg outline-none"
+              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
+            />
+            <button type="submit" disabled={authLoading}
+              className="w-full py-3 rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ background: accent, color: '#000' }}>
+              {authLoading ? <Loader2 className="animate-spin" size={18} /> : null}
+              Entrar
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  const eventStatusBadge = (st: string) => st === 'open' ? 'Aberto' : st === 'closed' ? 'Fechado' : st === 'resolved' ? 'Resolvido' : 'Cancelado';
+
+  return (
+    <div className="min-h-screen" style={{ background: bg, color: text }}>
+      {/* header */}
+      <header className="sticky top-0 z-20 backdrop-blur" style={{ background: `${bg}cc`, borderBottom: `1px solid ${accent}33` }}>
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="h-9 object-contain" />}
+            <div className="min-w-0">
+              <div className="font-bold truncate">{cfg.title || 'Apostas'}</div>
+              <div className="text-xs truncate" style={{ color: muted }}>{authed.name}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
+              {coinIcon ? <img src={coinIcon} className="w-4 h-4" alt="" /> : <Wallet size={14} />}
+              <span className="font-bold tabular-nums">{authed.tokens_balance}</span>
+              <span className="text-xs" style={{ color: muted }}>{coinName}</span>
+            </div>
+            <button onClick={() => { setAuthed(null); setMyWagers([]); }} title="Sair"
+              className="p-2 rounded-lg" style={{ background: '#00000033' }}>
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="max-w-5xl mx-auto px-4 pb-2 flex gap-1">
+          {([['events','Eventos'],['mine','Minhas apostas']] as const).map(([k, l]) => (
+            <button key={k} onClick={() => { setTab(k); if (k === 'mine') refreshMine(); }}
+              className="px-4 py-2 rounded-t-lg text-sm font-medium transition"
+              style={{
+                background: tab === k ? cardBg : 'transparent',
+                color: tab === k ? text : muted,
+                borderBottom: tab === k ? `2px solid ${accent}` : '2px solid transparent',
+              }}>{l}</button>
+          ))}
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 py-6">
+        {tab === 'events' && (
+          <div className="space-y-4">
+            {events.length === 0 && (
+              <div className="text-center py-16" style={{ color: muted }}>
+                Nenhum evento disponível no momento.
+              </div>
+            )}
+            {events.map(ev => {
+              const outs = outcomesByEvent[ev.id] || [];
+              const closed = ev.status !== 'open' || (ev.closes_at && new Date(ev.closes_at) < new Date());
+              const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
+              return (
+                <article key={ev.id} className="rounded-2xl p-4 sm:p-5" style={{ background: cardBg, border: `1px solid ${accent}22` }}>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                      {ev.category && <div className="text-xs uppercase tracking-wider mb-1" style={{ color: accent }}>{ev.category}</div>}
+                      <h2 className="font-bold text-lg sm:text-xl truncate">{ev.title}</h2>
+                      {ev.subtitle && <p className="text-sm mt-0.5" style={{ color: muted }}>{ev.subtitle}</p>}
+                      <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: muted }}>
+                        {ev.closes_at && (
+                          <span className="flex items-center gap-1"><Clock size={12} /> Encerra: {new Date(ev.closes_at).toLocaleString('pt-BR')}</span>
+                        )}
+                        <span className="px-2 py-0.5 rounded-full" style={{ background: '#00000044' }}>{eventStatusBadge(ev.status)}</span>
+                      </div>
+                    </div>
+                    {ev.image_url && <img src={ev.image_url} alt="" className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0" />}
+                  </div>
+                  {ev.payout_mode === 'case' && c && (
+                    <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: '#00000044' }}>
+                      {c.image_url && <img src={c.image_url} className="w-8 h-8 rounded" alt="" />}
+                      <span className="text-xs">Prêmio: caixa <b>{c.name}</b> ({ev.payout_case_qty_per_unit}× por unidade apostada)</span>
+                    </div>
+                  )}
+                  <div className={`grid gap-2 ${outs.length === 2 ? 'grid-cols-2' : outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                    {outs.map(o => {
+                      const isWinner = ev.status === 'resolved' && o.is_winner;
+                      const isLoser = ev.status === 'resolved' && !o.is_winner;
+                      return (
+                        <button key={o.id}
+                          onClick={() => openSlip(ev, o)}
+                          disabled={!!closed}
+                          className="px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+                          style={{
+                            background: isWinner ? `${accent}33` : '#00000033',
+                            border: `1px solid ${isWinner ? accent : `${accent}33`}`,
+                            color: isLoser ? muted : text,
+                          }}>
+                          <div className="text-xs uppercase tracking-wider mb-1" style={{ color: muted }}>{o.label}</div>
+                          <div className="text-xl font-bold tabular-nums" style={{ color: isWinner ? accent : text }}>{Number(o.odd).toFixed(2)}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {tab === 'mine' && (
+          <div className="space-y-2">
+            {myWagers.length === 0 && (
+              <div className="text-center py-16" style={{ color: muted }}>Você ainda não fez apostas.</div>
+            )}
+            {myWagers.map(w => {
+              const ev = myEvents.find(e => e.id === w.event_id);
+              const statusLabel: Record<string, string> = {
+                pending: 'Pendente', won: 'Ganhou', lost: 'Perdeu', refunded: 'Devolvida', cancelled: 'Cancelada',
+              };
+              const statusColor: Record<string, string> = {
+                pending: muted, won: '#22c55e', lost: '#ef4444', refunded: '#eab308', cancelled: muted,
+              };
+              return (
+                <div key={w.id} className="rounded-xl p-4 flex items-center justify-between gap-3"
+                  style={{ background: cardBg, border: `1px solid ${accent}22` }}>
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{ev?.title || w.event_id.slice(0, 8)}</div>
+                    <div className="text-xs mt-0.5" style={{ color: muted }}>
+                      {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
+                      {w.payout_mode === 'case' ? ' · Prêmio: caixa' : ` · Retorno: ${Math.round(w.amount_coins * Number(w.odd_snapshot))} ${coinName}`}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold" style={{ color: statusColor[w.status] }}>{statusLabel[w.status]}</div>
+                    {w.status === 'won' && w.payout_mode === 'coins' && (
+                      <div className="text-xs" style={{ color: muted }}>+{w.payout_coins}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+
+      {/* Bet slip */}
+      {slip && (
+        <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+          onClick={() => setSlip(null)}>
+          <div className="w-full max-w-md rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${accent}55` }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="min-w-0">
+                <div className="text-xs uppercase" style={{ color: muted }}>Cupom de aposta</div>
+                <div className="font-bold truncate">{slip.event.title}</div>
+                <div className="text-sm mt-1">
+                  <span className="px-2 py-0.5 rounded" style={{ background: `${accent}33` }}>
+                    {slip.outcome.label} · {Number(slip.outcome.odd).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setSlip(null)} className="p-1.5 rounded" style={{ background: '#00000044' }}>
+                <X size={16} />
+              </button>
+            </div>
+            <label className="text-sm" style={{ color: muted }}>Valor ({coinName})</label>
+            <input
+              type="number" inputMode="numeric" min={slip.event.min_bet} step={1}
+              value={amount} onChange={e => setAmount(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg outline-none text-lg font-bold tabular-nums mt-1"
+              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
+            />
+            <div className="flex gap-2 mt-2">
+              {[10, 50, 100, 500].map(v => (
+                <button key={v} type="button" onClick={() => setAmount(String(v))}
+                  className="flex-1 py-1.5 rounded text-xs font-medium" style={{ background: '#00000044', color: text }}>
+                  {v}
+                </button>
+              ))}
+              <button type="button" onClick={() => setAmount(String(authed?.tokens_balance ?? 0))}
+                className="flex-1 py-1.5 rounded text-xs font-medium" style={{ background: '#00000044', color: text }}>
+                Tudo
+              </button>
+            </div>
+
+            <div className="mt-4 p-3 rounded-lg space-y-1 text-sm" style={{ background: '#00000033' }}>
+              <div className="flex justify-between"><span style={{ color: muted }}>Saldo:</span><span className="tabular-nums">{authed?.tokens_balance ?? 0}</span></div>
+              <div className="flex justify-between"><span style={{ color: muted }}>Aposta:</span><span className="tabular-nums">{Math.floor(Number(amount) || 0)}</span></div>
+              <div className="flex justify-between font-bold">
+                <span>Retorno potencial:</span>
+                <span className="tabular-nums" style={{ color: accent }}>
+                  {slip.event.payout_mode === 'case'
+                    ? `${Math.max(1, Math.floor((Number(amount) || 0) * slip.event.payout_case_qty_per_unit))}× caixa`
+                    : `${Math.round((Number(amount) || 0) * Number(slip.outcome.odd))} ${coinName}`}
+                </span>
+              </div>
+            </div>
+
+            <button onClick={placeBet} disabled={placing}
+              className="mt-4 w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              style={{ background: accent, color: '#000' }}>
+              {placing ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+              Confirmar aposta
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Bets;
