@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy, Download, BarChart3, TrendingUp, TrendingDown, Users, Coins } from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
 
@@ -24,7 +25,7 @@ interface LbCase { id: string; name: string; image_url: string }
 const emptyOutcome = () => ({ id: '', label: '', odd: 1.5, position: 0 });
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
-  const [tab, setTab] = useState<'config'|'events'|'wagers'>('config');
+  const [tab, setTab] = useState<'config'|'events'|'wagers'|'analytics'>('config');
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
@@ -233,7 +234,10 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     setWagers(data || []);
   };
 
-  useEffect(() => { if (tab === 'wagers') loadWagers(); }, [tab, config?.id]);
+  useEffect(() => { if (tab === 'wagers' || tab === 'analytics') loadWagers(); }, [tab, config?.id]);
+
+  // Analytics filters
+  const [aFilter, setAFilter] = useState<{ eventId: string; status: string; days: number }>({ eventId: '', status: '', days: 30 });
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -264,6 +268,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           ['config', 'Configuração'],
           ['events', `Eventos (${events.length})`],
           ['wagers', 'Apostas'],
+          ['analytics', 'Analytics'],
         ] as const).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k as any)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition ${tab === k ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
@@ -481,6 +486,19 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           </table>
         </div>
       )}
+
+      {tab === 'analytics' && (
+        <AnalyticsTab
+          wagers={wagers}
+          events={events}
+          outcomes={outcomes}
+          coinName={config.coin_name || 'Coins'}
+          filter={aFilter}
+          setFilter={setAFilter}
+        />
+      )}
+
+
 
       {/* Event editor modal */}
       {editingEvent && (
@@ -700,6 +718,306 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
         <input type="text" value={value} onChange={e => onChange(e.target.value)}
           className="flex-1 px-3 py-2 rounded-lg bg-muted text-sm tabular-nums" />
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Analytics Tab
+// ============================================================
+interface AnalyticsTabProps {
+  wagers: any[];
+  events: BetEvent[];
+  outcomes: BetOutcome[];
+  coinName: string;
+  filter: { eventId: string; status: string; days: number };
+  setFilter: (f: { eventId: string; status: string; days: number }) => void;
+}
+
+const COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb7185', '#60a5fa'];
+
+function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }: AnalyticsTabProps) {
+  // Apply filters
+  const cutoff = filter.days > 0 ? Date.now() - filter.days * 86400_000 : 0;
+  const filtered = wagers.filter(w => {
+    if (filter.eventId && w.event_id !== filter.eventId) return false;
+    if (filter.status && w.status !== filter.status) return false;
+    if (cutoff && new Date(w.created_at).getTime() < cutoff) return false;
+    return true;
+  });
+
+  // KPIs
+  const totalWagers = filtered.length;
+  const totalStaked = filtered.reduce((s, w) => s + (w.amount_coins || 0), 0);
+  const totalPaidCoins = filtered.filter(w => w.status === 'won' && w.payout_mode !== 'case').reduce((s, w) => s + (w.payout_coins || 0), 0);
+  const totalPaidCases = filtered.filter(w => w.status === 'won' && w.payout_mode === 'case').length;
+  const refunded = filtered.filter(w => w.status === 'refunded').reduce((s, w) => s + (w.amount_coins || 0), 0);
+  const won = filtered.filter(w => w.status === 'won').length;
+  const lost = filtered.filter(w => w.status === 'lost').length;
+  const pending = filtered.filter(w => w.status === 'pending').length;
+  const uniqueUsers = new Set(filtered.map(w => `${w.user_email}|${w.account_id}`)).size;
+  const houseEdge = totalStaked - totalPaidCoins - refunded;
+  const winRate = (won + lost) > 0 ? (won / (won + lost)) * 100 : 0;
+  const avgBet = totalWagers > 0 ? totalStaked / totalWagers : 0;
+
+  // By status (pie)
+  const byStatus = ['pending', 'won', 'lost', 'refunded', 'cancelled'].map(s => ({
+    name: s, value: filtered.filter(w => w.status === s).length,
+  })).filter(x => x.value > 0);
+
+  // By day (line)
+  const byDayMap = new Map<string, { date: string; apostas: number; valor: number; pago: number }>();
+  filtered.forEach(w => {
+    const d = new Date(w.created_at).toISOString().slice(0, 10);
+    const e = byDayMap.get(d) || { date: d, apostas: 0, valor: 0, pago: 0 };
+    e.apostas += 1;
+    e.valor += w.amount_coins || 0;
+    if (w.status === 'won' && w.payout_mode !== 'case') e.pago += w.payout_coins || 0;
+    byDayMap.set(d, e);
+  });
+  const byDay = Array.from(byDayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+  // By event (bar)
+  const byEventMap = new Map<string, { title: string; apostas: number; valor: number; pago: number }>();
+  filtered.forEach(w => {
+    const ev = events.find(e => e.id === w.event_id);
+    const title = ev?.title || w.event_id.slice(0, 8);
+    const e = byEventMap.get(w.event_id) || { title, apostas: 0, valor: 0, pago: 0 };
+    e.apostas += 1;
+    e.valor += w.amount_coins || 0;
+    if (w.status === 'won' && w.payout_mode !== 'case') e.pago += w.payout_coins || 0;
+    byEventMap.set(w.event_id, e);
+  });
+  const byEvent = Array.from(byEventMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
+
+  // By outcome (top picks)
+  const byOutcomeMap = new Map<string, { label: string; event: string; apostas: number; valor: number }>();
+  filtered.forEach(w => {
+    const out = outcomes.find(o => o.id === w.outcome_id);
+    const ev = events.find(e => e.id === w.event_id);
+    const key = w.outcome_id;
+    const e = byOutcomeMap.get(key) || { label: out?.label || '?', event: ev?.title || '', apostas: 0, valor: 0 };
+    e.apostas += 1;
+    e.valor += w.amount_coins || 0;
+    byOutcomeMap.set(key, e);
+  });
+  const byOutcome = Array.from(byOutcomeMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
+
+  // Top users
+  const byUserMap = new Map<string, { name: string; email: string; account: string; apostas: number; valor: number; pago: number; ganhas: number; perdidas: number }>();
+  filtered.forEach(w => {
+    const key = `${w.user_email}|${w.account_id}`;
+    const e = byUserMap.get(key) || { name: w.user_name || w.user_email, email: w.user_email, account: w.account_id, apostas: 0, valor: 0, pago: 0, ganhas: 0, perdidas: 0 };
+    e.apostas += 1;
+    e.valor += w.amount_coins || 0;
+    if (w.status === 'won') {
+      e.ganhas += 1;
+      if (w.payout_mode !== 'case') e.pago += w.payout_coins || 0;
+    }
+    if (w.status === 'lost') e.perdidas += 1;
+    byUserMap.set(key, e);
+  });
+  const topUsers = Array.from(byUserMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 20);
+
+  const exportCsv = () => {
+    const rows = [
+      ['data', 'usuario', 'email', 'account_id', 'evento', 'resultado', 'valor', 'odd', 'status', 'modo', 'pago_coins', 'grant_id'],
+      ...filtered.map(w => {
+        const ev = events.find(e => e.id === w.event_id);
+        const out = outcomes.find(o => o.id === w.outcome_id);
+        return [
+          new Date(w.created_at).toISOString(),
+          w.user_name || '', w.user_email || '', w.account_id || '',
+          ev?.title || w.event_id, out?.label || '',
+          w.amount_coins, w.odd_snapshot, w.status, w.payout_mode,
+          w.payout_coins || 0, w.payout_grant_id || '',
+        ];
+      }),
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `apostas-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 items-end p-3 rounded-xl bg-card border border-border">
+        <div>
+          <label className="text-xs block mb-1 text-muted-foreground">Período</label>
+          <select value={filter.days} onChange={e => setFilter({ ...filter, days: Number(e.target.value) })}
+            className="px-3 py-1.5 rounded bg-muted text-sm border border-border">
+            <option value={1}>Últimas 24h</option>
+            <option value={7}>7 dias</option>
+            <option value={30}>30 dias</option>
+            <option value={90}>90 dias</option>
+            <option value={0}>Tudo</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-xs block mb-1 text-muted-foreground">Evento</label>
+          <select value={filter.eventId} onChange={e => setFilter({ ...filter, eventId: e.target.value })}
+            className="px-3 py-1.5 rounded bg-muted text-sm border border-border min-w-[180px]">
+            <option value="">Todos</option>
+            {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs block mb-1 text-muted-foreground">Status</label>
+          <select value={filter.status} onChange={e => setFilter({ ...filter, status: e.target.value })}
+            className="px-3 py-1.5 rounded bg-muted text-sm border border-border">
+            <option value="">Todos</option>
+            <option value="pending">Pendente</option>
+            <option value="won">Ganhou</option>
+            <option value="lost">Perdeu</option>
+            <option value="refunded">Devolvida</option>
+            <option value="cancelled">Cancelada</option>
+          </select>
+        </div>
+        <div className="ml-auto">
+          <button onClick={exportCsv} disabled={!filtered.length}
+            className="px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium flex items-center gap-1.5 disabled:opacity-50">
+            <Download size={14} /> Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi icon={<BarChart3 size={16} />} label="Apostas" value={totalWagers.toLocaleString('pt-BR')} sub={`${uniqueUsers} apostadores`} />
+        <Kpi icon={<Coins size={16} />} label={`${coinName} apostados`} value={totalStaked.toLocaleString('pt-BR')} sub={`Ticket médio ${avgBet.toFixed(0)}`} />
+        <Kpi icon={<TrendingDown size={16} />} label={`${coinName} pagos`} value={totalPaidCoins.toLocaleString('pt-BR')} sub={totalPaidCases > 0 ? `+${totalPaidCases} caixas` : 'em prêmios'} />
+        <Kpi icon={<TrendingUp size={16} />} label="Resultado da casa" value={houseEdge.toLocaleString('pt-BR')}
+          sub={`${totalStaked > 0 ? ((houseEdge / totalStaked) * 100).toFixed(1) : '0'}% margem`}
+          accent={houseEdge >= 0 ? 'positive' : 'negative'} />
+        <Kpi icon={<Trophy size={16} />} label="Ganhas" value={won.toLocaleString('pt-BR')} sub={`${winRate.toFixed(1)}% win rate`} accent="positive" />
+        <Kpi icon={<X size={16} />} label="Perdidas" value={lost.toLocaleString('pt-BR')} sub={`${(100 - winRate).toFixed(1)}% lose rate`} />
+        <Kpi icon={<Loader2 size={16} />} label="Pendentes" value={pending.toLocaleString('pt-BR')} sub="aguardando resolução" />
+        <Kpi icon={<Users size={16} />} label="Devolvido" value={refunded.toLocaleString('pt-BR')} sub={`${filtered.filter(w => w.status === 'refunded').length} apostas`} />
+      </div>
+
+      {/* Volume por dia */}
+      <div className="p-4 rounded-xl bg-card border border-border">
+        <h4 className="font-semibold text-sm mb-3">Volume por dia</h4>
+        {byDay.length === 0 ? <p className="text-xs text-muted-foreground py-8 text-center">Sem dados no período.</p> : (
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={byDay}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line type="monotone" dataKey="apostas" stroke="#22d3ee" name="Nº apostas" strokeWidth={2} />
+              <Line type="monotone" dataKey="valor" stroke="#a78bfa" name={`Valor (${coinName})`} strokeWidth={2} />
+              <Line type="monotone" dataKey="pago" stroke="#f472b6" name={`Pago (${coinName})`} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Status pie */}
+        <div className="p-4 rounded-xl bg-card border border-border">
+          <h4 className="font-semibold text-sm mb-3">Distribuição por status</h4>
+          {byStatus.length === 0 ? <p className="text-xs text-muted-foreground py-8 text-center">—</p> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie data={byStatus} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(d: any) => `${d.name}: ${d.value}`}>
+                  {byStatus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Pie>
+                <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* By event */}
+        <div className="p-4 rounded-xl bg-card border border-border">
+          <h4 className="font-semibold text-sm mb-3">Top eventos por valor</h4>
+          {byEvent.length === 0 ? <p className="text-xs text-muted-foreground py-8 text-center">—</p> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={byEvent} layout="vertical" margin={{ left: 80 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis type="category" dataKey="title" stroke="hsl(var(--muted-foreground))" fontSize={11} width={120} />
+                <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                <Bar dataKey="valor" fill="#22d3ee" name={`Valor (${coinName})`} />
+                <Bar dataKey="pago" fill="#f472b6" name={`Pago (${coinName})`} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      {/* Top outcomes */}
+      <div className="p-4 rounded-xl bg-card border border-border">
+        <h4 className="font-semibold text-sm mb-3">Resultados mais apostados</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-muted-foreground border-b border-border">
+              <th className="py-2">Resultado</th><th>Evento</th>
+              <th className="text-right">Apostas</th><th className="text-right">Valor</th>
+            </tr></thead>
+            <tbody>
+              {byOutcome.map((o, i) => (
+                <tr key={i} className="border-b border-border/50">
+                  <td className="py-2 font-medium">{o.label}</td>
+                  <td className="text-xs text-muted-foreground">{o.event}</td>
+                  <td className="text-right tabular-nums">{o.apostas}</td>
+                  <td className="text-right tabular-nums">{o.valor.toLocaleString('pt-BR')}</td>
+                </tr>
+              ))}
+              {byOutcome.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">—</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Top users */}
+      <div className="p-4 rounded-xl bg-card border border-border">
+        <h4 className="font-semibold text-sm mb-3">Top apostadores</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-muted-foreground border-b border-border">
+              <th className="py-2">Usuário</th><th>ID</th>
+              <th className="text-right">Apostas</th><th className="text-right">Valor</th>
+              <th className="text-right">Ganhas</th><th className="text-right">Perdidas</th>
+              <th className="text-right">Pago</th><th className="text-right">Saldo casa</th>
+            </tr></thead>
+            <tbody>
+              {topUsers.map((u, i) => {
+                const balance = u.valor - u.pago;
+                return (
+                  <tr key={i} className="border-b border-border/50">
+                    <td className="py-2">{u.name}<div className="text-xs text-muted-foreground">{u.email}</div></td>
+                    <td className="text-xs">{u.account}</td>
+                    <td className="text-right tabular-nums">{u.apostas}</td>
+                    <td className="text-right tabular-nums">{u.valor.toLocaleString('pt-BR')}</td>
+                    <td className="text-right tabular-nums text-green-500">{u.ganhas}</td>
+                    <td className="text-right tabular-nums text-red-500">{u.perdidas}</td>
+                    <td className="text-right tabular-nums">{u.pago.toLocaleString('pt-BR')}</td>
+                    <td className={`text-right tabular-nums font-medium ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>{balance.toLocaleString('pt-BR')}</td>
+                  </tr>
+                );
+              })}
+              {topUsers.length === 0 && <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Nenhum apostador no período.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Kpi({ icon, label, value, sub, accent }: { icon: React.ReactNode; label: string; value: string; sub?: string; accent?: 'positive' | 'negative' }) {
+  return (
+    <div className="p-3 rounded-xl bg-card border border-border">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">{icon}{label}</div>
+      <div className={`text-xl font-bold tabular-nums ${accent === 'positive' ? 'text-green-500' : accent === 'negative' ? 'text-red-500' : ''}`}>{value}</div>
+      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
   );
 }
