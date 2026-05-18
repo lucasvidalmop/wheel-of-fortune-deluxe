@@ -120,6 +120,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const [tokensLoading, setTokensLoading] = useState(false);
   const [tokensSearch, setTokensSearch] = useState('');
   const [adjustModal, setAdjustModal] = useState<{ user: any; value: string } | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [bulkModal, setBulkModal] = useState<{ value: string; scope: 'selected' | 'filtered' | 'all' } | null>(null);
+  const [bulkRunning, setBulkRunning] = useState(false);
 
   const baseUrl = window.location.origin;
 
@@ -269,6 +272,49 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
     setTokenUsers(prev => prev.map(u => u.id === userId ? { ...u, tokens_balance: data } : u));
     const lbl = cfg?.coin_name || 'Coins';
     toast.success(delta > 0 ? `+${delta} ${lbl}` : `${delta} ${lbl}`);
+  };
+
+  const runBulkAdjust = async () => {
+    if (!bulkModal) return;
+    const delta = parseInt(bulkModal.value);
+    if (!delta || isNaN(delta)) { toast.error('Informe um valor válido (use - para subtrair)'); return; }
+    setBulkRunning(true);
+    try {
+      let ids: string[] = [];
+      if (bulkModal.scope === 'selected') {
+        ids = Array.from(selectedUsers);
+        if (ids.length === 0) { toast.error('Selecione ao menos um usuário'); setBulkRunning(false); return; }
+      } else if (bulkModal.scope === 'filtered') {
+        ids = filteredTokenUsers.map(u => u.id);
+      } else {
+        const { data } = await (supabase as any).from('wheel_users').select('id').eq('owner_id', ownerId);
+        ids = (data || []).map((u: any) => u.id);
+      }
+      if (ids.length === 0) { toast.error('Nenhum usuário para atualizar'); setBulkRunning(false); return; }
+      const confirmMsg = `Aplicar ${delta > 0 ? '+' : ''}${delta} ${cfg?.coin_name || 'Coins'} para ${ids.length} usuário(s)?`;
+      if (!window.confirm(confirmMsg)) { setBulkRunning(false); return; }
+      let ok = 0, fail = 0;
+      const updates = new Map<string, number>();
+      // Run in batches of 10
+      for (let i = 0; i < ids.length; i += 10) {
+        const batch = ids.slice(i, i + 10);
+        const results = await Promise.all(batch.map(async (uid) => {
+          const { data, error } = await (supabase as any).rpc('adjust_luckybox_tokens', {
+            p_owner_id: ownerId, p_wheel_user_id: uid, p_delta: delta,
+          });
+          if (error) return { uid, ok: false };
+          updates.set(uid, data);
+          return { uid, ok: true };
+        }));
+        results.forEach(r => r.ok ? ok++ : fail++);
+      }
+      setTokenUsers(prev => prev.map(u => updates.has(u.id) ? { ...u, tokens_balance: updates.get(u.id) } : u));
+      toast.success(`${ok} usuário(s) atualizado(s)${fail ? ` · ${fail} falha(s)` : ''}`);
+      setBulkModal(null);
+      setSelectedUsers(new Set());
+    } finally {
+      setBulkRunning(false);
+    }
   };
 
   const handleUploadCoinIcon = async (file: File) => {
@@ -770,9 +816,15 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       {/* === TOKENS === */}
       {tab === 'tokens' && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <input value={tokensSearch} onChange={e => setTokensSearch(e.target.value)} placeholder="Buscar por nome, email ou ID" className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
+          <div className="flex flex-wrap items-center gap-3">
+            <input value={tokensSearch} onChange={e => setTokensSearch(e.target.value)} placeholder="Buscar por nome, email ou ID" className="flex-1 min-w-[200px] px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
             <button onClick={loadTokenUsers} className="px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm hover:bg-white/10">Recarregar</button>
+            <button
+              onClick={() => setBulkModal({ value: '', scope: selectedUsers.size > 0 ? 'selected' : 'filtered' })}
+              className="px-4 py-2.5 rounded-xl border border-emerald-400/40 bg-emerald-400/15 text-emerald-200 text-sm font-semibold hover:bg-emerald-400/25"
+            >
+              Tokens em massa {selectedUsers.size > 0 && `(${selectedUsers.size})`}
+            </button>
           </div>
           {tokensLoading ? (
             <div className="p-6 text-muted-foreground animate-pulse">Carregando usuários...</div>
@@ -781,6 +833,18 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
               <table className="w-full text-sm">
                 <thead className="bg-white/5 text-xs uppercase tracking-wider">
                   <tr>
+                    <th className="p-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={filteredTokenUsers.length > 0 && filteredTokenUsers.every(u => selectedUsers.has(u.id))}
+                        onChange={e => {
+                          const next = new Set(selectedUsers);
+                          if (e.target.checked) filteredTokenUsers.forEach(u => next.add(u.id));
+                          else filteredTokenUsers.forEach(u => next.delete(u.id));
+                          setSelectedUsers(next);
+                        }}
+                      />
+                    </th>
                     <th className="text-left p-3">Nome</th>
                     <th className="text-left p-3">Email</th>
                     <th className="text-left p-3">ID</th>
@@ -791,6 +855,17 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 <tbody>
                   {filteredTokenUsers.map(u => (
                     <tr key={u.id} className="border-t border-white/5">
+                      <td className="p-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.has(u.id)}
+                          onChange={e => {
+                            const next = new Set(selectedUsers);
+                            if (e.target.checked) next.add(u.id); else next.delete(u.id);
+                            setSelectedUsers(next);
+                          }}
+                        />
+                      </td>
                       <td className="p-3">{u.name}</td>
                       <td className="p-3 opacity-70">{u.email}</td>
                       <td className="p-3 font-mono text-xs">{u.account_id}</td>
@@ -806,12 +881,55 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                     </tr>
                   ))}
                   {filteredTokenUsers.length === 0 && (
-                    <tr><td colSpan={5} className="p-6 text-center opacity-60">Nenhum usuário encontrado</td></tr>
+                    <tr><td colSpan={6} className="p-6 text-center opacity-60">Nenhum usuário encontrado</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* === BULK TOKENS MODAL === */}
+      {bulkModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => !bulkRunning && setBulkModal(null)}>
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-background p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold">Tokens em massa</h3>
+            <p className="text-xs opacity-70">Use valor negativo para subtrair (ex: -50).</p>
+            <div>
+              <label className="text-xs opacity-70 mb-1 block">Aplicar a</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="radio" checked={bulkModal.scope === 'selected'} onChange={() => setBulkModal({ ...bulkModal, scope: 'selected' })} />
+                  Usuários selecionados ({selectedUsers.size})
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="radio" checked={bulkModal.scope === 'filtered'} onChange={() => setBulkModal({ ...bulkModal, scope: 'filtered' })} />
+                  Usuários filtrados na tabela ({filteredTokenUsers.length})
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="radio" checked={bulkModal.scope === 'all'} onChange={() => setBulkModal({ ...bulkModal, scope: 'all' })} />
+                  Todos os usuários do sistema
+                </label>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs opacity-70 mb-1 block">Quantidade de {cfg?.coin_name || 'Coins'}</label>
+              <input
+                type="number"
+                value={bulkModal.value}
+                onChange={e => setBulkModal({ ...bulkModal, value: e.target.value })}
+                placeholder="Ex: 100 ou -50"
+                className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm"
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <button disabled={bulkRunning} onClick={() => setBulkModal(null)} className="px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-sm">Cancelar</button>
+              <button disabled={bulkRunning} onClick={runBulkAdjust} className="px-4 py-2 rounded-xl bg-emerald-500 text-black font-semibold text-sm disabled:opacity-50">
+                {bulkRunning ? 'Aplicando...' : 'Aplicar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
