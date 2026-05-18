@@ -650,13 +650,35 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título" value={editingEvent.title || ''} onChange={v => setEditingEvent(p => ({ ...p!, title: v }))} />
-              <Field label="Categoria" value={editingEvent.category || ''} onChange={v => setEditingEvent(p => ({ ...p!, category: v }))} />
+              <div>
+                <label className="text-xs font-medium block mb-1">Categoria</label>
+                <select value={editingEvent.category_id || ''}
+                  onChange={e => setEditingEvent(p => ({ ...p!, category_id: e.target.value || null }))}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm">
+                  <option value="">— Sem categoria —</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>)}
+                </select>
+              </div>
               <Field label="Subtítulo" value={editingEvent.subtitle || ''} onChange={v => setEditingEvent(p => ({ ...p!, subtitle: v }))} />
               <ImageUploadField label="Imagem do evento" hint="800×450 px (16:9)" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
                 upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); setEditingEvent(p => ({ ...p!, image_url: r.publicUrl })); }} />
+              <Field label="Abre apostas em (vazio = agora)" type="datetime-local"
+                value={betIsoToDateTimeLocal(editingEvent.starts_at)}
+                onChange={v => setEditingEvent(p => ({ ...p!, starts_at: v ? dateTimeLocalToBetIso(v) : null }))} />
               <Field label="Encerra apostas em" type="datetime-local"
                 value={betIsoToDateTimeLocal(editingEvent.closes_at)}
                 onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? dateTimeLocalToBetIso(v) : null }))} />
+              <div>
+                <label className="text-xs font-medium block mb-1">Status</label>
+                <select value={editingEvent.status || 'open'}
+                  onChange={e => setEditingEvent(p => ({ ...p!, status: e.target.value as any }))}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm">
+                  <option value="scheduled">Agendado (abre na data)</option>
+                  <option value="open">Aberto</option>
+                  <option value="closed">Fechado</option>
+                </select>
+                <p className="text-[10px] text-muted-foreground mt-1">Se "Abre em" for futura, será agendado automaticamente.</p>
+              </div>
               <NumberField label="Aposta mínima" value={editingEvent.min_bet ?? null}
                 onChange={n => setEditingEvent(p => ({ ...p!, min_bet: n ?? 1 }))} />
               <NumberField label="Aposta máxima (0=sem)" value={editingEvent.max_bet ?? null}
