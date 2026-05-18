@@ -274,6 +274,49 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
     toast.success(delta > 0 ? `+${delta} ${lbl}` : `${delta} ${lbl}`);
   };
 
+  const runBulkAdjust = async () => {
+    if (!bulkModal) return;
+    const delta = parseInt(bulkModal.value);
+    if (!delta || isNaN(delta)) { toast.error('Informe um valor válido (use - para subtrair)'); return; }
+    setBulkRunning(true);
+    try {
+      let ids: string[] = [];
+      if (bulkModal.scope === 'selected') {
+        ids = Array.from(selectedUsers);
+        if (ids.length === 0) { toast.error('Selecione ao menos um usuário'); setBulkRunning(false); return; }
+      } else if (bulkModal.scope === 'filtered') {
+        ids = filteredTokenUsers.map(u => u.id);
+      } else {
+        const { data } = await (supabase as any).from('wheel_users').select('id').eq('owner_id', ownerId);
+        ids = (data || []).map((u: any) => u.id);
+      }
+      if (ids.length === 0) { toast.error('Nenhum usuário para atualizar'); setBulkRunning(false); return; }
+      const confirmMsg = `Aplicar ${delta > 0 ? '+' : ''}${delta} ${cfg?.coin_name || 'Coins'} para ${ids.length} usuário(s)?`;
+      if (!window.confirm(confirmMsg)) { setBulkRunning(false); return; }
+      let ok = 0, fail = 0;
+      const updates = new Map<string, number>();
+      // Run in batches of 10
+      for (let i = 0; i < ids.length; i += 10) {
+        const batch = ids.slice(i, i + 10);
+        const results = await Promise.all(batch.map(async (uid) => {
+          const { data, error } = await (supabase as any).rpc('adjust_luckybox_tokens', {
+            p_owner_id: ownerId, p_wheel_user_id: uid, p_delta: delta,
+          });
+          if (error) return { uid, ok: false };
+          updates.set(uid, data);
+          return { uid, ok: true };
+        }));
+        results.forEach(r => r.ok ? ok++ : fail++);
+      }
+      setTokenUsers(prev => prev.map(u => updates.has(u.id) ? { ...u, tokens_balance: updates.get(u.id) } : u));
+      toast.success(`${ok} usuário(s) atualizado(s)${fail ? ` · ${fail} falha(s)` : ''}`);
+      setBulkModal(null);
+      setSelectedUsers(new Set());
+    } finally {
+      setBulkRunning(false);
+    }
+  };
+
   const handleUploadCoinIcon = async (file: File) => {
     try {
       const res = await uploadAppAsset(file, 'luckybox');
