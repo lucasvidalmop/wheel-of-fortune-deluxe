@@ -346,11 +346,14 @@ const Bets = ({ tag }: BetsPageProps) => {
                       {ev.category && <div className="text-xs uppercase tracking-wider mb-1" style={{ color: accent }}>{ev.category}</div>}
                       <h2 className="font-bold text-lg sm:text-xl truncate">{ev.title}</h2>
                       {ev.subtitle && <p className="text-sm mt-0.5" style={{ color: muted }}>{ev.subtitle}</p>}
-                      <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: muted }}>
+                      <div className="flex items-center gap-3 mt-2 text-xs flex-wrap" style={{ color: muted }}>
                         {ev.closes_at && (
                           <span className="flex items-center gap-1"><Clock size={12} /> Encerra: {new Date(ev.closes_at).toLocaleString('pt-BR')}</span>
                         )}
                         <span className="px-2 py-0.5 rounded-full" style={{ background: '#00000044' }}>{eventStatusBadge(ev.status)}</span>
+                        {ev.status === 'open' && timeExpired && (
+                          <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</span>
+                        )}
                       </div>
                     </div>
                     {ev.image_url && <img src={ev.image_url} alt="" className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0" />}
