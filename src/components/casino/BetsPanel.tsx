@@ -23,7 +23,7 @@ interface BetEvent {
   is_hot?: boolean;
 }
 interface BetOutcome { id: string; event_id: string; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
-interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number }
+interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface LbCase { id: string; name: string; image_url: string }
 
 const emptyOutcome = () => ({ id: '', label: '', odd: 1.5, position: 0 });
