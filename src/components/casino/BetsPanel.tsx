@@ -1063,6 +1063,17 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
                                   'bg-muted text-muted-foreground'
                                 }`}>{p.status}</span>
                                 <span className="text-muted-foreground ml-auto">{new Date(p.createdAt).toLocaleString('pt-BR')}</span>
+                                {p.status === 'pending' && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); cancelWager(p.id, u.name); }}
+                                    disabled={cancelling === p.id}
+                                    className="px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-500 hover:bg-red-500/25 disabled:opacity-50 flex items-center gap-1"
+                                    title="Cancelar aposta e devolver coins"
+                                  >
+                                    {cancelling === p.id ? <Loader2 size={10} className="animate-spin" /> : <Ban size={10} />}
+                                    Cancelar
+                                  </button>
+                                )}
                               </div>
                             ))}
                           </div>
