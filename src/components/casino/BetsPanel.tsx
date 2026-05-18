@@ -544,6 +544,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     {ev.subtitle && <div className="text-sm text-muted-foreground">{ev.subtitle}</div>}
                     <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <span className="px-2 py-0.5 rounded-full bg-muted">{statusLabels[ev.status] || ev.status}</span>
+                      {ev.is_hot && <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-500 font-semibold">🔥 Quente</span>}
                       <span>{ev.payout_mode === 'case' ? `Caixa: ${c?.name || '?'} (${ev.payout_case_qty_per_unit}×)` : `Coins × odd`}</span>
                       {ev.starts_at && ev.status === 'scheduled' && <span>Abre: {formatBetDateTime(ev.starts_at)}</span>}
                       {ev.closes_at && <span>Encerra: {formatBetDateTime(ev.closes_at)}</span>}
