@@ -2015,6 +2015,7 @@ export type Database = {
           }
       build_link_prize_pool: { Args: { p_plan: Json }; Returns: Json }
       cancel_bet_event: { Args: { p_event_id: string }; Returns: Json }
+      cancel_bet_wager: { Args: { p_wager_id: string }; Returns: Json }
       consume_fixed_prize_spin: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
