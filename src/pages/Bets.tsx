@@ -456,7 +456,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     ? 0
                     : Math.round(w.amount_coins * Number(w.odd_snapshot));
                 setShareWager({
-                  userId: w.user_id || authed?.id,
+                  userId: authed?.id,
                   eventTitle: ev.title,
                   outcomeLabel: outcome?.label || '—',
                   odd: Number(w.odd_snapshot),
