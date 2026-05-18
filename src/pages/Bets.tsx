@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, LogOut, Wallet, X, Check, Clock } from 'lucide-react';
+import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 
 interface BetsPageProps { tag: string }
 
@@ -161,7 +162,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const openSlip = (event: EventRow, outcome: OutcomeRow) => {
     if (!authed) { toast.error('Faça login para apostar'); return; }
     if (event.status !== 'open') { toast.error('Evento fechado'); return; }
-    if (event.closes_at && new Date(event.closes_at) < new Date()) { toast.error('Apostas encerradas'); return; }
+    if (isBetDateTimeExpired(event.closes_at)) { toast.error('Apostas encerradas'); return; }
     setSlip({ event, outcome });
     setAmount(String(event.min_bet || 10));
   };
@@ -336,7 +337,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             )}
             {events.map(ev => {
               const outs = outcomesByEvent[ev.id] || [];
-              const timeExpired = !!(ev.closes_at && new Date(ev.closes_at) < new Date());
+              const timeExpired = isBetDateTimeExpired(ev.closes_at);
               const closed = ev.status !== 'open' || timeExpired;
               const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
               return (
@@ -348,7 +349,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       {ev.subtitle && <p className="text-sm mt-0.5" style={{ color: muted }}>{ev.subtitle}</p>}
                       <div className="flex items-center gap-3 mt-2 text-xs flex-wrap" style={{ color: muted }}>
                         {ev.closes_at && (
-                          <span className="flex items-center gap-1"><Clock size={12} /> Encerra: {new Date(ev.closes_at).toLocaleString('pt-BR')}</span>
+                          <span className="flex items-center gap-1"><Clock size={12} /> Encerra: {formatBetDateTime(ev.closes_at)}</span>
                         )}
                         <span className="px-2 py-0.5 rounded-full" style={{ background: '#00000044' }}>{eventStatusBadge(ev.status)}</span>
                         {ev.status === 'open' && timeExpired && (
