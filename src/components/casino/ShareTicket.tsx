@@ -4,7 +4,8 @@ import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 
 export interface ShareTicketData {
-  userName: string;
+  userName?: string;
+  userId?: string;
   eventTitle: string;
   outcomeLabel: string;
   odd: number;
@@ -15,6 +16,13 @@ export interface ShareTicketData {
   coinName: string;
   createdAt: string;
 }
+
+const maskId = (id?: string) => {
+  if (!id) return '***';
+  const clean = String(id).replace(/-/g, '');
+  if (clean.length <= 4) return `***${clean}`;
+  return `${clean.slice(0, 4)}***${clean.slice(-4)}`;
+};
 
 export interface TicketConfig {
   enabled?: boolean;
