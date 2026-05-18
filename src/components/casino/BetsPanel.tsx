@@ -553,6 +553,49 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         </div>
       )}
 
+      {tab === 'categories' && (
+        <div className="space-y-3 max-w-3xl">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Crie categorias para agrupar seus eventos (ex.: Futebol, eSports, Política).</p>
+            <button onClick={addCategory}
+              className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium flex items-center gap-2">
+              <Plus size={14} /> Nova categoria
+            </button>
+          </div>
+          {categories.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhuma categoria ainda.</p>}
+          {categories.map((c, idx) => (
+            <div key={c.id} className="p-3 rounded-xl bg-card border border-border flex items-end gap-3 flex-wrap">
+              <div className="flex-1 min-w-[180px]">
+                <label className="text-xs font-medium block mb-1">Nome</label>
+                <input value={c.name} onChange={e => updateCategory(c.id, { name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+              </div>
+              <div className="w-24">
+                <label className="text-xs font-medium block mb-1">Ícone</label>
+                <input value={c.icon} placeholder="⚽" onChange={e => updateCategory(c.id, { icon: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm text-center" />
+              </div>
+              <div className="w-32">
+                <label className="text-xs font-medium block mb-1">Cor</label>
+                <div className="flex gap-1">
+                  <input type="color" value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
+                    className="w-10 h-10 rounded cursor-pointer" />
+                  <input value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
+                    className="flex-1 px-2 py-2 rounded bg-muted text-xs tabular-nums w-0" />
+                </div>
+              </div>
+              <div className="w-20">
+                <label className="text-xs font-medium block mb-1">Ordem</label>
+                <input type="number" value={c.position}
+                  onChange={e => updateCategory(c.id, { position: Number(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm tabular-nums" />
+              </div>
+              <button onClick={() => deleteCategory(c)} className="p-2 rounded hover:bg-muted text-red-500"><Trash2 size={16} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {tab === 'wagers' && (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
