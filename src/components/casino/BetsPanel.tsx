@@ -234,7 +234,10 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     setWagers(data || []);
   };
 
-  useEffect(() => { if (tab === 'wagers') loadWagers(); }, [tab, config?.id]);
+  useEffect(() => { if (tab === 'wagers' || tab === 'analytics') loadWagers(); }, [tab, config?.id]);
+
+  // Analytics filters
+  const [aFilter, setAFilter] = useState<{ eventId: string; status: string; days: number }>({ eventId: '', status: '', days: 30 });
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
