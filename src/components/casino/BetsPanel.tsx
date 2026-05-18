@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy, Download, BarChart3, TrendingUp, TrendingDown, Users, Coins } from 'lucide-react';
@@ -737,6 +737,7 @@ interface AnalyticsTabProps {
 const COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb7185', '#60a5fa'];
 
 function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }: AnalyticsTabProps) {
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
   // Apply filters
   const cutoff = filter.days > 0 ? Date.now() - filter.days * 86400_000 : 0;
   const filtered = wagers.filter(w => {
@@ -804,10 +805,11 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
   const byOutcome = Array.from(byOutcomeMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
 
   // Top users
-  const byUserMap = new Map<string, { name: string; email: string; account: string; apostas: number; valor: number; pago: number; ganhas: number; perdidas: number }>();
+  type UserPick = { event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
+  const byUserMap = new Map<string, { name: string; email: string; account: string; apostas: number; valor: number; pago: number; ganhas: number; perdidas: number; picks: UserPick[] }>();
   filtered.forEach(w => {
     const key = `${w.user_email}|${w.account_id}`;
-    const e = byUserMap.get(key) || { name: w.user_name || w.user_email, email: w.user_email, account: w.account_id, apostas: 0, valor: 0, pago: 0, ganhas: 0, perdidas: 0 };
+    const e = byUserMap.get(key) || { name: w.user_name || w.user_email, email: w.user_email, account: w.account_id, apostas: 0, valor: 0, pago: 0, ganhas: 0, perdidas: 0, picks: [] };
     e.apostas += 1;
     e.valor += w.amount_coins || 0;
     if (w.status === 'won') {
@@ -815,6 +817,16 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
       if (w.payout_mode !== 'case') e.pago += w.payout_coins || 0;
     }
     if (w.status === 'lost') e.perdidas += 1;
+    const ev = events.find(x => x.id === w.event_id);
+    const out = outcomes.find(o => o.id === w.outcome_id);
+    e.picks.push({
+      event: ev?.title || '—',
+      outcome: out?.label || '—',
+      amount: w.amount_coins || 0,
+      odd: Number(w.odd_snapshot) || 0,
+      status: w.status,
+      createdAt: w.created_at,
+    });
     byUserMap.set(key, e);
   });
   const topUsers = Array.from(byUserMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 20);
@@ -982,7 +994,8 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="text-left text-muted-foreground border-b border-border">
-              <th className="py-2">Usuário</th><th>ID</th>
+              <th className="py-2 w-8"></th>
+              <th>Usuário</th><th>ID</th>
               <th className="text-right">Apostas</th><th className="text-right">Valor</th>
               <th className="text-right">Ganhas</th><th className="text-right">Perdidas</th>
               <th className="text-right">Pago</th><th className="text-right">Saldo casa</th>
@@ -990,20 +1003,50 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
             <tbody>
               {topUsers.map((u, i) => {
                 const balance = u.valor - u.pago;
+                const isOpen = expandedUser === `${u.email}|${u.account}`;
                 return (
-                  <tr key={i} className="border-b border-border/50">
-                    <td className="py-2">{u.name}<div className="text-xs text-muted-foreground">{u.email}</div></td>
-                    <td className="text-xs">{u.account}</td>
-                    <td className="text-right tabular-nums">{u.apostas}</td>
-                    <td className="text-right tabular-nums">{u.valor.toLocaleString('pt-BR')}</td>
-                    <td className="text-right tabular-nums text-green-500">{u.ganhas}</td>
-                    <td className="text-right tabular-nums text-red-500">{u.perdidas}</td>
-                    <td className="text-right tabular-nums">{u.pago.toLocaleString('pt-BR')}</td>
-                    <td className={`text-right tabular-nums font-medium ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>{balance.toLocaleString('pt-BR')}</td>
-                  </tr>
+                  <React.Fragment key={i}>
+                    <tr className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedUser(isOpen ? null : `${u.email}|${u.account}`)}>
+                      <td className="py-2 text-center text-muted-foreground">{isOpen ? '▾' : '▸'}</td>
+                      <td className="py-2">{u.name}<div className="text-xs text-muted-foreground">{u.email}</div></td>
+                      <td className="text-xs">{u.account}</td>
+                      <td className="text-right tabular-nums">{u.apostas}</td>
+                      <td className="text-right tabular-nums">{u.valor.toLocaleString('pt-BR')}</td>
+                      <td className="text-right tabular-nums text-green-500">{u.ganhas}</td>
+                      <td className="text-right tabular-nums text-red-500">{u.perdidas}</td>
+                      <td className="text-right tabular-nums">{u.pago.toLocaleString('pt-BR')}</td>
+                      <td className={`text-right tabular-nums font-medium ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>{balance.toLocaleString('pt-BR')}</td>
+                    </tr>
+                    {isOpen && (
+                      <tr className="bg-muted/20 border-b border-border/50">
+                        <td></td>
+                        <td colSpan={8} className="py-3">
+                          <div className="text-xs font-medium text-muted-foreground mb-2">Apostas deste usuário ({u.picks.length})</div>
+                          <div className="space-y-1.5">
+                            {u.picks.map((p, j) => (
+                              <div key={j} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs px-2 py-1.5 rounded bg-card/50">
+                                <span className="font-medium">{p.event}</span>
+                                <span className="text-muted-foreground">→</span>
+                                <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{p.outcome}</span>
+                                <span className="tabular-nums">{p.amount.toLocaleString('pt-BR')} {coinName}</span>
+                                <span className="text-muted-foreground">@ {p.odd.toFixed(2)}</span>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                  p.status === 'won' ? 'bg-green-500/15 text-green-500' :
+                                  p.status === 'lost' ? 'bg-red-500/15 text-red-500' :
+                                  p.status === 'refunded' ? 'bg-amber-500/15 text-amber-500' :
+                                  'bg-muted text-muted-foreground'
+                                }`}>{p.status}</span>
+                                <span className="text-muted-foreground ml-auto">{new Date(p.createdAt).toLocaleString('pt-BR')}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
-              {topUsers.length === 0 && <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Nenhum apostador no período.</td></tr>}
+              {topUsers.length === 0 && <tr><td colSpan={9} className="py-6 text-center text-muted-foreground">Nenhum apostador no período.</td></tr>}
             </tbody>
           </table>
         </div>
