@@ -1,0 +1,1 @@
+ALTER TABLE public.bet_categories ADD COLUMN IF NOT EXISTS background_url text NOT NULL DEFAULT '';

@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
     const { data: catz } = await supabase
       .from("bet_categories")
-      .select("id, name, color, icon, position")
+      .select("id, name, color, icon, position, background_url")
       .eq("bets_config_id", cfg.id)
       .order("position");
 

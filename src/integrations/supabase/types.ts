@@ -121,6 +121,7 @@ export type Database = {
       }
       bet_categories: {
         Row: {
+          background_url: string
           bets_config_id: string
           color: string
           created_at: string
@@ -132,6 +133,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          background_url?: string
           bets_config_id: string
           color?: string
           created_at?: string
@@ -143,6 +145,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          background_url?: string
           bets_config_id?: string
           color?: string
           created_at?: string
