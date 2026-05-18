@@ -500,16 +500,21 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           {events.map(ev => {
             const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
             const c = ev.payout_case_id ? cases.find(x => x.id === ev.payout_case_id) : null;
+            const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
+            const catLabel = cat?.name || ev.category;
+            const catColor = cat?.color || 'hsl(var(--primary))';
+            const statusLabels: Record<string,string> = { scheduled: 'Agendado', open: 'Aberto', closed: 'Fechado', resolved: 'Resolvido', cancelled: 'Cancelado' };
             return (
               <div key={ev.id} className="p-4 rounded-xl bg-card border border-border">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="min-w-0">
-                    {ev.category && <div className="text-xs uppercase text-primary mb-0.5">{ev.category}</div>}
+                    {catLabel && <div className="text-xs uppercase mb-0.5 flex items-center gap-1" style={{ color: catColor }}>{cat?.icon && <span>{cat.icon}</span>}{catLabel}</div>}
                     <div className="font-bold">{ev.title}</div>
                     {ev.subtitle && <div className="text-sm text-muted-foreground">{ev.subtitle}</div>}
                     <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
-                      <span className="px-2 py-0.5 rounded-full bg-muted">{ev.status}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-muted">{statusLabels[ev.status] || ev.status}</span>
                       <span>{ev.payout_mode === 'case' ? `Caixa: ${c?.name || '?'} (${ev.payout_case_qty_per_unit}×)` : `Coins × odd`}</span>
+                      {ev.starts_at && ev.status === 'scheduled' && <span>Abre: {formatBetDateTime(ev.starts_at)}</span>}
                       {ev.closes_at && <span>Encerra: {formatBetDateTime(ev.closes_at)}</span>}
                       <span>Min: {ev.min_bet}{ev.max_bet > 0 ? ` · Max: ${ev.max_bet}` : ''}{ev.max_bets_per_user > 0 ? ` · ${ev.max_bets_per_user}/usuário` : ''}</span>
                     </div>
