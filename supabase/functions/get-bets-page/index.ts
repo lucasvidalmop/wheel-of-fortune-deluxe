@@ -42,9 +42,9 @@ Deno.serve(async (req) => {
 
     const { data: events, error: evErr } = await supabase
       .from("bet_events")
-      .select("id, title, subtitle, category, image_url, starts_at, closes_at, status, payout_mode, payout_case_id, payout_case_qty_per_unit, min_bet, max_bet, max_bets_per_user, position, winning_outcome_id")
+      .select("id, title, subtitle, category, category_id, image_url, starts_at, closes_at, status, payout_mode, payout_case_id, payout_case_qty_per_unit, min_bet, max_bet, max_bets_per_user, position, winning_outcome_id")
       .eq("bets_config_id", cfg.id)
-      .in("status", ["open", "closed", "resolved"])
+      .in("status", ["scheduled", "open", "closed", "resolved"])
       .order("position", { ascending: true })
       .order("created_at", { ascending: false });
     if (evErr) throw evErr;
@@ -60,6 +60,12 @@ Deno.serve(async (req) => {
       if (outErr) throw outErr;
       outcomes = outs || [];
     }
+
+    const { data: catz } = await supabase
+      .from("bet_categories")
+      .select("id, name, color, icon, position")
+      .eq("bets_config_id", cfg.id)
+      .order("position");
 
     // case images for case-payout events
     const caseIds = Array.from(new Set((events || []).map((e: any) => e.payout_case_id).filter(Boolean)));
