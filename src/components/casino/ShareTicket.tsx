@@ -94,15 +94,33 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
 
   const StatusIcon = isWin ? Trophy : isLoss ? TrendingDown : Clock;
 
+  const waitForImages = async () => {
+    if (!cardRef.current) return;
+    const imgs = Array.from(cardRef.current.querySelectorAll('img'));
+    await Promise.all(
+      imgs.map(img =>
+        img.complete && img.naturalWidth > 0
+          ? Promise.resolve()
+          : new Promise<void>(resolve => {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+      )
+    );
+  };
+
+  const renderPng = async () => {
+    await waitForImages();
+    // double pass: first call warms fonts/images, second produces stable output
+    await toPng(cardRef.current!, { pixelRatio: 2, cacheBust: true, backgroundColor: bgFrom });
+    return toPng(cardRef.current!, { pixelRatio: 2, cacheBust: true, backgroundColor: bgFrom });
+  };
+
   const downloadImage = async () => {
     if (!cardRef.current) return;
     setDownloading(true);
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2,
-        cacheBust: true,
-        backgroundColor: bgFrom,
-      });
+      const dataUrl = await renderPng();
       const a = document.createElement('a');
       a.href = dataUrl;
       a.download = `bilhete-${data.eventTitle.replace(/\s+/g, '-').slice(0, 30)}.png`;
@@ -119,9 +137,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
     if (!cardRef.current) return;
     setSharing(true);
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2, cacheBust: true, backgroundColor: bgFrom,
-      });
+      const dataUrl = await renderPng();
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], 'bilhete.png', { type: 'image/png' });
       const shareText = isWin
