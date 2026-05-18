@@ -302,7 +302,7 @@ function Dashboard() {
     batalha_slot: false,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
