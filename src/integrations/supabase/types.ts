@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_notice_configs: {
+        Row: {
+          bg_color: string
+          created_at: string
+          cta_bg_color: string
+          cta_text: string
+          cta_text_color: string
+          cta_url: string
+          enabled: boolean
+          message: string
+          owner_id: string
+          text_color: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          created_at?: string
+          cta_bg_color?: string
+          cta_text?: string
+          cta_text_color?: string
+          cta_url?: string
+          enabled?: boolean
+          message?: string
+          owner_id: string
+          text_color?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          created_at?: string
+          cta_bg_color?: string
+          cta_text?: string
+          cta_text_color?: string
+          cta_url?: string
+          enabled?: boolean
+          message?: string
+          owner_id?: string
+          text_color?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       battle_configs: {
         Row: {
           config: Json
@@ -2019,6 +2064,20 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_auth_notice: {
+        Args: { p_owner_id: string }
+        Returns: {
+          bg_color: string
+          cta_bg_color: string
+          cta_text: string
+          cta_text_color: string
+          cta_url: string
+          enabled: boolean
+          message: string
+          text_color: string
+          title: string
+        }[]
       }
       get_battle_config_default: {
         Args: never
