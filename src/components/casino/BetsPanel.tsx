@@ -296,7 +296,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título" value={cfg.title || ''} onChange={v => setCfgField('title', v)} />
               <Field label="Subtítulo" value={cfg.subtitle || ''} onChange={v => setCfgField('subtitle', v)} />
-              <ImageUploadField label="Logo" value={cfg.logoUrl || ''} onChange={v => setCfgField('logoUrl', v)}
+              <ImageUploadField label="Logo" hint="200×60 px PNG" value={cfg.logoUrl || ''} onChange={v => setCfgField('logoUrl', v)}
                 upload={async f => { const r = await uploadAppAsset(f, 'bets-logo'); setCfgField('logoUrl', r.publicUrl); }} />
               <ColorField label="Fundo" value={cfg.bgColor || '#0b0b14'} onChange={v => setCfgField('bgColor', v)} />
               <ColorField label="Card" value={cfg.cardBg || '#141425'} onChange={v => setCfgField('cardBg', v)} />
@@ -310,7 +310,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             <h3 className="font-bold">Moeda</h3>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Nome da moeda" value={config.coin_name} onChange={v => setConfig({ ...config, coin_name: v })} />
-              <ImageUploadField label="Ícone da moeda" value={config.coin_icon_url} onChange={v => setConfig({ ...config, coin_icon_url: v })}
+              <ImageUploadField label="Ícone da moeda" hint="64×64 px PNG" value={config.coin_icon_url} onChange={v => setConfig({ ...config, coin_icon_url: v })}
                 upload={async f => { const r = await uploadAppAsset(f, 'bets-coin'); setConfig(c => c ? { ...c, coin_icon_url: r.publicUrl } : c); }} />
             </div>
           </div>
@@ -419,7 +419,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <Field label="Título" value={editingEvent.title || ''} onChange={v => setEditingEvent(p => ({ ...p!, title: v }))} />
               <Field label="Categoria" value={editingEvent.category || ''} onChange={v => setEditingEvent(p => ({ ...p!, category: v }))} />
               <Field label="Subtítulo" value={editingEvent.subtitle || ''} onChange={v => setEditingEvent(p => ({ ...p!, subtitle: v }))} />
-              <ImageUploadField label="Imagem do evento" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
+              <ImageUploadField label="Imagem do evento" hint="800×450 px (16:9)" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
                 upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); setEditingEvent(p => ({ ...p!, image_url: r.publicUrl })); }} />
               <Field label="Encerra apostas em" type="datetime-local"
                 value={editingEvent.closes_at ? new Date(editingEvent.closes_at).toISOString().slice(0, 16) : ''}
@@ -528,11 +528,14 @@ function Field({ label, value, onChange, type = 'text', upload }: { label: strin
   );
 }
 
-function ImageUploadField({ label, value, onChange, upload }: { label: string; value: string; onChange: (v: string) => void; upload: (f: File) => Promise<void> }) {
+function ImageUploadField({ label, value, onChange, upload, hint }: { label: string; value: string; onChange: (v: string) => void; upload: (f: File) => Promise<void>; hint?: string }) {
   const [busy, setBusy] = useState(false);
   return (
     <div>
-      <label className="text-xs font-medium block mb-1">{label}</label>
+      <label className="text-xs font-medium block mb-1">
+        {label}
+        {hint && <span className="ml-2 text-[10px] font-normal text-muted-foreground">({hint})</span>}
+      </label>
       <div className="flex items-center gap-2">
         {value ? (
           <img src={value} alt="" className="w-12 h-12 rounded object-cover bg-muted border border-border" />
