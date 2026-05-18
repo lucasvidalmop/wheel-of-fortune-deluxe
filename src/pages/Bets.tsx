@@ -16,7 +16,7 @@ interface EventRow {
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
   is_hot?: boolean;
 }
-interface CategoryRow { id: string; name: string; color: string; icon: string; position: number }
+interface CategoryRow { id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
 interface WagerRow {
   id: string; event_id: string; outcome_id: string; amount_coins: number; odd_snapshot: number;
