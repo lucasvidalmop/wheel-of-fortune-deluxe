@@ -379,7 +379,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         )}
                       </div>
                     </div>
-                    {ev.image_url && <img src={ev.image_url} alt="" className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0" />}
+                    {ev.image_url && <img src={ev.image_url} alt="" className="w-28 h-16 sm:w-36 sm:h-20 rounded-lg object-cover flex-shrink-0" />}
                   </div>
                   {ev.payout_mode === 'case' && c && (
                     <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: '#00000044' }}>
