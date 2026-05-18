@@ -528,6 +528,33 @@ function Field({ label, value, onChange, type = 'text', upload }: { label: strin
   );
 }
 
+function ImageUploadField({ label, value, onChange, upload }: { label: string; value: string; onChange: (v: string) => void; upload: (f: File) => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <div>
+      <label className="text-xs font-medium block mb-1">{label}</label>
+      <div className="flex items-center gap-2">
+        {value ? (
+          <img src={value} alt="" className="w-12 h-12 rounded object-cover bg-muted border border-border" />
+        ) : (
+          <div className="w-12 h-12 rounded bg-muted border border-dashed border-border" />
+        )}
+        <label className={`px-3 py-2 rounded-lg bg-muted cursor-pointer text-xs hover:bg-muted/80 flex items-center gap-1 ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+          {busy ? 'Enviando...' : value ? 'Trocar' : 'Upload'}
+          <input type="file" accept="image/*" className="hidden"
+            onChange={async e => {
+              const f = e.target.files?.[0]; if (!f) return;
+              setBusy(true); try { await upload(f); } finally { setBusy(false); e.currentTarget.value = ''; }
+            }} />
+        </label>
+        {value && (
+          <button type="button" onClick={() => onChange('')} className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground">Remover</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
