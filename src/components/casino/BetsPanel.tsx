@@ -315,6 +315,79 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             </div>
           </div>
 
+          <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+            <h3 className="font-bold">Plano de fundo</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <ImageUploadField label="Imagem de fundo" hint="1920×1080 px" value={cfg.bgImage || ''} onChange={v => setCfgField('bgImage', v)}
+                upload={async f => { const r = await uploadAppAsset(f, 'bets-bg'); setCfgField('bgImage', r.publicUrl); }} />
+              <div />
+              <ColorField label="Gradiente (topo)" value={cfg.bgGradientFrom || '#1a1230'} onChange={v => setCfgField('bgGradientFrom', v)} />
+              <ColorField label="Gradiente (base)" value={cfg.bgGradientTo || '#05040a'} onChange={v => setCfgField('bgGradientTo', v)} />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Se a imagem estiver definida, ela tem prioridade. Senão, usa o gradiente (ou a cor sólida "Fundo" acima).</p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+            <h3 className="font-bold">Tela de login</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Título do login" value={cfg.loginTitle || ''} onChange={v => setCfgField('loginTitle', v)} />
+              <Field label="Texto do botão" value={cfg.loginBtnText || ''} onChange={v => setCfgField('loginBtnText', v)} />
+              <Field label="Subtítulo do login" value={cfg.loginSubtitle || ''} onChange={v => setCfgField('loginSubtitle', v)} />
+              <ColorField label="Cor do título" value={cfg.titleColor || '#ffffff'} onChange={v => setCfgField('titleColor', v)} />
+              <ColorField label="Cor do subtítulo" value={cfg.subtitleColor || '#a0a0c0'} onChange={v => setCfgField('subtitleColor', v)} />
+              <ColorField label="Cor do texto do botão" value={cfg.btnTextColor || '#000000'} onChange={v => setCfgField('btnTextColor', v)} />
+            </div>
+            <div className="pt-2 border-t border-border space-y-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={!!cfg.hideSignup} onChange={e => setCfgField('hideSignup', e.target.checked)} />
+                Ocultar link "Não tem conta?"
+              </label>
+              {!cfg.hideSignup && (
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label='Texto antes do link' value={cfg.signupText || ''} onChange={v => setCfgField('signupText', v)} />
+                  <Field label='Texto do link' value={cfg.signupCtaText || ''} onChange={v => setCfgField('signupCtaText', v)} />
+                  <div className="col-span-2">
+                    <Field label='URL de cadastro (vazio = /gorjeta?ref=tag)' value={cfg.signupUrl || ''} onChange={v => setCfgField('signupUrl', v)} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+            <h3 className="font-bold">SEO & Pixels</h3>
+            <p className="text-[11px] text-muted-foreground -mt-1">Meta tags e pixels de rastreamento aplicados apenas na página de apostas.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Título da aba" value={cfg.seo?.pageTitle || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), pageTitle: v })} />
+              <Field label="Palavras-chave" value={cfg.seo?.keywords || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), keywords: v })} />
+              <ImageUploadField label="Favicon" hint="32×32 .ico/.png" value={cfg.seo?.faviconUrl || ''}
+                onChange={v => setCfgField('seo', { ...(cfg.seo || {}), faviconUrl: v })}
+                upload={async f => { const r = await uploadAppAsset(f, 'favicon'); setCfgField('seo', { ...(cfg.seo || {}), faviconUrl: r.publicUrl }); }} />
+              <ImageUploadField label="Imagem social (og:image)" hint="1200×630 px" value={cfg.seo?.ogImage || ''}
+                onChange={v => setCfgField('seo', { ...(cfg.seo || {}), ogImage: v })}
+                upload={async f => { const r = await uploadAppAsset(f, 'og-images'); setCfgField('seo', { ...(cfg.seo || {}), ogImage: r.publicUrl }); }} />
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1">Descrição (meta description)</label>
+              <textarea rows={2} value={cfg.seo?.pageDescription || ''}
+                onChange={e => setCfgField('seo', { ...(cfg.seo || {}), pageDescription: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+              <Field label="Facebook Pixel ID" value={cfg.seo?.facebookPixelId || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), facebookPixelId: v })} />
+              <Field label="Google Analytics (GA4)" value={cfg.seo?.googleAnalyticsId || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), googleAnalyticsId: v })} />
+              <Field label="Google Tag Manager" value={cfg.seo?.gtmId || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), gtmId: v })} />
+              <Field label="TikTok Pixel ID" value={cfg.seo?.tiktokPixelId || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), tiktokPixelId: v })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1">Script personalizado (head)</label>
+              <textarea rows={3} value={cfg.seo?.customHeadScript || ''}
+                onChange={e => setCfgField('seo', { ...(cfg.seo || {}), customHeadScript: e.target.value })}
+                placeholder="<!-- script personalizado -->"
+                className="w-full px-3 py-2 rounded-lg bg-muted text-xs font-mono" />
+            </div>
+          </div>
+
           <button onClick={saveConfig} disabled={saving}
             className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium flex items-center gap-2 disabled:opacity-50">
             {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Salvar

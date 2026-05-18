@@ -58,26 +58,50 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   // SEO/pixels injection
   useEffect(() => {
-    const seo = page?.pageConfig?.seo;
-    if (!seo) return;
+    const seo: any = page?.pageConfig?.seo;
+    if (!seo || Object.keys(seo).length === 0) return;
+    const addMeta = (name: string, content: string, property = false) => {
+      if (!content) return;
+      const sel = property ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+      let m = document.querySelector(sel) as HTMLMetaElement | null;
+      if (!m) { m = document.createElement('meta'); property ? m.setAttribute('property', name) : m.setAttribute('name', name); document.head.appendChild(m); }
+      m.setAttribute('content', content);
+    };
     if (seo.pageTitle) document.title = seo.pageTitle;
     if (seo.faviconUrl) {
       let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
       link.href = seo.faviconUrl;
     }
-    const setMeta = (name: string, content: string, isProp = false) => {
-      if (!content) return;
-      const attr = isProp ? 'property' : 'name';
-      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
-      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
-      el.content = content;
-    };
-    setMeta('description', seo.pageDescription || '');
-    setMeta('keywords', seo.keywords || '');
-    setMeta('og:title', seo.pageTitle || '', true);
-    setMeta('og:description', seo.pageDescription || '', true);
-    setMeta('og:image', seo.ogImage || '', true);
+    if (seo.pageDescription) { addMeta('description', seo.pageDescription); addMeta('og:description', seo.pageDescription, true); }
+    if (seo.pageTitle) addMeta('og:title', seo.pageTitle, true);
+    if (seo.ogImage) addMeta('og:image', seo.ogImage, true);
+    if (seo.keywords) addMeta('keywords', seo.keywords);
+    if (seo.facebookPixelId) {
+      const s = document.createElement('script');
+      s.innerHTML = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${seo.facebookPixelId}');fbq('track','PageView');`;
+      document.head.appendChild(s);
+    }
+    if (seo.googleAnalyticsId) {
+      const g1 = document.createElement('script'); g1.async = true; g1.src = `https://www.googletagmanager.com/gtag/js?id=${seo.googleAnalyticsId}`;
+      const g2 = document.createElement('script'); g2.innerHTML = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${seo.googleAnalyticsId}');`;
+      document.head.appendChild(g1); document.head.appendChild(g2);
+    }
+    if (seo.gtmId) {
+      const g = document.createElement('script');
+      g.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${seo.gtmId}');`;
+      document.head.appendChild(g);
+    }
+    if (seo.tiktokPixelId) {
+      const t = document.createElement('script');
+      t.innerHTML = `!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${seo.tiktokPixelId}');ttq.page();}(window,document,'ttq');`;
+      document.head.appendChild(t);
+    }
+    if (seo.customHeadScript) {
+      const div = document.createElement('div');
+      div.innerHTML = seo.customHeadScript;
+      Array.from(div.childNodes).forEach(n => document.head.appendChild(n));
+    }
   }, [page]);
 
   const cfg = page?.pageConfig || {};
@@ -192,35 +216,57 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   // Auth screen
   if (!authed) {
+    const loginTitle = cfg.loginTitle || cfg.title || 'Apostas';
+    const loginSubtitle = cfg.loginSubtitle || cfg.subtitle || 'Entre com seu e-mail e ID da conta para apostar';
+    const loginBtnText = cfg.loginBtnText || 'Entrar';
+    const titleColor = cfg.titleColor || text;
+    const subtitleColor = cfg.subtitleColor || muted;
+    const btnTextColor = cfg.btnTextColor || '#000';
+    const bgStyle: React.CSSProperties = cfg.bgImage
+      ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      : (cfg.bgGradientFrom || cfg.bgGradientTo)
+        ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)` }
+        : { background: bg };
+    const signupHref = cfg.signupUrl || (tag ? `/gorjeta?ref=${tag}` : '/gorjeta');
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg, color: text }}>
-        <div className="w-full max-w-md p-8 rounded-2xl border" style={{ background: cardBg, borderColor: `${accent}40` }}>
-          {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="mx-auto mb-4 h-16 object-contain" />}
-          <h1 className="text-2xl font-bold text-center mb-1">{cfg.title || 'Apostas'}</h1>
-          <p className="text-center text-sm mb-6" style={{ color: muted }}>
-            {cfg.subtitle || 'Informe e-mail e ID da conta para começar'}
-          </p>
-          <form onSubmit={handleAuth} className="space-y-3">
-            <input
-              type="email" placeholder="E-mail" value={authEmail}
-              onChange={e => setAuthEmail(e.target.value)} required maxLength={200}
-              className="w-full px-4 py-3 rounded-lg outline-none"
-              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
-            />
-            <input
-              type="text" placeholder="ID da conta" value={authAccountId}
-              onChange={e => setAuthAccountId(e.target.value)} required maxLength={50}
-              className="w-full px-4 py-3 rounded-lg outline-none"
-              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
-            />
-            <button type="submit" disabled={authLoading}
-              className="w-full py-3 rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: accent, color: '#000' }}>
-              {authLoading ? <Loader2 className="animate-spin" size={18} /> : null}
-              Entrar
-            </button>
-          </form>
-        </div>
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-white p-4" style={bgStyle}>
+        <form onSubmit={handleAuth} className="relative z-10 w-full max-w-sm rounded-2xl p-6 space-y-5 border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+          <div className="text-center space-y-2">
+            {cfg.logoUrl
+              ? <img src={cfg.logoUrl} alt="logo" className="max-h-20 mx-auto object-contain" />
+              : <div className="text-4xl">🎯</div>}
+            <h1 className="text-xl font-bold" style={{ color: titleColor }}>{loginTitle}</h1>
+            <p className="text-sm" style={{ color: subtitleColor }}>{loginSubtitle}</p>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 opacity-80">E-mail</label>
+              <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)}
+                required maxLength={200} autoComplete="email"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 opacity-80">ID da Conta</label>
+              <input type="text" value={authAccountId} onChange={e => setAuthAccountId(e.target.value)}
+                required maxLength={50} autoComplete="off"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20" />
+            </div>
+          </div>
+          <button type="submit" disabled={authLoading}
+            className="w-full py-3 rounded-xl font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: accent, color: btnTextColor }}>
+            {authLoading ? <Loader2 className="animate-spin" size={16} /> : null}
+            {authLoading ? 'Entrando...' : loginBtnText}
+          </button>
+          {!cfg.hideSignup && (
+            <p className="text-center text-xs" style={{ color: subtitleColor }}>
+              {cfg.signupText || 'Não tem conta ainda?'}{' '}
+              <a href={signupHref} className="font-semibold underline-offset-2 hover:underline" style={{ color: accent }}>
+                {cfg.signupCtaText || 'Clique aqui'}
+              </a>
+            </p>
+          )}
+        </form>
       </div>
     );
   }
