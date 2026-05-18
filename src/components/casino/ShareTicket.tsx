@@ -120,11 +120,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
     if (!cardRef.current) return;
     setDownloading(true);
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2,
-        cacheBust: true,
-        backgroundColor: bgFrom,
-      });
+      const dataUrl = await renderPng();
       const a = document.createElement('a');
       a.href = dataUrl;
       a.download = `bilhete-${data.eventTitle.replace(/\s+/g, '-').slice(0, 30)}.png`;
