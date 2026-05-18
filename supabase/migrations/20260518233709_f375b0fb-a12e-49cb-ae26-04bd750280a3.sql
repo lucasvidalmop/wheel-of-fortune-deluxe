@@ -1,0 +1,2 @@
+ALTER TABLE public.bet_events ADD COLUMN IF NOT EXISTS is_hot boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_bet_events_hot ON public.bet_events(bets_config_id, is_hot) WHERE is_hot = true;

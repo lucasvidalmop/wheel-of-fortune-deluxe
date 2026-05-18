@@ -20,6 +20,7 @@ interface BetEvent {
   status: 'scheduled'|'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
+  is_hot?: boolean;
 }
 interface BetOutcome { id: string; event_id: string; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
 interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number }
@@ -117,7 +118,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       title: '', subtitle: '', category: '', category_id: null, image_url: '',
       starts_at: null, closes_at: null, status: 'open',
       payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
-      min_bet: 10, max_bet: 0, max_bets_per_user: 1,
+      min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
     });
     setEditingOutcomes([{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }]);
   };
@@ -161,6 +162,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         max_bet: editingEvent.max_bet ?? 0,
         max_bets_per_user: editingEvent.max_bets_per_user ?? 0,
         position: editingEvent.position ?? 0,
+        is_hot: !!editingEvent.is_hot,
       };
       if (eventId) {
         const { error } = await supabase.from('bet_events').update(payload).eq('id', eventId);
@@ -542,6 +544,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     {ev.subtitle && <div className="text-sm text-muted-foreground">{ev.subtitle}</div>}
                     <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <span className="px-2 py-0.5 rounded-full bg-muted">{statusLabels[ev.status] || ev.status}</span>
+                      {ev.is_hot && <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-500 font-semibold">🔥 Quente</span>}
                       <span>{ev.payout_mode === 'case' ? `Caixa: ${c?.name || '?'} (${ev.payout_case_qty_per_unit}×)` : `Coins × odd`}</span>
                       {ev.starts_at && ev.status === 'scheduled' && <span>Abre: {formatBetDateTime(ev.starts_at)}</span>}
                       {ev.closes_at && <span>Encerra: {formatBetDateTime(ev.closes_at)}</span>}
@@ -714,6 +717,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                 onChange={n => setEditingEvent(p => ({ ...p!, max_bet: n ?? 0 }))} />
               <NumberField label="Apostas por usuário (0=ilimitado)" value={editingEvent.max_bets_per_user ?? null}
                 onChange={n => setEditingEvent(p => ({ ...p!, max_bets_per_user: n == null ? 0 : Math.max(0, Math.floor(n)) }))} />
+              <div className="col-span-2">
+                <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted cursor-pointer">
+                  <input type="checkbox" checked={!!editingEvent.is_hot}
+                    onChange={e => setEditingEvent(p => ({ ...p!, is_hot: e.target.checked }))} />
+                  <span className="text-sm font-medium">🔥 Evento quente</span>
+                  <span className="text-xs text-muted-foreground">(aparece em destaque, fora do filtro de categoria)</span>
+                </label>
+              </div>
             </div>
             <div className="p-3 rounded-lg bg-muted/50 space-y-2">
               <label className="text-sm font-medium">Tipo de prêmio</label>
