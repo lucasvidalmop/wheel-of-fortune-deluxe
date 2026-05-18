@@ -297,7 +297,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <Field label="Título" value={cfg.title || ''} onChange={v => setCfgField('title', v)} />
               <Field label="Subtítulo" value={cfg.subtitle || ''} onChange={v => setCfgField('subtitle', v)} />
               <Field label="Logo URL" value={cfg.logoUrl || ''} onChange={v => setCfgField('logoUrl', v)}
-                upload={async f => { const url = await uploadAppAsset(f, 'bets-logo'); setCfgField('logoUrl', url); }} />
+                upload={async f => { const r = await uploadAppAsset(f, 'bets-logo'); const url = r.publicUrl; setCfgField('logoUrl', url); }} />
               <ColorField label="Fundo" value={cfg.bgColor || '#0b0b14'} onChange={v => setCfgField('bgColor', v)} />
               <ColorField label="Card" value={cfg.cardBg || '#141425'} onChange={v => setCfgField('cardBg', v)} />
               <ColorField label="Destaque (odd)" value={cfg.accentColor || '#22d3ee'} onChange={v => setCfgField('accentColor', v)} />
@@ -419,7 +419,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <Field label="Categoria" value={editingEvent.category || ''} onChange={v => setEditingEvent(p => ({ ...p!, category: v }))} />
               <Field label="Subtítulo" value={editingEvent.subtitle || ''} onChange={v => setEditingEvent(p => ({ ...p!, subtitle: v }))} />
               <Field label="Imagem URL" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
-                upload={async f => { const url = await uploadAppAsset(f, 'bet-event'); setEditingEvent(p => ({ ...p!, image_url: url })); }} />
+                upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); const url = r.publicUrl; setEditingEvent(p => ({ ...p!, image_url: url })); }} />
               <Field label="Encerra apostas em" type="datetime-local"
                 value={editingEvent.closes_at ? new Date(editingEvent.closes_at).toISOString().slice(0, 16) : ''}
                 onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? new Date(v).toISOString() : null }))} />
