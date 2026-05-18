@@ -25,7 +25,7 @@ interface LbCase { id: string; name: string; image_url: string }
 const emptyOutcome = () => ({ id: '', label: '', odd: 1.5, position: 0 });
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
-  const [tab, setTab] = useState<'config'|'events'|'wagers'>('config');
+  const [tab, setTab] = useState<'config'|'events'|'wagers'|'analytics'>('config');
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
