@@ -257,7 +257,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   // ------- Categories CRUD -------
   const addCategory = async () => {
     if (!config) return;
-    const name = prompt('Nome da categoria (ex.: Futebol, eSports):')?.trim();
+    const name = (await promptDialog({
+      title: 'Nova categoria',
+      description: 'Dê um nome para a categoria de eventos.',
+      placeholder: 'ex.: Futebol, eSports',
+      confirmText: 'Criar',
+    }))?.trim();
     if (!name) return;
     const { error } = await supabase.from('bet_categories').insert({
       owner_id: ownerId, bets_config_id: config.id, name,
