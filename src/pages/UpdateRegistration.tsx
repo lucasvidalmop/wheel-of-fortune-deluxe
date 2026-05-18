@@ -561,23 +561,6 @@ const UpdateRegistration = ({ tag }: Props) => {
         {step === 'success' && (
           <div className="px-6 pb-6 space-y-4 text-center">
             <p className="text-sm" style={{ color: subtitleColor }}>{upd.successSubtitle}</p>
-            {cfg.ctaBtnUrl && cfg.ctaBtnShow !== false && (
-              <a
-                href={cfg.ctaBtnUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider text-center transition-all hover:brightness-110"
-                style={{
-                  backgroundColor: cfg.ctaBtnBgColor || accentColor,
-                  color: cfg.ctaBtnTextColor || cfg.btnTextColor || '#000000',
-                  border: `1px solid ${cfg.ctaBtnBorderColor || 'rgba(255,255,255,0.1)'}`,
-                }}
-              >
-                {cfg.ctaBtnText
-                  ? cfg.ctaBtnText.replace('{casino}', cfg.casinoName || '')
-                  : `VOLTAR PARA A ${cfg.casinoName || 'PLATAFORMA'}`}
-              </a>
-            )}
           </div>
         )}
 
