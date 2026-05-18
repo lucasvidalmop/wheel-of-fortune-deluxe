@@ -586,12 +586,18 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 };
 
 function Field({ label, value, onChange, type = 'text', upload }: { label: string; value: string; onChange: (v: string) => void; type?: string; upload?: (f: File) => Promise<void> }) {
+  const isNumber = type === 'number';
   return (
     <div>
       <label className="text-xs font-medium block mb-1">{label}</label>
       <div className="flex gap-1">
-        <input type={type} value={value} onChange={e => onChange(e.target.value)}
-          className="flex-1 px-3 py-2 rounded-lg bg-muted text-sm w-full" />
+        <input
+          type={isNumber ? 'text' : type}
+          inputMode={isNumber ? 'decimal' : undefined}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="flex-1 px-3 py-2 rounded-lg bg-muted text-sm w-full"
+        />
         {upload && (
           <label className="px-2 py-2 rounded-lg bg-muted cursor-pointer text-xs hover:bg-muted/80 flex items-center">
             Upload
@@ -600,6 +606,56 @@ function Field({ label, value, onChange, type = 'text', upload }: { label: strin
           </label>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Free-typing number input: stores raw string locally, emits numeric value to parent only when parseable.
+ *  Never overwrites what the user is typing (so "1.", "", "-" are allowed mid-edit). */
+function NumberField({ label, value, onChange, placeholder, className, allowEmpty = true }: {
+  label?: string; value: number | null | undefined; onChange: (n: number | null) => void;
+  placeholder?: string; className?: string; allowEmpty?: boolean;
+}) {
+  const [raw, setRaw] = useState<string>(value == null ? '' : String(value));
+  const [focused, setFocused] = useState(false);
+  // Sync from parent when not focused (avoids overwrite while typing)
+  React.useEffect(() => {
+    if (!focused) setRaw(value == null ? '' : String(value));
+  }, [value, focused]);
+  const input = (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={raw}
+      placeholder={placeholder}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false);
+        if (raw.trim() === '') {
+          if (allowEmpty) onChange(null);
+          else { setRaw(value == null ? '' : String(value)); }
+          return;
+        }
+        const n = Number(raw.replace(',', '.'));
+        if (isNaN(n)) { setRaw(value == null ? '' : String(value)); return; }
+        onChange(n);
+        setRaw(String(n));
+      }}
+      onChange={e => {
+        const v = e.target.value;
+        setRaw(v);
+        if (v.trim() === '') { if (allowEmpty) onChange(null); return; }
+        const n = Number(v.replace(',', '.'));
+        if (!isNaN(n)) onChange(n);
+      }}
+      className={className || 'flex-1 px-3 py-2 rounded-lg bg-muted text-sm w-full'}
+    />
+  );
+  if (!label) return input;
+  return (
+    <div>
+      <label className="text-xs font-medium block mb-1">{label}</label>
+      {input}
     </div>
   );
 }
