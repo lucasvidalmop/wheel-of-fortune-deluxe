@@ -362,7 +362,54 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           </div>
 
           <div className="p-4 rounded-xl bg-card border border-border space-y-3">
-            <h3 className="font-bold">SEO & Pixels</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold">Bilhetinho compartilhável</h3>
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox"
+                  checked={cfg.ticketEnabled !== false}
+                  onChange={e => setCfgField('ticketEnabled', e.target.checked)} />
+                Habilitar
+              </label>
+            </div>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Cada apostador poderá baixar e compartilhar um "bilhetinho" estilizado com a aposta (ganho, perda ou pendente).
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Nome da marca" value={cfg.ticket?.brandName || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), brandName: v })} />
+              <ImageUploadField label="Logo do bilhete" hint="200×60 px PNG" value={cfg.ticket?.logoUrl || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), logoUrl: v })}
+                upload={async f => { const r = await uploadAppAsset(f, 'bets-ticket-logo'); setCfgField('ticket', { ...(cfg.ticket || {}), logoUrl: r.publicUrl }); }} />
+              <Field label='Título — Ganhou' value={cfg.ticket?.titleWin || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), titleWin: v })} />
+              <Field label='Título — Perdeu' value={cfg.ticket?.titleLoss || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), titleLoss: v })} />
+              <Field label='Título — Pendente' value={cfg.ticket?.titlePending || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), titlePending: v })} />
+              <Field label='Rodapé (chamada)' value={cfg.ticket?.footer || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), footer: v })} />
+              <Field label='Texto do CTA' value={cfg.ticket?.ctaText || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), ctaText: v })} />
+              <Field label='URL do CTA' value={cfg.ticket?.ctaUrl || ''}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), ctaUrl: v })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+              <ColorField label="Fundo (topo)" value={cfg.ticket?.bgFrom || '#0b0b14'}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), bgFrom: v })} />
+              <ColorField label="Fundo (base)" value={cfg.ticket?.bgTo || '#1a1230'}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), bgTo: v })} />
+              <ColorField label="Destaque (pendente)" value={cfg.ticket?.accent || '#22d3ee'}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), accent: v })} />
+              <ColorField label="Destaque (ganhou)" value={cfg.ticket?.accentWin || '#22c55e'}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), accentWin: v })} />
+              <ColorField label="Destaque (perdeu)" value={cfg.ticket?.accentLoss || '#ef4444'}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), accentLoss: v })} />
+              <ColorField label="Texto" value={cfg.ticket?.textColor || '#ffffff'}
+                onChange={v => setCfgField('ticket', { ...(cfg.ticket || {}), textColor: v })} />
+            </div>
+          </div>
+
+
             <p className="text-[11px] text-muted-foreground -mt-1">Meta tags e pixels de rastreamento aplicados apenas na página de apostas.</p>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título da aba" value={cfg.seo?.pageTitle || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), pageTitle: v })} />
