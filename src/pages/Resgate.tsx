@@ -227,6 +227,7 @@ const Resgate = ({ tag }: { tag?: string }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={bgStyle}>
+      <AuthNoticeBanner ownerId={linkData?.owner_id} />
       {!cfg.bgImage && !cfg.bgColor && <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${cfg.bgGradientFrom} 0%, ${cfg.bgGradientTo} 70%)` }} />}
 
       <form
