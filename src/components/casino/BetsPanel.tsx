@@ -737,6 +737,7 @@ interface AnalyticsTabProps {
 const COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb7185', '#60a5fa'];
 
 function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }: AnalyticsTabProps) {
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
   // Apply filters
   const cutoff = filter.days > 0 ? Date.now() - filter.days * 86400_000 : 0;
   const filtered = wagers.filter(w => {
