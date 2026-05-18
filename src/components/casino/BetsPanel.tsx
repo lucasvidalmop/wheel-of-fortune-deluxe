@@ -20,6 +20,7 @@ interface BetEvent {
   status: 'scheduled'|'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
+  is_hot?: boolean;
 }
 interface BetOutcome { id: string; event_id: string; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
 interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number }
