@@ -278,7 +278,13 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     if (error) toast.error(error.message);
   };
   const deleteCategory = async (c: BetCategory) => {
-    if (!confirm(`Excluir categoria "${c.name}"? Eventos vinculados ficarão sem categoria.`)) return;
+    const ok = await confirmDialog({
+      title: 'Excluir categoria?',
+      description: `A categoria "${c.name}" será removida. Eventos vinculados ficarão sem categoria.`,
+      confirmText: 'Excluir',
+      destructive: true,
+    });
+    if (!ok) return;
     const { error } = await supabase.from('bet_categories').delete().eq('id', c.id);
     if (error) { toast.error(error.message); return; }
     toast.success('Removida');
