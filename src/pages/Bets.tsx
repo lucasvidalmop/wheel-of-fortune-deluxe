@@ -283,10 +283,16 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   const eventStatusBadge = (st: string) => st === 'open' ? 'Aberto' : st === 'closed' ? 'Fechado' : st === 'resolved' ? 'Resolvido' : 'Cancelado';
 
+  const mainBgStyle: React.CSSProperties = cfg.bgImage
+    ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', color: text }
+    : (cfg.bgGradientFrom || cfg.bgGradientTo)
+      ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)`, color: text }
+      : { background: bg, color: text };
+
   return (
-    <div className="min-h-screen" style={{ background: bg, color: text }}>
+    <div className="min-h-screen" style={mainBgStyle}>
       {/* header */}
-      <header className="sticky top-0 z-20 backdrop-blur" style={{ background: `${bg}cc`, borderBottom: `1px solid ${accent}33` }}>
+      <header className="sticky top-0 z-20 backdrop-blur" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: `1px solid ${accent}33` }}>
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="h-9 object-contain" />}
