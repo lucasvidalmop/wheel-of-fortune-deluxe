@@ -409,7 +409,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             </div>
           </div>
 
-
+          <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+            <h3 className="font-bold">SEO & Pixels</h3>
             <p className="text-[11px] text-muted-foreground -mt-1">Meta tags e pixels de rastreamento aplicados apenas na página de apostas.</p>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título da aba" value={cfg.seo?.pageTitle || ''} onChange={v => setCfgField('seo', { ...(cfg.seo || {}), pageTitle: v })} />
