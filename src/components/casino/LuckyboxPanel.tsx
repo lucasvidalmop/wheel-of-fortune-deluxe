@@ -120,6 +120,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const [tokensLoading, setTokensLoading] = useState(false);
   const [tokensSearch, setTokensSearch] = useState('');
   const [adjustModal, setAdjustModal] = useState<{ user: any; value: string } | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [bulkModal, setBulkModal] = useState<{ value: string; scope: 'selected' | 'filtered' | 'all' } | null>(null);
+  const [bulkRunning, setBulkRunning] = useState(false);
 
   const baseUrl = window.location.origin;
 
