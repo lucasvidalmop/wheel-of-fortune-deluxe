@@ -596,33 +596,44 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           </div>
           {categories.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhuma categoria ainda.</p>}
           {categories.map((c, idx) => (
-            <div key={c.id} className="p-3 rounded-xl bg-card border border-border flex items-end gap-3 flex-wrap">
-              <div className="flex-1 min-w-[180px]">
-                <label className="text-xs font-medium block mb-1">Nome</label>
-                <input value={c.name} onChange={e => updateCategory(c.id, { name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
-              </div>
-              <div className="w-24">
-                <label className="text-xs font-medium block mb-1">Ícone</label>
-                <input value={c.icon} placeholder="⚽" onChange={e => updateCategory(c.id, { icon: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm text-center" />
-              </div>
-              <div className="w-32">
-                <label className="text-xs font-medium block mb-1">Cor</label>
-                <div className="flex gap-1">
-                  <input type="color" value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
-                    className="w-10 h-10 rounded cursor-pointer" />
-                  <input value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
-                    className="flex-1 px-2 py-2 rounded bg-muted text-xs tabular-nums w-0" />
+            <div key={c.id} className="p-3 rounded-xl bg-card border border-border space-y-3">
+              <div className="flex items-end gap-3 flex-wrap">
+                <div className="flex-1 min-w-[180px]">
+                  <label className="text-xs font-medium block mb-1">Nome</label>
+                  <input value={c.name} onChange={e => updateCategory(c.id, { name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
                 </div>
+                <div className="w-24">
+                  <label className="text-xs font-medium block mb-1">Ícone</label>
+                  <input value={c.icon} placeholder="⚽" onChange={e => updateCategory(c.id, { icon: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-muted text-sm text-center" />
+                </div>
+                <div className="w-32">
+                  <label className="text-xs font-medium block mb-1">Cor</label>
+                  <div className="flex gap-1">
+                    <input type="color" value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
+                      className="w-10 h-10 rounded cursor-pointer" />
+                    <input value={c.color} onChange={e => updateCategory(c.id, { color: e.target.value })}
+                      className="flex-1 px-2 py-2 rounded bg-muted text-xs tabular-nums w-0" />
+                  </div>
+                </div>
+                <div className="w-20">
+                  <label className="text-xs font-medium block mb-1">Ordem</label>
+                  <input type="number" value={c.position}
+                    onChange={e => updateCategory(c.id, { position: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-lg bg-muted text-sm tabular-nums" />
+                </div>
+                <button onClick={() => deleteCategory(c)} className="p-2 rounded hover:bg-muted text-red-500"><Trash2 size={16} /></button>
               </div>
-              <div className="w-20">
-                <label className="text-xs font-medium block mb-1">Ordem</label>
-                <input type="number" value={c.position}
-                  onChange={e => updateCategory(c.id, { position: Number(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-lg bg-muted text-sm tabular-nums" />
+              <div>
+                <ImageUploadField
+                  label="Imagem de fundo do bilhete"
+                  hint="1200×300 px (proporção ~4:1) · JPG/PNG · usada como fundo dos cards de eventos desta categoria"
+                  value={c.background_url || ''}
+                  onChange={v => updateCategory(c.id, { background_url: v })}
+                  upload={async f => { const r = await uploadAppAsset(f, 'bet-category-bg'); await updateCategory(c.id, { background_url: r.publicUrl }); }}
+                />
               </div>
-              <button onClick={() => deleteCategory(c)} className="p-2 rounded hover:bg-muted text-red-500"><Trash2 size={16} /></button>
             </div>
           ))}
         </div>
