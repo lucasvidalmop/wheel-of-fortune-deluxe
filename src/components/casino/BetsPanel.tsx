@@ -5,6 +5,7 @@ import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy, 
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
+import { confirmDialog, promptDialog } from '@/components/ui/imperative-dialog';
 
 interface BetsPanelProps { ownerId: string }
 
@@ -72,7 +73,11 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   useEffect(() => { loadAll(); }, [ownerId]);
 
   const createConfig = async () => {
-    const tag = prompt('Defina a tag pública (ex.: apostas-1):')?.trim();
+    const tag = (await promptDialog({
+      title: 'Criar página de apostas',
+      description: 'Defina uma tag pública para acessar sua página.',
+      placeholder: 'ex.: apostas-1',
+    }))?.trim();
     if (!tag) return;
     if (!/^[a-z0-9-]+$/i.test(tag)) { toast.error('Use apenas letras, números e -'); return; }
     setSaving(true);
@@ -192,7 +197,13 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   };
 
   const deleteEvent = async (ev: BetEvent) => {
-    if (!confirm(`Excluir evento "${ev.title}"? Apostas associadas também serão removidas.`)) return;
+    const ok = await confirmDialog({
+      title: 'Excluir evento?',
+      description: `O evento "${ev.title}" será removido. Apostas associadas também serão excluídas.`,
+      confirmText: 'Excluir',
+      destructive: true,
+    });
+    if (!ok) return;
     const { error } = await supabase.from('bet_events').delete().eq('id', ev.id);
     if (error) { toast.error(error.message); return; }
     toast.success('Evento removido');
@@ -223,7 +234,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   };
 
   const cancelEvent = async (ev: BetEvent) => {
-    if (!confirm(`Cancelar evento "${ev.title}"? Apostas pendentes serão devolvidas.`)) return;
+    const ok = await confirmDialog({
+      title: 'Cancelar evento?',
+      description: `O evento "${ev.title}" será cancelado e todas as apostas pendentes serão devolvidas.`,
+      confirmText: 'Cancelar evento',
+      cancelText: 'Voltar',
+      destructive: true,
+    });
+    if (!ok) return;
     setSaving(true);
     const { data, error } = await supabase.rpc('cancel_bet_event', { p_event_id: ev.id });
     setSaving(false);
@@ -239,7 +257,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   // ------- Categories CRUD -------
   const addCategory = async () => {
     if (!config) return;
-    const name = prompt('Nome da categoria (ex.: Futebol, eSports):')?.trim();
+    const name = (await promptDialog({
+      title: 'Nova categoria',
+      description: 'Dê um nome para a categoria de eventos.',
+      placeholder: 'ex.: Futebol, eSports',
+      confirmText: 'Criar',
+    }))?.trim();
     if (!name) return;
     const { error } = await supabase.from('bet_categories').insert({
       owner_id: ownerId, bets_config_id: config.id, name,
@@ -255,7 +278,13 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     if (error) toast.error(error.message);
   };
   const deleteCategory = async (c: BetCategory) => {
-    if (!confirm(`Excluir categoria "${c.name}"? Eventos vinculados ficarão sem categoria.`)) return;
+    const ok = await confirmDialog({
+      title: 'Excluir categoria?',
+      description: `A categoria "${c.name}" será removida. Eventos vinculados ficarão sem categoria.`,
+      confirmText: 'Excluir',
+      destructive: true,
+    });
+    if (!ok) return;
     const { error } = await supabase.from('bet_categories').delete().eq('id', c.id);
     if (error) { toast.error(error.message); return; }
     toast.success('Removida');
@@ -904,7 +933,14 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   const [cancelling, setCancelling] = useState<string | null>(null);
 
   const cancelWager = async (wagerId: string, userName: string) => {
-    if (!confirm(`Cancelar esta aposta de ${userName}? Os ${coinName} serão devolvidos ao saldo do usuário.`)) return;
+    const ok = await confirmDialog({
+      title: 'Cancelar aposta?',
+      description: `A aposta de ${userName} será cancelada e os ${coinName} serão devolvidos ao saldo do usuário.`,
+      confirmText: 'Cancelar aposta',
+      cancelText: 'Voltar',
+      destructive: true,
+    });
+    if (!ok) return;
     setCancelling(wagerId);
     try {
       const { data, error } = await supabase.rpc('cancel_bet_wager' as any, { p_wager_id: wagerId });
