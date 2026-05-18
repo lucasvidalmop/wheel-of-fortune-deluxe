@@ -203,3 +203,15 @@ input[type="checkbox"]:checked::after {
     font-size: 16px !important;
   }
 }
+
+/* Remove number input spinners (global) — number fields used in admin panels
+   are formatted manually; the up/down spinner is more annoying than useful. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
