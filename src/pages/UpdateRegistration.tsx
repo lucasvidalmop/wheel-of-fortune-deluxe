@@ -219,6 +219,14 @@ const UpdateRegistration = ({ tag }: Props) => {
         setPixKey(r.user.pix_key || '');
         setPixKeyType(r.user.pix_key_type || '');
         setNewAccountId(r.user.account_id || '');
+        setLookupOriginal({
+          name: r.user.name || '',
+          phone: r.user.phone || '',
+          pix_key: r.user.pix_key || '',
+          pix_key_type: r.user.pix_key_type || '',
+          account_id: r.user.account_id || '',
+          wheel_user_id: r.user.id || null,
+        });
         setStep('edit');
       }
     } catch (err: any) {
