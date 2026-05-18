@@ -164,6 +164,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          is_hot: boolean
           max_bet: number
           max_bets_per_user: number
           min_bet: number
@@ -188,6 +189,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          is_hot?: boolean
           max_bet?: number
           max_bets_per_user?: number
           min_bet?: number
@@ -212,6 +214,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          is_hot?: boolean
           max_bet?: number
           max_bets_per_user?: number
           min_bet?: number
