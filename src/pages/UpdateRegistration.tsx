@@ -82,7 +82,17 @@ const UpdateRegistration = ({ tag }: Props) => {
   const [pixKeyType, setPixKeyType] = useState('');
   const [newAccountId, setNewAccountId] = useState('');
 
+  // Stable session id for analytics tracking
+  const sessionIdRef = (typeof window !== 'undefined') ? (() => {
+    const k = 'pv_session_atualizacao';
+    let s = sessionStorage.getItem(k);
+    if (!s) { s = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`; sessionStorage.setItem(k, s); }
+    return s;
+  })() : '';
+  const [lookupOriginal, setLookupOriginal] = useState<any>(null);
+
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
     const load = async () => {
       const { data, error } = await supabase.functions.invoke('get-update-page', { body: { tag } });
       if (error || !data?.found) {
@@ -96,8 +106,34 @@ const UpdateRegistration = ({ tag }: Props) => {
       setUpd(u);
       setPageEnabled(!!u.enabled);
       setLoading(false);
+
+      try {
+        supabase.functions.invoke('track-pageview', {
+          body: {
+            session_id: sessionIdRef,
+            slug: tag,
+            owner_id: data.ownerId,
+            referrer: document.referrer || null,
+            page_url: window.location.href,
+            page_type: 'atualizacao',
+          },
+        });
+      } catch { /* best-effort */ }
+
+      const start = Date.now();
+      const sendDur = () => {
+        const seconds = Math.round((Date.now() - start) / 1000);
+        try {
+          const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-pageview`;
+          const blob = new Blob([JSON.stringify({ session_id: sessionIdRef, action: 'update_duration', duration_seconds: seconds })], { type: 'application/json' });
+          navigator.sendBeacon?.(url, blob);
+        } catch { /* ignore */ }
+      };
+      window.addEventListener('beforeunload', sendDur);
+      cleanup = () => window.removeEventListener('beforeunload', sendDur);
     };
     load();
+    return () => { cleanup?.(); };
   }, [tag]);
 
   useEffect(() => {
