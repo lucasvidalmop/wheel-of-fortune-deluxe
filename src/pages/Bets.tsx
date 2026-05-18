@@ -336,7 +336,8 @@ const Bets = ({ tag }: BetsPageProps) => {
             )}
             {events.map(ev => {
               const outs = outcomesByEvent[ev.id] || [];
-              const closed = ev.status !== 'open' || (ev.closes_at && new Date(ev.closes_at) < new Date());
+              const timeExpired = !!(ev.closes_at && new Date(ev.closes_at) < new Date());
+              const closed = ev.status !== 'open' || timeExpired;
               const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
               return (
                 <article key={ev.id} className="rounded-2xl p-4 sm:p-5" style={{ background: cardBg, border: `1px solid ${accent}22` }}>
