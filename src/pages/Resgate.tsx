@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SlotMachineSuccess from '@/components/casino/SlotMachineSuccess';
 import { ReferralPageConfig, defaultPageConfig } from '@/components/casino/ReferralPageEditor';
+import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 
 /**
  * Página de Resgate por Código.
