@@ -495,6 +495,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           coinName={config.coin_name || 'Coins'}
           filter={aFilter}
           setFilter={setAFilter}
+          onRefresh={loadWagers}
         />
       )}
 
