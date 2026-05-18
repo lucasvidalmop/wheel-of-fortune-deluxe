@@ -161,10 +161,10 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
           />
 
           {/* Header */}
-          <div className="relative flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2 min-w-0">
+          <div className="relative flex items-center justify-center mb-6 pt-2">
+            <div className="flex w-full items-center justify-center min-w-0 px-8">
               {config.logoUrl ? (
-                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-16 max-w-[180px] object-contain" />
+                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-28 w-full max-w-[280px] object-contain" />
               ) : brandName ? (
                 <span className="font-black text-base tracking-tight truncate" style={{ color: accent }}>
                   {brandName}
@@ -172,7 +172,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
               ) : null}
             </div>
             <div
-              className="text-[10px] font-bold tracking-[0.2em] px-2 py-1 rounded-full"
+              className="absolute right-0 top-0 text-[10px] font-bold tracking-[0.2em] px-2 py-1 rounded-full"
               style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
             >
               BILHETE
