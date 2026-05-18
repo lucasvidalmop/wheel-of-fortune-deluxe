@@ -495,6 +495,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           coinName={config.coin_name || 'Coins'}
           filter={aFilter}
           setFilter={setAFilter}
+          onRefresh={loadWagers}
         />
       )}
 
@@ -732,12 +733,35 @@ interface AnalyticsTabProps {
   coinName: string;
   filter: { eventId: string; status: string; days: number };
   setFilter: (f: { eventId: string; status: string; days: number }) => void;
+  onRefresh: () => void | Promise<void>;
 }
 
 const COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb7185', '#60a5fa'];
 
-function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }: AnalyticsTabProps) {
+function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, onRefresh }: AnalyticsTabProps) {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  const cancelWager = async (wagerId: string, userName: string) => {
+    if (!confirm(`Cancelar esta aposta de ${userName}? Os ${coinName} serão devolvidos ao saldo do usuário.`)) return;
+    setCancelling(wagerId);
+    try {
+      const { data, error } = await supabase.rpc('cancel_bet_wager' as any, { p_wager_id: wagerId });
+      if (error) throw error;
+      const res = data as any;
+      if (!res?.success) {
+        toast.error(res?.error === 'not_pending' ? 'Aposta não pode ser cancelada (já resolvida)' : 'Falha ao cancelar');
+        return;
+      }
+      toast.success(`Aposta cancelada. ${res.refunded} ${coinName} devolvidos.`);
+      await onRefresh();
+    } catch (e: any) {
+      toast.error(e?.message || 'Erro ao cancelar aposta');
+    } finally {
+      setCancelling(null);
+    }
+  };
+
   // Apply filters
   const cutoff = filter.days > 0 ? Date.now() - filter.days * 86400_000 : 0;
   const filtered = wagers.filter(w => {
@@ -805,7 +829,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
   const byOutcome = Array.from(byOutcomeMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
 
   // Top users
-  type UserPick = { event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
+  type UserPick = { id: string; event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
   const byUserMap = new Map<string, { name: string; email: string; account: string; apostas: number; valor: number; pago: number; ganhas: number; perdidas: number; picks: UserPick[] }>();
   filtered.forEach(w => {
     const key = `${w.user_email}|${w.account_id}`;
@@ -820,6 +844,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
     const ev = events.find(x => x.id === w.event_id);
     const out = outcomes.find(o => o.id === w.outcome_id);
     e.picks.push({
+      id: w.id,
       event: ev?.title || '—',
       outcome: out?.label || '—',
       amount: w.amount_coins || 0,
@@ -829,6 +854,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
     });
     byUserMap.set(key, e);
   });
+
   const topUsers = Array.from(byUserMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 20);
 
   const exportCsv = () => {
@@ -1037,6 +1063,17 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
                                   'bg-muted text-muted-foreground'
                                 }`}>{p.status}</span>
                                 <span className="text-muted-foreground ml-auto">{new Date(p.createdAt).toLocaleString('pt-BR')}</span>
+                                {p.status === 'pending' && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); cancelWager(p.id, u.name); }}
+                                    disabled={cancelling === p.id}
+                                    className="px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-500 hover:bg-red-500/25 disabled:opacity-50 flex items-center gap-1"
+                                    title="Cancelar aposta e devolver coins"
+                                  >
+                                    {cancelling === p.id ? <Loader2 size={10} className="animate-spin" /> : <Ban size={10} />}
+                                    Cancelar
+                                  </button>
+                                )}
                               </div>
                             ))}
                           </div>
