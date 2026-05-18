@@ -933,7 +933,14 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   const [cancelling, setCancelling] = useState<string | null>(null);
 
   const cancelWager = async (wagerId: string, userName: string) => {
-    if (!confirm(`Cancelar esta aposta de ${userName}? Os ${coinName} serão devolvidos ao saldo do usuário.`)) return;
+    const ok = await confirmDialog({
+      title: 'Cancelar aposta?',
+      description: `A aposta de ${userName} será cancelada e os ${coinName} serão devolvidos ao saldo do usuário.`,
+      confirmText: 'Cancelar aposta',
+      cancelText: 'Voltar',
+      destructive: true,
+    });
+    if (!ok) return;
     setCancelling(wagerId);
     try {
       const { data, error } = await supabase.rpc('cancel_bet_wager' as any, { p_wager_id: wagerId });
