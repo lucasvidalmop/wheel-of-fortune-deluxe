@@ -829,7 +829,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   const byOutcome = Array.from(byOutcomeMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
 
   // Top users
-  type UserPick = { event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
+  type UserPick = { id: string; event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
   const byUserMap = new Map<string, { name: string; email: string; account: string; apostas: number; valor: number; pago: number; ganhas: number; perdidas: number; picks: UserPick[] }>();
   filtered.forEach(w => {
     const key = `${w.user_email}|${w.account_id}`;
@@ -844,6 +844,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
     const ev = events.find(x => x.id === w.event_id);
     const out = outcomes.find(o => o.id === w.outcome_id);
     e.picks.push({
+      id: w.id,
       event: ev?.title || '—',
       outcome: out?.label || '—',
       amount: w.amount_coins || 0,
@@ -853,6 +854,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
     });
     byUserMap.set(key, e);
   });
+
   const topUsers = Array.from(byUserMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 20);
 
   const exportCsv = () => {
