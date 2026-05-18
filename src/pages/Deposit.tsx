@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { User, Smartphone, CreditCard, Copy, CheckCircle2 } from 'lucide-react';
+import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 
 interface DepositConfig {
   enabled: boolean;
