@@ -4,7 +4,8 @@ import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 
 export interface ShareTicketData {
-  userName: string;
+  userName?: string;
+  userId?: string;
   eventTitle: string;
   outcomeLabel: string;
   odd: number;
@@ -15,6 +16,13 @@ export interface ShareTicketData {
   coinName: string;
   createdAt: string;
 }
+
+const maskId = (id?: string) => {
+  if (!id) return '***';
+  const clean = String(id).replace(/-/g, '');
+  if (clean.length <= 4) return `***${clean}`;
+  return `${clean.slice(0, 4)}***${clean.slice(-4)}`;
+};
 
 export interface TicketConfig {
   enabled?: boolean;
@@ -188,7 +196,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
             >
               {title}
             </h2>
-            <p className="text-sm mt-1" style={{ color: muted }}>{data.userName}</p>
+            <p className="text-xs mt-1 font-mono tracking-wider" style={{ color: muted }}>ID: {maskId(data.userId)}</p>
           </div>
 
           {/* Event */}
