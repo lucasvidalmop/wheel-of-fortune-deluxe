@@ -808,6 +808,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     const accent = pc.accentColor || '#22d3ee';
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-white" style={bgStyle}>
+        <AuthNoticeBanner ownerId={cfg?.owner_id} />
         <form onSubmit={handleLogin} className="relative z-10 w-full max-w-sm mx-4 rounded-2xl p-6 space-y-5 border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
           <div className="text-center space-y-2">
             {pc.logoUrl
