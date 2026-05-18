@@ -234,7 +234,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   };
 
   const cancelEvent = async (ev: BetEvent) => {
-    if (!confirm(`Cancelar evento "${ev.title}"? Apostas pendentes serão devolvidas.`)) return;
+    const ok = await confirmDialog({
+      title: 'Cancelar evento?',
+      description: `O evento "${ev.title}" será cancelado e todas as apostas pendentes serão devolvidas.`,
+      confirmText: 'Cancelar evento',
+      cancelText: 'Voltar',
+      destructive: true,
+    });
+    if (!ok) return;
     setSaving(true);
     const { data, error } = await supabase.rpc('cancel_bet_event', { p_event_id: ev.id });
     setSaving(false);
