@@ -8018,6 +8018,9 @@ function Dashboard() {
           {activeTab === 'luckybox' && session?.user?.id && (
             <LuckyboxPanel ownerId={session.user.id} />
           )}
+          {activeTab === 'apostas' && session?.user?.id && (
+            <BetsPanel ownerId={session.user.id} />
+          )}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
               {/* Sub-tabs */}
