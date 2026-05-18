@@ -619,7 +619,7 @@ function NumberField({ label, value, onChange, placeholder, className, allowEmpt
   const [raw, setRaw] = useState<string>(value == null ? '' : String(value));
   const [focused, setFocused] = useState(false);
   // Sync from parent when not focused (avoids overwrite while typing)
-  React.useEffect(() => {
+  useEffect(() => {
     if (!focused) setRaw(value == null ? '' : String(value));
   }, [value, focused]);
   const input = (
