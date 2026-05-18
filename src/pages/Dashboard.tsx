@@ -2013,6 +2013,14 @@ function Dashboard() {
     } else {
       setPageViews(data || []);
     }
+    // Fetch registration update logs in parallel
+    const { data: logs } = await (supabase as any)
+      .from('registration_update_logs')
+      .select('*')
+      .eq('owner_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    setUpdateLogs(logs || []);
     setAnalyticsLoading(false);
   };
 
