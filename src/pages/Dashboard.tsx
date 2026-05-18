@@ -330,6 +330,7 @@ function Dashboard() {
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style' | 'redemption'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
+  const [updateLogs, setUpdateLogs] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'roleta' | 'referral' | 'gorjeta'>('all');
   const [analyticsDateFilter, setAnalyticsDateFilter] = useState<string>(''); // YYYY-MM-DD
