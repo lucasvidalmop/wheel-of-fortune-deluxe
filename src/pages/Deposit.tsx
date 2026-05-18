@@ -432,6 +432,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: bg, color: txt }}>
+      {step === 'form' && <AuthNoticeBanner ownerId={ownerId} />}
       {config.bgImageUrl && (
         <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
       )}
