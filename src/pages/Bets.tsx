@@ -10,7 +10,7 @@ interface EventRow {
   id: string; title: string; subtitle: string; category: string; image_url: string;
   starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
-  min_bet: number; max_bet: number; position: number; winning_outcome_id: string | null;
+  min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
 }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
 interface WagerRow {
@@ -181,7 +181,17 @@ const Bets = ({ tag }: BetsPageProps) => {
       });
       if (error) throw error;
       if (!data?.success) {
-        toast.error(`Falha: ${data?.error || 'erro desconhecido'}`);
+        const errMap: Record<string, string> = {
+          max_bets_reached: `Limite de ${data?.max || 1} aposta(s) por usuário neste evento atingido`,
+          insufficient_balance: 'Saldo insuficiente',
+          event_closed: 'Apostas encerradas',
+          event_not_open: 'Evento fechado',
+          below_min_bet: `Aposta mínima: ${data?.min}`,
+          above_max_bet: `Aposta máxima: ${data?.max}`,
+          user_blocked: 'Conta bloqueada',
+          user_not_found: 'Usuário não encontrado',
+        };
+        toast.error(errMap[data?.error] || `Falha: ${data?.error || 'erro desconhecido'}`);
         return;
       }
       toast.success('Aposta confirmada!');

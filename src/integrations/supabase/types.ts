@@ -83,6 +83,7 @@ export type Database = {
           id: string
           image_url: string
           max_bet: number
+          max_bets_per_user: number
           min_bet: number
           owner_id: string
           payout_case_id: string | null
@@ -105,6 +106,7 @@ export type Database = {
           id?: string
           image_url?: string
           max_bet?: number
+          max_bets_per_user?: number
           min_bet?: number
           owner_id: string
           payout_case_id?: string | null
@@ -127,6 +129,7 @@ export type Database = {
           id?: string
           image_url?: string
           max_bet?: number
+          max_bets_per_user?: number
           min_bet?: number
           owner_id?: string
           payout_case_id?: string | null

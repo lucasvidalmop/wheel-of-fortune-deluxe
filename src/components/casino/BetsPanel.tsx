@@ -15,7 +15,7 @@ interface BetEvent {
   image_url: string; starts_at: string | null; closes_at: string | null;
   status: 'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
-  min_bet: number; max_bet: number; position: number; winning_outcome_id: string | null;
+  min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
 }
 interface BetOutcome { id: string; event_id: string; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
 interface LbCase { id: string; name: string; image_url: string }
@@ -105,7 +105,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       title: '', subtitle: '', category: '', image_url: '',
       starts_at: null, closes_at: null, status: 'open',
       payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
-      min_bet: 10, max_bet: 0,
+      min_bet: 10, max_bet: 0, max_bets_per_user: 1,
     });
     setEditingOutcomes([{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }]);
   };
@@ -139,6 +139,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         payout_case_qty_per_unit: editingEvent.payout_case_qty_per_unit ?? 1,
         min_bet: editingEvent.min_bet ?? 1,
         max_bet: editingEvent.max_bet ?? 0,
+        max_bets_per_user: editingEvent.max_bets_per_user ?? 0,
         position: editingEvent.position ?? 0,
       };
       if (eventId) {
@@ -416,7 +417,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       <span className="px-2 py-0.5 rounded-full bg-muted">{ev.status}</span>
                       <span>{ev.payout_mode === 'case' ? `Caixa: ${c?.name || '?'} (${ev.payout_case_qty_per_unit}×)` : `Coins × odd`}</span>
                       {ev.closes_at && <span>Encerra: {new Date(ev.closes_at).toLocaleString('pt-BR')}</span>}
-                      <span>Min: {ev.min_bet}{ev.max_bet > 0 ? ` · Max: ${ev.max_bet}` : ''}</span>
+                      <span>Min: {ev.min_bet}{ev.max_bet > 0 ? ` · Max: ${ev.max_bet}` : ''}{ev.max_bets_per_user > 0 ? ` · ${ev.max_bets_per_user}/usuário` : ''}</span>
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
@@ -501,6 +502,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                 onChange={v => setEditingEvent(p => ({ ...p!, min_bet: Math.max(1, Number(v) || 1) }))} />
               <Field label="Aposta máxima (0=sem)" type="number" value={String(editingEvent.max_bet ?? 0)}
                 onChange={v => setEditingEvent(p => ({ ...p!, max_bet: Math.max(0, Number(v) || 0) }))} />
+              <Field label="Apostas por usuário (0=ilimitado)" type="number" value={String(editingEvent.max_bets_per_user ?? 0)}
+                onChange={v => setEditingEvent(p => ({ ...p!, max_bets_per_user: Math.max(0, Math.floor(Number(v) || 0)) }))} />
             </div>
             <div className="p-3 rounded-lg bg-muted/50 space-y-2">
               <label className="text-sm font-medium">Tipo de prêmio</label>
