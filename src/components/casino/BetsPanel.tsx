@@ -73,7 +73,11 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   useEffect(() => { loadAll(); }, [ownerId]);
 
   const createConfig = async () => {
-    const tag = prompt('Defina a tag pública (ex.: apostas-1):')?.trim();
+    const tag = (await promptDialog({
+      title: 'Criar página de apostas',
+      description: 'Defina uma tag pública para acessar sua página.',
+      placeholder: 'ex.: apostas-1',
+    }))?.trim();
     if (!tag) return;
     if (!/^[a-z0-9-]+$/i.test(tag)) { toast.error('Use apenas letras, números e -'); return; }
     setSaving(true);
