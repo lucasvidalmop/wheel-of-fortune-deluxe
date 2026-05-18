@@ -1245,6 +1245,78 @@ export type Database = {
           },
         ]
       }
+      registration_update_logs: {
+        Row: {
+          account_id: string
+          after_data: Json
+          before_data: Json
+          browser: string | null
+          changed_fields: Json
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          ip_address: string | null
+          os: string | null
+          owner_id: string
+          page_url: string | null
+          referrer: string | null
+          region: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_email: string
+          user_name: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          after_data?: Json
+          before_data?: Json
+          browser?: string | null
+          changed_fields?: Json
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          os?: string | null
+          owner_id: string
+          page_url?: string | null
+          referrer?: string | null
+          region?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          after_data?: Json
+          before_data?: Json
+          browser?: string | null
+          changed_fields?: Json
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          os?: string | null
+          owner_id?: string
+          page_url?: string | null
+          referrer?: string | null
+          region?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: []
+      }
       scheduled_brevo_emails: {
         Row: {
           created_at: string
