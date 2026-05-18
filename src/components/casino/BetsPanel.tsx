@@ -197,7 +197,13 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   };
 
   const deleteEvent = async (ev: BetEvent) => {
-    if (!confirm(`Excluir evento "${ev.title}"? Apostas associadas também serão removidas.`)) return;
+    const ok = await confirmDialog({
+      title: 'Excluir evento?',
+      description: `O evento "${ev.title}" será removido. Apostas associadas também serão excluídas.`,
+      confirmText: 'Excluir',
+      destructive: true,
+    });
+    if (!ok) return;
     const { error } = await supabase.from('bet_events').delete().eq('id', ev.id);
     if (error) { toast.error(error.message); return; }
     toast.success('Evento removido');
