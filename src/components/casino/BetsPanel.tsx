@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
 
 interface BetsPanelProps { ownerId: string }
 
@@ -416,7 +417,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <span className="px-2 py-0.5 rounded-full bg-muted">{ev.status}</span>
                       <span>{ev.payout_mode === 'case' ? `Caixa: ${c?.name || '?'} (${ev.payout_case_qty_per_unit}×)` : `Coins × odd`}</span>
-                      {ev.closes_at && <span>Encerra: {new Date(ev.closes_at).toLocaleString('pt-BR')}</span>}
+                      {ev.closes_at && <span>Encerra: {formatBetDateTime(ev.closes_at)}</span>}
                       <span>Min: {ev.min_bet}{ev.max_bet > 0 ? ` · Max: ${ev.max_bet}` : ''}{ev.max_bets_per_user > 0 ? ` · ${ev.max_bets_per_user}/usuário` : ''}</span>
                     </div>
                   </div>
@@ -496,13 +497,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <ImageUploadField label="Imagem do evento" hint="800×450 px (16:9)" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
                 upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); setEditingEvent(p => ({ ...p!, image_url: r.publicUrl })); }} />
               <Field label="Encerra apostas em" type="datetime-local"
-                value={(() => {
-                  if (!editingEvent.closes_at) return '';
-                  const d = new Date(editingEvent.closes_at);
-                  const pad = (n: number) => String(n).padStart(2, '0');
-                  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                })()}
-                onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? new Date(v).toISOString() : null }))} />
+                value={betIsoToDateTimeLocal(editingEvent.closes_at)}
+                onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? dateTimeLocalToBetIso(v) : null }))} />
               <NumberField label="Aposta mínima" value={editingEvent.min_bet ?? null}
                 onChange={n => setEditingEvent(p => ({ ...p!, min_bet: n ?? 1 }))} />
               <NumberField label="Aposta máxima (0=sem)" value={editingEvent.max_bet ?? null}
