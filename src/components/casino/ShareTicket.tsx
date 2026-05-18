@@ -181,16 +181,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
 
           {/* Status */}
           <div className="relative text-center mb-5">
-            <div
-              className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-3"
-              style={{
-                background: `${accent}1a`,
-                border: `2px solid ${accent}`,
-                boxShadow: `0 0 24px ${accent}66`,
-              }}
-            >
-              <StatusIcon size={26} style={{ color: accent }} />
-            </div>
+
             <h2
               className="text-2xl font-black tracking-tight leading-tight"
               style={{ color: accent, textShadow: `0 0 16px ${accent}55` }}
