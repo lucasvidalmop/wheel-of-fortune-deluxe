@@ -268,6 +268,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           ['config', 'Configuração'],
           ['events', `Eventos (${events.length})`],
           ['wagers', 'Apostas'],
+          ['analytics', 'Analytics'],
         ] as const).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k as any)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition ${tab === k ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
