@@ -685,6 +685,7 @@ const Roleta = () => {
           ? `url(${bgImage}) center/cover no-repeat`
           : ac.authBgColor ?? '#1a0a2e',
       }}>
+        <AuthNoticeBanner ownerId={ownerId} />
         {!bgImage && (
           <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(80,20,120,0.3) 0%, rgba(10,5,30,0.9) 70%)' }} />
         )}
