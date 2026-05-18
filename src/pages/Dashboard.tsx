@@ -330,8 +330,9 @@ function Dashboard() {
   const [referralSubTab, setReferralSubTab] = useState<'links' | 'analytics' | 'default_style' | 'redemption'>('links');
   const [defaultReferralConfig, setDefaultReferralConfig] = useState<any>({});
   const [pageViews, setPageViews] = useState<any[]>([]);
+  const [updateLogs, setUpdateLogs] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'roleta' | 'referral' | 'gorjeta'>('all');
+  const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'roleta' | 'referral' | 'gorjeta' | 'atualizacao'>('all');
   const [analyticsDateFilter, setAnalyticsDateFilter] = useState<string>(''); // YYYY-MM-DD
   const [analyticsRangeFilter, setAnalyticsRangeFilter] = useState<'all' | 'today' | '7d' | '30d'>('all');
   const [users, setUsers] = useState<WheelUser[]>([]);
@@ -2012,6 +2013,14 @@ function Dashboard() {
     } else {
       setPageViews(data || []);
     }
+    // Fetch registration update logs in parallel
+    const { data: logs } = await (supabase as any)
+      .from('registration_update_logs')
+      .select('*')
+      .eq('owner_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    setUpdateLogs(logs || []);
     setAnalyticsLoading(false);
   };
 
@@ -4459,6 +4468,7 @@ function Dashboard() {
                   { key: 'roleta', label: 'Roleta' },
                   { key: 'referral', label: 'Referral' },
                   { key: 'gorjeta', label: 'Gorjeta' },
+                  { key: 'atualizacao', label: 'Atualização' },
                 ] as const).map(f => (
                   <button
                     key={f.key}
@@ -4655,6 +4665,107 @@ function Dashboard() {
                   </div>
                 </GlassCard>
               )}
+
+              {/* ══════ Atualizações detalhadas ══════ */}
+              {(analyticsFilter === 'all' || analyticsFilter === 'atualizacao') && (() => {
+                const logsFiltered = updateLogs.filter((l: any) => {
+                  if (analyticsDateFilter && dayKey(l.created_at) !== analyticsDateFilter) return false;
+                  if (rangeCutoff !== null && new Date(l.created_at).getTime() < rangeCutoff) return false;
+                  return true;
+                });
+                const uniqueEmails = new Set(logsFiltered.map((l: any) => (l.user_email || '').toLowerCase()).filter(Boolean)).size;
+                const uniqueLogIPs = new Set(logsFiltered.map((l: any) => l.ip_address).filter(Boolean)).size;
+                const fieldCounts: Record<string, number> = {};
+                logsFiltered.forEach((l: any) => (l.changed_fields || []).forEach((f: string) => { fieldCounts[f] = (fieldCounts[f] || 0) + 1; }));
+                const fieldLabels: Record<string, string> = { name: 'Nome', phone: 'WhatsApp', pix_key: 'Chave PIX', account_id: 'ID da Conta' };
+                return (
+                  <GlassCard className="p-5 space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <RefreshCw size={16} className="text-emerald-400" /> Atualizações de cadastro (gorjeta)
+                      </h3>
+                      <span className="text-xs text-muted-foreground">{logsFiltered.length} atualizaç{logsFiltered.length === 1 ? 'ão' : 'ões'}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      {[
+                        { label: 'Total Atualizações', value: logsFiltered.length, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                        { label: 'Usuários Únicos', value: uniqueEmails, color: 'text-primary', bg: 'bg-primary/10' },
+                        { label: 'IPs Únicos', value: uniqueLogIPs, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+                        { label: 'Campo + Editado', value: Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1])[0]?.[0] ? (fieldLabels[Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1])[0][0]] || Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1])[0][0]) : '—', color: 'text-sky-400', bg: 'bg-sky-400/10' },
+                      ].map(c => (
+                        <div key={c.label} className={`p-3 rounded-xl ${c.bg} border border-white/[0.04]`}>
+                          <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{c.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {Object.keys(fieldCounts).length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Campos atualizados</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1]).map(([f, n]) => (
+                            <span key={f} className="px-2.5 py-1 rounded-lg bg-white/[0.05] border border-white/[0.08] text-xs text-foreground">
+                              {fieldLabels[f] || f} <span className="text-muted-foreground ml-1">({n})</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {logsFiltered.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização registrada no período.</p>
+                    ) : (
+                      <div className="overflow-x-auto -mx-2">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="text-left text-muted-foreground border-b border-white/[0.06]">
+                              <th className="px-2 py-2 font-semibold">Quando</th>
+                              <th className="px-2 py-2 font-semibold">Usuário</th>
+                              <th className="px-2 py-2 font-semibold">Email</th>
+                              <th className="px-2 py-2 font-semibold">ID</th>
+                              <th className="px-2 py-2 font-semibold">Campos alterados</th>
+                              <th className="px-2 py-2 font-semibold">IP</th>
+                              <th className="px-2 py-2 font-semibold">Local</th>
+                              <th className="px-2 py-2 font-semibold">Dispositivo</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {logsFiltered.slice(0, 200).map((l: any) => (
+                              <tr key={l.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                                <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">{new Date(l.created_at).toLocaleString('pt-BR')}</td>
+                                <td className="px-2 py-2 text-foreground">{l.user_name || '—'}</td>
+                                <td className="px-2 py-2 text-foreground">{l.user_email || '—'}</td>
+                                <td className="px-2 py-2 font-mono text-muted-foreground">{l.account_id || '—'}</td>
+                                <td className="px-2 py-2">
+                                  {(l.changed_fields || []).length === 0 ? (
+                                    <span className="text-muted-foreground italic">sem alteração</span>
+                                  ) : (
+                                    <div className="flex flex-wrap gap-1">
+                                      {(l.changed_fields || []).map((f: string) => (
+                                        <span key={f} className="px-1.5 py-0.5 rounded bg-emerald-400/10 text-emerald-400 text-[10px] font-medium border border-emerald-400/20" title={`${JSON.stringify(l.before_data?.[f] ?? '')} → ${JSON.stringify(l.after_data?.[f] ?? '')}`}>
+                                          {fieldLabels[f] || f}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-2 py-2 font-mono text-muted-foreground">{l.ip_address || '—'}</td>
+                                <td className="px-2 py-2 text-muted-foreground">{[l.city, l.country].filter(Boolean).join(', ') || '—'}</td>
+                                <td className="px-2 py-2 text-muted-foreground">{[l.device_type, l.os, l.browser].filter(Boolean).join(' • ') || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {logsFiltered.length > 200 && (
+                          <p className="text-xs text-muted-foreground text-center py-2">Mostrando primeiras 200 de {logsFiltered.length}</p>
+                        )}
+                      </div>
+                    )}
+                  </GlassCard>
+                );
+              })()}
             </div>
             );
           })()}
