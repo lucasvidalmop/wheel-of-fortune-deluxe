@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
       coinIconUrl: cfg.coin_icon_url || "",
       events: events || [],
       outcomes,
+      categories: catz || [],
       cases,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
