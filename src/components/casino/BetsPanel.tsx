@@ -804,10 +804,11 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
   const byOutcome = Array.from(byOutcomeMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
 
   // Top users
-  const byUserMap = new Map<string, { name: string; email: string; account: string; apostas: number; valor: number; pago: number; ganhas: number; perdidas: number }>();
+  type UserPick = { event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
+  const byUserMap = new Map<string, { name: string; email: string; account: string; apostas: number; valor: number; pago: number; ganhas: number; perdidas: number; picks: UserPick[] }>();
   filtered.forEach(w => {
     const key = `${w.user_email}|${w.account_id}`;
-    const e = byUserMap.get(key) || { name: w.user_name || w.user_email, email: w.user_email, account: w.account_id, apostas: 0, valor: 0, pago: 0, ganhas: 0, perdidas: 0 };
+    const e = byUserMap.get(key) || { name: w.user_name || w.user_email, email: w.user_email, account: w.account_id, apostas: 0, valor: 0, pago: 0, ganhas: 0, perdidas: 0, picks: [] };
     e.apostas += 1;
     e.valor += w.amount_coins || 0;
     if (w.status === 'won') {
@@ -815,6 +816,16 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }:
       if (w.payout_mode !== 'case') e.pago += w.payout_coins || 0;
     }
     if (w.status === 'lost') e.perdidas += 1;
+    const ev = events.find(x => x.id === w.event_id);
+    const out = outcomes.find(o => o.id === w.outcome_id);
+    e.picks.push({
+      event: ev?.title || '—',
+      outcome: out?.label || '—',
+      amount: w.amount_coins || 0,
+      odd: Number(w.odd_snapshot) || 0,
+      status: w.status,
+      createdAt: w.created_at,
+    });
     byUserMap.set(key, e);
   });
   const topUsers = Array.from(byUserMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 20);
