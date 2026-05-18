@@ -528,11 +528,14 @@ function Field({ label, value, onChange, type = 'text', upload }: { label: strin
   );
 }
 
-function ImageUploadField({ label, value, onChange, upload }: { label: string; value: string; onChange: (v: string) => void; upload: (f: File) => Promise<void> }) {
+function ImageUploadField({ label, value, onChange, upload, hint }: { label: string; value: string; onChange: (v: string) => void; upload: (f: File) => Promise<void>; hint?: string }) {
   const [busy, setBusy] = useState(false);
   return (
     <div>
-      <label className="text-xs font-medium block mb-1">{label}</label>
+      <label className="text-xs font-medium block mb-1">
+        {label}
+        {hint && <span className="ml-2 text-[10px] font-normal text-muted-foreground">({hint})</span>}
+      </label>
       <div className="flex items-center gap-2">
         {value ? (
           <img src={value} alt="" className="w-12 h-12 rounded object-cover bg-muted border border-border" />
