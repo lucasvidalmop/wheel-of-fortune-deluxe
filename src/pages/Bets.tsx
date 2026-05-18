@@ -308,6 +308,28 @@ const Bets = ({ tag }: BetsPageProps) => {
               <span className="font-bold tabular-nums">{authed.tokens_balance}</span>
               <span className="text-xs" style={{ color: muted }}>{coinName}</span>
             </div>
+            <button
+              onClick={() => {
+                const luckyTag = (cfg.luckyboxTag || tag).toString().trim();
+                try {
+                  const sess = {
+                    id: authed.id,
+                    name: authed.name,
+                    account_id: authed.account_id,
+                    email: authed.email,
+                    tokens_balance: authed.tokens_balance,
+                    case_grants: {},
+                  };
+                  sessionStorage.setItem(`luckybox_user_${luckyTag}`, JSON.stringify(sess));
+                } catch {}
+                window.location.href = `/luckybox${luckyTag}`;
+              }}
+              title="Loja"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-90"
+              style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: text }}>
+              <Store size={14} />
+              <span>Loja</span>
+            </button>
             <button onClick={() => { setAuthed(null); setMyWagers([]); }} title="Sair"
               className="p-2 rounded-lg" style={{ background: '#00000033' }}>
               <LogOut size={16} />
