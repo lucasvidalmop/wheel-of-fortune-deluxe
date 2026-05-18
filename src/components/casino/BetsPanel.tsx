@@ -733,12 +733,35 @@ interface AnalyticsTabProps {
   coinName: string;
   filter: { eventId: string; status: string; days: number };
   setFilter: (f: { eventId: string; status: string; days: number }) => void;
+  onRefresh: () => void | Promise<void>;
 }
 
 const COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb7185', '#60a5fa'];
 
-function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter }: AnalyticsTabProps) {
+function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, onRefresh }: AnalyticsTabProps) {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  const cancelWager = async (wagerId: string, userName: string) => {
+    if (!confirm(`Cancelar esta aposta de ${userName}? Os ${coinName} serão devolvidos ao saldo do usuário.`)) return;
+    setCancelling(wagerId);
+    try {
+      const { data, error } = await supabase.rpc('cancel_bet_wager' as any, { p_wager_id: wagerId });
+      if (error) throw error;
+      const res = data as any;
+      if (!res?.success) {
+        toast.error(res?.error === 'not_pending' ? 'Aposta não pode ser cancelada (já resolvida)' : 'Falha ao cancelar');
+        return;
+      }
+      toast.success(`Aposta cancelada. ${res.refunded} ${coinName} devolvidos.`);
+      await onRefresh();
+    } catch (e: any) {
+      toast.error(e?.message || 'Erro ao cancelar aposta');
+    } finally {
+      setCancelling(null);
+    }
+  };
+
   // Apply filters
   const cutoff = filter.days > 0 ? Date.now() - filter.days * 86400_000 : 0;
   const filtered = wagers.filter(w => {
