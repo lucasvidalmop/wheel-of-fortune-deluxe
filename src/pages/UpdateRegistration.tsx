@@ -358,6 +358,7 @@ const UpdateRegistration = ({ tag }: Props) => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-6 px-4 relative overflow-hidden" style={bgStyle}>
+      {step === 'lookup' && <AuthNoticeBanner ownerId={ownerId} />}
       {/* Header */}
       <div className="relative z-10 text-center space-y-3 mb-6">
         {icon}
