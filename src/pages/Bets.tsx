@@ -216,35 +216,57 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   // Auth screen
   if (!authed) {
+    const loginTitle = cfg.loginTitle || cfg.title || 'Apostas';
+    const loginSubtitle = cfg.loginSubtitle || cfg.subtitle || 'Entre com seu e-mail e ID da conta para apostar';
+    const loginBtnText = cfg.loginBtnText || 'Entrar';
+    const titleColor = cfg.titleColor || text;
+    const subtitleColor = cfg.subtitleColor || muted;
+    const btnTextColor = cfg.btnTextColor || '#000';
+    const bgStyle: React.CSSProperties = cfg.bgImage
+      ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      : (cfg.bgGradientFrom || cfg.bgGradientTo)
+        ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)` }
+        : { background: bg };
+    const signupHref = cfg.signupUrl || (tag ? `/gorjeta?ref=${tag}` : '/gorjeta');
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg, color: text }}>
-        <div className="w-full max-w-md p-8 rounded-2xl border" style={{ background: cardBg, borderColor: `${accent}40` }}>
-          {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="mx-auto mb-4 h-16 object-contain" />}
-          <h1 className="text-2xl font-bold text-center mb-1">{cfg.title || 'Apostas'}</h1>
-          <p className="text-center text-sm mb-6" style={{ color: muted }}>
-            {cfg.subtitle || 'Informe e-mail e ID da conta para começar'}
-          </p>
-          <form onSubmit={handleAuth} className="space-y-3">
-            <input
-              type="email" placeholder="E-mail" value={authEmail}
-              onChange={e => setAuthEmail(e.target.value)} required maxLength={200}
-              className="w-full px-4 py-3 rounded-lg outline-none"
-              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
-            />
-            <input
-              type="text" placeholder="ID da conta" value={authAccountId}
-              onChange={e => setAuthAccountId(e.target.value)} required maxLength={50}
-              className="w-full px-4 py-3 rounded-lg outline-none"
-              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
-            />
-            <button type="submit" disabled={authLoading}
-              className="w-full py-3 rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: accent, color: '#000' }}>
-              {authLoading ? <Loader2 className="animate-spin" size={18} /> : null}
-              Entrar
-            </button>
-          </form>
-        </div>
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-white p-4" style={bgStyle}>
+        <form onSubmit={handleAuth} className="relative z-10 w-full max-w-sm rounded-2xl p-6 space-y-5 border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+          <div className="text-center space-y-2">
+            {cfg.logoUrl
+              ? <img src={cfg.logoUrl} alt="logo" className="max-h-20 mx-auto object-contain" />
+              : <div className="text-4xl">🎯</div>}
+            <h1 className="text-xl font-bold" style={{ color: titleColor }}>{loginTitle}</h1>
+            <p className="text-sm" style={{ color: subtitleColor }}>{loginSubtitle}</p>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 opacity-80">E-mail</label>
+              <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)}
+                required maxLength={200} autoComplete="email"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 opacity-80">ID da Conta</label>
+              <input type="text" value={authAccountId} onChange={e => setAuthAccountId(e.target.value)}
+                required maxLength={50} autoComplete="off"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20" />
+            </div>
+          </div>
+          <button type="submit" disabled={authLoading}
+            className="w-full py-3 rounded-xl font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: accent, color: btnTextColor }}>
+            {authLoading ? <Loader2 className="animate-spin" size={16} /> : null}
+            {authLoading ? 'Entrando...' : loginBtnText}
+          </button>
+          {!cfg.hideSignup && (
+            <p className="text-center text-xs" style={{ color: subtitleColor }}>
+              {cfg.signupText || 'Não tem conta ainda?'}{' '}
+              <a href={signupHref} className="font-semibold underline-offset-2 hover:underline" style={{ color: accent }}>
+                {cfg.signupCtaText || 'Clique aqui'}
+              </a>
+            </p>
+          )}
+        </form>
       </div>
     );
   }
