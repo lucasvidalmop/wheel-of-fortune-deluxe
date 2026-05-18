@@ -3108,11 +3108,12 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' | 'apostas' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'batalha_slot', icon: <Swords size={20} />, label: 'Batalha Slot', tool: 'batalha_slot' },
     { key: 'luckybox', icon: <Gift size={20} />, label: 'Luckybox', tool: 'luckybox' },
+    { key: 'apostas', icon: <Trophy size={20} />, label: 'Apostas', tool: 'apostas' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico', tool: 'history' },
     { key: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics', tool: 'analytics' },
