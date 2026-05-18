@@ -10,11 +10,13 @@ interface BetsPageProps { tag: string }
 
 interface OutcomeRow { id: string; event_id: string; label: string; odd: number; position: number; is_winner: boolean }
 interface EventRow {
-  id: string; title: string; subtitle: string; category: string; image_url: string;
+  id: string; title: string; subtitle: string; category: string; category_id: string | null; image_url: string;
   starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
+  is_hot?: boolean;
 }
+interface CategoryRow { id: string; name: string; color: string; icon: string; position: number }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
 interface WagerRow {
   id: string; event_id: string; outcome_id: string; amount_coins: number; odd_snapshot: number;
