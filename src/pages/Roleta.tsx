@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 
 const Roleta = () => {
   const { slug } = useParams();
