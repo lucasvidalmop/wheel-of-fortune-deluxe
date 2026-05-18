@@ -496,7 +496,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <ImageUploadField label="Imagem do evento" hint="800×450 px (16:9)" value={editingEvent.image_url || ''} onChange={v => setEditingEvent(p => ({ ...p!, image_url: v }))}
                 upload={async f => { const r = await uploadAppAsset(f, 'bet-event'); setEditingEvent(p => ({ ...p!, image_url: r.publicUrl })); }} />
               <Field label="Encerra apostas em" type="datetime-local"
-                value={editingEvent.closes_at ? new Date(editingEvent.closes_at).toISOString().slice(0, 16) : ''}
+                value={(() => {
+                  if (!editingEvent.closes_at) return '';
+                  const d = new Date(editingEvent.closes_at);
+                  const pad = (n: number) => String(n).padStart(2, '0');
+                  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                })()}
                 onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? new Date(v).toISOString() : null }))} />
               <NumberField label="Aposta mínima" value={editingEvent.min_bet ?? null}
                 onChange={n => setEditingEvent(p => ({ ...p!, min_bet: n ?? 1 }))} />
