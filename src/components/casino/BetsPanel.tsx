@@ -498,12 +498,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <Field label="Encerra apostas em" type="datetime-local"
                 value={editingEvent.closes_at ? new Date(editingEvent.closes_at).toISOString().slice(0, 16) : ''}
                 onChange={v => setEditingEvent(p => ({ ...p!, closes_at: v ? new Date(v).toISOString() : null }))} />
-              <Field label="Aposta mínima" type="number" value={String(editingEvent.min_bet ?? 1)}
-                onChange={v => setEditingEvent(p => ({ ...p!, min_bet: Math.max(1, Number(v) || 1) }))} />
-              <Field label="Aposta máxima (0=sem)" type="number" value={String(editingEvent.max_bet ?? 0)}
-                onChange={v => setEditingEvent(p => ({ ...p!, max_bet: Math.max(0, Number(v) || 0) }))} />
-              <Field label="Apostas por usuário (0=ilimitado)" type="number" value={String(editingEvent.max_bets_per_user ?? 0)}
-                onChange={v => setEditingEvent(p => ({ ...p!, max_bets_per_user: Math.max(0, Math.floor(Number(v) || 0)) }))} />
+              <NumberField label="Aposta mínima" value={editingEvent.min_bet ?? null}
+                onChange={n => setEditingEvent(p => ({ ...p!, min_bet: n ?? 1 }))} />
+              <NumberField label="Aposta máxima (0=sem)" value={editingEvent.max_bet ?? null}
+                onChange={n => setEditingEvent(p => ({ ...p!, max_bet: n ?? 0 }))} />
+              <NumberField label="Apostas por usuário (0=ilimitado)" value={editingEvent.max_bets_per_user ?? null}
+                onChange={n => setEditingEvent(p => ({ ...p!, max_bets_per_user: n == null ? 0 : Math.max(0, Math.floor(n)) }))} />
             </div>
             <div className="p-3 rounded-lg bg-muted/50 space-y-2">
               <label className="text-sm font-medium">Tipo de prêmio</label>
