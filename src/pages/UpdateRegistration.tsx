@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Gift, User, Mail, Phone, MapPin, Shield, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { GorjetaPageConfig, defaultGorjetaConfig } from '@/components/casino/GorjetaPageEditor';
 import { UpdatePageConfig, defaultUpdatePageConfig } from '@/components/casino/UpdatePageEditor';
+import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 
 const PIX_TYPES = [
   { value: '', label: 'Tipo' },
@@ -357,6 +358,7 @@ const UpdateRegistration = ({ tag }: Props) => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-6 px-4 relative overflow-hidden" style={bgStyle}>
+      {step === 'lookup' && <AuthNoticeBanner ownerId={ownerId} />}
       {/* Header */}
       <div className="relative z-10 text-center space-y-3 mb-6">
         {icon}

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { User, Smartphone, CreditCard, Copy, CheckCircle2 } from 'lucide-react';
+import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 
 interface DepositConfig {
   enabled: boolean;
@@ -431,6 +432,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: bg, color: txt }}>
+      {step === 'form' && <AuthNoticeBanner ownerId={ownerId} />}
       {config.bgImageUrl && (
         <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
       )}

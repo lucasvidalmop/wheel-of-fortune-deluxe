@@ -17,6 +17,7 @@ import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
 import RedemptionPagesPanel from '@/components/casino/RedemptionPagesPanel';
 import LuckyboxPanel from '@/components/casino/LuckyboxPanel';
 import BetsPanel from '@/components/casino/BetsPanel';
+import AuthNoticePanel from '@/components/casino/AuthNoticePanel';
 import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
@@ -9748,6 +9749,7 @@ function Dashboard() {
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
               <ConfigBackupPanel />
+              {session?.user?.id && <AuthNoticePanel ownerId={session.user.id} />}
               {/* Probabilidade do Sorteio */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
