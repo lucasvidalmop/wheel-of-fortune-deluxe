@@ -525,9 +525,9 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       {cases.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-                  <Field label="Caixas por unidade" type="number"
-                    value={String(editingEvent.payout_case_qty_per_unit ?? 1)}
-                    onChange={v => setEditingEvent(p => ({ ...p!, payout_case_qty_per_unit: Math.max(0.001, Number(v) || 1) }))} />
+                  <NumberField label="Caixas por unidade"
+                    value={editingEvent.payout_case_qty_per_unit ?? null}
+                    onChange={n => setEditingEvent(p => ({ ...p!, payout_case_qty_per_unit: n ?? 1 }))} />
                 </div>
               )}
             </div>
