@@ -156,8 +156,8 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
           {/* Decorative glow */}
           <div
             aria-hidden
-            className="absolute -top-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${accent}40, transparent 70%)` }}
+            className="absolute -top-24 -right-24 w-40 h-40 rounded-full pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${accent}15, transparent 70%)` }}
           />
 
           {/* Header */}
