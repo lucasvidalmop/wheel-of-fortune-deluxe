@@ -306,6 +306,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         {([
           ['config', 'Configuração'],
           ['events', `Eventos (${events.length})`],
+          ['categories', `Categorias (${categories.length})`],
           ['wagers', 'Apostas'],
           ['analytics', 'Analytics'],
         ] as const).map(([k, l]) => (
