@@ -131,16 +131,24 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     setSaving(true);
     try {
       let eventId = (editingEvent as BetEvent).id;
+      const catObj = editingEvent.category_id ? categories.find(c => c.id === editingEvent.category_id) : null;
+      // Auto-schedule: if starts_at is in the future, force status='scheduled'
+      const startsAtIso = editingEvent.starts_at || null;
+      let status = editingEvent.status || 'open';
+      if (startsAtIso && new Date(startsAtIso).getTime() > Date.now() && status === 'open') {
+        status = 'scheduled' as any;
+      }
       const payload = {
         owner_id: ownerId,
         bets_config_id: config.id,
         title: editingEvent.title.trim(),
         subtitle: editingEvent.subtitle?.trim() || '',
-        category: editingEvent.category?.trim() || '',
+        category: catObj?.name || editingEvent.category?.trim() || '',
+        category_id: editingEvent.category_id || null,
         image_url: editingEvent.image_url || '',
-        starts_at: editingEvent.starts_at || null,
+        starts_at: startsAtIso,
         closes_at: editingEvent.closes_at || null,
-        status: editingEvent.status || 'open',
+        status,
         payout_mode: editingEvent.payout_mode || 'coins',
         payout_case_id: editingEvent.payout_mode === 'case' ? (editingEvent.payout_case_id || null) : null,
         payout_case_qty_per_unit: editingEvent.payout_case_qty_per_unit ?? 1,
