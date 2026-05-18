@@ -310,7 +310,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             <h3 className="font-bold">Moeda</h3>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Nome da moeda" value={config.coin_name} onChange={v => setConfig({ ...config, coin_name: v })} />
-              <ImageUploadField label="Ícone da moeda" value={config.coin_icon_url} onChange={v => setConfig({ ...config, coin_icon_url: v })}
+              <ImageUploadField label="Ícone da moeda" hint="64×64 px PNG" value={config.coin_icon_url} onChange={v => setConfig({ ...config, coin_icon_url: v })}
                 upload={async f => { const r = await uploadAppAsset(f, 'bets-coin'); setConfig(c => c ? { ...c, coin_icon_url: r.publicUrl } : c); }} />
             </div>
           </div>
