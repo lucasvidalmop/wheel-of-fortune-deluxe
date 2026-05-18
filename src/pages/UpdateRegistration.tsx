@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Gift, User, Mail, Phone, MapPin, Shield, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { GorjetaPageConfig, defaultGorjetaConfig } from '@/components/casino/GorjetaPageEditor';
 import { UpdatePageConfig, defaultUpdatePageConfig } from '@/components/casino/UpdatePageEditor';
+import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 
 const PIX_TYPES = [
   { value: '', label: 'Tipo' },
