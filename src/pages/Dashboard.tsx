@@ -3139,7 +3139,7 @@ function Dashboard() {
   // ═══ MENU GROUPS ═══
   type GroupKey = 'operacao' | 'disparos' | 'crescimento' | 'sistema';
   const groupDefs: { key: GroupKey; label: string; itemKeys: typeof activeTab[] }[] = [
-    { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'auth', 'history'] },
+    { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'apostas', 'auth', 'history'] },
     { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
     { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
     { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
