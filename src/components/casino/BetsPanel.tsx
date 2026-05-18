@@ -236,6 +236,32 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     }
   };
 
+  // ------- Categories CRUD -------
+  const addCategory = async () => {
+    if (!config) return;
+    const name = prompt('Nome da categoria (ex.: Futebol, eSports):')?.trim();
+    if (!name) return;
+    const { error } = await supabase.from('bet_categories').insert({
+      owner_id: ownerId, bets_config_id: config.id, name,
+      color: '#22d3ee', icon: '', position: categories.length,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success('Categoria criada');
+    loadAll();
+  };
+  const updateCategory = async (id: string, patch: Partial<BetCategory>) => {
+    setCategories(arr => arr.map(c => c.id === id ? { ...c, ...patch } : c));
+    const { error } = await supabase.from('bet_categories').update(patch).eq('id', id);
+    if (error) toast.error(error.message);
+  };
+  const deleteCategory = async (c: BetCategory) => {
+    if (!confirm(`Excluir categoria "${c.name}"? Eventos vinculados ficarão sem categoria.`)) return;
+    const { error } = await supabase.from('bet_categories').delete().eq('id', c.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Removida');
+    loadAll();
+  };
+
   const loadWagers = async () => {
     if (!config) return;
     const { data } = await supabase
