@@ -1,66 +1,126 @@
 ## Visão geral
 
-Criar uma página pública de atualização de cadastro idêntica visualmente à página de Gorjeta. Cada operador terá sua própria URL `/atualizar=tag` (onde `tag` é o `slug` da gorjeta) e controla, no Dashboard, **quais campos** do cadastro podem ser editados pelo participante.
+Criar uma nova página pública de apostas estilo bet365 na rota `/odds=tag`, onde o operador cadastra eventos manualmente (ex.: "Flamengo x Vasco") com 2 ou mais resultados possíveis e suas odds. O usuário, autenticado via e-mail + ID da conta (mesmo padrão do Luckybox), aposta seu saldo de **coins do Luckybox** (mesma carteira `wheel_users.tokens_balance`) em um dos resultados. Quando o operador resolve o evento (define qual resultado venceu), as apostas vencedoras são pagas automaticamente.
 
-O participante se identifica por **e-mail + ID da conta** (mesmo padrão da auth da roleta), e os campos liberados são gravados diretamente em `wheel_users` (sobrescreve o cadastro).
+Cada **evento** define o tipo de prêmio:
+- **Coins × odd**: ganha `valor_apostado * odd` em coins de volta no `tokens_balance`.
+- **Caixa Luckybox**: ganha um `luckybox_grants` da caixa escolhida pelo operador (1 grant por aposta vencedora, opcionalmente multiplicado).
 
 ## O que muda
 
 ### 1. Roteamento
-- Nova rota `/:slug` capturada por `SlugRouter` quando começar com `atualizar=` → renderiza `<UpdateRegistration tag={...} />`.
+- `SlugRouter` em `src/App.tsx` reconhece `/:slug` começando com `odds=` → renderiza `<Bets tag={...} />`.
 
-### 2. Nova página `src/pages/UpdateRegistration.tsx`
-- Clone do `Registration.tsx` (mesmo `bgStyle`, `cardBg`, `accentColor`, header, footer, termos, CTA — reaproveita o `GorjetaPageConfig` existente do operador para herdar 100% do visual).
-- **Fluxo:**
-  1. Tela 1 — Identificação: campos E-mail + ID da Conta + botão "Buscar cadastro".
-  2. Tela 2 — Edição: mostra apenas os campos habilitados pelo operador, pré-preenchidos com os dados atuais; botão "Atualizar".
-  3. Tela 3 — Sucesso: mensagem configurável (reutiliza `successTitle`/`successSubtitle` ou específicos da atualização).
+### 2. Banco de dados (migração nova)
 
-### 3. Configuração por operador (Dashboard)
-- Nova aba dentro do menu **Gorjeta**: `✏️ Atualização` (entre "Visual Influencer" e "SEO").
-- Componente novo `src/components/casino/UpdatePageEditor.tsx` salvando em `wheelConfig.updatePageConfig`:
-  - `enabled` (boolean) — liga/desliga a página pública
-  - `fields`: `{ name, phone, cpf, accountId, pixKey }` cada um boolean (o e-mail é sempre a chave de identificação e nunca é editável)
-  - `titleText`, `subtitleText`, `btnText`, `successTitle`, `successSubtitle`, `notFoundText`
-- A URL gerada é exibida com botão de copiar/QR (mesmo padrão da aba Link da gorjeta).
+Tabela **`bets_configs`** (1 por operador/tag — configura a página pública):
+- `owner_id uuid`, `tag text unique`, `is_active boolean`
+- `page_config jsonb` (visual: cores, header, logo, textos, SEO/pixels — mesmo padrão das outras páginas)
+- `coin_name text`, `coin_icon_url text` (herdado/espelho do luckybox_configs do operador)
 
-### 4. Backend
-- **Edge function `get-update-page`** (público): recebe `tag` (slug), retorna `{ wheelSlug, ownerId, updatePageConfig, gorjetaPageConfig, gorjetaSeo, casinoName, enabled }`. Sem autenticação.
-- **RPC `update_wheel_user_self(p_owner_id, p_email, p_account_id, p_name, p_phone, p_cpf, p_pix_key, p_pix_key_type, p_allowed_fields jsonb)`** `SECURITY DEFINER`:
-  - Localiza o usuário em `wheel_users` por `(owner_id, email, account_id)`.
-  - Atualiza somente os campos presentes em `p_allowed_fields` (defesa server-side caso o front mande além do permitido).
-  - Retorna `{ success, error? }`.
-- Sem alteração nas RLS atuais; a RPC bypassa via `SECURITY DEFINER`.
+Tabela **`bet_events`** (eventos criados pelo operador):
+- `owner_id uuid`, `bets_config_id uuid`
+- `title text` ("Flamengo x Vasco"), `subtitle text`, `category text`, `image_url text`
+- `starts_at timestamptz`, `closes_at timestamptz` (apostas bloqueadas após)
+- `status text` (`open`, `closed`, `resolved`, `cancelled`)
+- `payout_mode text` (`coins` | `case`)
+- `payout_case_id uuid` (FK para `luckybox_cases`, quando `payout_mode = 'case'`)
+- `payout_case_qty_per_unit numeric` (qtas caixas por unidade apostada — default 1)
+- `min_bet integer`, `max_bet integer`
+- `position integer`, `created_at`, `updated_at`
 
-### 5. Tracking
-- `track-pageview` com `page_type: 'update_registration'` (mesmo padrão da gorjeta).
+Tabela **`bet_outcomes`** (resultados possíveis de cada evento):
+- `event_id uuid`, `label text` ("Casa", "Empate", "Visitante"), `odd numeric`
+- `position integer`, `is_winner boolean default false`
+
+Tabela **`bet_wagers`** (apostas dos usuários):
+- `owner_id`, `event_id`, `outcome_id`, `wheel_user_id`
+- `account_id text`, `user_email text`, `user_name text`
+- `amount_coins integer`, `odd_snapshot numeric` (trava a odd no momento da aposta)
+- `status text` (`pending`, `won`, `lost`, `refunded`, `cancelled`)
+- `payout_coins integer`, `payout_grant_id uuid` (FK luckybox_grants)
+- `created_at`, `resolved_at`
+
+RLS: owner+admin podem CRUD próprios registros. Service role acessa tudo.
+
+**RPCs `SECURITY DEFINER`** (chamadas via edge function, sem auth do usuário):
+- `place_bet(p_owner_id, p_email, p_account_id, p_event_id, p_outcome_id, p_amount)` — valida saldo, deduz `tokens_balance`, cria `bet_wagers` com `odd_snapshot`. Retorna `{ success, new_balance, wager_id }`.
+- `resolve_bet_event(p_event_id, p_winning_outcome_id)` — marca outcome vencedor, percorre wagers: vencedoras → credita coins ou cria `luckybox_grants`; perdedoras → marca `lost`. Idempotente.
+- `cancel_bet_event(p_event_id)` — devolve coins de todas as apostas pendentes.
+
+### 3. Edge functions
+- **`get-bets-page`** (público, sem JWT): recebe `tag`, retorna `{ found, ownerId, pageConfig, coinName, events[], outcomes[] }`. Lista só eventos `open` ou `closed`.
+- **`place-bet`** (público): recebe `tag, email, accountId, eventId, outcomeId, amount`. Localiza owner, valida evento aberto e dentro de `closes_at`, chama RPC `place_bet`. Retorna saldo atualizado.
+- **`get-user-bets`** (público): retorna histórico de apostas do usuário naquela tag.
+
+### 4. Painel do operador (Dashboard)
+Nova entrada `🎯 Apostas` no menu lateral (entre Luckybox e Gorjeta), com componente novo `src/components/casino/BetsPanel.tsx`:
+- **Aba "Configuração"**: tag (editável, valida unicidade), enabled, visual da página (reaproveita o mesmo editor de cores/header/SEO das outras páginas), URL pública com botão copiar + QR.
+- **Aba "Eventos"**: lista CRUD de `bet_events`. Botão "Novo evento" abre dialog com:
+  - Título, subtítulo, categoria, imagem
+  - Datas (início / fechamento de apostas)
+  - Min/max de aposta
+  - Tipo de prêmio: Coins × odd **ou** Caixa Luckybox (com select de `luckybox_cases` do operador + qtd por unidade)
+  - Lista dinâmica de resultados (mínimo 2): label + odd cada
+  - Ações por evento: editar, fechar apostas, **resolver** (escolhe vencedor → dispara `resolve_bet_event`), cancelar (devolve coins), excluir
+- **Aba "Apostas"**: tabela de `bet_wagers` com filtros por evento/status, exportar CSV.
+
+### 5. Página pública `src/pages/Bets.tsx`
+- Layout estilo casa de apostas:
+  - Header com logo, saldo de coins do usuário (após autenticar).
+  - Tela 1 (auth): e-mail + ID da conta → busca `wheel_users`, traz `tokens_balance`.
+  - Tela 2 (lobby): cards/lista de eventos `open`, agrupados por categoria. Cada card mostra título, horário, e botões de outcome com sua odd ("Flamengo 1.85", "Empate 3.20", "Vasco 4.10").
+  - Click em um outcome abre **cupom de aposta** lateral/modal: campo de valor, mostra retorno potencial `amount × odd` ou "X caixas", botão **Confirmar aposta**.
+  - Aba "Minhas apostas" mostrando histórico (pendentes/ganhas/perdidas).
+- Quando evento é resolvido pelo operador, refresh manual ou polling leve mostra resultado.
+- Suporta SEO/pixels igual `UpdateRegistration` (Facebook Pixel, GA4, GTM, TikTok, custom head script).
+
+### 6. Permissão
+- Adicionar coluna `apostas boolean default false` em `operator_permissions` e `operator_permissions_defaults`.
+- Menu "Apostas" só aparece se a permissão estiver ligada.
+
+### 7. Tracking
+- `track-pageview` com `page_type: 'bets'`.
 
 ## Detalhes técnicos
 
-- A `tag` da URL é igual ao `wheel_configs.slug` (1 por operador), garantindo escopo único por operador, sem precisar de nova tabela.
-- A página de identificação respeita `accountIdMode` ('numeric' vs 'text') do `gorjetaPageConfig`.
-- Se nenhum campo estiver habilitado ou `enabled=false`, a página exibe "Atualização indisponível" com o mesmo card visual.
-- Validações reaproveitam os mesmos `maskPhone`/`maskCpf`/`maskCnpj`/`PIX_TYPES` de Registration (extrair para `src/lib/formMasks.ts` para evitar duplicação).
+- A **odd é congelada** no momento da aposta (`odd_snapshot` em `bet_wagers`), então editar a odd do outcome depois não afeta apostas já feitas.
+- `resolve_bet_event` é **idempotente** — checa `status = 'resolved'` antes de pagar para não pagar 2×.
+- Pagamento em caixa: gera `luckybox_grants` com `case_id = payout_case_id`, `recipient_*` do `wheel_user`, `quantity = floor(amount * payout_case_qty_per_unit)` (mínimo 1), `status = 'pending'` (resgatável pelo Luckybox normalmente).
+- Pagamento em coins: `tokens_balance += round(amount * odd_snapshot)`.
+- Cancelamento devolve apenas `amount_coins` (sem odd) e marca `refunded`.
+- Validação no front E no RPC (defesa em profundidade): `amount` inteiro positivo, dentro de `min_bet/max_bet`, evento aberto, `now() < closes_at`, saldo suficiente.
 
 ## Diagrama do fluxo
 
 ```text
-[/atualizar=tag] -> get-update-page(tag) -> { config, fields liberados }
-       |
-       v
-[Tela 1: e-mail + ID]
-       |
-       v
-update_wheel_user_self (busca → confirma → mostra Tela 2)
-       |
-       v
-[Tela 2: campos liberados editáveis]
-       |
-       v
-update_wheel_user_self (grava só campos permitidos) -> [Tela 3 sucesso]
+[Operador] Dashboard > Apostas > Novo evento (título, outcomes+odds, prêmio)
+                                          |
+                                          v
+                                  bet_events / bet_outcomes
+                                          |
+[/odds=tag] -> get-bets-page -> lobby de eventos
+                                          |
+[User auth: email+id] -> wheel_users.tokens_balance
+                                          |
+                                          v
+[Click outcome] -> cupom (valor) -> place-bet -> place_bet RPC
+                                                  - deduz coins
+                                                  - cria bet_wager (odd travada)
+                                          |
+                                          v
+[Operador] resolve evento -> resolve_bet_event RPC
+                                          - vencedoras: credita coins OU gera grant Luckybox
+                                          - perdedoras: status=lost
+                                          |
+                                          v
+                       Usuário vê resultado em "Minhas apostas"
+                       (se ganhou caixa, abre na página /:tag do Luckybox)
 ```
 
-## Fora de escopo
-- Não altera `referral_redemptions` (a fonte de verdade do cadastro é `wheel_users`).
-- Não envia notificação ao operador (pode ser feito depois reaproveitando `send-owner-notification`).
-- Não permite trocar e-mail nem ID da conta (são chaves de identificação).
+## Fora de escopo (pode vir depois)
+- Apostas múltiplas (combinadas/parlay) — por ora só apostas simples.
+- Cash-out antes do evento resolver.
+- Limites/anti-fraude avançados (1 aposta por evento, etc).
+- Mercados múltiplos por evento (resultado + total gols etc) — fica como evento separado.
+- Notificação automática ao usuário quando ganha (pode reaproveitar `send-owner-notification` depois).

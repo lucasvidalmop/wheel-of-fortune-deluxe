@@ -17,6 +17,7 @@ import Batalha from "./pages/Batalha.tsx";
 import Resgate from "./pages/Resgate.tsx";
 import Luckybox from "./pages/Luckybox.tsx";
 import UpdateRegistration from "./pages/UpdateRegistration.tsx";
+import Bets from "./pages/Bets.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,10 @@ const SlugRouter = () => {
   if (slug && slug.startsWith('atualizar=')) {
     const tag = slug.substring(10);
     return <UpdateRegistration tag={tag} />;
+  }
+  if (slug && slug.startsWith('odds=')) {
+    const tag = slug.substring(5);
+    return <Bets tag={tag} />;
   }
   return <Roleta />;
 };

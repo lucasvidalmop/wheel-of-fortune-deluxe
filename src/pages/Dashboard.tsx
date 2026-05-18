@@ -16,6 +16,7 @@ import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
 import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
 import RedemptionPagesPanel from '@/components/casino/RedemptionPagesPanel';
 import LuckyboxPanel from '@/components/casino/LuckyboxPanel';
+import BetsPanel from '@/components/casino/BetsPanel';
 import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
 import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
@@ -298,10 +299,10 @@ function Dashboard() {
   const [toolPerms, setToolPerms] = useState<Record<string, boolean>>({
     roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, whatsapp: true, whatsapp2: true, financeiro: true, gorjeta: true, referral: true,
     inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
-    batalha_slot: false,
+    batalha_slot: false, apostas: true,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
@@ -3107,11 +3108,12 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' | 'apostas' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'batalha_slot', icon: <Swords size={20} />, label: 'Batalha Slot', tool: 'batalha_slot' },
     { key: 'luckybox', icon: <Gift size={20} />, label: 'Luckybox', tool: 'luckybox' },
+    { key: 'apostas', icon: <Trophy size={20} />, label: 'Apostas', tool: 'apostas' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico', tool: 'history' },
     { key: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics', tool: 'analytics' },
@@ -3137,7 +3139,7 @@ function Dashboard() {
   // ═══ MENU GROUPS ═══
   type GroupKey = 'operacao' | 'disparos' | 'crescimento' | 'sistema';
   const groupDefs: { key: GroupKey; label: string; itemKeys: typeof activeTab[] }[] = [
-    { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'auth', 'history'] },
+    { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'apostas', 'auth', 'history'] },
     { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
     { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
     { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
@@ -8015,6 +8017,9 @@ function Dashboard() {
           {/* ══════ REFERRAL LINKS TAB ══════ */}
           {activeTab === 'luckybox' && session?.user?.id && (
             <LuckyboxPanel ownerId={session.user.id} />
+          )}
+          {activeTab === 'apostas' && session?.user?.id && (
+            <BetsPanel ownerId={session.user.id} />
           )}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">

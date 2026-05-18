@@ -74,6 +74,232 @@ export type Database = {
         }
         Relationships: []
       }
+      bet_events: {
+        Row: {
+          bets_config_id: string
+          category: string
+          closes_at: string | null
+          created_at: string
+          id: string
+          image_url: string
+          max_bet: number
+          min_bet: number
+          owner_id: string
+          payout_case_id: string | null
+          payout_case_qty_per_unit: number
+          payout_mode: string
+          position: number
+          resolved_at: string | null
+          starts_at: string | null
+          status: string
+          subtitle: string
+          title: string
+          updated_at: string
+          winning_outcome_id: string | null
+        }
+        Insert: {
+          bets_config_id: string
+          category?: string
+          closes_at?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          max_bet?: number
+          min_bet?: number
+          owner_id: string
+          payout_case_id?: string | null
+          payout_case_qty_per_unit?: number
+          payout_mode?: string
+          position?: number
+          resolved_at?: string | null
+          starts_at?: string | null
+          status?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+          winning_outcome_id?: string | null
+        }
+        Update: {
+          bets_config_id?: string
+          category?: string
+          closes_at?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          max_bet?: number
+          min_bet?: number
+          owner_id?: string
+          payout_case_id?: string | null
+          payout_case_qty_per_unit?: number
+          payout_mode?: string
+          position?: number
+          resolved_at?: string | null
+          starts_at?: string | null
+          status?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+          winning_outcome_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_events_bets_config_id_fkey"
+            columns: ["bets_config_id"]
+            isOneToOne: false
+            referencedRelation: "bets_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bet_outcomes: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          is_winner: boolean
+          label: string
+          odd: number
+          owner_id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          is_winner?: boolean
+          label?: string
+          odd?: number
+          owner_id: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_winner?: boolean
+          label?: string
+          odd?: number
+          owner_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_outcomes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bet_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bet_wagers: {
+        Row: {
+          account_id: string
+          amount_coins: number
+          created_at: string
+          event_id: string
+          id: string
+          odd_snapshot: number
+          outcome_id: string
+          owner_id: string
+          payout_coins: number
+          payout_grant_id: string | null
+          payout_mode: string
+          resolved_at: string | null
+          status: string
+          user_email: string
+          user_name: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          amount_coins?: number
+          created_at?: string
+          event_id: string
+          id?: string
+          odd_snapshot?: number
+          outcome_id: string
+          owner_id: string
+          payout_coins?: number
+          payout_grant_id?: string | null
+          payout_mode?: string
+          resolved_at?: string | null
+          status?: string
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount_coins?: number
+          created_at?: string
+          event_id?: string
+          id?: string
+          odd_snapshot?: number
+          outcome_id?: string
+          owner_id?: string
+          payout_coins?: number
+          payout_grant_id?: string | null
+          payout_mode?: string
+          resolved_at?: string | null
+          status?: string
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_wagers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bet_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bet_wagers_outcome_id_fkey"
+            columns: ["outcome_id"]
+            isOneToOne: false
+            referencedRelation: "bet_outcomes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bets_configs: {
+        Row: {
+          coin_icon_url: string
+          coin_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          owner_id: string
+          page_config: Json
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          coin_icon_url?: string
+          coin_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id: string
+          page_config?: Json
+          tag: string
+          updated_at?: string
+        }
+        Update: {
+          coin_icon_url?: string
+          coin_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id?: string
+          page_config?: Json
+          tag?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       config_backups: {
         Row: {
           created_at: string
@@ -527,6 +753,7 @@ export type Database = {
       operator_permissions: {
         Row: {
           analytics: boolean
+          apostas: boolean
           auth: boolean
           batalha_slot: boolean
           configuracoes: boolean
@@ -553,6 +780,7 @@ export type Database = {
         }
         Insert: {
           analytics?: boolean
+          apostas?: boolean
           auth?: boolean
           batalha_slot?: boolean
           configuracoes?: boolean
@@ -579,6 +807,7 @@ export type Database = {
         }
         Update: {
           analytics?: boolean
+          apostas?: boolean
           auth?: boolean
           batalha_slot?: boolean
           configuracoes?: boolean
@@ -608,6 +837,7 @@ export type Database = {
       operator_permissions_defaults: {
         Row: {
           analytics: boolean
+          apostas: boolean
           auth: boolean
           batalha_slot: boolean
           configuracoes: boolean
@@ -633,6 +863,7 @@ export type Database = {
         }
         Insert: {
           analytics?: boolean
+          apostas?: boolean
           auth?: boolean
           batalha_slot?: boolean
           configuracoes?: boolean
@@ -658,6 +889,7 @@ export type Database = {
         }
         Update: {
           analytics?: boolean
+          apostas?: boolean
           auth?: boolean
           batalha_slot?: boolean
           configuracoes?: boolean
@@ -1662,6 +1894,7 @@ export type Database = {
             Returns: Json
           }
       build_link_prize_pool: { Args: { p_plan: Json }; Returns: Json }
+      cancel_bet_event: { Args: { p_event_id: string }; Returns: Json }
       consume_fixed_prize_spin: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
@@ -1809,6 +2042,17 @@ export type Database = {
         Args: { p_account_id: string; p_case_id: string; p_owner_id: string }
         Returns: Json
       }
+      place_bet: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_email: string
+          p_event_id: string
+          p_outcome_id: string
+          p_owner_id: string
+        }
+        Returns: Json
+      }
       pop_link_prize_pool: {
         Args: { p_count: number; p_link_id: string }
         Returns: Json
@@ -1909,6 +2153,10 @@ export type Database = {
             }
             Returns: Json
           }
+      resolve_bet_event: {
+        Args: { p_event_id: string; p_winning_outcome_id: string }
+        Returns: Json
+      }
       restore_config_backup: { Args: { _backup_id: string }; Returns: Json }
       segment_is_paying_prize: { Args: { p_segment: Json }; Returns: boolean }
       update_wheel_user_self: {
