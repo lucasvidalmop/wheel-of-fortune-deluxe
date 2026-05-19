@@ -649,6 +649,7 @@ export type Database = {
         Row: {
           claim_closes_at: string | null
           claim_enabled: boolean
+          claim_event_name: string
           claim_opens_at: string | null
           claim_quantity: number
           claim_recurrence: string
@@ -670,6 +671,7 @@ export type Database = {
         Insert: {
           claim_closes_at?: string | null
           claim_enabled?: boolean
+          claim_event_name?: string
           claim_opens_at?: string | null
           claim_quantity?: number
           claim_recurrence?: string
@@ -691,6 +693,7 @@ export type Database = {
         Update: {
           claim_closes_at?: string | null
           claim_enabled?: boolean
+          claim_event_name?: string
           claim_opens_at?: string | null
           claim_quantity?: number
           claim_recurrence?: string
