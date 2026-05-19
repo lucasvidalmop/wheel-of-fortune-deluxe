@@ -474,6 +474,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       const updated = { ...authedUser, case_grants: newGrants };
       setAuthedUser(updated);
       try { sessionStorage.setItem(`luckybox_user_${cfg.tag}`, JSON.stringify(updated)); } catch {}
+      setUserClaims(prev => ({ ...prev, [c.id]: (data.last_claim_at as string) || new Date().toISOString() }));
       toast.success(`🎁 ${data.quantity || 1} caixa(s) resgatada(s)!`);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao resgatar');
