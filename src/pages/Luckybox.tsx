@@ -290,6 +290,19 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     }
   };
 
+  const fetchUserClaims = async (ownerId: string, email: string, account: string) => {
+    try {
+      const { data } = await (supabase as any).rpc('get_user_case_claims', {
+        p_owner_id: ownerId,
+        p_email: email,
+        p_account_id: account,
+      });
+      setUserClaims((data && typeof data === 'object') ? data as Record<string, string> : {});
+    } catch {
+      setUserClaims({});
+    }
+  };
+
   // Capture ?code= from URL on first load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
