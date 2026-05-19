@@ -95,6 +95,7 @@ interface LuckyCase {
   claim_closes_at?: string | null;
   claim_quantity?: number;
   claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
+  claim_event_name?: string;
 }
 
 interface CasePoolItem { case_id: string; weight: number }
@@ -192,6 +193,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_closes_at: null,
       claim_quantity: 1,
       claim_recurrence: 'none',
+      claim_event_name: '',
     });
     setShowForm(true);
   };
@@ -220,6 +222,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_closes_at: editingCase.claim_closes_at || null,
       claim_quantity: Math.max(1, Number(editingCase.claim_quantity) || 1),
       claim_recurrence: ['daily','weekly','monthly'].includes(String(editingCase.claim_recurrence)) ? editingCase.claim_recurrence : 'none',
+      claim_event_name: (editingCase.claim_event_name || '').toString().slice(0, 80),
     };
     if (isCasePool) {
       const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
@@ -1057,6 +1060,18 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 <p className="text-[11px] opacity-70">Libera a caixa para resgate grátis dentro de uma janela de tempo. Cada usuário (e-mail ou ID) só pode resgatar 1 vez por caixa — ou periodicamente se a recorrência estiver ativada. O horário é em <b>Brasília (UTC-3)</b>.</p>
                 {editingCase.claim_enabled && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] uppercase opacity-60 mb-1">Nome do evento</label>
+                      <input
+                        type="text"
+                        maxLength={80}
+                        placeholder="Ex.: Caixa do Dia, Bônus de Quinta..."
+                        value={editingCase.claim_event_name || ''}
+                        onChange={e => setEditingCase({ ...editingCase, claim_event_name: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      />
+                      <p className="text-[10px] opacity-60 mt-1">Aparece no card no lugar do preço. Se vazio, mostra "🎁 Evento".</p>
+                    </div>
                     <div>
                       <label className="block text-[11px] uppercase opacity-60 mb-1">Abre em</label>
                       <input

@@ -97,6 +97,7 @@ interface LuckyCase {
   claim_closes_at?: string | null;
   claim_quantity?: number;
   claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
+  claim_event_name?: string;
 }
 interface DrawnCase {
   case_id: string;
@@ -1128,7 +1129,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                       {isFree ? (
                         <span className="text-sm">🎁 Abrir grátis</span>
                       ) : c.claim_enabled ? (
-                        <span className="text-sm">🎁 Evento</span>
+                        <span className="text-sm">🎁 {c.claim_event_name?.trim() || 'Evento'}</span>
                       ) : (
                         <>
                           <CoinIcon size={20} color={accent} />
