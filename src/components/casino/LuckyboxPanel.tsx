@@ -177,6 +177,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       image_url: '',
       rarity: 'common',
       mode: 'probability',
+      prize_type: 'pix',
       prizes: [newPrize()],
       position: cases.length,
       is_active: true,
