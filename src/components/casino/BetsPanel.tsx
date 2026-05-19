@@ -914,7 +914,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Mercados de aposta</label>
                 <button onClick={() => setEditingMarkets(arr => [...arr, {
-                  title: `Mercado ${arr.length + 1}`, position: arr.length,
+                  title: `Mercado ${arr.length + 1}`, position: arr.length, ...defaultMarketDefaults(),
                   outcomes: [{ label: 'Sim', odd: 1.9 }, { label: 'Não', odd: 1.9 }],
                 }])}
                   className="px-2 py-1 text-xs rounded bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1">
