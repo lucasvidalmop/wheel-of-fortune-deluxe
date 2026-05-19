@@ -95,6 +95,7 @@ interface LuckyCase {
   claim_closes_at?: string | null;
   claim_quantity?: number;
   claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
+  claim_event_name?: string;
 }
 
 interface CasePoolItem { case_id: string; weight: number }
