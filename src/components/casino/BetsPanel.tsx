@@ -124,6 +124,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const defaultMarketDefaults = (): Omit<EditingMarket, 'title'|'position'|'outcomes'> => ({
+    status: 'open', closes_at: null,
+    min_bet: 1, max_bet: 0, max_bets_per_user: 0,
+    payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
+  });
+
   const openNewEvent = () => {
     setEditingEvent({
       title: '', subtitle: '', category: '', category_id: null, image_url: '',
@@ -132,7 +138,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
     });
     setEditingMarkets([{
-      title: 'Principal', position: 0,
+      title: 'Principal', position: 0, ...defaultMarketDefaults(),
       outcomes: [{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }],
     }]);
   };
@@ -142,14 +148,18 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
     const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
     if (evMarkets.length === 0) {
-      // legacy event without markets: treat all outcomes as Principal
       setEditingMarkets([{
-        title: 'Principal', position: 0,
+        title: 'Principal', position: 0, ...defaultMarketDefaults(),
         outcomes: evOuts.map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
       }]);
     } else {
       setEditingMarkets(evMarkets.map((m, idx) => ({
         id: m.id, title: m.title, position: idx,
+        status: m.status, closes_at: m.closes_at,
+        min_bet: m.min_bet ?? 1, max_bet: m.max_bet ?? 0, max_bets_per_user: m.max_bets_per_user ?? 0,
+        payout_mode: (m as any).payout_mode || 'coins',
+        payout_case_id: (m as any).payout_case_id || null,
+        payout_case_qty_per_unit: (m as any).payout_case_qty_per_unit ?? 1,
         outcomes: evOuts.filter(o => o.market_id === m.id).map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
       })));
     }
