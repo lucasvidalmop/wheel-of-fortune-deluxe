@@ -96,6 +96,7 @@ interface LuckyCase {
   claim_opens_at?: string | null;
   claim_closes_at?: string | null;
   claim_quantity?: number;
+  claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
 }
 interface DrawnCase {
   case_id: string;
@@ -163,9 +164,23 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [signupRefCode, setSignupRefCode] = useState<string>('');
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [nowTs, setNowTs] = useState(Date.now());
+  const [userClaims, setUserClaims] = useState<Record<string, string>>({});
+
+  const formatCountdown = (ms: number) => {
+    if (ms <= 0) return '0s';
+    const s = Math.floor(ms / 1000);
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m ${sec}s`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
+  };
 
   useEffect(() => {
-    const t = setInterval(() => setNowTs(Date.now()), 15000);
+    const t = setInterval(() => setNowTs(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -226,7 +241,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     const key = `luckybox_user_${cfg.tag}`;
     const raw = sessionStorage.getItem(key);
     if (raw) {
-      try { setAuthedUser(JSON.parse(raw)); } catch {}
+      try {
+        const parsed = JSON.parse(raw);
+        setAuthedUser(parsed);
+        if (parsed?.email && parsed?.account_id) {
+          fetchUserClaims(cfg.owner_id, parsed.email, parsed.account_id);
+        }
+      } catch {}
     }
   }, [cfg]);
 
@@ -271,6 +292,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       };
       setAuthedUser(sess);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(sess));
+      fetchUserClaims(cfg!.owner_id, sess.email, sess.account_id);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao entrar');
     } finally {
@@ -285,6 +307,19 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       const updated = { ...authedUser, tokens_balance: data.tokens_balance ?? 0, case_grants: (data.case_grants as Record<string, number>) || {} };
       setAuthedUser(updated);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(updated));
+    }
+  };
+
+  const fetchUserClaims = async (ownerId: string, email: string, account: string) => {
+    try {
+      const { data } = await (supabase as any).rpc('get_user_case_claims', {
+        p_owner_id: ownerId,
+        p_email: email,
+        p_account_id: account,
+      });
+      setUserClaims((data && typeof data === 'object') ? data as Record<string, string> : {});
+    } catch {
+      setUserClaims({});
     }
   };
 
@@ -452,6 +487,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       const updated = { ...authedUser, case_grants: newGrants };
       setAuthedUser(updated);
       try { sessionStorage.setItem(`luckybox_user_${cfg.tag}`, JSON.stringify(updated)); } catch {}
+      setUserClaims(prev => ({ ...prev, [c.id]: (data.last_claim_at as string) || new Date().toISOString() }));
       toast.success(`🎁 ${data.quantity || 1} caixa(s) resgatada(s)!`);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao resgatar');
@@ -1024,11 +1060,23 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               const cantAfford = !isFree && authedUser.tokens_balance < c.price_tokens;
               const opensAt = c.claim_opens_at ? new Date(c.claim_opens_at).getTime() : null;
               const closesAt = c.claim_closes_at ? new Date(c.claim_closes_at).getTime() : null;
-              const claimOpen = !!c.claim_enabled
+              const windowOpen = !!c.claim_enabled
                 && (opensAt === null || nowTs >= opensAt)
                 && (closesAt === null || nowTs <= closesAt);
               const claimUpcoming = !!c.claim_enabled && opensAt !== null && nowTs < opensAt;
-              const showClaim = claimOpen && !isFree;
+              const recurrence = c.claim_recurrence || 'none';
+              const intervalMs = recurrence === 'daily' ? 86400000
+                : recurrence === 'weekly' ? 604800000
+                : recurrence === 'monthly' ? 2592000000
+                : 0;
+              const lastClaimStr = userClaims[c.id];
+              const lastClaimTs = lastClaimStr ? new Date(lastClaimStr).getTime() : null;
+              const nextAvailableTs = (lastClaimTs && intervalMs > 0) ? lastClaimTs + intervalMs : null;
+              const isLockedByRecurrence = !!(nextAvailableTs && nowTs < nextAvailableTs);
+              const alreadyClaimedOnce = !!lastClaimTs && recurrence === 'none';
+              const claimOpen = windowOpen && !alreadyClaimedOnce && !isLockedByRecurrence;
+              const showClaim = claimOpen;
+              const showCountdown = windowOpen && isLockedByRecurrence;
               return (
                 <div
                   key={c.id}
@@ -1104,9 +1152,19 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                       {claimingId === c.id ? 'Resgatando...' : `🎁 Resgatar grátis${(c.claim_quantity || 1) > 1 ? ` ×${c.claim_quantity}` : ''}`}
                     </button>
                   )}
-                  {claimUpcoming && !isFree && (
+                  {claimUpcoming && (
                     <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
                       🎁 Abre em {new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(opensAt!))}
+                    </div>
+                  )}
+                  {showCountdown && (
+                    <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
+                      ⏳ Próximo resgate em {formatCountdown(nextAvailableTs! - nowTs)}
+                    </div>
+                  )}
+                  {windowOpen && alreadyClaimedOnce && (
+                    <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[10px] font-semibold opacity-70">
+                      ✓ Resgate já utilizado
                     </div>
                   )}
                 </div>

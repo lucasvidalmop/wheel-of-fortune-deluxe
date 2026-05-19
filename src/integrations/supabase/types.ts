@@ -651,6 +651,7 @@ export type Database = {
           claim_enabled: boolean
           claim_opens_at: string | null
           claim_quantity: number
+          claim_recurrence: string
           created_at: string
           id: string
           image_url: string
@@ -671,6 +672,7 @@ export type Database = {
           claim_enabled?: boolean
           claim_opens_at?: string | null
           claim_quantity?: number
+          claim_recurrence?: string
           created_at?: string
           id?: string
           image_url?: string
@@ -691,6 +693,7 @@ export type Database = {
           claim_enabled?: boolean
           claim_opens_at?: string | null
           claim_quantity?: number
+          claim_recurrence?: string
           created_at?: string
           id?: string
           image_url?: string
@@ -2235,6 +2238,10 @@ export type Database = {
       }
       get_redemption_page_by_tag: { Args: { p_tag: string }; Returns: Json }
       get_referral_page_data: { Args: { p_code: string }; Returns: Json }
+      get_user_case_claims: {
+        Args: { p_account_id: string; p_email: string; p_owner_id: string }
+        Returns: Json
+      }
       get_wheel_config_by_slug: {
         Args: { p_slug: string }
         Returns: {

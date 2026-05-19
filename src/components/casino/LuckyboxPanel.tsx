@@ -94,6 +94,7 @@ interface LuckyCase {
   claim_opens_at?: string | null;
   claim_closes_at?: string | null;
   claim_quantity?: number;
+  claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
 }
 
 interface CasePoolItem { case_id: string; weight: number }
@@ -190,6 +191,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_opens_at: null,
       claim_closes_at: null,
       claim_quantity: 1,
+      claim_recurrence: 'none',
     });
     setShowForm(true);
   };
@@ -217,6 +219,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_opens_at: editingCase.claim_opens_at || null,
       claim_closes_at: editingCase.claim_closes_at || null,
       claim_quantity: Math.max(1, Number(editingCase.claim_quantity) || 1),
+      claim_recurrence: ['daily','weekly','monthly'].includes(String(editingCase.claim_recurrence)) ? editingCase.claim_recurrence : 'none',
     };
     if (isCasePool) {
       const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
@@ -1051,9 +1054,9 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                   />
                   🎁 Resgate gratuito agendado
                 </label>
-                <p className="text-[11px] opacity-70">Libera a caixa para resgate grátis dentro de uma janela de tempo. Cada usuário (e-mail ou ID) só pode resgatar 1 vez por caixa. O horário é em <b>Brasília (UTC-3)</b>.</p>
+                <p className="text-[11px] opacity-70">Libera a caixa para resgate grátis dentro de uma janela de tempo. Cada usuário (e-mail ou ID) só pode resgatar 1 vez por caixa — ou periodicamente se a recorrência estiver ativada. O horário é em <b>Brasília (UTC-3)</b>.</p>
                 {editingCase.claim_enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] uppercase opacity-60 mb-1">Abre em</label>
                       <input
@@ -1064,7 +1067,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] uppercase opacity-60 mb-1">Fecha em</label>
+                      <label className="block text-[11px] uppercase opacity-60 mb-1">Fecha em (opcional)</label>
                       <input
                         type="datetime-local"
                         value={betIsoToDateTimeLocal(editingCase.claim_closes_at)}
@@ -1081,6 +1084,20 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         onChange={e => setEditingCase({ ...editingCase, claim_quantity: Math.max(1, parseInt(e.target.value) || 1) })}
                         className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] uppercase opacity-60 mb-1">Recorrência</label>
+                      <select
+                        value={editingCase.claim_recurrence || 'none'}
+                        onChange={e => setEditingCase({ ...editingCase, claim_recurrence: e.target.value as any })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      >
+                        <option value="none">Único (1x por usuário)</option>
+                        <option value="daily">Diário (a cada 24h)</option>
+                        <option value="weekly">Semanal (a cada 7 dias)</option>
+                        <option value="monthly">Mensal (a cada 30 dias)</option>
+                      </select>
+                      <p className="text-[10px] opacity-60 mt-1">Com recorrência, o usuário pode resgatar novamente após o intervalo.</p>
                     </div>
                   </div>
                 )}
