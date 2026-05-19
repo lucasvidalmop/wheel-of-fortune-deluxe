@@ -186,6 +186,10 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       prizes: [newPrize()],
       position: cases.length,
       is_active: true,
+      claim_enabled: false,
+      claim_opens_at: null,
+      claim_closes_at: null,
+      claim_quantity: 1,
     });
     setShowForm(true);
   };
