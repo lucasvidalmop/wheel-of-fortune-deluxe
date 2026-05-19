@@ -1139,9 +1139,19 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                       {claimingId === c.id ? 'Resgatando...' : `🎁 Resgatar grátis${(c.claim_quantity || 1) > 1 ? ` ×${c.claim_quantity}` : ''}`}
                     </button>
                   )}
-                  {claimUpcoming && !isFree && (
+                  {claimUpcoming && (
                     <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
                       🎁 Abre em {new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(opensAt!))}
+                    </div>
+                  )}
+                  {showCountdown && (
+                    <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
+                      ⏳ Próximo resgate em {formatCountdown(nextAvailableTs! - nowTs)}
+                    </div>
+                  )}
+                  {windowOpen && alreadyClaimedOnce && (
+                    <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[10px] font-semibold opacity-70">
+                      ✓ Resgate já utilizado
                     </div>
                   )}
                 </div>
