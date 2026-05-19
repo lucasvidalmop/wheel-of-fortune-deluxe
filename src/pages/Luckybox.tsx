@@ -167,7 +167,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [userClaims, setUserClaims] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const t = setInterval(() => setNowTs(Date.now()), 15000);
+    const t = setInterval(() => setNowTs(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
