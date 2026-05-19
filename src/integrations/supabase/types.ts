@@ -244,6 +244,66 @@ export type Database = {
           },
         ]
       }
+      bet_markets: {
+        Row: {
+          closes_at: string | null
+          created_at: string
+          event_id: string
+          id: string
+          max_bet: number
+          max_bets_per_user: number
+          min_bet: number
+          owner_id: string
+          payout_case_id: string | null
+          payout_case_qty_per_unit: number
+          payout_mode: string
+          position: number
+          resolved_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          winning_outcome_id: string | null
+        }
+        Insert: {
+          closes_at?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          max_bet?: number
+          max_bets_per_user?: number
+          min_bet?: number
+          owner_id: string
+          payout_case_id?: string | null
+          payout_case_qty_per_unit?: number
+          payout_mode?: string
+          position?: number
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          winning_outcome_id?: string | null
+        }
+        Update: {
+          closes_at?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          max_bet?: number
+          max_bets_per_user?: number
+          min_bet?: number
+          owner_id?: string
+          payout_case_id?: string | null
+          payout_case_qty_per_unit?: number
+          payout_mode?: string
+          position?: number
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          winning_outcome_id?: string | null
+        }
+        Relationships: []
+      }
       bet_outcomes: {
         Row: {
           created_at: string
@@ -251,6 +311,7 @@ export type Database = {
           id: string
           is_winner: boolean
           label: string
+          market_id: string | null
           odd: number
           owner_id: string
           position: number
@@ -261,6 +322,7 @@ export type Database = {
           id?: string
           is_winner?: boolean
           label?: string
+          market_id?: string | null
           odd?: number
           owner_id: string
           position?: number
@@ -271,6 +333,7 @@ export type Database = {
           id?: string
           is_winner?: boolean
           label?: string
+          market_id?: string | null
           odd?: number
           owner_id?: string
           position?: number
@@ -292,6 +355,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          market_id: string | null
           odd_snapshot: number
           outcome_id: string
           owner_id: string
@@ -311,6 +375,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          market_id?: string | null
           odd_snapshot?: number
           outcome_id: string
           owner_id: string
@@ -330,6 +395,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          market_id?: string | null
           odd_snapshot?: number
           outcome_id?: string
           owner_id?: string
@@ -2117,6 +2183,7 @@ export type Database = {
           }
       build_link_prize_pool: { Args: { p_plan: Json }; Returns: Json }
       cancel_bet_event: { Args: { p_event_id: string }; Returns: Json }
+      cancel_bet_market: { Args: { p_market_id: string }; Returns: Json }
       cancel_bet_wager: { Args: { p_wager_id: string }; Returns: Json }
       claim_luckybox_case: {
         Args: {
@@ -2406,6 +2473,10 @@ export type Database = {
           }
       resolve_bet_event: {
         Args: { p_event_id: string; p_winning_outcome_id: string }
+        Returns: Json
+      }
+      resolve_bet_market: {
+        Args: { p_market_id: string; p_winning_outcome_id: string }
         Returns: Json
       }
       restore_config_backup: { Args: { _backup_id: string }; Returns: Json }
