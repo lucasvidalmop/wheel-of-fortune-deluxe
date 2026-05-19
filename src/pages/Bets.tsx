@@ -19,7 +19,7 @@ interface EventRow {
 interface CategoryRow { id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
 interface WagerRow {
-  id: string; event_id: string; outcome_id: string; amount_coins: number; odd_snapshot: number;
+  id: string; public_code?: string; event_id: string; outcome_id: string; amount_coins: number; odd_snapshot: number;
   payout_mode: 'coins'|'case'; status: 'pending'|'won'|'lost'|'refunded'|'cancelled';
   payout_coins: number; payout_grant_id: string | null; created_at: string; resolved_at: string | null;
 }
