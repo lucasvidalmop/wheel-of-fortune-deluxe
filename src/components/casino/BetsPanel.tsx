@@ -233,12 +233,23 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       for (let mi = 0; mi < editingMarkets.length; mi++) {
         const em = editingMarkets[mi];
         let marketId = em.id;
+        const marketPayload = {
+          title: em.title.trim(), position: mi,
+          status: em.status || 'open',
+          closes_at: em.closes_at || null,
+          min_bet: em.min_bet ?? 1,
+          max_bet: em.max_bet ?? 0,
+          max_bets_per_user: em.max_bets_per_user ?? 0,
+          payout_mode: em.payout_mode || 'coins',
+          payout_case_id: em.payout_mode === 'case' ? (em.payout_case_id || null) : null,
+          payout_case_qty_per_unit: em.payout_case_qty_per_unit ?? 1,
+        };
         if (marketId) {
-          const { error } = await supabase.from('bet_markets').update({ title: em.title.trim(), position: mi }).eq('id', marketId);
+          const { error } = await supabase.from('bet_markets').update(marketPayload).eq('id', marketId);
           if (error) throw error;
         } else {
           const { data, error } = await supabase.from('bet_markets').insert({
-            event_id: eventId, owner_id: ownerId, title: em.title.trim(), position: mi,
+            event_id: eventId, owner_id: ownerId, ...marketPayload,
           }).select().single();
           if (error) throw error;
           marketId = (data as any).id;
