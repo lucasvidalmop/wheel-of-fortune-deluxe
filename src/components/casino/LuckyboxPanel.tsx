@@ -5,6 +5,7 @@ import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Uplo
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import SendCasesTab from './LuckyboxSendCases';
 import LuckyboxHistoryTab from './LuckyboxHistoryTab';
+import { dateTimeLocalToBetIso, betIsoToDateTimeLocal } from '@/lib/betsDateTime';
 
 // Free-typing weight/percentage input. Keeps a local draft so partial
 // values like "0,", "0,0", "0,001" don't get clobbered when parsed to 0.
@@ -89,6 +90,10 @@ interface LuckyCase {
   prize_pool?: any;
   position: number;
   is_active: boolean;
+  claim_enabled?: boolean;
+  claim_opens_at?: string | null;
+  claim_closes_at?: string | null;
+  claim_quantity?: number;
 }
 
 interface CasePoolItem { case_id: string; weight: number }
@@ -181,6 +186,10 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       prizes: [newPrize()],
       position: cases.length,
       is_active: true,
+      claim_enabled: false,
+      claim_opens_at: null,
+      claim_closes_at: null,
+      claim_quantity: 1,
     });
     setShowForm(true);
   };
@@ -204,6 +213,10 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       prizes: isCasePool ? [] : (editingCase.prizes || []),
       position: editingCase.position ?? 0,
       is_active: editingCase.is_active !== false,
+      claim_enabled: !!editingCase.claim_enabled,
+      claim_opens_at: editingCase.claim_opens_at || null,
+      claim_closes_at: editingCase.claim_closes_at || null,
+      claim_quantity: Math.max(1, Number(editingCase.claim_quantity) || 1),
     };
     if (isCasePool) {
       const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
@@ -1028,7 +1041,52 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 </div>
                 {editingCase.image_url && <img src={editingCase.image_url} alt="" className="mt-2 max-h-24 rounded-lg border border-white/10" />}
               </div>
+
+              <div className="md:col-span-2 rounded-xl border border-amber-400/30 bg-amber-400/5 p-3 space-y-3">
+                <label className="flex items-center gap-2 text-sm font-semibold cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!editingCase.claim_enabled}
+                    onChange={e => setEditingCase({ ...editingCase, claim_enabled: e.target.checked })}
+                  />
+                  🎁 Resgate gratuito agendado
+                </label>
+                <p className="text-[11px] opacity-70">Libera a caixa para resgate grátis dentro de uma janela de tempo. Cada usuário (e-mail ou ID) só pode resgatar 1 vez por caixa. O horário é em <b>Brasília (UTC-3)</b>.</p>
+                {editingCase.claim_enabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] uppercase opacity-60 mb-1">Abre em</label>
+                      <input
+                        type="datetime-local"
+                        value={betIsoToDateTimeLocal(editingCase.claim_opens_at)}
+                        onChange={e => setEditingCase({ ...editingCase, claim_opens_at: e.target.value ? dateTimeLocalToBetIso(e.target.value) : null })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] uppercase opacity-60 mb-1">Fecha em</label>
+                      <input
+                        type="datetime-local"
+                        value={betIsoToDateTimeLocal(editingCase.claim_closes_at)}
+                        onChange={e => setEditingCase({ ...editingCase, claim_closes_at: e.target.value ? dateTimeLocalToBetIso(e.target.value) : null })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] uppercase opacity-60 mb-1">Caixas por resgate</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={editingCase.claim_quantity ?? 1}
+                        onChange={e => setEditingCase({ ...editingCase, claim_quantity: Math.max(1, parseInt(e.target.value) || 1) })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+
 
             {editingCase.mode !== 'case_pool' && (
             <div className="space-y-2">

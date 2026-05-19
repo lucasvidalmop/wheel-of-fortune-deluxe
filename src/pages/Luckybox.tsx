@@ -92,6 +92,10 @@ interface LuckyCase {
   mode?: 'probability' | 'pool' | 'case_pool';
   prize_type?: 'pix' | 'tokens';
   prize_pool?: { quantity?: number; items?: CasePoolItem[] } | any;
+  claim_enabled?: boolean;
+  claim_opens_at?: string | null;
+  claim_closes_at?: string | null;
+  claim_quantity?: number;
 }
 interface DrawnCase {
   case_id: string;
@@ -157,6 +161,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
   const [drawnCases, setDrawnCases] = useState<DrawnCase[]>([]);
   const [signupRefCode, setSignupRefCode] = useState<string>('');
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [nowTs, setNowTs] = useState(Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNowTs(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
 
 
   const pc = cfg?.page_config || {};
@@ -420,6 +431,33 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       if (target + 1 < n) reel[target + 1] = prizes[bestIdx];
     }
     return { reel, targetIndex: target };
+  };
+
+  const handleClaimCase = async (c: LuckyCase) => {
+    if (!authedUser || !cfg) return;
+    setClaimingId(c.id);
+    try {
+      const { data, error } = await (supabase as any).rpc('claim_luckybox_case', {
+        p_owner_id: cfg.owner_id,
+        p_email: authedUser.email,
+        p_account_id: authedUser.account_id,
+        p_case_id: c.id,
+      });
+      if (error) throw error;
+      if (!data?.success) {
+        toast.error(data?.error || 'Não foi possível resgatar');
+        return;
+      }
+      const newGrants = (data.case_grants as Record<string, number>) || authedUser.case_grants || {};
+      const updated = { ...authedUser, case_grants: newGrants };
+      setAuthedUser(updated);
+      try { sessionStorage.setItem(`luckybox_user_${cfg.tag}`, JSON.stringify(updated)); } catch {}
+      toast.success(`🎁 ${data.quantity || 1} caixa(s) resgatada(s)!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao resgatar');
+    } finally {
+      setClaimingId(null);
+    }
   };
 
   const handleOpenCase = async (c: LuckyCase) => {
@@ -984,6 +1022,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               const grantQty = (authedUser.case_grants?.[c.id] || 0);
               const isFree = grantQty > 0;
               const cantAfford = !isFree && authedUser.tokens_balance < c.price_tokens;
+              const opensAt = c.claim_opens_at ? new Date(c.claim_opens_at).getTime() : null;
+              const closesAt = c.claim_closes_at ? new Date(c.claim_closes_at).getTime() : null;
+              const claimOpen = !!c.claim_enabled
+                && (opensAt === null || nowTs >= opensAt)
+                && (closesAt === null || nowTs <= closesAt);
+              const claimUpcoming = !!c.claim_enabled && opensAt !== null && nowTs < opensAt;
+              const showClaim = claimOpen && !isFree;
               return (
                 <div
                   key={c.id}
@@ -1049,12 +1094,28 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   >
                     <Eye size={13} /> Ver prêmios
                   </button>
+                  {showClaim && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleClaimCase(c); }}
+                      disabled={claimingId === c.id}
+                      className="relative z-10 mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition disabled:opacity-60"
+                      style={{ background: accent, color: '#000' }}
+                    >
+                      {claimingId === c.id ? 'Resgatando...' : `🎁 Resgatar grátis${(c.claim_quantity || 1) > 1 ? ` ×${c.claim_quantity}` : ''}`}
+                    </button>
+                  )}
+                  {claimUpcoming && !isFree && (
+                    <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
+                      🎁 Abre em {new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(opensAt!))}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </main>
+
 
       {/* Opening modal */}
       {openingCase && (
