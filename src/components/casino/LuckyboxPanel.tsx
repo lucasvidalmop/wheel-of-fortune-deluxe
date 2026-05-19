@@ -222,6 +222,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_closes_at: editingCase.claim_closes_at || null,
       claim_quantity: Math.max(1, Number(editingCase.claim_quantity) || 1),
       claim_recurrence: ['daily','weekly','monthly'].includes(String(editingCase.claim_recurrence)) ? editingCase.claim_recurrence : 'none',
+      claim_event_name: (editingCase.claim_event_name || '').toString().slice(0, 80),
     };
     if (isCasePool) {
       const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
