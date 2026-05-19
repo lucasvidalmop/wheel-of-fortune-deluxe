@@ -974,6 +974,64 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       <Plus size={11} /> Adicionar resultado
                     </button>
                   </div>
+
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground select-none py-1">
+                      ⚙️ Configurações avançadas do mercado
+                    </summary>
+                    <div className="mt-2 grid grid-cols-2 gap-2 p-2 rounded bg-background/60 border border-border">
+                      <div>
+                        <label className="text-[10px] font-medium block mb-1">Status</label>
+                        <select value={m.status}
+                          onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, status: e.target.value as any } : x))}
+                          className="w-full px-2 py-1.5 rounded bg-muted text-xs" disabled={m.status === 'resolved' || m.status === 'cancelled'}>
+                          <option value="open">Aberto</option>
+                          <option value="closed">Fechado</option>
+                          {m.status === 'resolved' && <option value="resolved">Resolvido</option>}
+                          {m.status === 'cancelled' && <option value="cancelled">Cancelado</option>}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-medium block mb-1">Encerra apostas em (vazio = usa do evento)</label>
+                        <input type="datetime-local" value={betIsoToDateTimeLocal(m.closes_at)}
+                          onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, closes_at: e.target.value ? dateTimeLocalToBetIso(e.target.value) : null } : x))}
+                          className="w-full px-2 py-1.5 rounded bg-muted text-xs" />
+                      </div>
+                      <NumberField label="Mín. aposta" value={m.min_bet}
+                        onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, min_bet: n ?? 1 } : x))} />
+                      <NumberField label="Máx. aposta (0=sem)" value={m.max_bet}
+                        onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, max_bet: n ?? 0 } : x))} />
+                      <NumberField label="Apostas/usuário (0=ilim.)" value={m.max_bets_per_user}
+                        onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, max_bets_per_user: n == null ? 0 : Math.max(0, Math.floor(n)) } : x))} />
+                      <div>
+                        <label className="text-[10px] font-medium block mb-1">Prêmio</label>
+                        <div className="flex gap-1">
+                          {(['coins', 'case'] as const).map(mode => (
+                            <button key={mode} type="button"
+                              onClick={() => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, payout_mode: mode } : x))}
+                              className={`flex-1 px-2 py-1.5 rounded text-xs ${m.payout_mode === mode ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                              {mode === 'coins' ? 'Coins×odd' : 'Caixa'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {m.payout_mode === 'case' && (
+                        <>
+                          <div className="col-span-2">
+                            <label className="text-[10px] font-medium block mb-1">Caixa Luckybox</label>
+                            <select value={m.payout_case_id || ''}
+                              onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, payout_case_id: e.target.value || null } : x))}
+                              className="w-full px-2 py-1.5 rounded bg-muted text-xs">
+                              <option value="">Selecione…</option>
+                              {cases.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                          </div>
+                          <NumberField label="Caixas por unidade" value={m.payout_case_qty_per_unit}
+                            onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, payout_case_qty_per_unit: n ?? 1 } : x))} />
+                        </>
+                      )}
+                    </div>
+                  </details>
                 </div>
               ))}
             </div>
