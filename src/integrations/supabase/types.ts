@@ -298,6 +298,7 @@ export type Database = {
           payout_coins: number
           payout_grant_id: string | null
           payout_mode: string
+          public_code: string
           resolved_at: string | null
           status: string
           user_email: string
@@ -316,6 +317,7 @@ export type Database = {
           payout_coins?: number
           payout_grant_id?: string | null
           payout_mode?: string
+          public_code: string
           resolved_at?: string | null
           status?: string
           user_email?: string
@@ -334,6 +336,7 @@ export type Database = {
           payout_coins?: number
           payout_grant_id?: string | null
           payout_mode?: string
+          public_code?: string
           resolved_at?: string | null
           status?: string
           user_email?: string
@@ -2111,6 +2114,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      gen_bet_wager_code: { Args: never; Returns: string }
       get_auth_notice: {
         Args: { p_owner_id: string }
         Returns: {

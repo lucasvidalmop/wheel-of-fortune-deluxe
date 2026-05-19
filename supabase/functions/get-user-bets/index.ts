@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
     const { data: wagers } = await supabase
       .from("bet_wagers")
-      .select("id, event_id, outcome_id, amount_coins, odd_snapshot, payout_mode, status, payout_coins, payout_grant_id, created_at, resolved_at")
+      .select("id, public_code, event_id, outcome_id, amount_coins, odd_snapshot, payout_mode, status, payout_coins, payout_grant_id, created_at, resolved_at")
       .eq("owner_id", cfg.owner_id)
       .eq("account_id", accountId)
       .ilike("user_email", email)

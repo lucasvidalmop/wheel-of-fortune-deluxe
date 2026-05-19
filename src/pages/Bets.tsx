@@ -19,7 +19,7 @@ interface EventRow {
 interface CategoryRow { id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
 interface WagerRow {
-  id: string; event_id: string; outcome_id: string; amount_coins: number; odd_snapshot: number;
+  id: string; public_code?: string; event_id: string; outcome_id: string; amount_coins: number; odd_snapshot: number;
   payout_mode: 'coins'|'case'; status: 'pending'|'won'|'lost'|'refunded'|'cancelled';
   payout_coins: number; payout_grant_id: string | null; created_at: string; resolved_at: string | null;
 }
@@ -580,6 +580,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     : Math.round(w.amount_coins * Number(w.odd_snapshot));
                 setShareWager({
                   userId: authed?.account_id || authed?.id,
+                  wagerCode: w.public_code,
                   eventTitle: ev.title,
                   outcomeLabel: outcome?.label || '—',
                   odd: Number(w.odd_snapshot),
@@ -600,6 +601,11 @@ const Bets = ({ tag }: BetsPageProps) => {
                       {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
                       {w.payout_mode === 'case' ? ' · Prêmio: caixa' : ` · Retorno: ${Math.round(w.amount_coins * Number(w.odd_snapshot))} ${coinName}`}
                     </div>
+                    {w.public_code && (
+                      <div className="text-[10px] mt-1 font-mono tracking-wider" style={{ color: accent }}>
+                        ID: {w.public_code}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
