@@ -681,7 +681,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   type="number" inputMode="numeric" min={slip.event.min_bet} step={1}
                   value={amount} onChange={e => setAmount(e.target.value)}
                   className="w-full bg-transparent outline-none font-black text-2xl tabular-nums leading-none p-0"
-                  style={{ color: accent, textShadow: `0 0 12px ${accent}55` }}
+                  style={{ background: 'transparent', color: accent, textShadow: `0 0 12px ${accent}55` }}
                 />
                 <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{coinName}</div>
               </div>
