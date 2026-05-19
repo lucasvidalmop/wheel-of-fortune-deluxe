@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
       categories: catz || [],
       cases,
       wagerCounts,
+      outcomeStats,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("get-bets-page error", err);
