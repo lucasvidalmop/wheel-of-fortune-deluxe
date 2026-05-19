@@ -58,6 +58,7 @@ const Bets = ({ tag }: BetsPageProps) => {
         if (error) throw error;
         setPage(data);
         if (data?.wagerCounts) setWagerCounts(data.wagerCounts);
+        if (data?.outcomeStats) setOutcomeStats(data.outcomeStats);
       } catch (e: any) {
         toast.error('Erro ao carregar página');
       } finally {
