@@ -35,6 +35,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
   const [outcomes, setOutcomes] = useState<BetOutcome[]>([]);
+  const [markets, setMarkets] = useState<BetMarket[]>([]);
   const [categories, setCategories] = useState<BetCategory[]>([]);
   const [cases, setCases] = useState<LbCase[]>([]);
   const [wagers, setWagers] = useState<any[]>([]);
@@ -43,7 +44,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   // event modal state
   const [editingEvent, setEditingEvent] = useState<Partial<BetEvent> | null>(null);
-  const [editingOutcomes, setEditingOutcomes] = useState<Array<{ id?: string; label: string; odd: number }>>([]);
+  const [editingMarkets, setEditingMarkets] = useState<EditingMarket[]>([]);
   const [resolvingEvent, setResolvingEvent] = useState<BetEvent | null>(null);
 
   const loadAll = async () => {
