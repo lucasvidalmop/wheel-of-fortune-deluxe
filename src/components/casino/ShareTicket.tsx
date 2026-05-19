@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export interface ShareTicketData {
   userName?: string;
   userId?: string;
+  wagerCode?: string;
   eventTitle: string;
   outcomeLabel: string;
   odd: number;
