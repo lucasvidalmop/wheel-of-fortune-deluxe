@@ -51,14 +51,22 @@ Deno.serve(async (req) => {
 
     const eventIds = (events || []).map((e: any) => e.id);
     let outcomes: any[] = [];
+    let markets: any[] = [];
     if (eventIds.length) {
       const { data: outs, error: outErr } = await supabase
         .from("bet_outcomes")
-        .select("id, event_id, label, odd, position, is_winner")
+        .select("id, event_id, market_id, label, odd, position, is_winner")
         .in("event_id", eventIds)
         .order("position", { ascending: true });
       if (outErr) throw outErr;
       outcomes = outs || [];
+
+      const { data: mks } = await supabase
+        .from("bet_markets")
+        .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
+        .in("event_id", eventIds)
+        .order("position", { ascending: true });
+      markets = mks || [];
     }
 
     const { data: catz } = await supabase
