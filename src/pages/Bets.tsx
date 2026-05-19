@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2 } from 'lucide-react';
+import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
@@ -623,56 +623,103 @@ const Bets = ({ tag }: BetsPageProps) => {
       {slip && (
         <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
           onClick={() => setSlip(null)}>
-          <div className="w-full max-w-md rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${accent}55` }} onClick={e => e.stopPropagation()}>
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div className="min-w-0">
-                <div className="text-xs uppercase" style={{ color: muted }}>Cupom de aposta</div>
-                <div className="font-bold truncate">{slip.event.title}</div>
-                <div className="text-sm mt-1">
-                  <span className="px-2 py-0.5 rounded" style={{ background: `${accent}33` }}>
-                    {slip.outcome.label} · {Number(slip.outcome.odd).toFixed(2)}
-                  </span>
-                </div>
+          <div
+            className="w-full max-w-sm rounded-2xl p-5 relative overflow-hidden"
+            style={{
+              background: `linear-gradient(160deg, ${bg} 0%, ${cardBg} 100%)`,
+              border: `2px solid ${accent}55`,
+              boxShadow: `0 0 60px ${accent}26`,
+              color: text,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div aria-hidden className="absolute -top-24 -right-24 w-44 h-44 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${accent}18, transparent 70%)` }} />
+            <div className="relative flex items-center justify-center mb-5 pt-1">
+              <div className="flex w-full items-center justify-center min-w-0 px-9">
+                {cfg.logoUrl ? (
+                  <img src={cfg.logoUrl} alt="" className="h-20 w-full max-w-[220px] object-contain" />
+                ) : (
+                  <span className="font-black text-base truncate" style={{ color: accent }}>{cfg.title || 'Apostas'}</span>
+                )}
               </div>
-              <button onClick={() => setSlip(null)} className="p-1.5 rounded" style={{ background: '#00000044' }}>
-                <X size={16} />
+              <div className="absolute right-0 top-0 text-[10px] font-bold tracking-[0.2em] px-2 py-1 rounded-full" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
+                BILHETE
+              </div>
+              <button onClick={() => setSlip(null)} className="absolute left-0 top-0 p-1.5 rounded-full" style={{ background: '#00000044', color: text }}>
+                <X size={15} />
               </button>
             </div>
-            <label className="text-sm" style={{ color: muted }}>Valor ({coinName})</label>
-            <input
-              type="number" inputMode="numeric" min={slip.event.min_bet} step={1}
-              value={amount} onChange={e => setAmount(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg outline-none text-lg font-bold tabular-nums mt-1"
-              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
-            />
-            <div className="flex gap-2 mt-2">
+
+            <h2 className="relative text-center text-2xl font-black leading-tight mb-4" style={{ color: accent, textShadow: `0 0 16px ${accent}55` }}>
+              Cupom de aposta
+            </h2>
+
+            <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[11px] font-semibold" style={{ color: text }}>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Calendar size={13} />
+                <span className="truncate tabular-nums">{formatBetDateTime(new Date().toISOString())}</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 pl-2" style={{ borderLeft: `1px solid ${text}22` }}>
+                <Ticket size={13} />
+                <span className="tracking-wider">PRÉVIA</span>
+              </div>
+            </div>
+
+            <div className="relative rounded-xl p-3 mb-3" style={{ background: cardBg, border: `1px solid ${text}11` }}>
+              <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: muted }}>Evento</div>
+              <div className="font-bold text-sm leading-snug mb-2">{slip.event.title}</div>
+              <div className="inline-block px-2.5 py-1 rounded-md font-bold text-xs" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
+                {slip.outcome.label}
+              </div>
+            </div>
+
+            <div className="relative grid grid-cols-2 gap-2 mb-3">
+              <div className="relative rounded-xl px-3 py-3 overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}33`, boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66` }}>
+                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: accent }}>Valor</label>
+                <input
+                  type="number" inputMode="numeric" min={slip.event.min_bet} step={1}
+                  value={amount} onChange={e => setAmount(e.target.value)}
+                  className="w-full bg-transparent outline-none font-black text-2xl tabular-nums leading-none p-0"
+                  style={{ color: accent, textShadow: `0 0 12px ${accent}55` }}
+                />
+                <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{coinName}</div>
+              </div>
+              <div className="relative rounded-xl px-3 py-3" style={{ background: cardBg, border: `1px solid ${text}15` }}>
+                <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>Cota</div>
+                <div className="font-black text-2xl tabular-nums leading-none" style={{ color: text }}>{Number(slip.outcome.odd).toFixed(2).replace('.', ',')}</div>
+                <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>multiplicador</div>
+              </div>
+            </div>
+
+            <div className="relative grid grid-cols-5 gap-2 mb-3">
               {[10, 50, 100, 500].map(v => (
                 <button key={v} type="button" onClick={() => setAmount(String(v))}
-                  className="flex-1 py-1.5 rounded text-xs font-medium" style={{ background: '#00000044', color: text }}>
+                  className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: '#00000044', color: text, border: `1px solid ${text}10` }}>
                   {v}
                 </button>
               ))}
               <button type="button" onClick={() => setAmount(String(authed?.tokens_balance ?? 0))}
-                className="flex-1 py-1.5 rounded text-xs font-medium" style={{ background: '#00000044', color: text }}>
+                className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
                 Tudo
               </button>
             </div>
 
-            <div className="mt-4 p-3 rounded-lg space-y-1 text-sm" style={{ background: '#00000033' }}>
-              <div className="flex justify-between"><span style={{ color: muted }}>Saldo:</span><span className="tabular-nums">{authed?.tokens_balance ?? 0}</span></div>
-              <div className="flex justify-between"><span style={{ color: muted }}>Aposta:</span><span className="tabular-nums">{Math.floor(Number(amount) || 0)}</span></div>
-              <div className="flex justify-between font-bold">
-                <span>Retorno potencial:</span>
-                <span className="tabular-nums" style={{ color: accent }}>
+            <div className="relative rounded-xl px-4 py-3 mb-4 space-y-2" style={{ background: cardBg, border: `1px solid ${text}11` }}>
+              <div className="flex items-center justify-between text-sm"><span style={{ color: muted }}>Saldo</span><span className="tabular-nums font-semibold">{authed?.tokens_balance ?? 0} {coinName}</span></div>
+              <div className="flex items-center justify-between text-sm"><span style={{ color: muted }}>Aposta</span><span className="tabular-nums font-semibold">{Math.floor(Number(amount) || 0)} {coinName}</span></div>
+              <div className="flex items-center justify-between gap-3 pt-2 border-t" style={{ borderColor: `${text}11` }}>
+                <span className="text-[11px] uppercase tracking-wider font-bold" style={{ color: muted }}>Retorno potencial</span>
+                <span className="font-black text-lg tabular-nums text-right" style={{ color: accent }}>
                   {slip.event.payout_mode === 'case'
                     ? `${Math.max(1, Math.floor((Number(amount) || 0) * slip.event.payout_case_qty_per_unit))}× caixa`
-                    : `${Math.round((Number(amount) || 0) * Number(slip.outcome.odd))} ${coinName}`}
+                    : `${Math.round((Number(amount) || 0) * Number(slip.outcome.odd)).toLocaleString('pt-BR')} ${coinName}`}
                 </span>
               </div>
             </div>
 
             <button onClick={placeBet} disabled={placing}
-              className="mt-4 w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              className="relative w-full py-3 rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
               style={{ background: accent, color: '#000' }}>
               {placing ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
               Confirmar aposta
