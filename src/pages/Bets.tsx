@@ -8,7 +8,14 @@ import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTick
 
 interface BetsPageProps { tag: string }
 
-interface OutcomeRow { id: string; event_id: string; label: string; odd: number; position: number; is_winner: boolean }
+interface OutcomeRow { id: string; event_id: string; market_id: string | null; label: string; odd: number; position: number; is_winner: boolean }
+interface MarketRow {
+  id: string; event_id: string; title: string; position: number;
+  status: 'open'|'closed'|'resolved'|'cancelled'; closes_at: string | null;
+  winning_outcome_id: string | null; min_bet: number; max_bet: number;
+  max_bets_per_user: number; payout_mode: 'coins'|'case';
+  payout_case_id: string | null; payout_case_qty_per_unit: number;
+}
 interface EventRow {
   id: string; title: string; subtitle: string; category: string; category_id: string | null; image_url: string;
   starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
@@ -145,9 +152,23 @@ const Bets = ({ tag }: BetsPageProps) => {
   const coinIcon = page?.coinIconUrl || '';
 
   const events: EventRow[] = page?.events || [];
+  const marketsByEvent = useMemo(() => {
+    const m: Record<string, MarketRow[]> = {};
+    (page?.markets || []).forEach((mk: MarketRow) => { (m[mk.event_id] ||= []).push(mk); });
+    Object.values(m).forEach(arr => arr.sort((a, b) => a.position - b.position));
+    return m;
+  }, [page]);
   const outcomesByEvent = useMemo(() => {
     const m: Record<string, OutcomeRow[]> = {};
     (page?.outcomes || []).forEach((o: OutcomeRow) => { (m[o.event_id] ||= []).push(o); });
+    return m;
+  }, [page]);
+  const outcomesByMarket = useMemo(() => {
+    const m: Record<string, OutcomeRow[]> = {};
+    (page?.outcomes || []).forEach((o: OutcomeRow) => {
+      if (o.market_id) (m[o.market_id] ||= []).push(o);
+    });
+    Object.values(m).forEach(arr => arr.sort((a, b) => a.position - b.position));
     return m;
   }, [page]);
   const casesById = useMemo(() => {
@@ -191,10 +212,14 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   const openSlip = (event: EventRow, outcome: OutcomeRow) => {
     if (!authed) { toast.error('Faça login para apostar'); return; }
-    if (event.status !== 'open') { toast.error('Evento fechado'); return; }
-    if (isBetDateTimeExpired(event.closes_at)) { toast.error('Apostas encerradas'); return; }
+    const market = outcome.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
+    const status = market?.status ?? event.status;
+    const closesAt = market?.closes_at ?? event.closes_at;
+    const minBet = market?.min_bet ?? event.min_bet;
+    if (status !== 'open') { toast.error('Mercado fechado'); return; }
+    if (isBetDateTimeExpired(closesAt)) { toast.error('Apostas encerradas'); return; }
     setSlip({ event, outcome });
-    setAmount(String(event.min_bet || 10));
+    setAmount(String(minBet || 10));
   };
 
   const placeBet = async () => {
@@ -477,33 +502,80 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <span className="text-xs">Prêmio: caixa <b>{c.name}</b> ({ev.payout_case_qty_per_unit}× por unidade apostada)</span>
                   </div>
                 )}
-                <div className={`relative grid gap-2 ${outs.length === 2 ? 'grid-cols-2' : outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
-                  {outs.map(o => {
-                    const isWinner = ev.status === 'resolved' && o.is_winner;
-                    const isLoser = ev.status === 'resolved' && !o.is_winner;
-                    const stat = outcomeStats[o.id] || { count: 0, total: 0 };
+                {(() => {
+                  const evMarkets = marketsByEvent[ev.id] || [];
+                  // Group outcomes: by market if available, else fallback to single "main" group
+                  const groups: Array<{ market: MarketRow | null; outs: OutcomeRow[] }> = [];
+                  if (evMarkets.length) {
+                    evMarkets.forEach(mk => {
+                      const mOuts = outcomesByMarket[mk.id] || [];
+                      if (mOuts.length) groups.push({ market: mk, outs: mOuts });
+                    });
+                    const orphan = outs.filter(o => !o.market_id);
+                    if (orphan.length) groups.push({ market: null, outs: orphan });
+                  } else {
+                    if (outs.length) groups.push({ market: null, outs });
+                  }
+                  return groups.map((g, gi) => {
+                    const mk = g.market;
+                    const mkClosed = mk
+                      ? (mk.status !== 'open' || isBetDateTimeExpired(mk.closes_at))
+                      : closed;
+                    const mkCase = mk?.payout_case_id ? casesById[mk.payout_case_id] : null;
+                    const showHeader = !!mk && (evMarkets.length > 1 || mk.title !== 'Principal');
                     return (
-                      <button key={o.id}
-                        onClick={() => openSlip(ev, o)}
-                        disabled={!!closed}
-                        className="relative px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
-                        style={{
-                          background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
-                          border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
-                          boxShadow: isWinner ? `0 0 22px ${ticketAccent}33` : `inset 0 -1px 0 ${ticketAccent}44`,
-                          color: isLoser ? muted : text,
-                        }}>
-                        <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
-                        <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>{o.label}</div>
-                        <div className="text-2xl font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
-                        <div className="mt-2 pt-2 border-t flex items-center justify-between gap-1 text-[10px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
-                          <span className="flex items-center gap-1"><Ticket size={10} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
-                          <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
+                      <div key={mk?.id || `g${gi}`} className={gi > 0 ? 'mt-3' : ''}>
+                        {showHeader && (
+                          <div className="relative flex items-center justify-between gap-2 mb-2 px-1">
+                            <h3 className="text-[11px] uppercase tracking-[0.18em] font-black flex items-center gap-2" style={{ color: ticketAccent }}>
+                              <span className="inline-block w-1 h-3 rounded-sm" style={{ background: ticketAccent }} />
+                              {mk!.title}
+                            </h3>
+                            {mk!.status !== 'open' && (
+                              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: '#ef444433', color: '#f87171' }}>
+                                {mk!.status === 'resolved' ? 'Resolvido' : mk!.status === 'closed' ? 'Fechado' : 'Cancelado'}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {mk?.payout_mode === 'case' && mkCase && (
+                          <div className="relative flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
+                            {mkCase.image_url && <img src={mkCase.image_url} className="w-8 h-8 rounded" alt="" />}
+                            <span className="text-xs">Prêmio: caixa <b>{mkCase.name}</b> ({mk.payout_case_qty_per_unit}× por unidade apostada)</span>
+                          </div>
+                        )}
+                        <div className={`relative grid gap-2 ${g.outs.length === 2 ? 'grid-cols-2' : g.outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                          {g.outs.map(o => {
+                            const resolvedFlag = mk ? mk.status === 'resolved' : ev.status === 'resolved';
+                            const isWinner = resolvedFlag && o.is_winner;
+                            const isLoser = resolvedFlag && !o.is_winner;
+                            const stat = outcomeStats[o.id] || { count: 0, total: 0 };
+                            return (
+                              <button key={o.id}
+                                onClick={() => openSlip(ev, o)}
+                                disabled={mkClosed}
+                                className="relative px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
+                                style={{
+                                  background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
+                                  border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
+                                  boxShadow: isWinner ? `0 0 22px ${ticketAccent}33` : `inset 0 -1px 0 ${ticketAccent}44`,
+                                  color: isLoser ? muted : text,
+                                }}>
+                                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
+                                <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>{o.label}</div>
+                                <div className="text-2xl font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
+                                <div className="mt-2 pt-2 border-t flex items-center justify-between gap-1 text-[10px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
+                                  <span className="flex items-center gap-1"><Ticket size={10} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
+                                  <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
-                      </button>
+                      </div>
                     );
-                  })}
-                </div>
+                  });
+                })()}
                 {ev.status === 'open' && timeExpired && (
                   <div className="relative mt-3 px-3 py-2 rounded-lg text-xs font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</div>
                 )}
