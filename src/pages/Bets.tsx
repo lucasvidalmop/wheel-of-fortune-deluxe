@@ -65,19 +65,9 @@ const Bets = ({ tag }: BetsPageProps) => {
     })();
   }, [tag]);
 
-  // poll live wager counts every 30 min
-  useEffect(() => {
-    let active = true;
-    const tick = async () => {
-      try {
-        const { data } = await supabase.functions.invoke('get-bets-counts', { body: { tag } });
-        if (active && data?.wagerCounts) setWagerCounts(data.wagerCounts);
-      } catch {}
-    };
-    tick(); // initial load
-    const id = setInterval(tick, 30 * 60 * 1000);
-    return () => { active = false; clearInterval(id); };
-  }, [tag]);
+  // wager counts são carregados apenas no load inicial (via get-bets-page).
+  // Usuário precisa dar F5 para ver contagem atualizada — economia máxima de recursos.
+
 
   // restore persisted session
   useEffect(() => {
