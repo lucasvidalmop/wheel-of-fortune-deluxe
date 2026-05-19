@@ -23,7 +23,13 @@ interface BetEvent {
   is_hot?: boolean;
 }
 interface BetOutcome { id: string; event_id: string; market_id: string | null; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
-interface BetMarket { id: string; event_id: string; owner_id: string; title: string; position: number; status: 'open'|'closed'|'resolved'|'cancelled'; closes_at: string | null; winning_outcome_id: string | null; resolved_at: string | null }
+interface BetMarket {
+  id: string; event_id: string; owner_id: string; title: string; position: number;
+  status: 'open'|'closed'|'resolved'|'cancelled';
+  closes_at: string | null; winning_outcome_id: string | null; resolved_at: string | null;
+  min_bet: number; max_bet: number; max_bets_per_user: number;
+  payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
+}
 interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface LbCase { id: string; name: string; image_url: string }
 
