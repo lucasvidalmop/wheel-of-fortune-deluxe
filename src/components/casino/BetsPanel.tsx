@@ -22,11 +22,12 @@ interface BetEvent {
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
   is_hot?: boolean;
 }
-interface BetOutcome { id: string; event_id: string; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
+interface BetOutcome { id: string; event_id: string; market_id: string | null; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
+interface BetMarket { id: string; event_id: string; owner_id: string; title: string; position: number; status: 'open'|'closed'|'resolved'|'cancelled'; closes_at: string | null; winning_outcome_id: string | null; resolved_at: string | null }
 interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface LbCase { id: string; name: string; image_url: string }
 
-const emptyOutcome = () => ({ id: '', label: '', odd: 1.5, position: 0 });
+type EditingMarket = { id?: string; title: string; position: number; outcomes: Array<{ id?: string; label: string; odd: number }> };
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [tab, setTab] = useState<'config'|'events'|'categories'|'wagers'|'analytics'>('config');
@@ -34,6 +35,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
   const [outcomes, setOutcomes] = useState<BetOutcome[]>([]);
+  const [markets, setMarkets] = useState<BetMarket[]>([]);
   const [categories, setCategories] = useState<BetCategory[]>([]);
   const [cases, setCases] = useState<LbCase[]>([]);
   const [wagers, setWagers] = useState<any[]>([]);
@@ -42,7 +44,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   // event modal state
   const [editingEvent, setEditingEvent] = useState<Partial<BetEvent> | null>(null);
-  const [editingOutcomes, setEditingOutcomes] = useState<Array<{ id?: string; label: string; odd: number }>>([]);
+  const [editingMarkets, setEditingMarkets] = useState<EditingMarket[]>([]);
   const [resolvingEvent, setResolvingEvent] = useState<BetEvent | null>(null);
 
   const loadAll = async () => {
@@ -55,13 +57,15 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       setConfig(cfg as any);
       setCases((cs || []) as LbCase[]);
       if (cfg?.id) {
-        const [{ data: evs }, { data: outs }, { data: catz }] = await Promise.all([
+        const [{ data: evs }, { data: outs }, { data: mks }, { data: catz }] = await Promise.all([
           supabase.from('bet_events').select('*').eq('bets_config_id', cfg.id).order('created_at', { ascending: false }),
           supabase.from('bet_outcomes').select('*').eq('owner_id', ownerId).order('position'),
+          supabase.from('bet_markets').select('*').eq('owner_id', ownerId).order('position'),
           supabase.from('bet_categories').select('*').eq('bets_config_id', cfg.id).order('position'),
         ]);
         setEvents((evs || []) as BetEvent[]);
         setOutcomes((outs || []) as BetOutcome[]);
+        setMarkets((mks || []) as BetMarket[]);
         setCategories((catz || []) as BetCategory[]);
       }
     } catch (e: any) {
@@ -120,25 +124,45 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
       min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
     });
-    setEditingOutcomes([{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }]);
+    setEditingMarkets([{
+      title: 'Principal', position: 0,
+      outcomes: [{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }],
+    }]);
   };
 
   const openEditEvent = (ev: BetEvent) => {
     setEditingEvent({ ...ev });
+    const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
     const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
-    setEditingOutcomes(evOuts.map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })));
+    if (evMarkets.length === 0) {
+      // legacy event without markets: treat all outcomes as Principal
+      setEditingMarkets([{
+        title: 'Principal', position: 0,
+        outcomes: evOuts.map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
+      }]);
+    } else {
+      setEditingMarkets(evMarkets.map((m, idx) => ({
+        id: m.id, title: m.title, position: idx,
+        outcomes: evOuts.filter(o => o.market_id === m.id).map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
+      })));
+    }
   };
 
   const saveEvent = async () => {
     if (!config || !editingEvent) return;
     if (!editingEvent.title?.trim()) { toast.error('Título obrigatório'); return; }
-    if (editingOutcomes.length < 2) { toast.error('Mínimo 2 resultados'); return; }
-    if (editingOutcomes.some(o => !o.label.trim() || !(o.odd > 1))) { toast.error('Cada resultado precisa de label e odd > 1'); return; }
+    if (editingMarkets.length === 0) { toast.error('Adicione ao menos 1 mercado'); return; }
+    for (const m of editingMarkets) {
+      if (!m.title.trim()) { toast.error('Cada mercado precisa de um título'); return; }
+      if (m.outcomes.length < 2) { toast.error(`Mercado "${m.title}" precisa de no mínimo 2 resultados`); return; }
+      if (m.outcomes.some(o => !o.label.trim() || !(o.odd > 1))) {
+        toast.error(`Mercado "${m.title}": cada resultado precisa de label e odd > 1`); return;
+      }
+    }
     setSaving(true);
     try {
       let eventId = (editingEvent as BetEvent).id;
       const catObj = editingEvent.category_id ? categories.find(c => c.id === editingEvent.category_id) : null;
-      // Auto-schedule: if starts_at is in the future, force status='scheduled'
       const startsAtIso = editingEvent.starts_at || null;
       let status = editingEvent.status || 'open';
       if (startsAtIso && new Date(startsAtIso).getTime() > Date.now() && status === 'open') {
@@ -172,24 +196,54 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         if (error) throw error;
         eventId = (data as any).id;
       }
-      // Sync outcomes: delete missing, upsert provided
-      const existing = outcomes.filter(o => o.event_id === eventId);
-      const keepIds = editingOutcomes.filter(o => o.id).map(o => o.id);
-      const toDelete = existing.filter(o => !keepIds.includes(o.id));
-      if (toDelete.length) {
-        await supabase.from('bet_outcomes').delete().in('id', toDelete.map(o => o.id));
+
+      // Sync markets
+      const existingMarkets = markets.filter(m => m.event_id === eventId);
+      const keepMarketIds = editingMarkets.filter(m => m.id).map(m => m.id);
+      const marketsToDelete = existingMarkets.filter(m => !keepMarketIds.includes(m.id));
+      if (marketsToDelete.length) {
+        // outcomes are cascade-deleted via FK? Safer: delete outcomes first
+        await supabase.from('bet_outcomes').delete().in('market_id', marketsToDelete.map(m => m.id));
+        await supabase.from('bet_markets').delete().in('id', marketsToDelete.map(m => m.id));
       }
-      for (let i = 0; i < editingOutcomes.length; i++) {
-        const o = editingOutcomes[i];
-        if (o.id) {
-          await supabase.from('bet_outcomes').update({ label: o.label, odd: o.odd, position: i }).eq('id', o.id);
+
+      for (let mi = 0; mi < editingMarkets.length; mi++) {
+        const em = editingMarkets[mi];
+        let marketId = em.id;
+        if (marketId) {
+          const { error } = await supabase.from('bet_markets').update({ title: em.title.trim(), position: mi }).eq('id', marketId);
+          if (error) throw error;
         } else {
-          await supabase.from('bet_outcomes').insert({ event_id: eventId, owner_id: ownerId, label: o.label, odd: o.odd, position: i });
+          const { data, error } = await supabase.from('bet_markets').insert({
+            event_id: eventId, owner_id: ownerId, title: em.title.trim(), position: mi,
+          }).select().single();
+          if (error) throw error;
+          marketId = (data as any).id;
+        }
+
+        // Sync outcomes for this market
+        const existingOuts = outcomes.filter(o => o.market_id === marketId);
+        const keepOutIds = em.outcomes.filter(o => o.id).map(o => o.id);
+        const outsToDelete = existingOuts.filter(o => !keepOutIds.includes(o.id));
+        if (outsToDelete.length) {
+          await supabase.from('bet_outcomes').delete().in('id', outsToDelete.map(o => o.id));
+        }
+        for (let oi = 0; oi < em.outcomes.length; oi++) {
+          const o = em.outcomes[oi];
+          if (o.id) {
+            await supabase.from('bet_outcomes').update({ label: o.label, odd: o.odd, position: oi, market_id: marketId }).eq('id', o.id);
+          } else {
+            await supabase.from('bet_outcomes').insert({
+              event_id: eventId, market_id: marketId, owner_id: ownerId,
+              label: o.label, odd: o.odd, position: oi,
+            });
+          }
         }
       }
+
       toast.success('Evento salvo!');
       setEditingEvent(null);
-      setEditingOutcomes([]);
+      setEditingMarkets([]);
       loadAll();
     } catch (e: any) {
       toast.error(e.message || 'Erro ao salvar');
@@ -234,6 +288,41 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       toast.error(`Falha: ${(data as any)?.error || 'erro'}`);
     }
   };
+
+  const resolveMarket = async (marketId: string, winningOutcomeId: string) => {
+    setSaving(true);
+    const { data, error } = await supabase.rpc('resolve_bet_market', {
+      p_market_id: marketId, p_winning_outcome_id: winningOutcomeId,
+    });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    if ((data as any)?.success) {
+      toast.success(`Mercado resolvido: ${(data as any).processed} apostas processadas`);
+      loadAll();
+    } else {
+      toast.error(`Falha: ${(data as any)?.error || 'erro'}`);
+    }
+  };
+
+  const cancelMarket = async (marketId: string, title: string) => {
+    const ok = await confirmDialog({
+      title: 'Cancelar mercado?',
+      description: `O mercado "${title}" será cancelado e as apostas pendentes devolvidas.`,
+      confirmText: 'Cancelar mercado', cancelText: 'Voltar', destructive: true,
+    });
+    if (!ok) return;
+    setSaving(true);
+    const { data, error } = await supabase.rpc('cancel_bet_market', { p_market_id: marketId });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    if ((data as any)?.success) {
+      toast.success(`Cancelado. ${(data as any).refunded} apostas devolvidas`);
+      loadAll();
+    } else {
+      toast.error(`Falha: ${(data as any)?.error || 'erro'}`);
+    }
+  };
+
 
   const cancelEvent = async (ev: BetEvent) => {
     const ok = await confirmDialog({
@@ -571,14 +660,48 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     <button onClick={() => deleteEvent(ev)} title="Excluir" className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {evOuts.map(o => (
-                    <div key={o.id} className={`px-3 py-2 rounded-lg text-sm ${o.is_winner ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
-                      <div className="text-xs text-muted-foreground">{o.label}</div>
-                      <div className="font-bold tabular-nums">{Number(o.odd).toFixed(2)}</div>
+                {(() => {
+                  const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
+                  if (evMarkets.length === 0) {
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {evOuts.map(o => (
+                          <div key={o.id} className={`px-3 py-2 rounded-lg text-sm ${o.is_winner ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                            <div className="text-xs text-muted-foreground">{o.label}</div>
+                            <div className="font-bold tabular-nums">{Number(o.odd).toFixed(2)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-2">
+                      {evMarkets.map(m => {
+                        const mOuts = evOuts.filter(o => o.market_id === m.id);
+                        return (
+                          <div key={m.id} className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-semibold text-foreground/80">{m.title}</span>
+                              {m.status === 'resolved' && <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-600">Resolvido</span>}
+                              {m.status === 'cancelled' && <span className="px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-600">Cancelado</span>}
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              {mOuts.map(o => {
+                                const isWin = m.winning_outcome_id === o.id;
+                                return (
+                                  <div key={o.id} className={`px-3 py-2 rounded-lg text-sm ${isWin ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                                    <div className="text-xs text-muted-foreground">{isWin ? '🏆 ' : ''}{o.label}</div>
+                                    <div className="font-bold tabular-nums">{Number(o.odd).toFixed(2)}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -764,21 +887,59 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Resultados (mín. 2)</label>
-                <button onClick={() => setEditingOutcomes(o => [...o, { label: '', odd: 2 }])}
-                  className="px-2 py-1 text-xs rounded bg-muted hover:bg-muted/80 flex items-center gap-1"><Plus size={12} /> Adicionar</button>
+                <label className="text-sm font-medium">Mercados de aposta</label>
+                <button onClick={() => setEditingMarkets(arr => [...arr, {
+                  title: `Mercado ${arr.length + 1}`, position: arr.length,
+                  outcomes: [{ label: 'Sim', odd: 1.9 }, { label: 'Não', odd: 1.9 }],
+                }])}
+                  className="px-2 py-1 text-xs rounded bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1">
+                  <Plus size={12} /> Adicionar mercado
+                </button>
               </div>
-              {editingOutcomes.map((o, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <input value={o.label} placeholder="Resultado (ex.: Casa)"
-                    onChange={e => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
-                    className="flex-1 px-3 py-1.5 rounded bg-muted text-sm" />
-                  <NumberField value={o.odd}
-                    onChange={n => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, odd: n ?? 0 } : x))}
-                    className="w-24 px-3 py-1.5 rounded bg-muted text-sm tabular-nums" />
-                  <button onClick={() => setEditingOutcomes(arr => arr.filter((_, j) => j !== i))} className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Crie sub-apostas dentro do mesmo evento (ex.: <em>Resultado Final</em>, <em>Total de Gols</em>, <em>Ambas Marcam</em>). Cada mercado tem seus próprios resultados, odds e é resolvido separadamente.
+              </p>
+              {editingMarkets.map((m, mi) => (
+                <div key={mi} className="p-3 rounded-lg bg-muted/40 border border-border space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input value={m.title} placeholder="Título do mercado"
+                      onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, title: e.target.value } : x))}
+                      className="flex-1 px-3 py-1.5 rounded bg-background border border-border text-sm font-medium" />
+                    <button onClick={() => setEditingMarkets(arr => arr.filter((_, j) => j !== mi))}
+                      disabled={editingMarkets.length <= 1}
+                      title={editingMarkets.length <= 1 ? 'Mantenha ao menos 1 mercado' : 'Excluir mercado'}
+                      className="p-1.5 rounded hover:bg-muted text-red-500 disabled:opacity-30 disabled:cursor-not-allowed">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div className="space-y-1.5 pl-2 border-l-2 border-primary/30">
+                    {m.outcomes.map((o, oi) => (
+                      <div key={oi} className="flex gap-2 items-center">
+                        <input value={o.label} placeholder="Resultado (ex.: Sim)"
+                          onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                            ? { ...x, outcomes: x.outcomes.map((y, k) => k === oi ? { ...y, label: e.target.value } : y) }
+                            : x))}
+                          className="flex-1 px-3 py-1.5 rounded bg-background border border-border text-sm" />
+                        <NumberField value={o.odd}
+                          onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                            ? { ...x, outcomes: x.outcomes.map((y, k) => k === oi ? { ...y, odd: n ?? 0 } : y) }
+                            : x))}
+                          className="w-24 px-3 py-1.5 rounded bg-background border border-border text-sm tabular-nums" />
+                        <button onClick={() => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                          ? { ...x, outcomes: x.outcomes.filter((_, k) => k !== oi) }
+                          : x))}
+                          className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
+                      </div>
+                    ))}
+                    <button onClick={() => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                      ? { ...x, outcomes: [...x.outcomes, { label: '', odd: 2 }] }
+                      : x))}
+                      className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
+                      <Plus size={11} /> Adicionar resultado
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -795,24 +956,72 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       )}
 
       {/* Resolve modal */}
-      {resolvingEvent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setResolvingEvent(null)}>
-          <div className="bg-card border border-border rounded-2xl max-w-md w-full p-5 space-y-3" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg">Resolver "{resolvingEvent.title}"</h3>
-            <p className="text-sm text-muted-foreground">Selecione o resultado vencedor. Esta ação é definitiva e processa pagamentos.</p>
-            <div className="space-y-2">
-              {outcomes.filter(o => o.event_id === resolvingEvent.id).sort((a, b) => a.position - b.position).map(o => (
-                <button key={o.id} onClick={() => resolveEvent(o.id)} disabled={saving}
-                  className="w-full px-4 py-3 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition flex items-center justify-between disabled:opacity-50">
-                  <span className="font-medium">{o.label}</span>
-                  <span className="tabular-nums">{Number(o.odd).toFixed(2)}</span>
-                </button>
-              ))}
+      {resolvingEvent && (() => {
+        const evMarkets = markets.filter(m => m.event_id === resolvingEvent.id).sort((a, b) => a.position - b.position);
+        const evOuts = outcomes.filter(o => o.event_id === resolvingEvent.id).sort((a, b) => a.position - b.position);
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setResolvingEvent(null)}>
+            <div className="bg-card border border-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 space-y-3" onClick={e => e.stopPropagation()}>
+              <h3 className="font-bold text-lg">Resolver "{resolvingEvent.title}"</h3>
+              <p className="text-sm text-muted-foreground">Escolha o resultado vencedor de cada mercado. Esta ação é definitiva e processa pagamentos.</p>
+
+              {evMarkets.length === 0 && (
+                // Legacy event without markets — keep event-level resolve
+                <div className="space-y-2">
+                  {evOuts.map(o => (
+                    <button key={o.id} onClick={() => resolveEvent(o.id)} disabled={saving}
+                      className="w-full px-4 py-3 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition flex items-center justify-between disabled:opacity-50">
+                      <span className="font-medium">{o.label}</span>
+                      <span className="tabular-nums">{Number(o.odd).toFixed(2)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {evMarkets.map(m => {
+                const mOuts = evOuts.filter(o => o.market_id === m.id);
+                const isResolved = m.status === 'resolved';
+                const isCancelled = m.status === 'cancelled';
+                return (
+                  <div key={m.id} className="p-3 rounded-lg bg-muted/40 border border-border space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-semibold text-sm">{m.title}</div>
+                      <div className="flex items-center gap-2">
+                        {isResolved && <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-600">Resolvido</span>}
+                        {isCancelled && <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-600">Cancelado</span>}
+                        {!isResolved && !isCancelled && (
+                          <button onClick={() => cancelMarket(m.id, m.title)} disabled={saving}
+                            className="text-[11px] text-yellow-600 hover:underline">Cancelar mercado</button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {mOuts.map(o => {
+                        const isWinner = m.winning_outcome_id === o.id;
+                        return (
+                          <button key={o.id}
+                            onClick={() => !isResolved && !isCancelled && resolveMarket(m.id, o.id)}
+                            disabled={saving || isResolved || isCancelled}
+                            className={`w-full px-3 py-2 rounded-lg transition flex items-center justify-between text-sm ${
+                              isWinner ? 'bg-green-500/20 border border-green-500'
+                              : (isResolved || isCancelled) ? 'bg-muted opacity-60 cursor-not-allowed'
+                              : 'bg-background border border-border hover:bg-primary hover:text-primary-foreground'
+                            }`}>
+                            <span className="font-medium">{isWinner ? '🏆 ' : ''}{o.label}</span>
+                            <span className="tabular-nums">{Number(o.odd).toFixed(2)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <button onClick={() => setResolvingEvent(null)} className="w-full px-4 py-2 rounded bg-muted">Fechar</button>
             </div>
-            <button onClick={() => setResolvingEvent(null)} className="w-full px-4 py-2 rounded bg-muted">Cancelar</button>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
