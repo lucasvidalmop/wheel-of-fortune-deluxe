@@ -56,12 +56,26 @@ const Bets = ({ tag }: BetsPageProps) => {
         const { data, error } = await supabase.functions.invoke('get-bets-page', { body: { tag } });
         if (error) throw error;
         setPage(data);
+        if (data?.wagerCounts) setWagerCounts(data.wagerCounts);
       } catch (e: any) {
         toast.error('Erro ao carregar página');
       } finally {
         setLoading(false);
       }
     })();
+  }, [tag]);
+
+  // poll live wager counts every 8s
+  useEffect(() => {
+    let active = true;
+    const tick = async () => {
+      try {
+        const { data } = await supabase.functions.invoke('get-bets-counts', { body: { tag } });
+        if (active && data?.wagerCounts) setWagerCounts(data.wagerCounts);
+      } catch {}
+    };
+    const id = setInterval(tick, 8000);
+    return () => { active = false; clearInterval(id); };
   }, [tag]);
 
   // restore persisted session
