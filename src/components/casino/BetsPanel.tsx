@@ -922,24 +922,72 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       )}
 
       {/* Resolve modal */}
-      {resolvingEvent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setResolvingEvent(null)}>
-          <div className="bg-card border border-border rounded-2xl max-w-md w-full p-5 space-y-3" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg">Resolver "{resolvingEvent.title}"</h3>
-            <p className="text-sm text-muted-foreground">Selecione o resultado vencedor. Esta ação é definitiva e processa pagamentos.</p>
-            <div className="space-y-2">
-              {outcomes.filter(o => o.event_id === resolvingEvent.id).sort((a, b) => a.position - b.position).map(o => (
-                <button key={o.id} onClick={() => resolveEvent(o.id)} disabled={saving}
-                  className="w-full px-4 py-3 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition flex items-center justify-between disabled:opacity-50">
-                  <span className="font-medium">{o.label}</span>
-                  <span className="tabular-nums">{Number(o.odd).toFixed(2)}</span>
-                </button>
-              ))}
+      {resolvingEvent && (() => {
+        const evMarkets = markets.filter(m => m.event_id === resolvingEvent.id).sort((a, b) => a.position - b.position);
+        const evOuts = outcomes.filter(o => o.event_id === resolvingEvent.id).sort((a, b) => a.position - b.position);
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setResolvingEvent(null)}>
+            <div className="bg-card border border-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 space-y-3" onClick={e => e.stopPropagation()}>
+              <h3 className="font-bold text-lg">Resolver "{resolvingEvent.title}"</h3>
+              <p className="text-sm text-muted-foreground">Escolha o resultado vencedor de cada mercado. Esta ação é definitiva e processa pagamentos.</p>
+
+              {evMarkets.length === 0 && (
+                // Legacy event without markets — keep event-level resolve
+                <div className="space-y-2">
+                  {evOuts.map(o => (
+                    <button key={o.id} onClick={() => resolveEvent(o.id)} disabled={saving}
+                      className="w-full px-4 py-3 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition flex items-center justify-between disabled:opacity-50">
+                      <span className="font-medium">{o.label}</span>
+                      <span className="tabular-nums">{Number(o.odd).toFixed(2)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {evMarkets.map(m => {
+                const mOuts = evOuts.filter(o => o.market_id === m.id);
+                const isResolved = m.status === 'resolved';
+                const isCancelled = m.status === 'cancelled';
+                return (
+                  <div key={m.id} className="p-3 rounded-lg bg-muted/40 border border-border space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-semibold text-sm">{m.title}</div>
+                      <div className="flex items-center gap-2">
+                        {isResolved && <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-600">Resolvido</span>}
+                        {isCancelled && <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-600">Cancelado</span>}
+                        {!isResolved && !isCancelled && (
+                          <button onClick={() => cancelMarket(m.id, m.title)} disabled={saving}
+                            className="text-[11px] text-yellow-600 hover:underline">Cancelar mercado</button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {mOuts.map(o => {
+                        const isWinner = m.winning_outcome_id === o.id;
+                        return (
+                          <button key={o.id}
+                            onClick={() => !isResolved && !isCancelled && resolveMarket(m.id, o.id)}
+                            disabled={saving || isResolved || isCancelled}
+                            className={`w-full px-3 py-2 rounded-lg transition flex items-center justify-between text-sm ${
+                              isWinner ? 'bg-green-500/20 border border-green-500'
+                              : (isResolved || isCancelled) ? 'bg-muted opacity-60 cursor-not-allowed'
+                              : 'bg-background border border-border hover:bg-primary hover:text-primary-foreground'
+                            }`}>
+                            <span className="font-medium">{isWinner ? '🏆 ' : ''}{o.label}</span>
+                            <span className="tabular-nums">{Number(o.odd).toFixed(2)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <button onClick={() => setResolvingEvent(null)} className="w-full px-4 py-2 rounded bg-muted">Fechar</button>
             </div>
-            <button onClick={() => setResolvingEvent(null)} className="w-full px-4 py-2 rounded bg-muted">Cancelar</button>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
