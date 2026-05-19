@@ -193,6 +193,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_closes_at: null,
       claim_quantity: 1,
       claim_recurrence: 'none',
+      claim_event_name: '',
     });
     setShowForm(true);
   };
