@@ -90,6 +90,10 @@ interface LuckyCase {
   prize_pool?: any;
   position: number;
   is_active: boolean;
+  claim_enabled?: boolean;
+  claim_opens_at?: string | null;
+  claim_closes_at?: string | null;
+  claim_quantity?: number;
 }
 
 interface CasePoolItem { case_id: string; weight: number }
