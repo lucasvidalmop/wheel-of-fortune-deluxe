@@ -1103,7 +1103,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Valor em dinheiro (R$) <span className="opacity-70">— deixe vazio se não pagar</span></label>
+                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">{editingCase.prize_type === 'tokens' ? `Valor em ${cfg.coin_name || 'tokens'}` : 'Valor em dinheiro (R$)'} <span className="opacity-70">— deixe vazio se não pagar</span></label>
                           <input
                             type="text"
                             inputMode="decimal"
