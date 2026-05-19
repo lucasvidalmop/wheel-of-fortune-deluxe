@@ -433,6 +433,33 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     return { reel, targetIndex: target };
   };
 
+  const handleClaimCase = async (c: LuckyCase) => {
+    if (!authedUser || !cfg) return;
+    setClaimingId(c.id);
+    try {
+      const { data, error } = await (supabase as any).rpc('claim_luckybox_case', {
+        p_owner_id: cfg.owner_id,
+        p_email: authedUser.email,
+        p_account_id: authedUser.account_id,
+        p_case_id: c.id,
+      });
+      if (error) throw error;
+      if (!data?.success) {
+        toast.error(data?.error || 'Não foi possível resgatar');
+        return;
+      }
+      const newGrants = (data.case_grants as Record<string, number>) || authedUser.case_grants || {};
+      const updated = { ...authedUser, case_grants: newGrants };
+      setAuthedUser(updated);
+      try { sessionStorage.setItem(`luckybox_user_${cfg.tag}`, JSON.stringify(updated)); } catch {}
+      toast.success(`🎁 ${data.quantity || 1} caixa(s) resgatada(s)!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao resgatar');
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
   const handleOpenCase = async (c: LuckyCase) => {
     if (!authedUser) return;
     // Prime audio inside the user gesture so the very first opening plays
