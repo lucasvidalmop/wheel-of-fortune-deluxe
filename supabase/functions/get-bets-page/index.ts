@@ -78,6 +78,20 @@ Deno.serve(async (req) => {
       cases = cs || [];
     }
 
+    // wager counts per event (non-cancelled)
+    const wagerCounts: Record<string, number> = {};
+    if (eventIds.length) {
+      const { data: wc } = await supabase
+        .from("bet_wagers")
+        .select("event_id")
+        .eq("owner_id", cfg.owner_id)
+        .in("event_id", eventIds)
+        .neq("status", "cancelled");
+      (wc || []).forEach((r: any) => {
+        wagerCounts[r.event_id] = (wagerCounts[r.event_id] || 0) + 1;
+      });
+    }
+
     return new Response(JSON.stringify({
       found: true,
       ownerId: cfg.owner_id,
@@ -90,6 +104,7 @@ Deno.serve(async (req) => {
       outcomes,
       categories: catz || [],
       cases,
+      wagerCounts,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("get-bets-page error", err);
