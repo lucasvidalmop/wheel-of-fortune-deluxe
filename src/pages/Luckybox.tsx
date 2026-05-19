@@ -161,6 +161,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
   const [drawnCases, setDrawnCases] = useState<DrawnCase[]>([]);
   const [signupRefCode, setSignupRefCode] = useState<string>('');
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [nowTs, setNowTs] = useState(Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNowTs(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
 
 
   const pc = cfg?.page_config || {};
