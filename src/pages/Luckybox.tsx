@@ -164,6 +164,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [signupRefCode, setSignupRefCode] = useState<string>('');
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [nowTs, setNowTs] = useState(Date.now());
+  const [userClaims, setUserClaims] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const t = setInterval(() => setNowTs(Date.now()), 15000);
