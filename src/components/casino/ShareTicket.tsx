@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { X, Download, Share2, Loader2, TrendingUp, TrendingDown, Clock, Trophy } from 'lucide-react';
+import { X, Download, Share2, Loader2, TrendingDown, Clock, Trophy, Calendar, Ticket } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 
@@ -54,9 +54,15 @@ interface Props {
 const fmtDate = (iso: string) => {
   try {
     return new Date(iso).toLocaleString('pt-BR', {
-      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).replace(',', ' •');
   } catch { return ''; }
+};
+
+const shortId = (id?: string) => {
+  if (!id) return '------';
+  const clean = String(id).replace(/-/g, '').toUpperCase();
+  return clean.slice(0, 6);
 };
 
 export default function ShareTicket({ open, onClose, data, config = {} }: Props) {
@@ -204,55 +210,91 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
           </div>
 
           {/* Status */}
-          <div className="relative text-center mb-5">
-
+          <div className="relative text-center mb-4">
             <h2
               className="text-2xl font-black tracking-tight leading-tight"
               style={{ color: accent, textShadow: `0 0 16px ${accent}55` }}
             >
               {title}
             </h2>
-            <p className="text-xs mt-1 font-mono tracking-wider" style={{ color: muted }}>ID: {maskId(data.userId)}</p>
           </div>
 
-          {/* Event */}
+          {/* Meta bar: date + ID */}
           <div
-            className="relative rounded-xl p-4 mb-4"
+            className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[11px] font-semibold"
+            style={{ color: textColor }}
+          >
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Calendar size={13} style={{ color: textColor }} />
+              <span className="truncate tabular-nums">{fmtDate(data.createdAt)}</span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0 pl-2" style={{ borderLeft: `1px solid ${textColor}22` }}>
+              <Ticket size={13} style={{ color: textColor }} />
+              <span className="tabular-nums tracking-wider">ID: {shortId(data.userId)}</span>
+            </div>
+          </div>
+
+          {/* Event title */}
+          <div
+            className="relative rounded-xl p-3 mb-3"
             style={{ background: cardBg, border: `1px solid ${textColor}11` }}
           >
-            <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: muted }}>
-              Evento
-            </div>
-            <div className="font-bold text-base leading-snug mb-3">{data.eventTitle}</div>
-
-            <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: muted }}>
-              Palpite
-            </div>
+            <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: muted }}>Evento</div>
+            <div className="font-bold text-sm leading-snug mb-2">{data.eventTitle}</div>
             <div
-              className="inline-block px-3 py-1.5 rounded-lg font-bold text-sm mb-3"
+              className="inline-block px-2.5 py-1 rounded-md font-bold text-xs"
               style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
             >
-              {data.outcomeLabel} · {data.odd.toFixed(2)}
+              {data.outcomeLabel}
+            </div>
+          </div>
+
+          {/* VALOR / COTA cards */}
+          <div className="relative grid grid-cols-2 gap-2 mb-3">
+            {/* VALOR */}
+            <div
+              className="relative rounded-xl px-3 py-3 overflow-hidden"
+              style={{
+                background: `linear-gradient(180deg, ${cardBg}, ${cardBg})`,
+                border: `1px solid ${accent}33`,
+                boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66`,
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute inset-x-0 bottom-0 h-px"
+                style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }}
+              />
+              <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: accent }}>VALOR</div>
+              <div className="font-black text-2xl tabular-nums leading-none" style={{ color: accent, textShadow: `0 0 12px ${accent}55` }}>
+                {data.amount.toLocaleString('pt-BR')}
+              </div>
+              <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{data.coinName}</div>
             </div>
 
-            {/* Amounts grid */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t" style={{ borderColor: `${textColor}11` }}>
-              <div>
-                <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: muted }}>
-                  Aposta
-                </div>
-                <div className="font-bold tabular-nums">
-                  {data.amount} <span className="text-xs font-normal" style={{ color: muted }}>{data.coinName}</span>
-                </div>
+            {/* COTA */}
+            <div
+              className="relative rounded-xl px-3 py-3"
+              style={{ background: cardBg, border: `1px solid ${textColor}15` }}
+            >
+              <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>COTA</div>
+              <div className="font-black text-2xl tabular-nums leading-none" style={{ color: textColor }}>
+                {data.odd.toFixed(2).replace('.', ',')}
               </div>
-              <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: muted }}>
-                  {isWin ? 'Retorno' : isPending ? 'Potencial' : isLoss ? 'Perdeu' : 'Retorno'}
-                </div>
-                <div className="font-bold tabular-nums" style={{ color: isWin || isPending ? accent : textColor }}>
-                  {data.payoutMode === 'case' ? '🎁 caixa' : `${data.payout} ${data.coinName}`}
-                </div>
-              </div>
+              <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>multiplicador</div>
+            </div>
+          </div>
+
+          {/* Retorno */}
+          <div
+            className="relative rounded-xl px-4 py-3 mb-4 flex items-center justify-between"
+            style={{ background: cardBg, border: `1px solid ${textColor}11` }}
+          >
+            <div className="text-[11px] uppercase tracking-wider font-bold" style={{ color: muted }}>
+              {isWin ? 'Retorno' : isPending ? 'Retorno potencial' : isLoss ? 'Perdeu' : 'Retorno'}
+            </div>
+            <div className="font-black text-lg tabular-nums" style={{ color: isWin || isPending ? accent : textColor }}>
+              {data.payoutMode === 'case' ? '🎁 caixa' : `${data.payout.toLocaleString('pt-BR')} ${data.coinName}`}
             </div>
           </div>
 
@@ -264,10 +306,8 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
                 {ctaUrl.replace(/^https?:\/\//, '')}
               </p>
             )}
-            <div className="text-[10px] mt-3 flex items-center justify-center gap-2" style={{ color: muted }}>
-              <span>{fmtDate(data.createdAt)}</span>
-            </div>
           </div>
+
         </div>
 
         {/* Actions */}
