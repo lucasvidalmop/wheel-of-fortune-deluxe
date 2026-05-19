@@ -624,6 +624,7 @@ export type Database = {
           position: number
           price_tokens: number
           prize_pool: Json | null
+          prize_type: string
           prizes: Json
           rarity: string
           updated_at: string
@@ -639,6 +640,7 @@ export type Database = {
           position?: number
           price_tokens?: number
           prize_pool?: Json | null
+          prize_type?: string
           prizes?: Json
           rarity?: string
           updated_at?: string
@@ -654,6 +656,7 @@ export type Database = {
           position?: number
           price_tokens?: number
           prize_pool?: Json | null
+          prize_type?: string
           prizes?: Json
           rarity?: string
           updated_at?: string
