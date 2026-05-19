@@ -119,6 +119,7 @@ Deno.serve(async (req) => {
       coinIconUrl: cfg.coin_icon_url || "",
       events: events || [],
       outcomes,
+      markets,
       categories: catz || [],
       cases,
       wagerCounts,
