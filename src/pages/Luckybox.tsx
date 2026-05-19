@@ -1127,6 +1127,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     <div className="text-center mt-2 flex items-center justify-center gap-1.5 text-base font-bold" style={{ color: accent }}>
                       {isFree ? (
                         <span className="text-sm">🎁 Abrir grátis</span>
+                      ) : c.claim_enabled ? (
+                        <span className="text-sm">🎁 Evento</span>
                       ) : (
                         <>
                           <CoinIcon size={20} color={accent} />
