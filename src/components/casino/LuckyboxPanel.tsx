@@ -213,6 +213,10 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       prizes: isCasePool ? [] : (editingCase.prizes || []),
       position: editingCase.position ?? 0,
       is_active: editingCase.is_active !== false,
+      claim_enabled: !!editingCase.claim_enabled,
+      claim_opens_at: editingCase.claim_opens_at || null,
+      claim_closes_at: editingCase.claim_closes_at || null,
+      claim_quantity: Math.max(1, Number(editingCase.claim_quantity) || 1),
     };
     if (isCasePool) {
       const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
