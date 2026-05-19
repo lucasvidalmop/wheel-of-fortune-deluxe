@@ -152,9 +152,23 @@ const Bets = ({ tag }: BetsPageProps) => {
   const coinIcon = page?.coinIconUrl || '';
 
   const events: EventRow[] = page?.events || [];
+  const marketsByEvent = useMemo(() => {
+    const m: Record<string, MarketRow[]> = {};
+    (page?.markets || []).forEach((mk: MarketRow) => { (m[mk.event_id] ||= []).push(mk); });
+    Object.values(m).forEach(arr => arr.sort((a, b) => a.position - b.position));
+    return m;
+  }, [page]);
   const outcomesByEvent = useMemo(() => {
     const m: Record<string, OutcomeRow[]> = {};
     (page?.outcomes || []).forEach((o: OutcomeRow) => { (m[o.event_id] ||= []).push(o); });
+    return m;
+  }, [page]);
+  const outcomesByMarket = useMemo(() => {
+    const m: Record<string, OutcomeRow[]> = {};
+    (page?.outcomes || []).forEach((o: OutcomeRow) => {
+      if (o.market_id) (m[o.market_id] ||= []).push(o);
+    });
+    Object.values(m).forEach(arr => arr.sort((a, b) => a.position - b.position));
     return m;
   }, [page]);
   const casesById = useMemo(() => {
