@@ -48,6 +48,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
+  const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
 
   // load page
   useEffect(() => {
@@ -57,6 +58,7 @@ const Bets = ({ tag }: BetsPageProps) => {
         if (error) throw error;
         setPage(data);
         if (data?.wagerCounts) setWagerCounts(data.wagerCounts);
+        if (data?.outcomeStats) setOutcomeStats(data.outcomeStats);
       } catch (e: any) {
         toast.error('Erro ao carregar página');
       } finally {
@@ -479,6 +481,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   {outs.map(o => {
                     const isWinner = ev.status === 'resolved' && o.is_winner;
                     const isLoser = ev.status === 'resolved' && !o.is_winner;
+                    const stat = outcomeStats[o.id] || { count: 0, total: 0 };
                     return (
                       <button key={o.id}
                         onClick={() => openSlip(ev, o)}
@@ -493,6 +496,10 @@ const Bets = ({ tag }: BetsPageProps) => {
                         <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
                         <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>{o.label}</div>
                         <div className="text-2xl font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
+                        <div className="mt-2 pt-2 border-t flex items-center justify-between gap-1 text-[10px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
+                          <span className="flex items-center gap-1"><Ticket size={10} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
+                          <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
+                        </div>
                       </button>
                     );
                   })}
