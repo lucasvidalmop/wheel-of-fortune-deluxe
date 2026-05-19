@@ -797,35 +797,88 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         </div>
       )}
 
-      {tab === 'wagers' && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-muted-foreground border-b border-border">
-              <th className="py-2">Data</th><th>Usuário</th><th>Evento</th><th>Resultado</th>
-              <th className="text-right">Valor</th><th className="text-right">Odd</th><th>Status</th><th className="text-right">Retorno</th>
-            </tr></thead>
-            <tbody>
-              {wagers.map(w => {
-                const ev = events.find(e => e.id === w.event_id);
-                const out = outcomes.find(o => o.id === w.outcome_id);
-                return (
-                  <tr key={w.id} className="border-b border-border/50">
-                    <td className="py-2 text-xs">{new Date(w.created_at).toLocaleString('pt-BR')}</td>
-                    <td>{w.user_name || w.user_email}<div className="text-xs text-muted-foreground">{w.account_id}</div></td>
-                    <td className="text-xs">{ev?.title || w.event_id.slice(0, 8)}</td>
-                    <td className="text-xs">{out?.label || '?'}</td>
-                    <td className="text-right tabular-nums">{w.amount_coins}</td>
-                    <td className="text-right tabular-nums">{Number(w.odd_snapshot).toFixed(2)}</td>
-                    <td><span className="text-xs px-2 py-0.5 rounded bg-muted">{w.status}</span></td>
-                    <td className="text-right tabular-nums text-xs">{w.payout_mode === 'case' ? '— caixa' : (w.payout_coins || '—')}</td>
-                  </tr>
-                );
-              })}
-              {wagers.length === 0 && <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Nenhuma aposta ainda.</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {tab === 'wagers' && (() => {
+        const filtered = wagers.filter(w =>
+          (!wFilter.eventId || w.event_id === wFilter.eventId) &&
+          (!wFilter.marketId || w.market_id === wFilter.marketId) &&
+          (!wFilter.status || w.status === wFilter.status)
+        );
+        const availableMarkets = wFilter.eventId
+          ? markets.filter(m => m.event_id === wFilter.eventId)
+          : markets;
+        return (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 items-end">
+              <div>
+                <label className="text-xs font-medium block mb-1">Evento</label>
+                <select value={wFilter.eventId}
+                  onChange={e => setWFilter(f => ({ ...f, eventId: e.target.value, marketId: '' }))}
+                  className="px-3 py-2 rounded-lg bg-muted text-sm min-w-[200px]">
+                  <option value="">Todos</option>
+                  {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium block mb-1">Mercado</label>
+                <select value={wFilter.marketId}
+                  onChange={e => setWFilter(f => ({ ...f, marketId: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-muted text-sm min-w-[180px]">
+                  <option value="">Todos</option>
+                  {availableMarkets.map(m => {
+                    const ev = events.find(e => e.id === m.event_id);
+                    return <option key={m.id} value={m.id}>{wFilter.eventId ? m.title : `${ev?.title || '?'} → ${m.title}`}</option>;
+                  })}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium block mb-1">Status</label>
+                <select value={wFilter.status}
+                  onChange={e => setWFilter(f => ({ ...f, status: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-muted text-sm">
+                  <option value="">Todos</option>
+                  <option value="pending">Pendente</option>
+                  <option value="won">Ganhou</option>
+                  <option value="lost">Perdeu</option>
+                  <option value="refunded">Devolvida</option>
+                  <option value="cancelled">Cancelada</option>
+                </select>
+              </div>
+              <button onClick={() => setWFilter({ eventId: '', marketId: '', status: '' })}
+                className="px-3 py-2 rounded-lg bg-muted text-sm hover:bg-muted/80">Limpar</button>
+              <div className="ml-auto text-xs text-muted-foreground">{filtered.length} aposta(s)</div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="py-2">Data</th><th>Usuário</th><th>Evento</th><th>Mercado</th><th>Resultado</th>
+                  <th className="text-right">Valor</th><th className="text-right">Odd</th><th>Status</th><th className="text-right">Retorno</th>
+                </tr></thead>
+                <tbody>
+                  {filtered.map(w => {
+                    const ev = events.find(e => e.id === w.event_id);
+                    const out = outcomes.find(o => o.id === w.outcome_id);
+                    const mk = w.market_id ? markets.find(m => m.id === w.market_id) : null;
+                    return (
+                      <tr key={w.id} className="border-b border-border/50">
+                        <td className="py-2 text-xs">{new Date(w.created_at).toLocaleString('pt-BR')}</td>
+                        <td>{w.user_name || w.user_email}<div className="text-xs text-muted-foreground">{w.account_id}</div></td>
+                        <td className="text-xs">{ev?.title || w.event_id.slice(0, 8)}</td>
+                        <td className="text-xs text-muted-foreground">{mk?.title || '—'}</td>
+                        <td className="text-xs">{out?.label || '?'}</td>
+                        <td className="text-right tabular-nums">{w.amount_coins}</td>
+                        <td className="text-right tabular-nums">{Number(w.odd_snapshot).toFixed(2)}</td>
+                        <td><span className="text-xs px-2 py-0.5 rounded bg-muted">{w.status}</span></td>
+                        <td className="text-right tabular-nums text-xs">{w.payout_mode === 'case' ? '— caixa' : (w.payout_coins || '—')}</td>
+                      </tr>
+                    );
+                  })}
+                  {filtered.length === 0 && <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Nenhuma aposta.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       {tab === 'analytics' && (
         <AnalyticsTab
