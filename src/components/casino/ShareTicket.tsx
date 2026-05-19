@@ -231,7 +231,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
             </div>
             <div className="flex items-center gap-1.5 shrink-0 pl-2" style={{ borderLeft: `1px solid ${textColor}22` }}>
               <Ticket size={13} style={{ color: textColor }} />
-              <span className="tabular-nums tracking-wider">ID: {shortId(data.userId)}</span>
+              <span className="tabular-nums tracking-wider">ID: {data.wagerCode || shortId(data.userId)}</span>
             </div>
           </div>
 
