@@ -450,7 +450,20 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <Ticket size={13} />
                     <span className="tracking-wider">{ev.is_hot ? 'QUENTE' : (evCat?.name || ev.category || 'ODDS')}</span>
                   </span>
+                  <span
+                    className="flex items-center gap-1 shrink-0 pl-2 tabular-nums"
+                    style={{ borderLeft: `1px solid ${text}22`, color: ticketAccent }}
+                    title="Apostas em tempo real"
+                  >
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: ticketAccent }} />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: ticketAccent }} />
+                    </span>
+                    <b>{(wagerCounts[ev.id] || 0).toLocaleString('pt-BR')}</b>
+                    <span className="opacity-80">apostas</span>
+                  </span>
                 </div>
+
 
                 <div className="relative rounded-xl p-3 mb-3" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14` }}>
                   <div className="flex items-start justify-between gap-3">
