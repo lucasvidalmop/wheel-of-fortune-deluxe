@@ -65,7 +65,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     })();
   }, [tag]);
 
-  // poll live wager counts every 8s
+  // poll live wager counts every 30 min
   useEffect(() => {
     let active = true;
     const tick = async () => {
@@ -74,7 +74,8 @@ const Bets = ({ tag }: BetsPageProps) => {
         if (active && data?.wagerCounts) setWagerCounts(data.wagerCounts);
       } catch {}
     };
-    const id = setInterval(tick, 8000);
+    tick(); // initial load
+    const id = setInterval(tick, 30 * 60 * 1000);
     return () => { active = false; clearInterval(id); };
   }, [tag]);
 
