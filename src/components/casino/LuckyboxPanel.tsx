@@ -200,6 +200,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       image_url: editingCase.image_url || '',
       rarity: editingCase.rarity || 'common',
       mode: editingCase.mode || 'probability',
+      prize_type: editingCase.prize_type === 'tokens' ? 'tokens' : 'pix',
       prizes: isCasePool ? [] : (editingCase.prizes || []),
       position: editingCase.position ?? 0,
       is_active: editingCase.is_active !== false,
