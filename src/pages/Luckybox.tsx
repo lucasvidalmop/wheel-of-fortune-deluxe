@@ -1047,11 +1047,23 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               const cantAfford = !isFree && authedUser.tokens_balance < c.price_tokens;
               const opensAt = c.claim_opens_at ? new Date(c.claim_opens_at).getTime() : null;
               const closesAt = c.claim_closes_at ? new Date(c.claim_closes_at).getTime() : null;
-              const claimOpen = !!c.claim_enabled
+              const windowOpen = !!c.claim_enabled
                 && (opensAt === null || nowTs >= opensAt)
                 && (closesAt === null || nowTs <= closesAt);
               const claimUpcoming = !!c.claim_enabled && opensAt !== null && nowTs < opensAt;
-              const showClaim = claimOpen && !isFree;
+              const recurrence = c.claim_recurrence || 'none';
+              const intervalMs = recurrence === 'daily' ? 86400000
+                : recurrence === 'weekly' ? 604800000
+                : recurrence === 'monthly' ? 2592000000
+                : 0;
+              const lastClaimStr = userClaims[c.id];
+              const lastClaimTs = lastClaimStr ? new Date(lastClaimStr).getTime() : null;
+              const nextAvailableTs = (lastClaimTs && intervalMs > 0) ? lastClaimTs + intervalMs : null;
+              const isLockedByRecurrence = !!(nextAvailableTs && nowTs < nextAvailableTs);
+              const alreadyClaimedOnce = !!lastClaimTs && recurrence === 'none';
+              const claimOpen = windowOpen && !alreadyClaimedOnce && !isLockedByRecurrence;
+              const showClaim = claimOpen;
+              const showCountdown = windowOpen && isLockedByRecurrence;
               return (
                 <div
                   key={c.id}
