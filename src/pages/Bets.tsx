@@ -695,25 +695,28 @@ const Bets = ({ tag }: BetsPageProps) => {
               </div>
             </div>
 
-            <div className="relative grid grid-cols-2 gap-2 mb-2">
-              <div className="relative rounded-xl px-3 py-3 overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}55`, boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66` }}>
-                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
-                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: accent }}>Valor (digite)</label>
-                <input
-                  type="text" inputMode="numeric" pattern="[0-9]*"
-                  value={amount}
-                  onFocus={e => e.target.select()}
-                  onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder="0"
-                  className="w-full bg-transparent outline-none font-black text-2xl tabular-nums leading-none p-0 cursor-text"
-                  style={{ background: 'transparent', color: accent, textShadow: `0 0 12px ${accent}55` }}
-                />
-                <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{coinName}</div>
-              </div>
-              <div className="relative rounded-xl px-3 py-3" style={{ background: cardBg, border: `1px solid ${text}15` }}>
-                <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>Cota</div>
-                <div className="font-black text-2xl tabular-nums leading-none" style={{ color: text }}>{Number(slip.outcome.odd).toFixed(2).replace('.', ',')}</div>
-                <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>multiplicador</div>
+            <div className="relative mb-2">
+              <label className="block text-[10px] uppercase tracking-[0.18em] font-bold mb-1.5" style={{ color: accent }}>Valor da aposta</label>
+              <div className="flex gap-2">
+                <div className="flex-1 relative rounded-xl overflow-hidden" style={{ background: cardBg, border: `2px solid ${accent}`, boxShadow: `0 0 18px ${accent}33` }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    value={amount}
+                    onFocus={e => e.currentTarget.select()}
+                    onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="Digite o valor"
+                    className="w-full bg-transparent outline-none font-black text-2xl tabular-nums px-3 py-3"
+                    style={{ color: accent }}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider pointer-events-none" style={{ color: muted }}>{coinName}</span>
+                </div>
+                <div className="w-24 rounded-xl px-3 py-3 flex flex-col justify-center" style={{ background: cardBg, border: `1px solid ${text}15` }}>
+                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold" style={{ color: muted }}>Cota</div>
+                  <div className="font-black text-xl tabular-nums leading-none mt-0.5" style={{ color: text }}>{Number(slip.outcome.odd).toFixed(2).replace('.', ',')}</div>
+                </div>
               </div>
             </div>
 
