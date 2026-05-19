@@ -1060,6 +1060,18 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                 <p className="text-[11px] opacity-70">Libera a caixa para resgate grátis dentro de uma janela de tempo. Cada usuário (e-mail ou ID) só pode resgatar 1 vez por caixa — ou periodicamente se a recorrência estiver ativada. O horário é em <b>Brasília (UTC-3)</b>.</p>
                 {editingCase.claim_enabled && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] uppercase opacity-60 mb-1">Nome do evento</label>
+                      <input
+                        type="text"
+                        maxLength={80}
+                        placeholder="Ex.: Caixa do Dia, Bônus de Quinta..."
+                        value={editingCase.claim_event_name || ''}
+                        onChange={e => setEditingCase({ ...editingCase, claim_event_name: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm"
+                      />
+                      <p className="text-[10px] opacity-60 mt-1">Aparece no card no lugar do preço. Se vazio, mostra "🎁 Evento".</p>
+                    </div>
                     <div>
                       <label className="block text-[11px] uppercase opacity-60 mb-1">Abre em</label>
                       <input
