@@ -612,8 +612,45 @@ export type Database = {
         }
         Relationships: []
       }
+      luckybox_case_claims: {
+        Row: {
+          account_id: string
+          case_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          quantity: number
+          user_email: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          case_id: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          quantity?: number
+          user_email: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          quantity?: number
+          user_email?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: []
+      }
       luckybox_cases: {
         Row: {
+          claim_closes_at: string | null
+          claim_enabled: boolean
+          claim_opens_at: string | null
+          claim_quantity: number
           created_at: string
           id: string
           image_url: string
@@ -630,6 +667,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          claim_closes_at?: string | null
+          claim_enabled?: boolean
+          claim_opens_at?: string | null
+          claim_quantity?: number
           created_at?: string
           id?: string
           image_url?: string
@@ -646,6 +687,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          claim_closes_at?: string | null
+          claim_enabled?: boolean
+          claim_opens_at?: string | null
+          claim_quantity?: number
           created_at?: string
           id?: string
           image_url?: string
@@ -2067,6 +2112,15 @@ export type Database = {
       build_link_prize_pool: { Args: { p_plan: Json }; Returns: Json }
       cancel_bet_event: { Args: { p_event_id: string }; Returns: Json }
       cancel_bet_wager: { Args: { p_wager_id: string }; Returns: Json }
+      claim_luckybox_case: {
+        Args: {
+          p_account_id: string
+          p_case_id: string
+          p_email: string
+          p_owner_id: string
+        }
+        Returns: Json
+      }
       consume_fixed_prize_spin: {
         Args: { p_account_id: string; p_owner_id?: string }
         Returns: {
