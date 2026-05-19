@@ -429,7 +429,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                 <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[11px] font-semibold" style={{ color: text }}>
                   <span className="flex items-center gap-1.5 min-w-0">
                     <Calendar size={13} />
-                    <span className="truncate tabular-nums">{ev.closes_at ? `Encerra ${formatBetDateTime(ev.closes_at)}` : eventStatusBadge(ev.status)}</span>
+                    <span className="truncate tabular-nums" style={closed ? { color: '#f87171', fontWeight: 800, letterSpacing: '0.12em' } : undefined}>{closed ? 'ENCERRADO' : (ev.closes_at ? `Encerra ${formatBetDateTime(ev.closes_at)}` : eventStatusBadge(ev.status))}</span>
                   </span>
                   <span className="flex items-center gap-1.5 shrink-0 pl-2" style={{ borderLeft: `1px solid ${text}22` }}>
                     <Ticket size={13} />
