@@ -228,7 +228,13 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     const key = `luckybox_user_${cfg.tag}`;
     const raw = sessionStorage.getItem(key);
     if (raw) {
-      try { setAuthedUser(JSON.parse(raw)); } catch {}
+      try {
+        const parsed = JSON.parse(raw);
+        setAuthedUser(parsed);
+        if (parsed?.email && parsed?.account_id) {
+          fetchUserClaims(cfg.owner_id, parsed.email, parsed.account_id);
+        }
+      } catch {}
     }
   }, [cfg]);
 
