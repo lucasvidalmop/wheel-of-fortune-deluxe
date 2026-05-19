@@ -90,6 +90,7 @@ interface LuckyCase {
   rarity: string;
   prizes: CasePrize[];
   mode?: 'probability' | 'pool' | 'case_pool';
+  prize_type?: 'pix' | 'tokens';
   prize_pool?: { quantity?: number; items?: CasePoolItem[] } | any;
 }
 interface DrawnCase {
