@@ -1094,12 +1094,28 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                   >
                     <Eye size={13} /> Ver prêmios
                   </button>
+                  {showClaim && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleClaimCase(c); }}
+                      disabled={claimingId === c.id}
+                      className="relative z-10 mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition disabled:opacity-60"
+                      style={{ background: accent, color: '#000' }}
+                    >
+                      {claimingId === c.id ? 'Resgatando...' : `🎁 Resgatar grátis${(c.claim_quantity || 1) > 1 ? ` ×${c.claim_quantity}` : ''}`}
+                    </button>
+                  )}
+                  {claimUpcoming && !isFree && (
+                    <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
+                      🎁 Abre em {new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(opensAt!))}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </main>
+
 
       {/* Opening modal */}
       {openingCase && (
