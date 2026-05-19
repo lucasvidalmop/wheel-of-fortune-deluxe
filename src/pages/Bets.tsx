@@ -695,14 +695,17 @@ const Bets = ({ tag }: BetsPageProps) => {
               </div>
             </div>
 
-            <div className="relative grid grid-cols-2 gap-2 mb-3">
-              <div className="relative rounded-xl px-3 py-3 overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}33`, boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66` }}>
+            <div className="relative grid grid-cols-2 gap-2 mb-2">
+              <div className="relative rounded-xl px-3 py-3 overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}55`, boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66` }}>
                 <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
-                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: accent }}>Valor</label>
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: accent }}>Valor (digite)</label>
                 <input
-                  type="number" inputMode="numeric" min={slip.event.min_bet} step={1}
-                  value={amount} onChange={e => setAmount(e.target.value)}
-                  className="w-full bg-transparent outline-none font-black text-2xl tabular-nums leading-none p-0"
+                  type="text" inputMode="numeric" pattern="[0-9]*"
+                  value={amount}
+                  onFocus={e => e.target.select()}
+                  onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="0"
+                  className="w-full bg-transparent outline-none font-black text-2xl tabular-nums leading-none p-0 cursor-text"
                   style={{ background: 'transparent', color: accent, textShadow: `0 0 12px ${accent}55` }}
                 />
                 <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{coinName}</div>
@@ -714,6 +717,11 @@ const Bets = ({ tag }: BetsPageProps) => {
               </div>
             </div>
 
+            <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: muted }}>
+              <span>Mín: <span className="tabular-nums" style={{ color: text }}>{slip.event.min_bet} {coinName}</span></span>
+              <span>Máx: <span className="tabular-nums" style={{ color: text }}>{slip.event.max_bet} {coinName}</span></span>
+            </div>
+
             <div className="relative grid grid-cols-5 gap-2 mb-3">
               {[10, 50, 100, 500].map(v => (
                 <button key={v} type="button" onClick={() => setAmount(String(v))}
@@ -721,7 +729,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   {v}
                 </button>
               ))}
-              <button type="button" onClick={() => setAmount(String(authed?.tokens_balance ?? 0))}
+              <button type="button" onClick={() => setAmount(String(Math.min(authed?.tokens_balance ?? 0, slip.event.max_bet || (authed?.tokens_balance ?? 0))))}
                 className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
                 Tudo
               </button>
