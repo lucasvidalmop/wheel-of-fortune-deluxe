@@ -84,6 +84,7 @@ interface LuckyCase {
   image_url: string;
   rarity: string;
   mode: 'probability' | 'pool' | 'case_pool';
+  prize_type?: 'pix' | 'tokens';
   prizes: CasePrize[];
   prize_pool?: any;
   position: number;
@@ -176,6 +177,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       image_url: '',
       rarity: 'common',
       mode: 'probability',
+      prize_type: 'pix',
       prizes: [newPrize()],
       position: cases.length,
       is_active: true,
@@ -198,6 +200,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       image_url: editingCase.image_url || '',
       rarity: editingCase.rarity || 'common',
       mode: editingCase.mode || 'probability',
+      prize_type: editingCase.prize_type === 'tokens' ? 'tokens' : 'pix',
       prizes: isCasePool ? [] : (editingCase.prizes || []),
       position: editingCase.position ?? 0,
       is_active: editingCase.is_active !== false,
@@ -982,6 +985,29 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                   {RARITIES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
                 </select>
               </div>
+              {editingCase.mode !== 'case_pool' && (
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium mb-1 opacity-70">Tipo de prêmio</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingCase({ ...editingCase, prize_type: 'pix' })}
+                      className={`text-left px-3 py-2 rounded-lg border text-xs transition ${(editingCase.prize_type || 'pix') === 'pix' ? 'border-emerald-400/40 bg-emerald-400/10 text-emerald-100' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                    >
+                      <div className="font-bold mb-0.5">💸 PIX (dinheiro)</div>
+                      <div className="opacity-70">Cria um pagamento pendente em R$ para o usuário.</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingCase({ ...editingCase, prize_type: 'tokens' })}
+                      className={`text-left px-3 py-2 rounded-lg border text-xs transition ${editingCase.prize_type === 'tokens' ? 'border-amber-400/40 bg-amber-400/10 text-amber-100' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                    >
+                      <div className="font-bold mb-0.5">🪙 Tokens</div>
+                      <div className="opacity-70">Credita o valor sorteado direto no saldo de {cfg.coin_name || 'tokens'} do usuário.</div>
+                    </button>
+                  </div>
+                </div>
+              )}
               {editingCase.mode === 'case_pool' ? (
                 <div className="md:col-span-2 rounded-xl border border-purple-400/20 bg-purple-400/5 px-3 py-2 text-[11px] opacity-80 leading-relaxed">
                   📦 <b>Caixa de caixas:</b> escolha quais caixas existentes podem ser sorteadas e quantas serão entregues por abertura. Cada caixa sorteada é adicionada ao inventário do usuário (aparece como "🎁 Grátis ×N").
@@ -1077,7 +1103,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">Valor em dinheiro (R$) <span className="opacity-70">— deixe vazio se não pagar</span></label>
+                          <label className="block text-[10px] uppercase tracking-wider opacity-50 mb-1">{editingCase.prize_type === 'tokens' ? `Valor em ${cfg.coin_name || 'tokens'}` : 'Valor em dinheiro (R$)'} <span className="opacity-70">— deixe vazio se não pagar</span></label>
                           <input
                             type="text"
                             inputMode="decimal"
