@@ -75,8 +75,11 @@ Deno.serve(async (req) => {
       .eq("bets_config_id", cfg.id)
       .order("position");
 
-    // case images for case-payout events
-    const caseIds = Array.from(new Set((events || []).map((e: any) => e.payout_case_id).filter(Boolean)));
+    // case images for case-payout events + markets
+    const caseIds = Array.from(new Set([
+      ...(events || []).map((e: any) => e.payout_case_id).filter(Boolean),
+      ...markets.map((m: any) => m.payout_case_id).filter(Boolean),
+    ]));
     let cases: any[] = [];
     if (caseIds.length) {
       const { data: cs } = await supabase
