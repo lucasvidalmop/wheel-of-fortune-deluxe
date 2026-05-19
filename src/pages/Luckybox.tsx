@@ -96,6 +96,7 @@ interface LuckyCase {
   claim_opens_at?: string | null;
   claim_closes_at?: string | null;
   claim_quantity?: number;
+  claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
 }
 interface DrawnCase {
   case_id: string;
