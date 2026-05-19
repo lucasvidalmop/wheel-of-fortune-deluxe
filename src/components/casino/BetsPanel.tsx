@@ -660,14 +660,48 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     <button onClick={() => deleteEvent(ev)} title="Excluir" className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {evOuts.map(o => (
-                    <div key={o.id} className={`px-3 py-2 rounded-lg text-sm ${o.is_winner ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
-                      <div className="text-xs text-muted-foreground">{o.label}</div>
-                      <div className="font-bold tabular-nums">{Number(o.odd).toFixed(2)}</div>
+                {(() => {
+                  const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
+                  if (evMarkets.length === 0) {
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {evOuts.map(o => (
+                          <div key={o.id} className={`px-3 py-2 rounded-lg text-sm ${o.is_winner ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                            <div className="text-xs text-muted-foreground">{o.label}</div>
+                            <div className="font-bold tabular-nums">{Number(o.odd).toFixed(2)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-2">
+                      {evMarkets.map(m => {
+                        const mOuts = evOuts.filter(o => o.market_id === m.id);
+                        return (
+                          <div key={m.id} className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-semibold text-foreground/80">{m.title}</span>
+                              {m.status === 'resolved' && <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-600">Resolvido</span>}
+                              {m.status === 'cancelled' && <span className="px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-600">Cancelado</span>}
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              {mOuts.map(o => {
+                                const isWin = m.winning_outcome_id === o.id;
+                                return (
+                                  <div key={o.id} className={`px-3 py-2 rounded-lg text-sm ${isWin ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                                    <div className="text-xs text-muted-foreground">{isWin ? '🏆 ' : ''}{o.label}</div>
+                                    <div className="font-bold tabular-nums">{Number(o.odd).toFixed(2)}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
               </div>
             );
           })}
