@@ -84,6 +84,7 @@ interface LuckyCase {
   image_url: string;
   rarity: string;
   mode: 'probability' | 'pool' | 'case_pool';
+  prize_type?: 'pix' | 'tokens';
   prizes: CasePrize[];
   prize_pool?: any;
   position: number;
