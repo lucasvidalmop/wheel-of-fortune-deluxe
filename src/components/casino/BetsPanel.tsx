@@ -289,6 +289,41 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     }
   };
 
+  const resolveMarket = async (marketId: string, winningOutcomeId: string) => {
+    setSaving(true);
+    const { data, error } = await supabase.rpc('resolve_bet_market', {
+      p_market_id: marketId, p_winning_outcome_id: winningOutcomeId,
+    });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    if ((data as any)?.success) {
+      toast.success(`Mercado resolvido: ${(data as any).processed} apostas processadas`);
+      loadAll();
+    } else {
+      toast.error(`Falha: ${(data as any)?.error || 'erro'}`);
+    }
+  };
+
+  const cancelMarket = async (marketId: string, title: string) => {
+    const ok = await confirmDialog({
+      title: 'Cancelar mercado?',
+      description: `O mercado "${title}" será cancelado e as apostas pendentes devolvidas.`,
+      confirmText: 'Cancelar mercado', cancelText: 'Voltar', destructive: true,
+    });
+    if (!ok) return;
+    setSaving(true);
+    const { data, error } = await supabase.rpc('cancel_bet_market', { p_market_id: marketId });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    if ((data as any)?.success) {
+      toast.success(`Cancelado. ${(data as any).refunded} apostas devolvidas`);
+      loadAll();
+    } else {
+      toast.error(`Falha: ${(data as any)?.error || 'erro'}`);
+    }
+  };
+
+
   const cancelEvent = async (ev: BetEvent) => {
     const ok = await confirmDialog({
       title: 'Cancelar evento?',
