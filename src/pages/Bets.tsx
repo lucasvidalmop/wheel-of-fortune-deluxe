@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2 } from 'lucide-react';
+import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
@@ -409,43 +409,54 @@ const Bets = ({ tag }: BetsPageProps) => {
             const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
             const evCat = ev.category_id ? cats.find(x => x.id === ev.category_id) : null;
             const catBg = evCat?.background_url || '';
+            const ticketAccent = ev.is_hot ? '#f97316' : (evCat?.color || accent);
             const cardStyle: React.CSSProperties = catBg
               ? {
-                  backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.85) 100%), url(${catBg})`,
+                  backgroundImage: `linear-gradient(180deg, rgba(2, 8, 18, 0.2) 0%, rgba(3, 10, 24, 0.74) 50%, rgba(3, 7, 15, 0.96) 100%), url(${catBg})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  border: `1px solid ${ev.is_hot ? '#f9731688' : accent + '22'}`,
+                  border: `2px solid ${ticketAccent}66`,
+                  boxShadow: `0 18px 45px -22px ${ticketAccent}aa, inset 0 1px 0 rgba(255,255,255,0.12)`,
                 }
-              : { background: cardBg, border: `1px solid ${ev.is_hot ? '#f9731688' : accent + '22'}` };
+              : {
+                  background: `linear-gradient(160deg, ${bg} 0%, ${cardBg} 100%)`,
+                  border: `2px solid ${ticketAccent}66`,
+                  boxShadow: `0 18px 45px -22px ${ticketAccent}aa, inset 0 1px 0 rgba(255,255,255,0.12)`,
+                };
             return (
-              <article key={ev.id} className="rounded-2xl p-4 sm:p-5 overflow-hidden" style={cardStyle}>
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      {ev.is_hot && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: '#f9731633', color: '#f97316' }}>🔥 Quente</span>}
-                      {ev.category && <span className="text-xs uppercase tracking-wider" style={{ color: accent }}>{ev.category}</span>}
+              <article key={ev.id} className="relative rounded-2xl p-4 sm:p-5 overflow-hidden" style={cardStyle}>
+                <div aria-hidden className="absolute -top-24 -right-20 w-44 h-44 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${ticketAccent}20, transparent 70%)` }} />
+                <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[11px] font-semibold" style={{ color: text }}>
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <Calendar size={13} />
+                    <span className="truncate tabular-nums">{ev.closes_at ? `Encerra ${formatBetDateTime(ev.closes_at)}` : eventStatusBadge(ev.status)}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 shrink-0 pl-2" style={{ borderLeft: `1px solid ${text}22` }}>
+                    <Ticket size={13} />
+                    <span className="tracking-wider">{ev.is_hot ? 'QUENTE' : (evCat?.name || ev.category || 'ODDS')}</span>
+                  </span>
+                </div>
+
+                <div className="relative rounded-xl p-3 mb-3" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14` }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {ev.is_hot && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: '#f9731633', color: '#f97316', border: '#f9731655' }}>🔥 Quente</span>}
+                        {(evCat?.name || ev.category) && <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: ticketAccent }}>{evCat?.name || ev.category}</span>}
+                      </div>
+                      <h2 className="font-black text-lg sm:text-xl leading-tight" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{ev.title}</h2>
+                      {ev.subtitle && <p className="text-sm mt-1" style={{ color: muted }}>{ev.subtitle}</p>}
                     </div>
-                    <h2 className="font-bold text-lg sm:text-xl truncate">{ev.title}</h2>
-                    {ev.subtitle && <p className="text-sm mt-0.5" style={{ color: muted }}>{ev.subtitle}</p>}
-                    <div className="flex items-center gap-3 mt-2 text-xs flex-wrap" style={{ color: muted }}>
-                      {ev.closes_at && (
-                        <span className="flex items-center gap-1"><Clock size={12} /> Encerra: {formatBetDateTime(ev.closes_at)}</span>
-                      )}
-                      <span className="px-2 py-0.5 rounded-full" style={{ background: '#00000044' }}>{eventStatusBadge(ev.status)}</span>
-                      {ev.status === 'open' && timeExpired && (
-                        <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</span>
-                      )}
-                    </div>
+                    {ev.image_url && <img src={ev.image_url} alt="" className="w-24 h-16 sm:w-32 sm:h-20 rounded-lg object-cover flex-shrink-0 border border-white/10" />}
                   </div>
-                  {ev.image_url && <img src={ev.image_url} alt="" className="w-28 h-16 sm:w-36 sm:h-20 rounded-lg object-cover flex-shrink-0" />}
                 </div>
                 {ev.payout_mode === 'case' && c && (
-                  <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: '#00000044' }}>
+                  <div className="relative flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
                     {c.image_url && <img src={c.image_url} className="w-8 h-8 rounded" alt="" />}
                     <span className="text-xs">Prêmio: caixa <b>{c.name}</b> ({ev.payout_case_qty_per_unit}× por unidade apostada)</span>
                   </div>
                 )}
-                <div className={`grid gap-2 ${outs.length === 2 ? 'grid-cols-2' : outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                <div className={`relative grid gap-2 ${outs.length === 2 ? 'grid-cols-2' : outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
                   {outs.map(o => {
                     const isWinner = ev.status === 'resolved' && o.is_winner;
                     const isLoser = ev.status === 'resolved' && !o.is_winner;
@@ -453,18 +464,23 @@ const Bets = ({ tag }: BetsPageProps) => {
                       <button key={o.id}
                         onClick={() => openSlip(ev, o)}
                         disabled={!!closed}
-                        className="px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+                        className="relative px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
                         style={{
-                          background: isWinner ? `${accent}33` : '#00000033',
-                          border: `1px solid ${isWinner ? accent : `${accent}33`}`,
+                          background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
+                          border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
+                          boxShadow: isWinner ? `0 0 22px ${ticketAccent}33` : `inset 0 -1px 0 ${ticketAccent}44`,
                           color: isLoser ? muted : text,
                         }}>
-                        <div className="text-xs uppercase tracking-wider mb-1" style={{ color: muted }}>{o.label}</div>
-                        <div className="text-xl font-bold tabular-nums" style={{ color: isWinner ? accent : text }}>{Number(o.odd).toFixed(2)}</div>
+                        <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
+                        <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>{o.label}</div>
+                        <div className="text-2xl font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
                       </button>
                     );
                   })}
                 </div>
+                {ev.status === 'open' && timeExpired && (
+                  <div className="relative mt-3 px-3 py-2 rounded-lg text-xs font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</div>
+                )}
               </article>
             );
           };
@@ -623,56 +639,103 @@ const Bets = ({ tag }: BetsPageProps) => {
       {slip && (
         <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
           onClick={() => setSlip(null)}>
-          <div className="w-full max-w-md rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${accent}55` }} onClick={e => e.stopPropagation()}>
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div className="min-w-0">
-                <div className="text-xs uppercase" style={{ color: muted }}>Cupom de aposta</div>
-                <div className="font-bold truncate">{slip.event.title}</div>
-                <div className="text-sm mt-1">
-                  <span className="px-2 py-0.5 rounded" style={{ background: `${accent}33` }}>
-                    {slip.outcome.label} · {Number(slip.outcome.odd).toFixed(2)}
-                  </span>
-                </div>
+          <div
+            className="w-full max-w-sm rounded-2xl p-5 relative overflow-hidden"
+            style={{
+              background: `linear-gradient(160deg, ${bg} 0%, ${cardBg} 100%)`,
+              border: `2px solid ${accent}55`,
+              boxShadow: `0 0 60px ${accent}26`,
+              color: text,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div aria-hidden className="absolute -top-24 -right-24 w-44 h-44 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${accent}18, transparent 70%)` }} />
+            <div className="relative flex items-center justify-center mb-5 pt-1">
+              <div className="flex w-full items-center justify-center min-w-0 px-9">
+                {cfg.logoUrl ? (
+                  <img src={cfg.logoUrl} alt="" className="h-20 w-full max-w-[220px] object-contain" />
+                ) : (
+                  <span className="font-black text-base truncate" style={{ color: accent }}>{cfg.title || 'Apostas'}</span>
+                )}
               </div>
-              <button onClick={() => setSlip(null)} className="p-1.5 rounded" style={{ background: '#00000044' }}>
-                <X size={16} />
+              <div className="absolute right-0 top-0 text-[10px] font-bold tracking-[0.2em] px-2 py-1 rounded-full" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
+                BILHETE
+              </div>
+              <button onClick={() => setSlip(null)} className="absolute left-0 top-0 p-1.5 rounded-full" style={{ background: '#00000044', color: text }}>
+                <X size={15} />
               </button>
             </div>
-            <label className="text-sm" style={{ color: muted }}>Valor ({coinName})</label>
-            <input
-              type="number" inputMode="numeric" min={slip.event.min_bet} step={1}
-              value={amount} onChange={e => setAmount(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg outline-none text-lg font-bold tabular-nums mt-1"
-              style={{ background: '#00000033', color: text, border: `1px solid ${accent}55` }}
-            />
-            <div className="flex gap-2 mt-2">
+
+            <h2 className="relative text-center text-2xl font-black leading-tight mb-4" style={{ color: accent, textShadow: `0 0 16px ${accent}55` }}>
+              Cupom de aposta
+            </h2>
+
+            <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[11px] font-semibold" style={{ color: text }}>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Calendar size={13} />
+                <span className="truncate tabular-nums">{formatBetDateTime(new Date().toISOString())}</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 pl-2" style={{ borderLeft: `1px solid ${text}22` }}>
+                <Ticket size={13} />
+                <span className="tracking-wider">PRÉVIA</span>
+              </div>
+            </div>
+
+            <div className="relative rounded-xl p-3 mb-3" style={{ background: cardBg, border: `1px solid ${text}11` }}>
+              <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: muted }}>Evento</div>
+              <div className="font-bold text-sm leading-snug mb-2">{slip.event.title}</div>
+              <div className="inline-block px-2.5 py-1 rounded-md font-bold text-xs" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
+                {slip.outcome.label}
+              </div>
+            </div>
+
+            <div className="relative grid grid-cols-2 gap-2 mb-3">
+              <div className="relative rounded-xl px-3 py-3 overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}33`, boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66` }}>
+                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+                <label className="block text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: accent }}>Valor</label>
+                <input
+                  type="number" inputMode="numeric" min={slip.event.min_bet} step={1}
+                  value={amount} onChange={e => setAmount(e.target.value)}
+                  className="w-full bg-transparent outline-none font-black text-2xl tabular-nums leading-none p-0"
+                  style={{ background: 'transparent', color: accent, textShadow: `0 0 12px ${accent}55` }}
+                />
+                <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{coinName}</div>
+              </div>
+              <div className="relative rounded-xl px-3 py-3" style={{ background: cardBg, border: `1px solid ${text}15` }}>
+                <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>Cota</div>
+                <div className="font-black text-2xl tabular-nums leading-none" style={{ color: text }}>{Number(slip.outcome.odd).toFixed(2).replace('.', ',')}</div>
+                <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>multiplicador</div>
+              </div>
+            </div>
+
+            <div className="relative grid grid-cols-5 gap-2 mb-3">
               {[10, 50, 100, 500].map(v => (
                 <button key={v} type="button" onClick={() => setAmount(String(v))}
-                  className="flex-1 py-1.5 rounded text-xs font-medium" style={{ background: '#00000044', color: text }}>
+                  className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: '#00000044', color: text, border: `1px solid ${text}10` }}>
                   {v}
                 </button>
               ))}
               <button type="button" onClick={() => setAmount(String(authed?.tokens_balance ?? 0))}
-                className="flex-1 py-1.5 rounded text-xs font-medium" style={{ background: '#00000044', color: text }}>
+                className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
                 Tudo
               </button>
             </div>
 
-            <div className="mt-4 p-3 rounded-lg space-y-1 text-sm" style={{ background: '#00000033' }}>
-              <div className="flex justify-between"><span style={{ color: muted }}>Saldo:</span><span className="tabular-nums">{authed?.tokens_balance ?? 0}</span></div>
-              <div className="flex justify-between"><span style={{ color: muted }}>Aposta:</span><span className="tabular-nums">{Math.floor(Number(amount) || 0)}</span></div>
-              <div className="flex justify-between font-bold">
-                <span>Retorno potencial:</span>
-                <span className="tabular-nums" style={{ color: accent }}>
+            <div className="relative rounded-xl px-4 py-3 mb-4 space-y-2" style={{ background: cardBg, border: `1px solid ${text}11` }}>
+              <div className="flex items-center justify-between text-sm"><span style={{ color: muted }}>Saldo</span><span className="tabular-nums font-semibold">{authed?.tokens_balance ?? 0} {coinName}</span></div>
+              <div className="flex items-center justify-between text-sm"><span style={{ color: muted }}>Aposta</span><span className="tabular-nums font-semibold">{Math.floor(Number(amount) || 0)} {coinName}</span></div>
+              <div className="flex items-center justify-between gap-3 pt-2 border-t" style={{ borderColor: `${text}11` }}>
+                <span className="text-[11px] uppercase tracking-wider font-bold" style={{ color: muted }}>Retorno potencial</span>
+                <span className="font-black text-lg tabular-nums text-right" style={{ color: accent }}>
                   {slip.event.payout_mode === 'case'
                     ? `${Math.max(1, Math.floor((Number(amount) || 0) * slip.event.payout_case_qty_per_unit))}× caixa`
-                    : `${Math.round((Number(amount) || 0) * Number(slip.outcome.odd))} ${coinName}`}
+                    : `${Math.round((Number(amount) || 0) * Number(slip.outcome.odd)).toLocaleString('pt-BR')} ${coinName}`}
                 </span>
               </div>
             </div>
 
             <button onClick={placeBet} disabled={placing}
-              className="mt-4 w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              className="relative w-full py-3 rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
               style={{ background: accent, color: '#000' }}>
               {placing ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
               Confirmar aposta
