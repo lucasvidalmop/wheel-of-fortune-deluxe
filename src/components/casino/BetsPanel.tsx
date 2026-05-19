@@ -23,11 +23,24 @@ interface BetEvent {
   is_hot?: boolean;
 }
 interface BetOutcome { id: string; event_id: string; market_id: string | null; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
-interface BetMarket { id: string; event_id: string; owner_id: string; title: string; position: number; status: 'open'|'closed'|'resolved'|'cancelled'; closes_at: string | null; winning_outcome_id: string | null; resolved_at: string | null }
+interface BetMarket {
+  id: string; event_id: string; owner_id: string; title: string; position: number;
+  status: 'open'|'closed'|'resolved'|'cancelled';
+  closes_at: string | null; winning_outcome_id: string | null; resolved_at: string | null;
+  min_bet: number; max_bet: number; max_bets_per_user: number;
+  payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
+}
 interface BetCategory { id: string; bets_config_id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface LbCase { id: string; name: string; image_url: string }
 
-type EditingMarket = { id?: string; title: string; position: number; outcomes: Array<{ id?: string; label: string; odd: number }> };
+type EditingMarket = {
+  id?: string; title: string; position: number;
+  status: 'open'|'closed'|'resolved'|'cancelled';
+  closes_at: string | null;
+  min_bet: number; max_bet: number; max_bets_per_user: number;
+  payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
+  outcomes: Array<{ id?: string; label: string; odd: number }>;
+};
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [tab, setTab] = useState<'config'|'events'|'categories'|'wagers'|'analytics'>('config');
@@ -117,6 +130,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const defaultMarketDefaults = (): Omit<EditingMarket, 'title'|'position'|'outcomes'> => ({
+    status: 'open', closes_at: null,
+    min_bet: 1, max_bet: 0, max_bets_per_user: 0,
+    payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
+  });
+
   const openNewEvent = () => {
     setEditingEvent({
       title: '', subtitle: '', category: '', category_id: null, image_url: '',
@@ -125,7 +144,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
     });
     setEditingMarkets([{
-      title: 'Principal', position: 0,
+      title: 'Principal', position: 0, ...defaultMarketDefaults(),
       outcomes: [{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }],
     }]);
   };
@@ -135,14 +154,18 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
     const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
     if (evMarkets.length === 0) {
-      // legacy event without markets: treat all outcomes as Principal
       setEditingMarkets([{
-        title: 'Principal', position: 0,
+        title: 'Principal', position: 0, ...defaultMarketDefaults(),
         outcomes: evOuts.map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
       }]);
     } else {
       setEditingMarkets(evMarkets.map((m, idx) => ({
         id: m.id, title: m.title, position: idx,
+        status: m.status, closes_at: m.closes_at,
+        min_bet: m.min_bet ?? 1, max_bet: m.max_bet ?? 0, max_bets_per_user: m.max_bets_per_user ?? 0,
+        payout_mode: (m as any).payout_mode || 'coins',
+        payout_case_id: (m as any).payout_case_id || null,
+        payout_case_qty_per_unit: (m as any).payout_case_qty_per_unit ?? 1,
         outcomes: evOuts.filter(o => o.market_id === m.id).map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
       })));
     }
@@ -210,12 +233,23 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       for (let mi = 0; mi < editingMarkets.length; mi++) {
         const em = editingMarkets[mi];
         let marketId = em.id;
+        const marketPayload = {
+          title: em.title.trim(), position: mi,
+          status: em.status || 'open',
+          closes_at: em.closes_at || null,
+          min_bet: em.min_bet ?? 1,
+          max_bet: em.max_bet ?? 0,
+          max_bets_per_user: em.max_bets_per_user ?? 0,
+          payout_mode: em.payout_mode || 'coins',
+          payout_case_id: em.payout_mode === 'case' ? (em.payout_case_id || null) : null,
+          payout_case_qty_per_unit: em.payout_case_qty_per_unit ?? 1,
+        };
         if (marketId) {
-          const { error } = await supabase.from('bet_markets').update({ title: em.title.trim(), position: mi }).eq('id', marketId);
+          const { error } = await supabase.from('bet_markets').update(marketPayload).eq('id', marketId);
           if (error) throw error;
         } else {
           const { data, error } = await supabase.from('bet_markets').insert({
-            event_id: eventId, owner_id: ownerId, title: em.title.trim(), position: mi,
+            event_id: eventId, owner_id: ownerId, ...marketPayload,
           }).select().single();
           if (error) throw error;
           marketId = (data as any).id;
@@ -397,6 +431,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   // Analytics filters
   const [aFilter, setAFilter] = useState<{ eventId: string; status: string; days: number }>({ eventId: '', status: '', days: 30 });
+  const [wFilter, setWFilter] = useState<{ eventId: string; marketId: string; status: string }>({ eventId: '', marketId: '', status: '' });
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -762,35 +797,88 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         </div>
       )}
 
-      {tab === 'wagers' && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-muted-foreground border-b border-border">
-              <th className="py-2">Data</th><th>Usuário</th><th>Evento</th><th>Resultado</th>
-              <th className="text-right">Valor</th><th className="text-right">Odd</th><th>Status</th><th className="text-right">Retorno</th>
-            </tr></thead>
-            <tbody>
-              {wagers.map(w => {
-                const ev = events.find(e => e.id === w.event_id);
-                const out = outcomes.find(o => o.id === w.outcome_id);
-                return (
-                  <tr key={w.id} className="border-b border-border/50">
-                    <td className="py-2 text-xs">{new Date(w.created_at).toLocaleString('pt-BR')}</td>
-                    <td>{w.user_name || w.user_email}<div className="text-xs text-muted-foreground">{w.account_id}</div></td>
-                    <td className="text-xs">{ev?.title || w.event_id.slice(0, 8)}</td>
-                    <td className="text-xs">{out?.label || '?'}</td>
-                    <td className="text-right tabular-nums">{w.amount_coins}</td>
-                    <td className="text-right tabular-nums">{Number(w.odd_snapshot).toFixed(2)}</td>
-                    <td><span className="text-xs px-2 py-0.5 rounded bg-muted">{w.status}</span></td>
-                    <td className="text-right tabular-nums text-xs">{w.payout_mode === 'case' ? '— caixa' : (w.payout_coins || '—')}</td>
-                  </tr>
-                );
-              })}
-              {wagers.length === 0 && <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Nenhuma aposta ainda.</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {tab === 'wagers' && (() => {
+        const filtered = wagers.filter(w =>
+          (!wFilter.eventId || w.event_id === wFilter.eventId) &&
+          (!wFilter.marketId || w.market_id === wFilter.marketId) &&
+          (!wFilter.status || w.status === wFilter.status)
+        );
+        const availableMarkets = wFilter.eventId
+          ? markets.filter(m => m.event_id === wFilter.eventId)
+          : markets;
+        return (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 items-end">
+              <div>
+                <label className="text-xs font-medium block mb-1">Evento</label>
+                <select value={wFilter.eventId}
+                  onChange={e => setWFilter(f => ({ ...f, eventId: e.target.value, marketId: '' }))}
+                  className="px-3 py-2 rounded-lg bg-muted text-sm min-w-[200px]">
+                  <option value="">Todos</option>
+                  {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium block mb-1">Mercado</label>
+                <select value={wFilter.marketId}
+                  onChange={e => setWFilter(f => ({ ...f, marketId: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-muted text-sm min-w-[180px]">
+                  <option value="">Todos</option>
+                  {availableMarkets.map(m => {
+                    const ev = events.find(e => e.id === m.event_id);
+                    return <option key={m.id} value={m.id}>{wFilter.eventId ? m.title : `${ev?.title || '?'} → ${m.title}`}</option>;
+                  })}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium block mb-1">Status</label>
+                <select value={wFilter.status}
+                  onChange={e => setWFilter(f => ({ ...f, status: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-muted text-sm">
+                  <option value="">Todos</option>
+                  <option value="pending">Pendente</option>
+                  <option value="won">Ganhou</option>
+                  <option value="lost">Perdeu</option>
+                  <option value="refunded">Devolvida</option>
+                  <option value="cancelled">Cancelada</option>
+                </select>
+              </div>
+              <button onClick={() => setWFilter({ eventId: '', marketId: '', status: '' })}
+                className="px-3 py-2 rounded-lg bg-muted text-sm hover:bg-muted/80">Limpar</button>
+              <div className="ml-auto text-xs text-muted-foreground">{filtered.length} aposta(s)</div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="py-2">Data</th><th>Usuário</th><th>Evento</th><th>Mercado</th><th>Resultado</th>
+                  <th className="text-right">Valor</th><th className="text-right">Odd</th><th>Status</th><th className="text-right">Retorno</th>
+                </tr></thead>
+                <tbody>
+                  {filtered.map(w => {
+                    const ev = events.find(e => e.id === w.event_id);
+                    const out = outcomes.find(o => o.id === w.outcome_id);
+                    const mk = w.market_id ? markets.find(m => m.id === w.market_id) : null;
+                    return (
+                      <tr key={w.id} className="border-b border-border/50">
+                        <td className="py-2 text-xs">{new Date(w.created_at).toLocaleString('pt-BR')}</td>
+                        <td>{w.user_name || w.user_email}<div className="text-xs text-muted-foreground">{w.account_id}</div></td>
+                        <td className="text-xs">{ev?.title || w.event_id.slice(0, 8)}</td>
+                        <td className="text-xs text-muted-foreground">{mk?.title || '—'}</td>
+                        <td className="text-xs">{out?.label || '?'}</td>
+                        <td className="text-right tabular-nums">{w.amount_coins}</td>
+                        <td className="text-right tabular-nums">{Number(w.odd_snapshot).toFixed(2)}</td>
+                        <td><span className="text-xs px-2 py-0.5 rounded bg-muted">{w.status}</span></td>
+                        <td className="text-right tabular-nums text-xs">{w.payout_mode === 'case' ? '— caixa' : (w.payout_coins || '—')}</td>
+                      </tr>
+                    );
+                  })}
+                  {filtered.length === 0 && <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Nenhuma aposta.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       {tab === 'analytics' && (
         <AnalyticsTab
@@ -891,7 +979,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Mercados de aposta</label>
                 <button onClick={() => setEditingMarkets(arr => [...arr, {
-                  title: `Mercado ${arr.length + 1}`, position: arr.length,
+                  title: `Mercado ${arr.length + 1}`, position: arr.length, ...defaultMarketDefaults(),
                   outcomes: [{ label: 'Sim', odd: 1.9 }, { label: 'Não', odd: 1.9 }],
                 }])}
                   className="px-2 py-1 text-xs rounded bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1">
@@ -940,6 +1028,64 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       <Plus size={11} /> Adicionar resultado
                     </button>
                   </div>
+
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground select-none py-1">
+                      ⚙️ Configurações avançadas do mercado
+                    </summary>
+                    <div className="mt-2 grid grid-cols-2 gap-2 p-2 rounded bg-background/60 border border-border">
+                      <div>
+                        <label className="text-[10px] font-medium block mb-1">Status</label>
+                        <select value={m.status}
+                          onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, status: e.target.value as any } : x))}
+                          className="w-full px-2 py-1.5 rounded bg-muted text-xs" disabled={m.status === 'resolved' || m.status === 'cancelled'}>
+                          <option value="open">Aberto</option>
+                          <option value="closed">Fechado</option>
+                          {m.status === 'resolved' && <option value="resolved">Resolvido</option>}
+                          {m.status === 'cancelled' && <option value="cancelled">Cancelado</option>}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-medium block mb-1">Encerra apostas em (vazio = usa do evento)</label>
+                        <input type="datetime-local" value={betIsoToDateTimeLocal(m.closes_at)}
+                          onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, closes_at: e.target.value ? dateTimeLocalToBetIso(e.target.value) : null } : x))}
+                          className="w-full px-2 py-1.5 rounded bg-muted text-xs" />
+                      </div>
+                      <NumberField label="Mín. aposta" value={m.min_bet}
+                        onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, min_bet: n ?? 1 } : x))} />
+                      <NumberField label="Máx. aposta (0=sem)" value={m.max_bet}
+                        onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, max_bet: n ?? 0 } : x))} />
+                      <NumberField label="Apostas/usuário (0=ilim.)" value={m.max_bets_per_user}
+                        onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, max_bets_per_user: n == null ? 0 : Math.max(0, Math.floor(n)) } : x))} />
+                      <div>
+                        <label className="text-[10px] font-medium block mb-1">Prêmio</label>
+                        <div className="flex gap-1">
+                          {(['coins', 'case'] as const).map(mode => (
+                            <button key={mode} type="button"
+                              onClick={() => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, payout_mode: mode } : x))}
+                              className={`flex-1 px-2 py-1.5 rounded text-xs ${m.payout_mode === mode ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                              {mode === 'coins' ? 'Coins×odd' : 'Caixa'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {m.payout_mode === 'case' && (
+                        <>
+                          <div className="col-span-2">
+                            <label className="text-[10px] font-medium block mb-1">Caixa Luckybox</label>
+                            <select value={m.payout_case_id || ''}
+                              onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, payout_case_id: e.target.value || null } : x))}
+                              className="w-full px-2 py-1.5 rounded bg-muted text-xs">
+                              <option value="">Selecione…</option>
+                              {cases.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                          </div>
+                          <NumberField label="Caixas por unidade" value={m.payout_case_qty_per_unit}
+                            onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, payout_case_qty_per_unit: n ?? 1 } : x))} />
+                        </>
+                      )}
+                    </div>
+                  </details>
                 </div>
               ))}
             </div>
