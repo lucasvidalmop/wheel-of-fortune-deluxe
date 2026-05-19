@@ -8,7 +8,14 @@ import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTick
 
 interface BetsPageProps { tag: string }
 
-interface OutcomeRow { id: string; event_id: string; label: string; odd: number; position: number; is_winner: boolean }
+interface OutcomeRow { id: string; event_id: string; market_id: string | null; label: string; odd: number; position: number; is_winner: boolean }
+interface MarketRow {
+  id: string; event_id: string; title: string; position: number;
+  status: 'open'|'closed'|'resolved'|'cancelled'; closes_at: string | null;
+  winning_outcome_id: string | null; min_bet: number; max_bet: number;
+  max_bets_per_user: number; payout_mode: 'coins'|'case';
+  payout_case_id: string | null; payout_case_qty_per_unit: number;
+}
 interface EventRow {
   id: string; title: string; subtitle: string; category: string; category_id: string | null; image_url: string;
   starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
