@@ -54,9 +54,15 @@ interface Props {
 const fmtDate = (iso: string) => {
   try {
     return new Date(iso).toLocaleString('pt-BR', {
-      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).replace(',', ' •');
   } catch { return ''; }
+};
+
+const shortId = (id?: string) => {
+  if (!id) return '------';
+  const clean = String(id).replace(/-/g, '').toUpperCase();
+  return clean.slice(0, 6);
 };
 
 export default function ShareTicket({ open, onClose, data, config = {} }: Props) {
