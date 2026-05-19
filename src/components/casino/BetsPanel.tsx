@@ -818,21 +818,59 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Resultados (mín. 2)</label>
-                <button onClick={() => setEditingOutcomes(o => [...o, { label: '', odd: 2 }])}
-                  className="px-2 py-1 text-xs rounded bg-muted hover:bg-muted/80 flex items-center gap-1"><Plus size={12} /> Adicionar</button>
+                <label className="text-sm font-medium">Mercados de aposta</label>
+                <button onClick={() => setEditingMarkets(arr => [...arr, {
+                  title: `Mercado ${arr.length + 1}`, position: arr.length,
+                  outcomes: [{ label: 'Sim', odd: 1.9 }, { label: 'Não', odd: 1.9 }],
+                }])}
+                  className="px-2 py-1 text-xs rounded bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1">
+                  <Plus size={12} /> Adicionar mercado
+                </button>
               </div>
-              {editingOutcomes.map((o, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <input value={o.label} placeholder="Resultado (ex.: Casa)"
-                    onChange={e => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
-                    className="flex-1 px-3 py-1.5 rounded bg-muted text-sm" />
-                  <NumberField value={o.odd}
-                    onChange={n => setEditingOutcomes(arr => arr.map((x, j) => j === i ? { ...x, odd: n ?? 0 } : x))}
-                    className="w-24 px-3 py-1.5 rounded bg-muted text-sm tabular-nums" />
-                  <button onClick={() => setEditingOutcomes(arr => arr.filter((_, j) => j !== i))} className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Crie sub-apostas dentro do mesmo evento (ex.: <em>Resultado Final</em>, <em>Total de Gols</em>, <em>Ambas Marcam</em>). Cada mercado tem seus próprios resultados, odds e é resolvido separadamente.
+              </p>
+              {editingMarkets.map((m, mi) => (
+                <div key={mi} className="p-3 rounded-lg bg-muted/40 border border-border space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input value={m.title} placeholder="Título do mercado"
+                      onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, title: e.target.value } : x))}
+                      className="flex-1 px-3 py-1.5 rounded bg-background border border-border text-sm font-medium" />
+                    <button onClick={() => setEditingMarkets(arr => arr.filter((_, j) => j !== mi))}
+                      disabled={editingMarkets.length <= 1}
+                      title={editingMarkets.length <= 1 ? 'Mantenha ao menos 1 mercado' : 'Excluir mercado'}
+                      className="p-1.5 rounded hover:bg-muted text-red-500 disabled:opacity-30 disabled:cursor-not-allowed">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div className="space-y-1.5 pl-2 border-l-2 border-primary/30">
+                    {m.outcomes.map((o, oi) => (
+                      <div key={oi} className="flex gap-2 items-center">
+                        <input value={o.label} placeholder="Resultado (ex.: Sim)"
+                          onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                            ? { ...x, outcomes: x.outcomes.map((y, k) => k === oi ? { ...y, label: e.target.value } : y) }
+                            : x))}
+                          className="flex-1 px-3 py-1.5 rounded bg-background border border-border text-sm" />
+                        <NumberField value={o.odd}
+                          onChange={n => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                            ? { ...x, outcomes: x.outcomes.map((y, k) => k === oi ? { ...y, odd: n ?? 0 } : y) }
+                            : x))}
+                          className="w-24 px-3 py-1.5 rounded bg-background border border-border text-sm tabular-nums" />
+                        <button onClick={() => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                          ? { ...x, outcomes: x.outcomes.filter((_, k) => k !== oi) }
+                          : x))}
+                          className="p-1.5 rounded hover:bg-muted text-red-500"><Trash2 size={14} /></button>
+                      </div>
+                    ))}
+                    <button onClick={() => setEditingMarkets(arr => arr.map((x, j) => j === mi
+                      ? { ...x, outcomes: [...x.outcomes, { label: '', odd: 2 }] }
+                      : x))}
+                      className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
+                      <Plus size={11} /> Adicionar resultado
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
