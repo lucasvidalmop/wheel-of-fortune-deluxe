@@ -48,6 +48,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
+  const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
 
   // load page
   useEffect(() => {
