@@ -279,6 +279,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       };
       setAuthedUser(sess);
       sessionStorage.setItem(`luckybox_user_${cfg!.tag}`, JSON.stringify(sess));
+      fetchUserClaims(cfg!.owner_id, sess.email, sess.account_id);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao entrar');
     } finally {
