@@ -92,6 +92,10 @@ interface LuckyCase {
   mode?: 'probability' | 'pool' | 'case_pool';
   prize_type?: 'pix' | 'tokens';
   prize_pool?: { quantity?: number; items?: CasePoolItem[] } | any;
+  claim_enabled?: boolean;
+  claim_opens_at?: string | null;
+  claim_closes_at?: string | null;
+  claim_quantity?: number;
 }
 interface DrawnCase {
   case_id: string;
