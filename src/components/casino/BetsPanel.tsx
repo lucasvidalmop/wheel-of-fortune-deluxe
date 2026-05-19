@@ -124,25 +124,45 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
       min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
     });
-    setEditingOutcomes([{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }]);
+    setEditingMarkets([{
+      title: 'Principal', position: 0,
+      outcomes: [{ label: 'Casa', odd: 1.8 }, { label: 'Empate', odd: 3.2 }, { label: 'Visitante', odd: 4.0 }],
+    }]);
   };
 
   const openEditEvent = (ev: BetEvent) => {
     setEditingEvent({ ...ev });
+    const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
     const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
-    setEditingOutcomes(evOuts.map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })));
+    if (evMarkets.length === 0) {
+      // legacy event without markets: treat all outcomes as Principal
+      setEditingMarkets([{
+        title: 'Principal', position: 0,
+        outcomes: evOuts.map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
+      }]);
+    } else {
+      setEditingMarkets(evMarkets.map((m, idx) => ({
+        id: m.id, title: m.title, position: idx,
+        outcomes: evOuts.filter(o => o.market_id === m.id).map(o => ({ id: o.id, label: o.label, odd: Number(o.odd) })),
+      })));
+    }
   };
 
   const saveEvent = async () => {
     if (!config || !editingEvent) return;
     if (!editingEvent.title?.trim()) { toast.error('Título obrigatório'); return; }
-    if (editingOutcomes.length < 2) { toast.error('Mínimo 2 resultados'); return; }
-    if (editingOutcomes.some(o => !o.label.trim() || !(o.odd > 1))) { toast.error('Cada resultado precisa de label e odd > 1'); return; }
+    if (editingMarkets.length === 0) { toast.error('Adicione ao menos 1 mercado'); return; }
+    for (const m of editingMarkets) {
+      if (!m.title.trim()) { toast.error('Cada mercado precisa de um título'); return; }
+      if (m.outcomes.length < 2) { toast.error(`Mercado "${m.title}" precisa de no mínimo 2 resultados`); return; }
+      if (m.outcomes.some(o => !o.label.trim() || !(o.odd > 1))) {
+        toast.error(`Mercado "${m.title}": cada resultado precisa de label e odd > 1`); return;
+      }
+    }
     setSaving(true);
     try {
       let eventId = (editingEvent as BetEvent).id;
       const catObj = editingEvent.category_id ? categories.find(c => c.id === editingEvent.category_id) : null;
-      // Auto-schedule: if starts_at is in the future, force status='scheduled'
       const startsAtIso = editingEvent.starts_at || null;
       let status = editingEvent.status || 'open';
       if (startsAtIso && new Date(startsAtIso).getTime() > Date.now() && status === 'open') {
@@ -176,24 +196,54 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         if (error) throw error;
         eventId = (data as any).id;
       }
-      // Sync outcomes: delete missing, upsert provided
-      const existing = outcomes.filter(o => o.event_id === eventId);
-      const keepIds = editingOutcomes.filter(o => o.id).map(o => o.id);
-      const toDelete = existing.filter(o => !keepIds.includes(o.id));
-      if (toDelete.length) {
-        await supabase.from('bet_outcomes').delete().in('id', toDelete.map(o => o.id));
+
+      // Sync markets
+      const existingMarkets = markets.filter(m => m.event_id === eventId);
+      const keepMarketIds = editingMarkets.filter(m => m.id).map(m => m.id);
+      const marketsToDelete = existingMarkets.filter(m => !keepMarketIds.includes(m.id));
+      if (marketsToDelete.length) {
+        // outcomes are cascade-deleted via FK? Safer: delete outcomes first
+        await supabase.from('bet_outcomes').delete().in('market_id', marketsToDelete.map(m => m.id));
+        await supabase.from('bet_markets').delete().in('id', marketsToDelete.map(m => m.id));
       }
-      for (let i = 0; i < editingOutcomes.length; i++) {
-        const o = editingOutcomes[i];
-        if (o.id) {
-          await supabase.from('bet_outcomes').update({ label: o.label, odd: o.odd, position: i }).eq('id', o.id);
+
+      for (let mi = 0; mi < editingMarkets.length; mi++) {
+        const em = editingMarkets[mi];
+        let marketId = em.id;
+        if (marketId) {
+          const { error } = await supabase.from('bet_markets').update({ title: em.title.trim(), position: mi }).eq('id', marketId);
+          if (error) throw error;
         } else {
-          await supabase.from('bet_outcomes').insert({ event_id: eventId, owner_id: ownerId, label: o.label, odd: o.odd, position: i });
+          const { data, error } = await supabase.from('bet_markets').insert({
+            event_id: eventId, owner_id: ownerId, title: em.title.trim(), position: mi,
+          }).select().single();
+          if (error) throw error;
+          marketId = (data as any).id;
+        }
+
+        // Sync outcomes for this market
+        const existingOuts = outcomes.filter(o => o.market_id === marketId);
+        const keepOutIds = em.outcomes.filter(o => o.id).map(o => o.id);
+        const outsToDelete = existingOuts.filter(o => !keepOutIds.includes(o.id));
+        if (outsToDelete.length) {
+          await supabase.from('bet_outcomes').delete().in('id', outsToDelete.map(o => o.id));
+        }
+        for (let oi = 0; oi < em.outcomes.length; oi++) {
+          const o = em.outcomes[oi];
+          if (o.id) {
+            await supabase.from('bet_outcomes').update({ label: o.label, odd: o.odd, position: oi, market_id: marketId }).eq('id', o.id);
+          } else {
+            await supabase.from('bet_outcomes').insert({
+              event_id: eventId, market_id: marketId, owner_id: ownerId,
+              label: o.label, odd: o.odd, position: oi,
+            });
+          }
         }
       }
+
       toast.success('Evento salvo!');
       setEditingEvent(null);
-      setEditingOutcomes([]);
+      setEditingMarkets([]);
       loadAll();
     } catch (e: any) {
       toast.error(e.message || 'Erro ao salvar');
