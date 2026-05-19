@@ -601,6 +601,11 @@ const Bets = ({ tag }: BetsPageProps) => {
                       {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
                       {w.payout_mode === 'case' ? ' · Prêmio: caixa' : ` · Retorno: ${Math.round(w.amount_coins * Number(w.odd_snapshot))} ${coinName}`}
                     </div>
+                    {w.public_code && (
+                      <div className="text-[10px] mt-1 font-mono tracking-wider" style={{ color: accent }}>
+                        ID: {w.public_code}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
