@@ -1057,7 +1057,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
             {cases.map(c => {
               const grantQty = (authedUser.case_grants?.[c.id] || 0);
               const isFree = grantQty > 0;
-              const cantAfford = !isFree && authedUser.tokens_balance < c.price_tokens;
+              const cantAfford = !isFree && (c.claim_enabled || authedUser.tokens_balance < c.price_tokens);
               const opensAt = c.claim_opens_at ? new Date(c.claim_opens_at).getTime() : null;
               const closesAt = c.claim_closes_at ? new Date(c.claim_closes_at).getTime() : null;
               const windowOpen = !!c.claim_enabled
@@ -1127,6 +1127,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                     <div className="text-center mt-2 flex items-center justify-center gap-1.5 text-base font-bold" style={{ color: accent }}>
                       {isFree ? (
                         <span className="text-sm">🎁 Abrir grátis</span>
+                      ) : c.claim_enabled ? (
+                        <span className="text-sm">🎁 Evento</span>
                       ) : (
                         <>
                           <CoinIcon size={20} color={accent} />
