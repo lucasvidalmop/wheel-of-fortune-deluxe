@@ -292,6 +292,8 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
   };
 
+  const allowSameFixture = !!(cfg.multiTicket?.allowSameFixture);
+
   const addToTicket = (event: EventRow, outcome: OutcomeRow) => {
     if (!authed) { toast.error('Faça login para apostar'); return; }
     const market = outcome.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
@@ -300,6 +302,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     if (status !== 'open' && status !== 'scheduled') { toast.error('Mercado fechado'); return; }
     if (isBetDateTimeExpired(closesAt)) { toast.error('Apostas encerradas'); return; }
     const marketKey = outcome.market_id || 'main';
+    const marketTitle = market?.title || 'Resultado Final';
     const exists = ticketDraft.find(s => s.eventId === event.id && (s.marketId || 'main') === marketKey);
     if (exists) {
       if (exists.outcomeId === outcome.id) {
@@ -315,9 +318,17 @@ const Bets = ({ tag }: BetsPageProps) => {
       }
       return;
     }
+    // coerência: bloquear combinações conflitantes/redundantes no mesmo fixture
+    const check = canAddSelection(
+      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle })),
+      { eventId: event.id, marketId: outcome.market_id, marketTitle },
+      { allowSameFixture },
+    );
+    if (!check.ok) { toast.error(check.reason || 'Combinação não permitida'); return; }
+
     setTicketDraft(prev => [...prev, {
       eventId: event.id, eventTitle: event.title,
-      marketId: outcome.market_id, marketTitle: market?.title || 'Resultado Final',
+      marketId: outcome.market_id, marketTitle,
       outcomeId: outcome.id, outcomeLabel: outcome.label, odd: Number(outcome.odd),
     }]);
     toast.success('Adicionado ao bilhete');
