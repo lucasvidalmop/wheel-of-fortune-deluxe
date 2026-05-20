@@ -1234,7 +1234,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             ];
 
             try {
-              const r = await fetch(`http://177.7.52.80:3001/odds?fixture=${encodeURIComponent(String(fixtureId))}`);
+              const r = await fetch(`https://sportsapi.tipspayroleta.com/odds?fixture=${encodeURIComponent(String(fixtureId))}`);
               const oddsRes = await r.json().catch(() => ({}));
               const responses = (oddsRes as any)?.response || [];
               const bookmakers = responses[0]?.bookmakers || [];
@@ -1299,7 +1299,7 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
       if (season.trim()) qs.set('season', season.trim());
       if (date.trim()) qs.set('date', date.trim());
       if (team.trim()) qs.set('team', team.trim());
-      const r = await fetch(`http://177.7.52.80:3001/fixtures?${qs.toString()}`);
+      const r = await fetch(`https://sportsapi.tipspayroleta.com/fixtures?${qs.toString()}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
       if ((data as any)?.error) throw new Error((data as any).error);
