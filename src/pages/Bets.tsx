@@ -116,6 +116,16 @@ const Bets = ({ tag }: BetsPageProps) => {
     })();
   }, [tag]);
 
+  // sync selectedEventId with browser back/forward
+  useEffect(() => {
+    const onPop = () => {
+      const m = window.location.hash.match(/(?:^#|&)ev=([^&]+)/);
+      setSelectedEventIdState(m ? decodeURIComponent(m[1]) : null);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   // wager counts são carregados apenas no load inicial (via get-bets-page).
   // Usuário precisa dar F5 para ver contagem atualizada — economia máxima de recursos.
 
