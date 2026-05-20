@@ -612,7 +612,19 @@ const Bets = ({ tag }: BetsPageProps) => {
                         )}
                       </div>
                     );
-                  });
+                  })}
+                  {extraCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
+                      className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold transition hover:brightness-110"
+                      style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}
+                    >
+                      {evExpanded ? <>Esconder mercados <ChevronUp size={14} /></> : <>+{extraCount} mercados <ChevronDown size={14} /></>}
+                    </button>
+                  )}
+                    </>
+                  );
                 })()}
                 {ev.status === 'open' && timeExpired && (
                   <div className="relative mt-3 px-3 py-2 rounded-lg text-xs font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</div>
