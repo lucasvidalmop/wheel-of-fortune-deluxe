@@ -18,6 +18,7 @@ interface MarketRow {
 }
 interface EventRow {
   id: string; title: string; subtitle: string; category: string; category_id: string | null; image_url: string;
+  home_image_url?: string | null; away_image_url?: string | null;
   starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
