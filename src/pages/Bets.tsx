@@ -25,6 +25,8 @@ interface EventRow {
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
   is_hot?: boolean;
+  competition_id?: string | null; competition_name?: string | null;
+  competition_slug?: string | null; competition_country?: string | null;
 }
 interface CategoryRow { id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
