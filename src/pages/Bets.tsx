@@ -77,6 +77,19 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
+  const [selectedEventId, setSelectedEventIdState] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const m = window.location.hash.match(/(?:^#|&)ev=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  });
+  const setSelectedEventId = (id: string | null) => {
+    setSelectedEventIdState(id);
+    if (typeof window !== 'undefined') {
+      if (id) window.history.pushState(null, '', `#ev=${encodeURIComponent(id)}`);
+      else window.history.pushState(null, '', window.location.pathname + window.location.search);
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    }
+  };
 
   // multi-bet ticket
   const [ticketDraft, setTicketDraft] = useState<TicketDraft[]>([]);
@@ -102,6 +115,16 @@ const Bets = ({ tag }: BetsPageProps) => {
       }
     })();
   }, [tag]);
+
+  // sync selectedEventId with browser back/forward
+  useEffect(() => {
+    const onPop = () => {
+      const m = window.location.hash.match(/(?:^#|&)ev=([^&]+)/);
+      setSelectedEventIdState(m ? decodeURIComponent(m[1]) : null);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // wager counts são carregados apenas no load inicial (via get-bets-page).
   // Usuário precisa dar F5 para ver contagem atualizada — economia máxima de recursos.
@@ -632,7 +655,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             if (filtered.length) grouped.push({ cat: c, items: filtered });
           }
 
-          const renderEvent = (ev: EventRow) => {
+          const renderEvent = (ev: EventRow, detailMode = false) => {
             const outs = outcomesByEvent[ev.id] || [];
             const timeExpired = isBetDateTimeExpired(ev.closes_at);
             const closed = (ev.status !== 'open' && ev.status !== 'scheduled') || timeExpired;
@@ -678,9 +701,9 @@ const Bets = ({ tag }: BetsPageProps) => {
 
                 <button
                   type="button"
-                  onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
+                  onClick={() => { if (!detailMode) setSelectedEventId(ev.id); }}
                   className="relative w-full text-left rounded-xl p-2.5 mb-2.5 transition hover:brightness-110"
-                  style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14` }}
+                  style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14`, cursor: detailMode ? 'default' : 'pointer' }}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -723,12 +746,12 @@ const Bets = ({ tag }: BetsPageProps) => {
                   } else {
                     if (outs.length) groups.push({ market: null, outs });
                   }
-                  const evExpanded = !!expandedEvents[ev.id];
+                  const evExpanded = detailMode || !!expandedEvents[ev.id];
                   const extraCount = Math.max(0, groups.length - 1);
                   const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
                   return (
                     <>
-                      {evExpanded && extraCount > 0 && (
+                      {!detailMode && evExpanded && extraCount > 0 && (
                         <button
                           type="button"
                           onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: false }))}
@@ -839,7 +862,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       </div>
                     );
                   })}
-                  {extraCount > 0 && (
+                  {!detailMode && extraCount > 0 && (
                     <button
                       type="button"
                       onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
@@ -859,6 +882,30 @@ const Bets = ({ tag }: BetsPageProps) => {
             );
           };
 
+          // Detail mode: show only the selected event in full width
+          if (selectedEventId) {
+            const selectedEvent = events.find(e => e.id === selectedEventId);
+            return (
+              <div className="space-y-4">
+                <button
+                  onClick={() => setSelectedEventId(null)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition hover:brightness-110"
+                  style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: text }}
+                >
+                  <ChevronUp size={16} style={{ transform: 'rotate(-90deg)' }} />
+                  Voltar aos jogos
+                </button>
+                {selectedEvent ? (
+                  <div className="max-w-2xl mx-auto">{renderEvent(selectedEvent, true)}</div>
+                ) : (
+                  <div className="text-center py-16" style={{ color: muted }}>
+                    Evento não encontrado.
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <div className="space-y-6">
               {events.length === 0 && (
@@ -875,7 +922,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
                     <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
                   </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{hotEvents.map(renderEvent)}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{hotEvents.map(ev => renderEvent(ev))}</div>
                 </section>
               )}
 
@@ -939,7 +986,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <div className="flex-1 h-px" style={{ background: (g.cat?.color || accent) + '33' }} />
                     <span className="text-xs" style={{ color: muted }}>{g.items.length}</span>
                   </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{g.items.map(renderEvent)}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{g.items.map(ev => renderEvent(ev))}</div>
                 </section>
               ))}
 
