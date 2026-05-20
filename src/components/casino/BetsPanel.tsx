@@ -21,6 +21,7 @@ interface BetEvent {
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
   is_hot?: boolean;
+  external_fixture_id?: string | null;
 }
 interface BetOutcome { id: string; event_id: string; market_id: string | null; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
 interface BetMarket {
