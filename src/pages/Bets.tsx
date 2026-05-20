@@ -655,7 +655,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             if (filtered.length) grouped.push({ cat: c, items: filtered });
           }
 
-          const renderEvent = (ev: EventRow) => {
+          const renderEvent = (ev: EventRow, detailMode = false) => {
             const outs = outcomesByEvent[ev.id] || [];
             const timeExpired = isBetDateTimeExpired(ev.closes_at);
             const closed = (ev.status !== 'open' && ev.status !== 'scheduled') || timeExpired;
