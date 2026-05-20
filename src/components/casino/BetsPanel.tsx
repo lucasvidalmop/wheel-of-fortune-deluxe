@@ -650,10 +650,16 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
       {tab === 'events' && (
         <div className="space-y-3">
-          <button onClick={openNewEvent}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium flex items-center gap-2">
-            <Plus size={16} /> Novo evento
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={openNewEvent}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium flex items-center gap-2">
+              <Plus size={16} /> Novo evento
+            </button>
+            <button onClick={() => setImporterOpen(true)}
+              className="px-4 py-2 bg-muted hover:bg-muted/70 rounded-lg font-medium flex items-center gap-2 border border-border">
+              ⚽ Importar da API-Football
+            </button>
+          </div>
           {events.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento criado ainda.</p>}
           {events.map(ev => {
             const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
