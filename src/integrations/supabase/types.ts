@@ -165,6 +165,10 @@ export type Database = {
           category: string
           category_id: string | null
           closes_at: string | null
+          competition_country: string | null
+          competition_id: string | null
+          competition_name: string | null
+          competition_slug: string | null
           created_at: string
           external_fixture_id: string | null
           home_image_url: string | null
@@ -193,6 +197,10 @@ export type Database = {
           category?: string
           category_id?: string | null
           closes_at?: string | null
+          competition_country?: string | null
+          competition_id?: string | null
+          competition_name?: string | null
+          competition_slug?: string | null
           created_at?: string
           external_fixture_id?: string | null
           home_image_url?: string | null
@@ -221,6 +229,10 @@ export type Database = {
           category?: string
           category_id?: string | null
           closes_at?: string | null
+          competition_country?: string | null
+          competition_id?: string | null
+          competition_name?: string | null
+          competition_slug?: string | null
           created_at?: string
           external_fixture_id?: string | null
           home_image_url?: string | null

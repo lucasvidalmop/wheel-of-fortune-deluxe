@@ -25,6 +25,8 @@ interface EventRow {
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
   is_hot?: boolean;
+  competition_id?: string | null; competition_name?: string | null;
+  competition_slug?: string | null; competition_country?: string | null;
 }
 interface CategoryRow { id: string; name: string; color: string; icon: string; position: number; background_url?: string }
 interface CaseRow { id: string; name: string; image_url: string; rarity: string }
@@ -575,17 +577,39 @@ const Bets = ({ tag }: BetsPageProps) => {
           const cats: CategoryRow[] = page?.categories || [];
           const hotEvents = events.filter(e => e.is_hot);
           const nonHot = events.filter(e => !e.is_hot);
-          // categories present in non-hot events
+
+          // Filtros fixos por categoria/competição
+          // key formats:
+          //  'all'                          -> tudo
+          //  'category:<name lowercase>'    -> todos os eventos cuja categoria (nome) bate
+          //  'competition:<slug>'           -> eventos com competition_slug específico
+          //  'uncategorized'                -> sem category_id
+          //  <category_id>                  -> compat: filtro por id (não usado nos chips fixos)
+          const normCat = (s: string | null | undefined) => (s || '').trim().toLowerCase();
+          const matchesFilter = (e: EventRow) => {
+            if (categoryFilter === 'all') return true;
+            if (categoryFilter === 'uncategorized') return !e.category_id;
+            if (categoryFilter.startsWith('competition:')) {
+              const slug = categoryFilter.slice('competition:'.length);
+              return (e.competition_slug || '') === slug;
+            }
+            if (categoryFilter.startsWith('category:')) {
+              const name = categoryFilter.slice('category:'.length);
+              const evCatName = normCat(e.category) || normCat(cats.find(c => c.id === e.category_id)?.name);
+              return evCatName === name;
+            }
+            return e.category_id === categoryFilter;
+          };
+
+          const filtered = nonHot.filter(matchesFilter);
+
+          // categorias presentes em nonHot (para agrupar quando "Todos")
           const usedCatIds = new Set(nonHot.map(e => e.category_id).filter(Boolean) as string[]);
           const visibleCats = cats.filter(c => usedCatIds.has(c.id));
           const hasUncategorized = nonHot.some(e => !e.category_id);
-          const filtered = categoryFilter === 'all'
-            ? nonHot
-            : categoryFilter === 'uncategorized'
-              ? nonHot.filter(e => !e.category_id)
-              : nonHot.filter(e => e.category_id === categoryFilter);
-          // group filtered by category, preserving category order
-          const grouped: Array<{ cat: CategoryRow | null; items: EventRow[] }> = [];
+
+          // Agrupamento
+          const grouped: Array<{ cat: CategoryRow | null; items: EventRow[]; label?: string }> = [];
           if (categoryFilter === 'all') {
             visibleCats.forEach(c => {
               const items = filtered.filter(e => e.category_id === c.id);
@@ -593,6 +617,14 @@ const Bets = ({ tag }: BetsPageProps) => {
             });
             const unc = filtered.filter(e => !e.category_id);
             if (unc.length) grouped.push({ cat: null, items: unc });
+          } else if (categoryFilter.startsWith('competition:')) {
+            const slug = categoryFilter.slice('competition:'.length);
+            const label = filtered[0]?.competition_name || slug;
+            if (filtered.length) grouped.push({ cat: null, items: filtered, label });
+          } else if (categoryFilter.startsWith('category:')) {
+            const name = categoryFilter.slice('category:'.length);
+            const cat = cats.find(c => normCat(c.name) === name) || null;
+            if (filtered.length) grouped.push({ cat, items: filtered, label: cat?.name || name });
           } else if (categoryFilter === 'uncategorized') {
             if (filtered.length) grouped.push({ cat: null, items: filtered });
           } else {
@@ -855,40 +887,62 @@ const Bets = ({ tag }: BetsPageProps) => {
                 </section>
               )}
 
-              {/* Category filter chips */}
-              {(visibleCats.length > 0 || hasUncategorized) && (
-                <div className="flex flex-wrap gap-2 sticky top-[108px] z-10 py-2" style={{ background: 'transparent' }}>
-                  {(() => {
-                    const chip = (key: string, label: string, color?: string, icon?: string) => {
+              {/* Filtros fixos por categoria / competição */}
+              {(() => {
+                // chips fixos solicitados
+                const FIXED: Array<{ key: string; label: string; icon?: string }> = [
+                  { key: 'all', label: 'Todos' },
+                  { key: 'category:futebol', label: 'Futebol', icon: '⚽' },
+                  { key: 'competition:world-cup-2026', label: 'Copa do Mundo', icon: '🏆' },
+                  { key: 'competition:brasileirao', label: 'Brasileirão', icon: '🇧🇷' },
+                  { key: 'competition:champions-league', label: 'Champions League', icon: '⭐' },
+                  { key: 'competition:libertadores', label: 'Libertadores', icon: '🌎' },
+                ];
+                // só esconde chips que não têm nenhum evento correspondente (exceto "Todos")
+                const hasMatches = (key: string) => {
+                  if (key === 'all') return true;
+                  if (key.startsWith('competition:')) {
+                    const slug = key.slice('competition:'.length);
+                    return nonHot.some(e => e.competition_slug === slug);
+                  }
+                  if (key.startsWith('category:')) {
+                    const name = key.slice('category:'.length);
+                    return nonHot.some(e => {
+                      const evCatName = normCat(e.category) || normCat(cats.find(c => c.id === e.category_id)?.name);
+                      return evCatName === name;
+                    });
+                  }
+                  return false;
+                };
+                const visibleChips = FIXED.filter(c => c.key === 'all' || hasMatches(c.key));
+                if (visibleChips.length <= 1) return null;
+                return (
+                  <div className="flex flex-wrap gap-2 sticky top-[108px] z-10 py-2" style={{ background: 'transparent' }}>
+                    {visibleChips.map(({ key, label, icon }) => {
                       const active = categoryFilter === key;
                       return (
                         <button key={key} onClick={() => setCategoryFilter(key)}
                           className="px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition whitespace-nowrap"
                           style={{
-                            background: active ? (color || accent) : '#00000055',
-                            color: active ? '#000' : (color || text),
-                            border: `1px solid ${active ? (color || accent) : (color || accent) + '55'}`,
+                            background: active ? accent : '#00000055',
+                            color: active ? '#000' : text,
+                            border: `1px solid ${active ? accent : accent + '55'}`,
                           }}>
                           {icon ? `${icon} ` : ''}{label}
                         </button>
                       );
-                    };
-                    return [
-                      chip('all', 'Todas'),
-                      ...visibleCats.map(c => chip(c.id, c.name, c.color, c.icon)),
-                      ...(hasUncategorized ? [chip('uncategorized', 'Outros')] : []),
-                    ];
-                  })()}
-                </div>
-              )}
+                    })}
+                  </div>
+                );
+              })()}
 
               {/* Grouped events */}
               {grouped.map((g, i) => (
-                <section key={g.cat?.id || `unc-${i}`} className="space-y-3">
+                <section key={g.cat?.id || g.label || `unc-${i}`} className="space-y-3">
                   <div className="flex items-center gap-2">
                     {g.cat?.icon && <span>{g.cat.icon}</span>}
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: g.cat?.color || muted }}>
-                      {g.cat?.name || 'Outros'}
+                      {g.label || g.cat?.name || 'Outros'}
                     </h3>
                     <div className="flex-1 h-px" style={{ background: (g.cat?.color || accent) + '33' }} />
                     <span className="text-xs" style={{ color: muted }}>{g.items.length}</span>
