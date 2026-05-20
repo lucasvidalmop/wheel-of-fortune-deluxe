@@ -165,6 +165,7 @@ export type Database = {
           category_id: string | null
           closes_at: string | null
           created_at: string
+          external_fixture_id: string | null
           id: string
           image_url: string
           is_hot: boolean
@@ -190,6 +191,7 @@ export type Database = {
           category_id?: string | null
           closes_at?: string | null
           created_at?: string
+          external_fixture_id?: string | null
           id?: string
           image_url?: string
           is_hot?: boolean
@@ -215,6 +217,7 @@ export type Database = {
           category_id?: string | null
           closes_at?: string | null
           created_at?: string
+          external_fixture_id?: string | null
           id?: string
           image_url?: string
           is_hot?: boolean

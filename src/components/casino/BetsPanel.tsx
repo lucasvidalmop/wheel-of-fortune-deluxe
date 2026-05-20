@@ -21,6 +21,7 @@ interface BetEvent {
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
   is_hot?: boolean;
+  external_fixture_id?: string | null;
 }
 interface BetOutcome { id: string; event_id: string; market_id: string | null; owner_id: string; label: string; odd: number; position: number; is_winner: boolean }
 interface BetMarket {
@@ -59,6 +60,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [editingEvent, setEditingEvent] = useState<Partial<BetEvent> | null>(null);
   const [editingMarkets, setEditingMarkets] = useState<EditingMarket[]>([]);
   const [resolvingEvent, setResolvingEvent] = useState<BetEvent | null>(null);
+  const [importerOpen, setImporterOpen] = useState(false);
 
   const loadAll = async () => {
     setLoading(true);
@@ -210,6 +212,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         max_bets_per_user: editingEvent.max_bets_per_user ?? 0,
         position: editingEvent.position ?? 0,
         is_hot: !!editingEvent.is_hot,
+        external_fixture_id: (editingEvent as any).external_fixture_id || null,
       };
       if (eventId) {
         const { error } = await supabase.from('bet_events').update(payload).eq('id', eventId);
@@ -647,10 +650,16 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
       {tab === 'events' && (
         <div className="space-y-3">
-          <button onClick={openNewEvent}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium flex items-center gap-2">
-            <Plus size={16} /> Novo evento
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={openNewEvent}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium flex items-center gap-2">
+              <Plus size={16} /> Novo evento
+            </button>
+            <button onClick={() => setImporterOpen(true)}
+              className="px-4 py-2 bg-muted hover:bg-muted/70 rounded-lg font-medium flex items-center gap-2 border border-border">
+              ⚽ Importar da API-Football
+            </button>
+          </div>
           {events.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento criado ainda.</p>}
           {events.map(ev => {
             const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
@@ -1168,9 +1177,176 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           </div>
         );
       })()}
+
+      {importerOpen && (
+        <ApiFootballImporter
+          existingFixtureIds={events.map(e => (e as any).external_fixture_id).filter(Boolean) as string[]}
+          categories={categories}
+          onClose={() => setImporterOpen(false)}
+          onPick={(fx) => {
+            // Build event prefilled from fixture
+            const homeName = fx.teams?.home?.name || 'Casa';
+            const awayName = fx.teams?.away?.name || 'Visitante';
+            const homeLogo = fx.teams?.home?.logo || '';
+            const awayLogo = fx.teams?.away?.logo || '';
+            const startsAtIso = fx.fixture?.date || null;
+            const closesAtIso = startsAtIso
+              ? new Date(new Date(startsAtIso).getTime() - 5 * 60_000).toISOString()
+              : null;
+            const futCat = categories.find(c => /futebol|soccer|football/i.test(c.name));
+            setEditingEvent({
+              title: `${homeName} x ${awayName}`,
+              subtitle: fx.league?.name ? `${fx.league.name}${fx.league.round ? ' · ' + fx.league.round : ''}` : '',
+              category: 'Futebol',
+              category_id: futCat?.id || null,
+              image_url: homeLogo || awayLogo || '',
+              starts_at: startsAtIso,
+              closes_at: closesAtIso,
+              status: 'open',
+              payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
+              min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
+              external_fixture_id: String(fx.fixture?.id || ''),
+            } as any);
+            setEditingMarkets([{
+              title: 'Resultado Final', position: 0, ...defaultMarketDefaults(),
+              outcomes: [
+                { label: `${homeName} vence`, odd: 1.9 },
+                { label: 'Empate', odd: 3.2 },
+                { label: `${awayName} vence`, odd: 3.8 },
+              ],
+            }]);
+            setImporterOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
+
+function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }: {
+  existingFixtureIds: string[];
+  categories: Array<{ id: string; name: string }>;
+  onClose: () => void;
+  onPick: (fixture: any) => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [league, setLeague] = useState('');
+  const [season, setSeason] = useState(String(new Date().getFullYear()));
+  const [date, setDate] = useState(today);
+  const [team, setTeam] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<any[]>([]);
+  const [errored, setErrored] = useState<string>('');
+
+  const search = async () => {
+    setLoading(true); setErrored(''); setResults([]);
+    try {
+      const body: any = {};
+      if (league.trim()) body.league = league.trim();
+      if (season.trim()) body.season = season.trim();
+      if (date.trim()) body.date = date.trim();
+      if (team.trim()) body.team = team.trim();
+      const { data, error } = await supabase.functions.invoke('api-football-search', {
+        body: { resource: 'fixtures', ...body },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const list = (data as any)?.response || [];
+      setResults(list);
+      if (list.length === 0) toast.info('Nenhum jogo encontrado para esses filtros');
+    } catch (e: any) {
+      const msg = e?.message || 'Falha ao buscar';
+      setErrored(msg); toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-5 space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-lg">⚽ Importar da API-Football</h3>
+          <button onClick={onClose} className="p-1.5 rounded hover:bg-muted"><X size={16} /></button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div>
+            <label className="text-xs font-medium block mb-1">Liga (ID)</label>
+            <input value={league} onChange={e => setLeague(e.target.value)} placeholder="ex: 71"
+              className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Temporada</label>
+            <input value={season} onChange={e => setSeason(e.target.value)} placeholder="2025"
+              className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Data</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Time (ID)</label>
+            <input value={team} onChange={e => setTeam(e.target.value)} placeholder="ex: 131"
+              className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Use IDs numéricos da API-Football (league/team). Data no formato AAAA-MM-DD. Pelo menos um filtro é recomendado.
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <button onClick={() => { setLeague(''); setTeam(''); setDate(today); setSeason(String(new Date().getFullYear())); setResults([]); }}
+            className="px-3 py-2 rounded bg-muted text-sm">Limpar</button>
+          <button onClick={search} disabled={loading}
+            className="px-4 py-2 rounded bg-primary text-primary-foreground font-medium text-sm flex items-center gap-2 disabled:opacity-50">
+            {loading ? <Loader2 className="animate-spin" size={14} /> : '🔍'} Buscar jogos
+          </button>
+        </div>
+
+        {errored && <p className="text-sm text-destructive">{errored}</p>}
+
+        <div className="space-y-2">
+          {results.map((fx: any) => {
+            const fid = String(fx.fixture?.id || '');
+            const already = existingFixtureIds.includes(fid);
+            const home = fx.teams?.home; const away = fx.teams?.away;
+            const dt = fx.fixture?.date ? new Date(fx.fixture.date) : null;
+            return (
+              <div key={fid} className="p-3 rounded-xl bg-muted/50 border border-border flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-muted-foreground mb-1">
+                    {fx.league?.name} {fx.league?.country ? `· ${fx.league.country}` : ''} {fx.league?.round ? `· ${fx.league.round}` : ''}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    {home?.logo && <img src={home.logo} alt="" className="w-5 h-5 object-contain" />}
+                    <span className="truncate">{home?.name}</span>
+                    <span className="text-muted-foreground">x</span>
+                    {away?.logo && <img src={away.logo} alt="" className="w-5 h-5 object-contain" />}
+                    <span className="truncate">{away?.name}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1">
+                    {dt ? dt.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : ''}
+                    {' · fixture #' + fid}
+                  </div>
+                </div>
+                {already ? (
+                  <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Já importado</span>
+                ) : (
+                  <button onClick={() => onPick(fx)}
+                    className="px-3 py-1.5 rounded bg-primary text-primary-foreground text-xs font-medium">
+                    Usar
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Field({ label, value, onChange, type = 'text', upload }: { label: string; value: string; onChange: (v: string) => void; type?: string; upload?: (f: File) => Promise<void> }) {
   const isNumber = type === 'number';
