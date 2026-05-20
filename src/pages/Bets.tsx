@@ -577,17 +577,39 @@ const Bets = ({ tag }: BetsPageProps) => {
           const cats: CategoryRow[] = page?.categories || [];
           const hotEvents = events.filter(e => e.is_hot);
           const nonHot = events.filter(e => !e.is_hot);
-          // categories present in non-hot events
+
+          // Filtros fixos por categoria/competição
+          // key formats:
+          //  'all'                          -> tudo
+          //  'category:<name lowercase>'    -> todos os eventos cuja categoria (nome) bate
+          //  'competition:<slug>'           -> eventos com competition_slug específico
+          //  'uncategorized'                -> sem category_id
+          //  <category_id>                  -> compat: filtro por id (não usado nos chips fixos)
+          const normCat = (s: string | null | undefined) => (s || '').trim().toLowerCase();
+          const matchesFilter = (e: EventRow) => {
+            if (categoryFilter === 'all') return true;
+            if (categoryFilter === 'uncategorized') return !e.category_id;
+            if (categoryFilter.startsWith('competition:')) {
+              const slug = categoryFilter.slice('competition:'.length);
+              return (e.competition_slug || '') === slug;
+            }
+            if (categoryFilter.startsWith('category:')) {
+              const name = categoryFilter.slice('category:'.length);
+              const evCatName = normCat(e.category) || normCat(cats.find(c => c.id === e.category_id)?.name);
+              return evCatName === name;
+            }
+            return e.category_id === categoryFilter;
+          };
+
+          const filtered = nonHot.filter(matchesFilter);
+
+          // categorias presentes em nonHot (para agrupar quando "Todos")
           const usedCatIds = new Set(nonHot.map(e => e.category_id).filter(Boolean) as string[]);
           const visibleCats = cats.filter(c => usedCatIds.has(c.id));
           const hasUncategorized = nonHot.some(e => !e.category_id);
-          const filtered = categoryFilter === 'all'
-            ? nonHot
-            : categoryFilter === 'uncategorized'
-              ? nonHot.filter(e => !e.category_id)
-              : nonHot.filter(e => e.category_id === categoryFilter);
-          // group filtered by category, preserving category order
-          const grouped: Array<{ cat: CategoryRow | null; items: EventRow[] }> = [];
+
+          // Agrupamento
+          const grouped: Array<{ cat: CategoryRow | null; items: EventRow[]; label?: string }> = [];
           if (categoryFilter === 'all') {
             visibleCats.forEach(c => {
               const items = filtered.filter(e => e.category_id === c.id);
@@ -595,6 +617,14 @@ const Bets = ({ tag }: BetsPageProps) => {
             });
             const unc = filtered.filter(e => !e.category_id);
             if (unc.length) grouped.push({ cat: null, items: unc });
+          } else if (categoryFilter.startsWith('competition:')) {
+            const slug = categoryFilter.slice('competition:'.length);
+            const label = filtered[0]?.competition_name || slug;
+            if (filtered.length) grouped.push({ cat: null, items: filtered, label });
+          } else if (categoryFilter.startsWith('category:')) {
+            const name = categoryFilter.slice('category:'.length);
+            const cat = cats.find(c => normCat(c.name) === name) || null;
+            if (filtered.length) grouped.push({ cat, items: filtered, label: cat?.name || name });
           } else if (categoryFilter === 'uncategorized') {
             if (filtered.length) grouped.push({ cat: null, items: filtered });
           } else {
