@@ -1294,15 +1294,14 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
   const search = async () => {
     setLoading(true); setErrored(''); setResults([]);
     try {
-      const body: any = {};
-      if (league.trim()) body.league = league.trim();
-      if (season.trim()) body.season = season.trim();
-      if (date.trim()) body.date = date.trim();
-      if (team.trim()) body.team = team.trim();
-      const { data, error } = await supabase.functions.invoke('api-football-search', {
-        body: { resource: 'fixtures', ...body },
-      });
-      if (error) throw error;
+      const qs = new URLSearchParams();
+      if (league.trim()) qs.set('league', league.trim());
+      if (season.trim()) qs.set('season', season.trim());
+      if (date.trim()) qs.set('date', date.trim());
+      if (team.trim()) qs.set('team', team.trim());
+      const r = await fetch(`http://177.7.52.80:3001/fixtures?${qs.toString()}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
       if ((data as any)?.error) throw new Error((data as any).error);
       const list = (data as any)?.response || [];
       setResults(list);
