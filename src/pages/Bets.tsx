@@ -389,6 +389,10 @@ const Bets = ({ tag }: BetsPageProps) => {
           market_not_open: 'Um dos mercados não está aberto',
           duplicate_market: 'Não pode haver duas seleções do mesmo mercado',
           user_not_found: 'Usuário não encontrado',
+          odd_above_max: `Odd máxima permitida é ${maxOddAllowed}`,
+          return_above_max: `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`,
+          stake_below_min: `Valor mínimo de aposta é ${minBetAllowed}`,
+          stake_above_max: `Valor máximo de aposta é ${maxBetAllowed}`,
         };
         toast.error(errMap[data?.error] || `Falha: ${data?.error || 'erro'}`);
         return;
