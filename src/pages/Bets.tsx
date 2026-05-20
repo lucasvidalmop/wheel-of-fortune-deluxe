@@ -290,6 +290,94 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
   };
 
+  const addToTicket = (event: EventRow, outcome: OutcomeRow) => {
+    if (!authed) { toast.error('Faça login para apostar'); return; }
+    const market = outcome.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
+    const status = market?.status ?? event.status;
+    const closesAt = market?.closes_at ?? event.closes_at;
+    if (status !== 'open' && status !== 'scheduled') { toast.error('Mercado fechado'); return; }
+    if (isBetDateTimeExpired(closesAt)) { toast.error('Apostas encerradas'); return; }
+    const marketKey = outcome.market_id || 'main';
+    const exists = ticketDraft.find(s => s.eventId === event.id && (s.marketId || 'main') === marketKey);
+    if (exists) {
+      if (exists.outcomeId === outcome.id) {
+        toast.info('Seleção já no bilhete');
+      } else {
+        // replace selection within the same market
+        setTicketDraft(prev => prev.map(s =>
+          (s.eventId === event.id && (s.marketId || 'main') === marketKey)
+            ? { ...s, outcomeId: outcome.id, outcomeLabel: outcome.label, odd: Number(outcome.odd) }
+            : s
+        ));
+        toast.success('Seleção atualizada no bilhete');
+      }
+      return;
+    }
+    setTicketDraft(prev => [...prev, {
+      eventId: event.id, eventTitle: event.title,
+      marketId: outcome.market_id, marketTitle: market?.title || 'Resultado Final',
+      outcomeId: outcome.id, outcomeLabel: outcome.label, odd: Number(outcome.odd),
+    }]);
+    toast.success('Adicionado ao bilhete');
+  };
+
+  const removeFromTicket = (outcomeId: string) => {
+    setTicketDraft(prev => prev.filter(s => s.outcomeId !== outcomeId));
+  };
+  const clearTicket = () => setTicketDraft([]);
+
+  const totalOdd = useMemo(
+    () => ticketDraft.reduce((acc, s) => acc * (Number(s.odd) || 1), 1),
+    [ticketDraft],
+  );
+  const ticketReturn = useMemo(() => {
+    const amt = Math.floor(Number(ticketAmount));
+    if (!Number.isFinite(amt) || amt <= 0) return 0;
+    return Math.round(amt * totalOdd);
+  }, [ticketAmount, totalOdd]);
+
+  const placeTicket = async () => {
+    if (!authed) return;
+    if (ticketDraft.length < 2) { toast.error('Selecione pelo menos 2 opções'); return; }
+    const amt = Math.floor(Number(ticketAmount));
+    if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
+    if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
+    setPlacingTicket(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('place-ticket', {
+        body: {
+          tag, email: authed.email, accountId: authed.account_id,
+          selections: ticketDraft.map(s => ({ outcomeId: s.outcomeId })),
+          amount: amt,
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) {
+        const errMap: Record<string, string> = {
+          need_min_two_selections: 'Selecione pelo menos 2 opções',
+          too_many_selections: 'Limite de 20 seleções por bilhete',
+          insufficient_balance: 'Saldo insuficiente',
+          event_closed: 'Um dos eventos já está encerrado',
+          event_not_open: 'Um dos eventos não está aberto',
+          market_not_open: 'Um dos mercados não está aberto',
+          duplicate_market: 'Não pode haver duas seleções do mesmo mercado',
+          user_not_found: 'Usuário não encontrado',
+        };
+        toast.error(errMap[data?.error] || `Falha: ${data?.error || 'erro'}`);
+        return;
+      }
+      toast.success(`Bilhete confirmado! Retorno potencial: ${data.potential_return}`);
+      setAuthed(prev => prev ? { ...prev, tokens_balance: data.new_balance } : prev);
+      setTicketDraft([]);
+      setTicketOpen(false);
+      refreshMine();
+    } catch (err: any) {
+      toast.error('Falha ao registrar bilhete');
+    } finally {
+      setPlacingTicket(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: bg, color: text }}>
