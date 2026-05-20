@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar } from 'lucide-react';
+import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
@@ -57,6 +57,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
+  const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
 
   // load page
   useEffect(() => {
@@ -535,28 +536,40 @@ const Bets = ({ tag }: BetsPageProps) => {
                       ? (mk.status !== 'open' || isBetDateTimeExpired(mk.closes_at))
                       : closed;
                     const mkCase = mk?.payout_case_id ? casesById[mk.payout_case_id] : null;
-                    const showHeader = !!mk && (evMarkets.length > 1 || mk.title !== 'Principal');
+                    const isPrincipal = gi === 0;
+                    const showHeader = !isPrincipal && !!mk;
+                    const collapseKey = `${ev.id}:${mk?.id || 'main'}`;
+                    const collapsed = !isPrincipal && (collapsedMarkets[collapseKey] ?? true);
                     return (
-                      <div key={mk?.id || `g${gi}`} className={gi > 0 ? 'mt-3' : ''}>
+                      <div key={mk?.id || `g${gi}`} className={gi > 0 ? 'mt-2' : ''}>
                         {showHeader && (
-                          <div className="relative flex items-center justify-between gap-2 mb-2 px-1">
-                            <h3 className="text-[11px] uppercase tracking-[0.18em] font-black flex items-center gap-2" style={{ color: ticketAccent }}>
+                          <button
+                            type="button"
+                            onClick={() => setCollapsedMarkets(s => ({ ...s, [collapseKey]: !(s[collapseKey] ?? true) }))}
+                            className="relative w-full flex items-center justify-between gap-2 mb-2 px-2 py-1.5 rounded-md transition hover:opacity-90"
+                            style={{ background: `${ticketAccent}14`, border: `1px solid ${ticketAccent}33` }}
+                          >
+                            <h3 className="text-[10px] uppercase tracking-[0.18em] font-black flex items-center gap-2" style={{ color: ticketAccent }}>
                               <span className="inline-block w-1 h-3 rounded-sm" style={{ background: ticketAccent }} />
                               {mk!.title}
                             </h3>
-                            {mk!.status !== 'open' && (
-                              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: '#ef444433', color: '#f87171' }}>
-                                {mk!.status === 'resolved' ? 'Resolvido' : mk!.status === 'closed' ? 'Fechado' : 'Cancelado'}
-                              </span>
-                            )}
-                          </div>
+                            <span className="flex items-center gap-2">
+                              {mk!.status !== 'open' && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: '#ef444433', color: '#f87171' }}>
+                                  {mk!.status === 'resolved' ? 'Resolvido' : mk!.status === 'closed' ? 'Fechado' : 'Cancelado'}
+                                </span>
+                              )}
+                              {collapsed ? <ChevronDown size={14} style={{ color: ticketAccent }} /> : <ChevronUp size={14} style={{ color: ticketAccent }} />}
+                            </span>
+                          </button>
                         )}
-                        {mk?.payout_mode === 'case' && mkCase && (
+                        {!collapsed && mk?.payout_mode === 'case' && mkCase && (
                           <div className="relative flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
                             {mkCase.image_url && <img src={mkCase.image_url} className="w-8 h-8 rounded" alt="" />}
                             <span className="text-xs">Prêmio: caixa <b>{mkCase.name}</b> ({mk.payout_case_qty_per_unit}× por unidade apostada)</span>
                           </div>
                         )}
+                        {!collapsed && (
                         <div className={`relative grid gap-2 ${g.outs.length === 2 ? 'grid-cols-2' : g.outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
                           {g.outs.map(o => {
                             const resolvedFlag = mk ? mk.status === 'resolved' : ev.status === 'resolved';
@@ -567,7 +580,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                               <button key={o.id}
                                 onClick={() => openSlip(ev, o)}
                                 disabled={mkClosed}
-                                className="relative px-3 py-3 rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
+                                className="relative px-2.5 py-2 rounded-lg text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
                                 style={{
                                   background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
                                   border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
@@ -575,16 +588,17 @@ const Bets = ({ tag }: BetsPageProps) => {
                                   color: isLoser ? muted : text,
                                 }}>
                                 <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
-                                <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>{o.label}</div>
-                                <div className="text-2xl font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
-                                <div className="mt-2 pt-2 border-t flex items-center justify-between gap-1 text-[10px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
-                                  <span className="flex items-center gap-1"><Ticket size={10} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
+                                <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate" style={{ color: muted }}>{o.label}</div>
+                                <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
+                                <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
+                                  <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
                                   <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
                                 </div>
                               </button>
                             );
                           })}
                         </div>
+                        )}
                       </div>
                     );
                   });
