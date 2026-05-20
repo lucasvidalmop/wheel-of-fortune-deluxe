@@ -1422,7 +1422,7 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
                 ) : (
                   <button onClick={() => onPick(fx)}
                     className="px-3 py-1.5 rounded bg-primary text-primary-foreground text-xs font-medium">
-                    Usar
+                    Importar evento
                   </button>
                 )}
               </div>
