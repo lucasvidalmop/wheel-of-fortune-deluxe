@@ -882,6 +882,30 @@ const Bets = ({ tag }: BetsPageProps) => {
             );
           };
 
+          // Detail mode: show only the selected event in full width
+          if (selectedEventId) {
+            const selectedEvent = events.find(e => e.id === selectedEventId);
+            return (
+              <div className="space-y-4">
+                <button
+                  onClick={() => setSelectedEventId(null)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition hover:brightness-110"
+                  style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: text }}
+                >
+                  <ChevronUp size={16} style={{ transform: 'rotate(-90deg)' }} />
+                  Voltar aos jogos
+                </button>
+                {selectedEvent ? (
+                  <div className="max-w-2xl mx-auto">{renderEvent(selectedEvent, true)}</div>
+                ) : (
+                  <div className="text-center py-16" style={{ color: muted }}>
+                    Evento não encontrado.
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <div className="space-y-6">
               {events.length === 0 && (
