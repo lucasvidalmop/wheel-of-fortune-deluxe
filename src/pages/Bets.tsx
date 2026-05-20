@@ -381,8 +381,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
     if (ticketBlockReason) { toast.error(ticketBlockReason); return; }
     const coherence = validateTicketCoherence(
-      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle })),
-      { allowSameFixture },
+      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle, outcomeLabel: s.outcomeLabel, eventTitle: s.eventTitle })),
     );
     if (!coherence.ok) { toast.error(coherence.reason || 'Combinação não permitida'); return; }
     setPlacingTicket(true);
