@@ -701,9 +701,9 @@ const Bets = ({ tag }: BetsPageProps) => {
 
                 <button
                   type="button"
-                  onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
+                  onClick={() => { if (!detailMode) setSelectedEventId(ev.id); }}
                   className="relative w-full text-left rounded-xl p-2.5 mb-2.5 transition hover:brightness-110"
-                  style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14` }}
+                  style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14`, cursor: detailMode ? 'default' : 'pointer' }}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
