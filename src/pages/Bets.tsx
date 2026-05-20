@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import { computeTicketOdd, effectiveMaxOdd, HARD_MAX_ODD, type TicketOddLimits } from '@/lib/ticketOdds';
+import { canAddSelection, validateTicketCoherence } from '@/lib/ticketCoherence';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
 
@@ -291,6 +292,8 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
   };
 
+  const allowSameFixture = !!(cfg.multiTicket?.allowSameFixture);
+
   const addToTicket = (event: EventRow, outcome: OutcomeRow) => {
     if (!authed) { toast.error('Faça login para apostar'); return; }
     const market = outcome.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
@@ -299,6 +302,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     if (status !== 'open' && status !== 'scheduled') { toast.error('Mercado fechado'); return; }
     if (isBetDateTimeExpired(closesAt)) { toast.error('Apostas encerradas'); return; }
     const marketKey = outcome.market_id || 'main';
+    const marketTitle = market?.title || 'Resultado Final';
     const exists = ticketDraft.find(s => s.eventId === event.id && (s.marketId || 'main') === marketKey);
     if (exists) {
       if (exists.outcomeId === outcome.id) {
@@ -314,9 +318,17 @@ const Bets = ({ tag }: BetsPageProps) => {
       }
       return;
     }
+    // coerência: bloquear combinações conflitantes/redundantes no mesmo fixture
+    const check = canAddSelection(
+      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle })),
+      { eventId: event.id, marketId: outcome.market_id, marketTitle },
+      { allowSameFixture },
+    );
+    if (!check.ok) { toast.error(check.reason || 'Combinação não permitida'); return; }
+
     setTicketDraft(prev => [...prev, {
       eventId: event.id, eventTitle: event.title,
-      marketId: outcome.market_id, marketTitle: market?.title || 'Resultado Final',
+      marketId: outcome.market_id, marketTitle,
       outcomeId: outcome.id, outcomeLabel: outcome.label, odd: Number(outcome.odd),
     }]);
     toast.success('Adicionado ao bilhete');
@@ -369,6 +381,11 @@ const Bets = ({ tag }: BetsPageProps) => {
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
     if (ticketBlockReason) { toast.error(ticketBlockReason); return; }
+    const coherence = validateTicketCoherence(
+      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle })),
+      { allowSameFixture },
+    );
+    if (!coherence.ok) { toast.error(coherence.reason || 'Combinação não permitida'); return; }
     setPlacingTicket(true);
     try {
       const { data, error } = await supabase.functions.invoke('place-ticket', {
@@ -388,6 +405,8 @@ const Bets = ({ tag }: BetsPageProps) => {
           event_not_open: 'Um dos eventos não está aberto',
           market_not_open: 'Um dos mercados não está aberto',
           duplicate_market: 'Não pode haver duas seleções do mesmo mercado',
+          same_fixture_not_allowed: 'Essa seleção não pode ser combinada com outra aposta do mesmo jogo.',
+          incoherent_selections: 'Essa seleção não pode ser combinada com outra aposta do mesmo jogo.',
           user_not_found: 'Usuário não encontrado',
           odd_above_max: `Odd máxima permitida é ${maxOddAllowed}`,
           return_above_max: `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`,
