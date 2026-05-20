@@ -58,6 +58,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
+  const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
 
   // load page
   useEffect(() => {
