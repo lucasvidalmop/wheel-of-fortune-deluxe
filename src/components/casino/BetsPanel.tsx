@@ -1177,6 +1177,48 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           </div>
         );
       })()}
+
+      {importerOpen && (
+        <ApiFootballImporter
+          existingFixtureIds={events.map(e => (e as any).external_fixture_id).filter(Boolean) as string[]}
+          categories={categories}
+          onClose={() => setImporterOpen(false)}
+          onPick={(fx) => {
+            // Build event prefilled from fixture
+            const homeName = fx.teams?.home?.name || 'Casa';
+            const awayName = fx.teams?.away?.name || 'Visitante';
+            const homeLogo = fx.teams?.home?.logo || '';
+            const awayLogo = fx.teams?.away?.logo || '';
+            const startsAtIso = fx.fixture?.date || null;
+            const closesAtIso = startsAtIso
+              ? new Date(new Date(startsAtIso).getTime() - 5 * 60_000).toISOString()
+              : null;
+            const futCat = categories.find(c => /futebol|soccer|football/i.test(c.name));
+            setEditingEvent({
+              title: `${homeName} x ${awayName}`,
+              subtitle: fx.league?.name ? `${fx.league.name}${fx.league.round ? ' · ' + fx.league.round : ''}` : '',
+              category: 'Futebol',
+              category_id: futCat?.id || null,
+              image_url: homeLogo || awayLogo || '',
+              starts_at: startsAtIso,
+              closes_at: closesAtIso,
+              status: 'open',
+              payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
+              min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
+              external_fixture_id: String(fx.fixture?.id || ''),
+            } as any);
+            setEditingMarkets([{
+              title: 'Resultado Final', position: 0, ...defaultMarketDefaults(),
+              outcomes: [
+                { label: `${homeName} vence`, odd: 1.9 },
+                { label: 'Empate', odd: 3.2 },
+                { label: `${awayName} vence`, odd: 3.8 },
+              ],
+            }]);
+            setImporterOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
