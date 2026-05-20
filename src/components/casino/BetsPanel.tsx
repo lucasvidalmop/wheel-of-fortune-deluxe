@@ -1303,7 +1303,7 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
         </p>
 
         <div className="flex justify-end gap-2">
-          <button onClick={() => { setLeague(''); setTeam(''); setDate(today); setSeason(String(new Date().getFullYear())); setResults([]); }}
+          <button onClick={() => { setLeague(''); setTeam(''); setDate(''); setSeason(String(new Date().getFullYear())); setResults([]); }}
             className="px-3 py-2 rounded bg-muted text-sm">Limpar</button>
           <button onClick={search} disabled={loading}
             className="px-4 py-2 rounded bg-primary text-primary-foreground font-medium text-sm flex items-center gap-2 disabled:opacity-50">
