@@ -865,11 +865,11 @@ const Bets = ({ tag }: BetsPageProps) => {
                   {!detailMode && extraCount > 0 && (
                     <button
                       type="button"
-                      onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
+                      onClick={() => setSelectedEventId(ev.id)}
                       className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold transition hover:brightness-110"
                       style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}
                     >
-                      {evExpanded ? <>Esconder mercados <ChevronUp size={14} /></> : <>+{extraCount} mercados <ChevronDown size={14} /></>}
+                      +{extraCount} mercados <ChevronDown size={14} />
                     </button>
                   )}
                     </>
