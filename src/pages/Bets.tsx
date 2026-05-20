@@ -74,6 +74,14 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
 
+  // multi-bet ticket
+  const [ticketDraft, setTicketDraft] = useState<TicketDraft[]>([]);
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [ticketAmount, setTicketAmount] = useState('10');
+  const [placingTicket, setPlacingTicket] = useState(false);
+  const [myTickets, setMyTickets] = useState<TicketRow[]>([]);
+  const [myTicketSelections, setMyTicketSelections] = useState<TicketSelectionRow[]>([]);
+
   // load page
   useEffect(() => {
     (async () => {
