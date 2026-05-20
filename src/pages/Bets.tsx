@@ -848,8 +848,76 @@ const Bets = ({ tag }: BetsPageProps) => {
 
         {tab === 'mine' && (
           <div className="space-y-2">
-            {myWagers.length === 0 && (
+            {myWagers.length === 0 && myTickets.length === 0 && (
               <div className="text-center py-16" style={{ color: muted }}>Você ainda não fez apostas.</div>
+            )}
+            {myTickets.length > 0 && (
+              <div className="space-y-2 mb-4">
+                <div className="text-xs font-bold uppercase tracking-wider px-1" style={{ color: accent }}>
+                  Bilhetes múltiplos
+                </div>
+                {myTickets.map(t => {
+                  const sels = myTicketSelections.filter(s => s.ticket_id === t.id);
+                  const statusLabel: Record<string, string> = {
+                    pending: 'Pendente', won: 'Ganhou', lost: 'Perdeu', refunded: 'Devolvido', cancelled: 'Cancelado',
+                  };
+                  const statusColor: Record<string, string> = {
+                    pending: muted, won: '#22c55e', lost: '#ef4444', refunded: '#eab308', cancelled: muted,
+                  };
+                  const selStatusColor: Record<string, string> = {
+                    pending: muted, won: '#22c55e', lost: '#ef4444', cancelled: muted,
+                  };
+                  return (
+                    <div key={t.id} className="rounded-xl p-4"
+                      style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                              style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
+                              Múltipla · {sels.length}
+                            </span>
+                            {t.public_code && (
+                              <span className="text-[10px] font-mono tracking-wider" style={{ color: accent }}>
+                                #{t.public_code}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs mt-1" style={{ color: muted }}>
+                            {t.stake} {coinName} · odd total {Number(t.total_odd).toFixed(2)} · retorno {t.potential_return} {coinName}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-sm font-bold" style={{ color: statusColor[t.status] }}>{statusLabel[t.status]}</div>
+                          {t.status === 'won' && (
+                            <div className="text-xs" style={{ color: muted }}>+{t.payout_coins}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 pt-2" style={{ borderTop: `1px solid ${accent}22` }}>
+                        {sels.map(s => (
+                          <div key={s.id} className="flex items-center justify-between gap-2 text-xs">
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-medium">{s.event_title}</div>
+                              <div className="truncate" style={{ color: muted }}>
+                                {s.market_title} · <span style={{ color: accent }}>{s.selection_label}</span> · {Number(s.odd).toFixed(2)}
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold shrink-0" style={{ color: selStatusColor[s.status] }}>
+                              {statusLabel[s.status]}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {myWagers.length > 0 && myTickets.length > 0 && (
+              <div className="text-xs font-bold uppercase tracking-wider px-1 pt-2" style={{ color: accent }}>
+                Apostas simples
+              </div>
             )}
             {myWagers.map(w => {
               const ev = myEvents.find(e => e.id === w.event_id);
