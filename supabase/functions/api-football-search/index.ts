@@ -60,6 +60,17 @@ Deno.serve(async (req) => {
       if (body.search) params.set("search", String(body.search));
       if (body.league) params.set("league", String(body.league));
       if (body.season) params.set("season", String(body.season));
+    } else if (resource === "odds") {
+      if (body.fixture) params.set("fixture", String(body.fixture));
+      if (body.league) params.set("league", String(body.league));
+      if (body.season) params.set("season", String(body.season));
+      if (body.bookmaker) params.set("bookmaker", String(body.bookmaker));
+      if (body.bet) params.set("bet", String(body.bet));
+      if (!params.toString()) {
+        return new Response(JSON.stringify({ error: "odds requires fixture or league+season" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     } else {
       return new Response(JSON.stringify({ error: "invalid resource" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

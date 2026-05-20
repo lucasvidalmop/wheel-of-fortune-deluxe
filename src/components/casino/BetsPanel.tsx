@@ -1185,7 +1185,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           existingFixtureIds={events.map(e => (e as any).external_fixture_id).filter(Boolean) as string[]}
           categories={categories}
           onClose={() => setImporterOpen(false)}
-          onPick={(fx) => {
+          onPick={async (fx) => {
             // Build event prefilled from fixture
             const homeName = fx.teams?.home?.name || 'Casa';
             const awayName = fx.teams?.away?.name || 'Visitante';
@@ -1196,6 +1196,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               ? new Date(new Date(startsAtIso).getTime() - 5 * 60_000).toISOString()
               : null;
             const futCat = categories.find(c => /futebol|soccer|football/i.test(c.name));
+            const fixtureId = String(fx.fixture?.id || '');
             setEditingEvent({
               title: `${homeName} x ${awayName}`,
               subtitle: fx.league?.name ? `${fx.league.name}${fx.league.round ? ' · ' + fx.league.round : ''}` : '',
@@ -1209,16 +1210,65 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               status: 'open',
               payout_mode: 'coins', payout_case_id: null, payout_case_qty_per_unit: 1,
               min_bet: 10, max_bet: 0, max_bets_per_user: 1, is_hot: false,
-              external_fixture_id: String(fx.fixture?.id || ''),
+              external_fixture_id: fixtureId,
             } as any);
-            setEditingMarkets([{
+
+            // Try to fetch odds for this fixture and build markets dynamically
+            const fallbackMarkets = [{
               title: 'Resultado Final', position: 0, ...defaultMarketDefaults(),
               outcomes: [
                 { label: `${homeName} vence`, odd: 1.9 },
                 { label: 'Empate', odd: 3.2 },
                 { label: `${awayName} vence`, odd: 3.8 },
               ],
-            }]);
+            }];
+
+            const ALLOWED = [
+              'Match Winner',
+              'Both Teams Score',
+              'Goals Over/Under',
+              'Double Chance',
+              'Asian Handicap',
+              'Corners Over Under',
+              'Cards Over Under',
+            ];
+
+            try {
+              const { data: oddsRes } = await supabase.functions.invoke('api-football-search', {
+                body: { resource: 'odds', fixture: fixtureId },
+              });
+              const responses = (oddsRes as any)?.response || [];
+              const bookmakers = responses[0]?.bookmakers || [];
+              const bookmaker = bookmakers[0];
+              const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bookmaker?.bets || [];
+
+              const built: EditingMarket[] = [];
+              ALLOWED.forEach((wanted) => {
+                const bet = bets.find(b => (b.name || '').toLowerCase() === wanted.toLowerCase());
+                if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) return;
+                const outs = bet.values
+                  .map(v => ({ label: String(v.value), odd: Number(v.odd) }))
+                  .filter(o => o.label && o.odd > 1);
+                if (outs.length < 2) return;
+                built.push({
+                  title: bet.name, position: built.length, ...defaultMarketDefaults(),
+                  outcomes: outs,
+                });
+              });
+
+              if (built.length === 0) {
+                setEditingMarkets(fallbackMarkets);
+                toast.info('Sem odds disponíveis na API — usando mercado padrão.');
+              } else {
+                setEditingMarkets(built);
+                toast.success(`${built.length} mercado(s) importado(s)`);
+              }
+            } catch (err: any) {
+              console.error('odds fetch error', err);
+              setEditingMarkets(fallbackMarkets);
+              toast.info('Não foi possível buscar odds — usando mercado padrão.');
+            }
+
             setImporterOpen(false);
           }}
         />
