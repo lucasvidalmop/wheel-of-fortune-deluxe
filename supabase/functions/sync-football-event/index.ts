@@ -297,6 +297,19 @@ Deno.serve(async (req) => {
     return json(400, { error: "event.external_fixture_id and event.title are required" });
   }
 
+  // ---- Normalização de nomes de seleções ----
+  ev.title = normalizeInTitle(ev.title);
+  if (ev.subtitle) ev.subtitle = normalizeInTitle(ev.subtitle);
+  if (ev.home_team) ev.home_team = normalizeTeamName(ev.home_team);
+  if (ev.away_team) ev.away_team = normalizeTeamName(ev.away_team);
+  for (const mk of markets) {
+    if (Array.isArray(mk.outcomes)) {
+      for (const oc of mk.outcomes) {
+        if (oc?.label) oc.label = normalizeTeamName(oc.label);
+      }
+    }
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
