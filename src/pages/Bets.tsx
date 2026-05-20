@@ -655,19 +655,15 @@ const Bets = ({ tag }: BetsPageProps) => {
                   boxShadow: `0 18px 45px -22px ${ticketAccent}aa, inset 0 1px 0 rgba(255,255,255,0.12)`,
                 };
             return (
-              <article key={ev.id} className="relative rounded-2xl p-4 sm:p-5 overflow-hidden" style={cardStyle}>
+              <article key={ev.id} className="relative rounded-2xl p-3 sm:p-3.5 overflow-hidden flex flex-col" style={cardStyle}>
                 <div aria-hidden className="absolute -top-24 -right-20 w-44 h-44 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${ticketAccent}20, transparent 70%)` }} />
-                <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[11px] font-semibold" style={{ color: text }}>
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    <Calendar size={13} />
-                    <span className="truncate tabular-nums" style={closed ? { color: '#f87171', fontWeight: 800, letterSpacing: '0.12em' } : undefined}>{finalized ? 'FINALIZADO' : closed ? 'ENCERRADO' : (ev.closes_at ? `Encerra ${formatBetDateTime(ev.closes_at)}` : eventStatusBadge(ev.status))}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5 shrink-0 pl-2" style={{ borderLeft: `1px solid ${text}22` }}>
-                    <Ticket size={13} />
-                    <span className="tracking-wider">{ev.is_hot ? 'QUENTE' : (evCat?.name || ev.category || 'ODDS')}</span>
+                <div className="relative flex items-center justify-between gap-1 mb-2 text-[10px] font-semibold" style={{ color: text }}>
+                  <span className="flex items-center gap-1 min-w-0">
+                    <Calendar size={11} />
+                    <span className="truncate tabular-nums" style={closed ? { color: '#f87171', fontWeight: 800, letterSpacing: '0.08em' } : undefined}>{finalized ? 'FINALIZADO' : closed ? 'ENCERRADO' : (ev.closes_at ? formatBetDateTime(ev.closes_at) : eventStatusBadge(ev.status))}</span>
                   </span>
                   <span
-                    className="flex items-center gap-1 shrink-0 pl-2 tabular-nums"
+                    className="flex items-center gap-1 shrink-0 pl-1.5 tabular-nums"
                     style={{ borderLeft: `1px solid ${text}22`, color: ticketAccent }}
                     title="Apostas em tempo real"
                   >
@@ -676,7 +672,6 @@ const Bets = ({ tag }: BetsPageProps) => {
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: ticketAccent }} />
                     </span>
                     <b>{(wagerCounts[ev.id] || 0).toLocaleString('pt-BR')}</b>
-                    <span className="opacity-80">apostas</span>
                   </span>
                 </div>
 
@@ -684,30 +679,27 @@ const Bets = ({ tag }: BetsPageProps) => {
                 <button
                   type="button"
                   onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
-                  className="relative w-full text-left rounded-xl p-3 mb-3 transition hover:brightness-110"
+                  className="relative w-full text-left rounded-xl p-2.5 mb-2.5 transition hover:brightness-110"
                   style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14` }}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        {ev.is_hot && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: '#f9731633', color: '#f97316', border: '#f9731655' }}>🔥 Quente</span>}
-                        {(evCat?.name || ev.category) && <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: ticketAccent }}>{evCat?.name || ev.category}</span>}
-                      </div>
-                      <h2 className="font-black text-lg sm:text-xl leading-tight" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{ev.title}</h2>
-                      {ev.subtitle && <p className="text-sm mt-1" style={{ color: muted }}>{ev.subtitle}</p>}
+                      {ev.is_hot && <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mb-1" style={{ background: '#f9731633', color: '#f97316', border: '#f9731655' }}>🔥</span>}
+                      <h2 className="font-black text-sm sm:text-base leading-tight line-clamp-2" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{ev.title}</h2>
+                      {ev.subtitle && <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: muted }}>{ev.subtitle}</p>}
                     </div>
                     {(ev.home_image_url || ev.away_image_url) ? (
-                      <div className="flex items-center gap-1 flex-shrink-0 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div className="flex items-center gap-0.5 flex-shrink-0 px-1.5 py-1 rounded-md" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         {ev.home_image_url
-                          ? <img src={ev.home_image_url} alt="" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
-                          : <div className="w-10 h-10 sm:w-12 sm:h-12" />}
-                        <span className="text-[10px] font-bold opacity-60" style={{ color: text }}>VS</span>
+                          ? <img src={ev.home_image_url} alt="" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+                          : <div className="w-6 h-6 sm:w-7 sm:h-7" />}
+                        <span className="text-[8px] font-bold opacity-60" style={{ color: text }}>VS</span>
                         {ev.away_image_url
-                          ? <img src={ev.away_image_url} alt="" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
-                          : <div className="w-10 h-10 sm:w-12 sm:h-12" />}
+                          ? <img src={ev.away_image_url} alt="" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+                          : <div className="w-6 h-6 sm:w-7 sm:h-7" />}
                       </div>
                     ) : ev.image_url && (
-                      <img src={ev.image_url} alt="" className="w-24 h-16 sm:w-32 sm:h-20 rounded-lg object-cover flex-shrink-0 border border-white/10" />
+                      <img src={ev.image_url} alt="" className="w-14 h-9 sm:w-16 sm:h-10 rounded-md object-cover flex-shrink-0 border border-white/10" />
                     )}
                   </div>
                 </button>
@@ -883,7 +875,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
                     <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
                   </div>
-                  <div className="space-y-3">{hotEvents.map(renderEvent)}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{hotEvents.map(renderEvent)}</div>
                 </section>
               )}
 
@@ -947,7 +939,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <div className="flex-1 h-px" style={{ background: (g.cat?.color || accent) + '33' }} />
                     <span className="text-xs" style={{ color: muted }}>{g.items.length}</span>
                   </div>
-                  <div className="space-y-3">{g.items.map(renderEvent)}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{g.items.map(renderEvent)}</div>
                 </section>
               ))}
 
