@@ -32,6 +32,11 @@ interface EventPayload {
   away_logo?: string;
   image_url?: string;
   is_hot?: boolean;
+  // Competição / liga
+  competition_id?: string | number | null;
+  competition_name?: string | null;
+  competition_slug?: string | null;
+  competition_country?: string | null;
 }
 interface Body {
   event: EventPayload;
