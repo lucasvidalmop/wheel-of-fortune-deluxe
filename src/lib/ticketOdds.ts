@@ -33,18 +33,20 @@ export function computeTicketOdd(selections: TicketSelectionLite[]): TicketOddBr
   const ids = selections.map((s) => s.eventId);
   const hasSameFixture = new Set(ids).size !== ids.length;
 
-  // Fator de controle: pegar o MAIS restritivo dentre os aplicáveis.
-  let houseFactor = 0.97;
-  if (base > 50) houseFactor = Math.min(houseFactor, 0.9);
-  if (base > 100) houseFactor = Math.min(houseFactor, 0.8);
-  if (hasSameFixture) houseFactor = Math.min(houseFactor, 0.85);
-
-  // Bônus por quantidade de seleções
+  // Para 1 seleção não é múltipla: sem fator de casa nem bônus.
+  let houseFactor = 1;
   let bonus = 1;
-  if (n >= 10) bonus = 1.20;
-  else if (n >= 8) bonus = 1.12;
-  else if (n >= 5) bonus = 1.07;
-  else if (n >= 3) bonus = 1.03;
+  if (n >= 2) {
+    houseFactor = 0.97;
+    if (base > 50) houseFactor = Math.min(houseFactor, 0.9);
+    if (base > 100) houseFactor = Math.min(houseFactor, 0.8);
+    if (hasSameFixture) houseFactor = Math.min(houseFactor, 0.85);
+
+    if (n >= 10) bonus = 1.20;
+    else if (n >= 8) bonus = 1.12;
+    else if (n >= 5) bonus = 1.07;
+    else if (n >= 3) bonus = 1.03;
+  }
 
   const final = Math.round(base * houseFactor * bonus * 100) / 100;
   return { base, houseFactor, bonus, final, selections: n, hasSameFixture };
