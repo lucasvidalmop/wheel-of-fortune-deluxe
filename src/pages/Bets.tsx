@@ -77,6 +77,19 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
+  const [selectedEventId, setSelectedEventIdState] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const m = window.location.hash.match(/(?:^#|&)ev=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  });
+  const setSelectedEventId = (id: string | null) => {
+    setSelectedEventIdState(id);
+    if (typeof window !== 'undefined') {
+      if (id) window.history.pushState(null, '', `#ev=${encodeURIComponent(id)}`);
+      else window.history.pushState(null, '', window.location.pathname + window.location.search);
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    }
+  };
 
   // multi-bet ticket
   const [ticketDraft, setTicketDraft] = useState<TicketDraft[]>([]);
