@@ -136,6 +136,10 @@ async function syncForOwner(
     image_url: ev.image_url ?? "",
     external_fixture_id: ev.external_fixture_id,
     is_hot: Boolean(ev.is_hot ?? false),
+    competition_id: ev.competition_id != null ? String(ev.competition_id) : null,
+    competition_name: ev.competition_name ?? null,
+    competition_slug: ev.competition_slug ?? null,
+    competition_country: ev.competition_country ?? null,
     updated_at: new Date().toISOString(),
   };
 
