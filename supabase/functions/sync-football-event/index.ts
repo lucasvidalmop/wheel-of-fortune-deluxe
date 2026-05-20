@@ -45,6 +45,49 @@ function json(status: number, body: unknown) {
   });
 }
 
+// ---- Normalização de nomes de seleções ----
+const TEAM_NAME_MAP: Record<string, string> = {
+  "congo dr": "República Democrática do Congo",
+  "dr congo": "República Democrática do Congo",
+  "korea republic": "Coreia do Sul",
+  "republic of korea": "Coreia do Sul",
+  "south korea": "Coreia do Sul",
+  "korea dpr": "Coreia do Norte",
+  "dpr korea": "Coreia do Norte",
+  "north korea": "Coreia do Norte",
+  "usa": "Estados Unidos",
+  "united states": "Estados Unidos",
+  "united states of america": "Estados Unidos",
+  "uae": "Emirados Árabes Unidos",
+  "united arab emirates": "Emirados Árabes Unidos",
+  "ir iran": "Irã",
+  "iran": "Irã",
+  "ivory coast": "Costa do Marfim",
+  "cote d'ivoire": "Costa do Marfim",
+  "côte d'ivoire": "Costa do Marfim",
+  "cape verde": "Cabo Verde",
+  "cape verde islands": "Cabo Verde",
+  "saudi arabia": "Arábia Saudita",
+};
+
+function normalizeTeamName(name: string | null | undefined): string {
+  if (!name) return name ?? "";
+  const key = name.trim().toLowerCase();
+  return TEAM_NAME_MAP[key] ?? name;
+}
+
+function normalizeInTitle(title: string | null | undefined): string {
+  if (!title) return title ?? "";
+  // Replace " x " / " vs " separators preserving them
+  const sepMatch = title.match(/^(.*?)(\s+(?:x|vs|×|@|-)\s+)(.*)$/i);
+  if (sepMatch) {
+    const home = normalizeTeamName(sepMatch[1]);
+    const away = normalizeTeamName(sepMatch[3]);
+    return `${home}${sepMatch[2]}${away}`;
+  }
+  return normalizeTeamName(title);
+}
+
 async function syncForOwner(
   supabase: SupabaseClient,
   ownerId: string,
@@ -252,6 +295,19 @@ Deno.serve(async (req) => {
   const markets = Array.isArray(body?.markets) ? body.markets : [];
   if (!ev?.external_fixture_id || !ev?.title) {
     return json(400, { error: "event.external_fixture_id and event.title are required" });
+  }
+
+  // ---- Normalização de nomes de seleções ----
+  ev.title = normalizeInTitle(ev.title);
+  if (ev.subtitle) ev.subtitle = normalizeInTitle(ev.subtitle);
+  if (ev.home_team) ev.home_team = normalizeTeamName(ev.home_team);
+  if (ev.away_team) ev.away_team = normalizeTeamName(ev.away_team);
+  for (const mk of markets) {
+    if (Array.isArray(mk.outcomes)) {
+      for (const oc of mk.outcomes) {
+        if (oc?.label) oc.label = normalizeTeamName(oc.label);
+      }
+    }
   }
 
   const supabase = createClient(
