@@ -862,7 +862,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       </div>
                     );
                   })}
-                  {extraCount > 0 && (
+                  {!detailMode && extraCount > 0 && (
                     <button
                       type="button"
                       onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
