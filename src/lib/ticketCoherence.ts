@@ -130,10 +130,23 @@ function deriveClaim(sel: CoherenceSelection): Claim {
       if (/\b1\s*x\b|\bcasa\s*ou\s*empate\b|\bhome\s*or\s*draw\b/.test(label)) { cov.add('home'); cov.add('draw'); }
       if (/\bx\s*2\b|\bempate\s*ou\s*(visitante|fora)\b|\bdraw\s*or\s*away\b/.test(label)) { cov.add('draw'); cov.add('away'); }
       if (/\b12\b|\bcasa\s*ou\s*(visitante|fora)\b|\bhome\s*or\s*away\b/.test(label)) { cov.add('home'); cov.add('away'); }
+      // detect both team names in label → home+away (ex.: "Santos ou San Lorenzo")
+      const ht = teams.home.split(/\s+/)[0];
+      const at = teams.away.split(/\s+/)[0];
+      const hasHome = !!ht && new RegExp(`\\b${escapeRe(ht)}\\b`).test(label);
+      const hasAway = !!at && new RegExp(`\\b${escapeRe(at)}\\b`).test(label);
+      if (hasHome && hasAway) { cov.add('home'); cov.add('away'); }
       // by team name + "empate"
-      const side = teamSide(label, teams);
-      const hasDraw = /\b(empate|draw|x)\b/.test(label);
-      if (side && hasDraw) { cov.add(side); cov.add('draw'); }
+      const hasDraw = /\b(empate|draw)\b/.test(label);
+      if (hasDraw && hasHome) { cov.add('home'); cov.add('draw'); }
+      if (hasDraw && hasAway) { cov.add('away'); cov.add('draw'); }
+      // fallback: single side with draw word
+      if (cov.size === 0) {
+        const side = teamSide(label, teams);
+        if (side && hasDraw) { cov.add(side); cov.add('draw'); }
+        // last resort: if DC market but no parse, assume covers the side mentioned alongside anything
+        else if (side) { cov.add(side); }
+      }
       if (cov.size > 0) claim.dcCover = cov;
       break;
     }
