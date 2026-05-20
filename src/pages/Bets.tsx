@@ -58,6 +58,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
+  const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
 
   // load page
   useEffect(() => {
@@ -485,7 +486,12 @@ const Bets = ({ tag }: BetsPageProps) => {
                 </div>
 
 
-                <div className="relative rounded-xl p-3 mb-3" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14` }}>
+                <button
+                  type="button"
+                  onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
+                  className="relative w-full text-left rounded-xl p-3 mb-3 transition hover:brightness-110"
+                  style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}14` }}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -509,7 +515,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       <img src={ev.image_url} alt="" className="w-24 h-16 sm:w-32 sm:h-20 rounded-lg object-cover flex-shrink-0 border border-white/10" />
                     )}
                   </div>
-                </div>
+                </button>
                 {ev.payout_mode === 'case' && c && (
                   <div className="relative flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
                     {c.image_url && <img src={c.image_url} className="w-8 h-8 rounded" alt="" />}
@@ -530,7 +536,12 @@ const Bets = ({ tag }: BetsPageProps) => {
                   } else {
                     if (outs.length) groups.push({ market: null, outs });
                   }
-                  return groups.map((g, gi) => {
+                  const evExpanded = !!expandedEvents[ev.id];
+                  const extraCount = Math.max(0, groups.length - 1);
+                  const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
+                  return (
+                    <>
+                      {visibleGroups.map((g, gi) => {
                     const mk = g.market;
                     const mkClosed = mk
                       ? (mk.status !== 'open' || isBetDateTimeExpired(mk.closes_at))
@@ -601,7 +612,19 @@ const Bets = ({ tag }: BetsPageProps) => {
                         )}
                       </div>
                     );
-                  });
+                  })}
+                  {extraCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !s[ev.id] }))}
+                      className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold transition hover:brightness-110"
+                      style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}
+                    >
+                      {evExpanded ? <>Esconder mercados <ChevronUp size={14} /></> : <>+{extraCount} mercados <ChevronDown size={14} /></>}
+                    </button>
+                  )}
+                    </>
+                  );
                 })()}
                 {ev.status === 'open' && timeExpired && (
                   <div className="relative mt-3 px-3 py-2 rounded-lg text-xs font-semibold" style={{ background: '#ef444433', color: '#ef4444' }}>Apostas encerradas (prazo expirado)</div>
