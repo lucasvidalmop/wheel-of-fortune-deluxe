@@ -1234,9 +1234,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             ];
 
             try {
-              const { data: oddsRes } = await supabase.functions.invoke('api-football-search', {
-                body: { resource: 'odds', fixture: fixtureId },
-              });
+              const r = await fetch(`http://177.7.52.80:3001/odds?fixture=${encodeURIComponent(String(fixtureId))}`);
+              const oddsRes = await r.json().catch(() => ({}));
               const responses = (oddsRes as any)?.response || [];
               const bookmakers = responses[0]?.bookmakers || [];
               const bookmaker = bookmakers[0];
