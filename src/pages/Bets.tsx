@@ -541,6 +541,16 @@ const Bets = ({ tag }: BetsPageProps) => {
                   const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
                   return (
                     <>
+                      {evExpanded && extraCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: false }))}
+                          className="mb-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold transition hover:brightness-110"
+                          style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}
+                        >
+                          Esconder mercados <ChevronUp size={14} />
+                        </button>
+                      )}
                       {visibleGroups.map((g, gi) => {
                     const mk = g.market;
                     const mkClosed = mk
