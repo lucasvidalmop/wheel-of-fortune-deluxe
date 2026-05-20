@@ -1291,19 +1291,31 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
   const [results, setResults] = useState<any[]>([]);
   const [errored, setErrored] = useState<string>('');
 
-  const search = async () => {
+  const runSearch = async (overrides?: { league?: string; season?: string; date?: string; team?: string; nsOnly?: boolean }) => {
+    const l = overrides?.league ?? league;
+    const s = overrides?.season ?? season;
+    const d = overrides?.date ?? date;
+    const t = overrides?.team ?? team;
     setLoading(true); setErrored(''); setResults([]);
     try {
       const qs = new URLSearchParams();
-      if (league.trim()) qs.set('league', league.trim());
-      if (season.trim()) qs.set('season', season.trim());
-      if (date.trim()) qs.set('date', date.trim());
-      if (team.trim()) qs.set('team', team.trim());
+      if (l.trim()) qs.set('league', l.trim());
+      if (s.trim()) qs.set('season', s.trim());
+      if (d.trim()) qs.set('date', d.trim());
+      if (t.trim()) qs.set('team', t.trim());
       const r = await fetch(`https://sportsapi.tipspayroleta.com/fixtures?${qs.toString()}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
       if ((data as any)?.error) throw new Error((data as any).error);
-      const list = (data as any)?.response || [];
+      let list: any[] = (data as any)?.response || [];
+      if (overrides?.nsOnly) {
+        list = list.filter((fx: any) => fx?.fixture?.status?.short === 'NS');
+      }
+      list.sort((a: any, b: any) => {
+        const da = a?.fixture?.date ? new Date(a.fixture.date).getTime() : 0;
+        const db = b?.fixture?.date ? new Date(b.fixture.date).getTime() : 0;
+        return da - db;
+      });
       setResults(list);
       if (list.length === 0) toast.info('Nenhum jogo encontrado para esses filtros');
     } catch (e: any) {
@@ -1312,6 +1324,16 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
     } finally {
       setLoading(false);
     }
+  };
+
+  const search = () => runSearch();
+
+  const loadCopa2026 = () => {
+    setLeague('1');
+    setSeason('2026');
+    setDate('');
+    setTeam('');
+    runSearch({ league: '1', season: '2026', date: '', team: '', nsOnly: true });
   };
 
   return (
