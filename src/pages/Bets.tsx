@@ -318,7 +318,7 @@ const Bets = ({ tag }: BetsPageProps) => {
       marketId: outcome.market_id, marketTitle: market?.title || 'Resultado Final',
       outcomeId: outcome.id, outcomeLabel: outcome.label, odd: Number(outcome.odd),
     }]);
-    toast.success('Adicionado ao bilhete');
+    toast.success('Adicionado ao bilhete', { position: 'top-center' });
   };
 
   const removeFromTicket = (outcomeId: string) => {
