@@ -405,6 +405,8 @@ const Bets = ({ tag }: BetsPageProps) => {
           event_not_open: 'Um dos eventos não está aberto',
           market_not_open: 'Um dos mercados não está aberto',
           duplicate_market: 'Não pode haver duas seleções do mesmo mercado',
+          same_fixture_not_allowed: 'Essa seleção não pode ser combinada com outra aposta do mesmo jogo.',
+          incoherent_selections: 'Essa seleção não pode ser combinada com outra aposta do mesmo jogo.',
           user_not_found: 'Usuário não encontrado',
           odd_above_max: `Odd máxima permitida é ${maxOddAllowed}`,
           return_above_max: `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`,
