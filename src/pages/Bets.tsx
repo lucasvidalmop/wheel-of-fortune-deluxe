@@ -1050,6 +1050,101 @@ const Bets = ({ tag }: BetsPageProps) => {
           </div>
         </div>
       )}
+
+      {/* Floating ticket button */}
+      {authed && ticketDraft.length > 0 && !ticketOpen && (
+        <button
+          onClick={() => setTicketOpen(true)}
+          className="fixed bottom-4 right-4 z-40 px-4 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 transition hover:scale-105"
+          style={{ background: accent, color: '#000' }}
+        >
+          <Ticket size={18} />
+          Meu Bilhete
+          <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-black" style={{ background: '#000', color: accent }}>
+            {ticketDraft.length}
+          </span>
+        </button>
+      )}
+
+      {/* Ticket modal */}
+      {ticketOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4" onClick={() => setTicketOpen(false)}>
+          <div
+            className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto"
+            style={{ background: cardBg, color: text, border: `1px solid ${accent}55` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-black text-lg flex items-center gap-2">
+                <Ticket size={20} style={{ color: accent }} /> Meu Bilhete
+              </h2>
+              <button onClick={() => setTicketOpen(false)} className="p-1.5 rounded-full" style={{ background: '#00000044' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {ticketDraft.length === 0 ? (
+              <p className="text-sm text-center py-8" style={{ color: muted }}>Nenhuma seleção. Use o botão + nas odds.</p>
+            ) : (
+              <>
+                <div className="space-y-2 mb-4">
+                  {ticketDraft.map(s => (
+                    <div key={s.outcomeId} className="rounded-lg p-3 flex items-start justify-between gap-2" style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid ${accent}33` }}>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold truncate">{s.eventTitle}</div>
+                        <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{s.marketTitle}</div>
+                        <div className="text-sm mt-1">
+                          <span className="font-semibold">{s.outcomeLabel}</span>
+                          <span className="ml-2 font-black tabular-nums" style={{ color: accent }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => removeFromTicket(s.outcomeId)} className="p-1.5 rounded-md shrink-0" style={{ background: '#ef444422', color: '#f87171' }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-lg p-3 mb-3 space-y-1 text-sm" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                  <div className="flex justify-between"><span style={{ color: muted }}>Seleções</span><b>{ticketDraft.length}</b></div>
+                  <div className="flex justify-between"><span style={{ color: muted }}>Odd total</span><b className="tabular-nums" style={{ color: accent }}>{totalOdd.toFixed(2).replace('.', ',')}</b></div>
+                </div>
+
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: muted }}>Valor ({coinName})</label>
+                <input
+                  type="number" min={1} value={ticketAmount}
+                  onChange={(e) => setTicketAmount(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg mb-3 text-lg font-bold tabular-nums"
+                  style={{ background: '#00000066', border: `1px solid ${accent}55`, color: text }}
+                />
+
+                <div className="rounded-lg p-3 mb-4 flex items-center justify-between" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
+                  <span className="text-sm font-bold">Retorno potencial</span>
+                  <span className="font-black tabular-nums text-lg" style={{ color: accent }}>{ticketReturn.toLocaleString('pt-BR')} {coinName}</span>
+                </div>
+
+                {authed && (
+                  <div className="text-xs mb-3" style={{ color: muted }}>
+                    Saldo: <b style={{ color: text }}>{authed.tokens_balance.toLocaleString('pt-BR')}</b> {coinName}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button onClick={clearTicket} className="px-3 py-2.5 rounded-xl font-bold text-sm" style={{ background: '#00000055', color: text, border: `1px solid ${text}22` }}>
+                    Limpar
+                  </button>
+                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 2}
+                    className="flex-1 py-2.5 rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
+                    style={{ background: accent, color: '#000' }}>
+                    {placingTicket ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                    Confirmar bilhete
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
