@@ -760,12 +760,23 @@ const Bets = ({ tag }: BetsPageProps) => {
                             const isLoser = resolvedFlag && !o.is_winner;
                             const stat = outcomeStats[o.id] || { count: 0, total: 0 };
                             const inTicket = ticketDraft.some(s => s.outcomeId === o.id);
+                            const oMarketKey = o.market_id || 'main';
+                            const sameMarketExists = ticketDraft.some(s => s.eventId === ev.id && (s.marketId || 'main') === oMarketKey);
+                            const oMarketTitle = mk?.title || 'Resultado Final';
+                            const coherence = (!inTicket && !sameMarketExists && ticketDraft.length > 0)
+                              ? canAddSelection(
+                                  ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle, outcomeLabel: s.outcomeLabel, eventTitle: s.eventTitle })),
+                                  { eventId: ev.id, marketId: o.market_id, marketTitle: oMarketTitle, outcomeLabel: o.label, eventTitle: ev.title },
+                                )
+                              : { ok: true as const, reason: undefined as string | undefined };
+                            const incoherent = !coherence.ok;
                             return (
                               <div key={o.id} className="relative">
                                 <button
-                                  onClick={() => openSlip(ev, o)}
-                                  disabled={mkClosed}
-                                  className="relative w-full px-2.5 py-2 rounded-lg text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
+                                  onClick={() => { if (!incoherent) openSlip(ev, o); }}
+                                  disabled={mkClosed || incoherent}
+                                  title={incoherent ? (coherence.reason || 'Combinação não permitida com seleções do bilhete') : undefined}
+                                  className="relative w-full px-2.5 py-2 rounded-lg text-left transition disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
                                   style={{
                                     background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
                                     border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
@@ -780,7 +791,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                                     <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
                                   </div>
                                 </button>
-                                {!mkClosed && (
+                                {!mkClosed && !incoherent && (
                                   <button
                                     type="button"
                                     title={inTicket ? 'Remover do bilhete' : 'Adicionar ao bilhete'}
