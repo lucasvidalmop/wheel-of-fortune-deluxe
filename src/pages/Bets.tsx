@@ -19,7 +19,7 @@ interface MarketRow {
 interface EventRow {
   id: string; title: string; subtitle: string; category: string; category_id: string | null; image_url: string;
   home_image_url?: string | null; away_image_url?: string | null;
-  starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
+  starts_at: string | null; closes_at: string | null; status: 'scheduled'|'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
   is_hot?: boolean;
@@ -439,7 +439,7 @@ const Bets = ({ tag }: BetsPageProps) => {
           const renderEvent = (ev: EventRow) => {
             const outs = outcomesByEvent[ev.id] || [];
             const timeExpired = isBetDateTimeExpired(ev.closes_at);
-            const closed = ev.status !== 'open' || timeExpired;
+            const closed = (ev.status !== 'open' && ev.status !== 'scheduled') || timeExpired;
             const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
             const evCat = ev.category_id ? cats.find(x => x.id === ev.category_id) : null;
             const catBg = evCat?.background_url || '';
