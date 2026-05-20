@@ -1341,7 +1341,13 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
       <div className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-5 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-lg">⚽ Importador de Football</h3>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-muted"><X size={16} /></button>
+          <div className="flex items-center gap-2">
+            <button onClick={loadCopa2026} disabled={loading}
+              className="px-3 py-1.5 rounded bg-amber-500 text-black text-xs font-bold disabled:opacity-50">
+              🏆 Carregar Copa 2026
+            </button>
+            <button onClick={onClose} className="p-1.5 rounded hover:bg-muted"><X size={16} /></button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
