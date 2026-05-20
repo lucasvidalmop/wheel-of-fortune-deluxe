@@ -381,6 +381,11 @@ const Bets = ({ tag }: BetsPageProps) => {
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
     if (ticketBlockReason) { toast.error(ticketBlockReason); return; }
+    const coherence = validateTicketCoherence(
+      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle })),
+      { allowSameFixture },
+    );
+    if (!coherence.ok) { toast.error(coherence.reason || 'Combinação não permitida'); return; }
     setPlacingTicket(true);
     try {
       const { data, error } = await supabase.functions.invoke('place-ticket', {
