@@ -60,6 +60,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [editingEvent, setEditingEvent] = useState<Partial<BetEvent> | null>(null);
   const [editingMarkets, setEditingMarkets] = useState<EditingMarket[]>([]);
   const [resolvingEvent, setResolvingEvent] = useState<BetEvent | null>(null);
+  const [importerOpen, setImporterOpen] = useState(false);
 
   const loadAll = async () => {
     setLoading(true);
