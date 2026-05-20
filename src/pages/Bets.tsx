@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
