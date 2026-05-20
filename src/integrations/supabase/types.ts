@@ -2226,6 +2226,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _classify_bet_market: { Args: { p_title: string }; Returns: string }
+      _pair_blocked: { Args: { a: string; b: string }; Returns: boolean }
       _resolve_tickets_for_outcomes: {
         Args: { p_outcome_ids: string[] }
         Returns: undefined
