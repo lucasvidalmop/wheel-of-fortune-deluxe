@@ -320,9 +320,8 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
     // coerência: bloquear combinações conflitantes/redundantes no mesmo fixture
     const check = canAddSelection(
-      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle })),
-      { eventId: event.id, marketId: outcome.market_id, marketTitle },
-      { allowSameFixture },
+      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle, outcomeLabel: s.outcomeLabel, eventTitle: s.eventTitle })),
+      { eventId: event.id, marketId: outcome.market_id, marketTitle, outcomeLabel: outcome.label, eventTitle: event.title },
     );
     if (!check.ok) { toast.error(check.reason || 'Combinação não permitida'); return; }
 
