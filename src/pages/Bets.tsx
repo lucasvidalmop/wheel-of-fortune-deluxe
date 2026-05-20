@@ -711,25 +711,43 @@ const Bets = ({ tag }: BetsPageProps) => {
                             const isWinner = resolvedFlag && o.is_winner;
                             const isLoser = resolvedFlag && !o.is_winner;
                             const stat = outcomeStats[o.id] || { count: 0, total: 0 };
+                            const inTicket = ticketDraft.some(s => s.outcomeId === o.id);
                             return (
-                              <button key={o.id}
-                                onClick={() => openSlip(ev, o)}
-                                disabled={mkClosed}
-                                className="relative px-2.5 py-2 rounded-lg text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
-                                style={{
-                                  background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
-                                  border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
-                                  boxShadow: isWinner ? `0 0 22px ${ticketAccent}33` : `inset 0 -1px 0 ${ticketAccent}44`,
-                                  color: isLoser ? muted : text,
-                                }}>
-                                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
-                                <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate" style={{ color: muted }}>{o.label}</div>
-                                <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
-                                <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
-                                  <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
-                                  <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
-                                </div>
-                              </button>
+                              <div key={o.id} className="relative">
+                                <button
+                                  onClick={() => openSlip(ev, o)}
+                                  disabled={mkClosed}
+                                  className="relative w-full px-2.5 py-2 rounded-lg text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
+                                  style={{
+                                    background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
+                                    border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
+                                    boxShadow: isWinner ? `0 0 22px ${ticketAccent}33` : `inset 0 -1px 0 ${ticketAccent}44`,
+                                    color: isLoser ? muted : text,
+                                  }}>
+                                  <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
+                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{o.label}</div>
+                                  <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
+                                  <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
+                                    <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
+                                    <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
+                                  </div>
+                                </button>
+                                {!mkClosed && (
+                                  <button
+                                    type="button"
+                                    title={inTicket ? 'Remover do bilhete' : 'Adicionar ao bilhete'}
+                                    onClick={(e) => { e.stopPropagation(); inTicket ? removeFromTicket(o.id) : addToTicket(ev, o); }}
+                                    className="absolute top-1 right-1 z-10 w-5 h-5 rounded-full flex items-center justify-center transition hover:scale-110"
+                                    style={{
+                                      background: inTicket ? ticketAccent : `${ticketAccent}33`,
+                                      color: inTicket ? '#000' : ticketAccent,
+                                      border: `1px solid ${ticketAccent}`,
+                                    }}
+                                  >
+                                    {inTicket ? <Check size={11} strokeWidth={3} /> : <Plus size={12} strokeWidth={3} />}
+                                  </button>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
