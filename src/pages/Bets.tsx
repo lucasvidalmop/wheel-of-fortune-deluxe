@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
@@ -31,6 +31,20 @@ interface WagerRow {
   payout_mode: 'coins'|'case'; status: 'pending'|'won'|'lost'|'refunded'|'cancelled';
   payout_coins: number; payout_grant_id: string | null; created_at: string; resolved_at: string | null;
 }
+interface TicketRow {
+  id: string; public_code: string; total_odd: number; stake: number; potential_return: number;
+  status: 'pending'|'won'|'lost'|'cancelled'|'refunded'; payout_coins: number;
+  created_at: string; resolved_at: string | null;
+}
+interface TicketSelectionRow {
+  id: string; ticket_id: string; event_id: string; market_id: string | null; outcome_id: string;
+  event_title: string; market_title: string; selection_label: string; odd: number;
+  status: 'pending'|'won'|'lost'|'cancelled';
+}
+interface TicketDraft {
+  eventId: string; eventTitle: string; marketId: string | null; marketTitle: string;
+  outcomeId: string; outcomeLabel: string; odd: number;
+}
 
 interface AuthedUser { id: string; name: string; email: string; account_id: string; tokens_balance: number }
 
@@ -59,6 +73,14 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
+
+  // multi-bet ticket
+  const [ticketDraft, setTicketDraft] = useState<TicketDraft[]>([]);
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [ticketAmount, setTicketAmount] = useState('10');
+  const [placingTicket, setPlacingTicket] = useState(false);
+  const [myTickets, setMyTickets] = useState<TicketRow[]>([]);
+  const [myTicketSelections, setMyTicketSelections] = useState<TicketSelectionRow[]>([]);
 
   // load page
   useEffect(() => {
@@ -194,6 +216,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(data.user);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyTickets(data.tickets || []);
+      setMyTicketSelections(data.ticketSelections || []);
     } catch (err: any) {
       toast.error('Falha ao buscar cadastro');
     } finally {
@@ -210,6 +234,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(prev => prev ? { ...prev, tokens_balance: data.user.tokens_balance } : prev);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyTickets(data.tickets || []);
+      setMyTicketSelections(data.ticketSelections || []);
     }
   };
 
@@ -261,6 +287,94 @@ const Bets = ({ tag }: BetsPageProps) => {
       toast.error('Falha ao apostar');
     } finally {
       setPlacing(false);
+    }
+  };
+
+  const addToTicket = (event: EventRow, outcome: OutcomeRow) => {
+    if (!authed) { toast.error('Faça login para apostar'); return; }
+    const market = outcome.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
+    const status = market?.status ?? event.status;
+    const closesAt = market?.closes_at ?? event.closes_at;
+    if (status !== 'open' && status !== 'scheduled') { toast.error('Mercado fechado'); return; }
+    if (isBetDateTimeExpired(closesAt)) { toast.error('Apostas encerradas'); return; }
+    const marketKey = outcome.market_id || 'main';
+    const exists = ticketDraft.find(s => s.eventId === event.id && (s.marketId || 'main') === marketKey);
+    if (exists) {
+      if (exists.outcomeId === outcome.id) {
+        toast.info('Seleção já no bilhete');
+      } else {
+        // replace selection within the same market
+        setTicketDraft(prev => prev.map(s =>
+          (s.eventId === event.id && (s.marketId || 'main') === marketKey)
+            ? { ...s, outcomeId: outcome.id, outcomeLabel: outcome.label, odd: Number(outcome.odd) }
+            : s
+        ));
+        toast.success('Seleção atualizada no bilhete');
+      }
+      return;
+    }
+    setTicketDraft(prev => [...prev, {
+      eventId: event.id, eventTitle: event.title,
+      marketId: outcome.market_id, marketTitle: market?.title || 'Resultado Final',
+      outcomeId: outcome.id, outcomeLabel: outcome.label, odd: Number(outcome.odd),
+    }]);
+    toast.success('Adicionado ao bilhete');
+  };
+
+  const removeFromTicket = (outcomeId: string) => {
+    setTicketDraft(prev => prev.filter(s => s.outcomeId !== outcomeId));
+  };
+  const clearTicket = () => setTicketDraft([]);
+
+  const totalOdd = useMemo(
+    () => ticketDraft.reduce((acc, s) => acc * (Number(s.odd) || 1), 1),
+    [ticketDraft],
+  );
+  const ticketReturn = useMemo(() => {
+    const amt = Math.floor(Number(ticketAmount));
+    if (!Number.isFinite(amt) || amt <= 0) return 0;
+    return Math.round(amt * totalOdd);
+  }, [ticketAmount, totalOdd]);
+
+  const placeTicket = async () => {
+    if (!authed) return;
+    if (ticketDraft.length < 2) { toast.error('Selecione pelo menos 2 opções'); return; }
+    const amt = Math.floor(Number(ticketAmount));
+    if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
+    if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
+    setPlacingTicket(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('place-ticket', {
+        body: {
+          tag, email: authed.email, accountId: authed.account_id,
+          selections: ticketDraft.map(s => ({ outcomeId: s.outcomeId })),
+          amount: amt,
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) {
+        const errMap: Record<string, string> = {
+          need_min_two_selections: 'Selecione pelo menos 2 opções',
+          too_many_selections: 'Limite de 20 seleções por bilhete',
+          insufficient_balance: 'Saldo insuficiente',
+          event_closed: 'Um dos eventos já está encerrado',
+          event_not_open: 'Um dos eventos não está aberto',
+          market_not_open: 'Um dos mercados não está aberto',
+          duplicate_market: 'Não pode haver duas seleções do mesmo mercado',
+          user_not_found: 'Usuário não encontrado',
+        };
+        toast.error(errMap[data?.error] || `Falha: ${data?.error || 'erro'}`);
+        return;
+      }
+      toast.success(`Bilhete confirmado! Retorno potencial: ${data.potential_return}`);
+      setAuthed(prev => prev ? { ...prev, tokens_balance: data.new_balance } : prev);
+      setTicketDraft([]);
+      setTicketOpen(false);
+      refreshMine();
+    } catch (err: any) {
+      toast.error('Falha ao registrar bilhete');
+    } finally {
+      setPlacingTicket(false);
     }
   };
 
@@ -597,25 +711,43 @@ const Bets = ({ tag }: BetsPageProps) => {
                             const isWinner = resolvedFlag && o.is_winner;
                             const isLoser = resolvedFlag && !o.is_winner;
                             const stat = outcomeStats[o.id] || { count: 0, total: 0 };
+                            const inTicket = ticketDraft.some(s => s.outcomeId === o.id);
                             return (
-                              <button key={o.id}
-                                onClick={() => openSlip(ev, o)}
-                                disabled={mkClosed}
-                                className="relative px-2.5 py-2 rounded-lg text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
-                                style={{
-                                  background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
-                                  border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
-                                  boxShadow: isWinner ? `0 0 22px ${ticketAccent}33` : `inset 0 -1px 0 ${ticketAccent}44`,
-                                  color: isLoser ? muted : text,
-                                }}>
-                                <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
-                                <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate" style={{ color: muted }}>{o.label}</div>
-                                <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
-                                <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
-                                  <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
-                                  <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
-                                </div>
-                              </button>
+                              <div key={o.id} className="relative">
+                                <button
+                                  onClick={() => openSlip(ev, o)}
+                                  disabled={mkClosed}
+                                  className="relative w-full px-2.5 py-2 rounded-lg text-left transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
+                                  style={{
+                                    background: isWinner ? `${ticketAccent}33` : 'rgba(0,0,0,0.5)',
+                                    border: `1px solid ${isWinner ? ticketAccent : `${ticketAccent}44`}`,
+                                    boxShadow: isWinner ? `0 0 22px ${ticketAccent}33` : `inset 0 -1px 0 ${ticketAccent}44`,
+                                    color: isLoser ? muted : text,
+                                  }}>
+                                  <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
+                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{o.label}</div>
+                                  <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
+                                  <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
+                                    <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
+                                    <span className="truncate"><b style={{ color: text }}>{stat.total.toLocaleString('pt-BR')}</b> {coinName}</span>
+                                  </div>
+                                </button>
+                                {!mkClosed && (
+                                  <button
+                                    type="button"
+                                    title={inTicket ? 'Remover do bilhete' : 'Adicionar ao bilhete'}
+                                    onClick={(e) => { e.stopPropagation(); inTicket ? removeFromTicket(o.id) : addToTicket(ev, o); }}
+                                    className="absolute top-1 right-1 z-10 w-5 h-5 rounded-full flex items-center justify-center transition hover:scale-110"
+                                    style={{
+                                      background: inTicket ? ticketAccent : `${ticketAccent}33`,
+                                      color: inTicket ? '#000' : ticketAccent,
+                                      border: `1px solid ${ticketAccent}`,
+                                    }}
+                                  >
+                                    {inTicket ? <Check size={11} strokeWidth={3} /> : <Plus size={12} strokeWidth={3} />}
+                                  </button>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
@@ -915,6 +1047,101 @@ const Bets = ({ tag }: BetsPageProps) => {
               {placing ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
               Confirmar aposta
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating ticket button */}
+      {authed && ticketDraft.length > 0 && !ticketOpen && (
+        <button
+          onClick={() => setTicketOpen(true)}
+          className="fixed bottom-4 right-4 z-40 px-4 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 transition hover:scale-105"
+          style={{ background: accent, color: '#000' }}
+        >
+          <Ticket size={18} />
+          Meu Bilhete
+          <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-black" style={{ background: '#000', color: accent }}>
+            {ticketDraft.length}
+          </span>
+        </button>
+      )}
+
+      {/* Ticket modal */}
+      {ticketOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4" onClick={() => setTicketOpen(false)}>
+          <div
+            className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto"
+            style={{ background: cardBg, color: text, border: `1px solid ${accent}55` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-black text-lg flex items-center gap-2">
+                <Ticket size={20} style={{ color: accent }} /> Meu Bilhete
+              </h2>
+              <button onClick={() => setTicketOpen(false)} className="p-1.5 rounded-full" style={{ background: '#00000044' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {ticketDraft.length === 0 ? (
+              <p className="text-sm text-center py-8" style={{ color: muted }}>Nenhuma seleção. Use o botão + nas odds.</p>
+            ) : (
+              <>
+                <div className="space-y-2 mb-4">
+                  {ticketDraft.map(s => (
+                    <div key={s.outcomeId} className="rounded-lg p-3 flex items-start justify-between gap-2" style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid ${accent}33` }}>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold truncate">{s.eventTitle}</div>
+                        <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{s.marketTitle}</div>
+                        <div className="text-sm mt-1">
+                          <span className="font-semibold">{s.outcomeLabel}</span>
+                          <span className="ml-2 font-black tabular-nums" style={{ color: accent }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => removeFromTicket(s.outcomeId)} className="p-1.5 rounded-md shrink-0" style={{ background: '#ef444422', color: '#f87171' }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-lg p-3 mb-3 space-y-1 text-sm" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                  <div className="flex justify-between"><span style={{ color: muted }}>Seleções</span><b>{ticketDraft.length}</b></div>
+                  <div className="flex justify-between"><span style={{ color: muted }}>Odd total</span><b className="tabular-nums" style={{ color: accent }}>{totalOdd.toFixed(2).replace('.', ',')}</b></div>
+                </div>
+
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: muted }}>Valor ({coinName})</label>
+                <input
+                  type="number" min={1} value={ticketAmount}
+                  onChange={(e) => setTicketAmount(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg mb-3 text-lg font-bold tabular-nums"
+                  style={{ background: '#00000066', border: `1px solid ${accent}55`, color: text }}
+                />
+
+                <div className="rounded-lg p-3 mb-4 flex items-center justify-between" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
+                  <span className="text-sm font-bold">Retorno potencial</span>
+                  <span className="font-black tabular-nums text-lg" style={{ color: accent }}>{ticketReturn.toLocaleString('pt-BR')} {coinName}</span>
+                </div>
+
+                {authed && (
+                  <div className="text-xs mb-3" style={{ color: muted }}>
+                    Saldo: <b style={{ color: text }}>{authed.tokens_balance.toLocaleString('pt-BR')}</b> {coinName}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button onClick={clearTicket} className="px-3 py-2.5 rounded-xl font-bold text-sm" style={{ background: '#00000055', color: text, border: `1px solid ${text}22` }}>
+                    Limpar
+                  </button>
+                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 2}
+                    className="flex-1 py-2.5 rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
+                    style={{ background: accent, color: '#000' }}>
+                    {placingTicket ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                    Confirmar bilhete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

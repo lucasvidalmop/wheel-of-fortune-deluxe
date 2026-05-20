@@ -357,6 +357,110 @@ export type Database = {
           },
         ]
       }
+      bet_ticket_selections: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_title: string
+          id: string
+          market_id: string | null
+          market_title: string
+          odd: number
+          outcome_id: string
+          owner_id: string
+          selection_label: string
+          status: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          event_title?: string
+          id?: string
+          market_id?: string | null
+          market_title?: string
+          odd?: number
+          outcome_id: string
+          owner_id: string
+          selection_label?: string
+          status?: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_title?: string
+          id?: string
+          market_id?: string | null
+          market_title?: string
+          odd?: number
+          outcome_id?: string
+          owner_id?: string
+          selection_label?: string
+          status?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_ticket_selections_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "bet_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bet_tickets: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          payout_coins: number
+          potential_return: number
+          public_code: string
+          resolved_at: string | null
+          stake: number
+          status: string
+          total_odd: number
+          user_email: string
+          user_name: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          payout_coins?: number
+          potential_return?: number
+          public_code: string
+          resolved_at?: string | null
+          stake?: number
+          status?: string
+          total_odd?: number
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          payout_coins?: number
+          potential_return?: number
+          public_code?: string
+          resolved_at?: string | null
+          stake?: number
+          status?: string
+          total_odd?: number
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: []
+      }
       bet_wagers: {
         Row: {
           account_id: string
@@ -2122,6 +2226,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _resolve_tickets_for_outcomes: {
+        Args: { p_outcome_ids: string[] }
+        Returns: undefined
+      }
       adjust_luckybox_tokens:
         | {
             Args: { p_account_id: string; p_delta: number; p_owner_id: string }
@@ -2377,6 +2485,16 @@ export type Database = {
           p_event_id: string
           p_outcome_id: string
           p_owner_id: string
+        }
+        Returns: Json
+      }
+      place_ticket: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_email: string
+          p_owner_id: string
+          p_selections: Json
         }
         Returns: Json
       }
