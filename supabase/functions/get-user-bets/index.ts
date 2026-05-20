@@ -69,6 +69,25 @@ Deno.serve(async (req) => {
       events = evs || [];
     }
 
+    const { data: tickets } = await supabase
+      .from("bet_tickets")
+      .select("id, public_code, total_odd, stake, potential_return, status, payout_coins, created_at, resolved_at")
+      .eq("owner_id", cfg.owner_id)
+      .eq("account_id", accountId)
+      .ilike("user_email", email)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    let ticketSelections: any[] = [];
+    if ((tickets || []).length) {
+      const tids = tickets!.map((t: any) => t.id);
+      const { data: tsel } = await supabase
+        .from("bet_ticket_selections")
+        .select("id, ticket_id, event_id, market_id, outcome_id, event_title, market_title, selection_label, odd, status")
+        .in("ticket_id", tids);
+      ticketSelections = tsel || [];
+    }
+
     return new Response(JSON.stringify({
       found: true,
       user: {
@@ -78,6 +97,8 @@ Deno.serve(async (req) => {
       },
       wagers: wagers || [],
       events,
+      tickets: tickets || [],
+      ticketSelections,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("get-user-bets error", err);
