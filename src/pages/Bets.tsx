@@ -604,6 +604,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             const outs = outcomesByEvent[ev.id] || [];
             const timeExpired = isBetDateTimeExpired(ev.closes_at);
             const closed = (ev.status !== 'open' && ev.status !== 'scheduled') || timeExpired;
+            const finalized = ev.status === 'resolved' || ev.status === 'cancelled';
             const c = ev.payout_case_id ? casesById[ev.payout_case_id] : null;
             const evCat = ev.category_id ? cats.find(x => x.id === ev.category_id) : null;
             const catBg = evCat?.background_url || '';
