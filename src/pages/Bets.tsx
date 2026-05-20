@@ -327,15 +327,40 @@ const Bets = ({ tag }: BetsPageProps) => {
   };
   const clearTicket = () => setTicketDraft([]);
 
-  const totalOdd = useMemo(
-    () => ticketDraft.reduce((acc, s) => acc * (Number(s.odd) || 1), 1),
+  const ticketLimits: TicketOddLimits = (cfg.multiTicket || {}) as TicketOddLimits;
+  const maxOddAllowed = effectiveMaxOdd(ticketLimits);
+  const maxReturnAllowed = Math.max(0, Number(ticketLimits.maxReturn) || 0); // 0 = sem limite
+  const minBetAllowed = Math.max(1, Number(ticketLimits.minBet) || 1);
+  const maxBetAllowed = Math.max(0, Number(ticketLimits.maxBet) || 0); // 0 = sem limite
+
+  const oddBreakdown = useMemo(
+    () => computeTicketOdd(ticketDraft.map(s => ({ eventId: s.eventId, odd: Number(s.odd) || 1 }))),
     [ticketDraft],
   );
+  const totalOdd = oddBreakdown.final;
   const ticketReturn = useMemo(() => {
     const amt = Math.floor(Number(ticketAmount));
     if (!Number.isFinite(amt) || amt <= 0) return 0;
     return Math.round(amt * totalOdd);
   }, [ticketAmount, totalOdd]);
+
+  const ticketBlockReason = useMemo<string | null>(() => {
+    if (ticketDraft.length < 2) return null;
+    if (totalOdd > maxOddAllowed) {
+      return maxOddAllowed >= HARD_MAX_ODD
+        ? `Odd máxima permitida é ${HARD_MAX_ODD}`
+        : `Odd máxima permitida é ${maxOddAllowed}`;
+    }
+    const amt = Math.floor(Number(ticketAmount));
+    if (Number.isFinite(amt) && amt > 0) {
+      if (amt < minBetAllowed) return `Valor mínimo de aposta é ${minBetAllowed}`;
+      if (maxBetAllowed > 0 && amt > maxBetAllowed) return `Valor máximo de aposta é ${maxBetAllowed}`;
+      if (maxReturnAllowed > 0 && ticketReturn > maxReturnAllowed) {
+        return `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`;
+      }
+    }
+    return null;
+  }, [ticketDraft.length, totalOdd, maxOddAllowed, ticketAmount, ticketReturn, minBetAllowed, maxBetAllowed, maxReturnAllowed]);
 
   const placeTicket = async () => {
     if (!authed) return;
@@ -343,6 +368,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     const amt = Math.floor(Number(ticketAmount));
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
+    if (ticketBlockReason) { toast.error(ticketBlockReason); return; }
     setPlacingTicket(true);
     try {
       const { data, error } = await supabase.functions.invoke('place-ticket', {
