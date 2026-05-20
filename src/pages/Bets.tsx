@@ -216,6 +216,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(data.user);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyTickets(data.tickets || []);
+      setMyTicketSelections(data.ticketSelections || []);
     } catch (err: any) {
       toast.error('Falha ao buscar cadastro');
     } finally {
@@ -232,6 +234,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(prev => prev ? { ...prev, tokens_balance: data.user.tokens_balance } : prev);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyTickets(data.tickets || []);
+      setMyTicketSelections(data.ticketSelections || []);
     }
   };
 
