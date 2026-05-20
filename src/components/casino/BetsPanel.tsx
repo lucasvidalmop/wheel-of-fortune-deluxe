@@ -1223,15 +1223,41 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               ],
             }];
 
-            const ALLOWED = [
-              'Match Winner',
-              'Both Teams Score',
-              'Goals Over/Under',
-              'Double Chance',
-              'Asian Handicap',
-              'Corners Over Under',
-              'Cards Over Under',
-            ];
+            // PT-BR translations for known market names
+            const MARKET_NAME_PTBR: Record<string, string> = {
+              'match winner': 'Resultado Final',
+              'both teams score': 'Ambos marcam',
+              'goals over/under': 'Mais/Menos gols',
+              'double chance': 'Dupla chance',
+              'asian handicap': 'Handicap asiático',
+              'handicap result': 'Handicap',
+              'corners over under': 'Escanteios',
+              'cards over under': 'Cartões',
+              'first half winner': 'Vencedor 1º tempo',
+              'second half winner': 'Vencedor 2º tempo',
+              'exact score': 'Placar exato',
+              'total - home': 'Total gols mandante',
+              'total - away': 'Total gols visitante',
+            };
+
+            const translateValue = (raw: string, homeName: string, awayName: string): string => {
+              const v = String(raw || '').trim();
+              const low = v.toLowerCase();
+              if (low === 'home') return `${homeName} vence`;
+              if (low === 'away') return `${awayName} vence`;
+              if (low === 'draw') return 'Empate';
+              if (low === 'yes') return 'Sim';
+              if (low === 'no') return 'Não';
+              if (low === 'home/draw' || low === '1x') return `${homeName} ou empate`;
+              if (low === 'draw/away' || low === 'x2') return `Empate ou ${awayName}`;
+              if (low === 'home/away' || low === '12') return `${homeName} ou ${awayName}`;
+              // Over/Under X.Y
+              const ov = v.match(/^over\s+([\d.]+)$/i);
+              if (ov) return `Mais de ${ov[1]}`;
+              const un = v.match(/^under\s+([\d.]+)$/i);
+              if (un) return `Menos de ${un[1]}`;
+              return v;
+            };
 
             try {
               const r = await fetch(`https://sportsapi.tipspayroleta.com/odds?fixture=${encodeURIComponent(String(fixtureId))}`);
@@ -1242,15 +1268,33 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bookmaker?.bets || [];
 
               const built: EditingMarket[] = [];
-              ALLOWED.forEach((wanted) => {
-                const bet = bets.find(b => (b.name || '').toLowerCase() === wanted.toLowerCase());
+              // Match Winner always first as "Resultado Final"
+              const ordered = [...bets].sort((a, b) => {
+                const aw = (a.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                const bw = (b.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                return aw - bw;
+              });
+
+              ordered.forEach((bet) => {
                 if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) return;
+                const seen = new Set<string>();
                 const outs = bet.values
-                  .map(v => ({ label: String(v.value), odd: Number(v.odd) }))
-                  .filter(o => o.label && o.odd > 1);
+                  .map(v => ({
+                    label: translateValue(String(v.value), homeName, awayName),
+                    odd: Number(v.odd),
+                  }))
+                  .filter(o => {
+                    if (!o.label || !(o.odd > 1)) return false;
+                    const k = o.label.toLowerCase();
+                    if (seen.has(k)) return false;
+                    seen.add(k);
+                    return true;
+                  });
                 if (outs.length < 2) return;
+                const key = (bet.name || '').toLowerCase();
+                const title = MARKET_NAME_PTBR[key] || bet.name;
                 built.push({
-                  title: bet.name, position: built.length, ...defaultMarketDefaults(),
+                  title, position: built.length, ...defaultMarketDefaults(),
                   outcomes: outs,
                 });
               });
