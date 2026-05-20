@@ -659,7 +659,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             </button>
             <button onClick={() => setImporterOpen(true)}
               className="px-4 py-2 bg-muted hover:bg-muted/70 rounded-lg font-medium flex items-center gap-2 border border-border">
-              ⚽ Importar da API-Football
+              ⚽ Importador de Football
             </button>
           </div>
           {events.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento criado ainda.</p>}
