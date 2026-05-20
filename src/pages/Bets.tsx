@@ -31,6 +31,20 @@ interface WagerRow {
   payout_mode: 'coins'|'case'; status: 'pending'|'won'|'lost'|'refunded'|'cancelled';
   payout_coins: number; payout_grant_id: string | null; created_at: string; resolved_at: string | null;
 }
+interface TicketRow {
+  id: string; public_code: string; total_odd: number; stake: number; potential_return: number;
+  status: 'pending'|'won'|'lost'|'cancelled'|'refunded'; payout_coins: number;
+  created_at: string; resolved_at: string | null;
+}
+interface TicketSelectionRow {
+  id: string; ticket_id: string; event_id: string; market_id: string | null; outcome_id: string;
+  event_title: string; market_title: string; selection_label: string; odd: number;
+  status: 'pending'|'won'|'lost'|'cancelled';
+}
+interface TicketDraft {
+  eventId: string; eventTitle: string; marketId: string | null; marketTitle: string;
+  outcomeId: string; outcomeLabel: string; odd: number;
+}
 
 interface AuthedUser { id: string; name: string; email: string; account_id: string; tokens_balance: number }
 
