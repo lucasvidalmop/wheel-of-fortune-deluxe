@@ -746,7 +746,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   } else {
                     if (outs.length) groups.push({ market: null, outs });
                   }
-                  const evExpanded = !!expandedEvents[ev.id];
+                  const evExpanded = detailMode || !!expandedEvents[ev.id];
                   const extraCount = Math.max(0, groups.length - 1);
                   const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
                   return (
