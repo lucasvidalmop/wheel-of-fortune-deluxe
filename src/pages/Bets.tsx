@@ -536,7 +536,12 @@ const Bets = ({ tag }: BetsPageProps) => {
                   } else {
                     if (outs.length) groups.push({ market: null, outs });
                   }
-                  return groups.map((g, gi) => {
+                  const evExpanded = !!expandedEvents[ev.id];
+                  const extraCount = Math.max(0, groups.length - 1);
+                  const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
+                  return (
+                    <>
+                      {visibleGroups.map((g, gi) => {
                     const mk = g.market;
                     const mkClosed = mk
                       ? (mk.status !== 'open' || isBetDateTimeExpired(mk.closes_at))
