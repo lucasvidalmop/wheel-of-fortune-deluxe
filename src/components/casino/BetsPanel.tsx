@@ -211,6 +211,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         max_bets_per_user: editingEvent.max_bets_per_user ?? 0,
         position: editingEvent.position ?? 0,
         is_hot: !!editingEvent.is_hot,
+        external_fixture_id: (editingEvent as any).external_fixture_id || null,
       };
       if (eventId) {
         const { error } = await supabase.from('bet_events').update(payload).eq('id', eventId);
