@@ -213,6 +213,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         position: editingEvent.position ?? 0,
         is_hot: !!editingEvent.is_hot,
         external_fixture_id: (editingEvent as any).external_fixture_id || null,
+        home_image_url: (editingEvent as any).home_image_url || null,
+        away_image_url: (editingEvent as any).away_image_url || null,
       };
       if (eventId) {
         const { error } = await supabase.from('bet_events').update(payload).eq('id', eventId);
