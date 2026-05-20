@@ -898,7 +898,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
                     <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
                   </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{hotEvents.map(renderEvent)}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{hotEvents.map(ev => renderEvent(ev))}</div>
                 </section>
               )}
 
