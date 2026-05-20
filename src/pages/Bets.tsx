@@ -1159,8 +1159,8 @@ const Bets = ({ tag }: BetsPageProps) => {
         >
           <Ticket size={18} />
           Meu Bilhete
-          <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-black" style={{ background: '#000', color: accent }}>
-            {ticketDraft.length}
+          <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-black tabular-nums" style={{ background: '#000', color: accent }}>
+            {ticketDraft.length} · {totalOdd.toFixed(2).replace('.', ',')}
           </span>
         </button>
       )}
