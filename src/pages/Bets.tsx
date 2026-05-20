@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
+import { computeTicketOdd, effectiveMaxOdd, HARD_MAX_ODD, type TicketOddLimits } from '@/lib/ticketOdds';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
 
@@ -326,15 +327,40 @@ const Bets = ({ tag }: BetsPageProps) => {
   };
   const clearTicket = () => setTicketDraft([]);
 
-  const totalOdd = useMemo(
-    () => ticketDraft.reduce((acc, s) => acc * (Number(s.odd) || 1), 1),
+  const ticketLimits: TicketOddLimits = (cfg.multiTicket || {}) as TicketOddLimits;
+  const maxOddAllowed = effectiveMaxOdd(ticketLimits);
+  const maxReturnAllowed = Math.max(0, Number(ticketLimits.maxReturn) || 0); // 0 = sem limite
+  const minBetAllowed = Math.max(1, Number(ticketLimits.minBet) || 1);
+  const maxBetAllowed = Math.max(0, Number(ticketLimits.maxBet) || 0); // 0 = sem limite
+
+  const oddBreakdown = useMemo(
+    () => computeTicketOdd(ticketDraft.map(s => ({ eventId: s.eventId, odd: Number(s.odd) || 1 }))),
     [ticketDraft],
   );
+  const totalOdd = oddBreakdown.final;
   const ticketReturn = useMemo(() => {
     const amt = Math.floor(Number(ticketAmount));
     if (!Number.isFinite(amt) || amt <= 0) return 0;
     return Math.round(amt * totalOdd);
   }, [ticketAmount, totalOdd]);
+
+  const ticketBlockReason = useMemo<string | null>(() => {
+    if (ticketDraft.length < 2) return null;
+    if (totalOdd > maxOddAllowed) {
+      return maxOddAllowed >= HARD_MAX_ODD
+        ? `Odd máxima permitida é ${HARD_MAX_ODD}`
+        : `Odd máxima permitida é ${maxOddAllowed}`;
+    }
+    const amt = Math.floor(Number(ticketAmount));
+    if (Number.isFinite(amt) && amt > 0) {
+      if (amt < minBetAllowed) return `Valor mínimo de aposta é ${minBetAllowed}`;
+      if (maxBetAllowed > 0 && amt > maxBetAllowed) return `Valor máximo de aposta é ${maxBetAllowed}`;
+      if (maxReturnAllowed > 0 && ticketReturn > maxReturnAllowed) {
+        return `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`;
+      }
+    }
+    return null;
+  }, [ticketDraft.length, totalOdd, maxOddAllowed, ticketAmount, ticketReturn, minBetAllowed, maxBetAllowed, maxReturnAllowed]);
 
   const placeTicket = async () => {
     if (!authed) return;
@@ -342,6 +368,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     const amt = Math.floor(Number(ticketAmount));
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
+    if (ticketBlockReason) { toast.error(ticketBlockReason); return; }
     setPlacingTicket(true);
     try {
       const { data, error } = await supabase.functions.invoke('place-ticket', {
@@ -362,6 +389,10 @@ const Bets = ({ tag }: BetsPageProps) => {
           market_not_open: 'Um dos mercados não está aberto',
           duplicate_market: 'Não pode haver duas seleções do mesmo mercado',
           user_not_found: 'Usuário não encontrado',
+          odd_above_max: `Odd máxima permitida é ${maxOddAllowed}`,
+          return_above_max: `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`,
+          stake_below_min: `Valor mínimo de aposta é ${minBetAllowed}`,
+          stake_above_max: `Valor máximo de aposta é ${maxBetAllowed}`,
         };
         toast.error(errMap[data?.error] || `Falha: ${data?.error || 'erro'}`);
         return;
@@ -1175,21 +1206,48 @@ const Bets = ({ tag }: BetsPageProps) => {
 
                 <div className="rounded-lg p-3 mb-3 space-y-1 text-sm" style={{ background: 'rgba(0,0,0,0.35)' }}>
                   <div className="flex justify-between"><span style={{ color: muted }}>Seleções</span><b>{ticketDraft.length}</b></div>
-                  <div className="flex justify-between"><span style={{ color: muted }}>Odd total</span><b className="tabular-nums" style={{ color: accent }}>{totalOdd.toFixed(2).replace('.', ',')}</b></div>
+                  <div className="flex justify-between">
+                    <span style={{ color: muted }}>Odd base</span>
+                    <b className="tabular-nums">{oddBreakdown.base.toFixed(2).replace('.', ',')}</b>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: muted }}>
+                      Fator casa{oddBreakdown.hasSameFixture ? ' (mesmo jogo)' : ''}
+                    </span>
+                    <b className="tabular-nums">×{oddBreakdown.houseFactor.toFixed(2).replace('.', ',')}</b>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: muted }}>Bônus múltipla</span>
+                    <b className="tabular-nums" style={{ color: oddBreakdown.bonus > 1 ? '#4ade80' : undefined }}>
+                      {oddBreakdown.bonus > 1 ? `+${Math.round((oddBreakdown.bonus - 1) * 100)}%` : '—'}
+                    </b>
+                  </div>
+                  <div className="flex justify-between pt-1 mt-1 border-t" style={{ borderColor: `${accent}33` }}>
+                    <span className="font-bold">Odd final</span>
+                    <b className="tabular-nums text-base" style={{ color: accent }}>{totalOdd.toFixed(2).replace('.', ',')}</b>
+                  </div>
                 </div>
 
-                <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: muted }}>Valor ({coinName})</label>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: muted }}>
+                  Valor ({coinName}){maxBetAllowed > 0 ? ` · min ${minBetAllowed} / max ${maxBetAllowed}` : ` · min ${minBetAllowed}`}
+                </label>
                 <input
-                  type="number" min={1} value={ticketAmount}
+                  type="number" min={minBetAllowed} value={ticketAmount}
                   onChange={(e) => setTicketAmount(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg mb-3 text-lg font-bold tabular-nums"
                   style={{ background: '#00000066', border: `1px solid ${accent}55`, color: text }}
                 />
 
-                <div className="rounded-lg p-3 mb-4 flex items-center justify-between" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
-                  <span className="text-sm font-bold">Retorno potencial</span>
+                <div className="rounded-lg p-3 mb-3 flex items-center justify-between" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
+                  <span className="text-sm font-bold">Retorno possível</span>
                   <span className="font-black tabular-nums text-lg" style={{ color: accent }}>{ticketReturn.toLocaleString('pt-BR')} {coinName}</span>
                 </div>
+
+                {ticketBlockReason && (
+                  <div className="rounded-lg p-3 mb-3 text-xs font-bold" style={{ background: '#7f1d1d33', border: '1px solid #ef4444', color: '#fecaca' }}>
+                    {ticketBlockReason}
+                  </div>
+                )}
 
                 {authed && (
                   <div className="text-xs mb-3" style={{ color: muted }}>
@@ -1201,7 +1259,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   <button onClick={clearTicket} className="px-3 py-2.5 rounded-xl font-bold text-sm" style={{ background: '#00000055', color: text, border: `1px solid ${text}22` }}>
                     Limpar
                   </button>
-                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 2}
+                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 2 || !!ticketBlockReason}
                     className="flex-1 py-2.5 rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
                     style={{ background: accent, color: '#000' }}>
                     {placingTicket ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
