@@ -751,7 +751,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
                   return (
                     <>
-                      {evExpanded && extraCount > 0 && (
+                      {!detailMode && evExpanded && extraCount > 0 && (
                         <button
                           type="button"
                           onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: false }))}
