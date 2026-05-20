@@ -1320,7 +1320,7 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-5 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg">⚽ Importar da API-Football</h3>
+          <h3 className="font-bold text-lg">⚽ Importador de Football</h3>
           <button onClick={onClose} className="p-1.5 rounded hover:bg-muted"><X size={16} /></button>
         </div>
 
