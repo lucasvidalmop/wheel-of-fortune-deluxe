@@ -160,12 +160,14 @@ export type Database = {
       }
       bet_events: {
         Row: {
+          away_image_url: string | null
           bets_config_id: string
           category: string
           category_id: string | null
           closes_at: string | null
           created_at: string
           external_fixture_id: string | null
+          home_image_url: string | null
           id: string
           image_url: string
           is_hot: boolean
@@ -186,12 +188,14 @@ export type Database = {
           winning_outcome_id: string | null
         }
         Insert: {
+          away_image_url?: string | null
           bets_config_id: string
           category?: string
           category_id?: string | null
           closes_at?: string | null
           created_at?: string
           external_fixture_id?: string | null
+          home_image_url?: string | null
           id?: string
           image_url?: string
           is_hot?: boolean
@@ -212,12 +216,14 @@ export type Database = {
           winning_outcome_id?: string | null
         }
         Update: {
+          away_image_url?: string | null
           bets_config_id?: string
           category?: string
           category_id?: string | null
           closes_at?: string | null
           created_at?: string
           external_fixture_id?: string | null
+          home_image_url?: string | null
           id?: string
           image_url?: string
           is_hot?: boolean

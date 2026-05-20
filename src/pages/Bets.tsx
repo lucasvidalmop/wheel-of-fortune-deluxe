@@ -18,6 +18,7 @@ interface MarketRow {
 }
 interface EventRow {
   id: string; title: string; subtitle: string; category: string; category_id: string | null; image_url: string;
+  home_image_url?: string | null; away_image_url?: string | null;
   starts_at: string | null; closes_at: string | null; status: 'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins' | 'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
@@ -493,7 +494,19 @@ const Bets = ({ tag }: BetsPageProps) => {
                       <h2 className="font-black text-lg sm:text-xl leading-tight" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{ev.title}</h2>
                       {ev.subtitle && <p className="text-sm mt-1" style={{ color: muted }}>{ev.subtitle}</p>}
                     </div>
-                    {ev.image_url && <img src={ev.image_url} alt="" className="w-24 h-16 sm:w-32 sm:h-20 rounded-lg object-cover flex-shrink-0 border border-white/10" />}
+                    {(ev.home_image_url || ev.away_image_url) ? (
+                      <div className="flex items-center gap-1 flex-shrink-0 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        {ev.home_image_url
+                          ? <img src={ev.home_image_url} alt="" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+                          : <div className="w-10 h-10 sm:w-12 sm:h-12" />}
+                        <span className="text-[10px] font-bold opacity-60" style={{ color: text }}>VS</span>
+                        {ev.away_image_url
+                          ? <img src={ev.away_image_url} alt="" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+                          : <div className="w-10 h-10 sm:w-12 sm:h-12" />}
+                      </div>
+                    ) : ev.image_url && (
+                      <img src={ev.image_url} alt="" className="w-24 h-16 sm:w-32 sm:h-20 rounded-lg object-cover flex-shrink-0 border border-white/10" />
+                    )}
                   </div>
                 </div>
                 {ev.payout_mode === 'case' && c && (

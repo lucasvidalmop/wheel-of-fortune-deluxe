@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
     const { data: events, error: evErr } = await supabase
       .from("bet_events")
-      .select("id, title, subtitle, category, category_id, image_url, starts_at, closes_at, status, payout_mode, payout_case_id, payout_case_qty_per_unit, min_bet, max_bet, max_bets_per_user, position, winning_outcome_id, is_hot")
+      .select("id, title, subtitle, category, category_id, image_url, home_image_url, away_image_url, starts_at, closes_at, status, payout_mode, payout_case_id, payout_case_qty_per_unit, min_bet, max_bet, max_bets_per_user, position, winning_outcome_id, is_hot")
       .eq("bets_config_id", cfg.id)
       .in("status", ["scheduled", "open", "closed", "resolved"])
       .order("position", { ascending: true })

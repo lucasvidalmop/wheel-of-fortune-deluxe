@@ -213,6 +213,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         position: editingEvent.position ?? 0,
         is_hot: !!editingEvent.is_hot,
         external_fixture_id: (editingEvent as any).external_fixture_id || null,
+        home_image_url: (editingEvent as any).home_image_url || null,
+        away_image_url: (editingEvent as any).away_image_url || null,
       };
       if (eventId) {
         const { error } = await supabase.from('bet_events').update(payload).eq('id', eventId);
@@ -1199,7 +1201,9 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               subtitle: fx.league?.name ? `${fx.league.name}${fx.league.round ? ' · ' + fx.league.round : ''}` : '',
               category: 'Futebol',
               category_id: futCat?.id || null,
-              image_url: homeLogo || awayLogo || '',
+              image_url: '',
+              home_image_url: homeLogo || null,
+              away_image_url: awayLogo || null,
               starts_at: startsAtIso,
               closes_at: closesAtIso,
               status: 'open',
