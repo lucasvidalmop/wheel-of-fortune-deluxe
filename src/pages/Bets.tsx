@@ -839,7 +839,13 @@ const Bets = ({ tag }: BetsPageProps) => {
                             <span className="text-xs">Prêmio: caixa <b>{mkCase.name}</b> ({mk.payout_case_qty_per_unit}× por unidade apostada)</span>
                           </div>
                         )}
-                        {!collapsed && (
+                        {!collapsed && mkClosed && (mk ? mk.status !== 'resolved' : ev.status !== 'resolved') && (
+                          <div className="px-3 py-2 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold text-center" style={{ background: '#ef444422', color: '#f87171', border: '1px dashed #ef444455' }}>
+                            Mercado encerrado
+                          </div>
+                        )}
+                        {!collapsed && !(mkClosed && (mk ? mk.status !== 'resolved' : ev.status !== 'resolved')) && (
+
                         <div className={`relative grid gap-2 ${g.outs.length === 2 ? 'grid-cols-2' : g.outs.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
                           {g.outs.map(o => {
                             const resolvedFlag = mk ? mk.status === 'resolved' : ev.status === 'resolved';
