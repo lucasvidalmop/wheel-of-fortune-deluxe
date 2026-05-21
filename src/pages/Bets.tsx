@@ -1034,7 +1034,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <div className="flex-1 h-px" style={{ background: (g.cat?.color || accent) + '33' }} />
                     <span className="text-xs" style={{ color: muted }}>{g.items.length}</span>
                   </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{g.items.map(ev => renderEvent(ev))}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{g.items.map(ev => renderEvent(ev))}</div>
                 </section>
               ))}
 
