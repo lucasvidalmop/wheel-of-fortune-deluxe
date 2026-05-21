@@ -363,6 +363,19 @@ async function creditByAccount(supabase: any, ownerId: string, accountId: string
     .eq("id", user.id);
 }
 
+function notifyOwner(ownerId: string, type: string, payload: Record<string, any>) {
+  try {
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-owner-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({ ownerId, type, payload }),
+    }).catch((e) => console.error("notifyOwner fetch failed", e));
+  } catch (e) { console.error("notifyOwner failed", e); }
+}
+
 function norm(s: string | null | undefined): string {
   return (s || "").toString().trim().toLowerCase();
 }
