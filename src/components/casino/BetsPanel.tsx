@@ -335,22 +335,26 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     [events],
   );
 
-  const moveEvent = async (idx: number, dir: -1 | 1) => {
+  const moveHotEvent = async (eventId: string, dir: -1 | 1) => {
+    const hots = sortedEvents.filter(e => e.is_hot);
+    const idx = hots.findIndex(e => e.id === eventId);
+    if (idx < 0) return;
     const j = idx + dir;
-    if (j < 0 || j >= sortedEvents.length) return;
-    const reordered = [...sortedEvents];
-    [reordered[idx], reordered[j]] = [reordered[j], reordered[idx]];
-    const updates = reordered
-      .map((e, i) => ({ id: e.id, position: i, prev: e.position ?? 0 }))
-      .filter(u => u.position !== u.prev);
-    // Optimistic UI: assign new positions immediately
+    if (j < 0 || j >= hots.length) return;
+    const a = hots[idx];
+    const b = hots[j];
+    const posA = a.position ?? 0;
+    const posB = b.position ?? 0;
+    // Optimistic UI: swap positions between the two hot events
     setEvents(prev => prev.map(e => {
-      const u = updates.find(x => x.id === e.id);
-      return u ? { ...e, position: u.position } : e;
+      if (e.id === a.id) return { ...e, position: posB };
+      if (e.id === b.id) return { ...e, position: posA };
+      return e;
     }));
-    const results = await Promise.all(
-      updates.map(u => supabase.from('bet_events').update({ position: u.position }).eq('id', u.id))
-    );
+    const results = await Promise.all([
+      supabase.from('bet_events').update({ position: posB }).eq('id', a.id),
+      supabase.from('bet_events').update({ position: posA }).eq('id', b.id),
+    ]);
     const err = results.find(r => r.error);
     if (err?.error) { toast.error(err.error.message); loadAll(); }
   };
