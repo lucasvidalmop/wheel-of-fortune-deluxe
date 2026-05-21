@@ -8557,13 +8557,15 @@ function Dashboard() {
           )}
 
           {customizingReferral && (
-            <ReferralPageEditor
-              linkId={customizingReferral.id}
-              linkLabel={customizingReferral.label}
-              currentConfig={customizingReferral.page_config || {}}
-              onClose={() => setCustomizingReferral(null)}
-              onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
-            />
+            <Suspense fallback={<PanelFallback />}>
+              <ReferralPageEditor
+                linkId={customizingReferral.id}
+                linkLabel={customizingReferral.label}
+                currentConfig={customizingReferral.page_config || {}}
+                onClose={() => setCustomizingReferral(null)}
+                onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
+              />
+            </Suspense>
           )}
 
           {analyticsReferral && session?.user?.id && (
@@ -8576,11 +8578,13 @@ function Dashboard() {
                 >
                   <X size={18} />
                 </button>
-                <ReferralAnalyticsPanel
-                  ownerId={session.user.id}
-                  linkId={analyticsReferral.id}
-                  scopeLabel={`${analyticsReferral.label || 'Link'} • ${analyticsReferral.code}`}
-                />
+                <Suspense fallback={<PanelFallback />}>
+                  <ReferralAnalyticsPanel
+                    ownerId={session.user.id}
+                    linkId={analyticsReferral.id}
+                    scopeLabel={`${analyticsReferral.label || 'Link'} • ${analyticsReferral.code}`}
+                  />
+                </Suspense>
               </div>
             </div>
           )}
@@ -8736,27 +8740,33 @@ function Dashboard() {
                 )}
 
                 {gorjetaSubTab === 'visual' && session?.user?.id && (
-                  <GorjetaPageEditor
-                    userId={session.user.id}
-                    currentConfig={(wheelConfig as any).gorjetaPageConfig || {}}
-                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <GorjetaPageEditor
+                      userId={session.user.id}
+                      currentConfig={(wheelConfig as any).gorjetaPageConfig || {}}
+                      onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
+                    />
+                  </Suspense>
                 )}
 
                 {gorjetaSubTab === 'influencer' && session?.user?.id && (
-                  <InfluencerPageEditor
-                    userId={session.user.id}
-                    currentConfig={(wheelConfig as any).influencerPageConfig || {}}
-                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <InfluencerPageEditor
+                      userId={session.user.id}
+                      currentConfig={(wheelConfig as any).influencerPageConfig || {}}
+                      onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
+                    />
+                  </Suspense>
                 )}
 
                 {gorjetaSubTab === 'update' && session?.user?.id && (
-                  <UpdatePageEditor
-                    userId={session.user.id}
-                    currentConfig={(wheelConfig as any).updatePageConfig || {}}
-                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, updatePageConfig: cfg }))}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <UpdatePageEditor
+                      userId={session.user.id}
+                      currentConfig={(wheelConfig as any).updatePageConfig || {}}
+                      onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, updatePageConfig: cfg }))}
+                    />
+                  </Suspense>
                 )}
 
                 {gorjetaSubTab === 'seo' && (() => {
@@ -9777,7 +9787,9 @@ function Dashboard() {
 
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
-              <ConfigBackupPanel />
+              <Suspense fallback={<PanelFallback />}>
+                <ConfigBackupPanel />
+              </Suspense>
               {session?.user?.id && <AuthNoticePanel ownerId={session.user.id} />}
               {/* Probabilidade do Sorteio */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
@@ -10281,7 +10293,9 @@ function Dashboard() {
 
           {activeTab === 'msg_analytics' && (
             <div className="w-full max-w-[1200px] min-w-0">
-              <MessagingAnalytics ownerId={session?.user?.id || ''} />
+              <Suspense fallback={<PanelFallback />}>
+                <MessagingAnalytics ownerId={session?.user?.id || ''} />
+              </Suspense>
             </div>
           )}
 
@@ -11757,12 +11771,14 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
             <DialogTitle>{editingTemplate ? `Editar: ${editingTemplate.name}` : 'Novo template de email'}</DialogTitle>
           </DialogHeader>
           {session?.user?.id && (
-            <EmailTemplateEditor
-              ownerId={session.user.id}
-              initial={editingTemplate}
-              onClose={() => setShowTemplateEditor(false)}
-              onSaved={refreshCustomTemplates}
-            />
+            <Suspense fallback={<PanelFallback />}>
+              <EmailTemplateEditor
+                ownerId={session.user.id}
+                initial={editingTemplate}
+                onClose={() => setShowTemplateEditor(false)}
+                onSaved={refreshCustomTemplates}
+              />
+            </Suspense>
           )}
         </DialogContent>
       </Dialog>
