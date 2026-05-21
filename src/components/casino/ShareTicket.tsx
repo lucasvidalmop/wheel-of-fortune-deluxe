@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { X, Download, Share2, Loader2, TrendingDown, Clock, Trophy, Calendar, Ticket } from 'lucide-react';
+import { X, Download, Share2, Loader2, TrendingDown, Clock, Trophy, Calendar, Ticket, Link2, Check } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 
@@ -71,6 +71,7 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!open) return null;
 
@@ -309,25 +310,12 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
                 {ctaUrl.replace(/^https?:\/\//, '')}
               </p>
             )}
-            {data.copyUrl && (
-              <div
-                className="mt-3 rounded-lg px-3 py-2 text-center"
-                style={{ background: `${accent}11`, border: `1px dashed ${accent}55` }}
-              >
-                <div className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: accent }}>
-                  Copie este bilhete
-                </div>
-                <div className="text-[10px] font-mono break-all" style={{ color: textColor }}>
-                  {data.copyUrl.replace(/^https?:\/\//, '')}
-                </div>
-              </div>
-            )}
           </div>
 
         </div>
 
         {/* Actions */}
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           <button
             onClick={downloadImage}
             disabled={downloading}
@@ -344,6 +332,22 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
           >
             {sharing ? <Loader2 className="animate-spin" size={16} /> : <Share2 size={16} />}
             Compartilhar
+          </button>
+          <button
+            onClick={async () => {
+              if (!data.copyUrl) return;
+              try {
+                await navigator.clipboard.writeText(data.copyUrl);
+                setCopied(true);
+                toast.success('Link copiado!');
+                setTimeout(() => setCopied(false), 2000);
+              } catch { toast.error('Não foi possível copiar'); }
+            }}
+            disabled={!data.copyUrl}
+            className="py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 bg-white/10 text-white hover:bg-white/15 transition"
+          >
+            {copied ? <Check size={16} /> : <Link2 size={16} />}
+            {copied ? 'Copiado' : 'Link'}
           </button>
         </div>
         <button
