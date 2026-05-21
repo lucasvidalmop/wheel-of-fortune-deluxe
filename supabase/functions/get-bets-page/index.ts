@@ -53,20 +53,39 @@ Deno.serve(async (req) => {
     let outcomes: any[] = [];
     let markets: any[] = [];
     if (eventIds.length) {
-      const { data: outs, error: outErr } = await supabase
-        .from("bet_outcomes")
-        .select("id, event_id, market_id, label, odd, position, is_winner")
-        .in("event_id", eventIds)
-        .order("position", { ascending: true });
-      if (outErr) throw outErr;
-      outcomes = outs || [];
+      // Paginate outcomes (Supabase default limit is 1000 per query)
+      const PAGE = 1000;
+      let from = 0;
+      while (true) {
+        const { data: outs, error: outErr } = await supabase
+          .from("bet_outcomes")
+          .select("id, event_id, market_id, label, odd, position, is_winner")
+          .in("event_id", eventIds)
+          .order("position", { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (outErr) throw outErr;
+        const batch = outs || [];
+        outcomes.push(...batch);
+        if (batch.length < PAGE) break;
+        from += PAGE;
+        if (from > 100000) break; // safety
+      }
 
-      const { data: mks } = await supabase
-        .from("bet_markets")
-        .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
-        .in("event_id", eventIds)
-        .order("position", { ascending: true });
-      markets = mks || [];
+      // Paginate markets as well
+      let mFrom = 0;
+      while (true) {
+        const { data: mks } = await supabase
+          .from("bet_markets")
+          .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
+          .in("event_id", eventIds)
+          .order("position", { ascending: true })
+          .range(mFrom, mFrom + PAGE - 1);
+        const batch = mks || [];
+        markets.push(...batch);
+        if (batch.length < PAGE) break;
+        mFrom += PAGE;
+        if (mFrom > 50000) break;
+      }
     }
 
     const { data: catz } = await supabase
