@@ -334,6 +334,9 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     ),
     [events],
   );
+  const [eventsSourceFilter, setEventsSourceFilter] = useState<'all' | 'manual' | 'api'>('all');
+  const [eventsSearch, setEventsSearch] = useState('');
+
 
   const filteredEvents = React.useMemo(() => {
     const q = eventsSearch.trim().toLowerCase();
