@@ -203,6 +203,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [placingTicket, setPlacingTicket] = useState(false);
   const [myTickets, setMyTickets] = useState<TicketRow[]>([]);
   const [myTicketSelections, setMyTicketSelections] = useState<TicketSelectionRow[]>([]);
+  const [visibleEventLimit, setVisibleEventLimit] = useState(18);
 
   // load page
   useEffect(() => {
@@ -309,6 +310,10 @@ const Bets = ({ tag }: BetsPageProps) => {
       else sessionStorage.removeItem(`bets_user_${tag}`);
     } catch {}
   }, [authed, tag]);
+
+  useEffect(() => {
+    setVisibleEventLimit(18);
+  }, [categoryFilter]);
 
   // SEO/pixels injection
   useEffect(() => {
