@@ -149,6 +149,12 @@ async function syncForOwner(
     if (existingEv.status === "resolved" || existingEv.status === "cancelled") {
       delete evPayload.status;
     }
+    // Preserva flags gerenciadas pelo admin: não sobrescreve is_hot em re-sync,
+    // a menos que o payload explicitamente envie o campo. A API de fixtures não
+    // manda essa flag, então sobrescrever apagaria a marcação do operador.
+    if (ev.is_hot === undefined) {
+      delete evPayload.is_hot;
+    }
     const { error: updErr } = await supabase
       .from("bet_events")
       .update(evPayload)
