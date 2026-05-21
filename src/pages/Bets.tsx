@@ -53,6 +53,37 @@ interface TicketDraft {
 
 interface AuthedUser { id: string; name: string; email: string; account_id: string; tokens_balance: number }
 
+const PT_BR_DICT: Array<[RegExp, string]> = [
+  [/\bRegular Season\b/gi, 'Temporada Regular'],
+  [/\bQuarter[- ]?finals?\b/gi, 'Quartas de Final'],
+  [/\bSemi[- ]?finals?\b/gi, 'Semifinal'],
+  [/\bRound of 16\b/gi, 'Oitavas de Final'],
+  [/\bRound of 32\b/gi, 'Dezesseis avos'],
+  [/\bGroup Stage\b/gi, 'Fase de Grupos'],
+  [/\bPlay[- ]?offs?\b/gi, 'Playoffs'],
+  [/\bMatchday\b/gi, 'Rodada'],
+  [/\bRound\b/gi, 'Rodada'],
+  [/\bFinal\b/gi, 'Final'],
+];
+const translatePt = (s?: string | null) => {
+  if (!s) return s ?? '';
+  let out = s;
+  for (const [re, rep] of PT_BR_DICT) out = out.replace(re, rep);
+  return out;
+};
+const translateOutcomeLabel = (s?: string | null) => {
+  if (!s) return s ?? '';
+  const up = s.trim().toUpperCase();
+  if (up === 'HOME') return 'CASA';
+  if (up === 'AWAY') return 'FORA';
+  if (up === 'DRAW' || up === 'TIE') return 'EMPATE';
+  if (up === 'YES') return 'SIM';
+  if (up === 'NO') return 'NÃO';
+  if (up === 'OVER') return 'MAIS';
+  if (up === 'UNDER') return 'MENOS';
+  return s;
+};
+
 const Bets = ({ tag }: BetsPageProps) => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<any | null>(null);
