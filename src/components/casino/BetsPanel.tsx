@@ -327,6 +327,34 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     loadAll();
   };
 
+  const sortedEvents = React.useMemo(
+    () => [...events].sort((a, b) =>
+      ((a.position ?? 0) - (b.position ?? 0)) ||
+      String((b as any).created_at || '').localeCompare(String((a as any).created_at || ''))
+    ),
+    [events],
+  );
+
+  const moveEvent = async (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    if (j < 0 || j >= sortedEvents.length) return;
+    const reordered = [...sortedEvents];
+    [reordered[idx], reordered[j]] = [reordered[j], reordered[idx]];
+    const updates = reordered
+      .map((e, i) => ({ id: e.id, position: i, prev: e.position ?? 0 }))
+      .filter(u => u.position !== u.prev);
+    // Optimistic UI: assign new positions immediately
+    setEvents(prev => prev.map(e => {
+      const u = updates.find(x => x.id === e.id);
+      return u ? { ...e, position: u.position } : e;
+    }));
+    const results = await Promise.all(
+      updates.map(u => supabase.from('bet_events').update({ position: u.position }).eq('id', u.id))
+    );
+    const err = results.find(r => r.error);
+    if (err?.error) { toast.error(err.error.message); loadAll(); }
+  };
+
   const resolveEvent = async (winningOutcomeId: string) => {
     if (!resolvingEvent) return;
     setSaving(true);
