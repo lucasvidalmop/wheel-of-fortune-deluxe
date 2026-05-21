@@ -205,6 +205,37 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
             await creditByAccount(supabase, w.owner_id, w.account_id, w.user_email, payout);
           }
         }
+        // Notify owner about winning single ticket
+        try {
+          const [{ data: evRow }, { data: outRow }, { data: usrRow }] = await Promise.all([
+            supabase.from("bet_events").select("title").eq("id", ev.id).maybeSingle(),
+            supabase.from("bet_outcomes").select("label, market_id, odd").eq("id", w.outcome_id).maybeSingle(),
+            w.wheel_user_id
+              ? supabase.from("wheel_users").select("name").eq("id", w.wheel_user_id).maybeSingle()
+              : Promise.resolve({ data: null }),
+          ]);
+          let mkTitle = "";
+          if (outRow?.market_id) {
+            const { data: mk } = await supabase.from("bet_markets").select("title").eq("id", outRow.market_id).maybeSingle();
+            mkTitle = mk?.title || "";
+          }
+          notifyOwner(w.owner_id, "ticket_won", {
+            mode: "single",
+            userName: (usrRow as any)?.name || "",
+            userEmail: w.user_email || "",
+            accountId: w.account_id || "",
+            publicCode: null,
+            amountTokens: Number(w.amount_coins || 0),
+            totalOdd: Number(w.odd_snapshot || outRow?.odd || 0),
+            payoutTokens: payout,
+            selections: [{
+              eventTitle: evRow?.title || "",
+              marketTitle: mkTitle,
+              selectionLabel: outRow?.label || "",
+              odd: Number(w.odd_snapshot || outRow?.odd || 0),
+            }],
+          });
+        } catch (e) { console.error("notify wager_won failed", e); }
       }
     } else {
       const { error } = await supabase.from("bet_wagers")
@@ -236,7 +267,7 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
   for (const tid of touchedTickets) {
     const { data: ticket } = await supabase
       .from("bet_tickets")
-      .select("id, owner_id, wheel_user_id, account_id, user_email, stake, total_odd, status")
+      .select("id, owner_id, wheel_user_id, account_id, user_email, user_name, public_code, stake, total_odd, status")
       .eq("id", tid)
       .maybeSingle();
     if (!ticket || ticket.status !== "pending") continue;
@@ -268,6 +299,29 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
         } else {
           await creditByAccount(supabase, ticket.owner_id, ticket.account_id, ticket.user_email, payout);
         }
+        // Notify owner about winning multiple ticket
+        try {
+          const { data: allSelDetails } = await supabase
+            .from("bet_ticket_selections")
+            .select("event_title, market_title, selection_label, odd")
+            .eq("ticket_id", tid);
+          notifyOwner(ticket.owner_id, "ticket_won", {
+            mode: "multiple",
+            userName: ticket.user_name || "",
+            userEmail: ticket.user_email || "",
+            accountId: ticket.account_id || "",
+            publicCode: ticket.public_code || null,
+            amountTokens: Number(ticket.stake || 0),
+            totalOdd: Number(ticket.total_odd || 0),
+            payoutTokens: payout,
+            selections: (allSelDetails || []).map((s: any) => ({
+              eventTitle: s.event_title || "",
+              marketTitle: s.market_title || "",
+              selectionLabel: s.selection_label || "",
+              odd: Number(s.odd || 0),
+            })),
+          });
+        } catch (e) { console.error("notify ticket_won failed", e); }
       }
     }
     // else: still pending (waiting on other fixtures)
@@ -307,6 +361,19 @@ async function creditByAccount(supabase: any, ownerId: string, accountId: string
   await supabase.from("wheel_users")
     .update({ tokens_balance: current + amount, updated_at: new Date().toISOString() })
     .eq("id", user.id);
+}
+
+function notifyOwner(ownerId: string, type: string, payload: Record<string, any>) {
+  try {
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-owner-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({ ownerId, type, payload }),
+    }).catch((e) => console.error("notifyOwner fetch failed", e));
+  } catch (e) { console.error("notifyOwner failed", e); }
 }
 
 function norm(s: string | null | undefined): string {

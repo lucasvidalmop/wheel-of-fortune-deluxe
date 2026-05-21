@@ -111,6 +111,8 @@ interface PersistedDashboardSettings {
   notifyLuckyboxPurchasedEnabled: boolean;
   notifyLuckyboxRedeemedEnabled: boolean;
   notifyLuckyboxPrizeEnabled: boolean;
+  notifyTicketPlacedEnabled: boolean;
+  notifyTicketWonEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
@@ -170,6 +172,8 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyLuckyboxPurchasedEnabled: false,
   notifyLuckyboxRedeemedEnabled: false,
   notifyLuckyboxPrizeEnabled: false,
+  notifyTicketPlacedEnabled: false,
+  notifyTicketWonEnabled: false,
   notifyGroupJid: '',
   notifyGroupName: '',
   notifySelectedGroups: [],
@@ -494,6 +498,8 @@ function Dashboard() {
   const [notifyLuckyboxPurchasedEnabled, setNotifyLuckyboxPurchasedEnabled] = useState(false);
   const [notifyLuckyboxRedeemedEnabled, setNotifyLuckyboxRedeemedEnabled] = useState(false);
   const [notifyLuckyboxPrizeEnabled, setNotifyLuckyboxPrizeEnabled] = useState(false);
+  const [notifyTicketPlacedEnabled, setNotifyTicketPlacedEnabled] = useState(false);
+  const [notifyTicketWonEnabled, setNotifyTicketWonEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
@@ -1608,6 +1614,8 @@ function Dashboard() {
     notifyLuckyboxPurchasedEnabled,
     notifyLuckyboxRedeemedEnabled,
     notifyLuckyboxPrizeEnabled,
+    notifyTicketPlacedEnabled,
+    notifyTicketWonEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
@@ -1699,6 +1707,8 @@ function Dashboard() {
     setNotifyLuckyboxPurchasedEnabled(!!settings.notifyLuckyboxPurchasedEnabled);
     setNotifyLuckyboxRedeemedEnabled(!!settings.notifyLuckyboxRedeemedEnabled);
     setNotifyLuckyboxPrizeEnabled(!!settings.notifyLuckyboxPrizeEnabled);
+    setNotifyTicketPlacedEnabled(!!settings.notifyTicketPlacedEnabled);
+    setNotifyTicketWonEnabled(!!settings.notifyTicketWonEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
@@ -1961,6 +1971,8 @@ function Dashboard() {
     notifyLuckyboxPurchasedEnabled,
     notifyLuckyboxRedeemedEnabled,
     notifyLuckyboxPrizeEnabled,
+    notifyTicketPlacedEnabled,
+    notifyTicketWonEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
@@ -8077,8 +8089,52 @@ function Dashboard() {
                 </div>
               </GlassCard>
 
+              {/* Toggle: Bilhete criado */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      <Link2 size={20} className="text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Bilhete Criado</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um inscrito criar um bilhete (simples ou múltipla)</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { settingsUserEditedRef.current = true; setNotifyTicketPlacedEnabled(!notifyTicketPlacedEnabled); }}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyTicketPlacedEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyTicketPlacedEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
+              {/* Toggle: Bilhete que bater (premiado) */}
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                      <Sparkles size={20} className="text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Bilhete Premiado</h3>
+                      <p className="text-xs text-muted-foreground">Receba uma notificação quando um bilhete bater (ganhar)</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { settingsUserEditedRef.current = true; setNotifyTicketWonEnabled(!notifyTicketWonEnabled); }}
+                    className={`w-12 h-7 rounded-full relative transition-all duration-300 ${notifyTicketWonEnabled ? 'bg-amber-500 shadow-lg shadow-amber-500/30' : 'bg-white/[0.1]'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all duration-300 ${notifyTicketWonEnabled ? 'left-[26px]' : 'left-1'}`} />
+                  </button>
+                </div>
+              </GlassCard>
+
               {/* Configuração WhatsApp para Notificações */}
-              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled || notifyDepositEnabled || notifyLuckyboxPurchasedEnabled || notifyLuckyboxRedeemedEnabled || notifyLuckyboxPrizeEnabled) && (
+              {(notifyReferralEnabled || notifyPendingPaymentEnabled || notifyAutoPaymentEnabled || notifyDepositEnabled || notifyLuckyboxPurchasedEnabled || notifyLuckyboxRedeemedEnabled || notifyLuckyboxPrizeEnabled || notifyTicketPlacedEnabled || notifyTicketWonEnabled) && (
                 <GlassCard className="p-5 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">

@@ -61,6 +61,50 @@ Deno.serve(async (req) => {
     });
     if (error) throw error;
 
+    // Fire-and-forget notification on successful placement
+    if (data && (data as any).success) {
+      try {
+        const [{ data: ev }, { data: out }, { data: usr }] = await Promise.all([
+          supabase.from("bet_events").select("title").eq("id", eventId).maybeSingle(),
+          supabase.from("bet_outcomes").select("label, odd, market_id").eq("id", outcomeId).maybeSingle(),
+          supabase.from("wheel_users").select("name").eq("owner_id", cfg.owner_id).eq("account_id", accountId).maybeSingle(),
+        ]);
+        let marketTitle = "";
+        if (out?.market_id) {
+          const { data: mk } = await supabase.from("bet_markets").select("title").eq("id", out.market_id).maybeSingle();
+          marketTitle = mk?.title || "";
+        }
+        const odd = Number((data as any).odd || out?.odd || 1);
+        const amt = Math.floor(amount);
+        const notifyPayload = {
+          mode: "single",
+          userName: usr?.name || "",
+          userEmail: email,
+          accountId,
+          publicCode: null,
+          amountTokens: amt,
+          totalOdd: odd,
+          potentialReturn: Math.floor(amt * odd),
+          selections: [{
+            eventTitle: ev?.title || "",
+            marketTitle,
+            selectionLabel: out?.label || "",
+            odd,
+          }],
+        };
+        fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-owner-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ ownerId: cfg.owner_id, type: "ticket_placed", payload: notifyPayload }),
+        }).catch((e) => console.error("notify ticket_placed failed", e));
+      } catch (e) {
+        console.error("notify ticket_placed prep failed", e);
+      }
+    }
+
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

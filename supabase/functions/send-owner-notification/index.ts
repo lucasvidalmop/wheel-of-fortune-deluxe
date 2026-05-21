@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   ownerId: z.string().uuid(),
-  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed", "luckybox_purchased", "luckybox_redeemed", "luckybox_prize", "luckybox_opened"]),
+  type: z.enum(["referral_redeemed", "payment_pending", "payment_auto", "deposit_confirmed", "luckybox_purchased", "luckybox_redeemed", "luckybox_prize", "luckybox_opened", "ticket_placed", "ticket_won"]),
   payload: z.record(z.any()).default({}),
 });
 
@@ -47,9 +47,30 @@ const buildMessage = (type: z.infer<typeof BodySchema>["type"], payload: Record<
     return `🎁 *Caixa aberta (Luckybox)*\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}\n📦 *Caixa:* ${payload.caseName || "-"}${custoLine}\n✨ *Prêmio:* ${payload.prizeLabel || "-"}${valorLine}\n🕐 *Data:* ${now}`;
   }
 
+  if (type === "ticket_placed") {
+    const mode = payload.mode === "multiple" ? "Múltipla" : "Simples";
+    const selections: any[] = Array.isArray(payload.selections) ? payload.selections : [];
+    const selLines = selections.length
+      ? selections.map((s, i) => `  ${i + 1}. ${s.eventTitle || "-"}${s.marketTitle ? ` (${s.marketTitle})` : ""} → *${s.selectionLabel || "-"}* @ ${Number(s.odd || 0).toFixed(2)}`).join("\n")
+      : "  -";
+    const codeLine = payload.publicCode ? `\n🎟️ *Código:* ${payload.publicCode}` : "";
+    return `🧾 *Novo bilhete criado* (${mode})\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}${codeLine}\n💰 *Valor apostado:* ${payload.amountTokens || 0} ${payload.coinName || "tokens"}\n📈 *Odd total:* ${Number(payload.totalOdd || 0).toFixed(2)}\n🏆 *Retorno potencial:* ${payload.potentialReturn || 0} ${payload.coinName || "tokens"}\n\n*Seleções:*\n${selLines}\n\n🕐 *Data:* ${now}`;
+  }
+
+  if (type === "ticket_won") {
+    const mode = payload.mode === "multiple" ? "Múltipla" : "Simples";
+    const selections: any[] = Array.isArray(payload.selections) ? payload.selections : [];
+    const selLines = selections.length
+      ? selections.map((s, i) => `  ${i + 1}. ${s.eventTitle || "-"}${s.marketTitle ? ` (${s.marketTitle})` : ""} → *${s.selectionLabel || "-"}* @ ${Number(s.odd || 0).toFixed(2)}`).join("\n")
+      : "  -";
+    const codeLine = payload.publicCode ? `\n🎟️ *Código:* ${payload.publicCode}` : "";
+    return `🏆 *Bilhete premiado!* (${mode})\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}${codeLine}\n💰 *Valor apostado:* ${payload.amountTokens || 0} ${payload.coinName || "tokens"}\n📈 *Odd total:* ${Number(payload.totalOdd || 0).toFixed(2)}\n💸 *Pagamento:* ${payload.payoutTokens || 0} ${payload.coinName || "tokens"}\n\n*Seleções:*\n${selLines}\n\n🕐 *Data:* ${now}`;
+  }
+
   // deposit_confirmed
   return `✅ *Depósito PIX confirmado*\n\n👤 *Nome:* ${payload.userName || "-"}\n📱 *WhatsApp:* ${payload.userPhone || "-"}\n🆔 *ID da conta:* ${payload.userAccountId || "-"}\n💵 *Valor:* ${formatCurrency(payload.amount)}\n🕐 *Data:* ${now}`;
 };
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -110,6 +131,8 @@ Deno.serve(async (req) => {
       luckybox_redeemed: !!ds.notifyLuckyboxRedeemedEnabled,
       luckybox_prize: !!ds.notifyLuckyboxPrizeEnabled,
       luckybox_opened: !!ds.notifyLuckyboxPurchasedEnabled || !!ds.notifyLuckyboxPrizeEnabled,
+      ticket_placed: !!ds.notifyTicketPlacedEnabled,
+      ticket_won: !!ds.notifyTicketWonEnabled,
     } as const;
 
     if (!enabledMap[type]) {

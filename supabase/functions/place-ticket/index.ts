@@ -68,6 +68,45 @@ Deno.serve(async (req) => {
     });
     if (error) throw error;
 
+    // Fire-and-forget notification on successful placement
+    if (data && (data as any).success && (data as any).ticket_id) {
+      try {
+        const ticketId = (data as any).ticket_id;
+        const [{ data: sels }, { data: usr }] = await Promise.all([
+          supabase.from("bet_ticket_selections")
+            .select("event_title, market_title, selection_label, odd")
+            .eq("ticket_id", ticketId),
+          supabase.from("wheel_users").select("name").eq("owner_id", cfg.owner_id).eq("account_id", accountId).maybeSingle(),
+        ]);
+        const notifyPayload = {
+          mode: "multiple",
+          userName: usr?.name || "",
+          userEmail: email,
+          accountId,
+          publicCode: (data as any).public_code || null,
+          amountTokens: Math.floor(amount),
+          totalOdd: Number((data as any).total_odd || 0),
+          potentialReturn: Number((data as any).potential_return || 0),
+          selections: (sels || []).map((s: any) => ({
+            eventTitle: s.event_title || "",
+            marketTitle: s.market_title || "",
+            selectionLabel: s.selection_label || "",
+            odd: Number(s.odd || 0),
+          })),
+        };
+        fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-owner-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ ownerId: cfg.owner_id, type: "ticket_placed", payload: notifyPayload }),
+        }).catch((e) => console.error("notify ticket_placed failed", e));
+      } catch (e) {
+        console.error("notify ticket_placed prep failed", e);
+      }
+    }
+
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
