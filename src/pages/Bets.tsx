@@ -1109,9 +1109,9 @@ const Bets = ({ tag }: BetsPageProps) => {
                   return (
                     <>
                       {groups.length === 0 && !closed && !finalized && (
-                        <div className="px-3 py-3 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold text-center flex items-center justify-center gap-2" style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}>
+                        <div className="px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold text-center flex items-center justify-center gap-2" style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}>
                           <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: ticketAccent }} />
-                          Odds em breve · aguardando abertura
+                          Odds em breve
                         </div>
                       )}
                       {!detailMode && evExpanded && extraCount > 0 && (
