@@ -2039,21 +2039,33 @@ const Bets = ({ tag }: BetsPageProps) => {
             ) : (
               <>
                 <div className="space-y-2 mb-4">
-                  {ticketDraft.map(s => (
-                    <div key={s.outcomeId} className="rounded-lg p-3 flex items-start justify-between gap-2" style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid ${accent}33` }}>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold truncate">{s.eventTitle}</div>
-                        <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{translatePt(s.marketTitle)}</div>
-                        <div className="text-sm mt-1">
-                          <span className="font-semibold">{translateOutcomeLabel(s.outcomeLabel)}</span>
-                          <span className="ml-2 font-black tabular-nums" style={{ color: accent }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
+                  {ticketDraft.map(s => {
+                    const ev = events.find(e => e.id === s.eventId);
+                    const mk = s.marketId ? (marketsByEvent[s.eventId] || []).find(m => m.id === s.marketId) : null;
+                    const evClosed = !ev || (ev.status !== 'open' && ev.status !== 'scheduled') || isBetDateTimeExpired(ev.closes_at);
+                    const mkClosed = mk ? (mk.status !== 'open' || isBetDateTimeExpired(mk.closes_at)) : false;
+                    const closed = evClosed || mkClosed;
+                    return (
+                      <div key={s.outcomeId} className="rounded-lg p-3 flex items-start justify-between gap-2" style={{ background: closed ? 'rgba(239,68,68,0.10)' : 'rgba(0,0,0,0.4)', border: `1px solid ${closed ? '#ef4444' : `${accent}33`}` }}>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-bold truncate">{s.eventTitle}</div>
+                          <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{translatePt(s.marketTitle)}</div>
+                          <div className="text-sm mt-1">
+                            <span className="font-semibold">{translateOutcomeLabel(s.outcomeLabel)}</span>
+                            <span className="ml-2 font-black tabular-nums" style={{ color: closed ? '#f87171' : accent, textDecoration: closed ? 'line-through' : undefined }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
+                          </div>
+                          {closed && (
+                            <div className="mt-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: '#f87171' }}>
+                              {mkClosed && !evClosed ? 'Mercado encerrado · remova para continuar' : 'Evento encerrado · remova para continuar'}
+                            </div>
+                          )}
                         </div>
+                        <button onClick={() => removeFromTicket(s.outcomeId)} className="p-1.5 rounded-md shrink-0" style={{ background: '#ef444422', color: '#f87171' }}>
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <button onClick={() => removeFromTicket(s.outcomeId)} className="p-1.5 rounded-md shrink-0" style={{ background: '#ef444422', color: '#f87171' }}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="rounded-lg p-3 mb-3 space-y-1 text-sm" style={{ background: 'rgba(0,0,0,0.35)' }}>
