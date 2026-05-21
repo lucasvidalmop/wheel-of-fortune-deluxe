@@ -1025,7 +1025,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                     const [pg] = groups.splice(principalIdx, 1);
                     groups.unshift(pg);
                   }
-                  const extraCount = Math.max(0, groups.length - 1);
+                  const hasFullMarkets = detailMode || !!detailedEventIds[ev.id];
+                  const extraCount = hasFullMarkets ? Math.max(0, groups.length - 1) : (groups.length > 0 ? 1 : 0);
                   const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
                   return (
                     <>
@@ -1153,7 +1154,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold transition hover:brightness-110"
                       style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}
                     >
-                      +{extraCount} mercados <ChevronDown size={14} />
+                      {hasFullMarkets ? `+${extraCount} mercados` : 'Ver todos os mercados'} <ChevronDown size={14} />
                     </button>
                   )}
 
