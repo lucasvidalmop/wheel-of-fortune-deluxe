@@ -1361,14 +1361,28 @@ const Bets = ({ tag }: BetsPageProps) => {
                   { key: 'all', label: 'Todos' },
                   { key: 'category:futebol', label: 'Futebol', icon: '⚽' },
                 ];
-                // Sub-chips de competições por categoria
-                const SUBS: Record<string, Array<{ key: string; label: string; icon?: string }>> = {
+                // Sub-chips de competições por categoria (base fixa + dinâmicas dos eventos)
+                const BASE_SUBS: Record<string, Array<{ key: string; label: string; icon?: string }>> = {
                   'category:futebol': [
                     { key: 'competition:world-cup-2026', label: 'Copa do Mundo', icon: '🏆' },
                     { key: 'competition:brasileirao', label: 'Brasileirão', icon: '🇧🇷' },
                     { key: 'competition:champions-league', label: 'Champions League', icon: '⭐' },
                     { key: 'competition:libertadores', label: 'Libertadores', icon: '🌎' },
                   ],
+                };
+                const futebolDynamic: Array<{ key: string; label: string; icon?: string }> = [];
+                const seenSlugs = new Set(BASE_SUBS['category:futebol'].map(s => s.key));
+                nonHot.forEach(e => {
+                  const evCatName = normCat(e.category) || normCat(cats.find(c => c.id === e.category_id)?.name);
+                  if (evCatName !== 'futebol') return;
+                  if (!e.competition_slug) return;
+                  const key = `competition:${e.competition_slug}`;
+                  if (seenSlugs.has(key)) return;
+                  seenSlugs.add(key);
+                  futebolDynamic.push({ key, label: e.competition_name || e.competition_slug });
+                });
+                const SUBS: Record<string, Array<{ key: string; label: string; icon?: string }>> = {
+                  'category:futebol': [...BASE_SUBS['category:futebol'], ...futebolDynamic],
                 };
                 const hasMatches = (key: string) => {
                   if (key === 'all') return true;
@@ -1393,11 +1407,9 @@ const Bets = ({ tag }: BetsPageProps) => {
                   .filter(c => !fixedKeys.has(c.key));
                 const topChips = [...visibleTop, ...dynamicCategoryChips];
 
-                // Descobre qual categoria está "ativa" para mostrar sub-chips
                 const activeParentKey = (() => {
                   if (categoryFilter.startsWith('category:')) return categoryFilter;
                   if (categoryFilter.startsWith('competition:')) {
-                    // se a competição pertence a alguma categoria conhecida, retorna ela
                     for (const [parent, subs] of Object.entries(SUBS)) {
                       if (subs.some(s => s.key === categoryFilter)) return parent;
                     }
