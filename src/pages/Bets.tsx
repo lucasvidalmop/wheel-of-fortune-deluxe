@@ -932,7 +932,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                 </button>
                 {ev.payout_mode === 'case' && c && (
                   <div className="relative flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
-                    {c.image_url && <img src={c.image_url} className="w-8 h-8 rounded" alt="" />}
+                    {c.image_url && <img src={optimizedImage(c.image_url, { width: 96, quality: 70 })} loading="lazy" decoding="async" className="w-8 h-8 rounded" alt="" />}
                     <span className="text-xs">Prêmio: caixa <b>{c.name}</b> ({ev.payout_case_qty_per_unit}× por unidade apostada)</span>
                   </div>
                 )}
