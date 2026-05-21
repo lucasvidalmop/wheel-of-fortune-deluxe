@@ -1015,7 +1015,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                 const visibleChips = FIXED.filter(c => c.key === 'all' || hasMatches(c.key));
                 if (visibleChips.length <= 1) return null;
                 return (
-                  <div className="flex flex-wrap gap-2 sticky top-[108px] z-10 py-2" style={{ background: 'transparent' }}>
+                  <div className="flex flex-wrap gap-2 sticky top-[108px] z-10 py-2 -mx-3 px-3 backdrop-blur-md" style={{ background: `${bg}ee`, borderBottom: `1px solid ${accent}22` }}>
                     {visibleChips.map(({ key, label, icon }) => {
                       const active = categoryFilter === key;
                       return (
