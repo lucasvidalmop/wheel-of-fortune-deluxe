@@ -54,6 +54,7 @@ interface TicketDraft {
 interface AuthedUser { id: string; name: string; email: string; account_id: string; tokens_balance: number }
 
 const PT_BR_DICT: Array<[RegExp, string]> = [
+  // Competition / round names
   [/\bRegular Season\b/gi, 'Temporada Regular'],
   [/\bQuarter[- ]?finals?\b/gi, 'Quartas de Final'],
   [/\bSemi[- ]?finals?\b/gi, 'Semifinal'],
@@ -63,6 +64,31 @@ const PT_BR_DICT: Array<[RegExp, string]> = [
   [/\bPlay[- ]?offs?\b/gi, 'Playoffs'],
   [/\bMatchday\b/gi, 'Rodada'],
   [/\bRound\b/gi, 'Rodada'],
+  // Markets (mais específicos primeiro)
+  [/\bMatch Winner\b/gi, 'Vencedor da Partida'],
+  [/\bFull Time Result\b/gi, 'Resultado Final'],
+  [/\bFirst Half Winner\b/gi, 'Vencedor do 1º Tempo'],
+  [/\bSecond Half Winner\b/gi, 'Vencedor do 2º Tempo'],
+  [/\bDouble Chance\b/gi, 'Dupla Chance'],
+  [/\bBoth Teams (To )?Score\b/gi, 'Ambas Marcam'],
+  [/\bGoals Over\/Under\b/gi, 'Mais/Menos Gols'],
+  [/\bOver\/Under\b/gi, 'Mais/Menos'],
+  [/\bAsian Handicap\b/gi, 'Handicap Asiático'],
+  [/\bHandicap\b/gi, 'Handicap'],
+  [/\bCorrect Score\b/gi, 'Placar Exato'],
+  [/\bHalf Time\/Full Time\b/gi, 'Intervalo/Final'],
+  [/\bClean Sheet\b/gi, 'Não Sofrer Gol'],
+  [/\bWin To Nil\b/gi, 'Vencer Sem Sofrer'],
+  [/\bTotal Goals\b/gi, 'Total de Gols'],
+  [/\bExact Goals?\b/gi, 'Gols Exatos'],
+  [/\bOdd\/Even\b/gi, 'Ímpar/Par'],
+  [/\bHome\/Away\b/gi, 'Casa/Fora'],
+  [/\bTo Win\b/gi, 'Para Vencer'],
+  [/\bTo Qualify\b/gi, 'Para Se Classificar'],
+  [/\bCards\b/gi, 'Cartões'],
+  [/\bCorners\b/gi, 'Escanteios'],
+  [/\bPenalty\b/gi, 'Pênalti'],
+  // Genéricos no fim
   [/\bFinal\b/gi, 'Final'],
 ];
 const translatePt = (s?: string | null) => {
@@ -81,7 +107,9 @@ const translateOutcomeLabel = (s?: string | null) => {
   if (up === 'NO') return 'NÃO';
   if (up === 'OVER') return 'MAIS';
   if (up === 'UNDER') return 'MENOS';
-  return s;
+  if (up === 'ODD') return 'ÍMPAR';
+  if (up === 'EVEN') return 'PAR';
+  return translatePt(s);
 };
 
 const Bets = ({ tag }: BetsPageProps) => {
@@ -865,7 +893,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                           >
                             <h3 className="text-[10px] uppercase tracking-[0.18em] font-black flex items-center gap-2" style={{ color: ticketAccent }}>
                               <span className="inline-block w-1 h-3 rounded-sm" style={{ background: ticketAccent }} />
-                              {mk!.title}
+                              {translatePt(mk!.title)}
                             </h3>
                             <span className="flex items-center gap-2">
                               {mk!.status !== 'open' && (
@@ -1449,7 +1477,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <div key={s.outcomeId} className="rounded-lg p-3 flex items-start justify-between gap-2" style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid ${accent}33` }}>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold truncate">{s.eventTitle}</div>
-                        <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{s.marketTitle}</div>
+                        <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{translatePt(s.marketTitle)}</div>
                         <div className="text-sm mt-1">
                           <span className="font-semibold">{translateOutcomeLabel(s.outcomeLabel)}</span>
                           <span className="ml-2 font-black tabular-nums" style={{ color: accent }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
