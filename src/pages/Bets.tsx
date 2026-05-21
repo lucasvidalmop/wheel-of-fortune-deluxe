@@ -1230,6 +1230,15 @@ const Bets = ({ tag }: BetsPageProps) => {
         />
       )}
 
+      {shareMultiple && (
+        <ShareTicketMultiple
+          open={!!shareMultiple}
+          onClose={() => setShareMultiple(null)}
+          data={shareMultiple}
+          config={cfg.ticket || {}}
+        />
+      )}
+
       {/* Bet slip */}
       {slip && (
         <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
