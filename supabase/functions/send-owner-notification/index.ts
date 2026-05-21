@@ -58,13 +58,24 @@ const buildMessage = (type: z.infer<typeof BodySchema>["type"], payload: Record<
   }
 
   if (type === "ticket_won") {
+    const coin = payload.coinName || "tokens";
+    const winners: any[] = Array.isArray(payload.winners) ? payload.winners : [];
+    // Grouped (multiple winners on the same outcome) — 1 message listing all
+    if (payload.grouped && winners.length > 1) {
+      const winnerLines = winners.map((w, i) =>
+        `  ${i + 1}. ${w.userName || "-"} (${w.userEmail || "-"}) — apostou ${w.amountTokens || 0} → ganhou *${w.payoutTokens || 0}* ${coin}`
+      ).join("\n");
+      const totalPayout = payload.totalPayoutTokens || winners.reduce((s, w) => s + Number(w.payoutTokens || 0), 0);
+      return `🏆 *${payload.count || winners.length} bilhetes premiados!*\n\n⚽ *Evento:* ${payload.eventTitle || "-"}${payload.marketTitle ? `\n📊 *Mercado:* ${payload.marketTitle}` : ""}\n✅ *Seleção:* ${payload.selectionLabel || "-"} @ ${Number(payload.odd || 0).toFixed(2)}\n💸 *Total pago:* ${totalPayout} ${coin}\n\n*Ganhadores:*\n${winnerLines}\n\n🕐 *Data:* ${now}`;
+    }
+    // Single winner — individual message
     const mode = payload.mode === "multiple" ? "Múltipla" : "Simples";
     const selections: any[] = Array.isArray(payload.selections) ? payload.selections : [];
     const selLines = selections.length
       ? selections.map((s, i) => `  ${i + 1}. ${s.eventTitle || "-"}${s.marketTitle ? ` (${s.marketTitle})` : ""} → *${s.selectionLabel || "-"}* @ ${Number(s.odd || 0).toFixed(2)}`).join("\n")
       : "  -";
     const codeLine = payload.publicCode ? `\n🎟️ *Código:* ${payload.publicCode}` : "";
-    return `🏆 *Bilhete premiado!* (${mode})\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}${codeLine}\n💰 *Valor apostado:* ${payload.amountTokens || 0} ${payload.coinName || "tokens"}\n📈 *Odd total:* ${Number(payload.totalOdd || 0).toFixed(2)}\n💸 *Pagamento:* ${payload.payoutTokens || 0} ${payload.coinName || "tokens"}\n\n*Seleções:*\n${selLines}\n\n🕐 *Data:* ${now}`;
+    return `🏆 *Bilhete premiado!* (${mode})\n\n👤 *Inscrito:* ${payload.userName || "-"}\n📧 *Email:* ${payload.userEmail || "-"}\n🆔 *ID da conta:* ${payload.accountId || "-"}${codeLine}\n💰 *Valor apostado:* ${payload.amountTokens || 0} ${coin}\n📈 *Odd total:* ${Number(payload.totalOdd || 0).toFixed(2)}\n💸 *Pagamento:* ${payload.payoutTokens || 0} ${coin}\n\n*Seleções:*\n${selLines}\n\n🕐 *Data:* ${now}`;
   }
 
   // deposit_confirmed

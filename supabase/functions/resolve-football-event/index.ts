@@ -186,6 +186,11 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
 
   let wagersWon = 0, wagersLost = 0, coinsPaid = 0;
   const userCredits: Record<string, number> = {}; // wheel_user_id -> coins
+  // Collect winners per outcome_id for grouped notifications
+  const winnersByOutcome: Record<string, Array<{
+    userName: string; userEmail: string; accountId: string;
+    amountTokens: number; payoutTokens: number; odd: number; wheel_user_id?: string | null;
+  }>> = {};
 
   for (const w of (wagers || [])) {
     const isWinner = winningIds.has(w.outcome_id);
@@ -205,37 +210,15 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
             await creditByAccount(supabase, w.owner_id, w.account_id, w.user_email, payout);
           }
         }
-        // Notify owner about winning single ticket
-        try {
-          const [{ data: evRow }, { data: outRow }, { data: usrRow }] = await Promise.all([
-            supabase.from("bet_events").select("title").eq("id", ev.id).maybeSingle(),
-            supabase.from("bet_outcomes").select("label, market_id, odd").eq("id", w.outcome_id).maybeSingle(),
-            w.wheel_user_id
-              ? supabase.from("wheel_users").select("name").eq("id", w.wheel_user_id).maybeSingle()
-              : Promise.resolve({ data: null }),
-          ]);
-          let mkTitle = "";
-          if (outRow?.market_id) {
-            const { data: mk } = await supabase.from("bet_markets").select("title").eq("id", outRow.market_id).maybeSingle();
-            mkTitle = mk?.title || "";
-          }
-          notifyOwner(w.owner_id, "ticket_won", {
-            mode: "single",
-            userName: (usrRow as any)?.name || "",
-            userEmail: w.user_email || "",
-            accountId: w.account_id || "",
-            publicCode: null,
-            amountTokens: Number(w.amount_coins || 0),
-            totalOdd: Number(w.odd_snapshot || outRow?.odd || 0),
-            payoutTokens: payout,
-            selections: [{
-              eventTitle: evRow?.title || "",
-              marketTitle: mkTitle,
-              selectionLabel: outRow?.label || "",
-              odd: Number(w.odd_snapshot || outRow?.odd || 0),
-            }],
-          });
-        } catch (e) { console.error("notify wager_won failed", e); }
+        (winnersByOutcome[w.outcome_id] ||= []).push({
+          userName: "",
+          userEmail: w.user_email || "",
+          accountId: w.account_id || "",
+          amountTokens: Number(w.amount_coins || 0),
+          payoutTokens: payout,
+          odd: Number(w.odd_snapshot || 0),
+          wheel_user_id: w.wheel_user_id || null,
+        });
       }
     } else {
       const { error } = await supabase.from("bet_wagers")
@@ -245,6 +228,68 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
       if (!error) wagersLost++;
     }
   }
+
+  // Send grouped notifications per outcome (1 message per outcome, listing all winners)
+  try {
+    const outcomeIds = Object.keys(winnersByOutcome);
+    if (outcomeIds.length > 0) {
+      const [{ data: evRow }, { data: outRows }] = await Promise.all([
+        supabase.from("bet_events").select("title").eq("id", ev.id).maybeSingle(),
+        supabase.from("bet_outcomes").select("id, label, market_id, odd").in("id", outcomeIds),
+      ]);
+      const marketIds = Array.from(new Set((outRows || []).map((o: any) => o.market_id).filter(Boolean)));
+      const marketTitles: Record<string, string> = {};
+      if (marketIds.length) {
+        const { data: mks } = await supabase.from("bet_markets").select("id, title").in("id", marketIds);
+        for (const m of (mks || [])) marketTitles[m.id] = m.title || "";
+      }
+      // Resolve user names in batch
+      const userIds = Array.from(new Set(Object.values(winnersByOutcome).flat().map((w) => w.wheel_user_id).filter(Boolean))) as string[];
+      const nameById: Record<string, string> = {};
+      if (userIds.length) {
+        const { data: usrs } = await supabase.from("wheel_users").select("id, name").in("id", userIds);
+        for (const u of (usrs || [])) nameById[u.id] = u.name || "";
+      }
+      for (const outcomeId of outcomeIds) {
+        const winners = winnersByOutcome[outcomeId];
+        const outRow = (outRows || []).find((o: any) => o.id === outcomeId);
+        const mkTitle = outRow?.market_id ? (marketTitles[outRow.market_id] || "") : "";
+        const enrichedWinners = winners.map((w) => ({
+          userName: w.wheel_user_id ? (nameById[w.wheel_user_id] || "") : "",
+          userEmail: w.userEmail,
+          accountId: w.accountId,
+          amountTokens: w.amountTokens,
+          payoutTokens: w.payoutTokens,
+        }));
+        const totalPayout = winners.reduce((s, w) => s + w.payoutTokens, 0);
+        notifyOwner(ev.owner_id, "ticket_won", {
+          mode: "single",
+          grouped: winners.length > 1,
+          count: winners.length,
+          eventTitle: evRow?.title || "",
+          marketTitle: mkTitle,
+          selectionLabel: outRow?.label || "",
+          odd: Number(outRow?.odd || winners[0]?.odd || 0),
+          totalPayoutTokens: totalPayout,
+          winners: enrichedWinners,
+          // Backward-compat fields (used when count === 1)
+          userName: enrichedWinners[0]?.userName || "",
+          userEmail: enrichedWinners[0]?.userEmail || "",
+          accountId: enrichedWinners[0]?.accountId || "",
+          amountTokens: enrichedWinners[0]?.amountTokens || 0,
+          payoutTokens: enrichedWinners[0]?.payoutTokens || 0,
+          totalOdd: Number(outRow?.odd || winners[0]?.odd || 0),
+          selections: [{
+            eventTitle: evRow?.title || "",
+            marketTitle: mkTitle,
+            selectionLabel: outRow?.label || "",
+            odd: Number(outRow?.odd || winners[0]?.odd || 0),
+          }],
+        });
+      }
+    }
+  } catch (e) { console.error("notify grouped wagers_won failed", e); }
+
 
   // 5) Settle MULTIPLE tickets — resolve selections for THIS event first.
   const { data: selections } = await supabase
