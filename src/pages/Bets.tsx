@@ -253,7 +253,7 @@ const Bets = ({ tag }: BetsPageProps) => {
         sel = (data.selections as any) || [];
         stripPattern = /(?:^#|&)c=[^&]+/;
       } else if (mLegacy) {
-        sel = decodeCopy(decodeURIComponent(mLegacy[1]));
+        sel = await decodeCopy(decodeURIComponent(mLegacy[1]));
         stripPattern = /(?:^#|&)copy=[^&]+/;
       } else {
         return;
