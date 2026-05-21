@@ -866,20 +866,19 @@ const Bets = ({ tag }: BetsPageProps) => {
             const ticketAccent = ev.is_hot ? '#f97316' : (evCat?.color || accent);
             const cardStyle: React.CSSProperties = catBg
               ? {
-                  backgroundImage: `linear-gradient(180deg, rgba(2, 8, 18, 0.2) 0%, rgba(3, 10, 24, 0.74) 50%, rgba(3, 7, 15, 0.96) 100%), url(${catBg})`,
+                  backgroundImage: `linear-gradient(180deg, rgba(2, 8, 18, 0.28) 0%, rgba(3, 10, 24, 0.78) 54%, rgba(3, 7, 15, 0.97) 100%), url(${optimizedImage(catBg, { width: detailMode ? 960 : 480, quality: 68 })})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   border: `2px solid ${ticketAccent}66`,
-                  boxShadow: `0 18px 45px -22px ${ticketAccent}aa, inset 0 1px 0 rgba(255,255,255,0.12)`,
+                  boxShadow: `0 10px 24px -18px ${ticketAccent}99, inset 0 1px 0 rgba(255,255,255,0.12)`,
                 }
               : {
                   background: `linear-gradient(160deg, ${bg} 0%, ${cardBg} 100%)`,
                   border: `2px solid ${ticketAccent}66`,
-                  boxShadow: `0 18px 45px -22px ${ticketAccent}aa, inset 0 1px 0 rgba(255,255,255,0.12)`,
+                  boxShadow: `0 10px 24px -18px ${ticketAccent}99, inset 0 1px 0 rgba(255,255,255,0.12)`,
                 };
             return (
               <article key={ev.id} className="relative rounded-2xl p-3 sm:p-3.5 overflow-hidden flex flex-col" style={cardStyle}>
-                <div aria-hidden className="absolute -top-24 -right-20 w-44 h-44 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${ticketAccent}20, transparent 70%)` }} />
                 <div className="relative flex items-center justify-between gap-2 mb-2 text-[11px] font-semibold" style={{ color: text }}>
                   <span className="flex items-center gap-1.5 min-w-0 flex-1">
                     {ev.competition_name && (
@@ -902,7 +901,6 @@ const Bets = ({ tag }: BetsPageProps) => {
                     title="Apostas em tempo real"
                   >
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: ticketAccent }} />
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: ticketAccent }} />
                     </span>
                     <b>{(wagerCounts[ev.id] || 0).toLocaleString('pt-BR')}</b>
