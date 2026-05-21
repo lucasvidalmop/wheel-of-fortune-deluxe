@@ -1461,6 +1461,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                 };
                 const hasMatches = (key: string) => {
                   if (key === 'all') return true;
+                  if (key === 'today') return nonHot.some(isToday);
                   if (key.startsWith('competition:')) {
                     const slug = key.slice('competition:'.length);
                     return nonHot.some(e => e.competition_slug === slug);
