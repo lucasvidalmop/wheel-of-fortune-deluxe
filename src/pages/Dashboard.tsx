@@ -111,6 +111,8 @@ interface PersistedDashboardSettings {
   notifyLuckyboxPurchasedEnabled: boolean;
   notifyLuckyboxRedeemedEnabled: boolean;
   notifyLuckyboxPrizeEnabled: boolean;
+  notifyTicketPlacedEnabled: boolean;
+  notifyTicketWonEnabled: boolean;
   notifyGroupJid: string;
   notifyGroupName: string;
   notifySelectedGroups: {id: string; subject: string}[];
