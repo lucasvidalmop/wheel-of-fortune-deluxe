@@ -955,8 +955,19 @@ const Bets = ({ tag }: BetsPageProps) => {
           //  'uncategorized'                -> sem category_id
           //  <category_id>                  -> compat: filtro por id (não usado nos chips fixos)
           const normCat = (s: string | null | undefined) => (s || '').trim().toLowerCase();
+          const saoPauloYMD = (d: Date) => new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+          }).format(d);
+          const todayYMD = saoPauloYMD(new Date());
+          const isToday = (e: EventRow) => {
+            if (!e.starts_at) return false;
+            const d = new Date(e.starts_at);
+            if (Number.isNaN(d.getTime())) return false;
+            return saoPauloYMD(d) === todayYMD;
+          };
           const matchesFilter = (e: EventRow) => {
             if (categoryFilter === 'all') return true;
+            if (categoryFilter === 'today') return isToday(e);
             if (categoryFilter === 'uncategorized') return !e.category_id;
             if (categoryFilter.startsWith('competition:')) {
               const slug = categoryFilter.slice('competition:'.length);
@@ -1030,6 +1041,8 @@ const Bets = ({ tag }: BetsPageProps) => {
             const name = categoryFilter.slice('category:'.length);
             const cat = cats.find(c => normCat(c.name) === name) || null;
             if (filtered.length) grouped.push({ cat, items: filtered, label: cat?.name || name });
+          } else if (categoryFilter === 'today') {
+            if (filtered.length) grouped.push({ cat: null, items: filtered, label: 'Hoje' });
           } else if (categoryFilter === 'uncategorized') {
             if (filtered.length) grouped.push({ cat: null, items: filtered });
           } else {
@@ -1420,6 +1433,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                 // Top-level: somente categorias
                 const TOP: Array<{ key: string; label: string; icon?: string }> = [
                   { key: 'all', label: 'Todos' },
+                  { key: 'today', label: 'Hoje', icon: '📅' },
                   { key: 'category:futebol', label: 'Futebol', icon: '⚽' },
                 ];
                 // Sub-chips de competições por categoria (base fixa + dinâmicas dos eventos)
@@ -1447,6 +1461,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                 };
                 const hasMatches = (key: string) => {
                   if (key === 'all') return true;
+                  if (key === 'today') return nonHot.some(isToday);
                   if (key.startsWith('competition:')) {
                     const slug = key.slice('competition:'.length);
                     return nonHot.some(e => e.competition_slug === slug);
