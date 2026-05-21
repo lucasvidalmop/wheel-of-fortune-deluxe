@@ -335,22 +335,26 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     [events],
   );
 
-  const moveEvent = async (idx: number, dir: -1 | 1) => {
+  const moveHotEvent = async (eventId: string, dir: -1 | 1) => {
+    const hots = sortedEvents.filter(e => e.is_hot);
+    const idx = hots.findIndex(e => e.id === eventId);
+    if (idx < 0) return;
     const j = idx + dir;
-    if (j < 0 || j >= sortedEvents.length) return;
-    const reordered = [...sortedEvents];
-    [reordered[idx], reordered[j]] = [reordered[j], reordered[idx]];
-    const updates = reordered
-      .map((e, i) => ({ id: e.id, position: i, prev: e.position ?? 0 }))
-      .filter(u => u.position !== u.prev);
-    // Optimistic UI: assign new positions immediately
+    if (j < 0 || j >= hots.length) return;
+    const a = hots[idx];
+    const b = hots[j];
+    const posA = a.position ?? 0;
+    const posB = b.position ?? 0;
+    // Optimistic UI: swap positions between the two hot events
     setEvents(prev => prev.map(e => {
-      const u = updates.find(x => x.id === e.id);
-      return u ? { ...e, position: u.position } : e;
+      if (e.id === a.id) return { ...e, position: posB };
+      if (e.id === b.id) return { ...e, position: posA };
+      return e;
     }));
-    const results = await Promise.all(
-      updates.map(u => supabase.from('bet_events').update({ position: u.position }).eq('id', u.id))
-    );
+    const results = await Promise.all([
+      supabase.from('bet_events').update({ position: posB }).eq('id', a.id),
+      supabase.from('bet_events').update({ position: posA }).eq('id', b.id),
+    ]);
     const err = results.find(r => r.error);
     if (err?.error) { toast.error(err.error.message); loadAll(); }
   };
@@ -737,8 +741,16 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => moveEvent(evIndex, -1)} disabled={evIndex === 0} title="Mover para cima" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp size={14} /></button>
-                    <button onClick={() => moveEvent(evIndex, 1)} disabled={evIndex === sortedEvents.length - 1} title="Mover para baixo" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown size={14} /></button>
+                    {ev.is_hot && (() => {
+                      const hots = sortedEvents.filter(e => e.is_hot);
+                      const hotIdx = hots.findIndex(e => e.id === ev.id);
+                      return (
+                        <>
+                          <button onClick={() => moveHotEvent(ev.id, -1)} disabled={hotIdx === 0} title="Mover quente para cima" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-orange-500"><ArrowUp size={14} /></button>
+                          <button onClick={() => moveHotEvent(ev.id, 1)} disabled={hotIdx === hots.length - 1} title="Mover quente para baixo" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-orange-500"><ArrowDown size={14} /></button>
+                        </>
+                      );
+                    })()}
                     <button onClick={() => openEditEvent(ev)} title="Editar" className="p-1.5 rounded hover:bg-muted"><Edit2 size={14} /></button>
                     {ev.status === 'scheduled' && (
                       <button onClick={() => setEventStatus(ev, 'open')} title="Abrir agora" className="p-1.5 rounded hover:bg-muted text-green-500"><Play size={14} /></button>
