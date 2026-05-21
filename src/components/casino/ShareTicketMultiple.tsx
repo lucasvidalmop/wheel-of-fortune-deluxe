@@ -305,26 +305,6 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
 
         <div className="mt-4 grid grid-cols-3 gap-2">
           <button
-            onClick={async () => {
-              if (!data.copyUrl) return;
-              try {
-                await navigator.clipboard.writeText(data.copyUrl);
-                setCopied(true);
-                toast.success('Link copiado!');
-                setTimeout(() => setCopied(false), 2000);
-              } catch { toast.error('Não foi possível copiar'); }
-            }}
-            disabled={!data.copyUrl}
-            className="py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 bg-white/10 text-white hover:bg-white/15 transition"
-          >
-            {copied ? <Check size={16} /> : <Link2 size={16} />}
-            {copied ? 'Copiado' : 'Link'}
-          </button>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
             onClick={downloadImage}
             disabled={downloading}
             className="py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
@@ -340,6 +320,22 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
           >
             {sharing ? <Loader2 className="animate-spin" size={16} /> : <Share2 size={16} />}
             Compartilhar
+          </button>
+          <button
+            onClick={async () => {
+              if (!data.copyUrl) return;
+              try {
+                await navigator.clipboard.writeText(data.copyUrl);
+                setCopied(true);
+                toast.success('Link copiado!');
+                setTimeout(() => setCopied(false), 2000);
+              } catch { toast.error('Não foi possível copiar'); }
+            }}
+            disabled={!data.copyUrl}
+            className="py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 bg-white/10 text-white hover:bg-white/15 transition"
+          >
+            {copied ? <Check size={16} /> : <Link2 size={16} />}
+            {copied ? 'Copiado' : 'Link'}
           </button>
         </div>
         <button
