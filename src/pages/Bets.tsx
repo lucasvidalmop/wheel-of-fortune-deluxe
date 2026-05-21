@@ -710,7 +710,7 @@ const Bets = ({ tag }: BetsPageProps) => {
       <header className="sticky top-0 z-20 backdrop-blur" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: `1px solid ${accent}33` }}>
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="h-9 object-contain shrink-0" />}
+            {cfg.logoUrl && <img src={optimizedImage(cfg.logoUrl, { width: 160, quality: 80 })} alt="" decoding="async" className="h-9 object-contain shrink-0" />}
             <div className="min-w-0 hidden sm:block">
               <div className="font-bold truncate">{cfg.title || 'Apostas'}</div>
               <div className="text-xs truncate" style={{ color: muted }}>{authed.name}</div>
