@@ -878,8 +878,14 @@ const Bets = ({ tag }: BetsPageProps) => {
       <main className="max-w-5xl mx-auto px-4 py-6">
         {tab === 'events' && (() => {
           const cats: CategoryRow[] = page?.categories || [];
-          const hotEvents = events.filter(e => e.is_hot);
-          const nonHot = events.filter(e => !e.is_hot);
+          const normSearch = searchQuery.trim().toLowerCase();
+          const matchesSearch = (e: EventRow) => {
+            if (!normSearch) return true;
+            const hay = `${e.title || ''} ${e.subtitle || ''} ${e.competition_name || ''} ${e.category || ''}`.toLowerCase();
+            return hay.includes(normSearch);
+          };
+          const hotEvents = events.filter(e => e.is_hot && matchesSearch(e));
+          const nonHot = events.filter(e => !e.is_hot && matchesSearch(e));
 
           // Filtros fixos por categoria/competição
           // key formats:
