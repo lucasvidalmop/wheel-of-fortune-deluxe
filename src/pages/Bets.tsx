@@ -918,15 +918,15 @@ const Bets = ({ tag }: BetsPageProps) => {
                     {(ev.home_image_url || ev.away_image_url) ? (
                       <div className="flex items-center gap-1 flex-shrink-0 px-2 py-1.5 rounded-md" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         {ev.home_image_url
-                          ? <img src={ev.home_image_url} alt="" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
+                          ? <img src={optimizedImage(ev.home_image_url, { width: 96, quality: 70 })} alt="" loading="lazy" decoding="async" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
                           : <div className="w-8 h-8 sm:w-7 sm:h-7" />}
                         <span className="text-[9px] font-bold opacity-60" style={{ color: text }}>VS</span>
                         {ev.away_image_url
-                          ? <img src={ev.away_image_url} alt="" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
+                          ? <img src={optimizedImage(ev.away_image_url, { width: 96, quality: 70 })} alt="" loading="lazy" decoding="async" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
                           : <div className="w-8 h-8 sm:w-7 sm:h-7" />}
                       </div>
                     ) : ev.image_url && (
-                      <img src={ev.image_url} alt="" className="w-16 h-10 sm:w-16 sm:h-10 rounded-md object-cover flex-shrink-0 border border-white/10" />
+                      <img src={optimizedImage(ev.image_url, { width: 200, quality: 70 })} alt="" loading="lazy" decoding="async" className="w-16 h-10 sm:w-16 sm:h-10 rounded-md object-cover flex-shrink-0 border border-white/10" />
                     )}
                   </div>
                 </button>
