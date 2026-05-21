@@ -267,7 +267,7 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
   for (const tid of touchedTickets) {
     const { data: ticket } = await supabase
       .from("bet_tickets")
-      .select("id, owner_id, wheel_user_id, account_id, user_email, stake, total_odd, status")
+      .select("id, owner_id, wheel_user_id, account_id, user_email, user_name, public_code, stake, total_odd, status")
       .eq("id", tid)
       .maybeSingle();
     if (!ticket || ticket.status !== "pending") continue;
