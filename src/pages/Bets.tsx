@@ -7,6 +7,7 @@ import { computeTicketOdd, effectiveMaxOdd, HARD_MAX_ODD, type TicketOddLimits }
 import { canAddSelection, validateTicketCoherence } from '@/lib/ticketCoherence';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
+import ShareTicketMultiple, { type ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
 
 interface BetsPageProps { tag: string }
 
@@ -73,6 +74,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
+  const [shareMultiple, setShareMultiple] = useState<ShareMultipleData | null>(null);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
@@ -1086,10 +1088,40 @@ const Bets = ({ tag }: BetsPageProps) => {
                             {t.stake} {coinName} · odd total {Number(t.total_odd).toFixed(2)} · retorno {t.potential_return} {coinName}
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-sm font-bold" style={{ color: statusColor[t.status] }}>{statusLabel[t.status]}</div>
-                          {t.status === 'won' && (
-                            <div className="text-xs" style={{ color: muted }}>+{t.payout_coins}</div>
+                        <div className="text-right shrink-0 flex items-start gap-2">
+                          <div>
+                            <div className="text-sm font-bold" style={{ color: statusColor[t.status] }}>{statusLabel[t.status]}</div>
+                            {t.status === 'won' && (
+                              <div className="text-xs" style={{ color: muted }}>+{t.payout_coins}</div>
+                            )}
+                          </div>
+                          {cfg.ticketEnabled !== false && ['pending', 'won', 'lost'].includes(t.status) && (
+                            <button
+                              onClick={() => {
+                                setShareMultiple({
+                                  userId: authed?.account_id || authed?.id,
+                                  wagerCode: t.public_code,
+                                  selections: sels.map(s => ({
+                                    eventTitle: s.event_title,
+                                    marketTitle: s.market_title,
+                                    outcomeLabel: s.selection_label,
+                                    odd: Number(s.odd),
+                                    status: s.status as any,
+                                  })),
+                                  totalOdd: Number(t.total_odd),
+                                  amount: t.stake,
+                                  payout: t.status === 'won' ? t.payout_coins : t.status === 'lost' ? 0 : t.potential_return,
+                                  status: t.status as any,
+                                  coinName,
+                                  createdAt: t.created_at,
+                                });
+                              }}
+                              title="Compartilhar bilhete"
+                              className="p-2 rounded-lg transition hover:opacity-80"
+                              style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: accent }}
+                            >
+                              <Share2 size={14} />
+                            </button>
                           )}
                         </div>
                       </div>
@@ -1194,6 +1226,15 @@ const Bets = ({ tag }: BetsPageProps) => {
           open={!!shareWager}
           onClose={() => setShareWager(null)}
           data={shareWager}
+          config={cfg.ticket || {}}
+        />
+      )}
+
+      {shareMultiple && (
+        <ShareTicketMultiple
+          open={!!shareMultiple}
+          onClose={() => setShareMultiple(null)}
+          data={shareMultiple}
           config={cfg.ticket || {}}
         />
       )}
