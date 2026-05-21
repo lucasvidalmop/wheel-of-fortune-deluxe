@@ -498,6 +498,8 @@ function Dashboard() {
   const [notifyLuckyboxPurchasedEnabled, setNotifyLuckyboxPurchasedEnabled] = useState(false);
   const [notifyLuckyboxRedeemedEnabled, setNotifyLuckyboxRedeemedEnabled] = useState(false);
   const [notifyLuckyboxPrizeEnabled, setNotifyLuckyboxPrizeEnabled] = useState(false);
+  const [notifyTicketPlacedEnabled, setNotifyTicketPlacedEnabled] = useState(false);
+  const [notifyTicketWonEnabled, setNotifyTicketWonEnabled] = useState(false);
   const [notifyGroupJid, setNotifyGroupJid] = useState('');
   const [notifyGroupName, setNotifyGroupName] = useState('');
   const [notifySelectedGroups, setNotifySelectedGroups] = useState<{id: string; subject: string}[]>([]);
