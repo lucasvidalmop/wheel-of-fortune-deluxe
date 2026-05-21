@@ -944,8 +944,9 @@ const Bets = ({ tag }: BetsPageProps) => {
             const hay = `${e.title || ''} ${e.subtitle || ''} ${e.competition_name || ''} ${e.category || ''}`.toLowerCase();
             return hay.includes(normSearch);
           };
-          const hotEvents = events.filter(e => e.is_hot && matchesSearch(e));
-          const nonHot = events.filter(e => !e.is_hot && matchesSearch(e));
+          const isFinalized = (e: EventRow) => e.status === 'resolved' || e.status === 'cancelled';
+          const hotEvents = events.filter(e => e.is_hot && !isFinalized(e) && matchesSearch(e));
+          const nonHot = events.filter(e => !e.is_hot && !isFinalized(e) && matchesSearch(e));
 
           // Filtros fixos por categoria/competição
           // key formats:
