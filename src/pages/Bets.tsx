@@ -955,8 +955,19 @@ const Bets = ({ tag }: BetsPageProps) => {
           //  'uncategorized'                -> sem category_id
           //  <category_id>                  -> compat: filtro por id (não usado nos chips fixos)
           const normCat = (s: string | null | undefined) => (s || '').trim().toLowerCase();
+          const saoPauloYMD = (d: Date) => new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+          }).format(d);
+          const todayYMD = saoPauloYMD(new Date());
+          const isToday = (e: EventRow) => {
+            if (!e.starts_at) return false;
+            const d = new Date(e.starts_at);
+            if (Number.isNaN(d.getTime())) return false;
+            return saoPauloYMD(d) === todayYMD;
+          };
           const matchesFilter = (e: EventRow) => {
             if (categoryFilter === 'all') return true;
+            if (categoryFilter === 'today') return isToday(e);
             if (categoryFilter === 'uncategorized') return !e.category_id;
             if (categoryFilter.startsWith('competition:')) {
               const slug = categoryFilter.slice('competition:'.length);
