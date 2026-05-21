@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
@@ -6,9 +6,12 @@ import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import { computeTicketOdd, effectiveMaxOdd, HARD_MAX_ODD, type TicketOddLimits } from '@/lib/ticketOdds';
 import { canAddSelection, validateTicketCoherence } from '@/lib/ticketCoherence';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
-import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
-import ShareTicketMultiple, { type ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
+import type { ShareTicketData } from '@/components/casino/ShareTicket';
+import type { ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
 import { optimizedImage } from '@/lib/imageUrl';
+
+const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
+const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
 
 interface BetsPageProps { tag: string }
 
@@ -113,8 +116,6 @@ const translateOutcomeLabel = (s?: string | null) => {
   return translatePt(s);
 };
 
-import LZString from 'lz-string';
-
 const SLUG_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
 const genSlug = (len = 6) => {
   let s = '';
@@ -137,9 +138,10 @@ const createShortShareLink = async (
   return `${origin}/odds=${tag}`;
 };
 // legacy decoder for #copy= (compressed) links
-const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
+const decodeCopy = async (s: string): Promise<Array<{ e: string; o: string }>> => {
   try {
     if (s.startsWith('z')) {
+      const LZString = (await import('lz-string')).default;
       const decompressed = LZString.decompressFromEncodedURIComponent(s.slice(1));
       if (!decompressed) return [];
       return decompressed.split(';').map(pair => {
