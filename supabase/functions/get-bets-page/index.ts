@@ -57,6 +57,37 @@ Deno.serve(async (req) => {
     let markets: any[] = [];
     if (eventIds.length) {
       const PAGE = 1000;
+      const normTitle = (title = "") => title.trim().toLowerCase();
+      // Strict main-market match: full title equality with known principals.
+      // Avoids matching variants like "1x2 - 60 minutes" or "Goals Over/Under - Second Half".
+      const MAIN_TITLES = new Set([
+        "match winner",
+        "full time result",
+        "home/away",
+        "1x2",
+        "vencedor",
+        "vencedor do jogo",
+        "resultado final",
+        "resultado",
+      ]);
+      const mainTitleRank = (title = "") => {
+        const t = normTitle(title);
+        if (t === "match winner" || t === "full time result" || t === "resultado final") return 0;
+        if (t === "1x2" || t === "vencedor" || t === "vencedor do jogo" || t === "resultado") return 1;
+        if (t === "home/away") return 2;
+        return 9;
+      };
+      const isMainMarket = (title = "") => MAIN_TITLES.has(normTitle(title));
+      const isOpen = (m: any) => m?.status === "open";
+      const marketRank = (m: any) => {
+        if (isOpen(m) && isMainMarket(m.title)) return mainTitleRank(m.title);
+        if (isOpen(m)) return 10;
+        if (isMainMarket(m.title)) return 20 + mainTitleRank(m.title);
+        if (m?.status === "closed") return 30;
+        if (m?.status === "resolved") return 40;
+        if (m?.status === "cancelled") return 50;
+        return 60;
+      };
       // Paginate markets first so the initial page can return only the principal odds per event.
       let mFrom = 0;
       while (true) {
@@ -74,32 +105,24 @@ Deno.serve(async (req) => {
         mFrom += PAGE;
         if (mFrom > 50000) break;
       }
+      markets.sort((a, b) =>
+        String(a.event_id).localeCompare(String(b.event_id)) ||
+        marketRank(a) - marketRank(b) ||
+        (Number(a.position) || 0) - (Number(b.position) || 0) ||
+        String(a.id).localeCompare(String(b.id))
+      );
 
       let outcomeQueryIds: string[] | null = null;
       if (!isDetailLoad) {
         const byEvent = new Map<string, any[]>();
         for (const mk of markets) byEvent.set(mk.event_id, [...(byEvent.get(mk.event_id) || []), mk]);
-        const normTitle = (title = "") => title.trim().toLowerCase();
-        // Strict main-market match: full title equality with known principals.
-        // Avoids matching variants like "1x2 - 60 minutes" or "Goals Over/Under - Second Half".
-        const MAIN_TITLES = new Set([
-          "match winner",
-          "home/away",
-          "1x2",
-          "vencedor",
-          "vencedor do jogo",
-          "resultado final",
-          "resultado",
-        ]);
-        const isMainMarket = (title = "") => MAIN_TITLES.has(normTitle(title));
-        const isOpen = (m: any) => m?.status === "open";
         outcomeQueryIds = [];
         for (const mks of byEvent.values()) {
-          // Priority: open main → any main → first open → first market
+          // Priority: open main → first open → any main → first market
           const main =
             mks.find((m) => isMainMarket(m.title) && isOpen(m)) ||
-            mks.find((m) => isMainMarket(m.title)) ||
             mks.find((m) => isOpen(m)) ||
+            mks.find((m) => isMainMarket(m.title)) ||
             mks[0];
           if (main?.id) outcomeQueryIds.push(main.id);
         }
