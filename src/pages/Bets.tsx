@@ -231,44 +231,62 @@ const Bets = ({ tag }: BetsPageProps) => {
   // wager counts são carregados apenas no load inicial (via get-bets-page).
   // Usuário precisa dar F5 para ver contagem atualizada — economia máxima de recursos.
 
-  // import shared ticket via #copy=
+  // import shared ticket via #c=<slug> (new) or #copy=<payload> (legacy)
   useEffect(() => {
     if (!page?.events) return;
-    const m = window.location.hash.match(/(?:^#|&)copy=([^&]+)/);
-    if (!m) return;
-    const sel = decodeCopy(decodeURIComponent(m[1]));
-    if (!sel.length) return;
-    const events: EventRow[] = page.events || [];
-    const outcomes: OutcomeRow[] = page.outcomes || [];
-    const markets: MarketRow[] = page.markets || [];
-    const drafts: TicketDraft[] = [];
-    for (const { e, o } of sel) {
-      const ev = events.find(x => x.id === e);
-      const oc = outcomes.find(x => x.id === o && x.event_id === e);
-      if (!ev || !oc) continue;
-      const mk = markets.find(x => x.id === oc.market_id);
-      drafts.push({
-        eventId: ev.id, eventTitle: ev.title,
-        marketId: oc.market_id, marketTitle: mk?.title || 'Resultado Final',
-        outcomeId: oc.id, outcomeLabel: oc.label, odd: Number(oc.odd),
-      });
-    }
-    // strip the copy hash from URL (keep #ev=... if present)
-    const newHash = window.location.hash
-      .replace(/(?:^#|&)copy=[^&]+/, '')
-      .replace(/^#&/, '#')
-      .replace(/^#$/, '');
-    window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
-    if (!drafts.length) return;
-    if (drafts.length === 1) {
-      const ev = events.find(x => x.id === drafts[0].eventId);
-      const oc = outcomes.find(x => x.id === drafts[0].outcomeId);
-      if (ev && oc) { setSlip({ event: ev, outcome: oc }); toast.success('Bilhete carregado! Confirme para apostar.'); }
-    } else {
-      setTicketDraft(drafts);
-      setTicketOpen(true);
-      toast.success(`Múltipla com ${drafts.length} seleções carregada!`);
-    }
+    (async () => {
+      let sel: Array<{ e: string; o: string }> = [];
+      let stripPattern: RegExp | null = null;
+      const mShort = window.location.hash.match(/(?:^#|&)c=([^&]+)/);
+      const mLegacy = window.location.hash.match(/(?:^#|&)copy=([^&]+)/);
+      if (mShort) {
+        const slug = decodeURIComponent(mShort[1]);
+        const { data, error } = await supabase
+          .from('shared_tickets')
+          .select('selections')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (error || !data) { toast.error('Bilhete não encontrado'); return; }
+        sel = (data.selections as any) || [];
+        stripPattern = /(?:^#|&)c=[^&]+/;
+      } else if (mLegacy) {
+        sel = decodeCopy(decodeURIComponent(mLegacy[1]));
+        stripPattern = /(?:^#|&)copy=[^&]+/;
+      } else {
+        return;
+      }
+      if (!sel.length) return;
+      const events: EventRow[] = page.events || [];
+      const outcomes: OutcomeRow[] = page.outcomes || [];
+      const markets: MarketRow[] = page.markets || [];
+      const drafts: TicketDraft[] = [];
+      for (const { e, o } of sel) {
+        const ev = events.find(x => x.id === e);
+        const oc = outcomes.find(x => x.id === o && x.event_id === e);
+        if (!ev || !oc) continue;
+        const mk = markets.find(x => x.id === oc.market_id);
+        drafts.push({
+          eventId: ev.id, eventTitle: ev.title,
+          marketId: oc.market_id, marketTitle: mk?.title || 'Resultado Final',
+          outcomeId: oc.id, outcomeLabel: oc.label, odd: Number(oc.odd),
+        });
+      }
+      const newHash = window.location.hash
+        .replace(stripPattern!, '')
+        .replace(/^#&/, '#')
+        .replace(/^#$/, '');
+      window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
+      if (!drafts.length) return;
+      if (drafts.length === 1) {
+        const ev = events.find(x => x.id === drafts[0].eventId);
+        const oc = outcomes.find(x => x.id === drafts[0].outcomeId);
+        if (ev && oc) { setSlip({ event: ev, outcome: oc }); toast.success('Bilhete carregado! Confirme para apostar.'); }
+      } else {
+        setTicketDraft(drafts);
+        setTicketOpen(true);
+        toast.success(`Múltipla com ${drafts.length} seleções carregada!`);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
