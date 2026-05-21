@@ -21,7 +21,16 @@ const Luckybox = lazy(() => import("./pages/Luckybox.tsx"));
 const UpdateRegistration = lazy(() => import("./pages/UpdateRegistration.tsx"));
 const Bets = lazy(() => import("./pages/Bets.tsx"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const PageFallback = () => (
   <div className="min-h-screen w-full flex items-center justify-center bg-background">

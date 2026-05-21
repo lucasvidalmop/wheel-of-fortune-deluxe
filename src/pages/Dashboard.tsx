@@ -1,40 +1,49 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import CustomizationPanel from '@/components/casino/CustomizationPanel';
-import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
-import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import BattleConfigPanel from '@/components/casino/BattleConfigPanel';
 import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus, RefreshCw, CheckCircle2, Swords, Package, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
-import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
-import RedemptionPagesPanel from '@/components/casino/RedemptionPagesPanel';
-import LuckyboxPanel from '@/components/casino/LuckyboxPanel';
-import BetsPanel from '@/components/casino/BetsPanel';
 import AuthNoticePanel from '@/components/casino/AuthNoticePanel';
-import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
-import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
-import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
-import InfluencerPageEditor from '@/components/casino/InfluencerPageEditor';
-import UpdatePageEditor from '@/components/casino/UpdatePageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
-import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
-import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
-import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
+import { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
 import BulkSendProgress from '@/components/casino/BulkSendProgress';
 import BulkSendControls from '@/components/casino/BulkSendControls';
 import { useBulkSendControl } from '@/hooks/useBulkSendControl';
 import MoneyInput from '@/components/casino/MoneyInput';
-import { ConfigBackupPanel } from '@/components/casino/ConfigBackupPanel';
+
+// Heavy panels - lazy loaded on demand to reduce initial bundle
+const CustomizationPanel = lazy(() => import('@/components/casino/CustomizationPanel'));
+const DialogConfigPanel = lazy(() => import('@/components/casino/DialogConfigPanel'));
+const AuthConfigPanel = lazy(() => import('@/components/casino/AuthConfigPanel'));
+const BattleConfigPanel = lazy(() => import('@/components/casino/BattleConfigPanel'));
+const ReferralPageEditor = lazy(() => import('@/components/casino/ReferralPageEditor'));
+const ReferralAnalyticsPanel = lazy(() => import('@/components/casino/ReferralAnalyticsPanel'));
+const RedemptionPagesPanel = lazy(() => import('@/components/casino/RedemptionPagesPanel'));
+const LuckyboxPanel = lazy(() => import('@/components/casino/LuckyboxPanel'));
+const BetsPanel = lazy(() => import('@/components/casino/BetsPanel'));
+const WhatsAppShareDialog = lazy(() => import('@/components/casino/WhatsAppShareDialog'));
+const ReferralDefaultEditor = lazy(() => import('@/components/casino/ReferralDefaultEditor'));
+const GorjetaPageEditor = lazy(() => import('@/components/casino/GorjetaPageEditor'));
+const InfluencerPageEditor = lazy(() => import('@/components/casino/InfluencerPageEditor'));
+const UpdatePageEditor = lazy(() => import('@/components/casino/UpdatePageEditor'));
+const MessagingAnalytics = lazy(() => import('@/components/casino/MessagingAnalytics'));
+const EmailTemplateEditor = lazy(() => import('@/components/casino/EmailTemplateEditor'));
+const BrevoBulkEmailPanel = lazy(() => import('@/components/casino/BrevoBulkEmailPanel'));
+const ConfigBackupPanel = lazy(() => import('@/components/casino/ConfigBackupPanel').then(m => ({ default: m.ConfigBackupPanel })));
+
+const PanelFallback = () => (
+  <div className="w-full py-12 flex items-center justify-center">
+    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+  </div>
+);
 
 interface WheelUser {
   id: string;
@@ -4085,8 +4094,10 @@ function Dashboard() {
           {/* ══════ WHEEL CONFIG ══════ */}
           {activeTab === 'wheel' && (
             <div className="max-w-2xl space-y-4">
-              <CustomizationPanel config={wheelConfig} onChange={updateWheelConfig} />
-              <DialogConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              <Suspense fallback={<PanelFallback />}>
+                <CustomizationPanel config={wheelConfig} onChange={updateWheelConfig} />
+                <DialogConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              </Suspense>
               <button
                 onClick={handleSaveConfig}
                 disabled={savingConfig}
@@ -4099,13 +4110,17 @@ function Dashboard() {
 
           {/* ══════ BATALHA SLOT ══════ */}
           {activeTab === 'batalha_slot' && session?.user?.id && (
-            <BattleConfigPanel userId={session.user.id} />
+            <Suspense fallback={<PanelFallback />}>
+              <BattleConfigPanel userId={session.user.id} />
+            </Suspense>
           )}
 
           {/* ══════ AUTH CONFIG ══════ */}
           {activeTab === 'auth' && (
             <div className="max-w-lg space-y-4">
-              <AuthConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              <Suspense fallback={<PanelFallback />}>
+                <AuthConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              </Suspense>
               <button
                 onClick={handleSaveConfig}
                 disabled={savingConfig}
@@ -4773,7 +4788,9 @@ function Dashboard() {
 
           {/* ══════ EMAIL TAB ══════ */}
           {activeTab === 'email_brevo' && (
-            <BrevoBulkEmailPanel ownerId={session?.user?.id ?? null} />
+            <Suspense fallback={<PanelFallback />}>
+              <BrevoBulkEmailPanel ownerId={session?.user?.id ?? null} />
+            </Suspense>
           )}
 
           {activeTab === 'email' && (
@@ -8128,10 +8145,14 @@ function Dashboard() {
 
           {/* ══════ REFERRAL LINKS TAB ══════ */}
           {activeTab === 'luckybox' && session?.user?.id && (
-            <LuckyboxPanel ownerId={session.user.id} />
+            <Suspense fallback={<PanelFallback />}>
+              <LuckyboxPanel ownerId={session.user.id} />
+            </Suspense>
           )}
           {activeTab === 'apostas' && session?.user?.id && (
-            <BetsPanel ownerId={session.user.id} />
+            <Suspense fallback={<PanelFallback />}>
+              <BetsPanel ownerId={session.user.id} />
+            </Suspense>
           )}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
@@ -8159,23 +8180,29 @@ function Dashboard() {
 
               {referralSubTab === 'redemption' && (
                 <GlassCard className="p-5">
-                  <RedemptionPagesPanel ownerId={session.user.id} />
+                  <Suspense fallback={<PanelFallback />}>
+                    <RedemptionPagesPanel ownerId={session.user.id} />
+                  </Suspense>
                 </GlassCard>
               )}
 
               {referralSubTab === 'default_style' && (
                 <GlassCard className="p-5">
-                  <ReferralDefaultEditor
-                    userId={session.user.id}
-                    currentConfig={defaultReferralConfig}
-                    onSaved={(cfg) => setDefaultReferralConfig(cfg)}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <ReferralDefaultEditor
+                      userId={session.user.id}
+                      currentConfig={defaultReferralConfig}
+                      onSaved={(cfg) => setDefaultReferralConfig(cfg)}
+                    />
+                  </Suspense>
                 </GlassCard>
               )}
 
               {referralSubTab === 'analytics' && (
                 <GlassCard className="p-5">
-                  <ReferralAnalyticsPanel ownerId={session.user.id} gorjetaRef={(wheelConfig as any).gorjetaRef || ''} />
+                  <Suspense fallback={<PanelFallback />}>
+                    <ReferralAnalyticsPanel ownerId={session.user.id} gorjetaRef={(wheelConfig as any).gorjetaRef || ''} />
+                  </Suspense>
                 </GlassCard>
               )}
 
@@ -8530,13 +8557,15 @@ function Dashboard() {
           )}
 
           {customizingReferral && (
-            <ReferralPageEditor
-              linkId={customizingReferral.id}
-              linkLabel={customizingReferral.label}
-              currentConfig={customizingReferral.page_config || {}}
-              onClose={() => setCustomizingReferral(null)}
-              onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
-            />
+            <Suspense fallback={<PanelFallback />}>
+              <ReferralPageEditor
+                linkId={customizingReferral.id}
+                linkLabel={customizingReferral.label}
+                currentConfig={customizingReferral.page_config || {}}
+                onClose={() => setCustomizingReferral(null)}
+                onSaved={() => { setCustomizingReferral(null); fetchReferralLinks(); }}
+              />
+            </Suspense>
           )}
 
           {analyticsReferral && session?.user?.id && (
@@ -8549,25 +8578,29 @@ function Dashboard() {
                 >
                   <X size={18} />
                 </button>
-                <ReferralAnalyticsPanel
-                  ownerId={session.user.id}
-                  linkId={analyticsReferral.id}
-                  scopeLabel={`${analyticsReferral.label || 'Link'} • ${analyticsReferral.code}`}
-                />
+                <Suspense fallback={<PanelFallback />}>
+                  <ReferralAnalyticsPanel
+                    ownerId={session.user.id}
+                    linkId={analyticsReferral.id}
+                    scopeLabel={`${analyticsReferral.label || 'Link'} • ${analyticsReferral.code}`}
+                  />
+                </Suspense>
               </div>
             </div>
           )}
 
           {sharingReferral && session?.user?.id && (
-            <WhatsAppShareDialog
-              ownerId={session.user.id}
-              shareUrl={`${window.location.origin}/ref/${sharingReferral.code}`}
-              linkLabel={sharingReferral.label || ''}
-              onClose={() => setSharingReferral(null)}
-              evolutionApiUrl={evolutionApiUrl}
-              evolutionApiKey={evolutionApiKey}
-              evolutionInstance={evolutionInstance}
-            />
+            <Suspense fallback={null}>
+              <WhatsAppShareDialog
+                ownerId={session.user.id}
+                shareUrl={`${window.location.origin}/ref/${sharingReferral.code}`}
+                linkLabel={sharingReferral.label || ''}
+                onClose={() => setSharingReferral(null)}
+                evolutionApiUrl={evolutionApiUrl}
+                evolutionApiKey={evolutionApiKey}
+                evolutionInstance={evolutionInstance}
+              />
+            </Suspense>
           )}
 
           {/* ══════ GORJETA TAB ══════ */}
@@ -8707,27 +8740,33 @@ function Dashboard() {
                 )}
 
                 {gorjetaSubTab === 'visual' && session?.user?.id && (
-                  <GorjetaPageEditor
-                    userId={session.user.id}
-                    currentConfig={(wheelConfig as any).gorjetaPageConfig || {}}
-                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <GorjetaPageEditor
+                      userId={session.user.id}
+                      currentConfig={(wheelConfig as any).gorjetaPageConfig || {}}
+                      onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, gorjetaPageConfig: cfg }))}
+                    />
+                  </Suspense>
                 )}
 
                 {gorjetaSubTab === 'influencer' && session?.user?.id && (
-                  <InfluencerPageEditor
-                    userId={session.user.id}
-                    currentConfig={(wheelConfig as any).influencerPageConfig || {}}
-                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <InfluencerPageEditor
+                      userId={session.user.id}
+                      currentConfig={(wheelConfig as any).influencerPageConfig || {}}
+                      onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, influencerPageConfig: cfg }))}
+                    />
+                  </Suspense>
                 )}
 
                 {gorjetaSubTab === 'update' && session?.user?.id && (
-                  <UpdatePageEditor
-                    userId={session.user.id}
-                    currentConfig={(wheelConfig as any).updatePageConfig || {}}
-                    onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, updatePageConfig: cfg }))}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <UpdatePageEditor
+                      userId={session.user.id}
+                      currentConfig={(wheelConfig as any).updatePageConfig || {}}
+                      onSaved={(cfg) => updateWheelConfig((prev: any) => ({ ...prev, updatePageConfig: cfg }))}
+                    />
+                  </Suspense>
                 )}
 
                 {gorjetaSubTab === 'seo' && (() => {
@@ -9748,7 +9787,9 @@ function Dashboard() {
 
           {activeTab === 'configuracoes' && (
             <div className="w-full max-w-2xl min-w-0 space-y-6">
-              <ConfigBackupPanel />
+              <Suspense fallback={<PanelFallback />}>
+                <ConfigBackupPanel />
+              </Suspense>
               {session?.user?.id && <AuthNoticePanel ownerId={session.user.id} />}
               {/* Probabilidade do Sorteio */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
@@ -10252,7 +10293,9 @@ function Dashboard() {
 
           {activeTab === 'msg_analytics' && (
             <div className="w-full max-w-[1200px] min-w-0">
-              <MessagingAnalytics ownerId={session?.user?.id || ''} />
+              <Suspense fallback={<PanelFallback />}>
+                <MessagingAnalytics ownerId={session?.user?.id || ''} />
+              </Suspense>
             </div>
           )}
 
@@ -11728,12 +11771,14 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
             <DialogTitle>{editingTemplate ? `Editar: ${editingTemplate.name}` : 'Novo template de email'}</DialogTitle>
           </DialogHeader>
           {session?.user?.id && (
-            <EmailTemplateEditor
-              ownerId={session.user.id}
-              initial={editingTemplate}
-              onClose={() => setShowTemplateEditor(false)}
-              onSaved={refreshCustomTemplates}
-            />
+            <Suspense fallback={<PanelFallback />}>
+              <EmailTemplateEditor
+                ownerId={session.user.id}
+                initial={editingTemplate}
+                onClose={() => setShowTemplateEditor(false)}
+                onSaved={refreshCustomTemplates}
+              />
+            </Suspense>
           )}
         </DialogContent>
       </Dialog>
