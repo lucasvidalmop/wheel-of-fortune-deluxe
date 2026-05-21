@@ -910,6 +910,32 @@ const Bets = ({ tag }: BetsPageProps) => {
       }
       toast.success(`Bilhete confirmado! Retorno potencial: ${data.potential_return}`);
       setAuthed(prev => prev ? { ...prev, tokens_balance: data.new_balance } : prev);
+      if (cfg.ticketEnabled !== false) {
+        try {
+          const copyUrl = await createShortShareLink(
+            tag,
+            ticketDraft.map(s => ({ e: s.eventId, o: s.outcomeId })),
+          );
+          setShareMultiple({
+            userId: authed?.account_id || authed?.id,
+            wagerCode: data.public_code || undefined,
+            selections: ticketDraft.map(s => ({
+              eventTitle: s.eventTitle,
+              marketTitle: s.marketTitle,
+              outcomeLabel: s.outcomeLabel,
+              odd: Number(s.odd),
+              status: 'pending' as any,
+            })),
+            totalOdd: Number(data.total_odd) || totalOdd,
+            amount: amt,
+            payout: Number(data.potential_return) || Math.round(amt * totalOdd),
+            status: 'pending',
+            coinName,
+            createdAt: new Date().toISOString(),
+            copyUrl,
+          });
+        } catch (e) { /* ignore share build errors */ }
+      }
       setTicketDraft([]);
       setTicketOpen(false);
       refreshMine();
