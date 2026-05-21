@@ -1282,7 +1282,13 @@ const Bets = ({ tag }: BetsPageProps) => {
                   return false;
                 };
                 const visibleChips = FIXED.filter(c => c.key === 'all' || hasMatches(c.key));
-                if (visibleChips.length <= 1) return null;
+                const fixedKeys = new Set(visibleChips.map(c => c.key));
+                const dynamicCategoryChips = cats
+                  .filter(c => nonHot.some(e => e.category_id === c.id))
+                  .map(c => ({ key: c.name.trim().toLowerCase() === 'futebol' ? 'category:futebol' : c.id, label: c.name, icon: c.icon || undefined }))
+                  .filter(c => !fixedKeys.has(c.key));
+                const allChips = [...visibleChips, ...dynamicCategoryChips];
+                if (allChips.length <= 1) return null;
                 return (
                   <div className="relative -mx-3">
                     <style>{`.bets-chips-scroll::-webkit-scrollbar{display:none}`}</style>
@@ -1290,7 +1296,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       className="bets-chips-scroll flex gap-2 overflow-x-auto px-3 py-2 scroll-smooth snap-x"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {visibleChips.map(({ key, label, icon }) => {
+                      {allChips.map(({ key, label, icon }) => {
                         const active = categoryFilter === key;
                         return (
                           <button key={key} onClick={() => setCategoryFilter(key)}
