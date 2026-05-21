@@ -132,7 +132,8 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
       const shareText = isWin
         ? `🎉 Ganhei ${data.payout} ${data.coinName} numa múltipla de ${n} seleções! Odd ${data.totalOdd.toFixed(2)}`
         : `Minha múltipla de ${n} seleções — odd total ${data.totalOdd.toFixed(2)}`;
-      const fullText = ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText;
+      const copyLine = data.copyUrl ? `\n\n👉 Copie este bilhete: ${data.copyUrl}` : '';
+      const fullText = (ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText) + copyLine;
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], text: fullText, title: brandName || 'Minha múltipla' });
