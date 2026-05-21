@@ -604,8 +604,13 @@ const Bets = ({ tag }: BetsPageProps) => {
   const maxReturnAllowed = Math.max(0, Number(ticketLimits.maxReturn) || 0); // 0 = sem limite
   const MULTI_MIN_BET = 10;
   const MULTI_MAX_BET = 150;
-  const minBetAllowed = Math.max(MULTI_MIN_BET, Number(ticketLimits.minBet) || MULTI_MIN_BET);
-  const maxBetAllowed = Math.max(MULTI_MIN_BET, Number(ticketLimits.maxBet) || MULTI_MAX_BET);
+  const isSingleTicket = ticketDraft.length <= 1;
+  const minBetAllowed = isSingleTicket
+    ? SIMPLE_MIN_BET
+    : Math.max(MULTI_MIN_BET, Number(ticketLimits.minBet) || MULTI_MIN_BET);
+  const maxBetAllowed = isSingleTicket
+    ? SIMPLE_MAX_BET
+    : Math.max(MULTI_MIN_BET, Number(ticketLimits.maxBet) || MULTI_MAX_BET);
 
   const oddBreakdown = useMemo(
     () => computeTicketOdd(ticketDraft.map(s => ({ eventId: s.eventId, odd: Number(s.odd) || 1 }))),
