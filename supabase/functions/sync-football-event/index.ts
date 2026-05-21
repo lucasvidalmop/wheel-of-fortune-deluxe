@@ -326,12 +326,22 @@ Deno.serve(async (req) => {
   );
 
   try {
-    // Carrega todos os operadores ativos
-    const { data: configs, error: cfgErr } = await supabase
+    // Carrega operadores ativos; se a coluna não existir ou nenhum estiver ativo, usa TODOS
+    let configs: Array<{ id: string; owner_id: string }> | null = null;
+    const activeRes = await supabase
       .from("bets_configs")
       .select("id, owner_id, is_active")
       .eq("is_active", true);
-    if (cfgErr) throw cfgErr;
+    if (activeRes.error) {
+      console.warn("is_active filter failed, falling back to all operators", activeRes.error?.message);
+    } else {
+      configs = activeRes.data as any;
+    }
+    if (!configs || configs.length === 0) {
+      const allRes = await supabase.from("bets_configs").select("id, owner_id");
+      if (allRes.error) throw allRes.error;
+      configs = (allRes.data as any) || [];
+    }
 
     if (!configs || configs.length === 0) {
       return json(200, { success: true, operators: 0, results: [] });
