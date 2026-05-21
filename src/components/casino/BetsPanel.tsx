@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy, Download, BarChart3, TrendingUp, TrendingDown, Users, Coins } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy, Download, BarChart3, TrendingUp, TrendingDown, Users, Coins, ArrowUp, ArrowDown } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
@@ -325,6 +325,34 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     const { error } = await supabase.from('bet_events').update({ status }).eq('id', ev.id);
     if (error) { toast.error(error.message); return; }
     loadAll();
+  };
+
+  const sortedEvents = React.useMemo(
+    () => [...events].sort((a, b) =>
+      ((a.position ?? 0) - (b.position ?? 0)) ||
+      String((b as any).created_at || '').localeCompare(String((a as any).created_at || ''))
+    ),
+    [events],
+  );
+
+  const moveEvent = async (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    if (j < 0 || j >= sortedEvents.length) return;
+    const reordered = [...sortedEvents];
+    [reordered[idx], reordered[j]] = [reordered[j], reordered[idx]];
+    const updates = reordered
+      .map((e, i) => ({ id: e.id, position: i, prev: e.position ?? 0 }))
+      .filter(u => u.position !== u.prev);
+    // Optimistic UI: assign new positions immediately
+    setEvents(prev => prev.map(e => {
+      const u = updates.find(x => x.id === e.id);
+      return u ? { ...e, position: u.position } : e;
+    }));
+    const results = await Promise.all(
+      updates.map(u => supabase.from('bet_events').update({ position: u.position }).eq('id', u.id))
+    );
+    const err = results.find(r => r.error);
+    if (err?.error) { toast.error(err.error.message); loadAll(); }
   };
 
   const resolveEvent = async (winningOutcomeId: string) => {
@@ -685,7 +713,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             </button>
           </div>
           {events.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento criado ainda.</p>}
-          {events.map(ev => {
+          {sortedEvents.map((ev, evIndex) => {
             const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
             const c = ev.payout_case_id ? cases.find(x => x.id === ev.payout_case_id) : null;
             const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
@@ -709,6 +737,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
+                    <button onClick={() => moveEvent(evIndex, -1)} disabled={evIndex === 0} title="Mover para cima" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp size={14} /></button>
+                    <button onClick={() => moveEvent(evIndex, 1)} disabled={evIndex === sortedEvents.length - 1} title="Mover para baixo" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown size={14} /></button>
                     <button onClick={() => openEditEvent(ev)} title="Editar" className="p-1.5 rounded hover:bg-muted"><Edit2 size={14} /></button>
                     {ev.status === 'scheduled' && (
                       <button onClick={() => setEventStatus(ev, 'open')} title="Abrir agora" className="p-1.5 rounded hover:bg-muted text-green-500"><Play size={14} /></button>
