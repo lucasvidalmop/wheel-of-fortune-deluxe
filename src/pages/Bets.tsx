@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
@@ -6,9 +6,12 @@ import { formatBetDateTime, isBetDateTimeExpired } from '@/lib/betsDateTime';
 import { computeTicketOdd, effectiveMaxOdd, HARD_MAX_ODD, type TicketOddLimits } from '@/lib/ticketOdds';
 import { canAddSelection, validateTicketCoherence } from '@/lib/ticketCoherence';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
-import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
-import ShareTicketMultiple, { type ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
+import type { ShareTicketData } from '@/components/casino/ShareTicket';
+import type { ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
 import { optimizedImage } from '@/lib/imageUrl';
+
+const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
+const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
 
 interface BetsPageProps { tag: string }
 
@@ -113,8 +116,6 @@ const translateOutcomeLabel = (s?: string | null) => {
   return translatePt(s);
 };
 
-import LZString from 'lz-string';
-
 const SLUG_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
 const genSlug = (len = 6) => {
   let s = '';
@@ -137,9 +138,10 @@ const createShortShareLink = async (
   return `${origin}/odds=${tag}`;
 };
 // legacy decoder for #copy= (compressed) links
-const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
+const decodeCopy = async (s: string): Promise<Array<{ e: string; o: string }>> => {
   try {
     if (s.startsWith('z')) {
+      const LZString = (await import('lz-string')).default;
       const decompressed = LZString.decompressFromEncodedURIComponent(s.slice(1));
       if (!decompressed) return [];
       return decompressed.split(';').map(pair => {
@@ -201,6 +203,9 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [placingTicket, setPlacingTicket] = useState(false);
   const [myTickets, setMyTickets] = useState<TicketRow[]>([]);
   const [myTicketSelections, setMyTicketSelections] = useState<TicketSelectionRow[]>([]);
+  const [visibleEventLimit, setVisibleEventLimit] = useState(18);
+  const [detailedEventIds, setDetailedEventIds] = useState<Record<string, boolean>>({});
+  const [loadingDetailEventId, setLoadingDetailEventId] = useState<string | null>(null);
 
   // load page
   useEffect(() => {
@@ -251,7 +256,7 @@ const Bets = ({ tag }: BetsPageProps) => {
         sel = (data.selections as any) || [];
         stripPattern = /(?:^#|&)c=[^&]+/;
       } else if (mLegacy) {
-        sel = decodeCopy(decodeURIComponent(mLegacy[1]));
+        sel = await decodeCopy(decodeURIComponent(mLegacy[1]));
         stripPattern = /(?:^#|&)copy=[^&]+/;
       } else {
         return;
@@ -307,6 +312,50 @@ const Bets = ({ tag }: BetsPageProps) => {
       else sessionStorage.removeItem(`bets_user_${tag}`);
     } catch {}
   }, [authed, tag]);
+
+  useEffect(() => {
+    setVisibleEventLimit(18);
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    if (!selectedEventId || !page?.found || detailedEventIds[selectedEventId]) return;
+    let cancelled = false;
+    setLoadingDetailEventId(selectedEventId);
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-bets-page', { body: { tag, detailEventId: selectedEventId } });
+        if (error) throw error;
+        if (cancelled || !data?.found) return;
+        setPage((prev: any) => {
+          if (!prev) return prev;
+          const mergeById = (a: any[] = [], b: any[] = []) => Array.from(new Map([...a, ...b].map(x => [x.id, x])).values());
+          return {
+            ...prev,
+            events: mergeById(prev.events, data.events),
+            markets: [
+              ...(prev.markets || []).filter((m: MarketRow) => m.event_id !== selectedEventId),
+              ...(data.markets || []),
+            ],
+            outcomes: [
+              ...(prev.outcomes || []).filter((o: OutcomeRow) => o.event_id !== selectedEventId),
+              ...(data.outcomes || []),
+            ],
+            cases: mergeById(prev.cases, data.cases),
+            wagerCounts: { ...(prev.wagerCounts || {}), ...(data.wagerCounts || {}) },
+            outcomeStats: { ...(prev.outcomeStats || {}), ...(data.outcomeStats || {}) },
+          };
+        });
+        if (data?.wagerCounts) setWagerCounts(prev => ({ ...prev, ...data.wagerCounts }));
+        if (data?.outcomeStats) setOutcomeStats(prev => ({ ...prev, ...data.outcomeStats }));
+        setDetailedEventIds(prev => ({ ...prev, [selectedEventId]: true }));
+      } catch {
+        toast.error('Erro ao carregar mercados do jogo');
+      } finally {
+        if (!cancelled) setLoadingDetailEventId(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedEventId, page?.found, detailedEventIds, tag]);
 
   // SEO/pixels injection
   useEffect(() => {
@@ -647,7 +696,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     const subtitleColor = cfg.subtitleColor || muted;
     const btnTextColor = cfg.btnTextColor || '#000';
     const bgStyle: React.CSSProperties = cfg.bgImage
-      ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1280, quality: 70 })})`, backgroundSize: 'cover', backgroundPosition: 'center' }
       : (cfg.bgGradientFrom || cfg.bgGradientTo)
         ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)` }
         : { background: bg };
@@ -699,7 +748,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const eventStatusBadge = (st: string) => st === 'open' ? 'Aberto' : st === 'closed' ? 'Fechado' : st === 'resolved' ? 'Resolvido' : 'Cancelado';
 
   const mainBgStyle: React.CSSProperties = cfg.bgImage
-    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1920, quality: 65 })})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', color: text }
+    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1280, quality: 65 })})`, backgroundSize: 'cover', backgroundPosition: 'center', color: text }
     : (cfg.bgGradientFrom || cfg.bgGradientTo)
       ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)`, color: text }
       : { background: bg, color: text };
@@ -847,6 +896,19 @@ const Bets = ({ tag }: BetsPageProps) => {
             if (filtered.length) grouped.push({ cat: c, items: filtered });
           }
 
+          const displayedHotEvents = hotEvents.slice(0, visibleEventLimit);
+          let remainingEventSlots = Math.max(0, visibleEventLimit - displayedHotEvents.length);
+          const displayedGrouped = grouped
+            .map(g => {
+              const items = g.items.slice(0, remainingEventSlots);
+              remainingEventSlots = Math.max(0, remainingEventSlots - items.length);
+              return { ...g, items };
+            })
+            .filter(g => g.items.length > 0);
+          const totalEventCount = hotEvents.length + grouped.reduce((sum, g) => sum + g.items.length, 0);
+          const visibleEventCount = displayedHotEvents.length + displayedGrouped.reduce((sum, g) => sum + g.items.length, 0);
+          const canShowMoreEvents = visibleEventCount < totalEventCount;
+
 
           const renderEvent = (ev: EventRow, detailMode = false) => {
             const outs = outcomesByEvent[ev.id] || [];
@@ -859,20 +921,19 @@ const Bets = ({ tag }: BetsPageProps) => {
             const ticketAccent = ev.is_hot ? '#f97316' : (evCat?.color || accent);
             const cardStyle: React.CSSProperties = catBg
               ? {
-                  backgroundImage: `linear-gradient(180deg, rgba(2, 8, 18, 0.2) 0%, rgba(3, 10, 24, 0.74) 50%, rgba(3, 7, 15, 0.96) 100%), url(${catBg})`,
+                  backgroundImage: `linear-gradient(180deg, rgba(2, 8, 18, 0.28) 0%, rgba(3, 10, 24, 0.78) 54%, rgba(3, 7, 15, 0.97) 100%), url(${optimizedImage(catBg, { width: detailMode ? 960 : 480, quality: 68 })})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   border: `2px solid ${ticketAccent}66`,
-                  boxShadow: `0 18px 45px -22px ${ticketAccent}aa, inset 0 1px 0 rgba(255,255,255,0.12)`,
+                  boxShadow: `0 10px 24px -18px ${ticketAccent}99, inset 0 1px 0 rgba(255,255,255,0.12)`,
                 }
               : {
                   background: `linear-gradient(160deg, ${bg} 0%, ${cardBg} 100%)`,
                   border: `2px solid ${ticketAccent}66`,
-                  boxShadow: `0 18px 45px -22px ${ticketAccent}aa, inset 0 1px 0 rgba(255,255,255,0.12)`,
+                  boxShadow: `0 10px 24px -18px ${ticketAccent}99, inset 0 1px 0 rgba(255,255,255,0.12)`,
                 };
             return (
               <article key={ev.id} className="relative rounded-2xl p-3 sm:p-3.5 overflow-hidden flex flex-col" style={cardStyle}>
-                <div aria-hidden className="absolute -top-24 -right-20 w-44 h-44 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${ticketAccent}20, transparent 70%)` }} />
                 <div className="relative flex items-center justify-between gap-2 mb-2 text-[11px] font-semibold" style={{ color: text }}>
                   <span className="flex items-center gap-1.5 min-w-0 flex-1">
                     {ev.competition_name && (
@@ -895,7 +956,6 @@ const Bets = ({ tag }: BetsPageProps) => {
                     title="Apostas em tempo real"
                   >
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: ticketAccent }} />
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: ticketAccent }} />
                     </span>
                     <b>{(wagerCounts[ev.id] || 0).toLocaleString('pt-BR')}</b>
@@ -965,7 +1025,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                     const [pg] = groups.splice(principalIdx, 1);
                     groups.unshift(pg);
                   }
-                  const extraCount = Math.max(0, groups.length - 1);
+                  const hasFullMarkets = detailMode || !!detailedEventIds[ev.id];
+                  const extraCount = hasFullMarkets ? Math.max(0, groups.length - 1) : (groups.length > 0 ? 1 : 0);
                   const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
                   return (
                     <>
@@ -1093,7 +1154,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold transition hover:brightness-110"
                       style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}
                     >
-                      +{extraCount} mercados <ChevronDown size={14} />
+                      {hasFullMarkets ? `+${extraCount} mercados` : 'Ver todos os mercados'} <ChevronDown size={14} />
                     </button>
                   )}
 
@@ -1121,7 +1182,14 @@ const Bets = ({ tag }: BetsPageProps) => {
                   Voltar aos jogos
                 </button>
                 {selectedEvent ? (
-                  <div className="max-w-2xl mx-auto">{renderEvent(selectedEvent, true)}</div>
+                  <div className="max-w-2xl mx-auto space-y-3">
+                    {loadingDetailEventId === selectedEvent.id && (
+                      <div className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold" style={{ background: `${accent}16`, color: accent, border: `1px solid ${accent}33` }}>
+                        <Loader2 className="animate-spin" size={16} /> Carregando mercados...
+                      </div>
+                    )}
+                    {renderEvent(selectedEvent, true)}
+                  </div>
                 ) : (
                   <div className="text-center py-16" style={{ color: muted }}>
                     Evento não encontrado.
@@ -1140,14 +1208,14 @@ const Bets = ({ tag }: BetsPageProps) => {
               )}
 
               {/* Hot events — always shown on top, ignore filter */}
-              {hotEvents.length > 0 && (
+              {displayedHotEvents.length > 0 && (
                 <section className="space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🔥</span>
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
                     <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{hotEvents.map(ev => renderEvent(ev))}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{displayedHotEvents.map(ev => renderEvent(ev))}</div>
                 </section>
               )}
 
@@ -1208,7 +1276,7 @@ const Bets = ({ tag }: BetsPageProps) => {
               })()}
 
               {/* Grouped events */}
-              {grouped.map((g, i) => (
+              {displayedGrouped.map((g, i) => (
                 <section key={g.cat?.id || g.label || `unc-${i}`} className="space-y-3">
                   <div className="flex items-center gap-2">
                     {g.cat?.icon && <span>{g.cat.icon}</span>}
@@ -1221,6 +1289,17 @@ const Bets = ({ tag }: BetsPageProps) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{g.items.map(ev => renderEvent(ev))}</div>
                 </section>
               ))}
+
+              {canShowMoreEvents && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleEventLimit(v => v + 18)}
+                  className="w-full py-3 rounded-xl text-sm font-black uppercase tracking-wider transition hover:brightness-110"
+                  style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
+                >
+                  Ver mais jogos ({totalEventCount - visibleEventCount})
+                </button>
+              )}
 
               {hotEvents.length === 0 && grouped.length === 0 && events.length > 0 && (
                 <div className="text-center py-16" style={{ color: muted }}>
@@ -1413,21 +1492,25 @@ const Bets = ({ tag }: BetsPageProps) => {
       </main>
 
       {shareWager && (
-        <ShareTicket
-          open={!!shareWager}
-          onClose={() => setShareWager(null)}
-          data={shareWager}
-          config={cfg.ticket || {}}
-        />
+        <Suspense fallback={null}>
+          <ShareTicket
+            open={!!shareWager}
+            onClose={() => setShareWager(null)}
+            data={shareWager}
+            config={cfg.ticket || {}}
+          />
+        </Suspense>
       )}
 
       {shareMultiple && (
-        <ShareTicketMultiple
-          open={!!shareMultiple}
-          onClose={() => setShareMultiple(null)}
-          data={shareMultiple}
-          config={cfg.ticket || {}}
-        />
+        <Suspense fallback={null}>
+          <ShareTicketMultiple
+            open={!!shareMultiple}
+            onClose={() => setShareMultiple(null)}
+            data={shareMultiple}
+            config={cfg.ticket || {}}
+          />
+        </Suspense>
       )}
 
       {/* Bet slip */}

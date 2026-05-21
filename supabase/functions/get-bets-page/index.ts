@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { tag } = await req.json();
+    const { tag, detailEventId } = await req.json();
     if (!tag || typeof tag !== "string") {
       return new Response(JSON.stringify({ error: "tag required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -40,53 +40,75 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: events, error: evErr } = await supabase
+    let evQuery = supabase
       .from("bet_events")
       .select("id,title,subtitle,category,category_id,image_url,home_image_url,away_image_url,starts_at,closes_at,status,payout_mode,payout_case_id,payout_case_qty_per_unit,min_bet,max_bet,max_bets_per_user,position,winning_outcome_id,is_hot,competition_id,competition_name,competition_slug,competition_country")
       .eq("bets_config_id", cfg.id)
       .in("status", ["scheduled", "open", "closed", "resolved"])
       .order("position", { ascending: true })
       .order("created_at", { ascending: false });
+    if (detailEventId && typeof detailEventId === "string") evQuery = evQuery.eq("id", detailEventId);
+    const { data: events, error: evErr } = await evQuery;
     if (evErr) throw evErr;
 
     const eventIds = (events || []).map((e: any) => e.id);
+    const isDetailLoad = !!(detailEventId && typeof detailEventId === "string");
     let outcomes: any[] = [];
     let markets: any[] = [];
     if (eventIds.length) {
-      // Paginate outcomes (Supabase default limit is 1000 per query)
       const PAGE = 1000;
-      let from = 0;
-      while (true) {
-        const { data: outs, error: outErr } = await supabase
-          .from("bet_outcomes")
-          .select("id, event_id, market_id, label, odd, position, is_winner")
-          .in("event_id", eventIds)
-          .order("position", { ascending: true })
-          .order("id", { ascending: true })
-          .range(from, from + PAGE - 1);
-        if (outErr) throw outErr;
-        const batch = outs || [];
-        outcomes.push(...batch);
-        if (batch.length < PAGE) break;
-        from += PAGE;
-        if (from > 100000) break; // safety
-      }
-
-      // Paginate markets as well
+      // Paginate markets first so the initial page can return only the principal odds per event.
       let mFrom = 0;
       while (true) {
-        const { data: mks } = await supabase
+        const { data: mks, error: mkErr } = await supabase
           .from("bet_markets")
           .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
           .in("event_id", eventIds)
           .order("position", { ascending: true })
           .order("id", { ascending: true })
           .range(mFrom, mFrom + PAGE - 1);
+        if (mkErr) throw mkErr;
         const batch = mks || [];
         markets.push(...batch);
         if (batch.length < PAGE) break;
         mFrom += PAGE;
         if (mFrom > 50000) break;
+      }
+
+      let outcomeQueryIds: string[] | null = null;
+      if (!isDetailLoad) {
+        const byEvent = new Map<string, any[]>();
+        for (const mk of markets) byEvent.set(mk.event_id, [...(byEvent.get(mk.event_id) || []), mk]);
+        const isMainMarket = (title = "") => {
+          const t = title.toLowerCase();
+          return t.includes("match winner") || t.includes("vencedor") || t.includes("resultado") || t === "1x2" || t.includes("1x2");
+        };
+        outcomeQueryIds = [];
+        for (const mks of byEvent.values()) {
+          const main = mks.find((m) => isMainMarket(m.title)) || mks[0];
+          if (main?.id) outcomeQueryIds.push(main.id);
+        }
+        const keep = new Set(outcomeQueryIds);
+        markets = markets.filter((m) => keep.has(m.id));
+      }
+
+      let from = 0;
+      while (true) {
+        let outQuery = supabase
+          .from("bet_outcomes")
+          .select("id, event_id, market_id, label, odd, position, is_winner")
+          .order("position", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, from + PAGE - 1);
+        outQuery = outcomeQueryIds?.length ? outQuery.in("market_id", outcomeQueryIds) : outQuery.in("event_id", eventIds);
+        if (!isDetailLoad && !outcomeQueryIds?.length) outQuery = outQuery.lte("position", 3);
+        const { data: outs, error: outErr } = await outQuery;
+        if (outErr) throw outErr;
+        const batch = outs || [];
+        outcomes.push(...batch);
+        if (batch.length < PAGE) break;
+        from += PAGE;
+        if (from > 100000) break; // safety
       }
     }
 
