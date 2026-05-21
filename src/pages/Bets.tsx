@@ -1826,7 +1826,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   <button onClick={clearTicket} className="px-3 py-2.5 rounded-xl font-bold text-sm" style={{ background: '#00000055', color: text, border: `1px solid ${text}22` }}>
                     Limpar
                   </button>
-                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 2 || !!ticketBlockReason}
+                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 1 || !!ticketBlockReason}
                     className="flex-1 py-2.5 rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
                     style={{ background: accent, color: '#000' }}>
                     {placingTicket ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
