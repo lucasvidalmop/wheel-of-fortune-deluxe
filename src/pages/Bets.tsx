@@ -174,6 +174,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   // my bets
   const [tab, setTab] = useState<'events' | 'mine'>('events');
   const [categoryFilter, setCategoryFilter] = useState<string>('all'); // 'all' | category_id | 'uncategorized'
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
