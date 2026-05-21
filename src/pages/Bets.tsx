@@ -1016,12 +1016,11 @@ const Bets = ({ tag }: BetsPageProps) => {
                 if (visibleChips.length <= 1) return null;
                 return (
                   <div className="relative -mx-3">
+                    <style>{`.bets-chips-scroll::-webkit-scrollbar{display:none}`}</style>
                     <div
-                      className="flex gap-2 overflow-x-auto px-3 py-2 scroll-smooth snap-x"
+                      className="bets-chips-scroll flex gap-2 overflow-x-auto px-3 py-2 scroll-smooth snap-x"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                      ref={(el) => { if (el) (el as any).style.setProperty('--hide-sb', '1'); }}
                     >
-                      <style>{`.bets-chips::-webkit-scrollbar{display:none}`}</style>
                       {visibleChips.map(({ key, label, icon }) => {
                         const active = categoryFilter === key;
                         return (
@@ -1037,6 +1036,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         );
                       })}
                     </div>
+                    <div aria-hidden className="pointer-events-none absolute top-0 right-0 h-full w-8" style={{ background: `linear-gradient(90deg, transparent, ${bg})` }} />
                   </div>
                 );
               })()}
