@@ -194,8 +194,9 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     if (editingMarkets.length === 0) { toast.error('Adicione ao menos 1 mercado'); return; }
     for (const m of editingMarkets) {
       if (!m.title.trim()) { toast.error('Cada mercado precisa de um título'); return; }
-      if (m.outcomes.length < 2) { toast.error(`Mercado "${m.title}" precisa de no mínimo 2 resultados`); return; }
-      if (m.outcomes.some(o => !o.label.trim() || !(o.odd > 1))) {
+      // Allow 0 outcomes (API will populate later). If any outcomes are present, require ≥2 and valid.
+      if (m.outcomes.length > 0 && m.outcomes.length < 2) { toast.error(`Mercado "${m.title}" precisa de no mínimo 2 resultados (ou deixe vazio para a API preencher)`); return; }
+      if (m.outcomes.length > 0 && m.outcomes.some(o => !o.label.trim() || !(o.odd > 1))) {
         toast.error(`Mercado "${m.title}": cada resultado precisa de label e odd > 1`); return;
       }
     }
