@@ -803,7 +803,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       {visibleGroups.map((g, gi) => {
                     const mk = g.market;
                     const mkClosed = mk
-                      ? (mk.status !== 'open' || isBetDateTimeExpired(mk.closes_at))
+                      ? (closed || mk.status !== 'open' || isBetDateTimeExpired(mk.closes_at))
                       : closed;
                     const mkCase = mk?.payout_case_id ? casesById[mk.payout_case_id] : null;
                     const isPrincipal = gi === 0;
