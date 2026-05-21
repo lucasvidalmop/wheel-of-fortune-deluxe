@@ -350,6 +350,49 @@ const Bets = ({ tag }: BetsPageProps) => {
     })();
   }, [tag]);
 
+  // ── Track pageview (odds page) ──
+  useEffect(() => {
+    if (!page?.ownerId) return;
+    const sessionId = (() => {
+      let sid = sessionStorage.getItem('pv_session');
+      if (!sid) { sid = crypto.randomUUID(); sessionStorage.setItem('pv_session', sid); }
+      return sid;
+    })();
+    const startTime = Date.now();
+
+    supabase.functions.invoke('track-pageview', {
+      body: {
+        session_id: sessionId,
+        slug: tag,
+        owner_id: page.ownerId,
+        referrer: document.referrer || null,
+        page_url: window.location.href,
+        page_type: 'odds',
+      },
+    }).catch(() => {});
+
+    const durationInterval = setInterval(() => {
+      const seconds = Math.round((Date.now() - startTime) / 1000);
+      supabase.functions.invoke('track-pageview', {
+        body: { session_id: sessionId, action: 'update_duration', duration_seconds: seconds },
+      }).catch(() => {});
+    }, 120000);
+
+    const handleUnload = () => {
+      const seconds = Math.round((Date.now() - startTime) / 1000);
+      navigator.sendBeacon?.(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-pageview`,
+        JSON.stringify({ session_id: sessionId, action: 'update_duration', duration_seconds: seconds })
+      );
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      clearInterval(durationInterval);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [page?.ownerId, tag]);
+
   // sync selectedEventId with browser back/forward
   useEffect(() => {
     const onPop = () => {
