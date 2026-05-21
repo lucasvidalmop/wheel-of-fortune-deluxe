@@ -151,7 +151,8 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
       const shareText = isWin
         ? `🎉 Acabei de ganhar ${data.payout} ${data.coinName} em "${data.eventTitle}"!`
         : `Olha minha aposta em "${data.eventTitle}" — odd ${data.odd.toFixed(2)}`;
-      const fullText = ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText;
+      const copyLine = data.copyUrl ? `\n\n👉 Copie este bilhete: ${data.copyUrl}` : '';
+      const fullText = (ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText) + copyLine;
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], text: fullText, title: brandName || 'Meu bilhete' });
