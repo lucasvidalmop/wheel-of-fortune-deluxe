@@ -335,6 +335,20 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     [events],
   );
 
+  const filteredEvents = React.useMemo(() => {
+    const q = eventsSearch.trim().toLowerCase();
+    return sortedEvents.filter((ev: any) => {
+      if (eventsSourceFilter === 'api' && !ev.external_fixture_id) return false;
+      if (eventsSourceFilter === 'manual' && ev.external_fixture_id) return false;
+      if (!q) return true;
+      const hay = [
+        ev.title, ev.subtitle, ev.category,
+        ev.competition_name, ev.competition_country,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }, [sortedEvents, eventsSourceFilter, eventsSearch]);
+
   const moveHotEvent = async (eventId: string, dir: -1 | 1) => {
     const hots = sortedEvents.filter(e => e.is_hot);
     const idx = hots.findIndex(e => e.id === eventId);
