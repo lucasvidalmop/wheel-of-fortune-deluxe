@@ -1015,21 +1015,28 @@ const Bets = ({ tag }: BetsPageProps) => {
                 const visibleChips = FIXED.filter(c => c.key === 'all' || hasMatches(c.key));
                 if (visibleChips.length <= 1) return null;
                 return (
-                  <div className="flex flex-wrap gap-2 sticky top-[108px] z-10 py-2 -mx-3 px-3 backdrop-blur-md" style={{ background: `${bg}ee`, borderBottom: `1px solid ${accent}22` }}>
-                    {visibleChips.map(({ key, label, icon }) => {
-                      const active = categoryFilter === key;
-                      return (
-                        <button key={key} onClick={() => setCategoryFilter(key)}
-                          className="px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition whitespace-nowrap"
-                          style={{
-                            background: active ? accent : '#00000055',
-                            color: active ? '#000' : text,
-                            border: `1px solid ${active ? accent : accent + '55'}`,
-                          }}>
-                          {icon ? `${icon} ` : ''}{label}
-                        </button>
-                      );
-                    })}
+                  <div className="relative -mx-3">
+                    <style>{`.bets-chips-scroll::-webkit-scrollbar{display:none}`}</style>
+                    <div
+                      className="bets-chips-scroll flex gap-2 overflow-x-auto px-3 py-2 scroll-smooth snap-x"
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                      {visibleChips.map(({ key, label, icon }) => {
+                        const active = categoryFilter === key;
+                        return (
+                          <button key={key} onClick={() => setCategoryFilter(key)}
+                            className="shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition whitespace-nowrap"
+                            style={{
+                              background: active ? accent : '#00000055',
+                              color: active ? '#000' : text,
+                              border: `1px solid ${active ? accent : accent + '55'}`,
+                            }}>
+                            {icon ? `${icon} ` : ''}{label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div aria-hidden className="pointer-events-none absolute top-0 right-0 h-full w-8" style={{ background: `linear-gradient(90deg, transparent, ${bg})` }} />
                   </div>
                 );
               })()}
