@@ -1342,15 +1342,14 @@ const Bets = ({ tag }: BetsPageProps) => {
               };
               const outcome = (page?.outcomes || []).find((o: OutcomeRow) => o.id === w.outcome_id);
               const canShare = cfg.ticketEnabled !== false && (w.status === 'won' || w.status === 'lost' || w.status === 'pending');
-              const openShare = () => {
+              const openShare = async () => {
                 if (!ev) return;
                 const payout = w.status === 'won'
                   ? w.payout_coins
                   : w.status === 'lost'
                     ? 0
                     : Math.round(w.amount_coins * Number(w.odd_snapshot));
-                const copyHash = encodeCopy([{ e: w.event_id, o: w.outcome_id }]);
-                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
+                const copyUrl = await createShortShareLink(tag, [{ e: w.event_id, o: w.outcome_id }]);
                 setShareWager({
                   userId: authed?.account_id || authed?.id,
                   wagerCode: w.public_code,
