@@ -445,6 +445,8 @@ const Bets = ({ tag }: BetsPageProps) => {
     if (!slip || !authed) return;
     const amt = Math.floor(Number(amount));
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
+    if (amt < SIMPLE_MIN_BET) { toast.error(`Valor mínimo de aposta: ${SIMPLE_MIN_BET} ${coinName}`); return; }
+    if (amt > SIMPLE_MAX_BET) { toast.error(`Valor máximo de aposta: ${SIMPLE_MAX_BET} ${coinName}`); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
     setPlacing(true);
     try {
