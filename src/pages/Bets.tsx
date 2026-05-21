@@ -1444,7 +1444,7 @@ const Bets = ({ tag }: BetsPageProps) => {
 
               {hotEvents.length === 0 && grouped.length === 0 && events.length > 0 && (
                 <div className="text-center py-16" style={{ color: muted }}>
-                  Nenhum evento nesta categoria.
+                  {normSearch ? `Nenhum evento encontrado para "${searchQuery}".` : 'Nenhum evento nesta categoria.'}
                 </div>
               )}
             </div>
