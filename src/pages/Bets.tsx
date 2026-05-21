@@ -581,7 +581,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
     // coerência: bloquear combinações conflitantes/redundantes no mesmo fixture
     const check = canAddSelection(
-      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle, outcomeLabel: s.outcomeLabel, eventTitle: s.eventTitle })),
+      ticketDraftProjection,
       { eventId: event.id, marketId: outcome.market_id, marketTitle, outcomeLabel: outcome.label, eventTitle: event.title },
     );
     if (!check.ok) { toast.error(check.reason || 'Combinação não permitida'); return; }
@@ -643,9 +643,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
     if (ticketBlockReason) { toast.error(ticketBlockReason); return; }
-    const coherence = validateTicketCoherence(
-      ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle, outcomeLabel: s.outcomeLabel, eventTitle: s.eventTitle })),
-    );
+    const coherence = validateTicketCoherence(ticketDraftProjection);
     if (!coherence.ok) { toast.error(coherence.reason || 'Combinação não permitida'); return; }
     setPlacingTicket(true);
     try {
@@ -1113,13 +1111,13 @@ const Bets = ({ tag }: BetsPageProps) => {
                             const isWinner = resolvedFlag && o.is_winner;
                             const isLoser = resolvedFlag && !o.is_winner;
                             const stat = outcomeStats[o.id] || { count: 0, total: 0 };
-                            const inTicket = ticketDraft.some(s => s.outcomeId === o.id);
+                            const inTicket = ticketDraftOutcomeIds.has(o.id);
                             const oMarketKey = o.market_id || 'main';
-                            const sameMarketExists = ticketDraft.some(s => s.eventId === ev.id && (s.marketId || 'main') === oMarketKey);
+                            const sameMarketExists = ticketDraftMarketKeys.has(`${ev.id}|${oMarketKey}`);
                             const oMarketTitle = mk?.title || 'Resultado Final';
-                            const coherence = (!inTicket && !sameMarketExists && ticketDraft.length > 0)
+                            const coherence = (!inTicket && !sameMarketExists && ticketDraftProjection.length > 0)
                               ? canAddSelection(
-                                  ticketDraft.map(s => ({ eventId: s.eventId, marketId: s.marketId, marketTitle: s.marketTitle, outcomeLabel: s.outcomeLabel, eventTitle: s.eventTitle })),
+                                  ticketDraftProjection,
                                   { eventId: ev.id, marketId: o.market_id, marketTitle: oMarketTitle, outcomeLabel: o.label, eventTitle: ev.title },
                                 )
                               : { ok: true as const, reason: undefined as string | undefined };
