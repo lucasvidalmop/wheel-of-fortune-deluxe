@@ -658,7 +658,7 @@ const Bets = ({ tag }: BetsPageProps) => {
         <form onSubmit={handleAuth} className="relative z-10 w-full max-w-sm rounded-2xl p-6 space-y-5 border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
           <div className="text-center space-y-2">
             {cfg.logoUrl
-              ? <img src={cfg.logoUrl} alt="logo" className="max-h-20 mx-auto object-contain" />
+              ? <img src={optimizedImage(cfg.logoUrl, { width: 320, quality: 80 })} alt="logo" decoding="async" className="max-h-20 mx-auto object-contain" />
               : <div className="text-4xl">🎯</div>}
             <h1 className="text-xl font-bold" style={{ color: titleColor }}>{loginTitle}</h1>
             <p className="text-sm" style={{ color: subtitleColor }}>{loginSubtitle}</p>
