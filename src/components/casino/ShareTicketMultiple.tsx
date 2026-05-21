@@ -327,6 +327,7 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
           <X size={14} /> Fechar
         </button>
       </div>
+      </div>
     </div>
   );
 }
