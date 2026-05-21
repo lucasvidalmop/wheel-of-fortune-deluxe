@@ -82,19 +82,28 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         const eventList = (evs || []) as BetEvent[];
         const eventIds = eventList.map(e => e.id);
 
-        // Scope outcomes/markets to loaded events instead of full owner scan (was returning ~14k outcomes).
-        const [{ data: outs }, { data: mks }, { data: catz }] = await Promise.all([
-          eventIds.length
-            ? supabase.from('bet_outcomes').select('*').in('event_id', eventIds).order('position')
-            : Promise.resolve({ data: [] as any[] }),
-          eventIds.length
-            ? supabase.from('bet_markets').select('*').in('event_id', eventIds).order('position')
-            : Promise.resolve({ data: [] as any[] }),
+        // Scope outcomes/markets to loaded events. Chunk + raise limit to bypass
+        // PostgREST's default 1000-row cap (football fixtures have ~60 outcomes each).
+        const chunk = <T,>(arr: T[], size: number) => {
+          const out: T[][] = [];
+          for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+          return out;
+        };
+        const eventChunks = eventIds.length ? chunk(eventIds, 50) : [];
+        const [outsArrays, mksArrays, { data: catz }] = await Promise.all([
+          Promise.all(eventChunks.map(ids =>
+            supabase.from('bet_outcomes').select('*').in('event_id', ids).order('position').limit(50000)
+          )),
+          Promise.all(eventChunks.map(ids =>
+            supabase.from('bet_markets').select('*').in('event_id', ids).order('position').limit(10000)
+          )),
           supabase.from('bet_categories').select('*').eq('bets_config_id', cfg.id).order('position'),
         ]);
+        const outs = outsArrays.flatMap(r => (r.data || []) as any[]);
+        const mks = mksArrays.flatMap(r => (r.data || []) as any[]);
         setEvents(eventList);
-        setOutcomes((outs || []) as BetOutcome[]);
-        setMarkets((mks || []) as BetMarket[]);
+        setOutcomes(outs as BetOutcome[]);
+        setMarkets(mks as BetMarket[]);
         setCategories((catz || []) as BetCategory[]);
       }
     } catch (e: any) {
