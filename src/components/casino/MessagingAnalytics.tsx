@@ -47,69 +47,81 @@ export default function MessagingAnalytics({ ownerId }: Props) {
 
   const fetchAll = async () => {
     setLoading(true);
-    const PAGE = 1000;
+    try {
+      const PAGE = 1000;
+      const MAX_PAGES = 5; // cap em 5k linhas por tabela para evitar gargalo
+      // Cutoff server-side: a UI permite no máximo 90d (exceto "all"). Limitamos sempre a 90d para reduzir tráfego.
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 90);
+      const cutoffIso = cutoff.toISOString();
 
-    const fetchPaginated = async (table: string, ownerFilter: 'owner_id' | 'metadata_owner' | 'none') => {
-      let all: any[] = [];
-      let from = 0;
-      while (true) {
-        let q = (supabase as any)
-          .from(table)
-          .select('*')
-          .order('created_at', { ascending: false })
-          .range(from, from + PAGE - 1);
-        if (ownerFilter === 'owner_id') {
-          q = q.eq('owner_id', ownerId);
+      const fetchPaginated = async (table: string, ownerFilter: 'owner_id' | 'metadata_owner' | 'none', cols: string) => {
+        let all: any[] = [];
+        let from = 0;
+        for (let p = 0; p < MAX_PAGES; p++) {
+          let q = (supabase as any)
+            .from(table)
+            .select(cols)
+            .gte('created_at', cutoffIso)
+            .order('created_at', { ascending: false })
+            .range(from, from + PAGE - 1);
+          if (ownerFilter === 'owner_id') q = q.eq('owner_id', ownerId);
+          const { data, error } = await q;
+          if (error) { console.warn(`[MessagingAnalytics] ${table}:`, error.message); break; }
+          if (!data || data.length === 0) break;
+          const filteredData = ownerFilter === 'metadata_owner'
+            ? data.filter((row: any) => row?.metadata?.owner_id === ownerId)
+            : data;
+          all = all.concat(filteredData);
+          if (data.length < PAGE) break;
+          from += PAGE;
         }
-        const { data } = await q;
-        if (!data || data.length === 0) break;
-        const filteredData = ownerFilter === 'metadata_owner'
-          ? data.filter((row: any) => row?.metadata?.owner_id === ownerId)
-          : data;
-        all = all.concat(filteredData);
-        if (data.length < PAGE) break;
-        from += PAGE;
+        return all;
+      };
+
+      const smsCols = 'id,created_at,status,recipient_phone,recipient_name,message,error_message,batch_id';
+      const waCols = 'id,created_at,status,recipient_phone,recipient_name,message,error_message,batch_id';
+      const emailCols = 'id,created_at,status,recipient_email,template_name,error_message,message_id,metadata';
+
+      const [smsTwilio, smsMb, smsCs, wa1, wa2, emails] = await Promise.all([
+        fetchPaginated('sms_message_log', 'owner_id', smsCols),
+        fetchPaginated('sms_mb_message_log', 'owner_id', smsCols),
+        fetchPaginated('sms_cs_message_log', 'owner_id', smsCols),
+        fetchPaginated('whatsapp_message_log', 'owner_id', waCols),
+        fetchPaginated('whatsapp2_message_log', 'owner_id', waCols),
+        fetchPaginated('email_send_log', 'metadata_owner', emailCols),
+      ]);
+      const sms = [...smsTwilio, ...smsMb, ...smsCs].sort(
+        (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const wa = [...wa1, ...wa2].sort(
+        (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      const emailDedupMap = new Map<string, any>();
+      for (const e of emails) {
+        const key = e.message_id || e.id;
+        if (!emailDedupMap.has(key)) emailDedupMap.set(key, e);
       }
-      return all;
-    };
+      const emailsMapped: LogEntry[] = Array.from(emailDedupMap.values()).map((e: any) => ({
+        id: e.id,
+        created_at: e.created_at,
+        status: e.status === 'sent' ? 'sent' : 'failed',
+        recipient_phone: e.recipient_email,
+        recipient_name: e.template_name || '',
+        message: e.template_name || '',
+        error_message: e.error_message || undefined,
+        batch_id: undefined,
+      }));
 
-    const [smsTwilio, smsMb, smsCs, wa1, wa2, emails] = await Promise.all([
-      fetchPaginated('sms_message_log', 'owner_id'),
-      fetchPaginated('sms_mb_message_log', 'owner_id'),
-      fetchPaginated('sms_cs_message_log', 'owner_id'),
-      fetchPaginated('whatsapp_message_log', 'owner_id'),
-      fetchPaginated('whatsapp2_message_log', 'owner_id'),
-      fetchPaginated('email_send_log', 'metadata_owner'),
-    ]);
-    const sms = [...smsTwilio, ...smsMb, ...smsCs].sort(
-      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-    const wa = [...wa1, ...wa2].sort(
-      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    // Deduplicate emails by message_id (latest status per message wins; data is ordered DESC)
-    const emailDedupMap = new Map<string, any>();
-    for (const e of emails) {
-      const key = e.message_id || e.id;
-      if (!emailDedupMap.has(key)) emailDedupMap.set(key, e);
+      setSmsLogs(sms);
+      setWaLogs(wa);
+      setEmailLogs(emailsMapped);
+    } catch (e: any) {
+      toast.error('Erro ao carregar analytics: ' + (e?.message || 'desconhecido'));
+    } finally {
+      setLoading(false);
     }
-    const emailsMapped: LogEntry[] = Array.from(emailDedupMap.values()).map((e: any) => ({
-      id: e.id,
-      created_at: e.created_at,
-      // Treat 'sent' as success; everything else (pending/failed/dlq/suppressed/bounced) as not-sent for the success rate
-      status: e.status === 'sent' ? 'sent' : 'failed',
-      recipient_phone: e.recipient_email,
-      recipient_name: e.template_name || '',
-      message: e.template_name || '',
-      error_message: e.error_message || undefined,
-      batch_id: undefined,
-    }));
-
-    setSmsLogs(sms);
-    setWaLogs(wa);
-    setEmailLogs(emailsMapped);
-    setLoading(false);
   };
 
   useEffect(() => { if (ownerId) fetchAll(); }, [ownerId]);
