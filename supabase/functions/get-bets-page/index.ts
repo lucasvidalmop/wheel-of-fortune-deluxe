@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
           .select("id, event_id, market_id, label, odd, position, is_winner")
           .in("event_id", eventIds)
           .order("position", { ascending: true })
+          .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
         if (outErr) throw outErr;
         const batch = outs || [];
@@ -79,6 +80,7 @@ Deno.serve(async (req) => {
           .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
           .in("event_id", eventIds)
           .order("position", { ascending: true })
+          .order("id", { ascending: true })
           .range(mFrom, mFrom + PAGE - 1);
         const batch = mks || [];
         markets.push(...batch);
@@ -137,8 +139,8 @@ Deno.serve(async (req) => {
       coinName: cfg.coin_name || "Coins",
       coinIconUrl: cfg.coin_icon_url || "",
       events: events || [],
-      outcomes,
-      markets,
+      outcomes: Array.from(new Map(outcomes.map((o: any) => [o.id, o])).values()),
+      markets: Array.from(new Map(markets.map((m: any) => [m.id, m])).values()),
       categories: catz || [],
       cases,
       wagerCounts,
