@@ -1448,7 +1448,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             <div className="relative flex items-center justify-center mb-5 pt-1">
               <div className="flex w-full items-center justify-center min-w-0 px-9">
                 {cfg.logoUrl ? (
-                  <img src={cfg.logoUrl} alt="" className="h-20 w-full max-w-[220px] object-contain" />
+                  <img src={optimizedImage(cfg.logoUrl, { width: 440, quality: 80 })} alt="" loading="lazy" decoding="async" className="h-20 w-full max-w-[220px] object-contain" />
                 ) : (
                   <span className="font-black text-base truncate" style={{ color: accent }}>{cfg.title || 'Apostas'}</span>
                 )}
