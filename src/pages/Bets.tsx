@@ -624,15 +624,21 @@ const Bets = ({ tag }: BetsPageProps) => {
             return e.category_id === categoryFilter;
           };
 
-          // Prioridade: abertos (apostáveis) primeiro, depois agendados, encerrados e por fim finalizados/cancelados
+          // Prioridade: abertos COM odds carregadas → abertos sem odds → agendados → expirados → encerrados → finalizados → cancelados
+          const hasOdds = (e: EventRow): boolean => {
+            const outs = outcomesByEvent[e.id] || [];
+            return outs.length > 0;
+          };
           const statusRank = (e: EventRow): number => {
             const expired = isBetDateTimeExpired(e.closes_at);
-            if (e.status === 'open' && !expired) return 0;
-            if (e.status === 'scheduled') return 1;
-            if (e.status === 'open' && expired) return 2;
-            if (e.status === 'closed') return 3;
-            if (e.status === 'resolved') return 4;
-            return 5; // cancelled / outros
+            const odds = hasOdds(e);
+            if (e.status === 'open' && !expired && odds) return 0;
+            if (e.status === 'open' && !expired && !odds) return 1;
+            if (e.status === 'scheduled') return 2;
+            if (e.status === 'open' && expired) return 3;
+            if (e.status === 'closed') return 4;
+            if (e.status === 'resolved') return 5;
+            return 6;
           };
           const sortByStatus = (arr: EventRow[]) =>
             [...arr].sort((a, b) => {
@@ -640,6 +646,7 @@ const Bets = ({ tag }: BetsPageProps) => {
               if (ra !== rb) return ra - rb;
               return (a.position ?? 0) - (b.position ?? 0);
             });
+
 
           const filtered = sortByStatus(nonHot.filter(matchesFilter));
 
