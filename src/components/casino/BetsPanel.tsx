@@ -334,6 +334,23 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     ),
     [events],
   );
+  const [eventsSourceFilter, setEventsSourceFilter] = useState<'all' | 'manual' | 'api'>('all');
+  const [eventsSearch, setEventsSearch] = useState('');
+
+
+  const filteredEvents = React.useMemo(() => {
+    const q = eventsSearch.trim().toLowerCase();
+    return sortedEvents.filter((ev: any) => {
+      if (eventsSourceFilter === 'api' && !ev.external_fixture_id) return false;
+      if (eventsSourceFilter === 'manual' && ev.external_fixture_id) return false;
+      if (!q) return true;
+      const hay = [
+        ev.title, ev.subtitle, ev.category,
+        ev.competition_name, ev.competition_country,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }, [sortedEvents, eventsSourceFilter, eventsSearch]);
 
   const moveHotEvent = async (eventId: string, dir: -1 | 1) => {
     const hots = sortedEvents.filter(e => e.is_hot);
@@ -716,8 +733,37 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               ⚽ Importador de Football
             </button>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+              {([['all', 'Todos'], ['manual', 'Manuais'], ['api', 'API']] as const).map(([k, label]) => {
+                const active = eventsSourceFilter === k;
+                const count = k === 'all'
+                  ? events.length
+                  : k === 'api'
+                    ? events.filter((e: any) => e.external_fixture_id).length
+                    : events.filter((e: any) => !e.external_fixture_id).length;
+                return (
+                  <button key={k} onClick={() => setEventsSourceFilter(k)}
+                    className={`px-3 py-1.5 font-medium transition ${active ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/70'}`}>
+                    {label} ({count})
+                  </button>
+                );
+              })}
+            </div>
+            <input
+              type="text"
+              value={eventsSearch}
+              onChange={e => setEventsSearch(e.target.value)}
+              placeholder="🔎 Pesquisar eventos..."
+              className="flex-1 min-w-[200px] px-3 py-1.5 rounded-lg bg-muted text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            {eventsSearch && (
+              <button onClick={() => setEventsSearch('')} className="px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground">Limpar</button>
+            )}
+          </div>
           {events.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento criado ainda.</p>}
-          {sortedEvents.map((ev, evIndex) => {
+          {events.length > 0 && filteredEvents.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento encontrado com esses filtros.</p>}
+          {filteredEvents.map((ev, evIndex) => {
             const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
             const c = ev.payout_case_id ? cases.find(x => x.id === ev.payout_case_id) : null;
             const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
