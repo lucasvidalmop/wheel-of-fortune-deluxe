@@ -204,6 +204,8 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myTickets, setMyTickets] = useState<TicketRow[]>([]);
   const [myTicketSelections, setMyTicketSelections] = useState<TicketSelectionRow[]>([]);
   const [visibleEventLimit, setVisibleEventLimit] = useState(18);
+  const [detailedEventIds, setDetailedEventIds] = useState<Record<string, boolean>>({});
+  const [loadingDetailEventId, setLoadingDetailEventId] = useState<string | null>(null);
 
   // load page
   useEffect(() => {
@@ -314,6 +316,46 @@ const Bets = ({ tag }: BetsPageProps) => {
   useEffect(() => {
     setVisibleEventLimit(18);
   }, [categoryFilter]);
+
+  useEffect(() => {
+    if (!selectedEventId || !page?.found || detailedEventIds[selectedEventId]) return;
+    let cancelled = false;
+    setLoadingDetailEventId(selectedEventId);
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-bets-page', { body: { tag, detailEventId: selectedEventId } });
+        if (error) throw error;
+        if (cancelled || !data?.found) return;
+        setPage((prev: any) => {
+          if (!prev) return prev;
+          const mergeById = (a: any[] = [], b: any[] = []) => Array.from(new Map([...a, ...b].map(x => [x.id, x])).values());
+          return {
+            ...prev,
+            events: mergeById(prev.events, data.events),
+            markets: [
+              ...(prev.markets || []).filter((m: MarketRow) => m.event_id !== selectedEventId),
+              ...(data.markets || []),
+            ],
+            outcomes: [
+              ...(prev.outcomes || []).filter((o: OutcomeRow) => o.event_id !== selectedEventId),
+              ...(data.outcomes || []),
+            ],
+            cases: mergeById(prev.cases, data.cases),
+            wagerCounts: { ...(prev.wagerCounts || {}), ...(data.wagerCounts || {}) },
+            outcomeStats: { ...(prev.outcomeStats || {}), ...(data.outcomeStats || {}) },
+          };
+        });
+        if (data?.wagerCounts) setWagerCounts(prev => ({ ...prev, ...data.wagerCounts }));
+        if (data?.outcomeStats) setOutcomeStats(prev => ({ ...prev, ...data.outcomeStats }));
+        setDetailedEventIds(prev => ({ ...prev, [selectedEventId]: true }));
+      } catch {
+        toast.error('Erro ao carregar mercados do jogo');
+      } finally {
+        if (!cancelled) setLoadingDetailEventId(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedEventId, page?.found, detailedEventIds, tag]);
 
   // SEO/pixels injection
   useEffect(() => {
