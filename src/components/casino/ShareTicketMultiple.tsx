@@ -159,7 +159,7 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
       <div className="w-full max-w-sm my-4 sm:my-8" onClick={e => e.stopPropagation()}>
         <div
           ref={cardRef}
-          className="relative rounded-2xl overflow-hidden p-6"
+          className="relative rounded-2xl overflow-hidden p-4"
           style={{
             background: `linear-gradient(160deg, ${bgFrom} 0%, ${bgTo} 100%)`,
             color: textColor,
@@ -174,10 +174,10 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
           />
 
           {/* Header */}
-          <div className="relative flex items-center justify-center mb-6 pt-2">
+          <div className="relative flex items-center justify-center mb-3 pt-1">
             <div className="flex w-full items-center justify-center min-w-0 px-8">
               {config.logoUrl ? (
-                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-28 w-full max-w-[280px] object-contain" />
+                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-14 w-full max-w-[180px] object-contain" />
               ) : brandName ? (
                 <span className="font-black text-base tracking-tight truncate" style={{ color: accent }}>
                   {brandName}
@@ -185,16 +185,16 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
               ) : null}
             </div>
             <div
-              className="absolute right-0 top-0 text-[10px] font-bold tracking-[0.2em] px-2 py-1 rounded-full"
+              className="absolute right-0 top-0 text-[9px] font-bold tracking-[0.2em] px-2 py-0.5 rounded-full"
               style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
             >
               MÚLTIPLA · {data.selections.length}
             </div>
           </div>
 
-          <div className="relative text-center mb-4">
+          <div className="relative text-center mb-3">
             <h2
-              className="text-2xl font-black tracking-tight leading-tight"
+              className="text-lg font-black tracking-tight leading-tight"
               style={{ color: accent, textShadow: `0 0 16px ${accent}55` }}
             >
               {title}
