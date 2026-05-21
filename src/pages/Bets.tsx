@@ -718,7 +718,7 @@ const Bets = ({ tag }: BetsPageProps) => {
           </div>
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
-              {coinIcon ? <img src={coinIcon} className="w-4 h-4" alt="" /> : <Wallet size={14} />}
+              {coinIcon ? <img src={optimizedImage(coinIcon, { width: 48, quality: 80 })} className="w-4 h-4" alt="" decoding="async" /> : <Wallet size={14} />}
               <span className="font-bold tabular-nums text-sm">{authed.tokens_balance}</span>
               <span className="text-xs hidden sm:inline" style={{ color: muted }}>{coinName}</span>
             </div>
