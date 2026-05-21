@@ -427,22 +427,26 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
   };
 
+  const SIMPLE_MIN_BET = 10;
+  const SIMPLE_MAX_BET = 500;
+
   const openSlip = (event: EventRow, outcome: OutcomeRow) => {
     if (!authed) { toast.error('Faça login para apostar'); return; }
     const market = outcome.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
     const status = market?.status ?? event.status;
     const closesAt = market?.closes_at ?? event.closes_at;
-    const minBet = market?.min_bet ?? event.min_bet;
     if (status !== 'open') { toast.error('Mercado fechado'); return; }
     if (isBetDateTimeExpired(closesAt)) { toast.error('Apostas encerradas'); return; }
     setSlip({ event, outcome });
-    setAmount(String(minBet || 10));
+    setAmount(String(SIMPLE_MIN_BET));
   };
 
   const placeBet = async () => {
     if (!slip || !authed) return;
     const amt = Math.floor(Number(amount));
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
+    if (amt < SIMPLE_MIN_BET) { toast.error(`Valor mínimo de aposta: ${SIMPLE_MIN_BET} ${coinName}`); return; }
+    if (amt > SIMPLE_MAX_BET) { toast.error(`Valor máximo de aposta: ${SIMPLE_MAX_BET} ${coinName}`); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
     setPlacing(true);
     try {
@@ -527,8 +531,10 @@ const Bets = ({ tag }: BetsPageProps) => {
   const ticketLimits: TicketOddLimits = (cfg.multiTicket || {}) as TicketOddLimits;
   const maxOddAllowed = effectiveMaxOdd(ticketLimits);
   const maxReturnAllowed = Math.max(0, Number(ticketLimits.maxReturn) || 0); // 0 = sem limite
-  const minBetAllowed = Math.max(1, Number(ticketLimits.minBet) || 1);
-  const maxBetAllowed = Math.max(0, Number(ticketLimits.maxBet) || 0); // 0 = sem limite
+  const MULTI_MIN_BET = 10;
+  const MULTI_MAX_BET = 150;
+  const minBetAllowed = Math.max(MULTI_MIN_BET, Number(ticketLimits.minBet) || MULTI_MIN_BET);
+  const maxBetAllowed = Math.max(MULTI_MIN_BET, Number(ticketLimits.maxBet) || MULTI_MAX_BET);
 
   const oddBreakdown = useMemo(
     () => computeTicketOdd(ticketDraft.map(s => ({ eventId: s.eventId, odd: Number(s.odd) || 1 }))),
@@ -1503,18 +1509,18 @@ const Bets = ({ tag }: BetsPageProps) => {
             </div>
 
             <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: muted }}>
-              <span>Mín: <span className="tabular-nums" style={{ color: text }}>{slip.event.min_bet} {coinName}</span></span>
-              <span>Máx: <span className="tabular-nums" style={{ color: text }}>{slip.event.max_bet} {coinName}</span></span>
+              <span>Mín: <span className="tabular-nums" style={{ color: text }}>{SIMPLE_MIN_BET} {coinName}</span></span>
+              <span>Máx: <span className="tabular-nums" style={{ color: text }}>{SIMPLE_MAX_BET} {coinName}</span></span>
             </div>
 
             <div className="relative grid grid-cols-5 gap-2 mb-3">
               {[10, 50, 100, 500].map(v => (
-                <button key={v} type="button" onClick={() => setAmount(String(v))}
+                <button key={v} type="button" onClick={() => setAmount(String(Math.min(v, SIMPLE_MAX_BET)))}
                   className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: '#00000044', color: text, border: `1px solid ${text}10` }}>
                   {v}
                 </button>
               ))}
-              <button type="button" onClick={() => setAmount(String(Math.min(authed?.tokens_balance ?? 0, slip.event.max_bet || (authed?.tokens_balance ?? 0))))}
+              <button type="button" onClick={() => setAmount(String(Math.min(authed?.tokens_balance ?? 0, SIMPLE_MAX_BET)))}
                 className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
                 Tudo
               </button>
@@ -1622,10 +1628,10 @@ const Bets = ({ tag }: BetsPageProps) => {
                 </div>
 
                 <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: muted }}>
-                  Valor ({coinName}){maxBetAllowed > 0 ? ` · min ${minBetAllowed} / max ${maxBetAllowed}` : ` · min ${minBetAllowed}`}
+                  Valor ({coinName}) · min {minBetAllowed} / max {maxBetAllowed}
                 </label>
                 <input
-                  type="number" min={minBetAllowed} value={ticketAmount}
+                  type="number" min={minBetAllowed} max={maxBetAllowed} value={ticketAmount}
                   onChange={(e) => setTicketAmount(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg mb-3 text-lg font-bold tabular-nums"
                   style={{ background: '#00000066', border: `1px solid ${accent}55`, color: text }}
