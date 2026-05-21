@@ -49,6 +49,7 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!open) return null;
 
