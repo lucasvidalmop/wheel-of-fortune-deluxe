@@ -854,6 +854,19 @@ const Bets = ({ tag }: BetsPageProps) => {
             if (filtered.length) grouped.push({ cat: c, items: filtered });
           }
 
+          const displayedHotEvents = hotEvents.slice(0, visibleEventLimit);
+          let remainingEventSlots = Math.max(0, visibleEventLimit - displayedHotEvents.length);
+          const displayedGrouped = grouped
+            .map(g => {
+              const items = g.items.slice(0, remainingEventSlots);
+              remainingEventSlots = Math.max(0, remainingEventSlots - items.length);
+              return { ...g, items };
+            })
+            .filter(g => g.items.length > 0);
+          const totalEventCount = hotEvents.length + grouped.reduce((sum, g) => sum + g.items.length, 0);
+          const visibleEventCount = displayedHotEvents.length + displayedGrouped.reduce((sum, g) => sum + g.items.length, 0);
+          const canShowMoreEvents = visibleEventCount < totalEventCount;
+
 
           const renderEvent = (ev: EventRow, detailMode = false) => {
             const outs = outcomesByEvent[ev.id] || [];
