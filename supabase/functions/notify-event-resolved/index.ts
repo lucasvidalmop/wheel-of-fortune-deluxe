@@ -200,3 +200,79 @@ function json(body: any, status = 200) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+
+async function sendWinnerWhatsapps(
+  supabase: any,
+  ownerId: string,
+  msgs: { wheelUserId?: string | null; accountId?: string; email?: string; text: string }[],
+) {
+  if (!msgs.length) return { sent: 0, failed: 0, skipped: 0 };
+
+  // Load evolution config from owner's wheel_configs
+  const { data: cfgRow } = await supabase
+    .from("wheel_configs").select("config").eq("user_id", ownerId).maybeSingle();
+  const cfg = typeof cfgRow?.config === "string" ? JSON.parse(cfgRow.config) : cfgRow?.config;
+  const ds = cfg?.dashboardSettings || {};
+  const notifyUrl = ds.notifyEvolutionApiUrl;
+  const notifyKey = ds.notifyEvolutionApiKey;
+  const notifyInstance = ds.notifyEvolutionInstance;
+  if (!notifyUrl || !notifyKey || !notifyInstance) {
+    console.log("sendWinnerWhatsapps: evolution not configured, skipping");
+    return { sent: 0, failed: 0, skipped: msgs.length };
+  }
+  const baseUrl = String(notifyUrl).replace(/\/+$/, "").replace(/\/manager$/i, "");
+
+  // Resolve phones for each message via wheel_users
+  const ids = Array.from(new Set(msgs.map((m) => m.wheelUserId).filter(Boolean))) as string[];
+  const phoneById: Record<string, string> = {};
+  if (ids.length) {
+    const { data } = await supabase.from("wheel_users").select("id, phone").in("id", ids);
+    for (const u of (data || [])) phoneById[u.id] = String(u.phone || "");
+  }
+  // Fallback lookup by account_id + email for rows without wheel_user_id
+  const fallback = msgs.filter((m) => !m.wheelUserId && (m.accountId || m.email));
+  const phoneByKey: Record<string, string> = {};
+  if (fallback.length) {
+    const accountIds = Array.from(new Set(fallback.map((m) => m.accountId).filter(Boolean))) as string[];
+    if (accountIds.length) {
+      const { data } = await supabase
+        .from("wheel_users").select("account_id, email, phone")
+        .eq("owner_id", ownerId).in("account_id", accountIds);
+      for (const u of (data || [])) {
+        phoneByKey[`${u.account_id}|${String(u.email || "").toLowerCase()}`] = String(u.phone || "");
+      }
+    }
+  }
+
+  const cooldown = msgs.length > 10 ? 10000 : 0;
+  let sent = 0, failed = 0, skipped = 0;
+  console.log(`sendWinnerWhatsapps: ${msgs.length} winners, cooldown=${cooldown}ms`);
+
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    const raw = m.wheelUserId
+      ? phoneById[m.wheelUserId]
+      : phoneByKey[`${m.accountId}|${String(m.email || "").toLowerCase()}`];
+    let phone = String(raw || "").replace(/\D/g, "");
+    if (!phone || phone.length < 10) { skipped++; continue; }
+    if (!phone.startsWith("55")) phone = `55${phone}`;
+
+    try {
+      const res = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
+        method: "POST",
+        headers: { "apikey": notifyKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ number: phone, text: m.text }),
+      });
+      if (res.ok) sent++;
+      else { failed++; console.error("winner whatsapp failed", res.status, await res.text().catch(() => "")); }
+    } catch (e) {
+      failed++;
+      console.error("winner whatsapp error", e);
+    }
+
+    if (cooldown && i < msgs.length - 1) {
+      await new Promise((r) => setTimeout(r, cooldown));
+    }
+  }
+  return { sent, failed, skipped };
+}
