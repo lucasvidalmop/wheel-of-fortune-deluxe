@@ -1181,7 +1181,14 @@ const Bets = ({ tag }: BetsPageProps) => {
                   Voltar aos jogos
                 </button>
                 {selectedEvent ? (
-                  <div className="max-w-2xl mx-auto">{renderEvent(selectedEvent, true)}</div>
+                  <div className="max-w-2xl mx-auto space-y-3">
+                    {loadingDetailEventId === selectedEvent.id && (
+                      <div className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold" style={{ background: `${accent}16`, color: accent, border: `1px solid ${accent}33` }}>
+                        <Loader2 className="animate-spin" size={16} /> Carregando mercados...
+                      </div>
+                    )}
+                    {renderEvent(selectedEvent, true)}
+                  </div>
                 ) : (
                   <div className="text-center py-16" style={{ color: muted }}>
                     Evento não encontrado.
