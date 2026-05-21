@@ -13,6 +13,51 @@ import { optimizedImage } from '@/lib/imageUrl';
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
 
+function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent: (ev: any) => React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    if (events.length <= 1) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const interval = setInterval(() => {
+      if (pausedRef.current || !el) return;
+      const children = el.children;
+      // ignora o <style> inline como filho
+      const items = Array.from(children).filter(c => c.tagName !== 'STYLE') as HTMLElement[];
+      if (items.length === 0) return;
+      indexRef.current = (indexRef.current + 1) % items.length;
+      const next = items[indexRef.current];
+      el.scrollTo({ left: next.offsetLeft - el.offsetLeft, behavior: 'smooth' });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [events.length]);
+
+  const pause = () => { pausedRef.current = true; };
+  const resume = () => { pausedRef.current = false; };
+
+  return (
+    <div
+      ref={scrollRef}
+      className="hot-events-scroll flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x snap-mandatory"
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onTouchStart={pause}
+      onTouchEnd={resume}
+    >
+      <style>{`.hot-events-scroll::-webkit-scrollbar{display:none}`}</style>
+      {events.map(ev => (
+        <div key={ev.id} className="snap-start shrink-0 w-[85%] sm:w-[48%] lg:w-[32%]">
+          {renderEvent(ev)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface BetsPageProps { tag: string }
 
 interface OutcomeRow { id: string; event_id: string; market_id: string | null; label: string; odd: number; position: number; is_winner: boolean }
