@@ -172,6 +172,8 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   notifyLuckyboxPurchasedEnabled: false,
   notifyLuckyboxRedeemedEnabled: false,
   notifyLuckyboxPrizeEnabled: false,
+  notifyTicketPlacedEnabled: false,
+  notifyTicketWonEnabled: false,
   notifyGroupJid: '',
   notifyGroupName: '',
   notifySelectedGroups: [],
