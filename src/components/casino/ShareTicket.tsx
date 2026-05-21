@@ -16,6 +16,7 @@ export interface ShareTicketData {
   payoutMode: 'coins' | 'case';
   coinName: string;
   createdAt: string;
+  copyUrl?: string;
 }
 
 const maskId = (id?: string) => {
