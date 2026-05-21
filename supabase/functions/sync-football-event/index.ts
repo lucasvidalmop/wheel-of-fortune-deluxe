@@ -211,9 +211,22 @@ async function syncForOwner(
         })
         .select("id")
         .single();
-      if (mkInsErr) throw mkInsErr;
-      marketId = newMk.id;
+      if (mkInsErr) {
+        // Race / unique violation on (event_id, lower(trim(title))) — refetch existing
+        const { data: existing } = await supabase
+          .from("bet_markets")
+          .select("id, title")
+          .eq("event_id", eventId);
+        const match = (existing || []).find(
+          (em: any) => (em.title || "").trim().toLowerCase() === title.toLowerCase(),
+        );
+        if (!match) throw mkInsErr;
+        marketId = match.id;
+      } else {
+        marketId = newMk.id;
+      }
     }
+
 
     // ---- Outcomes ----
     const { data: existingOutcomes, error: ocListErr } = await supabase
@@ -254,7 +267,23 @@ async function syncForOwner(
             odd,
             position: pos,
           });
-        if (ocInsErr) throw ocInsErr;
+        if (ocInsErr) {
+          // Race / unique violation on (market_id, lower(trim(label))) — update existing
+          const { data: existingOc } = await supabase
+            .from("bet_outcomes")
+            .select("id, label, is_winner")
+            .eq("market_id", marketId);
+          const match = (existingOc || []).find(
+            (eo: any) => (eo.label || "").trim().toLowerCase() === label.toLowerCase(),
+          );
+          if (!match) throw ocInsErr;
+          if (!match.is_winner) {
+            await supabase
+              .from("bet_outcomes")
+              .update({ odd, position: pos })
+              .eq("id", match.id);
+          }
+        }
       }
     }
 
