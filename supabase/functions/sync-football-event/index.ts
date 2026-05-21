@@ -267,7 +267,23 @@ async function syncForOwner(
             odd,
             position: pos,
           });
-        if (ocInsErr) throw ocInsErr;
+        if (ocInsErr) {
+          // Race / unique violation on (market_id, lower(trim(label))) — update existing
+          const { data: existingOc } = await supabase
+            .from("bet_outcomes")
+            .select("id, label, is_winner")
+            .eq("market_id", marketId);
+          const match = (existingOc || []).find(
+            (eo: any) => (eo.label || "").trim().toLowerCase() === label.toLowerCase(),
+          );
+          if (!match) throw ocInsErr;
+          if (!match.is_winner) {
+            await supabase
+              .from("bet_outcomes")
+              .update({ odd, position: pos })
+              .eq("id", match.id);
+          }
+        }
       }
     }
 
