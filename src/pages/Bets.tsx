@@ -888,18 +888,30 @@ const Bets = ({ tag }: BetsPageProps) => {
 
           // categorias presentes em nonHot (para agrupar quando "Todos")
           const usedCatIds = new Set(nonHot.map(e => e.category_id).filter(Boolean) as string[]);
-          const visibleCats = cats.filter(c => usedCatIds.has(c.id));
+          const groupFirstIndex = new Map<string, number>();
+          filtered.forEach((e, index) => {
+            const key = e.category_id || '__uncategorized';
+            if (!groupFirstIndex.has(key)) groupFirstIndex.set(key, index);
+          });
+          const visibleCats = cats
+            .filter(c => usedCatIds.has(c.id))
+            .sort((a, b) =>
+              (groupFirstIndex.get(a.id) ?? 9999) - (groupFirstIndex.get(b.id) ?? 9999) ||
+              (a.position ?? 0) - (b.position ?? 0)
+            );
           const hasUncategorized = nonHot.some(e => !e.category_id);
 
           // Agrupamento
           const grouped: Array<{ cat: CategoryRow | null; items: EventRow[]; label?: string }> = [];
           if (categoryFilter === 'all') {
-            visibleCats.forEach(c => {
-              const items = sortByStatus(filtered.filter(e => e.category_id === c.id));
-              if (items.length) grouped.push({ cat: c, items });
+            const groupEntries = [
+              ...visibleCats.map(c => ({ key: c.id, cat: c })),
+              ...(hasUncategorized ? [{ key: '__uncategorized', cat: null as CategoryRow | null }] : []),
+            ].sort((a, b) => (groupFirstIndex.get(a.key) ?? 9999) - (groupFirstIndex.get(b.key) ?? 9999));
+            groupEntries.forEach(({ key, cat }) => {
+              const items = sortByStatus(filtered.filter(e => key === '__uncategorized' ? !e.category_id : e.category_id === key));
+              if (items.length) grouped.push({ cat, items });
             });
-            const unc = sortByStatus(filtered.filter(e => !e.category_id));
-            if (unc.length) grouped.push({ cat: null, items: unc });
           } else if (categoryFilter.startsWith('competition:')) {
             const slug = categoryFilter.slice('competition:'.length);
             const label = filtered[0]?.competition_name || slug;
@@ -1270,7 +1282,13 @@ const Bets = ({ tag }: BetsPageProps) => {
                   return false;
                 };
                 const visibleChips = FIXED.filter(c => c.key === 'all' || hasMatches(c.key));
-                if (visibleChips.length <= 1) return null;
+                const fixedKeys = new Set(visibleChips.map(c => c.key));
+                const dynamicCategoryChips = cats
+                  .filter(c => nonHot.some(e => e.category_id === c.id))
+                  .map(c => ({ key: c.name.trim().toLowerCase() === 'futebol' ? 'category:futebol' : c.id, label: c.name, icon: c.icon || undefined }))
+                  .filter(c => !fixedKeys.has(c.key));
+                const allChips = [...visibleChips, ...dynamicCategoryChips];
+                if (allChips.length <= 1) return null;
                 return (
                   <div className="relative -mx-3">
                     <style>{`.bets-chips-scroll::-webkit-scrollbar{display:none}`}</style>
@@ -1278,7 +1296,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       className="bets-chips-scroll flex gap-2 overflow-x-auto px-3 py-2 scroll-smooth snap-x"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {visibleChips.map(({ key, label, icon }) => {
+                      {allChips.map(({ key, label, icon }) => {
                         const active = categoryFilter === key;
                         return (
                           <button key={key} onClick={() => setCategoryFilter(key)}
