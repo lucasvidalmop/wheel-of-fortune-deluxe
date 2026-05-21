@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { X, Download, Share2, Loader2, TrendingDown, Clock, Trophy, Calendar, Ticket } from 'lucide-react';
+import { X, Download, Share2, Loader2, TrendingDown, Clock, Trophy, Calendar, Ticket, Link2, Check } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 
