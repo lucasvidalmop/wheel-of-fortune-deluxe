@@ -542,19 +542,19 @@ const Bets = ({ tag }: BetsPageProps) => {
     <div className="min-h-screen" style={mainBgStyle}>
       {/* header */}
       <header className="sticky top-0 z-20 backdrop-blur" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: `1px solid ${accent}33` }}>
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="h-9 object-contain" />}
-            <div className="min-w-0">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="h-9 object-contain shrink-0" />}
+            <div className="min-w-0 hidden sm:block">
               <div className="font-bold truncate">{cfg.title || 'Apostas'}</div>
               <div className="text-xs truncate" style={{ color: muted }}>{authed.name}</div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
               {coinIcon ? <img src={coinIcon} className="w-4 h-4" alt="" /> : <Wallet size={14} />}
-              <span className="font-bold tabular-nums">{authed.tokens_balance}</span>
-              <span className="text-xs" style={{ color: muted }}>{coinName}</span>
+              <span className="font-bold tabular-nums text-sm">{authed.tokens_balance}</span>
+              <span className="text-xs hidden sm:inline" style={{ color: muted }}>{coinName}</span>
             </div>
             <button
               onClick={() => {
@@ -573,10 +573,10 @@ const Bets = ({ tag }: BetsPageProps) => {
                 window.location.href = `/luckybox=${luckyTag}`;
               }}
               title="Loja"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-90"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-90"
               style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: text }}>
               <Store size={14} />
-              <span>Loja</span>
+              <span className="hidden sm:inline">Loja</span>
             </button>
             <button onClick={() => { setAuthed(null); setMyWagers([]); }} title="Sair"
               className="p-2 rounded-lg" style={{ background: '#00000033' }}>
