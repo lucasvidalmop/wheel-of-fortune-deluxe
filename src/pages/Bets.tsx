@@ -14,58 +14,61 @@ const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
 
 function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent: (ev: any) => React.ReactNode }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  const [animate, setAnimate] = useState(true);
   const pausedRef = useRef(false);
+  const n = events.length;
 
-  // duplica a lista para criar efeito de loop infinito (apenas se houver >1)
-  const loop = events.length > 1;
-  const items = loop ? [...events, ...events] : events;
+  // duplica o primeiro slide no fim para loop infinito sem "voltar"
+  const slides = n > 1 ? [...events, events[0]] : events;
 
   useEffect(() => {
-    if (!loop) return;
-    const el = scrollRef.current;
-    if (!el) return;
+    if (n <= 1) return;
+    const id = setInterval(() => {
+      if (pausedRef.current) return;
+      setIndex(i => i + 1);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [n]);
 
-    let raf = 0;
-    let last = performance.now();
-    const speed = 40; // px por segundo
-
-    const tick = (now: number) => {
-      const dt = (now - last) / 1000;
-      last = now;
-      if (el && !pausedRef.current) {
-        el.scrollLeft += speed * dt;
-        // metade do scroll = fim da primeira cópia → reseta sem animação
-        const half = el.scrollWidth / 2;
-        if (el.scrollLeft >= half) {
-          el.scrollLeft -= half;
-        }
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [loop, events.length]);
+  // ao chegar no clone (index === n), aguarda transição e reseta sem animação
+  useEffect(() => {
+    if (n <= 1) return;
+    if (index === n) {
+      const t = setTimeout(() => {
+        setAnimate(false);
+        setIndex(0);
+        // reabilita animação no próximo frame
+        requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
+      }, 600);
+      return () => clearTimeout(t);
+    }
+  }, [index, n]);
 
   const pause = () => { pausedRef.current = true; };
   const resume = () => { pausedRef.current = false; };
 
   return (
     <div
-      ref={scrollRef}
-      className="hot-events-scroll flex gap-3 overflow-x-auto -mx-3 px-3 pb-2"
-      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      className="relative overflow-hidden"
       onMouseEnter={pause}
       onMouseLeave={resume}
       onTouchStart={pause}
       onTouchEnd={resume}
     >
-      <style>{`.hot-events-scroll::-webkit-scrollbar{display:none}`}</style>
-      {items.map((ev, i) => (
-        <div key={`${ev.id}-${i}`} className="shrink-0 w-[85%] sm:w-[48%] lg:w-[32%]">
-          {renderEvent(ev)}
-        </div>
-      ))}
+      <div
+        className="flex"
+        style={{
+          transform: `translateX(-${index * 100}%)`,
+          transition: animate ? 'transform 600ms ease-in-out' : 'none',
+        }}
+      >
+        {slides.map((ev, i) => (
+          <div key={`${ev.id}-${i}`} className="shrink-0 w-full px-1">
+            {renderEvent(ev)}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
