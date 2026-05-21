@@ -721,9 +721,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       </div>
                     );
                   }
+                  const isExpanded = !!expandedEvents[ev.id];
+                  const visibleMarkets = isExpanded ? evMarkets : evMarkets.slice(0, 1);
+                  const hiddenCount = evMarkets.length - visibleMarkets.length;
                   return (
                     <div className="space-y-2">
-                      {evMarkets.map(m => {
+                      {visibleMarkets.map(m => {
                         const mOuts = evOuts.filter(o => o.market_id === m.id);
                         return (
                           <div key={m.id} className="space-y-1">
@@ -746,6 +749,15 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                           </div>
                         );
                       })}
+                      {evMarkets.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedEvents(s => ({ ...s, [ev.id]: !isExpanded }))}
+                          className="w-full mt-1 px-3 py-1.5 rounded-lg bg-muted/60 hover:bg-muted text-xs text-muted-foreground font-medium transition"
+                        >
+                          {isExpanded ? `Recolher mercados` : `+${hiddenCount} mercado${hiddenCount > 1 ? 's' : ''}`}
+                        </button>
+                      )}
                     </div>
                   );
                 })()}
