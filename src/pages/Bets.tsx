@@ -1014,7 +1014,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         )}
                         {!collapsed && mk?.payout_mode === 'case' && mkCase && (
                           <div className="relative flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
-                            {mkCase.image_url && <img src={mkCase.image_url} className="w-8 h-8 rounded" alt="" />}
+                            {mkCase.image_url && <img src={optimizedImage(mkCase.image_url, { width: 96, quality: 70 })} loading="lazy" decoding="async" className="w-8 h-8 rounded" alt="" />}
                             <span className="text-xs">Prêmio: caixa <b>{mkCase.name}</b> ({mk.payout_case_qty_per_unit}× por unidade apostada)</span>
                           </div>
                         )}
