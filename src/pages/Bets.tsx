@@ -324,6 +324,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   };
 
   // multi-bet ticket
+  const isMobile = useIsMobile();
   const [ticketDraft, setTicketDraft] = useState<TicketDraft[]>([]);
   const [ticketOpen, setTicketOpen] = useState(false);
   const [ticketAmount, setTicketAmount] = useState('10');
