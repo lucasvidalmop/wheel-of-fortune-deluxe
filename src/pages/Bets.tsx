@@ -116,8 +116,8 @@ import LZString from 'lz-string';
 
 const encodeCopy = (sel: Array<{ e: string; o: string }>) => {
   try {
-    const json = JSON.stringify({ s: sel });
-    return 'z' + LZString.compressToEncodedURIComponent(json);
+    const payload = sel.map(s => s.e + '|' + s.o).join(';');
+    return 'z' + LZString.compressToEncodedURIComponent(payload);
   } catch { return ''; }
 };
 const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
@@ -125,10 +125,12 @@ const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
     if (s.startsWith('z')) {
       const decompressed = LZString.decompressFromEncodedURIComponent(s.slice(1));
       if (!decompressed) return [];
-      const json = JSON.parse(decompressed);
-      return Array.isArray(json?.s) ? json.s.filter((x: any) => x?.e && x?.o) : [];
+      return decompressed.split(';').map(pair => {
+        const [e, o] = pair.split('|');
+        return { e, o };
+      }).filter(x => x.e && x.o);
     }
-    // fallback: legacy base64url
+    // fallback: legacy base64url of JSON {s:[{e,o}]}
     const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
     const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + pad;
     const json = JSON.parse(atob(b64));
