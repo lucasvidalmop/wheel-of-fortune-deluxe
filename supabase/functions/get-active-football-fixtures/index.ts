@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
   const statusParam = url.searchParams.get("status");
   const statuses = statusParam
     ? statusParam.split(",").map((s) => s.trim()).filter(Boolean)
-    : ["open", "live"];
+    : ["open", "live", "closed"];
 
   const { data, error } = await supabase
     .from("bet_events")
