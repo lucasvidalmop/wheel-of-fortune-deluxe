@@ -23,6 +23,8 @@ project_id = "zrijrsntmmzyykuqjbno"
     verify_jwt = false
   [functions.send-whatsapp]
     verify_jwt = false
+  [functions.evolution-proxy]
+    verify_jwt = false
   [functions.get-gorjeta-page]
     verify_jwt = false
   [functions.get-bets-counts]

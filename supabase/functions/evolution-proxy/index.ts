@@ -57,8 +57,8 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ ok: false, error: "Não autenticado." }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ ok: false, error: "Sessão expirada. Faça login novamente no painel." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     const supabase = createClient(
@@ -70,8 +70,8 @@ serve(async (req) => {
     const { data: userData, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !userData?.user?.id) {
       return new Response(
-        JSON.stringify({ ok: false, error: "Sessão inválida." }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ ok: false, error: "Sessão inválida. Faça login novamente no painel." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
