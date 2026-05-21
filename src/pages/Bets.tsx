@@ -9,6 +9,7 @@ import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import type { ShareTicketData } from '@/components/casino/ShareTicket';
 import type { ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
 import { optimizedImage } from '@/lib/imageUrl';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
@@ -323,6 +324,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   };
 
   // multi-bet ticket
+  const isMobile = useIsMobile();
   const [ticketDraft, setTicketDraft] = useState<TicketDraft[]>([]);
   const [ticketOpen, setTicketOpen] = useState(false);
   const [ticketAmount, setTicketAmount] = useState('10');
@@ -1426,7 +1428,15 @@ const Bets = ({ tag }: BetsPageProps) => {
                             return (
                               <div key={o.id} className="relative">
                                 <button
-                                  onClick={() => { if (!incoherent) openSlip(ev, o); }}
+                                  onClick={() => {
+                                    if (incoherent) return;
+                                    if (isMobile) {
+                                      if (inTicket) removeFromTicket(o.id);
+                                      else addToTicket(ev, o);
+                                    } else {
+                                      openSlip(ev, o);
+                                    }
+                                  }}
                                   disabled={mkClosed || incoherent}
                                   title={incoherent ? (coherence.reason || 'Combinação não permitida com seleções do bilhete') : undefined}
                                   className="relative w-full px-2.5 py-2 rounded-lg text-left transition disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] overflow-hidden"
