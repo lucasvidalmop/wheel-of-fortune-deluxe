@@ -43,6 +43,9 @@ Deno.serve(async (req) => {
 
   const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
+  // Collect winner notifications to send via WhatsApp at the end
+  const userMessages: { wheelUserId?: string | null; accountId?: string; email?: string; text: string }[] = [];
+
   // --- 1) Singles: grouped per outcome ---
   const wagerQuery = supabase
     .from("bet_wagers")
@@ -109,6 +112,14 @@ Deno.serve(async (req) => {
       }],
     });
     singlesNotified++;
+
+    // Queue per-user WhatsApp notifications
+    for (const w of ws) {
+      const payout = Number(w.payout_coins || 0);
+      const stake = Number(w.amount_coins || 0);
+      const text = `🏆 *Seu bilhete foi premiado!*\n\n⚽ *Evento:* ${ev.title || "-"}${mkTitle ? `\n📊 *Mercado:* ${mkTitle}` : ""}\n✅ *Seleção:* ${outRow?.label || "-"} @ ${Number(outRow?.odd || w.odd_snapshot || 0).toFixed(2)}\n💰 *Apostado:* ${stake}\n💸 *Ganho:* ${payout}\n\nParabéns! 🎉`;
+      userMessages.push({ wheelUserId: w.wheel_user_id, accountId: w.account_id, email: w.user_email, text });
+    }
   }
 
   // --- 2) Multiples: any ticket that has a selection in this event/market and was just resolved as 'won' ---
@@ -124,7 +135,7 @@ Deno.serve(async (req) => {
   if (ticketIds.length) {
     const { data: tickets } = await supabase
       .from("bet_tickets")
-      .select("id, user_name, user_email, account_id, public_code, stake, total_odd, payout_coins, resolved_at, status")
+      .select("id, wheel_user_id, user_name, user_email, account_id, public_code, stake, total_odd, payout_coins, resolved_at, status")
       .in("id", ticketIds)
       .eq("status", "won")
       .gte("resolved_at", cutoff);
@@ -153,10 +164,20 @@ Deno.serve(async (req) => {
         })),
       });
       multiplesNotified++;
+
+      const selLines = allSels.map((s: any, i: number) =>
+        `  ${i + 1}. ${s.event_title || "-"}${s.market_title ? ` (${s.market_title})` : ""} → *${s.selection_label || "-"}* @ ${Number(s.odd || 0).toFixed(2)}`
+      ).join("\n");
+      const codeLine = t.public_code ? `\n🎟️ *Código:* ${t.public_code}` : "";
+      const text = `🏆 *Seu bilhete múltiplo foi premiado!*${codeLine}\n💰 *Apostado:* ${Number(t.stake || 0)}\n📈 *Odd total:* ${Number(t.total_odd || 0).toFixed(2)}\n💸 *Ganho:* ${Number(t.payout_coins || 0)}\n\n*Seleções:*\n${selLines}\n\nParabéns! 🎉`;
+      userMessages.push({ wheelUserId: t.wheel_user_id, accountId: t.account_id, email: t.user_email, text });
     }
   }
 
-  return json({ ok: true, singlesNotified, multiplesNotified });
+  // Dispatch WhatsApp messages to winners (with cooldown if > 10)
+  const userResults = await sendWinnerWhatsapps(supabase, ev.owner_id, userMessages);
+
+  return json({ ok: true, singlesNotified, multiplesNotified, userNotified: userResults });
 });
 
 async function notifyOwner(ownerId: string, type: string, payload: Record<string, any>) {
@@ -178,4 +199,80 @@ function json(body: any, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+async function sendWinnerWhatsapps(
+  supabase: any,
+  ownerId: string,
+  msgs: { wheelUserId?: string | null; accountId?: string; email?: string; text: string }[],
+) {
+  if (!msgs.length) return { sent: 0, failed: 0, skipped: 0 };
+
+  // Load evolution config from owner's wheel_configs
+  const { data: cfgRow } = await supabase
+    .from("wheel_configs").select("config").eq("user_id", ownerId).maybeSingle();
+  const cfg = typeof cfgRow?.config === "string" ? JSON.parse(cfgRow.config) : cfgRow?.config;
+  const ds = cfg?.dashboardSettings || {};
+  const notifyUrl = ds.notifyEvolutionApiUrl;
+  const notifyKey = ds.notifyEvolutionApiKey;
+  const notifyInstance = ds.notifyEvolutionInstance;
+  if (!notifyUrl || !notifyKey || !notifyInstance) {
+    console.log("sendWinnerWhatsapps: evolution not configured, skipping");
+    return { sent: 0, failed: 0, skipped: msgs.length };
+  }
+  const baseUrl = String(notifyUrl).replace(/\/+$/, "").replace(/\/manager$/i, "");
+
+  // Resolve phones for each message via wheel_users
+  const ids = Array.from(new Set(msgs.map((m) => m.wheelUserId).filter(Boolean))) as string[];
+  const phoneById: Record<string, string> = {};
+  if (ids.length) {
+    const { data } = await supabase.from("wheel_users").select("id, phone").in("id", ids);
+    for (const u of (data || [])) phoneById[u.id] = String(u.phone || "");
+  }
+  // Fallback lookup by account_id + email for rows without wheel_user_id
+  const fallback = msgs.filter((m) => !m.wheelUserId && (m.accountId || m.email));
+  const phoneByKey: Record<string, string> = {};
+  if (fallback.length) {
+    const accountIds = Array.from(new Set(fallback.map((m) => m.accountId).filter(Boolean))) as string[];
+    if (accountIds.length) {
+      const { data } = await supabase
+        .from("wheel_users").select("account_id, email, phone")
+        .eq("owner_id", ownerId).in("account_id", accountIds);
+      for (const u of (data || [])) {
+        phoneByKey[`${u.account_id}|${String(u.email || "").toLowerCase()}`] = String(u.phone || "");
+      }
+    }
+  }
+
+  const cooldown = msgs.length > 10 ? 10000 : 0;
+  let sent = 0, failed = 0, skipped = 0;
+  console.log(`sendWinnerWhatsapps: ${msgs.length} winners, cooldown=${cooldown}ms`);
+
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    const raw = m.wheelUserId
+      ? phoneById[m.wheelUserId]
+      : phoneByKey[`${m.accountId}|${String(m.email || "").toLowerCase()}`];
+    let phone = String(raw || "").replace(/\D/g, "");
+    if (!phone || phone.length < 10) { skipped++; continue; }
+    if (!phone.startsWith("55")) phone = `55${phone}`;
+
+    try {
+      const res = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
+        method: "POST",
+        headers: { "apikey": notifyKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ number: phone, text: m.text }),
+      });
+      if (res.ok) sent++;
+      else { failed++; console.error("winner whatsapp failed", res.status, await res.text().catch(() => "")); }
+    } catch (e) {
+      failed++;
+      console.error("winner whatsapp error", e);
+    }
+
+    if (cooldown && i < msgs.length - 1) {
+      await new Promise((r) => setTimeout(r, cooldown));
+    }
+  }
+  return { sent, failed, skipped };
 }
