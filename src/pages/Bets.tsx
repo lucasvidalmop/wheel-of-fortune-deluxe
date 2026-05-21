@@ -114,12 +114,28 @@ const translateOutcomeLabel = (s?: string | null) => {
 
 import LZString from 'lz-string';
 
-const encodeCopy = (sel: Array<{ e: string; o: string }>) => {
-  try {
-    const payload = sel.map(s => s.e + '|' + s.o).join(';');
-    return 'z' + LZString.compressToEncodedURIComponent(payload);
-  } catch { return ''; }
+const SLUG_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
+const genSlug = (len = 6) => {
+  let s = '';
+  for (let i = 0; i < len; i++) s += SLUG_ALPHABET[Math.floor(Math.random() * SLUG_ALPHABET.length)];
+  return s;
 };
+const createShortShareLink = async (
+  tag: string,
+  selections: Array<{ e: string; o: string }>
+): Promise<string> => {
+  const origin = window.location.origin;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = genSlug(6);
+    const { error } = await supabase
+      .from('shared_tickets')
+      .insert({ slug, tag, selections });
+    if (!error) return `${origin}/odds=${tag}#c=${slug}`;
+    if ((error as any).code !== '23505') break;
+  }
+  return `${origin}/odds=${tag}`;
+};
+// legacy decoder for #copy= (compressed) links
 const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
   try {
     if (s.startsWith('z')) {
@@ -130,7 +146,6 @@ const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
         return { e, o };
       }).filter(x => x.e && x.o);
     }
-    // fallback: legacy base64url of JSON {s:[{e,o}]}
     const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
     const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + pad;
     const json = JSON.parse(atob(b64));
