@@ -624,30 +624,68 @@ const Bets = ({ tag }: BetsPageProps) => {
   }, [ticketAmount, totalOdd]);
 
   const ticketBlockReason = useMemo<string | null>(() => {
+    if (ticketDraft.length === 0) return null;
+    const amt = Math.floor(Number(ticketAmount));
+    if (Number.isFinite(amt) && amt > 0) {
+      if (amt < minBetAllowed) return `Valor mínimo de aposta é ${minBetAllowed}`;
+      if (maxBetAllowed > 0 && amt > maxBetAllowed) return `Valor máximo de aposta é ${maxBetAllowed}`;
+    }
     if (ticketDraft.length < 2) return null;
     if (totalOdd > maxOddAllowed) {
       return maxOddAllowed >= HARD_MAX_ODD
         ? `Odd máxima permitida é ${HARD_MAX_ODD}`
         : `Odd máxima permitida é ${maxOddAllowed}`;
     }
-    const amt = Math.floor(Number(ticketAmount));
-    if (Number.isFinite(amt) && amt > 0) {
-      if (amt < minBetAllowed) return `Valor mínimo de aposta é ${minBetAllowed}`;
-      if (maxBetAllowed > 0 && amt > maxBetAllowed) return `Valor máximo de aposta é ${maxBetAllowed}`;
-      if (maxReturnAllowed > 0 && ticketReturn > maxReturnAllowed) {
-        return `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`;
-      }
+    if (maxReturnAllowed > 0 && ticketReturn > maxReturnAllowed) {
+      return `Retorno máximo permitido é ${maxReturnAllowed.toLocaleString('pt-BR')}`;
     }
     return null;
   }, [ticketDraft.length, totalOdd, maxOddAllowed, ticketAmount, ticketReturn, minBetAllowed, maxBetAllowed, maxReturnAllowed]);
 
   const placeTicket = async () => {
     if (!authed) return;
-    if (ticketDraft.length < 2) { toast.error('Selecione pelo menos 2 opções'); return; }
+    if (ticketDraft.length < 1) { toast.error('Selecione uma opção'); return; }
     const amt = Math.floor(Number(ticketAmount));
     if (!Number.isFinite(amt) || amt <= 0) { toast.error('Valor inválido'); return; }
     if (amt > authed.tokens_balance) { toast.error('Saldo insuficiente'); return; }
     if (ticketBlockReason) { toast.error(ticketBlockReason); return; }
+    if (ticketDraft.length === 1) {
+      setPlacingTicket(true);
+      try {
+        const selection = ticketDraft[0];
+        const { data, error } = await supabase.functions.invoke('place-bet', {
+          body: {
+            tag, email: authed.email, accountId: authed.account_id,
+            eventId: selection.eventId, outcomeId: selection.outcomeId, amount: amt,
+          },
+        });
+        if (error) throw error;
+        if (!data?.success) {
+          const errMap: Record<string, string> = {
+            max_bets_reached: `Limite de ${data?.max || 1} aposta(s) por usuário neste evento atingido`,
+            insufficient_balance: 'Saldo insuficiente',
+            event_closed: 'Apostas encerradas',
+            event_not_open: 'Evento fechado',
+            below_min_bet: `Aposta mínima: ${data?.min}`,
+            above_max_bet: `Aposta máxima: ${data?.max}`,
+            user_blocked: 'Conta bloqueada',
+            user_not_found: 'Usuário não encontrado',
+          };
+          toast.error(errMap[data?.error] || `Falha: ${data?.error || 'erro desconhecido'}`);
+          return;
+        }
+        toast.success('Aposta confirmada!');
+        setAuthed(prev => prev ? { ...prev, tokens_balance: data.tokens_balance } : prev);
+        setTicketDraft([]);
+        setTicketOpen(false);
+        refreshMine();
+      } catch (err: any) {
+        toast.error('Falha ao apostar');
+      } finally {
+        setPlacingTicket(false);
+      }
+      return;
+    }
     const coherence = validateTicketCoherence(ticketDraftProjection);
     if (!coherence.ok) { toast.error(coherence.reason || 'Combinação não permitida'); return; }
     setPlacingTicket(true);
@@ -1788,7 +1826,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   <button onClick={clearTicket} className="px-3 py-2.5 rounded-xl font-bold text-sm" style={{ background: '#00000055', color: text, border: `1px solid ${text}22` }}>
                     Limpar
                   </button>
-                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 2 || !!ticketBlockReason}
+                  <button onClick={placeTicket} disabled={placingTicket || ticketDraft.length < 1 || !!ticketBlockReason}
                     className="flex-1 py-2.5 rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50 transition hover:opacity-90"
                     style={{ background: accent, color: '#000' }}>
                     {placingTicket ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
