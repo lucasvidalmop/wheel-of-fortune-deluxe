@@ -1274,9 +1274,11 @@ const Bets = ({ tag }: BetsPageProps) => {
                           </div>
                           {cfg.ticketEnabled !== false && ['pending', 'won', 'lost'].includes(t.status) && (
                             <button
-                              onClick={() => {
-                                const copyHash = encodeCopy(sels.map(s => ({ e: s.event_id, o: s.outcome_id })));
-                                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
+                              onClick={async () => {
+                                const copyUrl = await createShortShareLink(
+                                  tag,
+                                  sels.map(s => ({ e: s.event_id, o: s.outcome_id }))
+                                );
                                 setShareMultiple({
                                   userId: authed?.account_id || authed?.id,
                                   wagerCode: t.public_code,
