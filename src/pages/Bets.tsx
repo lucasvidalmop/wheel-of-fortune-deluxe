@@ -174,6 +174,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   // my bets
   const [tab, setTab] = useState<'events' | 'mine'>('events');
   const [categoryFilter, setCategoryFilter] = useState<string>('all'); // 'all' | category_id | 'uncategorized'
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
@@ -877,8 +878,14 @@ const Bets = ({ tag }: BetsPageProps) => {
       <main className="max-w-5xl mx-auto px-4 py-6">
         {tab === 'events' && (() => {
           const cats: CategoryRow[] = page?.categories || [];
-          const hotEvents = events.filter(e => e.is_hot);
-          const nonHot = events.filter(e => !e.is_hot);
+          const normSearch = searchQuery.trim().toLowerCase();
+          const matchesSearch = (e: EventRow) => {
+            if (!normSearch) return true;
+            const hay = `${e.title || ''} ${e.subtitle || ''} ${e.competition_name || ''} ${e.category || ''}`.toLowerCase();
+            return hay.includes(normSearch);
+          };
+          const hotEvents = events.filter(e => e.is_hot && matchesSearch(e));
+          const nonHot = events.filter(e => !e.is_hot && matchesSearch(e));
 
           // Filtros fixos por categoria/competição
           // key formats:
@@ -1291,6 +1298,50 @@ const Bets = ({ tag }: BetsPageProps) => {
                 </div>
               )}
 
+              {/* Search input */}
+              {events.length > 0 && (
+                <div className="relative">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                    style={{ color: muted }}
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar por time, competição..."
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl text-sm outline-none transition focus:brightness-110"
+                    style={{
+                      background: '#00000055',
+                      color: text,
+                      border: `1px solid ${accent}55`,
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition hover:brightness-125"
+                      style={{ background: `${accent}33`, color: text }}
+                      aria-label="Limpar busca"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              )}
+
+
               {/* Hot events — always shown on top, ignore filter */}
               {displayedHotEvents.length > 0 && (
                 <section className="space-y-3">
@@ -1393,7 +1444,7 @@ const Bets = ({ tag }: BetsPageProps) => {
 
               {hotEvents.length === 0 && grouped.length === 0 && events.length > 0 && (
                 <div className="text-center py-16" style={{ color: muted }}>
-                  Nenhum evento nesta categoria.
+                  {normSearch ? `Nenhum evento encontrado para "${searchQuery}".` : 'Nenhum evento nesta categoria.'}
                 </div>
               )}
             </div>
