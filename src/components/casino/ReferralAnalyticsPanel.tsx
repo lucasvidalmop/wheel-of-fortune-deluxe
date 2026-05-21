@@ -83,8 +83,9 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
 
         let q = (supabase as any)
           .from('referral_redemptions')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('id,owner_id,email,account_id,cpf,created_at,referral_link_id,link_code,link_label')
+          .order('created_at', { ascending: false })
+          .limit(5000);
         if (linkId) q = q.eq('referral_link_id', linkId);
         else q = q.eq('owner_id', ownerId);
         const { data: reds } = await q;
@@ -93,7 +94,8 @@ const ReferralAnalyticsPanel = ({ ownerId, linkId, scopeLabel, gorjetaRef }: Pro
           .from('wheel_users')
           .select('id, name, email, account_id, phone, referral_link_id, user_type, created_at, responsible')
           .eq('owner_id', ownerId)
-          .eq('user_type', 'Real');
+          .eq('user_type', 'Real')
+          .limit(10000);
 
         const covered = new Set<string>();
         (reds || []).forEach((r: any) => {

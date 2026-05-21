@@ -110,7 +110,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     setGrantsLoading(true);
     const { data } = await (supabase as any)
       .from('luckybox_grants')
-      .select('*')
+      .select('id,owner_id,case_id,case_name,code,status,quantity,recipient_name,recipient_email,recipient_phone,recipient_account_id,whatsapp_status,whatsapp_error,redeemed_at,created_at,forced_prizes,one_per_user,batch_id')
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(200);

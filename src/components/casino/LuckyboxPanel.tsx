@@ -137,8 +137,8 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const load = async () => {
     setLoading(true);
     const [{ data: c }, { data: cs }] = await Promise.all([
-      (supabase as any).from('luckybox_configs').select('*').eq('owner_id', ownerId).maybeSingle(),
-      (supabase as any).from('luckybox_cases').select('*').eq('owner_id', ownerId).order('position').order('created_at'),
+      (supabase as any).from('luckybox_configs').select('id,owner_id,tag,is_active,tokens_symbol,coin_name,coin_icon_url,page_config,created_at,updated_at').eq('owner_id', ownerId).maybeSingle(),
+      (supabase as any).from('luckybox_cases').select('id,owner_id,name,image_url,price_tokens,prizes,prize_pool,mode,prize_type,rarity,position,is_active,claim_enabled,claim_recurrence,claim_event_name,claim_opens_at,claim_closes_at,claim_quantity,created_at,updated_at').eq('owner_id', ownerId).order('position').order('created_at').limit(500),
     ]);
     if (!c) {
       // create default
@@ -309,7 +309,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       } else if (bulkModal.scope === 'filtered') {
         ids = filteredTokenUsers.map(u => u.id);
       } else {
-        const { data } = await (supabase as any).from('wheel_users').select('id').eq('owner_id', ownerId);
+        const { data } = await (supabase as any).from('wheel_users').select('id').eq('owner_id', ownerId).eq('archived', false).limit(20000);
         ids = (data || []).map((u: any) => u.id);
       }
       if (ids.length === 0) { toast.error('Nenhum usuário para atualizar'); setBulkRunning(false); return; }

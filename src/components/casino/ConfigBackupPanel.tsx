@@ -28,8 +28,9 @@ export const ConfigBackupPanel = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('config_backups' as any)
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('id,label,trigger,created_at,wheel_configs,referral_links,email_templates,whatsapp_share_templates')
+      .order('created_at', { ascending: false })
+      .limit(50);
     if (error) {
       toast.error('Erro ao carregar backups: ' + error.message);
     } else {
