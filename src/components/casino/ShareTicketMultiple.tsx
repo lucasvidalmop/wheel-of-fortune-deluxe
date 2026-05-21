@@ -22,6 +22,7 @@ export interface ShareMultipleData {
   status: 'pending' | 'won' | 'lost' | 'refunded' | 'cancelled';
   coinName: string;
   createdAt: string;
+  copyUrl?: string;
 }
 
 interface Props {
