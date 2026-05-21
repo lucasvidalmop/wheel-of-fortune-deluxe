@@ -299,6 +299,29 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
         } else {
           await creditByAccount(supabase, ticket.owner_id, ticket.account_id, ticket.user_email, payout);
         }
+        // Notify owner about winning multiple ticket
+        try {
+          const { data: allSelDetails } = await supabase
+            .from("bet_ticket_selections")
+            .select("event_title, market_title, selection_label, odd")
+            .eq("ticket_id", tid);
+          notifyOwner(ticket.owner_id, "ticket_won", {
+            mode: "multiple",
+            userName: ticket.user_name || "",
+            userEmail: ticket.user_email || "",
+            accountId: ticket.account_id || "",
+            publicCode: ticket.public_code || null,
+            amountTokens: Number(ticket.stake || 0),
+            totalOdd: Number(ticket.total_odd || 0),
+            payoutTokens: payout,
+            selections: (allSelDetails || []).map((s: any) => ({
+              eventTitle: s.event_title || "",
+              marketTitle: s.market_title || "",
+              selectionLabel: s.selection_label || "",
+              odd: Number(s.odd || 0),
+            })),
+          });
+        } catch (e) { console.error("notify ticket_won failed", e); }
       }
     }
     // else: still pending (waiting on other fixtures)
