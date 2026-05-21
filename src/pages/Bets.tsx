@@ -1158,14 +1158,14 @@ const Bets = ({ tag }: BetsPageProps) => {
               )}
 
               {/* Hot events — always shown on top, ignore filter */}
-              {hotEvents.length > 0 && (
+              {displayedHotEvents.length > 0 && (
                 <section className="space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🔥</span>
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
                     <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{hotEvents.map(ev => renderEvent(ev))}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{displayedHotEvents.map(ev => renderEvent(ev))}</div>
                 </section>
               )}
 
@@ -1226,7 +1226,7 @@ const Bets = ({ tag }: BetsPageProps) => {
               })()}
 
               {/* Grouped events */}
-              {grouped.map((g, i) => (
+              {displayedGrouped.map((g, i) => (
                 <section key={g.cat?.id || g.label || `unc-${i}`} className="space-y-3">
                   <div className="flex items-center gap-2">
                     {g.cat?.icon && <span>{g.cat.icon}</span>}
@@ -1239,6 +1239,17 @@ const Bets = ({ tag }: BetsPageProps) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{g.items.map(ev => renderEvent(ev))}</div>
                 </section>
               ))}
+
+              {canShowMoreEvents && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleEventLimit(v => v + 18)}
+                  className="w-full py-3 rounded-xl text-sm font-black uppercase tracking-wider transition hover:brightness-110"
+                  style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
+                >
+                  Ver mais jogos ({totalEventCount - visibleEventCount})
+                </button>
+              )}
 
               {hotEvents.length === 0 && grouped.length === 0 && events.length > 0 && (
                 <div className="text-center py-16" style={{ color: muted }}>
