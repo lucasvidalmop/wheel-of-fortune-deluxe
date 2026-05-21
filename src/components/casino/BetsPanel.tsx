@@ -66,19 +66,33 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     setLoading(true);
     try {
       const [{ data: cfg }, { data: cs }] = await Promise.all([
-        supabase.from('bets_configs').select('*').eq('owner_id', ownerId).maybeSingle(),
+        supabase.from('bets_configs').select('id,owner_id,tag,is_active,coin_name,coin_icon_url,page_config').eq('owner_id', ownerId).maybeSingle(),
         supabase.from('luckybox_cases').select('id, name, image_url').eq('owner_id', ownerId).order('position'),
       ]);
       setConfig(cfg as any);
       setCases((cs || []) as LbCase[]);
       if (cfg?.id) {
-        const [{ data: evs }, { data: outs }, { data: mks }, { data: catz }] = await Promise.all([
-          supabase.from('bet_events').select('*').eq('bets_config_id', cfg.id).order('created_at', { ascending: false }),
-          supabase.from('bet_outcomes').select('*').eq('owner_id', ownerId).order('position'),
-          supabase.from('bet_markets').select('*').eq('owner_id', ownerId).order('position'),
+        // Limit events to most recent 500 — historical events accumulate over time.
+        const { data: evs } = await supabase
+          .from('bet_events')
+          .select('*')
+          .eq('bets_config_id', cfg.id)
+          .order('created_at', { ascending: false })
+          .limit(500);
+        const eventList = (evs || []) as BetEvent[];
+        const eventIds = eventList.map(e => e.id);
+
+        // Scope outcomes/markets to loaded events instead of full owner scan (was returning ~14k outcomes).
+        const [{ data: outs }, { data: mks }, { data: catz }] = await Promise.all([
+          eventIds.length
+            ? supabase.from('bet_outcomes').select('*').in('event_id', eventIds).order('position')
+            : Promise.resolve({ data: [] as any[] }),
+          eventIds.length
+            ? supabase.from('bet_markets').select('*').in('event_id', eventIds).order('position')
+            : Promise.resolve({ data: [] as any[] }),
           supabase.from('bet_categories').select('*').eq('bets_config_id', cfg.id).order('position'),
         ]);
-        setEvents((evs || []) as BetEvent[]);
+        setEvents(eventList);
         setOutcomes((outs || []) as BetOutcome[]);
         setMarkets((mks || []) as BetMarket[]);
         setCategories((catz || []) as BetCategory[]);
@@ -89,6 +103,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       setLoading(false);
     }
   };
+
 
   useEffect(() => { loadAll(); }, [ownerId]);
 

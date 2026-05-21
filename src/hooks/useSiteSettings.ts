@@ -12,18 +12,36 @@ interface SiteSettings {
   dashboard_favicon_url?: string;
 }
 
+// Module-level cache: site_settings is a single-row table, never changes during a session.
+// This avoids duplicate fetches when multiple components mount the hook (or StrictMode double-mount).
+let cachedSettings: SiteSettings | null = null;
+let inflight: Promise<SiteSettings | null> | null = null;
+
+const fetchSettings = (): Promise<SiteSettings | null> => {
+  if (cachedSettings) return Promise.resolve(cachedSettings);
+  if (inflight) return inflight;
+  inflight = (async () => {
+    const { data } = await (supabase as any)
+      .from('site_settings')
+      .select('site_title,site_description,favicon_url,bg_image_url,home_mode,dashboard_title,dashboard_description,dashboard_favicon_url')
+      .eq('id', 1)
+      .maybeSingle();
+    cachedSettings = (data as SiteSettings) || null;
+    inflight = null;
+    return cachedSettings;
+  })();
+  return inflight;
+};
+
 export const useSiteSettings = (mode: 'site' | 'dashboard' = 'site') => {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(cachedSettings);
 
   useEffect(() => {
-    (async () => {
-      const { data } = await (supabase as any)
-        .from('site_settings')
-        .select('*')
-        .eq('id', 1)
-        .maybeSingle();
-      if (data) setSettings(data);
-    })();
+    let cancelled = false;
+    if (!cachedSettings) {
+      fetchSettings().then((data) => { if (!cancelled && data) setSettings(data); });
+    }
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {

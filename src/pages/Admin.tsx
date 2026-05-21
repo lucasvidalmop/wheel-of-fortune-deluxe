@@ -134,7 +134,12 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     setUsersLoading(true);
-    const { data, error } = await (supabase as any).from('wheel_users').select('*').order('created_at', { ascending: false });
+    // Explicit columns + cap to avoid unbounded scans as the table grows.
+    const { data, error } = await (supabase as any)
+      .from('wheel_users')
+      .select('id,account_id,email,phone,name,spins_available,created_at')
+      .order('created_at', { ascending: false })
+      .limit(5000);
     if (error) toast.error('Erro ao carregar usuários');
     else setUsers(data || []);
     setUsersLoading(false);
@@ -143,7 +148,7 @@ const Admin = () => {
   const fetchHistory = async () => {
     setHistoryLoading(true);
     const [resultsRes, configsRes] = await Promise.all([
-      (supabase as any).from('spin_results').select('*').order('spun_at', { ascending: false }),
+      (supabase as any).from('spin_results').select('*').order('spun_at', { ascending: false }).limit(2000),
       (supabase as any).from('wheel_configs').select('user_id, slug'),
     ]);
     const configs = configsRes.data || [];
