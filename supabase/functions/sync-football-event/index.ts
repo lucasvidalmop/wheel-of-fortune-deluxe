@@ -135,7 +135,7 @@ async function syncForOwner(
     away_image_url: ev.away_logo ?? null,
     image_url: ev.image_url ?? "",
     external_fixture_id: ev.external_fixture_id,
-    is_hot: Boolean(ev.is_hot ?? false),
+    ...(ev.is_hot !== undefined ? { is_hot: Boolean(ev.is_hot) } : {}),
     competition_id: ev.competition_id != null ? String(ev.competition_id) : null,
     competition_name: ev.competition_name ?? null,
     competition_slug: ev.competition_slug ?? null,
@@ -148,6 +148,12 @@ async function syncForOwner(
     eventId = existingEv.id;
     if (existingEv.status === "resolved" || existingEv.status === "cancelled") {
       delete evPayload.status;
+    }
+    // Preserva flags gerenciadas pelo admin: não sobrescreve is_hot em re-sync,
+    // a menos que o payload explicitamente envie o campo. A API de fixtures não
+    // manda essa flag, então sobrescrever apagaria a marcação do operador.
+    if (ev.is_hot === undefined) {
+      delete evPayload.is_hot;
     }
     const { error: updErr } = await supabase
       .from("bet_events")
