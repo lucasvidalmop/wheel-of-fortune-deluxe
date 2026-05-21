@@ -1354,18 +1354,22 @@ const Bets = ({ tag }: BetsPageProps) => {
                 </section>
               )}
 
-              {/* Filtros fixos por categoria / competição */}
+              {/* Filtros: categorias (linha 1) + competições da categoria selecionada (linha 2) */}
               {(() => {
-                // chips fixos solicitados
-                const FIXED: Array<{ key: string; label: string; icon?: string }> = [
+                // Top-level: somente categorias
+                const TOP: Array<{ key: string; label: string; icon?: string }> = [
                   { key: 'all', label: 'Todos' },
                   { key: 'category:futebol', label: 'Futebol', icon: '⚽' },
-                  { key: 'competition:world-cup-2026', label: 'Copa do Mundo', icon: '🏆' },
-                  { key: 'competition:brasileirao', label: 'Brasileirão', icon: '🇧🇷' },
-                  { key: 'competition:champions-league', label: 'Champions League', icon: '⭐' },
-                  { key: 'competition:libertadores', label: 'Libertadores', icon: '🌎' },
                 ];
-                // só esconde chips que não têm nenhum evento correspondente (exceto "Todos")
+                // Sub-chips de competições por categoria
+                const SUBS: Record<string, Array<{ key: string; label: string; icon?: string }>> = {
+                  'category:futebol': [
+                    { key: 'competition:world-cup-2026', label: 'Copa do Mundo', icon: '🏆' },
+                    { key: 'competition:brasileirao', label: 'Brasileirão', icon: '🇧🇷' },
+                    { key: 'competition:champions-league', label: 'Champions League', icon: '⭐' },
+                    { key: 'competition:libertadores', label: 'Libertadores', icon: '🌎' },
+                  ],
+                };
                 const hasMatches = (key: string) => {
                   if (key === 'all') return true;
                   if (key.startsWith('competition:')) {
@@ -1381,25 +1385,39 @@ const Bets = ({ tag }: BetsPageProps) => {
                   }
                   return false;
                 };
-                const visibleChips = FIXED.filter(c => c.key === 'all' || hasMatches(c.key));
-                const fixedKeys = new Set(visibleChips.map(c => c.key));
+                const visibleTop = TOP.filter(c => c.key === 'all' || hasMatches(c.key));
+                const fixedKeys = new Set(visibleTop.map(c => c.key));
                 const dynamicCategoryChips = cats
                   .filter(c => nonHot.some(e => e.category_id === c.id))
                   .map(c => ({ key: c.name.trim().toLowerCase() === 'futebol' ? 'category:futebol' : c.id, label: c.name, icon: c.icon || undefined }))
                   .filter(c => !fixedKeys.has(c.key));
-                const allChips = [...visibleChips, ...dynamicCategoryChips];
-                if (allChips.length <= 1) return null;
-                return (
+                const topChips = [...visibleTop, ...dynamicCategoryChips];
+
+                // Descobre qual categoria está "ativa" para mostrar sub-chips
+                const activeParentKey = (() => {
+                  if (categoryFilter.startsWith('category:')) return categoryFilter;
+                  if (categoryFilter.startsWith('competition:')) {
+                    // se a competição pertence a alguma categoria conhecida, retorna ela
+                    for (const [parent, subs] of Object.entries(SUBS)) {
+                      if (subs.some(s => s.key === categoryFilter)) return parent;
+                    }
+                  }
+                  return null;
+                })();
+                const subChips = activeParentKey ? (SUBS[activeParentKey] || []).filter(c => hasMatches(c.key)) : [];
+
+                if (topChips.length <= 1 && subChips.length === 0) return null;
+
+                const renderRow = (items: Array<{ key: string; label: string; icon?: string }>, keyPrefix: string) => (
                   <div className="relative -mx-3">
-                    <style>{`.bets-chips-scroll::-webkit-scrollbar{display:none}`}</style>
                     <div
                       className="bets-chips-scroll flex gap-2 overflow-x-auto px-3 py-2 scroll-smooth snap-x"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {allChips.map(({ key, label, icon }) => {
+                      {items.map(({ key, label, icon }) => {
                         const active = categoryFilter === key;
                         return (
-                          <button key={key} onClick={() => setCategoryFilter(key)}
+                          <button key={`${keyPrefix}-${key}`} onClick={() => setCategoryFilter(key)}
                             className="shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition whitespace-nowrap"
                             style={{
                               background: active ? accent : '#00000055',
@@ -1414,7 +1432,20 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <div aria-hidden className="pointer-events-none absolute top-0 right-0 h-full w-8" style={{ background: `linear-gradient(90deg, transparent, ${bg})` }} />
                   </div>
                 );
+
+                return (
+                  <div className="space-y-1">
+                    <style>{`.bets-chips-scroll::-webkit-scrollbar{display:none}`}</style>
+                    {topChips.length > 1 && renderRow(topChips, 'top')}
+                    {subChips.length > 0 && (
+                      <div className="pl-3 pt-1 border-l-2" style={{ borderColor: `${accent}55` }}>
+                        {renderRow(subChips, 'sub')}
+                      </div>
+                    )}
+                  </div>
+                );
               })()}
+
 
               {/* Grouped events */}
               {displayedGrouped.map((g, i) => (
