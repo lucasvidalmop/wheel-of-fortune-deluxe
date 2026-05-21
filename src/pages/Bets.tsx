@@ -440,6 +440,27 @@ const Bets = ({ tag }: BetsPageProps) => {
     return m;
   }, [page]);
 
+  // Lookups memoizados para evitar O(N*M) re-scan do ticketDraft dentro do .map de outcomes
+  const ticketDraftProjection = useMemo(
+    () => ticketDraft.map(s => ({
+      eventId: s.eventId,
+      marketId: s.marketId,
+      marketTitle: s.marketTitle,
+      outcomeLabel: s.outcomeLabel,
+      eventTitle: s.eventTitle,
+    })),
+    [ticketDraft],
+  );
+  const ticketDraftOutcomeIds = useMemo(
+    () => new Set(ticketDraft.map(s => s.outcomeId)),
+    [ticketDraft],
+  );
+  const ticketDraftMarketKeys = useMemo(() => {
+    const s = new Set<string>();
+    ticketDraft.forEach(t => s.add(`${t.eventId}|${t.marketId || 'main'}`));
+    return s;
+  }, [ticketDraft]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = authEmail.trim().toLowerCase();
