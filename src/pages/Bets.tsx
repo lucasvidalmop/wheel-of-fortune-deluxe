@@ -1350,7 +1350,20 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
                     <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{displayedHotEvents.map(ev => renderEvent(ev))}</div>
+                  <div
+                    className="hot-events-scroll flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x snap-mandatory"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    <style>{`.hot-events-scroll::-webkit-scrollbar{display:none}`}</style>
+                    {displayedHotEvents.map(ev => (
+                      <div
+                        key={ev.id}
+                        className="snap-start shrink-0 w-[85%] sm:w-[48%] lg:w-[32%]"
+                      >
+                        {renderEvent(ev)}
+                      </div>
+                    ))}
+                  </div>
                 </section>
               )}
 
