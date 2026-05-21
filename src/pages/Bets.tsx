@@ -1433,6 +1433,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                 // Top-level: somente categorias
                 const TOP: Array<{ key: string; label: string; icon?: string }> = [
                   { key: 'all', label: 'Todos' },
+                  { key: 'today', label: 'Hoje', icon: '📅' },
                   { key: 'category:futebol', label: 'Futebol', icon: '⚽' },
                 ];
                 // Sub-chips de competições por categoria (base fixa + dinâmicas dos eventos)
