@@ -114,12 +114,28 @@ const translateOutcomeLabel = (s?: string | null) => {
 
 import LZString from 'lz-string';
 
-const encodeCopy = (sel: Array<{ e: string; o: string }>) => {
-  try {
-    const payload = sel.map(s => s.e + '|' + s.o).join(';');
-    return 'z' + LZString.compressToEncodedURIComponent(payload);
-  } catch { return ''; }
+const SLUG_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
+const genSlug = (len = 6) => {
+  let s = '';
+  for (let i = 0; i < len; i++) s += SLUG_ALPHABET[Math.floor(Math.random() * SLUG_ALPHABET.length)];
+  return s;
 };
+const createShortShareLink = async (
+  tag: string,
+  selections: Array<{ e: string; o: string }>
+): Promise<string> => {
+  const origin = window.location.origin;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = genSlug(6);
+    const { error } = await supabase
+      .from('shared_tickets')
+      .insert({ slug, tag, selections });
+    if (!error) return `${origin}/odds=${tag}#c=${slug}`;
+    if ((error as any).code !== '23505') break;
+  }
+  return `${origin}/odds=${tag}`;
+};
+// legacy decoder for #copy= (compressed) links
 const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
   try {
     if (s.startsWith('z')) {
@@ -130,7 +146,6 @@ const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
         return { e, o };
       }).filter(x => x.e && x.o);
     }
-    // fallback: legacy base64url of JSON {s:[{e,o}]}
     const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
     const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + pad;
     const json = JSON.parse(atob(b64));
@@ -216,44 +231,62 @@ const Bets = ({ tag }: BetsPageProps) => {
   // wager counts são carregados apenas no load inicial (via get-bets-page).
   // Usuário precisa dar F5 para ver contagem atualizada — economia máxima de recursos.
 
-  // import shared ticket via #copy=
+  // import shared ticket via #c=<slug> (new) or #copy=<payload> (legacy)
   useEffect(() => {
     if (!page?.events) return;
-    const m = window.location.hash.match(/(?:^#|&)copy=([^&]+)/);
-    if (!m) return;
-    const sel = decodeCopy(decodeURIComponent(m[1]));
-    if (!sel.length) return;
-    const events: EventRow[] = page.events || [];
-    const outcomes: OutcomeRow[] = page.outcomes || [];
-    const markets: MarketRow[] = page.markets || [];
-    const drafts: TicketDraft[] = [];
-    for (const { e, o } of sel) {
-      const ev = events.find(x => x.id === e);
-      const oc = outcomes.find(x => x.id === o && x.event_id === e);
-      if (!ev || !oc) continue;
-      const mk = markets.find(x => x.id === oc.market_id);
-      drafts.push({
-        eventId: ev.id, eventTitle: ev.title,
-        marketId: oc.market_id, marketTitle: mk?.title || 'Resultado Final',
-        outcomeId: oc.id, outcomeLabel: oc.label, odd: Number(oc.odd),
-      });
-    }
-    // strip the copy hash from URL (keep #ev=... if present)
-    const newHash = window.location.hash
-      .replace(/(?:^#|&)copy=[^&]+/, '')
-      .replace(/^#&/, '#')
-      .replace(/^#$/, '');
-    window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
-    if (!drafts.length) return;
-    if (drafts.length === 1) {
-      const ev = events.find(x => x.id === drafts[0].eventId);
-      const oc = outcomes.find(x => x.id === drafts[0].outcomeId);
-      if (ev && oc) { setSlip({ event: ev, outcome: oc }); toast.success('Bilhete carregado! Confirme para apostar.'); }
-    } else {
-      setTicketDraft(drafts);
-      setTicketOpen(true);
-      toast.success(`Múltipla com ${drafts.length} seleções carregada!`);
-    }
+    (async () => {
+      let sel: Array<{ e: string; o: string }> = [];
+      let stripPattern: RegExp | null = null;
+      const mShort = window.location.hash.match(/(?:^#|&)c=([^&]+)/);
+      const mLegacy = window.location.hash.match(/(?:^#|&)copy=([^&]+)/);
+      if (mShort) {
+        const slug = decodeURIComponent(mShort[1]);
+        const { data, error } = await supabase
+          .from('shared_tickets')
+          .select('selections')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (error || !data) { toast.error('Bilhete não encontrado'); return; }
+        sel = (data.selections as any) || [];
+        stripPattern = /(?:^#|&)c=[^&]+/;
+      } else if (mLegacy) {
+        sel = decodeCopy(decodeURIComponent(mLegacy[1]));
+        stripPattern = /(?:^#|&)copy=[^&]+/;
+      } else {
+        return;
+      }
+      if (!sel.length) return;
+      const events: EventRow[] = page.events || [];
+      const outcomes: OutcomeRow[] = page.outcomes || [];
+      const markets: MarketRow[] = page.markets || [];
+      const drafts: TicketDraft[] = [];
+      for (const { e, o } of sel) {
+        const ev = events.find(x => x.id === e);
+        const oc = outcomes.find(x => x.id === o && x.event_id === e);
+        if (!ev || !oc) continue;
+        const mk = markets.find(x => x.id === oc.market_id);
+        drafts.push({
+          eventId: ev.id, eventTitle: ev.title,
+          marketId: oc.market_id, marketTitle: mk?.title || 'Resultado Final',
+          outcomeId: oc.id, outcomeLabel: oc.label, odd: Number(oc.odd),
+        });
+      }
+      const newHash = window.location.hash
+        .replace(stripPattern!, '')
+        .replace(/^#&/, '#')
+        .replace(/^#$/, '');
+      window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
+      if (!drafts.length) return;
+      if (drafts.length === 1) {
+        const ev = events.find(x => x.id === drafts[0].eventId);
+        const oc = outcomes.find(x => x.id === drafts[0].outcomeId);
+        if (ev && oc) { setSlip({ event: ev, outcome: oc }); toast.success('Bilhete carregado! Confirme para apostar.'); }
+      } else {
+        setTicketDraft(drafts);
+        setTicketOpen(true);
+        toast.success(`Múltipla com ${drafts.length} seleções carregada!`);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
@@ -1241,9 +1274,11 @@ const Bets = ({ tag }: BetsPageProps) => {
                           </div>
                           {cfg.ticketEnabled !== false && ['pending', 'won', 'lost'].includes(t.status) && (
                             <button
-                              onClick={() => {
-                                const copyHash = encodeCopy(sels.map(s => ({ e: s.event_id, o: s.outcome_id })));
-                                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
+                              onClick={async () => {
+                                const copyUrl = await createShortShareLink(
+                                  tag,
+                                  sels.map(s => ({ e: s.event_id, o: s.outcome_id }))
+                                );
                                 setShareMultiple({
                                   userId: authed?.account_id || authed?.id,
                                   wagerCode: t.public_code,
@@ -1307,15 +1342,14 @@ const Bets = ({ tag }: BetsPageProps) => {
               };
               const outcome = (page?.outcomes || []).find((o: OutcomeRow) => o.id === w.outcome_id);
               const canShare = cfg.ticketEnabled !== false && (w.status === 'won' || w.status === 'lost' || w.status === 'pending');
-              const openShare = () => {
+              const openShare = async () => {
                 if (!ev) return;
                 const payout = w.status === 'won'
                   ? w.payout_coins
                   : w.status === 'lost'
                     ? 0
                     : Math.round(w.amount_coins * Number(w.odd_snapshot));
-                const copyHash = encodeCopy([{ e: w.event_id, o: w.outcome_id }]);
-                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
+                const copyUrl = await createShortShareLink(tag, [{ e: w.event_id, o: w.outcome_id }]);
                 setShareWager({
                   userId: authed?.account_id || authed?.id,
                   wagerCode: w.public_code,

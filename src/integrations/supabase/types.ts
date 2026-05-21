@@ -1793,6 +1793,27 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_tickets: {
+        Row: {
+          created_at: string
+          selections: Json
+          slug: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          selections: Json
+          slug: string
+          tag: string
+        }
+        Update: {
+          created_at?: string
+          selections?: Json
+          slug?: string
+          tag?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           bg_image_url: string | null
