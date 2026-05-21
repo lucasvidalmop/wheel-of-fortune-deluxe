@@ -56,18 +56,51 @@ Deno.serve(async (req) => {
     let outcomes: any[] = [];
     let markets: any[] = [];
     if (eventIds.length) {
-      // Paginate outcomes (Supabase default limit is 1000 per query)
       const PAGE = 1000;
+      // Paginate markets first so the initial page can return only the principal odds per event.
+      let mFrom = 0;
+      while (true) {
+        const { data: mks, error: mkErr } = await supabase
+          .from("bet_markets")
+          .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
+          .in("event_id", eventIds)
+          .order("position", { ascending: true })
+          .order("id", { ascending: true })
+          .range(mFrom, mFrom + PAGE - 1);
+        if (mkErr) throw mkErr;
+        const batch = mks || [];
+        markets.push(...batch);
+        if (batch.length < PAGE) break;
+        mFrom += PAGE;
+        if (mFrom > 50000) break;
+      }
+
+      let outcomeQueryIds: string[] | null = null;
+      if (!isDetailLoad) {
+        const byEvent = new Map<string, any[]>();
+        for (const mk of markets) byEvent.set(mk.event_id, [...(byEvent.get(mk.event_id) || []), mk]);
+        const isMainMarket = (title = "") => {
+          const t = title.toLowerCase();
+          return t.includes("match winner") || t.includes("vencedor") || t.includes("resultado") || t === "1x2" || t.includes("1x2");
+        };
+        outcomeQueryIds = [];
+        for (const mks of byEvent.values()) {
+          const main = mks.find((m) => isMainMarket(m.title)) || mks[0];
+          if (main?.id) outcomeQueryIds.push(main.id);
+        }
+        const keep = new Set(outcomeQueryIds);
+        markets = markets.filter((m) => keep.has(m.id));
+      }
+
       let from = 0;
       while (true) {
         let outQuery = supabase
           .from("bet_outcomes")
           .select("id, event_id, market_id, label, odd, position, is_winner")
-          .in("event_id", eventIds)
           .order("position", { ascending: true })
           .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
-        if (!isDetailLoad) outQuery = outQuery.lte("position", 3);
+        outQuery = outcomeQueryIds ? outQuery.in("market_id", outcomeQueryIds) : outQuery.in("event_id", eventIds);
         const { data: outs, error: outErr } = await outQuery;
         if (outErr) throw outErr;
         const batch = outs || [];
@@ -75,25 +108,6 @@ Deno.serve(async (req) => {
         if (batch.length < PAGE) break;
         from += PAGE;
         if (from > 100000) break; // safety
-      }
-
-      // Paginate markets as well
-      let mFrom = 0;
-      while (true) {
-        let marketQuery = supabase
-          .from("bet_markets")
-          .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
-          .in("event_id", eventIds)
-          .order("position", { ascending: true })
-          .order("id", { ascending: true })
-          .range(mFrom, mFrom + PAGE - 1);
-        if (!isDetailLoad) marketQuery = marketQuery.lte("position", 1);
-        const { data: mks } = await marketQuery;
-        const batch = mks || [];
-        markets.push(...batch);
-        if (batch.length < PAGE) break;
-        mFrom += PAGE;
-        if (mFrom > 50000) break;
       }
     }
 
