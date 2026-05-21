@@ -1303,6 +1303,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                   : w.status === 'lost'
                     ? 0
                     : Math.round(w.amount_coins * Number(w.odd_snapshot));
+                const copyHash = encodeCopy([{ e: w.event_id, o: w.outcome_id }]);
+                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
                 setShareWager({
                   userId: authed?.account_id || authed?.id,
                   wagerCode: w.public_code,
@@ -1315,6 +1317,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   payoutMode: w.payout_mode,
                   coinName,
                   createdAt: w.created_at,
+                  copyUrl,
                 });
               };
               return (
