@@ -43,6 +43,9 @@ Deno.serve(async (req) => {
 
   const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
+  // Collect winner notifications to send via WhatsApp at the end
+  const userMessages: { wheelUserId?: string | null; accountId?: string; email?: string; text: string }[] = [];
+
   // --- 1) Singles: grouped per outcome ---
   const wagerQuery = supabase
     .from("bet_wagers")
