@@ -893,7 +893,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                           >
                             <h3 className="text-[10px] uppercase tracking-[0.18em] font-black flex items-center gap-2" style={{ color: ticketAccent }}>
                               <span className="inline-block w-1 h-3 rounded-sm" style={{ background: ticketAccent }} />
-                              {mk!.title}
+                              {translatePt(mk!.title)}
                             </h3>
                             <span className="flex items-center gap-2">
                               {mk!.status !== 'open' && (
