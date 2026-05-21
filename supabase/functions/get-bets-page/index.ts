@@ -79,13 +79,28 @@ Deno.serve(async (req) => {
       if (!isDetailLoad) {
         const byEvent = new Map<string, any[]>();
         for (const mk of markets) byEvent.set(mk.event_id, [...(byEvent.get(mk.event_id) || []), mk]);
-        const isMainMarket = (title = "") => {
-          const t = title.toLowerCase();
-          return t.includes("match winner") || t.includes("vencedor") || t.includes("resultado") || t === "1x2" || t.includes("1x2");
-        };
+        const normTitle = (title = "") => title.trim().toLowerCase();
+        // Strict main-market match: full title equality with known principals.
+        // Avoids matching variants like "1x2 - 60 minutes" or "Goals Over/Under - Second Half".
+        const MAIN_TITLES = new Set([
+          "match winner",
+          "home/away",
+          "1x2",
+          "vencedor",
+          "vencedor do jogo",
+          "resultado final",
+          "resultado",
+        ]);
+        const isMainMarket = (title = "") => MAIN_TITLES.has(normTitle(title));
+        const isOpen = (m: any) => m?.status === "open";
         outcomeQueryIds = [];
         for (const mks of byEvent.values()) {
-          const main = mks.find((m) => isMainMarket(m.title)) || mks[0];
+          // Priority: open main → any main → first open → first market
+          const main =
+            mks.find((m) => isMainMarket(m.title) && isOpen(m)) ||
+            mks.find((m) => isMainMarket(m.title)) ||
+            mks.find((m) => isOpen(m)) ||
+            mks[0];
           if (main?.id) outcomeQueryIds.push(main.id);
         }
         const keep = new Set(outcomeQueryIds);
