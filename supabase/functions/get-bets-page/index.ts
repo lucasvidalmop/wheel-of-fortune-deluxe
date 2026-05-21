@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { tag } = await req.json();
+    const { tag, detailEventId } = await req.json();
     if (!tag || typeof tag !== "string") {
       return new Response(JSON.stringify({ error: "tag required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -40,13 +40,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: events, error: evErr } = await supabase
+    let evQuery = supabase
       .from("bet_events")
       .select("id,title,subtitle,category,category_id,image_url,home_image_url,away_image_url,starts_at,closes_at,status,payout_mode,payout_case_id,payout_case_qty_per_unit,min_bet,max_bet,max_bets_per_user,position,winning_outcome_id,is_hot,competition_id,competition_name,competition_slug,competition_country")
       .eq("bets_config_id", cfg.id)
       .in("status", ["scheduled", "open", "closed", "resolved"])
       .order("position", { ascending: true })
       .order("created_at", { ascending: false });
+    if (detailEventId && typeof detailEventId === "string") evQuery = evQuery.eq("id", detailEventId);
+    const { data: events, error: evErr } = await evQuery;
     if (evErr) throw evErr;
 
     const eventIds = (events || []).map((e: any) => e.id);
