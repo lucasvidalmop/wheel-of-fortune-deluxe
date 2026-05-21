@@ -100,7 +100,8 @@ Deno.serve(async (req) => {
           .order("position", { ascending: true })
           .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
-        outQuery = outcomeQueryIds ? outQuery.in("market_id", outcomeQueryIds) : outQuery.in("event_id", eventIds);
+        outQuery = outcomeQueryIds?.length ? outQuery.in("market_id", outcomeQueryIds) : outQuery.in("event_id", eventIds);
+        if (!isDetailLoad && !outcomeQueryIds?.length) outQuery = outQuery.lte("position", 3);
         const { data: outs, error: outErr } = await outQuery;
         if (outErr) throw outErr;
         const batch = outs || [];
