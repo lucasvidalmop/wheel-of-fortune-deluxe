@@ -7,6 +7,7 @@ import { computeTicketOdd, effectiveMaxOdd, HARD_MAX_ODD, type TicketOddLimits }
 import { canAddSelection, validateTicketCoherence } from '@/lib/ticketCoherence';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
+import ShareTicketMultiple, { type ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
 
 interface BetsPageProps { tag: string }
 
