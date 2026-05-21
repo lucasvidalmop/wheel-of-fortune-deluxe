@@ -1298,7 +1298,18 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               const oddsRes = await r.json().catch(() => ({}));
               const responses = (oddsRes as any)?.response || [];
               const bookmakers = responses[0]?.bookmakers || [];
-              const bookmaker = bookmakers[0];
+              // Usar EXCLUSIVAMENTE Bet365 — sem fallback automático para outras casas
+              const bookmaker = bookmakers.find(
+                (b: any) => String(b?.name || '').toLowerCase() === 'bet365',
+              );
+              if (!bookmaker) {
+                console.warn(`Bet365 not available for fixture ${fixtureId}`);
+                setEditingMarkets(fallbackMarkets);
+                toast.info('Bet365 indisponível para este jogo — usando mercado padrão.');
+                setImporterOpen(false);
+                return;
+              }
+              console.log('Using bookmaker: Bet365');
               const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bookmaker?.bets || [];
 
               const built: EditingMarket[] = [];
