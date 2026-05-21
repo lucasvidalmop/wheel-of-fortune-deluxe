@@ -1417,7 +1417,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       {items.map(({ key, label, icon }) => {
                         const active = categoryFilter === key;
                         return (
-                          <button key={`${keyPrefix}-${key}`} onClick={() => setCategoryFilter(key)}
+                          <button key={`${keyPrefix}-${key}`} onClick={() => setCategoryFilter(active ? 'all' : key)}
                             className="shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition whitespace-nowrap"
                             style={{
                               background: active ? accent : '#00000055',
