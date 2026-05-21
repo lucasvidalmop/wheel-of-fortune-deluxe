@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
     if (evErr) throw evErr;
 
     const eventIds = (events || []).map((e: any) => e.id);
+    const isDetailLoad = !!(detailEventId && typeof detailEventId === "string");
     let outcomes: any[] = [];
     let markets: any[] = [];
     if (eventIds.length) {
@@ -59,13 +60,15 @@ Deno.serve(async (req) => {
       const PAGE = 1000;
       let from = 0;
       while (true) {
-        const { data: outs, error: outErr } = await supabase
+        let outQuery = supabase
           .from("bet_outcomes")
           .select("id, event_id, market_id, label, odd, position, is_winner")
           .in("event_id", eventIds)
           .order("position", { ascending: true })
           .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
+        if (!isDetailLoad) outQuery = outQuery.lte("position", 3);
+        const { data: outs, error: outErr } = await outQuery;
         if (outErr) throw outErr;
         const batch = outs || [];
         outcomes.push(...batch);
@@ -77,13 +80,15 @@ Deno.serve(async (req) => {
       // Paginate markets as well
       let mFrom = 0;
       while (true) {
-        const { data: mks } = await supabase
+        let marketQuery = supabase
           .from("bet_markets")
           .select("id, event_id, title, position, status, closes_at, winning_outcome_id, min_bet, max_bet, max_bets_per_user, payout_mode, payout_case_id, payout_case_qty_per_unit, resolved_at")
           .in("event_id", eventIds)
           .order("position", { ascending: true })
           .order("id", { ascending: true })
           .range(mFrom, mFrom + PAGE - 1);
+        if (!isDetailLoad) marketQuery = marketQuery.lte("position", 1);
+        const { data: mks } = await marketQuery;
         const batch = mks || [];
         markets.push(...batch);
         if (batch.length < PAGE) break;
