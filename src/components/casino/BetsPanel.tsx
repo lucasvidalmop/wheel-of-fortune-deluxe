@@ -713,8 +713,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
             </button>
           </div>
           {events.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento criado ainda.</p>}
-          {events.map(ev => {
-            const evIndex = sortedEvents.findIndex(s => s.id === ev.id);
+          {sortedEvents.map((ev, evIndex) => {
             const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
             const c = ev.payout_case_id ? cases.find(x => x.id === ev.payout_case_id) : null;
             const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
