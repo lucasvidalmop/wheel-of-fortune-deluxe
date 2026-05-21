@@ -1707,6 +1707,8 @@ function Dashboard() {
     setNotifyLuckyboxPurchasedEnabled(!!settings.notifyLuckyboxPurchasedEnabled);
     setNotifyLuckyboxRedeemedEnabled(!!settings.notifyLuckyboxRedeemedEnabled);
     setNotifyLuckyboxPrizeEnabled(!!settings.notifyLuckyboxPrizeEnabled);
+    setNotifyTicketPlacedEnabled(!!settings.notifyTicketPlacedEnabled);
+    setNotifyTicketWonEnabled(!!settings.notifyTicketWonEnabled);
     setNotifyGroupJid(settings.notifyGroupJid || '');
     setNotifyGroupName(settings.notifyGroupName || '');
     setNotifySelectedGroups(Array.isArray(settings.notifySelectedGroups) ? settings.notifySelectedGroups : []);
