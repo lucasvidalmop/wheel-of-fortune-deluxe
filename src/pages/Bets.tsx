@@ -8,6 +8,7 @@ import { canAddSelection, validateTicketCoherence } from '@/lib/ticketCoherence'
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
 import ShareTicketMultiple, { type ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
+import { optimizedImage } from '@/lib/imageUrl';
 
 interface BetsPageProps { tag: string }
 
@@ -657,7 +658,7 @@ const Bets = ({ tag }: BetsPageProps) => {
         <form onSubmit={handleAuth} className="relative z-10 w-full max-w-sm rounded-2xl p-6 space-y-5 border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
           <div className="text-center space-y-2">
             {cfg.logoUrl
-              ? <img src={cfg.logoUrl} alt="logo" className="max-h-20 mx-auto object-contain" />
+              ? <img src={optimizedImage(cfg.logoUrl, { width: 320, quality: 80 })} alt="logo" decoding="async" className="max-h-20 mx-auto object-contain" />
               : <div className="text-4xl">🎯</div>}
             <h1 className="text-xl font-bold" style={{ color: titleColor }}>{loginTitle}</h1>
             <p className="text-sm" style={{ color: subtitleColor }}>{loginSubtitle}</p>
@@ -698,7 +699,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const eventStatusBadge = (st: string) => st === 'open' ? 'Aberto' : st === 'closed' ? 'Fechado' : st === 'resolved' ? 'Resolvido' : 'Cancelado';
 
   const mainBgStyle: React.CSSProperties = cfg.bgImage
-    ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', color: text }
+    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1920, quality: 65 })})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', color: text }
     : (cfg.bgGradientFrom || cfg.bgGradientTo)
       ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)`, color: text }
       : { background: bg, color: text };
@@ -709,7 +710,7 @@ const Bets = ({ tag }: BetsPageProps) => {
       <header className="sticky top-0 z-20 backdrop-blur" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: `1px solid ${accent}33` }}>
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {cfg.logoUrl && <img src={cfg.logoUrl} alt="" className="h-9 object-contain shrink-0" />}
+            {cfg.logoUrl && <img src={optimizedImage(cfg.logoUrl, { width: 160, quality: 80 })} alt="" decoding="async" className="h-9 object-contain shrink-0" />}
             <div className="min-w-0 hidden sm:block">
               <div className="font-bold truncate">{cfg.title || 'Apostas'}</div>
               <div className="text-xs truncate" style={{ color: muted }}>{authed.name}</div>
@@ -717,7 +718,7 @@ const Bets = ({ tag }: BetsPageProps) => {
           </div>
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg" style={{ background: `${accent}22`, border: `1px solid ${accent}55` }}>
-              {coinIcon ? <img src={coinIcon} className="w-4 h-4" alt="" /> : <Wallet size={14} />}
+              {coinIcon ? <img src={optimizedImage(coinIcon, { width: 48, quality: 80 })} className="w-4 h-4" alt="" decoding="async" /> : <Wallet size={14} />}
               <span className="font-bold tabular-nums text-sm">{authed.tokens_balance}</span>
               <span className="text-xs hidden sm:inline" style={{ color: muted }}>{coinName}</span>
             </div>
@@ -917,21 +918,21 @@ const Bets = ({ tag }: BetsPageProps) => {
                     {(ev.home_image_url || ev.away_image_url) ? (
                       <div className="flex items-center gap-1 flex-shrink-0 px-2 py-1.5 rounded-md" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         {ev.home_image_url
-                          ? <img src={ev.home_image_url} alt="" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
+                          ? <img src={optimizedImage(ev.home_image_url, { width: 96, quality: 70 })} alt="" loading="lazy" decoding="async" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
                           : <div className="w-8 h-8 sm:w-7 sm:h-7" />}
                         <span className="text-[9px] font-bold opacity-60" style={{ color: text }}>VS</span>
                         {ev.away_image_url
-                          ? <img src={ev.away_image_url} alt="" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
+                          ? <img src={optimizedImage(ev.away_image_url, { width: 96, quality: 70 })} alt="" loading="lazy" decoding="async" className="w-8 h-8 sm:w-7 sm:h-7 object-contain" />
                           : <div className="w-8 h-8 sm:w-7 sm:h-7" />}
                       </div>
                     ) : ev.image_url && (
-                      <img src={ev.image_url} alt="" className="w-16 h-10 sm:w-16 sm:h-10 rounded-md object-cover flex-shrink-0 border border-white/10" />
+                      <img src={optimizedImage(ev.image_url, { width: 200, quality: 70 })} alt="" loading="lazy" decoding="async" className="w-16 h-10 sm:w-16 sm:h-10 rounded-md object-cover flex-shrink-0 border border-white/10" />
                     )}
                   </div>
                 </button>
                 {ev.payout_mode === 'case' && c && (
                   <div className="relative flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
-                    {c.image_url && <img src={c.image_url} className="w-8 h-8 rounded" alt="" />}
+                    {c.image_url && <img src={optimizedImage(c.image_url, { width: 96, quality: 70 })} loading="lazy" decoding="async" className="w-8 h-8 rounded" alt="" />}
                     <span className="text-xs">Prêmio: caixa <b>{c.name}</b> ({ev.payout_case_qty_per_unit}× por unidade apostada)</span>
                   </div>
                 )}
@@ -1013,7 +1014,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         )}
                         {!collapsed && mk?.payout_mode === 'case' && mkCase && (
                           <div className="relative flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.48)', border: `1px solid ${text}12` }}>
-                            {mkCase.image_url && <img src={mkCase.image_url} className="w-8 h-8 rounded" alt="" />}
+                            {mkCase.image_url && <img src={optimizedImage(mkCase.image_url, { width: 96, quality: 70 })} loading="lazy" decoding="async" className="w-8 h-8 rounded" alt="" />}
                             <span className="text-xs">Prêmio: caixa <b>{mkCase.name}</b> ({mk.payout_case_qty_per_unit}× por unidade apostada)</span>
                           </div>
                         )}
@@ -1447,7 +1448,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             <div className="relative flex items-center justify-center mb-5 pt-1">
               <div className="flex w-full items-center justify-center min-w-0 px-9">
                 {cfg.logoUrl ? (
-                  <img src={cfg.logoUrl} alt="" className="h-20 w-full max-w-[220px] object-contain" />
+                  <img src={optimizedImage(cfg.logoUrl, { width: 440, quality: 80 })} alt="" loading="lazy" decoding="async" className="h-20 w-full max-w-[220px] object-contain" />
                 ) : (
                   <span className="font-black text-base truncate" style={{ color: accent }}>{cfg.title || 'Apostas'}</span>
                 )}
