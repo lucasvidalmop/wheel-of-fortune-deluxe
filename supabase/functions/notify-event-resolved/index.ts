@@ -164,10 +164,20 @@ Deno.serve(async (req) => {
         })),
       });
       multiplesNotified++;
+
+      const selLines = allSels.map((s: any, i: number) =>
+        `  ${i + 1}. ${s.event_title || "-"}${s.market_title ? ` (${s.market_title})` : ""} → *${s.selection_label || "-"}* @ ${Number(s.odd || 0).toFixed(2)}`
+      ).join("\n");
+      const codeLine = t.public_code ? `\n🎟️ *Código:* ${t.public_code}` : "";
+      const text = `🏆 *Seu bilhete múltiplo foi premiado!*${codeLine}\n💰 *Apostado:* ${Number(t.stake || 0)}\n📈 *Odd total:* ${Number(t.total_odd || 0).toFixed(2)}\n💸 *Ganho:* ${Number(t.payout_coins || 0)}\n\n*Seleções:*\n${selLines}\n\nParabéns! 🎉`;
+      userMessages.push({ wheelUserId: t.wheel_user_id, accountId: t.account_id, email: t.user_email, text });
     }
   }
 
-  return json({ ok: true, singlesNotified, multiplesNotified });
+  // Dispatch WhatsApp messages to winners (with cooldown if > 10)
+  const userResults = await sendWinnerWhatsapps(supabase, ev.owner_id, userMessages);
+
+  return json({ ok: true, singlesNotified, multiplesNotified, userNotified: userResults });
 });
 
 async function notifyOwner(ownerId: string, type: string, payload: Record<string, any>) {
