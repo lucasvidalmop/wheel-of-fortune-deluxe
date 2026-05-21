@@ -1030,13 +1030,17 @@ const Bets = ({ tag }: BetsPageProps) => {
                     if (outs.length) groups.push({ market: null, outs });
                   }
                   const evExpanded = detailMode || !!expandedEvents[ev.id];
-                  // Pick principal market: prefer a 1X2-like market (3 outcomes), else 2-outcome, else first
-                  const norm = (s: string | null | undefined) => (s || '').toLowerCase();
-                  const isMatchWinner = (m: MarketRow | null) => {
-                    const t = norm(m?.title);
-                    return t.includes('match winner') || t.includes('vencedor') || t.includes('resultado') || t === '1x2' || t.includes('1x2');
-                  };
-                  let principalIdx = groups.findIndex(g => isMatchWinner(g.market) && g.outs.length >= 2);
+                  // Pick principal market: prefer OPEN main-titled markets (strict match), then any open, then fallback
+                  const norm = (s: string | null | undefined) => (s || '').trim().toLowerCase();
+                  const MAIN_TITLES_FE = new Set([
+                    'match winner', 'full time result', 'home/away',
+                    '1x2', 'vencedor', 'vencedor do jogo', 'resultado final', 'resultado',
+                  ]);
+                  const isMainTitle = (m: MarketRow | null) => MAIN_TITLES_FE.has(norm(m?.title));
+                  const isOpenMk = (m: MarketRow | null) => !m || (m.status === 'open' && !isBetDateTimeExpired(m.closes_at));
+                  let principalIdx = groups.findIndex(g => isMainTitle(g.market) && isOpenMk(g.market) && g.outs.length >= 2);
+                  if (principalIdx < 0) principalIdx = groups.findIndex(g => isOpenMk(g.market) && g.outs.length >= 2);
+                  if (principalIdx < 0) principalIdx = groups.findIndex(g => isMainTitle(g.market) && g.outs.length >= 2);
                   if (principalIdx < 0) principalIdx = groups.findIndex(g => g.outs.length === 3);
                   if (principalIdx < 0) principalIdx = groups.findIndex(g => g.outs.length === 2);
                   if (principalIdx < 0) principalIdx = 0;
