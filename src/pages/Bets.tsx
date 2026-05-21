@@ -1442,21 +1442,25 @@ const Bets = ({ tag }: BetsPageProps) => {
       </main>
 
       {shareWager && (
-        <ShareTicket
-          open={!!shareWager}
-          onClose={() => setShareWager(null)}
-          data={shareWager}
-          config={cfg.ticket || {}}
-        />
+        <Suspense fallback={null}>
+          <ShareTicket
+            open={!!shareWager}
+            onClose={() => setShareWager(null)}
+            data={shareWager}
+            config={cfg.ticket || {}}
+          />
+        </Suspense>
       )}
 
       {shareMultiple && (
-        <ShareTicketMultiple
-          open={!!shareMultiple}
-          onClose={() => setShareMultiple(null)}
-          data={shareMultiple}
-          config={cfg.ticket || {}}
-        />
+        <Suspense fallback={null}>
+          <ShareTicketMultiple
+            open={!!shareMultiple}
+            onClose={() => setShareMultiple(null)}
+            data={shareMultiple}
+            config={cfg.ticket || {}}
+          />
+        </Suspense>
       )}
 
       {/* Bet slip */}
