@@ -1971,6 +1971,8 @@ function Dashboard() {
     notifyLuckyboxPurchasedEnabled,
     notifyLuckyboxRedeemedEnabled,
     notifyLuckyboxPrizeEnabled,
+    notifyTicketPlacedEnabled,
+    notifyTicketWonEnabled,
     notifyGroupJid,
     notifyGroupName,
     notifySelectedGroups,
