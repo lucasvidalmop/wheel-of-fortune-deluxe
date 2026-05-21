@@ -4094,8 +4094,10 @@ function Dashboard() {
           {/* ══════ WHEEL CONFIG ══════ */}
           {activeTab === 'wheel' && (
             <div className="max-w-2xl space-y-4">
-              <CustomizationPanel config={wheelConfig} onChange={updateWheelConfig} />
-              <DialogConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              <Suspense fallback={<PanelFallback />}>
+                <CustomizationPanel config={wheelConfig} onChange={updateWheelConfig} />
+                <DialogConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              </Suspense>
               <button
                 onClick={handleSaveConfig}
                 disabled={savingConfig}
@@ -4108,13 +4110,17 @@ function Dashboard() {
 
           {/* ══════ BATALHA SLOT ══════ */}
           {activeTab === 'batalha_slot' && session?.user?.id && (
-            <BattleConfigPanel userId={session.user.id} />
+            <Suspense fallback={<PanelFallback />}>
+              <BattleConfigPanel userId={session.user.id} />
+            </Suspense>
           )}
 
           {/* ══════ AUTH CONFIG ══════ */}
           {activeTab === 'auth' && (
             <div className="max-w-lg space-y-4">
-              <AuthConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              <Suspense fallback={<PanelFallback />}>
+                <AuthConfigPanel config={wheelConfig} onChange={updateWheelConfig} />
+              </Suspense>
               <button
                 onClick={handleSaveConfig}
                 disabled={savingConfig}
@@ -4782,7 +4788,9 @@ function Dashboard() {
 
           {/* ══════ EMAIL TAB ══════ */}
           {activeTab === 'email_brevo' && (
-            <BrevoBulkEmailPanel ownerId={session?.user?.id ?? null} />
+            <Suspense fallback={<PanelFallback />}>
+              <BrevoBulkEmailPanel ownerId={session?.user?.id ?? null} />
+            </Suspense>
           )}
 
           {activeTab === 'email' && (
@@ -8137,10 +8145,14 @@ function Dashboard() {
 
           {/* ══════ REFERRAL LINKS TAB ══════ */}
           {activeTab === 'luckybox' && session?.user?.id && (
-            <LuckyboxPanel ownerId={session.user.id} />
+            <Suspense fallback={<PanelFallback />}>
+              <LuckyboxPanel ownerId={session.user.id} />
+            </Suspense>
           )}
           {activeTab === 'apostas' && session?.user?.id && (
-            <BetsPanel ownerId={session.user.id} />
+            <Suspense fallback={<PanelFallback />}>
+              <BetsPanel ownerId={session.user.id} />
+            </Suspense>
           )}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
@@ -8168,23 +8180,29 @@ function Dashboard() {
 
               {referralSubTab === 'redemption' && (
                 <GlassCard className="p-5">
-                  <RedemptionPagesPanel ownerId={session.user.id} />
+                  <Suspense fallback={<PanelFallback />}>
+                    <RedemptionPagesPanel ownerId={session.user.id} />
+                  </Suspense>
                 </GlassCard>
               )}
 
               {referralSubTab === 'default_style' && (
                 <GlassCard className="p-5">
-                  <ReferralDefaultEditor
-                    userId={session.user.id}
-                    currentConfig={defaultReferralConfig}
-                    onSaved={(cfg) => setDefaultReferralConfig(cfg)}
-                  />
+                  <Suspense fallback={<PanelFallback />}>
+                    <ReferralDefaultEditor
+                      userId={session.user.id}
+                      currentConfig={defaultReferralConfig}
+                      onSaved={(cfg) => setDefaultReferralConfig(cfg)}
+                    />
+                  </Suspense>
                 </GlassCard>
               )}
 
               {referralSubTab === 'analytics' && (
                 <GlassCard className="p-5">
-                  <ReferralAnalyticsPanel ownerId={session.user.id} gorjetaRef={(wheelConfig as any).gorjetaRef || ''} />
+                  <Suspense fallback={<PanelFallback />}>
+                    <ReferralAnalyticsPanel ownerId={session.user.id} gorjetaRef={(wheelConfig as any).gorjetaRef || ''} />
+                  </Suspense>
                 </GlassCard>
               )}
 
@@ -8568,15 +8586,17 @@ function Dashboard() {
           )}
 
           {sharingReferral && session?.user?.id && (
-            <WhatsAppShareDialog
-              ownerId={session.user.id}
-              shareUrl={`${window.location.origin}/ref/${sharingReferral.code}`}
-              linkLabel={sharingReferral.label || ''}
-              onClose={() => setSharingReferral(null)}
-              evolutionApiUrl={evolutionApiUrl}
-              evolutionApiKey={evolutionApiKey}
-              evolutionInstance={evolutionInstance}
-            />
+            <Suspense fallback={null}>
+              <WhatsAppShareDialog
+                ownerId={session.user.id}
+                shareUrl={`${window.location.origin}/ref/${sharingReferral.code}`}
+                linkLabel={sharingReferral.label || ''}
+                onClose={() => setSharingReferral(null)}
+                evolutionApiUrl={evolutionApiUrl}
+                evolutionApiKey={evolutionApiKey}
+                evolutionInstance={evolutionInstance}
+              />
+            </Suspense>
           )}
 
           {/* ══════ GORJETA TAB ══════ */}
