@@ -16,24 +16,36 @@ const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMu
 function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent: (ev: any) => React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
-  const indexRef = useRef(0);
+
+  // duplica a lista para criar efeito de loop infinito (apenas se houver >1)
+  const loop = events.length > 1;
+  const items = loop ? [...events, ...events] : events;
 
   useEffect(() => {
-    if (events.length <= 1) return;
+    if (!loop) return;
     const el = scrollRef.current;
     if (!el) return;
-    const interval = setInterval(() => {
-      if (pausedRef.current || !el) return;
-      const children = el.children;
-      // ignora o <style> inline como filho
-      const items = Array.from(children).filter(c => c.tagName !== 'STYLE') as HTMLElement[];
-      if (items.length === 0) return;
-      indexRef.current = (indexRef.current + 1) % items.length;
-      const next = items[indexRef.current];
-      el.scrollTo({ left: next.offsetLeft - el.offsetLeft, behavior: 'smooth' });
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [events.length]);
+
+    let raf = 0;
+    let last = performance.now();
+    const speed = 40; // px por segundo
+
+    const tick = (now: number) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      if (el && !pausedRef.current) {
+        el.scrollLeft += speed * dt;
+        // metade do scroll = fim da primeira cópia → reseta sem animação
+        const half = el.scrollWidth / 2;
+        if (el.scrollLeft >= half) {
+          el.scrollLeft -= half;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [loop, events.length]);
 
   const pause = () => { pausedRef.current = true; };
   const resume = () => { pausedRef.current = false; };
@@ -41,7 +53,7 @@ function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent
   return (
     <div
       ref={scrollRef}
-      className="hot-events-scroll flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x snap-mandatory"
+      className="hot-events-scroll flex gap-3 overflow-x-auto -mx-3 px-3 pb-2"
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       onMouseEnter={pause}
       onMouseLeave={resume}
@@ -49,8 +61,8 @@ function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent
       onTouchEnd={resume}
     >
       <style>{`.hot-events-scroll::-webkit-scrollbar{display:none}`}</style>
-      {events.map(ev => (
-        <div key={ev.id} className="snap-start shrink-0 w-[85%] sm:w-[48%] lg:w-[32%]">
+      {items.map((ev, i) => (
+        <div key={`${ev.id}-${i}`} className="shrink-0 w-[85%] sm:w-[48%] lg:w-[32%]">
           {renderEvent(ev)}
         </div>
       ))}
