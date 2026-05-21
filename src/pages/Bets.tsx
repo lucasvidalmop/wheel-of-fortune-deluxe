@@ -1507,18 +1507,18 @@ const Bets = ({ tag }: BetsPageProps) => {
             </div>
 
             <div className="relative flex items-center justify-between gap-2 mb-3 px-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: muted }}>
-              <span>Mín: <span className="tabular-nums" style={{ color: text }}>{slip.event.min_bet} {coinName}</span></span>
-              <span>Máx: <span className="tabular-nums" style={{ color: text }}>{slip.event.max_bet} {coinName}</span></span>
+              <span>Mín: <span className="tabular-nums" style={{ color: text }}>{SIMPLE_MIN_BET} {coinName}</span></span>
+              <span>Máx: <span className="tabular-nums" style={{ color: text }}>{SIMPLE_MAX_BET} {coinName}</span></span>
             </div>
 
             <div className="relative grid grid-cols-5 gap-2 mb-3">
               {[10, 50, 100, 500].map(v => (
-                <button key={v} type="button" onClick={() => setAmount(String(v))}
+                <button key={v} type="button" onClick={() => setAmount(String(Math.min(v, SIMPLE_MAX_BET)))}
                   className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: '#00000044', color: text, border: `1px solid ${text}10` }}>
                   {v}
                 </button>
               ))}
-              <button type="button" onClick={() => setAmount(String(Math.min(authed?.tokens_balance ?? 0, slip.event.max_bet || (authed?.tokens_balance ?? 0))))}
+              <button type="button" onClick={() => setAmount(String(Math.min(authed?.tokens_balance ?? 0, SIMPLE_MAX_BET)))}
                 className="py-2 rounded-lg text-xs font-bold transition hover:opacity-90" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
                 Tudo
               </button>
