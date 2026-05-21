@@ -1880,18 +1880,33 @@ const Bets = ({ tag }: BetsPageProps) => {
               return (
                 <div key={w.id} className="rounded-xl p-4 flex items-center justify-between gap-3"
                   style={{ background: cardBg, border: `1px solid ${accent}22` }}>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{ev?.title || w.event_id.slice(0, 8)}</div>
-                    <div className="text-xs mt-0.5" style={{ color: muted }}>
-                      {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
-                      {w.payout_mode === 'case' ? ' · Prêmio: caixa' : ` · Retorno: ${Math.round(w.amount_coins * Number(w.odd_snapshot))} ${coinName}`}
-                    </div>
-                    {w.public_code && (
-                      <div className="text-[10px] mt-1 font-mono tracking-wider" style={{ color: accent }}>
-                        ID: {w.public_code}
+                  {(() => {
+                    const mk = outcome?.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
+                    const marketTitle = mk?.title || 'Resultado Final';
+                    return (
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate">{ev?.title || w.event_id.slice(0, 8)}</div>
+                        <div className="text-xs mt-1 flex flex-wrap items-center gap-1.5">
+                          <span
+                            className="inline-block px-2 py-0.5 rounded-md font-bold"
+                            style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
+                          >
+                            {outcome?.label || '—'}
+                          </span>
+                          <span style={{ color: muted }}>{marketTitle}</span>
+                        </div>
+                        <div className="text-xs mt-1" style={{ color: muted }}>
+                          {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
+                          {w.payout_mode === 'case' ? ' · Prêmio: caixa' : ` · Retorno: ${Math.round(w.amount_coins * Number(w.odd_snapshot))} ${coinName}`}
+                        </div>
+                        {w.public_code && (
+                          <div className="text-[10px] mt-1 font-mono tracking-wider" style={{ color: accent }}>
+                            ID: {w.public_code}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <div className="text-sm font-bold" style={{ color: statusColor[w.status] }}>{statusLabel[w.status]}</div>
