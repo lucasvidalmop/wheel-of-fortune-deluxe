@@ -17,28 +17,35 @@ function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent
   const [index, setIndex] = useState(0);
   const [animate, setAnimate] = useState(true);
   const pausedRef = useRef(false);
+  const interactedRef = useRef(false);
+  const touchStartXRef = useRef<number | null>(null);
   const n = events.length;
 
-  // duplica o primeiro slide no fim para loop infinito sem "voltar"
   const slides = n > 1 ? [...events, events[0]] : events;
 
   useEffect(() => {
     if (n <= 1) return;
     const id = setInterval(() => {
-      if (pausedRef.current) return;
+      if (pausedRef.current || interactedRef.current) return;
       setIndex(i => i + 1);
     }, 4000);
     return () => clearInterval(id);
   }, [n]);
 
-  // ao chegar no clone (index === n), aguarda transição e reseta sem animação
   useEffect(() => {
     if (n <= 1) return;
     if (index === n) {
       const t = setTimeout(() => {
         setAnimate(false);
         setIndex(0);
-        // reabilita animação no próximo frame
+        requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
+      }, 600);
+      return () => clearTimeout(t);
+    }
+    if (index < 0) {
+      const t = setTimeout(() => {
+        setAnimate(false);
+        setIndex(n - 1);
         requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
       }, 600);
       return () => clearTimeout(t);
@@ -48,18 +55,47 @@ function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent
   const pause = () => { pausedRef.current = true; };
   const resume = () => { pausedRef.current = false; };
 
+  const goNext = () => {
+    interactedRef.current = true;
+    setAnimate(true);
+    setIndex(i => (i >= n ? 1 : i + 1));
+  };
+  const goPrev = () => {
+    interactedRef.current = true;
+    setAnimate(true);
+    setIndex(i => i - 1);
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    pause();
+    touchStartXRef.current = e.touches[0]?.clientX ?? null;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    resume();
+    const startX = touchStartXRef.current;
+    touchStartXRef.current = null;
+    if (startX == null) return;
+    const endX = e.changedTouches[0]?.clientX ?? startX;
+    const dx = endX - startX;
+    if (Math.abs(dx) > 40) {
+      if (dx < 0) goNext(); else goPrev();
+    }
+  };
+
+  const activeDot = n > 0 ? (((index % n) + n) % n) : 0;
+
   return (
     <div
-      className="relative overflow-hidden"
+      className="relative overflow-hidden group"
       onMouseEnter={pause}
       onMouseLeave={resume}
-      onTouchStart={pause}
-      onTouchEnd={resume}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       <div
         className="flex"
         style={{
-          transform: `translateX(-${index * 100}%)`,
+          transform: `translateX(-${(index < 0 ? 0 : index) * 100}%)`,
           transition: animate ? 'transform 600ms ease-in-out' : 'none',
         }}
       >
@@ -69,6 +105,35 @@ function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent
           </div>
         ))}
       </div>
+
+      {n > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label="Anterior"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm border border-white/10 text-white flex items-center justify-center opacity-70 hover:opacity-100 transition"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="Próximo"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm border border-white/10 text-white flex items-center justify-center opacity-70 hover:opacity-100 transition"
+          >
+            <ChevronRight size={18} />
+          </button>
+          <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+            {events.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${activeDot === i ? 'w-4 bg-white' : 'w-1.5 bg-white/40'}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
