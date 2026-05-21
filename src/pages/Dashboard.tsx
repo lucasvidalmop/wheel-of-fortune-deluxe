@@ -4497,6 +4497,7 @@ function Dashboard() {
                   { key: 'referral', label: 'Referral' },
                   { key: 'gorjeta', label: 'Gorjeta' },
                   { key: 'atualizacao', label: 'Atualização' },
+                  { key: 'odds', label: 'Odds' },
                 ] as const).map(f => (
                   <button
                     key={f.key}
