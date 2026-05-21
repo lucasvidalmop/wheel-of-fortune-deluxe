@@ -329,14 +329,17 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const resolveEvent = async (winningOutcomeId: string) => {
     if (!resolvingEvent) return;
     setSaving(true);
+    const eventId = resolvingEvent.id;
     const { data, error } = await supabase.rpc('resolve_bet_event', {
-      p_event_id: resolvingEvent.id, p_winning_outcome_id: winningOutcomeId,
+      p_event_id: eventId, p_winning_outcome_id: winningOutcomeId,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     if ((data as any)?.success) {
       toast.success(`Resolvido: ${(data as any).processed} apostas processadas`);
       setResolvingEvent(null);
+      supabase.functions.invoke('notify-event-resolved', { body: { event_id: eventId } })
+        .catch((e) => console.error('notify-event-resolved failed', e));
       loadAll();
     } else {
       toast.error(`Falha: ${(data as any)?.error || 'erro'}`);
@@ -352,6 +355,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     if (error) { toast.error(error.message); return; }
     if ((data as any)?.success) {
       toast.success(`Mercado resolvido: ${(data as any).processed} apostas processadas`);
+      supabase.functions.invoke('notify-event-resolved', { body: { market_id: marketId } })
+        .catch((e) => console.error('notify-event-resolved failed', e));
       loadAll();
     } else {
       toast.error(`Falha: ${(data as any)?.error || 'erro'}`);
