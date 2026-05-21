@@ -427,16 +427,18 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
   };
 
+  const SIMPLE_MIN_BET = 10;
+  const SIMPLE_MAX_BET = 500;
+
   const openSlip = (event: EventRow, outcome: OutcomeRow) => {
     if (!authed) { toast.error('Faça login para apostar'); return; }
     const market = outcome.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
     const status = market?.status ?? event.status;
     const closesAt = market?.closes_at ?? event.closes_at;
-    const minBet = market?.min_bet ?? event.min_bet;
     if (status !== 'open') { toast.error('Mercado fechado'); return; }
     if (isBetDateTimeExpired(closesAt)) { toast.error('Apostas encerradas'); return; }
     setSlip({ event, outcome });
-    setAmount(String(minBet || 10));
+    setAmount(String(SIMPLE_MIN_BET));
   };
 
   const placeBet = async () => {
