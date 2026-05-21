@@ -508,8 +508,6 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [aFilter, setAFilter] = useState<{ eventId: string; status: string; days: number }>({ eventId: '', status: '', days: 30 });
   const [wFilter, setWFilter] = useState<{ eventId: string; marketId: string; status: string }>({ eventId: '', marketId: '', status: '' });
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
-  const [eventsSourceFilter, setEventsSourceFilter] = useState<'all' | 'manual' | 'api'>('all');
-  const [eventsSearch, setEventsSearch] = useState('');
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
