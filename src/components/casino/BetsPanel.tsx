@@ -741,8 +741,16 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => moveEvent(evIndex, -1)} disabled={evIndex === 0} title="Mover para cima" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp size={14} /></button>
-                    <button onClick={() => moveEvent(evIndex, 1)} disabled={evIndex === sortedEvents.length - 1} title="Mover para baixo" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown size={14} /></button>
+                    {ev.is_hot && (() => {
+                      const hots = sortedEvents.filter(e => e.is_hot);
+                      const hotIdx = hots.findIndex(e => e.id === ev.id);
+                      return (
+                        <>
+                          <button onClick={() => moveHotEvent(ev.id, -1)} disabled={hotIdx === 0} title="Mover quente para cima" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-orange-500"><ArrowUp size={14} /></button>
+                          <button onClick={() => moveHotEvent(ev.id, 1)} disabled={hotIdx === hots.length - 1} title="Mover quente para baixo" className="p-1.5 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-orange-500"><ArrowDown size={14} /></button>
+                        </>
+                      );
+                    })()}
                     <button onClick={() => openEditEvent(ev)} title="Editar" className="p-1.5 rounded hover:bg-muted"><Edit2 size={14} /></button>
                     {ev.status === 'scheduled' && (
                       <button onClick={() => setEventStatus(ev, 'open')} title="Abrir agora" className="p-1.5 rounded hover:bg-muted text-green-500"><Play size={14} /></button>
