@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, LogOut, Wallet, X, Check, Clock, Store, Share2, Ticket, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
@@ -12,6 +12,51 @@ import { optimizedImage } from '@/lib/imageUrl';
 
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
+
+function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent: (ev: any) => React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    if (events.length <= 1) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const interval = setInterval(() => {
+      if (pausedRef.current || !el) return;
+      const children = el.children;
+      // ignora o <style> inline como filho
+      const items = Array.from(children).filter(c => c.tagName !== 'STYLE') as HTMLElement[];
+      if (items.length === 0) return;
+      indexRef.current = (indexRef.current + 1) % items.length;
+      const next = items[indexRef.current];
+      el.scrollTo({ left: next.offsetLeft - el.offsetLeft, behavior: 'smooth' });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [events.length]);
+
+  const pause = () => { pausedRef.current = true; };
+  const resume = () => { pausedRef.current = false; };
+
+  return (
+    <div
+      ref={scrollRef}
+      className="hot-events-scroll flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x snap-mandatory"
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onTouchStart={pause}
+      onTouchEnd={resume}
+    >
+      <style>{`.hot-events-scroll::-webkit-scrollbar{display:none}`}</style>
+      {events.map(ev => (
+        <div key={ev.id} className="snap-start shrink-0 w-[85%] sm:w-[48%] lg:w-[32%]">
+          {renderEvent(ev)}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface BetsPageProps { tag: string }
 
@@ -1350,20 +1395,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <h3 className="font-bold uppercase tracking-wider text-sm" style={{ color: '#f97316' }}>Eventos quentes</h3>
                     <div className="flex-1 h-px" style={{ background: '#f9731633' }} />
                   </div>
-                  <div
-                    className="hot-events-scroll flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x snap-mandatory"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                  >
-                    <style>{`.hot-events-scroll::-webkit-scrollbar{display:none}`}</style>
-                    {displayedHotEvents.map(ev => (
-                      <div
-                        key={ev.id}
-                        className="snap-start shrink-0 w-[85%] sm:w-[48%] lg:w-[32%]"
-                      >
-                        {renderEvent(ev)}
-                      </div>
-                    ))}
-                  </div>
+                  <HotEventsCarousel events={displayedHotEvents} renderEvent={renderEvent} />
+
                 </section>
               )}
 
