@@ -218,21 +218,21 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
 
           {/* Selections list */}
           <div
-            className="relative rounded-xl p-3 mb-3 space-y-2"
+            className="relative rounded-xl p-2.5 mb-2 space-y-1.5"
             style={{ background: cardBg, border: `1px solid ${textColor}11` }}
           >
-            <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>
+            <div className="text-[9px] uppercase tracking-wider" style={{ color: muted }}>
               Seleções
             </div>
             {data.selections.map((s, i) => (
               <div
                 key={i}
-                className="flex items-start justify-between gap-2 pb-2"
+                className="flex items-start justify-between gap-2 pb-1.5"
                 style={{ borderBottom: i < data.selections.length - 1 ? `1px dashed ${textColor}11` : 'none' }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-[12px] leading-snug truncate">{s.eventTitle}</div>
-                  <div className="text-[11px] mt-0.5" style={{ color: muted }}>
+                  <div className="font-bold text-[11px] leading-tight truncate">{s.eventTitle}</div>
+                  <div className="text-[10px] mt-0.5 leading-tight" style={{ color: muted }}>
                     {s.marketTitle ? `${s.marketTitle} · ` : ''}
                     <span style={{ color: accent }}>{s.outcomeLabel}</span>
                     {' · '}
@@ -252,43 +252,43 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
           </div>
 
           {/* VALOR / ODD TOTAL */}
-          <div className="relative grid grid-cols-2 gap-2 mb-3">
+          <div className="relative grid grid-cols-2 gap-2 mb-2">
             <div
-              className="relative rounded-xl px-3 py-3 overflow-hidden"
+              className="relative rounded-xl px-2.5 py-2 overflow-hidden"
               style={{
                 background: cardBg,
                 border: `1px solid ${accent}33`,
                 boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66`,
               }}
             >
-              <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: accent }}>VALOR</div>
-              <div className="font-black text-2xl tabular-nums leading-none" style={{ color: accent, textShadow: `0 0 12px ${accent}55` }}>
+              <div className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: accent }}>VALOR</div>
+              <div className="font-black text-lg tabular-nums leading-none" style={{ color: accent, textShadow: `0 0 12px ${accent}55` }}>
                 {data.amount.toLocaleString('pt-BR')}
               </div>
-              <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{data.coinName}</div>
+              <div className="text-[9px] mt-0.5 font-medium" style={{ color: muted }}>{data.coinName}</div>
             </div>
 
             <div
-              className="relative rounded-xl px-3 py-3"
+              className="relative rounded-xl px-2.5 py-2"
               style={{ background: cardBg, border: `1px solid ${textColor}15` }}
             >
-              <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1" style={{ color: muted }}>ODD TOTAL</div>
-              <div className="font-black text-2xl tabular-nums leading-none" style={{ color: textColor }}>
+              <div className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: muted }}>ODD TOTAL</div>
+              <div className="font-black text-lg tabular-nums leading-none" style={{ color: textColor }}>
                 {data.totalOdd.toFixed(2).replace('.', ',')}
               </div>
-              <div className="text-[10px] mt-1 font-medium" style={{ color: muted }}>{data.selections.length} seleções</div>
+              <div className="text-[9px] mt-0.5 font-medium" style={{ color: muted }}>{data.selections.length} seleções</div>
             </div>
           </div>
 
           {/* Retorno */}
           <div
-            className="relative rounded-xl px-4 py-3 mb-4 flex items-center justify-between"
+            className="relative rounded-xl px-3 py-2 mb-2 flex items-center justify-between"
             style={{ background: cardBg, border: `1px solid ${textColor}11` }}
           >
-            <div className="text-[11px] uppercase tracking-wider font-bold" style={{ color: muted }}>
+            <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: muted }}>
               {isWin ? 'Retorno' : isPending ? 'Retorno potencial' : isLoss ? 'Perdeu' : 'Retorno'}
             </div>
-            <div className="font-black text-lg tabular-nums" style={{ color: isWin || isPending ? accent : textColor }}>
+            <div className="font-black text-base tabular-nums" style={{ color: isWin || isPending ? accent : textColor }}>
               {data.payout.toLocaleString('pt-BR')} {data.coinName}
             </div>
           </div>
