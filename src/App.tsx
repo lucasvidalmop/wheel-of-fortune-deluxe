@@ -3,24 +3,31 @@ import { BrowserRouter, Route, Routes, useParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import Roleta from "./pages/Roleta.tsx";
-import Admin from "./pages/Admin.tsx";
-import Dashboard from "./pages/Dashboard.tsx";
-import Unsubscribe from "./pages/Unsubscribe.tsx";
-import Referral from "./pages/Referral.tsx";
-import Registration from "./pages/Registration.tsx";
-import Influencer from "./pages/Influencer.tsx";
-import Deposit from "./pages/Deposit.tsx";
-import DepositBS from "./pages/DepositBS.tsx";
-import Batalha from "./pages/Batalha.tsx";
-import Resgate from "./pages/Resgate.tsx";
-import Luckybox from "./pages/Luckybox.tsx";
-import UpdateRegistration from "./pages/UpdateRegistration.tsx";
-import Bets from "./pages/Bets.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { lazy, Suspense } from "react";
+
+const Index = lazy(() => import("./pages/Index.tsx"));
+const Roleta = lazy(() => import("./pages/Roleta.tsx"));
+const Admin = lazy(() => import("./pages/Admin.tsx"));
+const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe.tsx"));
+const Referral = lazy(() => import("./pages/Referral.tsx"));
+const Registration = lazy(() => import("./pages/Registration.tsx"));
+const Influencer = lazy(() => import("./pages/Influencer.tsx"));
+const Deposit = lazy(() => import("./pages/Deposit.tsx"));
+const DepositBS = lazy(() => import("./pages/DepositBS.tsx"));
+const Batalha = lazy(() => import("./pages/Batalha.tsx"));
+const Resgate = lazy(() => import("./pages/Resgate.tsx"));
+const Luckybox = lazy(() => import("./pages/Luckybox.tsx"));
+const UpdateRegistration = lazy(() => import("./pages/UpdateRegistration.tsx"));
+const Bets = lazy(() => import("./pages/Bets.tsx"));
 
 const queryClient = new QueryClient();
+
+const PageFallback = () => (
+  <div className="min-h-screen w-full flex items-center justify-center bg-background">
+    <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+  </div>
+);
 
 const SlugRouter = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -57,17 +64,19 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/unsubscribe" element={<Unsubscribe />} />
-          <Route path="/ref/:code" element={<Referral />} />
-          <Route path="/gorjeta" element={<Registration />} />
-          <Route path="/influencer" element={<Influencer />} />
-          <Route path="/batalha" element={<Batalha />} />
-          <Route path="/:slug" element={<SlugRouter />} />
-        </Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/ref/:code" element={<Referral />} />
+            <Route path="/gorjeta" element={<Registration />} />
+            <Route path="/influencer" element={<Influencer />} />
+            <Route path="/batalha" element={<Batalha />} />
+            <Route path="/:slug" element={<SlugRouter />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
