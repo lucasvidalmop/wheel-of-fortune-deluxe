@@ -907,7 +907,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       </div>
                     );
                   })}
-                  {!detailMode && extraCount > 0 && (
+                  {!detailMode && !closed && extraCount > 0 && (
                     <button
                       type="button"
                       onClick={() => setSelectedEventId(ev.id)}
@@ -917,6 +917,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                       +{extraCount} mercados <ChevronDown size={14} />
                     </button>
                   )}
+
                     </>
                   );
                 })()}
