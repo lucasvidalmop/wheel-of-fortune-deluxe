@@ -845,6 +845,27 @@ const Bets = ({ tag }: BetsPageProps) => {
         }
         toast.success('Aposta confirmada!');
         setAuthed(prev => prev ? { ...prev, tokens_balance: data.tokens_balance } : prev);
+        if (cfg.ticketEnabled !== false) {
+          try {
+            const ev = events.find(e => e.id === selection.eventId);
+            const payout = Math.round(amt * Number(selection.odd));
+            const copyUrl = await createShortShareLink(tag, [{ e: selection.eventId, o: selection.outcomeId }]);
+            setShareWager({
+              userId: authed?.account_id || authed?.id,
+              wagerCode: data.public_code || undefined,
+              eventTitle: selection.eventTitle,
+              outcomeLabel: selection.outcomeLabel,
+              odd: Number(selection.odd),
+              amount: amt,
+              payout,
+              status: 'pending',
+              payoutMode: ev?.payout_mode || 'coins',
+              coinName,
+              createdAt: new Date().toISOString(),
+              copyUrl,
+            });
+          } catch (e) { /* ignore share build errors */ }
+        }
         setTicketDraft([]);
         setTicketOpen(false);
         refreshMine();
