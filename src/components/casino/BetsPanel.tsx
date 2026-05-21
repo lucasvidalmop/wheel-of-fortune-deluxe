@@ -104,9 +104,6 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     }
   };
 
-  // Prevent duplicate concurrent loads (e.g. StrictMode double-mount)
-  const loadingRef = (loadAll as any).ref || ({ current: false } as { current: boolean });
-  (loadAll as any).ref = loadingRef;
 
   useEffect(() => { loadAll(); }, [ownerId]);
 
