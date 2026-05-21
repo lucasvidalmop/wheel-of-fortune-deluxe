@@ -1,40 +1,49 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import CustomizationPanel from '@/components/casino/CustomizationPanel';
-import DialogConfigPanel from '@/components/casino/DialogConfigPanel';
-import AuthConfigPanel from '@/components/casino/AuthConfigPanel';
 import { WheelConfig, defaultConfig } from '@/components/casino/types';
-import BattleConfigPanel from '@/components/casino/BattleConfigPanel';
 import { Users, Target, Shield, Trophy, Mail, Smartphone, MessageCircle, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Eye, Settings, Send, X, BarChart3, Globe, Monitor, Clock, MapPin, Wallet, DollarSign, Ban, Link2, Palette, CalendarIcon, Bell, Image, Film, Mic, Paperclip, ImageIcon, Video, FileAudio, FileText, Gift, Star, Upload, Minus, RefreshCw, CheckCircle2, Swords, Package, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import ReferralPageEditor from '@/components/casino/ReferralPageEditor';
-import ReferralAnalyticsPanel from '@/components/casino/ReferralAnalyticsPanel';
-import RedemptionPagesPanel from '@/components/casino/RedemptionPagesPanel';
-import LuckyboxPanel from '@/components/casino/LuckyboxPanel';
-import BetsPanel from '@/components/casino/BetsPanel';
 import AuthNoticePanel from '@/components/casino/AuthNoticePanel';
-import WhatsAppShareDialog from '@/components/casino/WhatsAppShareDialog';
-import ReferralDefaultEditor from '@/components/casino/ReferralDefaultEditor';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
-import GorjetaPageEditor from '@/components/casino/GorjetaPageEditor';
-import InfluencerPageEditor from '@/components/casino/InfluencerPageEditor';
-import UpdatePageEditor from '@/components/casino/UpdatePageEditor';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
-import MessagingAnalytics from '@/components/casino/MessagingAnalytics';
-import EmailTemplateEditor, { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
-import BrevoBulkEmailPanel from '@/components/casino/BrevoBulkEmailPanel';
+import { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
 import BulkSendProgress from '@/components/casino/BulkSendProgress';
 import BulkSendControls from '@/components/casino/BulkSendControls';
 import { useBulkSendControl } from '@/hooks/useBulkSendControl';
 import MoneyInput from '@/components/casino/MoneyInput';
-import { ConfigBackupPanel } from '@/components/casino/ConfigBackupPanel';
+
+// Heavy panels - lazy loaded on demand to reduce initial bundle
+const CustomizationPanel = lazy(() => import('@/components/casino/CustomizationPanel'));
+const DialogConfigPanel = lazy(() => import('@/components/casino/DialogConfigPanel'));
+const AuthConfigPanel = lazy(() => import('@/components/casino/AuthConfigPanel'));
+const BattleConfigPanel = lazy(() => import('@/components/casino/BattleConfigPanel'));
+const ReferralPageEditor = lazy(() => import('@/components/casino/ReferralPageEditor'));
+const ReferralAnalyticsPanel = lazy(() => import('@/components/casino/ReferralAnalyticsPanel'));
+const RedemptionPagesPanel = lazy(() => import('@/components/casino/RedemptionPagesPanel'));
+const LuckyboxPanel = lazy(() => import('@/components/casino/LuckyboxPanel'));
+const BetsPanel = lazy(() => import('@/components/casino/BetsPanel'));
+const WhatsAppShareDialog = lazy(() => import('@/components/casino/WhatsAppShareDialog'));
+const ReferralDefaultEditor = lazy(() => import('@/components/casino/ReferralDefaultEditor'));
+const GorjetaPageEditor = lazy(() => import('@/components/casino/GorjetaPageEditor'));
+const InfluencerPageEditor = lazy(() => import('@/components/casino/InfluencerPageEditor'));
+const UpdatePageEditor = lazy(() => import('@/components/casino/UpdatePageEditor'));
+const MessagingAnalytics = lazy(() => import('@/components/casino/MessagingAnalytics'));
+const EmailTemplateEditor = lazy(() => import('@/components/casino/EmailTemplateEditor'));
+const BrevoBulkEmailPanel = lazy(() => import('@/components/casino/BrevoBulkEmailPanel'));
+const ConfigBackupPanel = lazy(() => import('@/components/casino/ConfigBackupPanel').then(m => ({ default: m.ConfigBackupPanel })));
+
+const PanelFallback = () => (
+  <div className="w-full py-12 flex items-center justify-center">
+    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+  </div>
+);
 
 interface WheelUser {
   id: string;
