@@ -211,9 +211,22 @@ async function syncForOwner(
         })
         .select("id")
         .single();
-      if (mkInsErr) throw mkInsErr;
-      marketId = newMk.id;
+      if (mkInsErr) {
+        // Race / unique violation on (event_id, lower(trim(title))) — refetch existing
+        const { data: existing } = await supabase
+          .from("bet_markets")
+          .select("id, title")
+          .eq("event_id", eventId);
+        const match = (existing || []).find(
+          (em: any) => (em.title || "").trim().toLowerCase() === title.toLowerCase(),
+        );
+        if (!match) throw mkInsErr;
+        marketId = match.id;
+      } else {
+        marketId = newMk.id;
+      }
     }
+
 
     // ---- Outcomes ----
     const { data: existingOutcomes, error: ocListErr } = await supabase
