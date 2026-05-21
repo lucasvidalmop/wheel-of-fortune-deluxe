@@ -300,6 +300,19 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
                 {ctaUrl.replace(/^https?:\/\//, '')}
               </p>
             )}
+            {data.copyUrl && (
+              <div
+                className="mt-3 rounded-lg px-3 py-2 text-center"
+                style={{ background: `${accent}11`, border: `1px dashed ${accent}55` }}
+              >
+                <div className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: accent }}>
+                  Copie esta múltipla
+                </div>
+                <div className="text-[10px] font-mono break-all" style={{ color: textColor }}>
+                  {data.copyUrl.replace(/^https?:\/\//, '')}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
