@@ -1041,6 +1041,8 @@ const Bets = ({ tag }: BetsPageProps) => {
             const name = categoryFilter.slice('category:'.length);
             const cat = cats.find(c => normCat(c.name) === name) || null;
             if (filtered.length) grouped.push({ cat, items: filtered, label: cat?.name || name });
+          } else if (categoryFilter === 'today') {
+            if (filtered.length) grouped.push({ cat: null, items: filtered, label: 'Hoje' });
           } else if (categoryFilter === 'uncategorized') {
             if (filtered.length) grouped.push({ cat: null, items: filtered });
           } else {
