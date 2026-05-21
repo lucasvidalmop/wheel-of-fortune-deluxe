@@ -1338,7 +1338,7 @@ const Bets = ({ tag }: BetsPageProps) => {
               <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: muted }}>Evento</div>
               <div className="font-bold text-sm leading-snug mb-2">{slip.event.title}</div>
               <div className="inline-block px-2.5 py-1 rounded-md font-bold text-xs" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
-                {slip.outcome.label}
+                {translateOutcomeLabel(slip.outcome.label)}
               </div>
             </div>
 
