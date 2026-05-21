@@ -53,6 +53,37 @@ interface TicketDraft {
 
 interface AuthedUser { id: string; name: string; email: string; account_id: string; tokens_balance: number }
 
+const PT_BR_DICT: Array<[RegExp, string]> = [
+  [/\bRegular Season\b/gi, 'Temporada Regular'],
+  [/\bQuarter[- ]?finals?\b/gi, 'Quartas de Final'],
+  [/\bSemi[- ]?finals?\b/gi, 'Semifinal'],
+  [/\bRound of 16\b/gi, 'Oitavas de Final'],
+  [/\bRound of 32\b/gi, 'Dezesseis avos'],
+  [/\bGroup Stage\b/gi, 'Fase de Grupos'],
+  [/\bPlay[- ]?offs?\b/gi, 'Playoffs'],
+  [/\bMatchday\b/gi, 'Rodada'],
+  [/\bRound\b/gi, 'Rodada'],
+  [/\bFinal\b/gi, 'Final'],
+];
+const translatePt = (s?: string | null) => {
+  if (!s) return s ?? '';
+  let out = s;
+  for (const [re, rep] of PT_BR_DICT) out = out.replace(re, rep);
+  return out;
+};
+const translateOutcomeLabel = (s?: string | null) => {
+  if (!s) return s ?? '';
+  const up = s.trim().toUpperCase();
+  if (up === 'HOME') return 'CASA';
+  if (up === 'AWAY') return 'FORA';
+  if (up === 'DRAW' || up === 'TIE') return 'EMPATE';
+  if (up === 'YES') return 'SIM';
+  if (up === 'NO') return 'NÃO';
+  if (up === 'OVER') return 'MAIS';
+  if (up === 'UNDER') return 'MENOS';
+  return s;
+};
+
 const Bets = ({ tag }: BetsPageProps) => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<any | null>(null);
@@ -747,7 +778,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                     <div className="min-w-0 flex-1">
                       {ev.is_hot && <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mb-1" style={{ background: '#f9731633', color: '#f97316', border: '#f9731655' }}>🔥</span>}
                       <h2 className="font-black text-base sm:text-base leading-tight line-clamp-2" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{ev.title}</h2>
-                      {ev.subtitle && <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: muted }}>{ev.subtitle}</p>}
+                      {ev.subtitle && <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: muted }}>{translatePt(ev.subtitle)}</p>}
                     </div>
                     {(ev.home_image_url || ev.away_image_url) ? (
                       <div className="flex items-center gap-1 flex-shrink-0 px-2 py-1.5 rounded-md" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -890,7 +921,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                                     color: isLoser ? muted : text,
                                   }}>
                                   <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
-                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{o.label}</div>
+                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{translateOutcomeLabel(o.label)}</div>
                                   <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
                                   <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
                                     <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
@@ -1307,7 +1338,7 @@ const Bets = ({ tag }: BetsPageProps) => {
               <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: muted }}>Evento</div>
               <div className="font-bold text-sm leading-snug mb-2">{slip.event.title}</div>
               <div className="inline-block px-2.5 py-1 rounded-md font-bold text-xs" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
-                {slip.outcome.label}
+                {translateOutcomeLabel(slip.outcome.label)}
               </div>
             </div>
 
@@ -1420,7 +1451,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         <div className="text-xs font-bold truncate">{s.eventTitle}</div>
                         <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{s.marketTitle}</div>
                         <div className="text-sm mt-1">
-                          <span className="font-semibold">{s.outcomeLabel}</span>
+                          <span className="font-semibold">{translateOutcomeLabel(s.outcomeLabel)}</span>
                           <span className="ml-2 font-black tabular-nums" style={{ color: accent }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
                         </div>
                       </div>
