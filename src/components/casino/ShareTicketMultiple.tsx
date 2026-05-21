@@ -150,10 +150,11 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm overflow-y-auto"
       onClick={onClose}
     >
-      <div className="w-full max-w-sm my-8" onClick={e => e.stopPropagation()}>
+      <div className="min-h-full flex items-start sm:items-center justify-center p-4">
+      <div className="w-full max-w-sm my-4 sm:my-8" onClick={e => e.stopPropagation()}>
         <div
           ref={cardRef}
           className="relative rounded-2xl overflow-hidden p-6"
