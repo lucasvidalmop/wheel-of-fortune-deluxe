@@ -845,6 +845,27 @@ const Bets = ({ tag }: BetsPageProps) => {
         }
         toast.success('Aposta confirmada!');
         setAuthed(prev => prev ? { ...prev, tokens_balance: data.tokens_balance } : prev);
+        if (cfg.ticketEnabled !== false) {
+          try {
+            const ev = events.find(e => e.id === selection.eventId);
+            const payout = Math.round(amt * Number(selection.odd));
+            const copyUrl = await createShortShareLink(tag, [{ e: selection.eventId, o: selection.outcomeId }]);
+            setShareWager({
+              userId: authed?.account_id || authed?.id,
+              wagerCode: data.public_code || undefined,
+              eventTitle: selection.eventTitle,
+              outcomeLabel: selection.outcomeLabel,
+              odd: Number(selection.odd),
+              amount: amt,
+              payout,
+              status: 'pending',
+              payoutMode: ev?.payout_mode || 'coins',
+              coinName,
+              createdAt: new Date().toISOString(),
+              copyUrl,
+            });
+          } catch (e) { /* ignore share build errors */ }
+        }
         setTicketDraft([]);
         setTicketOpen(false);
         refreshMine();
@@ -889,6 +910,32 @@ const Bets = ({ tag }: BetsPageProps) => {
       }
       toast.success(`Bilhete confirmado! Retorno potencial: ${data.potential_return}`);
       setAuthed(prev => prev ? { ...prev, tokens_balance: data.new_balance } : prev);
+      if (cfg.ticketEnabled !== false) {
+        try {
+          const copyUrl = await createShortShareLink(
+            tag,
+            ticketDraft.map(s => ({ e: s.eventId, o: s.outcomeId })),
+          );
+          setShareMultiple({
+            userId: authed?.account_id || authed?.id,
+            wagerCode: data.public_code || undefined,
+            selections: ticketDraft.map(s => ({
+              eventTitle: s.eventTitle,
+              marketTitle: s.marketTitle,
+              outcomeLabel: s.outcomeLabel,
+              odd: Number(s.odd),
+              status: 'pending' as any,
+            })),
+            totalOdd: Number(data.total_odd) || totalOdd,
+            amount: amt,
+            payout: Number(data.potential_return) || Math.round(amt * totalOdd),
+            status: 'pending',
+            coinName,
+            createdAt: new Date().toISOString(),
+            copyUrl,
+          });
+        } catch (e) { /* ignore share build errors */ }
+      }
       setTicketDraft([]);
       setTicketOpen(false);
       refreshMine();
