@@ -747,6 +747,20 @@ const Bets = ({ tag }: BetsPageProps) => {
                     if (outs.length) groups.push({ market: null, outs });
                   }
                   const evExpanded = detailMode || !!expandedEvents[ev.id];
+                  // Pick principal market: prefer a 1X2-like market (3 outcomes), else 2-outcome, else first
+                  const norm = (s: string | null | undefined) => (s || '').toLowerCase();
+                  const isMatchWinner = (m: MarketRow | null) => {
+                    const t = norm(m?.title);
+                    return t.includes('match winner') || t.includes('vencedor') || t.includes('resultado') || t === '1x2' || t.includes('1x2');
+                  };
+                  let principalIdx = groups.findIndex(g => isMatchWinner(g.market) && g.outs.length >= 2);
+                  if (principalIdx < 0) principalIdx = groups.findIndex(g => g.outs.length === 3);
+                  if (principalIdx < 0) principalIdx = groups.findIndex(g => g.outs.length === 2);
+                  if (principalIdx < 0) principalIdx = 0;
+                  if (principalIdx > 0) {
+                    const [pg] = groups.splice(principalIdx, 1);
+                    groups.unshift(pg);
+                  }
                   const extraCount = Math.max(0, groups.length - 1);
                   const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
                   return (
