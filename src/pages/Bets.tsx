@@ -624,7 +624,24 @@ const Bets = ({ tag }: BetsPageProps) => {
             return e.category_id === categoryFilter;
           };
 
-          const filtered = nonHot.filter(matchesFilter);
+          // Prioridade: abertos (apostáveis) primeiro, depois agendados, encerrados e por fim finalizados/cancelados
+          const statusRank = (e: EventRow): number => {
+            const expired = isBetDateTimeExpired(e.closes_at);
+            if (e.status === 'open' && !expired) return 0;
+            if (e.status === 'scheduled') return 1;
+            if (e.status === 'open' && expired) return 2;
+            if (e.status === 'closed') return 3;
+            if (e.status === 'resolved') return 4;
+            return 5; // cancelled / outros
+          };
+          const sortByStatus = (arr: EventRow[]) =>
+            [...arr].sort((a, b) => {
+              const ra = statusRank(a), rb = statusRank(b);
+              if (ra !== rb) return ra - rb;
+              return (a.position ?? 0) - (b.position ?? 0);
+            });
+
+          const filtered = sortByStatus(nonHot.filter(matchesFilter));
 
           // categorias presentes em nonHot (para agrupar quando "Todos")
           const usedCatIds = new Set(nonHot.map(e => e.category_id).filter(Boolean) as string[]);
@@ -635,10 +652,10 @@ const Bets = ({ tag }: BetsPageProps) => {
           const grouped: Array<{ cat: CategoryRow | null; items: EventRow[]; label?: string }> = [];
           if (categoryFilter === 'all') {
             visibleCats.forEach(c => {
-              const items = filtered.filter(e => e.category_id === c.id);
+              const items = sortByStatus(filtered.filter(e => e.category_id === c.id));
               if (items.length) grouped.push({ cat: c, items });
             });
-            const unc = filtered.filter(e => !e.category_id);
+            const unc = sortByStatus(filtered.filter(e => !e.category_id));
             if (unc.length) grouped.push({ cat: null, items: unc });
           } else if (categoryFilter.startsWith('competition:')) {
             const slug = categoryFilter.slice('competition:'.length);
@@ -654,6 +671,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             const c = cats.find(x => x.id === categoryFilter) || null;
             if (filtered.length) grouped.push({ cat: c, items: filtered });
           }
+
 
           const renderEvent = (ev: EventRow, detailMode = false) => {
             const outs = outcomesByEvent[ev.id] || [];
