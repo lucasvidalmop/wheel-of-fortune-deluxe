@@ -112,14 +112,23 @@ const translateOutcomeLabel = (s?: string | null) => {
   return translatePt(s);
 };
 
+import LZString from 'lz-string';
+
 const encodeCopy = (sel: Array<{ e: string; o: string }>) => {
   try {
-    const b64 = btoa(JSON.stringify({ s: sel }));
-    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const json = JSON.stringify({ s: sel });
+    return 'z' + LZString.compressToEncodedURIComponent(json);
   } catch { return ''; }
 };
 const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
   try {
+    if (s.startsWith('z')) {
+      const decompressed = LZString.decompressFromEncodedURIComponent(s.slice(1));
+      if (!decompressed) return [];
+      const json = JSON.parse(decompressed);
+      return Array.isArray(json?.s) ? json.s.filter((x: any) => x?.e && x?.o) : [];
+    }
+    // fallback: legacy base64url
     const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
     const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + pad;
     const json = JSON.parse(atob(b64));
