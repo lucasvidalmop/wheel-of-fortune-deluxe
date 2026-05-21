@@ -1231,6 +1231,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                           {cfg.ticketEnabled !== false && ['pending', 'won', 'lost'].includes(t.status) && (
                             <button
                               onClick={() => {
+                                const copyHash = encodeCopy(sels.map(s => ({ e: s.event_id, o: s.outcome_id })));
+                                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
                                 setShareMultiple({
                                   userId: authed?.account_id || authed?.id,
                                   wagerCode: t.public_code,
@@ -1247,6 +1249,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                                   status: t.status as any,
                                   coinName,
                                   createdAt: t.created_at,
+                                  copyUrl,
                                 });
                               }}
                               title="Compartilhar bilhete"
