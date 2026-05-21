@@ -8,6 +8,7 @@ import { canAddSelection, validateTicketCoherence } from '@/lib/ticketCoherence'
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
 import ShareTicket, { type ShareTicketData } from '@/components/casino/ShareTicket';
 import ShareTicketMultiple, { type ShareMultipleData } from '@/components/casino/ShareTicketMultiple';
+import { optimizedImage } from '@/lib/imageUrl';
 
 interface BetsPageProps { tag: string }
 
