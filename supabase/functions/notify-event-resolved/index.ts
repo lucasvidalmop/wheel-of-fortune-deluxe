@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
   if (ticketIds.length) {
     const { data: tickets } = await supabase
       .from("bet_tickets")
-      .select("id, user_name, user_email, account_id, public_code, stake, total_odd, payout_coins, resolved_at, status")
+      .select("id, wheel_user_id, user_name, user_email, account_id, public_code, stake, total_odd, payout_coins, resolved_at, status")
       .in("id", ticketIds)
       .eq("status", "won")
       .gte("resolved_at", cutoff);
