@@ -22,6 +22,7 @@ export interface ShareMultipleData {
   status: 'pending' | 'won' | 'lost' | 'refunded' | 'cancelled';
   coinName: string;
   createdAt: string;
+  copyUrl?: string;
 }
 
 interface Props {
@@ -131,7 +132,8 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
       const shareText = isWin
         ? `🎉 Ganhei ${data.payout} ${data.coinName} numa múltipla de ${n} seleções! Odd ${data.totalOdd.toFixed(2)}`
         : `Minha múltipla de ${n} seleções — odd total ${data.totalOdd.toFixed(2)}`;
-      const fullText = ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText;
+      const copyLine = data.copyUrl ? `\n\n👉 Copie este bilhete: ${data.copyUrl}` : '';
+      const fullText = (ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText) + copyLine;
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], text: fullText, title: brandName || 'Minha múltipla' });
@@ -297,6 +299,19 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
               <p className="text-xs font-medium" style={{ color: accent }}>
                 {ctaUrl.replace(/^https?:\/\//, '')}
               </p>
+            )}
+            {data.copyUrl && (
+              <div
+                className="mt-3 rounded-lg px-3 py-2 text-center"
+                style={{ background: `${accent}11`, border: `1px dashed ${accent}55` }}
+              >
+                <div className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: accent }}>
+                  Copie esta múltipla
+                </div>
+                <div className="text-[10px] font-mono break-all" style={{ color: textColor }}>
+                  {data.copyUrl.replace(/^https?:\/\//, '')}
+                </div>
+              </div>
             )}
           </div>
         </div>

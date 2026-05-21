@@ -112,6 +112,21 @@ const translateOutcomeLabel = (s?: string | null) => {
   return translatePt(s);
 };
 
+const encodeCopy = (sel: Array<{ e: string; o: string }>) => {
+  try {
+    const b64 = btoa(JSON.stringify({ s: sel }));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  } catch { return ''; }
+};
+const decodeCopy = (s: string): Array<{ e: string; o: string }> => {
+  try {
+    const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
+    const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + pad;
+    const json = JSON.parse(atob(b64));
+    return Array.isArray(json?.s) ? json.s.filter((x: any) => x?.e && x?.o) : [];
+  } catch { return []; }
+};
+
 const Bets = ({ tag }: BetsPageProps) => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<any | null>(null);
@@ -189,6 +204,47 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   // wager counts são carregados apenas no load inicial (via get-bets-page).
   // Usuário precisa dar F5 para ver contagem atualizada — economia máxima de recursos.
+
+  // import shared ticket via #copy=
+  useEffect(() => {
+    if (!page?.events) return;
+    const m = window.location.hash.match(/(?:^#|&)copy=([^&]+)/);
+    if (!m) return;
+    const sel = decodeCopy(decodeURIComponent(m[1]));
+    if (!sel.length) return;
+    const events: EventRow[] = page.events || [];
+    const outcomes: OutcomeRow[] = page.outcomes || [];
+    const markets: MarketRow[] = page.markets || [];
+    const drafts: TicketDraft[] = [];
+    for (const { e, o } of sel) {
+      const ev = events.find(x => x.id === e);
+      const oc = outcomes.find(x => x.id === o && x.event_id === e);
+      if (!ev || !oc) continue;
+      const mk = markets.find(x => x.id === oc.market_id);
+      drafts.push({
+        eventId: ev.id, eventTitle: ev.title,
+        marketId: oc.market_id, marketTitle: mk?.title || 'Resultado Final',
+        outcomeId: oc.id, outcomeLabel: oc.label, odd: Number(oc.odd),
+      });
+    }
+    // strip the copy hash from URL (keep #ev=... if present)
+    const newHash = window.location.hash
+      .replace(/(?:^#|&)copy=[^&]+/, '')
+      .replace(/^#&/, '#')
+      .replace(/^#$/, '');
+    window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
+    if (!drafts.length) return;
+    if (drafts.length === 1) {
+      const ev = events.find(x => x.id === drafts[0].eventId);
+      const oc = outcomes.find(x => x.id === drafts[0].outcomeId);
+      if (ev && oc) { setSlip({ event: ev, outcome: oc }); toast.success('Bilhete carregado! Confirme para apostar.'); }
+    } else {
+      setTicketDraft(drafts);
+      setTicketOpen(true);
+      toast.success(`Múltipla com ${drafts.length} seleções carregada!`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
 
   // restore persisted session
@@ -1175,6 +1231,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                           {cfg.ticketEnabled !== false && ['pending', 'won', 'lost'].includes(t.status) && (
                             <button
                               onClick={() => {
+                                const copyHash = encodeCopy(sels.map(s => ({ e: s.event_id, o: s.outcome_id })));
+                                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
                                 setShareMultiple({
                                   userId: authed?.account_id || authed?.id,
                                   wagerCode: t.public_code,
@@ -1191,6 +1249,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                                   status: t.status as any,
                                   coinName,
                                   createdAt: t.created_at,
+                                  copyUrl,
                                 });
                               }}
                               title="Compartilhar bilhete"
@@ -1244,6 +1303,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                   : w.status === 'lost'
                     ? 0
                     : Math.round(w.amount_coins * Number(w.odd_snapshot));
+                const copyHash = encodeCopy([{ e: w.event_id, o: w.outcome_id }]);
+                const copyUrl = `${window.location.origin}/odds=${tag}#copy=${copyHash}`;
                 setShareWager({
                   userId: authed?.account_id || authed?.id,
                   wagerCode: w.public_code,
@@ -1256,6 +1317,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   payoutMode: w.payout_mode,
                   coinName,
                   createdAt: w.created_at,
+                  copyUrl,
                 });
               };
               return (

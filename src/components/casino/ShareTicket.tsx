@@ -16,6 +16,7 @@ export interface ShareTicketData {
   payoutMode: 'coins' | 'case';
   coinName: string;
   createdAt: string;
+  copyUrl?: string;
 }
 
 const maskId = (id?: string) => {
@@ -150,7 +151,8 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
       const shareText = isWin
         ? `🎉 Acabei de ganhar ${data.payout} ${data.coinName} em "${data.eventTitle}"!`
         : `Olha minha aposta em "${data.eventTitle}" — odd ${data.odd.toFixed(2)}`;
-      const fullText = ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText;
+      const copyLine = data.copyUrl ? `\n\n👉 Copie este bilhete: ${data.copyUrl}` : '';
+      const fullText = (ctaUrl ? `${shareText}\n\n${ctaUrl}` : shareText) + copyLine;
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], text: fullText, title: brandName || 'Meu bilhete' });
@@ -306,6 +308,19 @@ export default function ShareTicket({ open, onClose, data, config = {} }: Props)
               <p className="text-xs font-medium" style={{ color: accent }}>
                 {ctaUrl.replace(/^https?:\/\//, '')}
               </p>
+            )}
+            {data.copyUrl && (
+              <div
+                className="mt-3 rounded-lg px-3 py-2 text-center"
+                style={{ background: `${accent}11`, border: `1px dashed ${accent}55` }}
+              >
+                <div className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: accent }}>
+                  Copie este bilhete
+                </div>
+                <div className="text-[10px] font-mono break-all" style={{ color: textColor }}>
+                  {data.copyUrl.replace(/^https?:\/\//, '')}
+                </div>
+              </div>
             )}
           </div>
 
