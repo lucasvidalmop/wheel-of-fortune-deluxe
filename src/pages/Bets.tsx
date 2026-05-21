@@ -1451,7 +1451,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         <div className="text-xs font-bold truncate">{s.eventTitle}</div>
                         <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{s.marketTitle}</div>
                         <div className="text-sm mt-1">
-                          <span className="font-semibold">{s.outcomeLabel}</span>
+                          <span className="font-semibold">{translateOutcomeLabel(s.outcomeLabel)}</span>
                           <span className="ml-2 font-black tabular-nums" style={{ color: accent }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
                         </div>
                       </div>
