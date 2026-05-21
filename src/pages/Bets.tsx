@@ -699,7 +699,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const eventStatusBadge = (st: string) => st === 'open' ? 'Aberto' : st === 'closed' ? 'Fechado' : st === 'resolved' ? 'Resolvido' : 'Cancelado';
 
   const mainBgStyle: React.CSSProperties = cfg.bgImage
-    ? { backgroundImage: `url(${cfg.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', color: text }
+    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1920, quality: 65 })})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', color: text }
     : (cfg.bgGradientFrom || cfg.bgGradientTo)
       ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)`, color: text }
       : { background: bg, color: text };
