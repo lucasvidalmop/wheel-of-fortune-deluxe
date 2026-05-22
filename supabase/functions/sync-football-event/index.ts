@@ -182,9 +182,14 @@ async function syncForOwner(
     if (existingEv.status === "resolved" || existingEv.status === "cancelled") {
       delete evPayload.status;
     }
-    // Preserva flags gerenciadas pelo admin: não sobrescreve is_hot em re-sync,
-    // a menos que o payload explicitamente envie o campo. A API de fixtures não
-    // manda essa flag, então sobrescrever apagaria a marcação do operador.
+    // Não sobrescreve starts_at com null se o payload não trouxer
+    if (ev.starts_at == null) {
+      delete evPayload.starts_at;
+    }
+    if (ev.closes_at == null) {
+      delete evPayload.closes_at;
+    }
+    // Preserva flags gerenciadas pelo admin: não sobrescreve is_hot em re-sync
     if (ev.is_hot === undefined) {
       delete evPayload.is_hot;
     }
@@ -193,7 +198,15 @@ async function syncForOwner(
       .update(evPayload)
       .eq("id", eventId);
     if (updErr) throw updErr;
+    console.log("[sync-football-event] updated existing event", {
+      event_id: eventId,
+      external_fixture_id: ev.external_fixture_id,
+      previous_status: existingEv.status,
+      new_status: evPayload.status ?? existingEv.status,
+      fixture_short: fixtureShort,
+    });
   } else {
+
     const { data: inserted, error: insErr } = await supabase
       .from("bet_events")
       .insert(evPayload)
