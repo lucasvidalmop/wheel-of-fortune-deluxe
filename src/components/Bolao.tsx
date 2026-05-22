@@ -640,7 +640,7 @@ function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted
   );
 
   const cols = mirror ? [c5, c4, c3, c2, c1] : [c1, c2, c3, c4, c5];
-  return <div className="flex flex-1">{cols}</div>;
+  return <div className="flex flex-1 h-full items-stretch">{cols}</div>;
 }
 
 function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, accent, muted, text, disabled }: {
