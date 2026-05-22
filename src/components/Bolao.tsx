@@ -67,6 +67,8 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
   const [deadlinePassed, setDeadlinePassed] = useState(false);
   const [picks, setPicks] = useState<Record<string, GroupPick>>({});
   const [bestThirds, setBestThirds] = useState<string[]>([]);
+  const [revealing, setRevealing] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [bracket, setBracket] = useState<BracketState>({});
 
   const isLocked = !!entry && (entry.status === "submitted" || entry.status === "locked");
