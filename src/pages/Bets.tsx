@@ -242,6 +242,47 @@ const translateOutcomeLabel = (s?: string | null) => {
   return translatePt(s);
 };
 
+// Gera sigla de 3 letras de um nome de time (visual apenas).
+const teamAcronym = (name?: string | null): string => {
+  if (!name) return '';
+  const cleaned = name
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9 ]/g, ' ')
+    .trim();
+  if (!cleaned) return '';
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    const initials = words.slice(0, 3).map(w => w[0]).join('').toUpperCase();
+    if (initials.length >= 2) return initials.slice(0, 3);
+  }
+  const letters = cleaned.replace(/[^A-Za-z]/g, '');
+  if (letters.length < 3) return '';
+  return letters.slice(0, 3).toUpperCase();
+};
+
+const parseEventTeams = (title?: string | null): { home: string; away: string } => {
+  if (!title) return { home: '', away: '' };
+  const parts = title.split(/\s+(?:x|vs|×|@|-)\s+/i);
+  if (parts.length < 2) return { home: '', away: '' };
+  return { home: parts[0].trim(), away: parts.slice(1).join(' ').trim() };
+};
+
+// Para botões de odds principais: troca CASA/EMPATE/FORA por sigla dos times.
+const outcomeLabelForCard = (label?: string | null, eventTitle?: string | null) => {
+  if (!label) return '';
+  const up = label.trim().toUpperCase();
+  if (up === 'HOME') {
+    const { home } = parseEventTeams(eventTitle);
+    return teamAcronym(home) || 'CASA';
+  }
+  if (up === 'AWAY') {
+    const { away } = parseEventTeams(eventTitle);
+    return teamAcronym(away) || 'FORA';
+  }
+  if (up === 'DRAW' || up === 'TIE') return 'EMP';
+  return translateOutcomeLabel(label);
+};
+
 const SLUG_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
 const genSlug = (len = 6) => {
   let s = '';
