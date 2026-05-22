@@ -396,7 +396,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                     <div className="text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: accent }}>Mata-mata</div>
                     <div className="text-xs" style={{ color: muted }}>Clique nos vencedores de cada confronto.</div>
                   </div>
-                  <div className="flex items-stretch justify-center gap-0 mx-auto" style={{ minWidth: 880, minHeight: 720 }}>
+                  <div className="flex items-stretch justify-center gap-0 mx-auto" style={{ minWidth: 880, height: 720 }}>
                     <BracketHalf
                       side="left"
                       r32={r32Slots.slice(0, 8)}
@@ -514,7 +514,7 @@ function R32MatchCard({ teamA, teamB, winnerCode, onPick, disabled, accent, mute
 }) {
   return (
     <div
-      className="flex flex-col gap-1 px-2 py-1.5 rounded-md"
+      className="flex flex-col justify-center gap-1 px-2 rounded-md"
       style={{
         borderRight: mirror ? "none" : `1px solid ${muted}22`,
         borderLeft: mirror ? `1px solid ${muted}22` : "none",
@@ -546,7 +546,7 @@ function ColumnSlots({ count, getTeam, isSelected, onPick, accent, muted, mirror
 }) {
   return (
     <div
-      className="flex flex-col justify-around py-2 px-2"
+      className="flex flex-col justify-around h-full px-2"
       style={{
         borderRight: mirror ? "none" : `1px solid ${muted}22`,
         borderLeft: mirror ? `1px solid ${muted}22` : "none",
@@ -593,7 +593,7 @@ function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted
   const fin = bracket.final || {};
 
   const c1 = (
-    <div className="flex flex-col justify-around py-2 gap-1" key="c1">
+    <div className="flex flex-col justify-around h-full" key="c1">
       {r32.map((m, i) => (
         <R32MatchCard
           key={i}
@@ -640,7 +640,7 @@ function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted
   );
 
   const cols = mirror ? [c5, c4, c3, c2, c1] : [c1, c2, c3, c4, c5];
-  return <div className="flex flex-1">{cols}</div>;
+  return <div className="flex flex-1 h-full items-stretch">{cols}</div>;
 }
 
 function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, accent, muted, text, disabled }: {
