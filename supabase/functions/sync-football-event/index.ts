@@ -24,6 +24,8 @@ interface EventPayload {
   starts_at?: string | null;
   closes_at?: string | null;
   status?: string;
+  /** API-Football fixture.status.short (NS, 1H, HT, 2H, ET, P, BT, LIVE, FT, AET, PEN, PST, CANC, ABD, AWD, WO, SUSP, INT) */
+  fixture_status?: string | null;
   category?: string;
   category_id?: string | null;
   home_team?: string;
@@ -37,6 +39,25 @@ interface EventPayload {
   competition_name?: string | null;
   competition_slug?: string | null;
   competition_country?: string | null;
+}
+
+/**
+ * Mapeia o status curto da API-Football para o status interno do bet_events.
+ * - NS => open (não começou, aceita apostas)
+ * - 1H/HT/2H/ET/P/BT/LIVE => live (em andamento, fecha apostas)
+ * - FT/AET/PEN => closed (encerrado, aguardando resolução/pagamento)
+ * - PST/SUSP/INT => closed (sem novas apostas, mas ainda monitorado)
+ * - CANC/ABD/AWD/WO => cancelled
+ */
+function mapFixtureStatusToEventStatus(short: string | null | undefined): string | null {
+  if (!short) return null;
+  const s = String(short).toUpperCase().trim();
+  if (s === "NS" || s === "TBD") return "open";
+  if (["1H", "2H", "HT", "ET", "P", "BT", "LIVE"].includes(s)) return "live";
+  if (["FT", "AET", "PEN"].includes(s)) return "closed";
+  if (["PST", "SUSP", "INT"].includes(s)) return "closed";
+  if (["CANC", "ABD", "AWD", "WO"].includes(s)) return "cancelled";
+  return null;
 }
 interface Body {
   event: EventPayload;
