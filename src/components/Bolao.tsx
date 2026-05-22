@@ -67,8 +67,6 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
   const [deadlinePassed, setDeadlinePassed] = useState(false);
   const [picks, setPicks] = useState<Record<string, GroupPick>>({});
   const [bestThirds, setBestThirds] = useState<string[]>([]);
-  const [revealing, setRevealing] = useState(false);
-  const [revealed, setRevealed] = useState(false);
   const [bracket, setBracket] = useState<BracketState>({});
 
   const isLocked = !!entry && (entry.status === "submitted" || entry.status === "locked");
@@ -149,45 +147,55 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
 
   const thirds = useMemo(() => groups.map(g => ({ key: g.key, team: g.teams.find(t => t.code === picks[g.key]?.third_team) })).filter(x => x.team), [groups, picks]);
 
-  // Auto-compute "8 melhores terceiros": thirds of groups A-H (matches bracket template slots 3A..3H).
-  // No manual user selection — the system decides.
-  const allGroupsFilled = groupsFilled === groups.length && groups.length > 0;
-  const autoBestThirds = useMemo(() => {
-    if (!allGroupsFilled) return [];
-    const order = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    return order
-      .map(k => picks[k]?.third_team)
-      .filter((c): c is string => !!c);
-  }, [picks, allGroupsFilled]);
-
-  // Keep state in sync with auto value so existing submit/bracket logic keeps working
-  useEffect(() => {
+  const toggleThird = (code: string) => {
+    if (readOnly) return;
     setBestThirds(prev => {
-      if (prev.length === autoBestThirds.length && prev.every((c, i) => c === autoBestThirds[i])) return prev;
-      return autoBestThirds;
+      if (prev.includes(code)) return prev.filter(c => c !== code);
+      if (prev.length >= 8) { toast.error("Máximo 8 terceiros"); return prev; }
+      return [...prev, code];
     });
-  }, [autoBestThirds]);
+    // clear bracket dependent on thirds
+    setBracket({});
+  };
 
-  // Reveal animation when entering classification tab with all groups complete
-  useEffect(() => {
-    if (tab !== "classification" || !allGroupsFilled) return;
-    if (revealed) return;
-    setRevealing(true);
-    const t = setTimeout(() => { setRevealing(false); setRevealed(true); }, 1800);
-    return () => clearTimeout(t);
-  }, [tab, allGroupsFilled, revealed]);
-
-
-  // Build R32 slots — simple resolution (bestThirds = 3A..3H always)
+  // Build R32 slots from template using picks.
+  // Special handling for "3X" specs: there are exactly 8 such slots in the template,
+  // and exactly 8 best-thirds chosen by the user. Match preferred 3X when that group's
+  // third was selected; fill remaining 3X slots with leftover best-thirds in order.
   const r32Slots = useMemo(() => {
-    return bracketTemplate.map(({ slot, a, b }) => ({
-      slot,
-      teamA: resolveSlotTeam(a, picks, bestThirds, groups),
-      teamB: resolveSlotTeam(b, picks, bestThirds, groups),
-    }));
+    // First pass: resolve all non-third specs and tentatively resolve 3X
+    const thirdSlots: number[] = [];
+    const used = new Set<string>();
+    const tentative = bracketTemplate.map(({ slot, a, b }) => {
+      const resolve = (spec: string, side: "a" | "b") => {
+        if (spec[0] === "3") {
+          const groupKey = spec.slice(1);
+          const p = picks[groupKey];
+          const code = p?.third_team;
+          if (code && bestThirds.includes(code) && !used.has(code)) {
+            used.add(code);
+            return groups.flatMap(g => g.teams).find(t => t.code === code);
+          }
+          thirdSlots.push(slot * 2 + (side === "a" ? 0 : 1));
+          return undefined;
+        }
+        return resolveSlotTeam(spec, picks, bestThirds, groups);
+      };
+      return { slot, teamA: resolve(a, "a"), teamB: resolve(b, "b") };
+    });
+    // Second pass: fill empty 3X slots with leftover best-thirds in user-pick order
+    const leftover = bestThirds.filter(c => !used.has(c));
+    let li = 0;
+    for (const flat of thirdSlots) {
+      if (li >= leftover.length) break;
+      const slotIdx = Math.floor(flat / 2);
+      const side = flat % 2 === 0 ? "teamA" : "teamB";
+      const code = leftover[li++];
+      const team = groups.flatMap(g => g.teams).find(t => t.code === code);
+      (tentative[slotIdx] as any)[side] = team;
+    }
+    return tentative;
   }, [bracketTemplate, picks, bestThirds, groups]);
-
-
 
 
   const teamByCode = useMemo(() => {
@@ -310,14 +318,13 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           <>
             {/* Tabs */}
             <div className="flex gap-1 px-4 pt-3 border-b" style={{ borderColor: `${accent}22` }}>
-              {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["classification", `Classificação`], ["bracket", "Mata-mata"]] as const).map(([k, l]) => (
+              {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["classification", `Classificação (${bestThirds.length}/8)`], ["bracket", "Mata-mata"]] as const).map(([k, l]) => (
                 <button key={k} onClick={() => setTab(k)} className="px-4 py-2 rounded-t-lg text-sm font-medium transition"
                   style={{ background: tab === k ? cardBg : "transparent", color: tab === k ? text : muted, borderBottom: tab === k ? `2px solid ${accent}` : "2px solid transparent" }}>
                   {l}
                 </button>
               ))}
             </div>
-
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-4" style={{ color: text }}>
@@ -380,127 +387,140 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                 </>
               )}
 
-              {tab === "classification" && (() => {
-                if (!allGroupsFilled) {
-                  return (
-                    <div className="flex flex-col items-center justify-center py-16 text-center" style={{ color: muted }}>
-                      <Trophy size={42} style={{ color: `${accent}66` }} />
-                      <div className="mt-3 text-base font-bold" style={{ color: text }}>Termine os 12 grupos primeiro</div>
-                      <div className="text-xs mt-1">Faltam {groups.length - groupsFilled} grupo(s) para revelar os classificados.</div>
-                      <button onClick={() => setTab("groups")} className="mt-4 px-4 py-2 rounded-lg text-sm font-bold" style={{ background: accent, color: "#1a1404" }}>
-                        Ir para os grupos
-                      </button>
-                    </div>
-                  );
-                }
-                if (revealing) {
-                  return (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                      <div className="relative">
-                        <Loader2 size={56} className="animate-spin" style={{ color: accent }} />
-                        <div className="absolute inset-0 rounded-full animate-ping" style={{ background: `${accent}22` }} />
-                      </div>
-                      <div className="mt-5 text-lg font-bold" style={{ color: accent }}>Calculando os melhores terceiros…</div>
-                      <div className="text-xs mt-1" style={{ color: muted }}>Analisando os 12 grupos</div>
-                    </div>
-                  );
-                }
-                return (
-                  <div className="space-y-6 animate-in fade-in duration-500">
-                    {/* Funil 48 → 24 → 8 → 32 */}
-                    <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${accent}22` }}>
-                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold mb-3" style={{ color: muted }}>Como a classificação foi montada</div>
-                      <div className="flex items-center justify-between gap-2 md:gap-3 overflow-x-auto">
-                        {[
-                          { n: "48", label: "Seleções", sub: "12 grupos × 4" },
-                          { n: "24", label: "Diretos", sub: "1º e 2º de cada grupo" },
-                          { n: "+8", label: "Melhores 3º", sub: "calculados pelo sistema", accent: true },
-                          { n: "32", label: "Mata-mata", sub: "chave pronta" },
-                        ].map((s, i, arr) => (
-                          <div key={i} className="flex items-center gap-2 md:gap-3 shrink-0">
-                            <div className="text-center min-w-[78px] md:min-w-[100px]">
-                              <div className="rounded-xl py-2 px-3 mb-1" style={{ background: s.accent ? `linear-gradient(135deg, ${accent}44, ${accent}11)` : "rgba(255,255,255,0.04)", border: `1px solid ${s.accent ? accent : "rgba(255,255,255,0.08)"}`, boxShadow: s.accent ? `0 0 20px ${accent}33` : "none" }}>
-                                <div className="text-xl md:text-2xl font-black tabular-nums" style={{ color: s.accent ? accent : text }}>{s.n}</div>
-                                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: s.accent ? accent : muted }}>{s.label}</div>
-                              </div>
-                              <div className="text-[10px]" style={{ color: muted }}>{s.sub}</div>
+              {tab === "classification" && (
+                <div className="space-y-6">
+                  {/* DIAGRAMA EXPLICATIVO — funil visual 48 → 24 → +8 → 32 */}
+                  <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${accent}22` }}>
+                    <div className="text-[10px] uppercase tracking-[0.2em] font-bold mb-3" style={{ color: muted }}>Como funciona a classificação</div>
+                    <div className="flex items-center justify-between gap-2 md:gap-3 overflow-x-auto">
+                      {[
+                        { n: "48", label: "Seleções", sub: "12 grupos × 4", tone: "neutral" },
+                        { n: "24", label: "Classificados", sub: "1º e 2º de cada grupo", tone: "neutral" },
+                        { n: "+8", label: "Melhores 3º", sub: "você escolhe", tone: "accent" },
+                        { n: "32", label: "Mata-mata", sub: "chave final", tone: "neutral" },
+                      ].map((step, i, arr) => (
+                        <div key={i} className="flex items-center gap-2 md:gap-3 shrink-0">
+                          <div className="text-center min-w-[78px] md:min-w-[100px]">
+                            <div className="rounded-xl py-2 px-3 mb-1"
+                              style={{
+                                background: step.tone === "accent" ? `linear-gradient(135deg, ${accent}44, ${accent}11)` : "rgba(255,255,255,0.04)",
+                                border: `1px solid ${step.tone === "accent" ? accent : "rgba(255,255,255,0.08)"}`,
+                                boxShadow: step.tone === "accent" ? `0 0 20px ${accent}33` : "none",
+                              }}>
+                              <div className="text-xl md:text-2xl font-black tabular-nums" style={{ color: step.tone === "accent" ? accent : text }}>{step.n}</div>
+                              <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: step.tone === "accent" ? accent : muted }}>{step.label}</div>
                             </div>
-                            {i < arr.length - 1 && <div className="text-lg md:text-xl shrink-0" style={{ color: `${accent}77` }}>→</div>}
+                            <div className="text-[10px]" style={{ color: muted }}>{step.sub}</div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Terceiros classificados (auto) */}
-                    <div className="rounded-2xl p-4 md:p-5" style={{ background: `linear-gradient(135deg, ${accent}1f, ${accent}06)`, border: `2px solid ${accent}`, boxShadow: `0 0 40px ${accent}22` }}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <CheckCircle2 size={18} style={{ color: accent }} />
-                        <div>
-                          <div className="text-xl font-black leading-tight">Terceiros classificados</div>
-                          <div className="text-xs" style={{ color: muted }}>Os 8 melhores terceiros foram calculados automaticamente.</div>
+                          {i < arr.length - 1 && (
+                            <div className="text-lg md:text-xl shrink-0" style={{ color: `${accent}77` }}>→</div>
+                          )}
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {bestThirds.map((code, i) => {
-                          const t = teamByCode[code];
-                          const gk = groups.find(g => picks[g.key]?.third_team === code)?.key;
-                          if (!t) return null;
-                          return (
-                            <div key={code} className="relative p-3 md:p-4 rounded-xl flex items-center gap-3 animate-in fade-in zoom-in duration-300"
-                              style={{ animationDelay: `${i * 60}ms`, background: `linear-gradient(135deg, ${accent}33, ${accent}0f)`, border: `2px solid ${accent}`, boxShadow: `0 6px 24px ${accent}33` }}>
-                              <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent, boxShadow: `0 0 12px ${accent}` }}>
-                                <CheckCircle2 size={14} strokeWidth={3} style={{ color: "#0a0a0a" }} />
-                              </div>
-                              <FlagImg code={t.code} size={36} />
-                              <div className="min-w-0 flex-1 text-left">
-                                <div className="font-bold truncate leading-tight">{t.name}</div>
-                                <div className="text-[10px] mt-0.5" style={{ color: muted }}>3º colocado · Grupo {gk}</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Classificados automáticos (1º+2º) */}
-                    <div>
-                      <div className="mb-3">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <CheckCircle2 size={16} style={{ color: muted }} />
-                          <div className="text-sm font-bold" style={{ color: text }}>Classificados pelos grupos</div>
-                        </div>
-                        <div className="text-xs ml-6" style={{ color: muted }}>Os 1º e 2º colocados de cada grupo já avançaram automaticamente.</div>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 opacity-80">
-                        {groups.flatMap(g => {
-                          const p = picks[g.key];
-                          if (!p) return [];
-                          return [["1º", g.key, p.first_team], ["2º", g.key, p.second_team]] as const;
-                        }).map(([pos, gk, code], idx) => {
-                          const t = teamByCode[code as string];
-                          return (
-                            <div key={`${pos}-${gk}-${idx}`} className="px-2.5 py-2 rounded-lg flex items-center gap-2 min-w-0" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                              <FlagImg code={t?.code} size={18} />
-                              <div className="min-w-0 flex-1">
-                                <div className="text-xs font-semibold truncate" style={{ color: muted }}>{t?.name || "—"}</div>
-                                <div className="text-[9px] uppercase tracking-wider" style={{ color: muted, opacity: 0.7 }}>{pos} · Grupo {gk}</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center">
-                      <button onClick={() => setTab("bracket")} className="px-6 py-2.5 rounded-xl text-sm font-bold hover:opacity-90" style={{ background: accent, color: "#1a1404", boxShadow: `0 4px 20px ${accent}55` }}>
-                        Ver mata-mata →
-                      </button>
+                      ))}
                     </div>
                   </div>
-                );
-              })()}
 
+                  {/* BLOCO 2 — Ação principal: escolher 8 terceiros */}
+                  <div className="rounded-2xl p-4 md:p-5"
+                    style={{
+                      background: `linear-gradient(135deg, ${accent}1f, ${accent}06)`,
+                      border: `2px solid ${accent}`,
+                      boxShadow: `0 0 40px ${accent}22`,
+                    }}>
+                    <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: accent, boxShadow: `0 0 10px ${accent}` }} />
+                          <div className="text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: accent }}>Sua vez</div>
+                        </div>
+                        <div className="text-xl md:text-2xl font-black leading-tight">Escolha os 8 terceiros que avançam</div>
+                        <div className="text-sm mt-1" style={{ color: muted }}>Selecione apenas os terceiros colocados que também irão para o mata-mata.</div>
+                      </div>
+                      <div className="text-center px-4 py-2 rounded-xl shrink-0" style={{ background: "rgba(0,0,0,0.3)", border: `1px solid ${accent}66` }}>
+                        <div>
+                          <span className="text-3xl font-black tabular-nums" style={{ color: accent }}>{bestThirds.length}</span>
+                          <span className="text-lg font-bold" style={{ color: muted }}> de 8</span>
+                        </div>
+                        <div className="text-[10px] uppercase tracking-wider font-bold mt-0.5" style={{ color: muted }}>selecionados</div>
+                      </div>
+                    </div>
+                    {/* progress bar */}
+                    <div className="h-2 rounded-full overflow-hidden mb-4" style={{ background: "rgba(0,0,0,0.3)" }}>
+                      <div className="h-full transition-all duration-500" style={{ width: `${Math.min(100, (bestThirds.length / 8) * 100)}%`, background: `linear-gradient(90deg, ${accent}, ${accent}aa)`, boxShadow: `0 0 12px ${accent}` }} />
+                    </div>
 
+                    {bestThirds.length >= 8 && (
+                      <div className="mb-3 px-3 py-2 rounded-lg text-xs flex items-center gap-2"
+                        style={{ background: `${accent}15`, border: `1px solid ${accent}55`, color: accent }}>
+                        <CheckCircle2 size={14} />
+                        <span><strong>Limite atingido.</strong> Toque em um selecionado para trocar.</span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {thirds.map(({ key, team }) => {
+                        if (!team) return null;
+                        const selected = bestThirds.includes(team.code);
+                        const blocked = !selected && bestThirds.length >= 8;
+                        return (
+                          <button key={team.code} onClick={() => toggleThird(team.code)} disabled={readOnly || blocked}
+                            className="group relative p-3 md:p-4 rounded-xl text-sm flex items-center gap-3 transition-all duration-200 hover:scale-[1.03] disabled:hover:scale-100 disabled:cursor-not-allowed"
+                            style={{
+                              background: selected
+                                ? `linear-gradient(135deg, ${accent}55, ${accent}1a)`
+                                : blocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.05)",
+                              border: `2px solid ${selected ? accent : blocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)"}`,
+                              boxShadow: selected ? `0 6px 24px ${accent}44, inset 0 1px 0 ${accent}66` : "none",
+                              opacity: blocked ? 0.4 : 1,
+                            }}>
+                            {selected && (
+                              <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center animate-in zoom-in duration-200"
+                                style={{ background: accent, boxShadow: `0 0 12px ${accent}` }}>
+                                <CheckCircle2 size={14} strokeWidth={3} style={{ color: "#0a0a0a" }} />
+                              </div>
+                            )}
+                            <FlagImg code={team.code} size={36} />
+                            <div className="min-w-0 flex-1 text-left">
+                              <div className="font-bold truncate leading-tight" style={{ color: selected ? text : text, fontSize: "0.95rem" }}>{team.name}</div>
+                              <div className="text-[10px] mt-0.5" style={{ color: muted }}>3º colocado · Grupo {key}</div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* BLOCO 1 — Já classificados (leitura, apagado) */}
+                  <div>
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <CheckCircle2 size={16} style={{ color: muted }} />
+                        <div className="text-sm font-bold" style={{ color: text }}>Classificados automaticamente</div>
+                      </div>
+                      <div className="text-xs ml-6" style={{ color: muted }}>Os 1º e 2º colocados de cada grupo já avançaram automaticamente.</div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 opacity-70">
+                      {groups.flatMap(g => {
+                        const p = picks[g.key];
+                        if (!p) return [];
+                        return [["1º", g.key, p.first_team], ["2º", g.key, p.second_team]] as const;
+                      }).map(([pos, gk, code], idx) => {
+                        const t = teamByCode[code as string];
+                        return (
+                          <div key={`${pos}-${gk}-${idx}`} className="px-2.5 py-2 rounded-lg flex items-center gap-2 min-w-0"
+                            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                            <FlagImg code={t?.code} size={18} />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-semibold truncate" style={{ color: muted }}>{t?.name || "—"}</div>
+                              <div className="text-[9px] uppercase tracking-wider" style={{ color: muted, opacity: 0.7 }}>{pos} · Grupo {gk}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
 
 
 
