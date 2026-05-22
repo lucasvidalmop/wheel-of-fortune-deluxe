@@ -514,7 +514,7 @@ function R32MatchCard({ teamA, teamB, winnerCode, onPick, disabled, accent, mute
 }) {
   return (
     <div
-      className="flex flex-col gap-1 px-2 py-1.5 rounded-md"
+      className="flex flex-col justify-center gap-1 px-2 rounded-md"
       style={{
         borderRight: mirror ? "none" : `1px solid ${muted}22`,
         borderLeft: mirror ? `1px solid ${muted}22` : "none",
