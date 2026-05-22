@@ -370,7 +370,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                         return (
                           <div key={label} className="p-2 rounded-md text-sm flex items-center gap-2" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
                             <span className="text-xs font-bold" style={{ color: muted }}>{label}</span>
-                            {t ? <><span>{t.flag}</span><span className="truncate">{t.name}</span></> : <span className="text-xs" style={{ color: muted }}>—</span>}
+                            {t ? <><FlagImg code={t.code} size={20} /><span className="truncate">{t.name}</span></> : <span className="text-xs" style={{ color: muted }}>—</span>}
                           </div>
                         );
                       })}
