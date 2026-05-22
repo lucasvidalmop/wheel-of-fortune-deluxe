@@ -343,6 +343,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all'); // 'all' | category_id | 'uncategorized'
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
+  const [expandedTickets, setExpandedTickets] = useState<Set<string>>(new Set());
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [shareMultiple, setShareMultiple] = useState<ShareMultipleData | null>(null);
