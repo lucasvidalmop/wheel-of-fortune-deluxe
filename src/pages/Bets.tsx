@@ -1026,7 +1026,7 @@ const Bets = ({ tag }: BetsPageProps) => {
     const subtitleColor = cfg.subtitleColor || muted;
     const btnTextColor = cfg.btnTextColor || '#000';
     const bgStyle: React.CSSProperties = cfg.bgImage
-      ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1280, quality: 70 })})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1920, quality: 90 })})`, backgroundSize: 'cover', backgroundPosition: 'center' }
       : (cfg.bgGradientFrom || cfg.bgGradientTo)
         ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)` }
         : { background: bg };
@@ -1078,7 +1078,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const eventStatusBadge = (st: string) => st === 'open' ? 'Aberto' : st === 'closed' ? 'Fechado' : st === 'resolved' ? 'Resolvido' : 'Cancelado';
 
   const pageBackgroundLayerStyle: React.CSSProperties = cfg.bgImage
-    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1280, quality: 65 })})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }
+    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1920, quality: 90 })})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }
     : (cfg.bgGradientFrom || cfg.bgGradientTo)
       ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)` }
       : { background: bg };
