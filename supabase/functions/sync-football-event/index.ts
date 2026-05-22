@@ -24,6 +24,8 @@ interface EventPayload {
   starts_at?: string | null;
   closes_at?: string | null;
   status?: string;
+  /** API-Football fixture.status.short (NS, 1H, HT, 2H, ET, P, BT, LIVE, FT, AET, PEN, PST, CANC, ABD, AWD, WO, SUSP, INT) */
+  fixture_status?: string | null;
   category?: string;
   category_id?: string | null;
   home_team?: string;
@@ -37,6 +39,25 @@ interface EventPayload {
   competition_name?: string | null;
   competition_slug?: string | null;
   competition_country?: string | null;
+}
+
+/**
+ * Mapeia o status curto da API-Football para o status interno do bet_events.
+ * - NS => open (não começou, aceita apostas)
+ * - 1H/HT/2H/ET/P/BT/LIVE => live (em andamento, fecha apostas)
+ * - FT/AET/PEN => closed (encerrado, aguardando resolução/pagamento)
+ * - PST/SUSP/INT => closed (sem novas apostas, mas ainda monitorado)
+ * - CANC/ABD/AWD/WO => cancelled
+ */
+function mapFixtureStatusToEventStatus(short: string | null | undefined): string | null {
+  if (!short) return null;
+  const s = String(short).toUpperCase().trim();
+  if (s === "NS" || s === "TBD") return "open";
+  if (["1H", "2H", "HT", "ET", "P", "BT", "LIVE"].includes(s)) return "live";
+  if (["FT", "AET", "PEN"].includes(s)) return "closed";
+  if (["PST", "SUSP", "INT"].includes(s)) return "closed";
+  if (["CANC", "ABD", "AWD", "WO"].includes(s)) return "cancelled";
+  return null;
 }
 interface Body {
   event: EventPayload;
@@ -121,6 +142,9 @@ async function syncForOwner(
     .maybeSingle();
   if (findErr) throw findErr;
 
+  // Deriva status interno a partir do fixture.status.short da API-Football quando enviado.
+  const derivedStatus = mapFixtureStatusToEventStatus(ev.fixture_status) ?? ev.status ?? "open";
+
   const evPayload: Record<string, unknown> = {
     owner_id: ownerId,
     bets_config_id: betsConfigId,
@@ -130,7 +154,7 @@ async function syncForOwner(
     category_id: categoryId,
     starts_at: ev.starts_at ?? null,
     closes_at: ev.closes_at ?? null,
-    status: ev.status ?? "open",
+    status: derivedStatus,
     home_image_url: ev.home_logo ?? null,
     away_image_url: ev.away_logo ?? null,
     image_url: ev.image_url ?? "",
@@ -146,6 +170,7 @@ async function syncForOwner(
   let eventId: string;
   if (existingEv) {
     eventId = existingEv.id;
+    // Nunca regredir status terminais
     if (existingEv.status === "resolved" || existingEv.status === "cancelled") {
       delete evPayload.status;
     }
@@ -381,6 +406,14 @@ Deno.serve(async (req) => {
     if (!configs || configs.length === 0) {
       return json(200, { success: true, operators: 0, results: [] });
     }
+
+    const derivedLog = mapFixtureStatusToEventStatus(ev.fixture_status);
+    console.log("[sync-football-event] fixture", {
+      external_fixture_id: ev.external_fixture_id,
+      fixture_status: ev.fixture_status ?? null,
+      derived_status: derivedLog,
+      operators: configs.length,
+    });
 
     const results: Array<{ owner_id: string; ok: boolean; error?: string; data?: unknown }> = [];
 
