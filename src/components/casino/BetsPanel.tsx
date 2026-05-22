@@ -508,7 +508,37 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(500);
-    setWagers(data || []);
+    const list = data || [];
+    setWagers(list);
+
+    // Backfill events/outcomes/markets referenced by wagers but missing from
+    // the initial scope (events list is capped at 500 newest; outcomes may have
+    // been re-synced for football fixtures). Without this, the "Apostas deste
+    // usuário" detail row renders "—" for the selection label.
+    const missingEventIds = Array.from(new Set(
+      list.map((w: any) => w.event_id).filter((id: string) => id && !events.some(e => e.id === id))
+    )) as string[];
+    const missingOutcomeIds = Array.from(new Set(
+      list.map((w: any) => w.outcome_id).filter((id: string) => id && !outcomes.some(o => o.id === id))
+    )) as string[];
+    const missingMarketIds = Array.from(new Set(
+      list.map((w: any) => w.market_id).filter((id: string) => id && !markets.some(m => m.id === id))
+    )) as string[];
+
+    const [evRes, outRes, mkRes] = await Promise.all([
+      missingEventIds.length
+        ? supabase.from('bet_events').select('*').in('id', missingEventIds)
+        : Promise.resolve({ data: [] as any[] }),
+      missingOutcomeIds.length
+        ? supabase.from('bet_outcomes').select('*').in('id', missingOutcomeIds)
+        : Promise.resolve({ data: [] as any[] }),
+      missingMarketIds.length
+        ? supabase.from('bet_markets').select('*').in('id', missingMarketIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    if (evRes.data?.length) setEvents(prev => [...prev, ...(evRes.data as BetEvent[]).filter(e => !prev.some(p => p.id === e.id))]);
+    if (outRes.data?.length) setOutcomes(prev => [...prev, ...(outRes.data as BetOutcome[]).filter(o => !prev.some(p => p.id === o.id))]);
+    if (mkRes.data?.length) setMarkets(prev => [...prev, ...(mkRes.data as BetMarket[]).filter(m => !prev.some(p => p.id === m.id))]);
   };
 
   useEffect(() => { if (tab === 'wagers' || tab === 'analytics') loadWagers(); }, [tab, config?.id]);
