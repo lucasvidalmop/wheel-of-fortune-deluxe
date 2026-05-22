@@ -477,7 +477,7 @@ function BracketRound({ title, pairs, picks, onPick, accent, cardBg, muted, disa
                   <button key={i} onClick={() => pick(t?.code)} disabled={!t || disabled}
                     className="w-full text-left p-2 rounded-md text-sm flex items-center gap-2 transition disabled:opacity-40"
                     style={{ background: isWinner ? `${accent}33` : "rgba(255,255,255,0.04)", border: isWinner ? `1px solid ${accent}` : "1px solid transparent" }}>
-                    {t ? <><span>{t.flag}</span><span className="truncate">{t.name}</span></> : <span style={{ color: muted }}>—</span>}
+                    {t ? <><FlagImg code={t.code} size={18} /><span className="truncate">{t.name}</span></> : <span style={{ color: muted }}>—</span>}
                   </button>
                 );
               })}
