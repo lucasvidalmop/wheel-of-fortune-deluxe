@@ -2060,6 +2060,22 @@ const Bets = ({ tag }: BetsPageProps) => {
         </Suspense>
       )}
 
+      {bolaoOpen && (
+        <Suspense fallback={null}>
+          <Bolao
+            open={bolaoOpen}
+            onClose={() => setBolaoOpen(false)}
+            tag={tag}
+            authed={authed ? { email: authed.email, account_id: authed.account_id || authed.id, name: authed.name } : null}
+            accent={accent}
+            bg={bg}
+            cardBg={cardBg}
+            text={text}
+            muted={muted}
+          />
+        </Suspense>
+      )}
+
       {/* Bet slip */}
       {slip && (
         <div className="fixed inset-0 z-30 bg-black/75 flex items-end sm:items-center justify-center p-4"
