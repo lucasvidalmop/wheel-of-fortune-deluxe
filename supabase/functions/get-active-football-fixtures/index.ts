@@ -24,13 +24,13 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
 
-  const statuses = ["open", "live", "closed"];
-
   const { data, error } = await supabase
     .from("bet_events")
     .select("external_fixture_id, status, starts_at")
     .not("external_fixture_id", "is", null)
-    .in("status", statuses)
+    // Keep every non-finalized event under VPS monitoring.
+    // "closed" means betting is closed, but the fixture may still need result/payment resolution.
+    .not("status", "in", "(resolved,cancelled)")
     .order("starts_at", { ascending: true });
 
   if (error) return json({ error: "db_error", detail: error.message }, 500);
