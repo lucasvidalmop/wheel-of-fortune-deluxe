@@ -1150,7 +1150,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             .bolao-btn {
               background-image: linear-gradient(110deg, #b8862a 0%, #d4af37 25%, #f5e08a 50%, #d4af37 75%, #b8862a 100%);
               background-size: 200% 100%;
-              animation: bolaoShimmer 4s linear infinite, bolaoGlow 2.8s ease-in-out infinite;
+              animation: bolaoShimmer 9s linear infinite, bolaoGlow 6s ease-in-out infinite;
             }
           `}</style>
           <button
