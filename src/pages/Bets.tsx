@@ -1866,7 +1866,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                             <div className="min-w-0 flex-1">
                               <div className="truncate font-medium">{s.event_title}</div>
                               <div className="truncate" style={{ color: muted }}>
-                                {s.market_title} · <span style={{ color: accent }}>{s.selection_label}</span> · {Number(s.odd).toFixed(2)}
+                                {translatePt(s.market_title)} · <span style={{ color: accent }}>{translateOutcomeLabel(s.selection_label)}</span> · {Number(s.odd).toFixed(2)}
                               </div>
                             </div>
                             <span className="text-[10px] font-bold shrink-0" style={{ color: selStatusColor[s.status] }}>
