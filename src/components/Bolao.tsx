@@ -147,55 +147,35 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
 
   const thirds = useMemo(() => groups.map(g => ({ key: g.key, team: g.teams.find(t => t.code === picks[g.key]?.third_team) })).filter(x => x.team), [groups, picks]);
 
-  const toggleThird = (code: string) => {
-    if (readOnly) return;
-    setBestThirds(prev => {
-      if (prev.includes(code)) return prev.filter(c => c !== code);
-      if (prev.length >= 8) { toast.error("Máximo 8 terceiros"); return prev; }
-      return [...prev, code];
-    });
-    // clear bracket dependent on thirds
-    setBracket({});
-  };
+  // Auto-compute "8 melhores terceiros": thirds of groups A-H (matches bracket template slots 3A..3H).
+  // No manual user selection — the system decides.
+  const allGroupsFilled = groupsFilled === groups.length && groups.length > 0;
+  const autoBestThirds = useMemo(() => {
+    if (!allGroupsFilled) return [];
+    const order = ["A", "B", "C", "D", "E", "F", "G", "H"];
+    return order
+      .map(k => picks[k]?.third_team)
+      .filter((c): c is string => !!c);
+  }, [picks, allGroupsFilled]);
 
-  // Build R32 slots from template using picks.
-  // Special handling for "3X" specs: there are exactly 8 such slots in the template,
-  // and exactly 8 best-thirds chosen by the user. Match preferred 3X when that group's
-  // third was selected; fill remaining 3X slots with leftover best-thirds in order.
-  const r32Slots = useMemo(() => {
-    // First pass: resolve all non-third specs and tentatively resolve 3X
-    const thirdSlots: number[] = [];
-    const used = new Set<string>();
-    const tentative = bracketTemplate.map(({ slot, a, b }) => {
-      const resolve = (spec: string, side: "a" | "b") => {
-        if (spec[0] === "3") {
-          const groupKey = spec.slice(1);
-          const p = picks[groupKey];
-          const code = p?.third_team;
-          if (code && bestThirds.includes(code) && !used.has(code)) {
-            used.add(code);
-            return groups.flatMap(g => g.teams).find(t => t.code === code);
-          }
-          thirdSlots.push(slot * 2 + (side === "a" ? 0 : 1));
-          return undefined;
-        }
-        return resolveSlotTeam(spec, picks, bestThirds, groups);
-      };
-      return { slot, teamA: resolve(a, "a"), teamB: resolve(b, "b") };
+  // Keep state in sync with auto value so existing submit/bracket logic keeps working
+  useEffect(() => {
+    setBestThirds(prev => {
+      if (prev.length === autoBestThirds.length && prev.every((c, i) => c === autoBestThirds[i])) return prev;
+      return autoBestThirds;
     });
-    // Second pass: fill empty 3X slots with leftover best-thirds in user-pick order
-    const leftover = bestThirds.filter(c => !used.has(c));
-    let li = 0;
-    for (const flat of thirdSlots) {
-      if (li >= leftover.length) break;
-      const slotIdx = Math.floor(flat / 2);
-      const side = flat % 2 === 0 ? "teamA" : "teamB";
-      const code = leftover[li++];
-      const team = groups.flatMap(g => g.teams).find(t => t.code === code);
-      (tentative[slotIdx] as any)[side] = team;
-    }
-    return tentative;
+  }, [autoBestThirds]);
+
+  // Build R32 slots — simple resolution (bestThirds = 3A..3H always)
+  const r32Slots = useMemo(() => {
+    return bracketTemplate.map(({ slot, a, b }) => ({
+      slot,
+      teamA: resolveSlotTeam(a, picks, bestThirds, groups),
+      teamB: resolveSlotTeam(b, picks, bestThirds, groups),
+    }));
   }, [bracketTemplate, picks, bestThirds, groups]);
+
+
 
 
   const teamByCode = useMemo(() => {
