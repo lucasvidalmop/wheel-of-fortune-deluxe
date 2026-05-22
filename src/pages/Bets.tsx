@@ -350,6 +350,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myMarkets, setMyMarkets] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [shareMultiple, setShareMultiple] = useState<ShareMultipleData | null>(null);
+  const [bolaoOpen, setBolaoOpen] = useState(false);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
