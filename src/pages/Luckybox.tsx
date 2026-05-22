@@ -1393,7 +1393,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
 
                     <div className="text-3xl font-bold mb-2">{final.label}</div>
 
-                    {finalAmount > 0 && (
+                    {finalAmount > 0 && openingCase?.prize_type !== 'tokens' && (
                       <div className="text-sm opacity-80 mb-5">Será pago em PIX automaticamente quando aprovado.</div>
                     )}
 
