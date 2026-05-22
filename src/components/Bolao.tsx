@@ -327,7 +327,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                             {g.teams.map(t => (
                               <div key={t.code} className="flex items-center justify-between gap-2 p-1.5 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <span className="text-lg leading-none">{t.flag}</span>
+                                  <FlagImg code={t.code} size={22} />
                                   <span className="text-sm truncate">{t.name}</span>
                                 </div>
                                 <div className="flex gap-2 shrink-0">
