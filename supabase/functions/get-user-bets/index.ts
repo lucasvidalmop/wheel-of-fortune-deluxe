@@ -116,6 +116,8 @@ Deno.serve(async (req) => {
       },
       wagers: wagers || [],
       events,
+      outcomes,
+      markets,
       tickets: tickets || [],
       ticketSelections,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
