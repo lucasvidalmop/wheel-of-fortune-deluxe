@@ -1069,14 +1069,15 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   const eventStatusBadge = (st: string) => st === 'open' ? 'Aberto' : st === 'closed' ? 'Fechado' : st === 'resolved' ? 'Resolvido' : 'Cancelado';
 
-  const mainBgStyle: React.CSSProperties = cfg.bgImage
-    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1280, quality: 65 })})`, backgroundSize: 'cover', backgroundPosition: 'center', color: text }
+  const pageBackgroundLayerStyle: React.CSSProperties = cfg.bgImage
+    ? { backgroundImage: `url(${optimizedImage(cfg.bgImage, { width: 1280, quality: 65 })})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }
     : (cfg.bgGradientFrom || cfg.bgGradientTo)
-      ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)`, color: text }
-      : { background: bg, color: text };
+      ? { background: `radial-gradient(ellipse at top, ${cfg.bgGradientFrom || '#1a1230'} 0%, ${cfg.bgGradientTo || '#05040a'} 70%)` }
+      : { background: bg };
 
   return (
-    <div className="min-h-screen" style={mainBgStyle}>
+    <div className="relative min-h-screen overflow-x-hidden" style={{ background: bg, color: text }}>
+      <div aria-hidden className="fixed inset-0 pointer-events-none" style={pageBackgroundLayerStyle} />
       {/* header */}
       <header className="sticky top-0 z-20 backdrop-blur" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: `1px solid ${accent}33` }}>
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
