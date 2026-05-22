@@ -158,14 +158,45 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
     setBracket({});
   };
 
-  // Build R32 slots from template using picks
+  // Build R32 slots from template using picks.
+  // Special handling for "3X" specs: there are exactly 8 such slots in the template,
+  // and exactly 8 best-thirds chosen by the user. Match preferred 3X when that group's
+  // third was selected; fill remaining 3X slots with leftover best-thirds in order.
   const r32Slots = useMemo(() => {
-    return bracketTemplate.map(({ slot, a, b }) => ({
-      slot,
-      teamA: resolveSlotTeam(a, picks, bestThirds, groups),
-      teamB: resolveSlotTeam(b, picks, bestThirds, groups),
-    }));
+    // First pass: resolve all non-third specs and tentatively resolve 3X
+    const thirdSlots: number[] = [];
+    const used = new Set<string>();
+    const tentative = bracketTemplate.map(({ slot, a, b }) => {
+      const resolve = (spec: string, side: "a" | "b") => {
+        if (spec[0] === "3") {
+          const groupKey = spec.slice(1);
+          const p = picks[groupKey];
+          const code = p?.third_team;
+          if (code && bestThirds.includes(code) && !used.has(code)) {
+            used.add(code);
+            return groups.flatMap(g => g.teams).find(t => t.code === code);
+          }
+          thirdSlots.push(slot * 2 + (side === "a" ? 0 : 1));
+          return undefined;
+        }
+        return resolveSlotTeam(spec, picks, bestThirds, groups);
+      };
+      return { slot, teamA: resolve(a, "a"), teamB: resolve(b, "b") };
+    });
+    // Second pass: fill empty 3X slots with leftover best-thirds in user-pick order
+    const leftover = bestThirds.filter(c => !used.has(c));
+    let li = 0;
+    for (const flat of thirdSlots) {
+      if (li >= leftover.length) break;
+      const slotIdx = Math.floor(flat / 2);
+      const side = flat % 2 === 0 ? "teamA" : "teamB";
+      const code = leftover[li++];
+      const team = groups.flatMap(g => g.teams).find(t => t.code === code);
+      (tentative[slotIdx] as any)[side] = team;
+    }
+    return tentative;
   }, [bracketTemplate, picks, bestThirds, groups]);
+
 
   const teamByCode = useMemo(() => {
     const m: Record<string, Team> = {};
