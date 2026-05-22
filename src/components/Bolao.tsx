@@ -147,16 +147,16 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
 
   const thirds = useMemo(() => groups.map(g => ({ key: g.key, team: g.teams.find(t => t.code === picks[g.key]?.third_team) })).filter(x => x.team), [groups, picks]);
 
-  const toggleThird = (code: string) => {
-    if (readOnly) return;
-    setBestThirds(prev => {
-      if (prev.includes(code)) return prev.filter(c => c !== code);
-      if (prev.length >= 8) { toast.error("Máximo 8 terceiros"); return prev; }
-      return [...prev, code];
-    });
-    // clear bracket dependent on thirds
-    setBracket({});
-  };
+  // Auto-select the 8 "best thirds" from filled groups (first 8 in group order — A..L).
+  // Mirrors the GE-style simulator: user doesn't manually pick thirds; bracket is built automatically.
+  useEffect(() => {
+    const auto = groups
+      .map(g => picks[g.key]?.third_team)
+      .filter((c): c is string => !!c)
+      .slice(0, 8);
+    setBestThirds(prev => (prev.length === auto.length && prev.every((c, i) => c === auto[i]) ? prev : auto));
+    // bracket is recomputed from r32Slots; clear stored picks only if thirds set changed materially
+  }, [picks, groups]);
 
   // Build R32 slots from template using picks.
   // Special handling for "3X" specs: there are exactly 8 such slots in the template,
