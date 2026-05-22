@@ -345,6 +345,8 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
   const [expandedTickets, setExpandedTickets] = useState<Set<string>>(new Set());
   const [myEvents, setMyEvents] = useState<any[]>([]);
+  const [myOutcomes, setMyOutcomes] = useState<any[]>([]);
+  const [myMarkets, setMyMarkets] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [shareMultiple, setShareMultiple] = useState<ShareMultipleData | null>(null);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
