@@ -710,6 +710,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(prev => prev ? { ...prev, tokens_balance: data.user.tokens_balance } : prev);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyOutcomes(data.outcomes || []);
+      setMyMarkets(data.markets || []);
       setMyTickets(data.tickets || []);
       setMyTicketSelections(data.ticketSelections || []);
     }
