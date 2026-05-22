@@ -143,7 +143,15 @@ async function syncForOwner(
   if (findErr) throw findErr;
 
   // Deriva status interno a partir do fixture.status.short da API-Football quando enviado.
-  const derivedStatus = mapFixtureStatusToEventStatus(ev.fixture_status) ?? ev.status ?? "open";
+  // Aceita o short code tanto em `fixture_status` quanto em `status` (compat. VPS antigo).
+  const fixtureShort = ev.fixture_status ?? ev.status ?? null;
+  const mappedFromShort = mapFixtureStatusToEventStatus(fixtureShort);
+  const derivedStatus =
+    mappedFromShort ??
+    (ev.status && ["open", "live", "closed", "resolved", "cancelled"].includes(ev.status)
+      ? ev.status
+      : "open");
+
 
   const evPayload: Record<string, unknown> = {
     owner_id: ownerId,
