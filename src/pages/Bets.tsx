@@ -1156,7 +1156,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             }
           `}</style>
           <button
-            onClick={() => toast.info('Bolão da Copa em breve!')}
+            onClick={() => setBolaoOpen(true)}
             className="bolao-btn ml-auto px-4 py-2 rounded-lg text-sm font-bold tracking-wide transition hover:brightness-110"
             style={{ color: '#3a2a05', border: '1px solid rgba(255,225,140,0.6)' }}
             title="Bolão da Copa"
