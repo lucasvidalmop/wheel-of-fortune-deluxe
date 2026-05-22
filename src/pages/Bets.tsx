@@ -1128,7 +1128,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             </button>
           </div>
         </div>
-        <div className="max-w-5xl mx-auto px-4 pb-2 flex gap-1">
+        <div className="max-w-5xl mx-auto px-4 pb-2 flex gap-1 items-center">
           {([['events','Eventos'],['mine','Minhas apostas']] as const).map(([k, l]) => (
             <button key={k} onClick={() => { setTab(k); if (k === 'mine') refreshMine(); }}
               className="px-4 py-2 rounded-t-lg text-sm font-medium transition"
@@ -1138,8 +1138,32 @@ const Bets = ({ tag }: BetsPageProps) => {
                 borderBottom: tab === k ? `2px solid ${accent}` : '2px solid transparent',
               }}>{l}</button>
           ))}
+          <style>{`
+            @keyframes bolaoShimmer {
+              0% { background-position: -200% 0; }
+              100% { background-position: 200% 0; }
+            }
+            @keyframes bolaoGlow {
+              0%, 100% { box-shadow: 0 0 8px rgba(212,175,55,0.35), 0 0 16px rgba(212,175,55,0.15); }
+              50% { box-shadow: 0 0 14px rgba(212,175,55,0.6), 0 0 28px rgba(212,175,55,0.3); }
+            }
+            .bolao-btn {
+              background-image: linear-gradient(110deg, #b8862a 0%, #d4af37 25%, #f5e08a 50%, #d4af37 75%, #b8862a 100%);
+              background-size: 200% 100%;
+              animation: bolaoShimmer 4s linear infinite, bolaoGlow 2.8s ease-in-out infinite;
+            }
+          `}</style>
+          <button
+            onClick={() => toast.info('Bolão da Copa em breve!')}
+            className="bolao-btn ml-auto px-4 py-2 rounded-lg text-sm font-bold tracking-wide transition hover:brightness-110"
+            style={{ color: '#3a2a05', border: '1px solid rgba(255,225,140,0.6)' }}
+            title="Bolão da Copa"
+          >
+            🏆 Bolão da Copa
+          </button>
         </div>
       </header>
+
 
       <main className="max-w-5xl mx-auto px-4 py-6">
         {tab === 'events' && (() => {
