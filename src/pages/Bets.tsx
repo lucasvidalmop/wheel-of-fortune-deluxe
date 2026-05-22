@@ -690,6 +690,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(data.user);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyOutcomes(data.outcomes || []);
+      setMyMarkets(data.markets || []);
       setMyTickets(data.tickets || []);
       setMyTicketSelections(data.ticketSelections || []);
     } catch (err: any) {
