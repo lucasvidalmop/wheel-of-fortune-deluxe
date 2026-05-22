@@ -1208,6 +1208,9 @@ const Bets = ({ tag }: BetsPageProps) => {
             [...arr].sort((a, b) => {
               const ra = statusRank(a), rb = statusRank(b);
               if (ra !== rb) return ra - rb;
+              const ta = a.starts_at ? new Date(a.starts_at).getTime() : Number.POSITIVE_INFINITY;
+              const tb = b.starts_at ? new Date(b.starts_at).getTime() : Number.POSITIVE_INFINITY;
+              if (ta !== tb) return ta - tb;
               return (a.position ?? 0) - (b.position ?? 0);
             });
 
