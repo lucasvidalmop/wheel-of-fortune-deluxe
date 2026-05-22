@@ -384,7 +384,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                           className="p-2 rounded-md text-sm flex items-center gap-2 transition"
                           style={{ background: bestThirds.includes(team.code) ? `${accent}33` : cardBg, border: `1px solid ${bestThirds.includes(team.code) ? accent : `${accent}33`}` }}>
                           <span className="text-xs font-bold" style={{ color: muted }}>3º {key}</span>
-                          <span>{team.flag}</span>
+                          <FlagImg code={team.code} size={20} />
                           <span className="truncate text-left flex-1">{team.name}</span>
                         </button>
                       ))}
