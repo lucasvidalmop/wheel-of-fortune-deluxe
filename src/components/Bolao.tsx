@@ -168,6 +168,16 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
     });
   }, [autoBestThirds]);
 
+  // Reveal animation when entering classification tab with all groups complete
+  useEffect(() => {
+    if (tab !== "classification" || !allGroupsFilled) return;
+    if (revealed) return;
+    setRevealing(true);
+    const t = setTimeout(() => { setRevealing(false); setRevealed(true); }, 1800);
+    return () => clearTimeout(t);
+  }, [tab, allGroupsFilled, revealed]);
+
+
   // Build R32 slots — simple resolution (bestThirds = 3A..3H always)
   const r32Slots = useMemo(() => {
     return bracketTemplate.map(({ slot, a, b }) => ({
