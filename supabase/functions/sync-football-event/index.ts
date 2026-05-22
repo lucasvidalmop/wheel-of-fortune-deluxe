@@ -153,6 +153,10 @@ async function syncForOwner(
       : "open");
 
 
+  // Detecta automaticamente fase eliminatória (Final, Semi Final, Quarter Finals, Final - 1, etc.)
+  const phaseText = `${ev.subtitle ?? ""} ${ev.category ?? ""}`.toLowerCase();
+  const isFinalsPhase = /\bfinal/.test(phaseText) || /semi[\s-]?final/.test(phaseText) || /quarter[\s-]?final/.test(phaseText);
+
   const evPayload: Record<string, unknown> = {
     owner_id: ownerId,
     bets_config_id: betsConfigId,
@@ -167,7 +171,9 @@ async function syncForOwner(
     away_image_url: ev.away_logo ?? null,
     image_url: ev.image_url ?? "",
     external_fixture_id: ev.external_fixture_id,
-    ...(ev.is_hot !== undefined ? { is_hot: Boolean(ev.is_hot) } : {}),
+    // is_hot só é aplicado na CRIAÇÃO (removido em updates abaixo).
+    // Fase de mata-mata força true; caso contrário usa payload ou false.
+    is_hot: isFinalsPhase ? true : Boolean(ev.is_hot ?? false),
     competition_id: ev.competition_id != null ? String(ev.competition_id) : null,
     competition_name: ev.competition_name ?? null,
     competition_slug: ev.competition_slug ?? null,
@@ -189,10 +195,9 @@ async function syncForOwner(
     if (ev.closes_at == null) {
       delete evPayload.closes_at;
     }
-    // Preserva flags gerenciadas pelo admin: não sobrescreve is_hot em re-sync
-    if (ev.is_hot === undefined) {
-      delete evPayload.is_hot;
-    }
+    // NUNCA sobrescreve is_hot em eventos já existentes — o admin é a fonte da verdade.
+    // Auto-marcação por "Final" e flag do payload só valem na criação.
+    delete evPayload.is_hot;
     const { error: updErr } = await supabase
       .from("bet_events")
       .update(evPayload)
