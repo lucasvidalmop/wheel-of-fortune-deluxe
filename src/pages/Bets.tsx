@@ -13,6 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
+const Bolao = lazy(() => import('@/components/Bolao'));
 
 function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent: (ev: any) => React.ReactNode }) {
   const [index, setIndex] = useState(0);
@@ -349,6 +350,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myMarkets, setMyMarkets] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [shareMultiple, setShareMultiple] = useState<ShareMultipleData | null>(null);
+  const [bolaoOpen, setBolaoOpen] = useState(false);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
@@ -1154,7 +1156,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             }
           `}</style>
           <button
-            onClick={() => toast.info('Bolão da Copa em breve!')}
+            onClick={() => setBolaoOpen(true)}
             className="bolao-btn ml-auto px-4 py-2 rounded-lg text-sm font-bold tracking-wide transition hover:brightness-110"
             style={{ color: '#3a2a05', border: '1px solid rgba(255,225,140,0.6)' }}
             title="Bolão da Copa"
@@ -2054,6 +2056,22 @@ const Bets = ({ tag }: BetsPageProps) => {
             onClose={() => setShareMultiple(null)}
             data={shareMultiple}
             config={cfg.ticket || {}}
+          />
+        </Suspense>
+      )}
+
+      {bolaoOpen && (
+        <Suspense fallback={null}>
+          <Bolao
+            open={bolaoOpen}
+            onClose={() => setBolaoOpen(false)}
+            tag={tag}
+            authed={authed ? { email: authed.email, account_id: authed.account_id || authed.id, name: authed.name } : null}
+            accent={accent}
+            bg={bg}
+            cardBg={cardBg}
+            text={text}
+            muted={muted}
           />
         </Suspense>
       )}

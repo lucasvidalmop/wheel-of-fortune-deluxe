@@ -587,6 +587,184 @@ export type Database = {
         }
         Relationships: []
       }
+      bolao_configs: {
+        Row: {
+          bracket_template: Json
+          created_at: string
+          groups: Json
+          id: string
+          is_active: boolean
+          name: string
+          official_results: Json
+          owner_id: string
+          page_config: Json
+          scoring: Json
+          submission_deadline: string | null
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          bracket_template?: Json
+          created_at?: string
+          groups?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          official_results?: Json
+          owner_id: string
+          page_config?: Json
+          scoring?: Json
+          submission_deadline?: string | null
+          tag: string
+          updated_at?: string
+        }
+        Update: {
+          bracket_template?: Json
+          created_at?: string
+          groups?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          official_results?: Json
+          owner_id?: string
+          page_config?: Json
+          scoring?: Json
+          submission_deadline?: string | null
+          tag?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bolao_entries: {
+        Row: {
+          account_id: string
+          best_thirds: Json
+          bolao_config_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          score: number
+          score_breakdown: Json
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_email: string
+          user_name: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          best_thirds?: Json
+          bolao_config_id: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          score?: number
+          score_breakdown?: Json
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          best_thirds?: Json
+          bolao_config_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          score?: number
+          score_breakdown?: Json
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: []
+      }
+      bolao_entry_bracket: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          owner_id: string
+          round: string
+          slot: number
+          team_code: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          owner_id: string
+          round: string
+          slot: number
+          team_code?: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          owner_id?: string
+          round?: string
+          slot?: number
+          team_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bolao_entry_bracket_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "bolao_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bolao_entry_groups: {
+        Row: {
+          created_at: string
+          entry_id: string
+          first_team: string
+          group_key: string
+          id: string
+          owner_id: string
+          second_team: string
+          third_team: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          first_team?: string
+          group_key: string
+          id?: string
+          owner_id: string
+          second_team?: string
+          third_team?: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          first_team?: string
+          group_key?: string
+          id?: string
+          owner_id?: string
+          second_team?: string
+          third_team?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bolao_entry_groups_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "bolao_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       config_backups: {
         Row: {
           created_at: string

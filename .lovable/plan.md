@@ -1,90 +1,93 @@
-# Bilhete múltiplo (apostas combinadas)
 
-Adicionar suporte a apostas combinadas mantendo o sistema atual de apostas simples intacto.
+# Bolão da Copa
 
-## Banco de dados (nova migração)
+Sistema de palpites estilo "bolão" inspirado nos prints: usuário monta fase de grupos (12 grupos × 4 seleções), escolhe os 8 melhores terceiros, monta o mata-mata até o campeão, envia o palpite uma única vez, e recebe pontos conforme o resultado oficial.
 
-### Tabela `bet_tickets`
-- `id`, `owner_id`, `wheel_user_id`, `account_id`, `user_email`, `user_name`
-- `public_code text unique` (mesmo padrão de `bet_wagers`)
-- `total_odd numeric` — produto das odds no momento da aposta
-- `stake integer` — coins apostadas
-- `potential_return integer` — `round(stake * total_odd)`
-- `status text` — `pending` | `won` | `lost` | `cancelled` | `refunded`
-- `payout_coins integer default 0`
-- `resolved_at timestamptz`, `created_at`
+## 1. Modelo de dados (Lovable Cloud)
 
-### Tabela `bet_ticket_selections`
-- `id`, `ticket_id`, `owner_id`
-- `event_id`, `market_id` (nullable), `outcome_id`
-- `event_title text`, `market_title text`, `selection_label text` (snapshots para histórico)
-- `odd numeric` — odd travada
-- `status text` — `pending` | `won` | `lost` | `cancelled`
+Quatro tabelas novas, todas isoladas por `owner_id` (mesmo padrão de `bets_configs`):
 
-RLS: owner+admin CRUD próprios registros; service role full.
+- **bolao_configs** — 1 por owner/tag.
+  - `tag`, `owner_id`, `name`, `submission_deadline` (timestamp), `is_active`, `page_config` (jsonb: cores, textos), `scoring` (jsonb com os pontos abaixo, editáveis), `groups` (jsonb: 12 grupos A–L, cada um com 4 seleções `{name, flag_url, code}`), `bracket_template` (jsonb opcional: cruzamentos das oitavas), `official_results` (jsonb: posições reais por grupo, melhores terceiros, vencedores de cada confronto, campeão).
+- **bolao_entries** — 1 por usuário.
+  - `owner_id`, `bolao_config_id`, `wheel_user_id`, `account_id`, `user_email`, `user_name`, `status` (`draft` | `submitted` | `locked`), `submitted_at`, `score` (int, calculado), `score_breakdown` (jsonb).
+  - Único: `(bolao_config_id, account_id)`.
+- **bolao_entry_groups** — palpite de grupos.
+  - `entry_id`, `group_key` (A–L), `first_team`, `second_team`, `third_team`.
+- **bolao_entry_bracket** — palpite do mata-mata.
+  - `entry_id`, `round` (`r32` | `r16` | `qf` | `sf` | `final` | `champion`), `slot` (posição no chaveamento), `team_code`.
+  - Campo separado `best_thirds` (jsonb com 8 códigos) em `bolao_entries`.
 
-### RPCs `SECURITY DEFINER`
-- `place_ticket(p_owner_id, p_email, p_account_id, p_selections jsonb, p_amount int)`
-  - Valida: pelo menos 2 seleções; nenhuma seleção duplicada por evento+mercado; cada evento aberto e dentro de `closes_at`; saldo suficiente
-  - Calcula `total_odd` no servidor a partir dos `bet_outcomes`
-  - Deduz `tokens_balance`, cria `bet_tickets` + `bet_ticket_selections` (status `pending`)
-  - Retorna `{ success, new_balance, ticket_id, public_code, total_odd, potential_return }`
-- Ajuste em `resolve_bet_event` (e/ou `resolve_bet_market`): após resolver outcomes, percorrer `bet_ticket_selections` afetadas:
-  - marcar selection `won` ou `lost`
-  - se qualquer selection do ticket virar `lost` → ticket `lost`
-  - se todas as selections do ticket virarem `won` → ticket `won` e creditar `potential_return` no `tokens_balance` (idempotente)
+RLS: owner CRUD próprio; service role gerencia tudo; leitura pública dos `bolao_configs` via edge function (sem expor `official_results` antes do prazo).
 
-## Edge functions
+## 2. Fluxo do participante (frontend)
 
-### Nova: `place-ticket` (pública, sem JWT)
-- Body: `{ tag, email, accountId, selections: [{ eventId, outcomeId, marketId? }], amount }`
-- Localiza owner via `bets_configs.tag`, chama RPC `place_ticket`
-- Retorna saldo atualizado e ticket criado
+Nova rota `/bolao/:tag` (ou botão "Bolão da Copa" abre modal/aba no `/odds=...`). 3 abas internas:
 
-### `get-user-bets` (existente)
-- Expandir retorno para incluir `tickets` do usuário (com selections agregadas)
+### Aba "Grupos"
+- 12 cards (Grupo A → L), 3 colunas em desktop, 1 em mobile.
+- Cada card: lista as 4 seleções (bandeira + nome) com 3 radios "1º / 2º / 3º".
+- Validação: não permite a mesma seleção em duas posições do mesmo grupo (desabilita radios já usados).
+- Botão "Sorteio aleatório" por grupo: embaralha e preenche 1º/2º/3º.
+- Header fixo com progresso: `X / 12 grupos preenchidos`.
 
-## Frontend (`src/pages/Bets.tsx`)
+### Aba "Classificação"
+- Mostra automaticamente os 24 classificados (1º + 2º de cada grupo) em formato de tabela.
+- Lista os 12 terceiros — usuário marca 8 (botão fica desabilitado quando atinge 8).
+- Indicador "Faltam Y terceiros".
 
-### Estado novo
-- `ticketSelections: Array<{ event, market, outcome }>` (em memória, sem persistir)
-- `ticketOpen: boolean` para mostrar/esconder painel
-- `ticketAmount: string`
+### Aba "Mata-mata"
+- Chaveamento em bracket visual (similar ao print 3) com rounds: 16-avos (32→16), Oitavas (16→8), Quartas (8→4), Semi (4→2), Final (2→1), Campeão.
+- Slots iniciais preenchidos a partir do template (1A vs 2B, 1B vs 3F, etc.) — uso o cruzamento padrão da Copa.
+- Clique no time avança automaticamente para o slot da próxima fase.
+- Trocar um vencedor em fase anterior limpa as fases dependentes.
+- Botão "Enviar palpite" só habilita quando todos os 32 grupos + 8 terceiros + bracket completos estiverem prontos.
 
-### Botão nas odds
-- Cada botão de odd existente passa a ter dois modos:
-  - clique simples → mantém comportamento atual (aposta simples / abre slip)
-  - botão pequeno secundário "+" / "Adicionar ao bilhete" sobreposto no canto
-- Ao adicionar:
-  - bloqueia se já existe seleção do mesmo `event_id` + `market_id`
-  - toast confirmando
-  - abre/atualiza badge do botão flutuante "Meu Bilhete (N)"
+### Envio
+- Botão "Enviar palpite" → confirma → grava `status='submitted'`.
+- Após envio: tela read-only com o palpite + pontuação atual (se admin já lançou resultados).
+- Após `submission_deadline`: backend força `status='locked'` ao tentar editar.
 
-### Painel "Meu Bilhete"
-- Botão flutuante fixo (canto inferior direito) com contador de seleções
-- Drawer/Sheet lateral mostrando:
-  - Lista de seleções (evento, mercado, label, odd) com botão remover
-  - Odd final calculada (multiplicação)
-  - Input de valor em coins
-  - Retorno potencial = `valor × odd_final`
-  - Botão "Confirmar bilhete" → chama `place-ticket`
-  - Botão "Limpar bilhete"
-- Validações no front: saldo, mínimo 2 seleções, todas válidas
+## 3. Admin
 
-### Aba "Minhas apostas"
-- Adicionar seção "Bilhetes múltiplos" listando tickets do usuário com:
-  - código, data, stake, odd total, retorno potencial, status
-  - lista expandível das selections com status individual
+Nova seção no painel admin de Apostas: "Bolão da Copa".
+- Editor de **grupos**: criar/renomear grupos, adicionar/remover seleções, upload de bandeira.
+- Definir **deadline** de envio.
+- Definir **resultados oficiais** (mesma UI do participante, mas marcando o real).
+- Botão **"Recalcular pontuações"** → edge function percorre `bolao_entries` e atualiza `score`/`score_breakdown`.
+- Tabela de **ranking** dos participantes (nome, account_id, pontos, ver palpite).
 
-## Detalhes técnicos
-- Odd travada no momento da aposta (`odd` em `bet_ticket_selections`), igual ao padrão de `bet_wagers.odd_snapshot`.
-- Resolução idempotente: checar status antes de creditar.
-- Bilhete cancelado/refunded devolve `stake` ao saldo.
-- Caso uma selection seja de evento cancelado, a regra é: bilhete vira `refunded` e devolve stake (mais simples e justo).
-- Pagamento em caixa Luckybox **fora de escopo** para bilhetes — bilhete múltiplo paga apenas em coins.
-- Apostas simples (`bet_wagers`) continuam funcionando exatamente como hoje, sem mudanças no fluxo.
+## 4. Pontuação (regras do usuário)
 
-## Fora de escopo
-- UI no painel do operador para resolver tickets manualmente (resolução é automática via resolução dos eventos/mercados).
-- Cash-out parcial.
-- Bilhetes com prêmio em caixa.
+Implementada em uma edge function `score-bolao` reutilizando o `scoring` jsonb (default = valores do pedido):
+
+- Seleção classificada no grupo (apareceu no top 2 ou nos 8 melhores 3º): **5 pts**
+- Posição exata no grupo (1º/2º/3º acertado): **10 pts**
+- Terceiro escolhido entre os 8 melhores reais: **8 pts**
+- Acerto de seleção nas oitavas: **10 pts**
+- Acerto nas quartas: **15 pts**
+- Acerto na semi: **25 pts**
+- Acerto de finalista: **40 pts**
+- Acerto do campeão: **80 pts**
+
+## 5. Edge functions
+
+- `get-bolao` — devolve config pública + entry do usuário logado (sem `official_results` se antes do prazo).
+- `submit-bolao` — valida entry completa, grava como `submitted`, idempotente.
+- `score-bolao` (admin) — recalcula todas as pontuações.
+- Reuso de `get-user-bets` pattern para autenticação por email+account_id.
+
+## 6. Itens fora do escopo deste plano
+
+- Premiação automática em coins (pode vir depois ligando a `prize_payments`).
+- Chat / comentários no bolão.
+- Múltiplos bolões simultâneos por owner (faço 1 por tag agora; multi-bolão depois).
+
+---
+
+## Decisões necessárias antes de implementar
+
+1. **Seleções e grupos**: você quer que eu já deixe pré-cadastradas as 48 seleções dos prints (Grupo A–L) como seed inicial, ou prefere começar vazio e cadastrar tudo pelo admin?
+2. **Acesso ao bolão**: o usuário precisa estar logado (mesmo email/account_id que usa nas apostas) para participar — ok?
+3. **Cruzamentos do mata-mata**: uso o cruzamento padrão (1A×3C/D/E/F, 2A×2C, etc.) ou você quer definir manualmente quem cruza com quem no admin?
+4. **Deadline**: edição bloqueada exatamente no `submission_deadline`, sem prorrogação automática — confirma?
