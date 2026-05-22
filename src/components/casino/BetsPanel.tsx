@@ -645,6 +645,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           </div>
 
           <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+            <h3 className="font-bold">Bolão da Copa</h3>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={!!cfg.hideBolao} onChange={e => setCfgField('hideBolao', e.target.checked)} />
+              Esconder botão "Bolão da Copa" nesta página
+            </label>
+          </div>
+
+          <div className="p-4 rounded-xl bg-card border border-border space-y-3">
             <h3 className="font-bold">Tela de login</h3>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Título do login" value={cfg.loginTitle || ''} onChange={v => setCfgField('loginTitle', v)} />
