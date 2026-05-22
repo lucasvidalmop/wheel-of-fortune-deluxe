@@ -142,6 +142,9 @@ async function syncForOwner(
     .maybeSingle();
   if (findErr) throw findErr;
 
+  // Deriva status interno a partir do fixture.status.short da API-Football quando enviado.
+  const derivedStatus = mapFixtureStatusToEventStatus(ev.fixture_status) ?? ev.status ?? "open";
+
   const evPayload: Record<string, unknown> = {
     owner_id: ownerId,
     bets_config_id: betsConfigId,
@@ -151,7 +154,7 @@ async function syncForOwner(
     category_id: categoryId,
     starts_at: ev.starts_at ?? null,
     closes_at: ev.closes_at ?? null,
-    status: ev.status ?? "open",
+    status: derivedStatus,
     home_image_url: ev.home_logo ?? null,
     away_image_url: ev.away_logo ?? null,
     image_url: ev.image_url ?? "",
@@ -167,6 +170,7 @@ async function syncForOwner(
   let eventId: string;
   if (existingEv) {
     eventId = existingEv.id;
+    // Nunca regredir status terminais
     if (existingEv.status === "resolved" || existingEv.status === "cancelled") {
       delete evPayload.status;
     }
