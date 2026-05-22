@@ -1155,6 +1155,7 @@ const Bets = ({ tag }: BetsPageProps) => {
               animation: bolaoShimmer 9s linear infinite, bolaoGlow 6s ease-in-out infinite;
             }
           `}</style>
+          {!cfg.hideBolao && (
           <button
             onClick={() => setBolaoOpen(true)}
             className="bolao-btn ml-auto px-4 py-2 rounded-lg text-sm font-bold tracking-wide transition hover:brightness-110"
@@ -1163,6 +1164,7 @@ const Bets = ({ tag }: BetsPageProps) => {
           >
             🏆 Bolão da Copa
           </button>
+          )}
         </div>
       </header>
 
