@@ -391,22 +391,38 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
 
 
               {tab === "bracket" && (
-                <div className="space-y-6">
-                  {/* R32: user picks winner of each of the 16 R32 matches; result goes to R16 */}
-                  <BracketRound title="16-avos (32 → 16)" pairs={r32Slots.map(s => ({ slot: s.slot, a: s.teamA, b: s.teamB }))} picks={bracket.r16 || {}} onPick={(slot, code) => pickWinner("r16", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Oitavas (16 → 8)" pairs={getRoundPairs("qf")} picks={bracket.qf || {}} onPick={(slot, code) => pickWinner("qf", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Quartas (8 → 4)" pairs={getRoundPairs("sf")} picks={bracket.sf || {}} onPick={(slot, code) => pickWinner("sf", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Semifinal (4 → 2)" pairs={getRoundPairs("final")} picks={bracket.final || {}} onPick={(slot, code) => pickWinner("final", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Final" pairs={getRoundPairs("champion")} picks={bracket.champion || {}} onPick={(slot, code) => pickWinner("champion", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  {bracket.champion?.[0] && (
-                    <div className="p-4 rounded-xl text-center" style={{ background: `linear-gradient(135deg, ${accent}44, ${accent}11)`, border: `2px solid ${accent}` }}>
-                      <Trophy className="inline" size={32} style={{ color: accent }} />
-                      <div className="mt-1 text-xs uppercase tracking-wider" style={{ color: muted }}>Campeão</div>
-                      <div className="text-xl font-bold flex items-center justify-center gap-2" style={{ color: accent }}>
-                        <FlagImg code={bracket.champion[0]} size={28} /> {teamByCode[bracket.champion[0]]?.name}
-                      </div>
-                    </div>
-                  )}
+                <div className="overflow-x-auto -mx-4 px-4">
+                  <div className="mb-3 text-center">
+                    <div className="text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: accent }}>Mata-mata</div>
+                    <div className="text-xs" style={{ color: muted }}>Clique nos vencedores de cada confronto.</div>
+                  </div>
+                  <div className="flex items-stretch justify-center gap-0 mx-auto" style={{ minWidth: 880, minHeight: 720 }}>
+                    <BracketHalf
+                      side="left"
+                      r32={r32Slots.slice(0, 8)}
+                      bracket={bracket}
+                      teamByCode={teamByCode}
+                      pickWinner={pickWinner}
+                      accent={accent} muted={muted} text={text}
+                      disabled={readOnly}
+                    />
+                    <BracketCenter
+                      leftFinalist={teamByCode[bracket.final?.[0] || ""]}
+                      rightFinalist={teamByCode[bracket.final?.[1] || ""]}
+                      champion={teamByCode[bracket.champion?.[0] || ""]}
+                      onPickChampion={(code) => pickWinner("champion", 0, code)}
+                      accent={accent} muted={muted} text={text} disabled={readOnly}
+                    />
+                    <BracketHalf
+                      side="right"
+                      r32={r32Slots.slice(8, 16)}
+                      bracket={bracket}
+                      teamByCode={teamByCode}
+                      pickWinner={pickWinner}
+                      accent={accent} muted={muted} text={text}
+                      disabled={readOnly}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -452,35 +468,240 @@ function resolveSlotTeam(spec: string, picks: Record<string, GroupPick>, bestThi
 
 function winnerOf(_a?: Team, _b?: Team): Team | undefined { return undefined; }
 
-function BracketRound({ title, pairs, picks, onPick, accent, cardBg, muted, disabled }: {
-  title: string;
-  pairs: { slot: number; a?: Team; b?: Team }[];
-  picks: Record<number, string>;
-  onPick: (slot: number, code: string) => void;
-  accent: string; cardBg: string; muted: string; disabled?: boolean;
+// ─── Bracket tree (GE-style) ──────────────────────────────────────────────
+
+function MatchSlot({ team, selected, onClick, disabled, accent, muted, size, mirror, showName = true }: {
+  team?: Team; selected?: boolean; onClick?: () => void; disabled?: boolean;
+  accent: string; muted: string; size: number; mirror?: boolean; showName?: boolean;
+}) {
+  const clickable = !!team && !!onClick && !disabled;
+  return (
+    <button
+      type="button"
+      onClick={clickable ? onClick : undefined}
+      disabled={!clickable}
+      className="group flex items-center gap-1.5 transition disabled:cursor-default"
+      style={{ flexDirection: mirror ? "row-reverse" : "row" }}
+    >
+      <div
+        className="rounded-full flex items-center justify-center shrink-0 transition"
+        style={{
+          width: size, height: size,
+          border: `2px solid ${selected ? accent : team ? `${muted}66` : `${muted}33`}`,
+          background: team ? "rgba(255,255,255,0.04)" : "transparent",
+          boxShadow: selected ? `0 0 14px ${accent}99, inset 0 0 8px ${accent}33` : team ? "0 2px 6px rgba(0,0,0,0.3)" : "none",
+          opacity: team ? 1 : 0.5,
+        }}
+      >
+        {team ? <FlagImg code={team.code} size={size - 8} /> : null}
+      </div>
+      {showName && team && (
+        <span
+          className="text-[10px] font-bold tracking-wider uppercase truncate"
+          style={{ color: selected ? accent : muted, maxWidth: 44 }}
+        >
+          {team.code}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function R32MatchCard({ teamA, teamB, winnerCode, onPick, disabled, accent, muted, mirror }: {
+  teamA?: Team; teamB?: Team; winnerCode?: string;
+  onPick: (code: string) => void; disabled?: boolean;
+  accent: string; muted: string; mirror?: boolean;
 }) {
   return (
-    <div>
-      <div className="text-sm font-bold mb-2" style={{ color: accent }}>{title}</div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-        {pairs.map(({ slot, a, b }) => {
-          const selected = picks[slot];
-          const pick = (code?: string) => code && !disabled && onPick(slot, code);
-          return (
-            <div key={slot} className="rounded-lg p-2 space-y-1" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
-              {[a, b].map((t, i) => {
-                const isWinner = selected && t && selected === t.code;
-                return (
-                  <button key={i} onClick={() => pick(t?.code)} disabled={!t || disabled}
-                    className="w-full text-left p-2 rounded-md text-sm flex items-center gap-2 transition disabled:opacity-40"
-                    style={{ background: isWinner ? `${accent}33` : "rgba(255,255,255,0.04)", border: isWinner ? `1px solid ${accent}` : "1px solid transparent" }}>
-                    {t ? <><FlagImg code={t.code} size={18} /><span className="truncate">{t.name}</span></> : <span style={{ color: muted }}>—</span>}
-                  </button>
-                );
-              })}
-            </div>
-          );
-        })}
+    <div
+      className="flex flex-col gap-1 px-2 py-1.5 rounded-md"
+      style={{
+        borderRight: mirror ? "none" : `1px solid ${muted}22`,
+        borderLeft: mirror ? `1px solid ${muted}22` : "none",
+      }}
+    >
+      {[teamA, teamB].map((t, i) => (
+        <MatchSlot
+          key={i}
+          team={t}
+          selected={!!winnerCode && t?.code === winnerCode}
+          onClick={t ? () => onPick(t.code) : undefined}
+          disabled={disabled}
+          accent={accent}
+          muted={muted}
+          size={30}
+          mirror={mirror}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ColumnSlots({ count, getTeam, isSelected, onPick, accent, muted, mirror, size, disabled }: {
+  count: number;
+  getTeam: (i: number) => Team | undefined;
+  isSelected: (i: number) => boolean;
+  onPick: (i: number, code: string) => void;
+  accent: string; muted: string; mirror?: boolean; size: number; disabled?: boolean;
+}) {
+  return (
+    <div
+      className="flex flex-col justify-around py-2 px-2"
+      style={{
+        borderRight: mirror ? "none" : `1px solid ${muted}22`,
+        borderLeft: mirror ? `1px solid ${muted}22` : "none",
+      }}
+    >
+      {Array.from({ length: count }).map((_, i) => {
+        const t = getTeam(i);
+        return (
+          <MatchSlot
+            key={i}
+            team={t}
+            selected={isSelected(i)}
+            onClick={t ? () => onPick(i, t.code) : undefined}
+            disabled={disabled}
+            accent={accent}
+            muted={muted}
+            size={size}
+            mirror={mirror}
+            showName={false}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted, text, disabled }: {
+  side: "left" | "right";
+  r32: { slot: number; teamA?: Team; teamB?: Team }[];
+  bracket: BracketState;
+  teamByCode: Record<string, Team>;
+  pickWinner: (round: any, slot: number, code: string) => void;
+  accent: string; muted: string; text: string; disabled?: boolean;
+}) {
+  const mirror = side === "right";
+  const r16Base = mirror ? 8 : 0;
+  const qfBase = mirror ? 4 : 0;
+  const sfBase = mirror ? 2 : 0;
+  const finalSlot = mirror ? 1 : 0;
+
+  const r16 = bracket.r16 || {};
+  const qf = bracket.qf || {};
+  const sf = bracket.sf || {};
+  const fin = bracket.final || {};
+
+  const c1 = (
+    <div className="flex flex-col justify-around py-2 gap-1" key="c1">
+      {r32.map((m, i) => (
+        <R32MatchCard
+          key={i}
+          teamA={m.teamA} teamB={m.teamB}
+          winnerCode={r16[r16Base + i]}
+          onPick={(code) => pickWinner("r16", r16Base + i, code)}
+          disabled={disabled}
+          accent={accent} muted={muted} mirror={mirror}
+        />
+      ))}
+    </div>
+  );
+  const c2 = (
+    <ColumnSlots key="c2" count={8}
+      getTeam={(i) => teamByCode[r16[r16Base + i]]}
+      isSelected={(i) => !!r16[r16Base + i] && qf[qfBase + Math.floor(i / 2)] === r16[r16Base + i]}
+      onPick={(i, code) => pickWinner("qf", qfBase + Math.floor(i / 2), code)}
+      accent={accent} muted={muted} mirror={mirror} size={34} disabled={disabled}
+    />
+  );
+  const c3 = (
+    <ColumnSlots key="c3" count={4}
+      getTeam={(i) => teamByCode[qf[qfBase + i]]}
+      isSelected={(i) => !!qf[qfBase + i] && sf[sfBase + Math.floor(i / 2)] === qf[qfBase + i]}
+      onPick={(i, code) => pickWinner("sf", sfBase + Math.floor(i / 2), code)}
+      accent={accent} muted={muted} mirror={mirror} size={38} disabled={disabled}
+    />
+  );
+  const c4 = (
+    <ColumnSlots key="c4" count={2}
+      getTeam={(i) => teamByCode[sf[sfBase + i]]}
+      isSelected={(i) => !!sf[sfBase + i] && fin[finalSlot] === sf[sfBase + i]}
+      onPick={(i, code) => pickWinner("final", finalSlot, code)}
+      accent={accent} muted={muted} mirror={mirror} size={42} disabled={disabled}
+    />
+  );
+  const c5 = (
+    <ColumnSlots key="c5" count={1}
+      getTeam={() => teamByCode[fin[finalSlot]]}
+      isSelected={() => !!fin[finalSlot] && bracket.champion?.[0] === fin[finalSlot]}
+      onPick={(_i, code) => pickWinner("champion", 0, code)}
+      accent={accent} muted={muted} mirror={mirror} size={48} disabled={disabled}
+    />
+  );
+
+  const cols = mirror ? [c5, c4, c3, c2, c1] : [c1, c2, c3, c4, c5];
+  return <div className="flex flex-1">{cols}</div>;
+}
+
+function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, accent, muted, text, disabled }: {
+  leftFinalist?: Team; rightFinalist?: Team; champion?: Team;
+  onPickChampion: (code: string) => void;
+  accent: string; muted: string; text: string; disabled?: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center px-3 md:px-5 min-w-[140px]">
+      <div className="text-[10px] uppercase tracking-[0.3em] font-bold mb-2" style={{ color: muted }}>Final</div>
+      <div className="flex items-center gap-2 mb-3">
+        <button
+          type="button"
+          disabled={!leftFinalist || disabled}
+          onClick={() => leftFinalist && onPickChampion(leftFinalist.code)}
+          className="rounded-full flex items-center justify-center transition disabled:opacity-40 disabled:cursor-default"
+          style={{
+            width: 38, height: 38,
+            border: `2px solid ${champion?.code === leftFinalist?.code && champion ? accent : `${muted}55`}`,
+            background: "rgba(255,255,255,0.04)",
+            boxShadow: champion?.code === leftFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
+          }}
+        >
+          {leftFinalist && <FlagImg code={leftFinalist.code} size={30} />}
+        </button>
+        <div
+          className="rounded-full flex items-center justify-center"
+          style={{
+            width: 88, height: 88,
+            background: champion ? `radial-gradient(circle, ${accent}44, transparent 70%)` : "transparent",
+            border: `2px dashed ${champion ? accent : `${muted}55`}`,
+          }}
+        >
+          {champion ? <FlagImg code={champion.code} size={66} /> : <Trophy size={40} style={{ color: muted }} />}
+        </div>
+        <button
+          type="button"
+          disabled={!rightFinalist || disabled}
+          onClick={() => rightFinalist && onPickChampion(rightFinalist.code)}
+          className="rounded-full flex items-center justify-center transition disabled:opacity-40 disabled:cursor-default"
+          style={{
+            width: 38, height: 38,
+            border: `2px solid ${champion?.code === rightFinalist?.code && champion ? accent : `${muted}55`}`,
+            background: "rgba(255,255,255,0.04)",
+            boxShadow: champion?.code === rightFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
+          }}
+        >
+          {rightFinalist && <FlagImg code={rightFinalist.code} size={30} />}
+        </button>
+      </div>
+      <div className="text-center min-h-[32px]">
+        {champion ? (
+          <>
+            <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accent }}>Campeão</div>
+            <div className="text-sm font-black truncate max-w-[140px]" style={{ color: text }}>{champion.name}</div>
+          </>
+        ) : (
+          <div className="text-[10px]" style={{ color: muted }}>
+            {leftFinalist && rightFinalist ? "Clique no campeão" : "Aguardando finalistas"}
+          </div>
+        )}
       </div>
     </div>
   );
