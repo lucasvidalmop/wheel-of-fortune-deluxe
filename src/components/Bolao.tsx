@@ -389,73 +389,56 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
 
               {tab === "classification" && (
                 <div className="space-y-6">
-                  {/* DIAGRAMA EXPLICATIVO — funil visual 48 → 24 → +8 → 32 */}
-                  <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${accent}22` }}>
-                    <div className="text-[10px] uppercase tracking-[0.2em] font-bold mb-3" style={{ color: muted }}>Como funciona a classificação</div>
-                    <div className="flex items-center justify-between gap-2 md:gap-3 overflow-x-auto">
-                      {[
-                        { n: "48", label: "Seleções", sub: "12 grupos × 4", tone: "neutral" },
-                        { n: "24", label: "Classificados", sub: "1º e 2º de cada grupo", tone: "neutral" },
-                        { n: "+8", label: "Melhores 3º", sub: "você escolhe", tone: "accent" },
-                        { n: "32", label: "Mata-mata", sub: "chave final", tone: "neutral" },
-                      ].map((step, i, arr) => (
-                        <div key={i} className="flex items-center gap-2 md:gap-3 shrink-0">
-                          <div className="text-center min-w-[78px] md:min-w-[100px]">
-                            <div className="rounded-xl py-2 px-3 mb-1"
-                              style={{
-                                background: step.tone === "accent" ? `linear-gradient(135deg, ${accent}44, ${accent}11)` : "rgba(255,255,255,0.04)",
-                                border: `1px solid ${step.tone === "accent" ? accent : "rgba(255,255,255,0.08)"}`,
-                                boxShadow: step.tone === "accent" ? `0 0 20px ${accent}33` : "none",
-                              }}>
-                              <div className="text-xl md:text-2xl font-black tabular-nums" style={{ color: step.tone === "accent" ? accent : text }}>{step.n}</div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: step.tone === "accent" ? accent : muted }}>{step.label}</div>
-                            </div>
-                            <div className="text-[10px]" style={{ color: muted }}>{step.sub}</div>
-                          </div>
-                          {i < arr.length - 1 && (
-                            <div className="text-lg md:text-xl shrink-0" style={{ color: `${accent}77` }}>→</div>
-                          )}
-                        </div>
-                      ))}
+                  {/* Cabeçalho: título + explicação clara */}
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.2em] font-bold mb-1" style={{ color: accent }}>Etapa 2 de 3 · Terceiros classificados</div>
+                    <h2 className="text-2xl md:text-3xl font-black leading-tight">Escolha os 8 terceiros que avançam</h2>
+                    <p className="text-sm mt-2 max-w-2xl" style={{ color: muted }}>
+                      Os <strong style={{ color: text }}>1º e 2º colocados</strong> de cada grupo já estão classificados automaticamente.
+                      Agora escolha quais <strong style={{ color: accent }}>terceiros colocados</strong> também avançam para completar os 32 times do mata-mata.
+                    </p>
+                  </div>
+
+                  {/* Equação visual: 24 + 8 = 32 */}
+                  <div className="rounded-2xl p-4 md:p-5 flex items-center justify-center gap-3 md:gap-5 flex-wrap"
+                    style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${accent}22` }}>
+                    <div className="text-center min-w-[110px]">
+                      <div className="text-3xl md:text-4xl font-black tabular-nums" style={{ color: text }}>24</div>
+                      <div className="text-[10px] uppercase tracking-wider font-bold mt-1" style={{ color: muted }}>Automáticos</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: muted }}>1º e 2º de cada grupo</div>
+                    </div>
+                    <div className="text-2xl md:text-3xl font-black" style={{ color: `${accent}77` }}>+</div>
+                    <div className="text-center min-w-[110px] rounded-xl py-2 px-3"
+                      style={{ background: `linear-gradient(135deg, ${accent}33, ${accent}0a)`, border: `1px solid ${accent}`, boxShadow: `0 0 20px ${accent}33` }}>
+                      <div className="text-3xl md:text-4xl font-black tabular-nums" style={{ color: accent }}>{bestThirds.length}<span style={{ color: muted, fontSize: "0.6em" }}>/8</span></div>
+                      <div className="text-[10px] uppercase tracking-wider font-bold mt-1" style={{ color: accent }}>Você escolhe</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: muted }}>melhores terceiros</div>
+                    </div>
+                    <div className="text-2xl md:text-3xl font-black" style={{ color: `${accent}77` }}>=</div>
+                    <div className="text-center min-w-[110px]">
+                      <div className="text-3xl md:text-4xl font-black tabular-nums" style={{ color: text }}>32</div>
+                      <div className="text-[10px] uppercase tracking-wider font-bold mt-1" style={{ color: muted }}>Mata-mata</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: muted }}>chave completa</div>
                     </div>
                   </div>
 
-                  {/* BLOCO 2 — Ação principal: escolher 8 terceiros */}
-                  <div className="rounded-2xl p-4 md:p-5"
-                    style={{
-                      background: `linear-gradient(135deg, ${accent}1f, ${accent}06)`,
-                      border: `2px solid ${accent}`,
-                      boxShadow: `0 0 40px ${accent}22`,
-                    }}>
-                    <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: accent, boxShadow: `0 0 10px ${accent}` }} />
-                          <div className="text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: accent }}>Sua vez</div>
-                        </div>
-                        <div className="text-xl md:text-2xl font-black leading-tight">Escolha os 8 terceiros que avançam</div>
-                        <div className="text-sm mt-1" style={{ color: muted }}>Selecione apenas os terceiros colocados que também irão para o mata-mata.</div>
+                  {/* Cards dos 12 terceiros — única coisa para escolher */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: accent, boxShadow: `0 0 10px ${accent}` }} />
+                        <div className="text-sm font-bold">Os 12 terceiros colocados — marque 8</div>
                       </div>
-                      <div className="text-center px-4 py-2 rounded-xl shrink-0" style={{ background: "rgba(0,0,0,0.3)", border: `1px solid ${accent}66` }}>
-                        <div>
-                          <span className="text-3xl font-black tabular-nums" style={{ color: accent }}>{bestThirds.length}</span>
-                          <span className="text-lg font-bold" style={{ color: muted }}> de 8</span>
-                        </div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold mt-0.5" style={{ color: muted }}>selecionados</div>
+                      <div className="text-xs" style={{ color: muted }}>
+                        {bestThirds.length < 8
+                          ? <>Faltam <strong style={{ color: accent }}>{8 - bestThirds.length}</strong></>
+                          : <span style={{ color: accent }}>Pronto! Toque em um selecionado para trocar.</span>}
                       </div>
                     </div>
                     {/* progress bar */}
-                    <div className="h-2 rounded-full overflow-hidden mb-4" style={{ background: "rgba(0,0,0,0.3)" }}>
+                    <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
                       <div className="h-full transition-all duration-500" style={{ width: `${Math.min(100, (bestThirds.length / 8) * 100)}%`, background: `linear-gradient(90deg, ${accent}, ${accent}aa)`, boxShadow: `0 0 12px ${accent}` }} />
                     </div>
-
-                    {bestThirds.length >= 8 && (
-                      <div className="mb-3 px-3 py-2 rounded-lg text-xs flex items-center gap-2"
-                        style={{ background: `${accent}15`, border: `1px solid ${accent}55`, color: accent }}>
-                        <CheckCircle2 size={14} />
-                        <span><strong>Limite atingido.</strong> Toque em um selecionado para trocar.</span>
-                      </div>
-                    )}
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {thirds.map(({ key, team }) => {
@@ -481,7 +464,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                             )}
                             <FlagImg code={team.code} size={36} />
                             <div className="min-w-0 flex-1 text-left">
-                              <div className="font-bold truncate leading-tight" style={{ color: selected ? text : text, fontSize: "0.95rem" }}>{team.name}</div>
+                              <div className="font-bold truncate leading-tight" style={{ color: text, fontSize: "0.95rem" }}>{team.name}</div>
                               <div className="text-[10px] mt-0.5" style={{ color: muted }}>3º colocado · Grupo {key}</div>
                             </div>
                           </button>
@@ -490,14 +473,32 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                     </div>
                   </div>
 
-                  {/* BLOCO 1 — Já classificados (leitura, apagado) */}
+                  {/* CTA — Montar mata-mata */}
+                  {!readOnly && (
+                    <div className="sticky bottom-0 -mx-4 px-4 py-3" style={{ background: `linear-gradient(180deg, transparent, ${cardBg} 30%)` }}>
+                      <button
+                        onClick={() => setTab("bracket")}
+                        disabled={bestThirds.length < 8}
+                        className="w-full py-3.5 rounded-xl text-base font-black uppercase tracking-wider transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.01]"
+                        style={{
+                          background: bestThirds.length >= 8 ? `linear-gradient(135deg, ${accent}, ${accent}cc)` : "rgba(255,255,255,0.06)",
+                          color: bestThirds.length >= 8 ? "#0a0a0a" : muted,
+                          boxShadow: bestThirds.length >= 8 ? `0 8px 32px ${accent}55, inset 0 1px 0 rgba(255,255,255,0.3)` : "none",
+                          border: bestThirds.length >= 8 ? "none" : "1px solid rgba(255,255,255,0.08)",
+                        }}>
+                        {bestThirds.length >= 8 ? "Montar mata-mata →" : `Selecione mais ${8 - bestThirds.length} terceiro${8 - bestThirds.length > 1 ? "s" : ""}`}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Bloco secundário — 24 já classificados (apenas leitura, bem apagado) */}
                   <div>
                     <div className="mb-3">
                       <div className="flex items-center gap-2 mb-0.5">
                         <CheckCircle2 size={16} style={{ color: muted }} />
-                        <div className="text-sm font-bold" style={{ color: text }}>Classificados automaticamente</div>
+                        <div className="text-sm font-bold" style={{ color: text }}>Já classificados (24 times)</div>
                       </div>
-                      <div className="text-xs ml-6" style={{ color: muted }}>Os 1º e 2º colocados de cada grupo já avançaram automaticamente.</div>
+                      <div className="text-xs ml-6" style={{ color: muted }}>1º e 2º colocados de cada grupo — você não precisa escolher esses.</div>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 opacity-70">
                       {groups.flatMap(g => {
