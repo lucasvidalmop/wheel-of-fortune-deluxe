@@ -13,6 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
+const Bolao = lazy(() => import('@/components/Bolao'));
 
 function HotEventsCarousel({ events, renderEvent }: { events: any[]; renderEvent: (ev: any) => React.ReactNode }) {
   const [index, setIndex] = useState(0);
