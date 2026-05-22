@@ -318,7 +318,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           <>
             {/* Tabs */}
             <div className="flex gap-1 px-4 pt-3 border-b" style={{ borderColor: `${accent}22` }}>
-              {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["classification", `Classificação (${bestThirds.length}/8)`], ["bracket", "Mata-mata"]] as const).map(([k, l]) => (
+              {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["classification", `Terceiros classificados (${bestThirds.length}/8)`], ["bracket", "Mata-mata"]] as const).map(([k, l]) => (
                 <button key={k} onClick={() => setTab(k)} className="px-4 py-2 rounded-t-lg text-sm font-medium transition"
                   style={{ background: tab === k ? cardBg : "transparent", color: tab === k ? text : muted, borderBottom: tab === k ? `2px solid ${accent}` : "2px solid transparent" }}>
                   {l}
