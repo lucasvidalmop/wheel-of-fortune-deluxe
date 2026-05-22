@@ -1859,23 +1859,47 @@ const Bets = ({ tag }: BetsPageProps) => {
                               <Share2 size={14} />
                             </button>
                           )}
+                          <button
+                            onClick={() => {
+                              setExpandedTickets(prev => {
+                                const next = new Set(prev);
+                                if (next.has(t.id)) next.delete(t.id); else next.add(t.id);
+                                return next;
+                              });
+                            }}
+                            title={expandedTickets.has(t.id) ? 'Recolher' : 'Expandir'}
+                            className="p-2 rounded-lg transition hover:opacity-80"
+                            style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: accent }}
+                          >
+                            {expandedTickets.has(t.id) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </button>
                         </div>
                       </div>
-                      <div className="space-y-1.5 pt-2" style={{ borderTop: `1px solid ${accent}22` }}>
-                        {sels.map(s => (
-                          <div key={s.id} className="flex items-center justify-between gap-2 text-xs">
-                            <div className="min-w-0 flex-1">
-                              <div className="truncate font-medium">{s.event_title}</div>
-                              <div className="truncate" style={{ color: muted }}>
-                                {translatePt(s.market_title)} · <span style={{ color: accent }}>{translateOutcomeLabel(s.selection_label)}</span> · {Number(s.odd).toFixed(2)}
+                      {expandedTickets.has(t.id) ? (
+                        <div className="space-y-1.5 pt-2" style={{ borderTop: `1px solid ${accent}22` }}>
+                          {sels.map(s => (
+                            <div key={s.id} className="flex items-center justify-between gap-2 text-xs">
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate font-medium">{s.event_title}</div>
+                                <div className="truncate" style={{ color: muted }}>
+                                  {translatePt(s.market_title)} · <span style={{ color: accent }}>{translateOutcomeLabel(s.selection_label)}</span> · {Number(s.odd).toFixed(2)}
+                                </div>
                               </div>
+                              <span className="text-[10px] font-bold shrink-0" style={{ color: selStatusColor[s.status] }}>
+                                {statusLabel[s.status]}
+                              </span>
                             </div>
-                            <span className="text-[10px] font-bold shrink-0" style={{ color: selStatusColor[s.status] }}>
-                              {statusLabel[s.status]}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setExpandedTickets(prev => { const n = new Set(prev); n.add(t.id); return n; })}
+                          className="w-full text-[11px] pt-2 text-left hover:opacity-80 transition"
+                          style={{ borderTop: `1px solid ${accent}22`, color: muted }}
+                        >
+                          {sels.length} seleções · clique para ver detalhes
+                        </button>
+                      )}
                     </div>
                   );
                 })}
