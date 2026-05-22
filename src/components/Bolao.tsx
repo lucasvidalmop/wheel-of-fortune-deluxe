@@ -546,7 +546,7 @@ function ColumnSlots({ count, getTeam, isSelected, onPick, accent, muted, mirror
 }) {
   return (
     <div
-      className="flex flex-col justify-around py-2 px-2"
+      className="flex flex-col justify-around h-full px-2"
       style={{
         borderRight: mirror ? "none" : `1px solid ${muted}22`,
         borderLeft: mirror ? `1px solid ${muted}22` : "none",
