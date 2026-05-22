@@ -208,11 +208,26 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
   const pickWinner = (round: keyof typeof ROUND_SIZES, slot: number, code: string) => {
     if (readOnly || !code) return;
     setBracket(prev => {
-      const next: BracketState = { ...prev, [round]: { ...(prev[round] || {}), [slot]: code } };
-      // clear downstream rounds
-      const order = ["r16", "qf", "sf", "final", "champion"];
-      const idx = order.indexOf(round);
-      for (let i = idx + 1; i < order.length; i++) delete next[order[i]];
+      const order = ["r16", "qf", "sf", "final", "champion"] as const;
+      const startIdx = order.indexOf(round as any);
+      const next: BracketState = { ...prev };
+      next[round] = { ...(prev[round] || {}), [slot]: code };
+      // Only clear downstream picks that were derived from the OLD value at this slot.
+      // Siblings' winners in other branches remain untouched.
+      let oldCode = prev[round]?.[slot];
+      let curSlot = slot;
+      for (let i = startIdx + 1; i < order.length; i++) {
+        const r = order[i];
+        curSlot = Math.floor(curSlot / 2);
+        const cur = next[r]?.[curSlot];
+        if (oldCode && cur === oldCode) {
+          next[r] = { ...next[r] };
+          delete next[r]![curSlot];
+          oldCode = cur;
+        } else {
+          break;
+        }
+      }
       return next;
     });
   };
