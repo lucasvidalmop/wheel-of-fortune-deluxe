@@ -405,8 +405,8 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                     <div className="p-4 rounded-xl text-center" style={{ background: `linear-gradient(135deg, ${accent}44, ${accent}11)`, border: `2px solid ${accent}` }}>
                       <Trophy className="inline" size={32} style={{ color: accent }} />
                       <div className="mt-1 text-xs uppercase tracking-wider" style={{ color: muted }}>Campeão</div>
-                      <div className="text-xl font-bold" style={{ color: accent }}>
-                        {teamByCode[bracket.champion[0]]?.flag} {teamByCode[bracket.champion[0]]?.name}
+                      <div className="text-xl font-bold flex items-center justify-center gap-2" style={{ color: accent }}>
+                        <FlagImg code={bracket.champion[0]} size={28} /> {teamByCode[bracket.champion[0]]?.name}
                       </div>
                     </div>
                   )}
