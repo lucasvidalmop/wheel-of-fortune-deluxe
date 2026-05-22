@@ -90,40 +90,50 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
 
   // Build winning set
   const winningIds = new Set<string>();
-  if (Array.isArray(body.winning_outcome_ids)) {
-    for (const id of body.winning_outcome_ids) {
-      if (outcomes.some((o: any) => o.id === id)) winningIds.add(id);
-    }
-  }
-  if (Array.isArray(body.winners)) {
-    for (const w of body.winners) {
-      if (w.outcome_id && outcomes.some((o: any) => o.id === w.outcome_id)) {
-        winningIds.add(w.outcome_id);
-        continue;
+
+  // Safety: if the event was already resolved, NEVER overwrite the winners.
+  // A second call with a different winner would otherwise mark extra outcomes
+  // as is_winner=true and (worse) leave previously-paid wagers untouched
+  // because of the pending-only guard below. Always trust the winners that
+  // are already persisted in bet_outcomes.is_winner.
+  if (alreadyResolved) {
+    for (const o of outcomes) if (o.is_winner) winningIds.add(o.id);
+  } else {
+    if (Array.isArray(body.winning_outcome_ids)) {
+      for (const id of body.winning_outcome_ids) {
+        if (outcomes.some((o: any) => o.id === id)) winningIds.add(id);
       }
-      const wantLabel = norm(w.label);
-      const wantMarket = w.market_id || null;
-      const wantMarketTitle = norm(w.market_title);
-      if (!wantLabel) continue;
-      const match = outcomes.find((o: any) => {
-        if (norm(o.label) !== wantLabel) return false;
-        if (wantMarket) return o.market_id === wantMarket;
-        if (wantMarketTitle) return true; // resolved via market lookup below if needed
-        return true;
-      });
-      if (match) winningIds.add(match.id);
     }
-  }
-  // Convenience: winner = home/away/draw maps to standard 1X2 labels in principal market
-  if (winningIds.size === 0 && body.winner) {
-    const w = String(body.winner).toLowerCase();
-    const wantLabels = w === "home" ? ["home", "1", "casa"]
-      : w === "away" ? ["away", "2", "fora"]
-      : w === "draw" ? ["draw", "x", "empate"]
-      : [];
-    if (wantLabels.length) {
-      const match = outcomes.find((o: any) => wantLabels.includes(norm(o.label) || ""));
-      if (match) winningIds.add(match.id);
+    if (Array.isArray(body.winners)) {
+      for (const w of body.winners) {
+        if (w.outcome_id && outcomes.some((o: any) => o.id === w.outcome_id)) {
+          winningIds.add(w.outcome_id);
+          continue;
+        }
+        const wantLabel = norm(w.label);
+        const wantMarket = w.market_id || null;
+        const wantMarketTitle = norm(w.market_title);
+        if (!wantLabel) continue;
+        const match = outcomes.find((o: any) => {
+          if (norm(o.label) !== wantLabel) return false;
+          if (wantMarket) return o.market_id === wantMarket;
+          if (wantMarketTitle) return true;
+          return true;
+        });
+        if (match) winningIds.add(match.id);
+      }
+    }
+    // Convenience: winner = home/away/draw maps to standard 1X2 labels
+    if (winningIds.size === 0 && body.winner) {
+      const w = String(body.winner).toLowerCase();
+      const wantLabels = w === "home" ? ["home", "1", "casa"]
+        : w === "away" ? ["away", "2", "fora"]
+        : w === "draw" ? ["draw", "x", "empate"]
+        : [];
+      if (wantLabels.length) {
+        const match = outcomes.find((o: any) => wantLabels.includes(norm(o.label) || ""));
+        if (match) winningIds.add(match.id);
+      }
     }
   }
 
@@ -131,8 +141,8 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
     return { skipped: "no_winners_declared" };
   }
 
-  // 2) Mark winning outcomes
-  if (winningIds.size > 0) {
+  // 2) Mark winning outcomes — only on first resolution; never re-write history.
+  if (!alreadyResolved && winningIds.size > 0) {
     await supabase.from("bet_outcomes")
       .update({ is_winner: true })
       .in("id", Array.from(winningIds));
