@@ -1925,7 +1925,8 @@ const Bets = ({ tag }: BetsPageProps) => {
               const statusColor: Record<string, string> = {
                 pending: muted, won: '#22c55e', lost: '#ef4444', refunded: '#eab308', cancelled: muted,
               };
-              const outcome = (page?.outcomes || []).find((o: OutcomeRow) => o.id === w.outcome_id);
+              const outcome = (page?.outcomes || []).find((o: OutcomeRow) => o.id === w.outcome_id)
+                || myOutcomes.find((o: any) => o.id === w.outcome_id);
               const canShare = cfg.ticketEnabled !== false && (w.status === 'won' || w.status === 'lost' || w.status === 'pending');
               const openShare = async () => {
                 if (!ev) return;
