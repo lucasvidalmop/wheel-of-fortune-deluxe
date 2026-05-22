@@ -1955,7 +1955,10 @@ const Bets = ({ tag }: BetsPageProps) => {
                 <div key={w.id} className="rounded-xl p-4 flex items-center justify-between gap-3"
                   style={{ background: cardBg, border: `1px solid ${accent}22` }}>
                   {(() => {
-                    const mk = outcome?.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
+                    const mk = outcome?.market_id
+                      ? ((page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id)
+                          || myMarkets.find((m: any) => m.id === outcome.market_id))
+                      : null;
                     const marketTitle = mk?.title || 'Resultado Final';
                     return (
                       <div className="min-w-0 flex-1">
