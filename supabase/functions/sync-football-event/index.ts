@@ -407,6 +407,14 @@ Deno.serve(async (req) => {
       return json(200, { success: true, operators: 0, results: [] });
     }
 
+    const derivedLog = mapFixtureStatusToEventStatus(ev.fixture_status);
+    console.log("[sync-football-event] fixture", {
+      external_fixture_id: ev.external_fixture_id,
+      fixture_status: ev.fixture_status ?? null,
+      derived_status: derivedLog,
+      operators: configs.length,
+    });
+
     const results: Array<{ owner_id: string; ok: boolean; error?: string; data?: unknown }> = [];
 
     for (const cfg of configs) {
