@@ -357,10 +357,54 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
               )}
 
               {tab === "classification" && (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* HERO: ação principal — escolher 8 terceiros */}
+                  <div className="rounded-2xl p-4 md:p-5" style={{ background: `linear-gradient(135deg, ${accent}22, ${accent}08)`, border: `2px solid ${accent}` }}>
+                    <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: accent }}>Sua decisão</div>
+                        <div className="text-lg md:text-xl font-bold mt-0.5">Escolha os 8 melhores terceiros</div>
+                        <div className="text-xs mt-1" style={{ color: muted }}>Dos 12 terceiros colocados, indique quais avançam ao mata-mata.</div>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(0,0,0,0.25)", border: `1px solid ${accent}55` }}>
+                        <span className="text-2xl font-bold tabular-nums" style={{ color: accent }}>{bestThirds.length}</span>
+                        <span className="text-sm" style={{ color: muted }}>/ 8</span>
+                      </div>
+                    </div>
+                    {/* progress bar */}
+                    <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <div className="h-full transition-all" style={{ width: `${Math.min(100, (bestThirds.length / 8) * 100)}%`, background: `linear-gradient(90deg, ${accent}, ${accent}aa)` }} />
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {thirds.map(({ key, team }) => team && (
+                        <button key={team.code} onClick={() => toggleThird(team.code)} disabled={readOnly}
+                          className="relative p-3 rounded-xl text-sm flex items-center gap-3 transition hover:scale-[1.02] disabled:hover:scale-100"
+                          style={{
+                            background: bestThirds.includes(team.code) ? `linear-gradient(135deg, ${accent}55, ${accent}22)` : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${bestThirds.includes(team.code) ? accent : "rgba(255,255,255,0.08)"}`,
+                            boxShadow: bestThirds.includes(team.code) ? `0 4px 16px ${accent}33` : "none",
+                          }}>
+                          {bestThirds.includes(team.code) && (
+                            <CheckCircle2 size={14} className="absolute top-1.5 right-1.5" style={{ color: accent }} />
+                          )}
+                          <FlagImg code={team.code} size={28} />
+                          <div className="min-w-0 flex-1 text-left">
+                            <div className="text-[9px] uppercase tracking-wider font-bold" style={{ color: muted }}>3º {key}</div>
+                            <div className="truncate font-semibold leading-tight">{team.name}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* RESUMO: 24 já classificados — secundário */}
                   <div>
-                    <div className="text-sm font-bold mb-2" style={{ color: accent }}>Classificados diretos (1º + 2º)</div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle2 size={14} style={{ color: muted }} />
+                      <div className="text-xs uppercase tracking-wider font-bold" style={{ color: muted }}>Já classificados — 1º e 2º de cada grupo</div>
+                      <div className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: muted }}>automático</div>
+                    </div>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5">
                       {groups.flatMap(g => {
                         const p = picks[g.key];
                         if (!p) return [];
@@ -368,30 +412,17 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                       }).map(([label, code]) => {
                         const t = teamByCode[code as string];
                         return (
-                          <div key={label} className="p-2 rounded-md text-sm flex items-center gap-2" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
-                            <span className="text-xs font-bold" style={{ color: muted }}>{label}</span>
-                            {t ? <><FlagImg code={t.code} size={20} /><span className="truncate">{t.name}</span></> : <span className="text-xs" style={{ color: muted }}>—</span>}
+                          <div key={label} className="px-2 py-1.5 rounded-md text-xs flex items-center gap-1.5 min-w-0" style={{ background: "rgba(255,255,255,0.03)" }}>
+                            <span className="text-[10px] font-bold shrink-0" style={{ color: muted }}>{label}</span>
+                            {t ? <><FlagImg code={t.code} size={14} /><span className="truncate" style={{ color: muted }}>{t.name}</span></> : <span style={{ color: muted }}>—</span>}
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-sm font-bold mb-2" style={{ color: accent }}>Escolha 8 melhores terceiros ({bestThirds.length}/8)</div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {thirds.map(({ key, team }) => team && (
-                        <button key={team.code} onClick={() => toggleThird(team.code)} disabled={readOnly}
-                          className="p-2 rounded-md text-sm flex items-center gap-2 transition"
-                          style={{ background: bestThirds.includes(team.code) ? `${accent}33` : cardBg, border: `1px solid ${bestThirds.includes(team.code) ? accent : `${accent}33`}` }}>
-                          <span className="text-xs font-bold" style={{ color: muted }}>3º {key}</span>
-                          <FlagImg code={team.code} size={20} />
-                          <span className="truncate text-left flex-1">{team.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               )}
+
 
               {tab === "bracket" && (
                 <div className="space-y-6">
