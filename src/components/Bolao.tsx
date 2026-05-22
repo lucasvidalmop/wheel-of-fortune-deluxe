@@ -593,7 +593,7 @@ function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted
   const fin = bracket.final || {};
 
   const c1 = (
-    <div className="flex flex-col justify-around py-2 gap-1" key="c1">
+    <div className="flex flex-col justify-around h-full" key="c1">
       {r32.map((m, i) => (
         <R32MatchCard
           key={i}
