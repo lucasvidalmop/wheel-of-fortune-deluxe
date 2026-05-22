@@ -391,22 +391,38 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
 
 
               {tab === "bracket" && (
-                <div className="space-y-6">
-                  {/* R32: user picks winner of each of the 16 R32 matches; result goes to R16 */}
-                  <BracketRound title="16-avos (32 → 16)" pairs={r32Slots.map(s => ({ slot: s.slot, a: s.teamA, b: s.teamB }))} picks={bracket.r16 || {}} onPick={(slot, code) => pickWinner("r16", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Oitavas (16 → 8)" pairs={getRoundPairs("qf")} picks={bracket.qf || {}} onPick={(slot, code) => pickWinner("qf", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Quartas (8 → 4)" pairs={getRoundPairs("sf")} picks={bracket.sf || {}} onPick={(slot, code) => pickWinner("sf", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Semifinal (4 → 2)" pairs={getRoundPairs("final")} picks={bracket.final || {}} onPick={(slot, code) => pickWinner("final", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  <BracketRound title="Final" pairs={getRoundPairs("champion")} picks={bracket.champion || {}} onPick={(slot, code) => pickWinner("champion", slot, code)} accent={accent} cardBg={cardBg} muted={muted} disabled={readOnly} />
-                  {bracket.champion?.[0] && (
-                    <div className="p-4 rounded-xl text-center" style={{ background: `linear-gradient(135deg, ${accent}44, ${accent}11)`, border: `2px solid ${accent}` }}>
-                      <Trophy className="inline" size={32} style={{ color: accent }} />
-                      <div className="mt-1 text-xs uppercase tracking-wider" style={{ color: muted }}>Campeão</div>
-                      <div className="text-xl font-bold flex items-center justify-center gap-2" style={{ color: accent }}>
-                        <FlagImg code={bracket.champion[0]} size={28} /> {teamByCode[bracket.champion[0]]?.name}
-                      </div>
-                    </div>
-                  )}
+                <div className="overflow-x-auto -mx-4 px-4">
+                  <div className="mb-3 text-center">
+                    <div className="text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: accent }}>Mata-mata</div>
+                    <div className="text-xs" style={{ color: muted }}>Clique nos vencedores de cada confronto.</div>
+                  </div>
+                  <div className="flex items-stretch justify-center gap-0 mx-auto" style={{ minWidth: 880, minHeight: 720 }}>
+                    <BracketHalf
+                      side="left"
+                      r32={r32Slots.slice(0, 8)}
+                      bracket={bracket}
+                      teamByCode={teamByCode}
+                      pickWinner={pickWinner}
+                      accent={accent} muted={muted} text={text}
+                      disabled={readOnly}
+                    />
+                    <BracketCenter
+                      leftFinalist={teamByCode[bracket.final?.[0] || ""]}
+                      rightFinalist={teamByCode[bracket.final?.[1] || ""]}
+                      champion={teamByCode[bracket.champion?.[0] || ""]}
+                      onPickChampion={(code) => pickWinner("champion", 0, code)}
+                      accent={accent} muted={muted} text={text} disabled={readOnly}
+                    />
+                    <BracketHalf
+                      side="right"
+                      r32={r32Slots.slice(8, 16)}
+                      bracket={bracket}
+                      teamByCode={teamByCode}
+                      pickWinner={pickWinner}
+                      accent={accent} muted={muted} text={text}
+                      disabled={readOnly}
+                    />
+                  </div>
                 </div>
               )}
             </div>
