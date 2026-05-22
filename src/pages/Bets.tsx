@@ -345,6 +345,8 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [myWagers, setMyWagers] = useState<WagerRow[]>([]);
   const [expandedTickets, setExpandedTickets] = useState<Set<string>>(new Set());
   const [myEvents, setMyEvents] = useState<any[]>([]);
+  const [myOutcomes, setMyOutcomes] = useState<any[]>([]);
+  const [myMarkets, setMyMarkets] = useState<any[]>([]);
   const [shareWager, setShareWager] = useState<ShareTicketData | null>(null);
   const [shareMultiple, setShareMultiple] = useState<ShareMultipleData | null>(null);
   const [wagerCounts, setWagerCounts] = useState<Record<string, number>>({});
@@ -688,6 +690,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(data.user);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyOutcomes(data.outcomes || []);
+      setMyMarkets(data.markets || []);
       setMyTickets(data.tickets || []);
       setMyTicketSelections(data.ticketSelections || []);
     } catch (err: any) {
@@ -706,6 +710,8 @@ const Bets = ({ tag }: BetsPageProps) => {
       setAuthed(prev => prev ? { ...prev, tokens_balance: data.user.tokens_balance } : prev);
       setMyWagers(data.wagers || []);
       setMyEvents(data.events || []);
+      setMyOutcomes(data.outcomes || []);
+      setMyMarkets(data.markets || []);
       setMyTickets(data.tickets || []);
       setMyTicketSelections(data.ticketSelections || []);
     }
@@ -1919,7 +1925,8 @@ const Bets = ({ tag }: BetsPageProps) => {
               const statusColor: Record<string, string> = {
                 pending: muted, won: '#22c55e', lost: '#ef4444', refunded: '#eab308', cancelled: muted,
               };
-              const outcome = (page?.outcomes || []).find((o: OutcomeRow) => o.id === w.outcome_id);
+              const outcome = (page?.outcomes || []).find((o: OutcomeRow) => o.id === w.outcome_id)
+                || myOutcomes.find((o: any) => o.id === w.outcome_id);
               const canShare = cfg.ticketEnabled !== false && (w.status === 'won' || w.status === 'lost' || w.status === 'pending');
               const openShare = async () => {
                 if (!ev) return;
@@ -1948,7 +1955,10 @@ const Bets = ({ tag }: BetsPageProps) => {
                 <div key={w.id} className="rounded-xl p-4 flex items-center justify-between gap-3"
                   style={{ background: cardBg, border: `1px solid ${accent}22` }}>
                   {(() => {
-                    const mk = outcome?.market_id ? (page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id) : null;
+                    const mk = outcome?.market_id
+                      ? ((page?.markets || []).find((m: MarketRow) => m.id === outcome.market_id)
+                          || myMarkets.find((m: any) => m.id === outcome.market_id))
+                      : null;
                     const marketTitle = mk?.title || 'Resultado Final';
                     return (
                       <div className="min-w-0 flex-1">
