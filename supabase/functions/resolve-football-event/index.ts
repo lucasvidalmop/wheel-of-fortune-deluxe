@@ -1,6 +1,12 @@
 // Resolve a football fixture: marks event/markets/outcomes as resolved,
 // settles single bet_wagers and multiple bet_tickets, credits coins.
-// Idempotent: pending-only updates + once-resolved events are skipped.
+//
+// Source of truth: the FINAL SCORE.
+// Each market is resolved from the score by its title + outcome labels.
+// Unknown markets stay pending (we never blindly mark them lost).
+//
+// Idempotent: if the event is already resolved, winners are NOT re-written —
+// we trust bet_outcomes.is_winner and only settle leftover pending wagers/tickets.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
@@ -12,34 +18,28 @@ const corsHeaders = {
 interface WinnerHint {
   market_id?: string | null;
   market_title?: string | null;
-  label?: string | null;        // winning outcome label
-  outcome_id?: string | null;   // direct id (preferred)
+  label?: string | null;
+  outcome_id?: string | null;
 }
 
 interface Payload {
   external_fixture_id: string;
-  status?: string;                 // raw final status from provider
+  status?: string;
   score?: { home?: number; away?: number } | null;
   winner?: "home" | "away" | "draw" | string | null;
-  winning_outcome_ids?: string[];  // preferred: explicit outcome ids
-  winners?: WinnerHint[];          // alternative: list by label/market
-  // Whether to also force-lose unresolved markets without a declared winner.
-  // Default false — only declared markets are resolved.
-  resolve_all_markets?: boolean;
+  winning_outcome_ids?: string[];
+  winners?: WinnerHint[];
 }
+
+interface Score { home: number; away: number }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") {
-    return json({ error: "method_not_allowed" }, 405);
-  }
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  // Shared-secret auth (VPS -> function)
   const expected = Deno.env.get("RESOLVE_FOOTBALL_SECRET");
   const got = req.headers.get("x-webhook-secret") || "";
-  if (!expected || got !== expected) {
-    return json({ error: "unauthorized" }, 401);
-  }
+  if (!expected || got !== expected) return json({ error: "unauthorized" }, 401);
 
   let body: Payload;
   try { body = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
@@ -53,61 +53,86 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
 
-  // 1) Locate all bet_events with this fixture (multi-tenant safe).
   const { data: events, error: evErr } = await supabase
     .from("bet_events")
-    .select("id, owner_id, status, winning_outcome_id")
+    .select("id, owner_id, status, winning_outcome_id, title")
     .eq("external_fixture_id", fixtureId);
   if (evErr) return json({ error: "db_error", detail: evErr.message }, 500);
   if (!events || events.length === 0) return json({ ok: true, events_found: 0 });
 
-  const results: any[] = [];
+  const score: Score | null =
+    body.score &&
+    Number.isFinite(Number(body.score.home)) &&
+    Number.isFinite(Number(body.score.away))
+      ? { home: Number(body.score.home), away: Number(body.score.away) }
+      : null;
 
+  console.log(`[resolve] fixture=${fixtureId} score=${score ? `${score.home}-${score.away}` : "n/a"} winner_hint=${body.winner || "n/a"} events=${events.length}`);
+
+  const results: any[] = [];
   for (const ev of events) {
     try {
-      const r = await resolveEvent(supabase, ev, body);
-      results.push({ event_id: ev.id, ...r });
+      const r = await resolveEvent(supabase, ev, body, score, fixtureId);
+      results.push({ event_id: ev.id, title: ev.title, ...r });
     } catch (e) {
-      console.error("resolveEvent failed", ev.id, e);
+      console.error(`[resolve] fixture=${fixtureId} event=${ev.id} ERROR`, e);
       results.push({ event_id: ev.id, error: String((e as Error).message || e) });
     }
   }
 
-  return json({ ok: true, fixture: fixtureId, events: results });
+  return json({ ok: true, fixture: fixtureId, score, events: results });
 });
 
-async function resolveEvent(supabase: any, ev: any, body: Payload) {
-  // Skip if already resolved — no double payouts. Still safe to re-run, but exit fast.
+async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score | null, fixtureId: string) {
   const alreadyResolved = ev.status === "resolved";
 
-  // Load all outcomes for this event
-  const { data: outcomes, error: outErr } = await supabase
-    .from("bet_outcomes")
-    .select("id, event_id, market_id, label, odd, is_winner")
-    .eq("event_id", ev.id);
+  const [{ data: outcomes, error: outErr }, { data: markets }] = await Promise.all([
+    supabase.from("bet_outcomes")
+      .select("id, event_id, market_id, label, odd, is_winner")
+      .eq("event_id", ev.id),
+    supabase.from("bet_markets")
+      .select("id, title, status")
+      .eq("event_id", ev.id),
+  ]);
   if (outErr) throw outErr;
   if (!outcomes || outcomes.length === 0) return { skipped: "no_outcomes" };
 
-  // Build winning set
-  const winningIds = new Set<string>();
+  const marketsById = new Map<string, any>((markets || []).map((m: any) => [m.id, m]));
+  const outcomesByMarket = new Map<string, any[]>();
+  for (const o of outcomes) {
+    const k = o.market_id || "_none_";
+    if (!outcomesByMarket.has(k)) outcomesByMarket.set(k, []);
+    outcomesByMarket.get(k)!.push(o);
+  }
 
-  // Safety: if the event was already resolved, NEVER overwrite the winners.
-  // A second call with a different winner would otherwise mark extra outcomes
-  // as is_winner=true and (worse) leave previously-paid wagers untouched
-  // because of the pending-only guard below. Always trust the winners that
-  // are already persisted in bet_outcomes.is_winner.
+  // winningIds = set of outcome_ids that win in this event (across markets)
+  // resolvedMarketIds = markets that are considered settled in this call;
+  //   wagers/selections on outcomes belonging to OTHER markets stay pending.
+  const winningIds = new Set<string>();
+  const resolvedMarketIds = new Set<string>();
+  const perMarketLog: string[] = [];
+
   if (alreadyResolved) {
+    // Safety: never re-write winners. Trust what's persisted in the DB.
     for (const o of outcomes) if (o.is_winner) winningIds.add(o.id);
+    for (const m of markets || []) if (m.status === "resolved") resolvedMarketIds.add(m.id);
   } else {
+    // 1) Explicit winners from caller (preferred when given)
     if (Array.isArray(body.winning_outcome_ids)) {
       for (const id of body.winning_outcome_ids) {
-        if (outcomes.some((o: any) => o.id === id)) winningIds.add(id);
+        const o = outcomes.find((x: any) => x.id === id);
+        if (o) {
+          winningIds.add(id);
+          if (o.market_id) resolvedMarketIds.add(o.market_id);
+        }
       }
     }
     if (Array.isArray(body.winners)) {
       for (const w of body.winners) {
         if (w.outcome_id && outcomes.some((o: any) => o.id === w.outcome_id)) {
+          const o = outcomes.find((x: any) => x.id === w.outcome_id)!;
           winningIds.add(w.outcome_id);
+          if (o.market_id) resolvedMarketIds.add(o.market_id);
           continue;
         }
         const wantLabel = norm(w.label);
@@ -117,63 +142,104 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
         const match = outcomes.find((o: any) => {
           if (norm(o.label) !== wantLabel) return false;
           if (wantMarket) return o.market_id === wantMarket;
-          if (wantMarketTitle) return true;
+          if (wantMarketTitle) {
+            const mk = marketsById.get(o.market_id);
+            return norm(mk?.title) === wantMarketTitle;
+          }
           return true;
         });
-        if (match) winningIds.add(match.id);
+        if (match) {
+          winningIds.add(match.id);
+          if (match.market_id) resolvedMarketIds.add(match.market_id);
+        }
       }
     }
-    // Convenience: winner = home/away/draw maps to standard 1X2 labels
-    if (winningIds.size === 0 && body.winner) {
+
+    // 2) Score-derived resolution PER MARKET (the real source of truth).
+    //    Recognises: Match Winner/1X2, Home/Away, Double Chance, Both Teams Score.
+    //    Unknown markets are left untouched.
+    if (score) {
+      for (const m of markets || []) {
+        const outs = outcomesByMarket.get(m.id) || [];
+        const res = deriveMarketWinners(m.title, outs, score);
+        if (!res) continue;
+        resolvedMarketIds.add(m.id);
+        for (const id of res.winnerIds) winningIds.add(id);
+        perMarketLog.push(`market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(none — push/no-pay)"}]`);
+      }
+    }
+
+    // 3) Convenience fallback: winner=home/away/draw, only when no score is given.
+    //    Resolves the principal Match Winner market only.
+    if (!score && body.winner && winningIds.size === 0) {
       const w = String(body.winner).toLowerCase();
       const wantLabels = w === "home" ? ["home", "1", "casa"]
         : w === "away" ? ["away", "2", "fora"]
         : w === "draw" ? ["draw", "x", "empate"]
         : [];
       if (wantLabels.length) {
-        const match = outcomes.find((o: any) => wantLabels.includes(norm(o.label) || ""));
-        if (match) winningIds.add(match.id);
+        const match = outcomes.find((o: any) => {
+          if (!wantLabels.includes(norm(o.label))) return false;
+          const mk = marketsById.get(o.market_id);
+          return isPrincipalMatchWinner(mk?.title);
+        }) || outcomes.find((o: any) => wantLabels.includes(norm(o.label)));
+        if (match) {
+          winningIds.add(match.id);
+          if (match.market_id) resolvedMarketIds.add(match.market_id);
+        }
       }
     }
   }
 
-  if (winningIds.size === 0 && !alreadyResolved) {
+  if (winningIds.size === 0 && resolvedMarketIds.size === 0 && !alreadyResolved) {
+    console.log(`[resolve] fixture=${fixtureId} event=${ev.id} skipped=no_winners_declared`);
     return { skipped: "no_winners_declared" };
   }
 
-  // 2) Mark winning outcomes — only on first resolution; never re-write history.
-  if (!alreadyResolved && winningIds.size > 0) {
-    await supabase.from("bet_outcomes")
-      .update({ is_winner: true })
-      .in("id", Array.from(winningIds));
-    // Mark losers in the SAME market(s) as the winners (don't touch other markets)
-    const winnerMarketIds = new Set<string | null>(
-      outcomes.filter((o: any) => winningIds.has(o.id)).map((o: any) => o.market_id ?? null),
-    );
-    const loserIds = outcomes
-      .filter((o: any) => !winningIds.has(o.id) && winnerMarketIds.has(o.market_id ?? null))
-      .map((o: any) => o.id);
+  // ── Mark winners/losers per resolved market (first-time resolutions only) ──
+  if (!alreadyResolved) {
+    if (winningIds.size > 0) {
+      await supabase.from("bet_outcomes")
+        .update({ is_winner: true })
+        .in("id", Array.from(winningIds));
+    }
+    // Losers = every outcome in a resolved market that isn't a winner.
+    // Markets resolved with no winner (e.g. Home/Away on a draw) get ALL outcomes flagged false.
+    const loserIds: string[] = [];
+    for (const mid of resolvedMarketIds) {
+      const outs = outcomesByMarket.get(mid) || [];
+      for (const o of outs) if (!winningIds.has(o.id)) loserIds.push(o.id);
+    }
     if (loserIds.length) {
       await supabase.from("bet_outcomes")
         .update({ is_winner: false })
         .in("id", loserIds);
     }
-
-    // Resolve markets that have a declared winner
-    for (const mid of winnerMarketIds) {
-      if (!mid) continue;
+    for (const mid of resolvedMarketIds) {
+      const winnerOutcome = (outcomesByMarket.get(mid) || []).find((o: any) => winningIds.has(o.id));
       await supabase.from("bet_markets")
-        .update({ status: "resolved", resolved_at: new Date().toISOString(), winning_outcome_id: outcomes.find((o:any)=>o.market_id===mid && winningIds.has(o.id))?.id })
+        .update({
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+          winning_outcome_id: winnerOutcome?.id ?? null,
+        })
         .eq("id", mid)
         .neq("status", "resolved");
     }
   }
 
-  // 3) Mark event resolved (idempotent: only if not yet)
-  const principalWinningId = ev.winning_outcome_id
-    ?? outcomes.find((o: any) => winningIds.has(o.id) && !o.market_id)?.id
-    ?? outcomes.find((o: any) => winningIds.has(o.id))?.id
-    ?? null;
+  // Pick the principal winning outcome for the event row (Match Winner preferred).
+  let principalWinningId: string | null = ev.winning_outcome_id || null;
+  if (!principalWinningId) {
+    for (const m of markets || []) {
+      if (!isPrincipalMatchWinner(m.title)) continue;
+      const w = (outcomesByMarket.get(m.id) || []).find((o: any) => winningIds.has(o.id));
+      if (w) { principalWinningId = w.id; break; }
+    }
+    if (!principalWinningId) {
+      principalWinningId = outcomes.find((o: any) => winningIds.has(o.id))?.id ?? null;
+    }
+  }
 
   if (!alreadyResolved) {
     await supabase.from("bet_events")
@@ -186,8 +252,12 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
       .neq("status", "resolved");
   }
 
-  // 4) Settle SINGLE wagers — only pending ones (avoids double pay).
-  // Uses odd_snapshot — never recomputed.
+  // ── Settle SINGLE wagers — only pending, only for outcomes whose market we resolved ──
+  const settleOutcomeIds = new Set<string>();
+  for (const mid of resolvedMarketIds) {
+    for (const o of (outcomesByMarket.get(mid) || [])) settleOutcomeIds.add(o.id);
+  }
+
   const { data: wagers } = await supabase
     .from("bet_wagers")
     .select("id, owner_id, wheel_user_id, account_id, user_email, outcome_id, amount_coins, odd_snapshot, status, payout_mode")
@@ -195,21 +265,21 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
     .eq("status", "pending");
 
   let wagersWon = 0, wagersLost = 0, coinsPaid = 0;
-  const userCredits: Record<string, number> = {}; // wheel_user_id -> coins
-  // Collect winners per outcome_id for grouped notifications
+  const userCredits: Record<string, number> = {};
   const winnersByOutcome: Record<string, Array<{
     userName: string; userEmail: string; accountId: string;
     amountTokens: number; payoutTokens: number; odd: number; wheel_user_id?: string | null;
   }>> = {};
 
   for (const w of (wagers || [])) {
+    if (!settleOutcomeIds.has(w.outcome_id)) continue; // market not resolved here — leave pending
     const isWinner = winningIds.has(w.outcome_id);
     if (isWinner) {
       const payout = Math.floor(Number(w.amount_coins || 0) * Number(w.odd_snapshot || 1));
       const { error } = await supabase.from("bet_wagers")
         .update({ status: "won", payout_coins: payout, resolved_at: new Date().toISOString() })
         .eq("id", w.id)
-        .eq("status", "pending"); // guard against races
+        .eq("status", "pending");
       if (!error) {
         wagersWon++;
         if (payout > 0 && (w.payout_mode || "coins") === "coins") {
@@ -253,7 +323,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
         const { data: mks } = await supabase.from("bet_markets").select("id, title").in("id", marketIds);
         for (const m of (mks || [])) marketTitles[m.id] = m.title || "";
       }
-      // Resolve user names in batch
       const userIds = Array.from(new Set(Object.values(winnersByOutcome).flat().map((w) => w.wheel_user_id).filter(Boolean))) as string[];
       const nameById: Record<string, string> = {};
       if (userIds.length) {
@@ -282,7 +351,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
           odd: Number(outRow?.odd || winners[0]?.odd || 0),
           totalPayoutTokens: totalPayout,
           winners: enrichedWinners,
-          // Backward-compat fields (used when count === 1)
           userName: enrichedWinners[0]?.userName || "",
           userEmail: enrichedWinners[0]?.userEmail || "",
           accountId: enrichedWinners[0]?.accountId || "",
@@ -300,8 +368,7 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
     }
   } catch (e) { console.error("notify grouped wagers_won failed", e); }
 
-
-  // 5) Settle MULTIPLE tickets — resolve selections for THIS event first.
+  // ── Settle MULTIPLE tickets — selections in resolved markets only ──
   const { data: selections } = await supabase
     .from("bet_ticket_selections")
     .select("id, ticket_id, outcome_id, status")
@@ -310,6 +377,7 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
 
   const touchedTickets = new Set<string>();
   for (const s of (selections || [])) {
+    if (!settleOutcomeIds.has(s.outcome_id)) continue; // leave pending; other market resolves later
     const won = winningIds.has(s.outcome_id);
     await supabase.from("bet_ticket_selections")
       .update({ status: won ? "won" : "lost" })
@@ -340,7 +408,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
         .eq("status", "pending");
       if (!error) ticketsLost++;
     } else if (sels.length > 0 && sels.every((s: any) => s.status === "won")) {
-      // total_odd is locked at placement — never recompute
       const payout = Math.floor(Number(ticket.stake || 0) * Number(ticket.total_odd || 1));
       const { error } = await supabase.from("bet_tickets")
         .update({ status: "won", payout_coins: payout, resolved_at: new Date().toISOString() })
@@ -354,7 +421,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
         } else {
           await creditByAccount(supabase, ticket.owner_id, ticket.account_id, ticket.user_email, payout);
         }
-        // Notify owner about winning multiple ticket
         try {
           const { data: allSelDetails } = await supabase
             .from("bet_ticket_selections")
@@ -379,10 +445,9 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
         } catch (e) { console.error("notify ticket_won failed", e); }
       }
     }
-    // else: still pending (waiting on other fixtures)
   }
 
-  // 6) Credit users (batched per user)
+  // ── Credit users (batched per user) ──
   for (const [uid, amount] of Object.entries(userCredits)) {
     if (amount <= 0) continue;
     const { data: user } = await supabase
@@ -393,8 +458,16 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
       .eq("id", uid);
   }
 
+  console.log(
+    `[resolve] fixture=${fixtureId} event=${ev.id} title="${ev.title}" already_resolved=${alreadyResolved} ` +
+    `score=${score ? `${score.home}-${score.away}` : "n/a"} markets_resolved=${resolvedMarketIds.size} ` +
+    `wagers_won=${wagersWon} wagers_lost=${wagersLost} tickets_won=${ticketsWon} tickets_lost=${ticketsLost} ` +
+    `coins_paid=${coinsPaid}` + (perMarketLog.length ? ` | ${perMarketLog.join(" | ")}` : "")
+  );
+
   return {
     already_resolved: alreadyResolved,
+    markets_resolved: resolvedMarketIds.size,
     winning_outcomes: Array.from(winningIds),
     wagers_won: wagersWon,
     wagers_lost: wagersLost,
@@ -402,6 +475,74 @@ async function resolveEvent(supabase: any, ev: any, body: Payload) {
     tickets_lost: ticketsLost,
     coins_paid: coinsPaid,
   };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Score-based market resolution. Returns null for unknown markets.
+// `winnerIds` may be empty when a market is resolved but pays no one
+// (e.g. Home/Away on a draw — everyone loses, no payouts).
+// ─────────────────────────────────────────────────────────────
+function deriveMarketWinners(
+  title: string | null | undefined,
+  outcomes: any[],
+  score: Score,
+): { winnerIds: string[]; winnerLabels: string[] } | null {
+  const t = norm(title);
+  const find = (labels: string[]) => outcomes.find((o: any) => labels.includes(norm(o.label)));
+  const isDraw = score.home === score.away;
+  const homeWon = score.home > score.away;
+  const awayWon = score.away > score.home;
+
+  // Match Winner / 1X2 / Resultado Final / Vencedor
+  if ([
+    "match winner", "full time result", "resultado final", "1x2",
+    "vencedor", "vencedor da partida", "vencedor do jogo", "resultado",
+  ].includes(t)) {
+    const w = homeWon ? find(["home", "1", "casa"])
+      : awayWon ? find(["away", "2", "fora"])
+      : find(["draw", "x", "empate"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  // Home/Away — DRAW MUST NEVER PAY. Market resolves with no winner.
+  if (t === "home/away") {
+    if (isDraw) return { winnerIds: [], winnerLabels: [] };
+    const w = homeWon ? find(["home", "1", "casa"]) : find(["away", "2", "fora"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  // Double Chance / Dupla Chance
+  if (t === "double chance" || t === "dupla chance" || t === "chance dupla") {
+    const winners: any[] = [];
+    if (homeWon || isDraw) { const w = find(["home/draw", "1x", "casa/empate"]); if (w) winners.push(w); }
+    if (awayWon || isDraw) { const w = find(["draw/away", "x2", "empate/fora"]); if (w) winners.push(w); }
+    if (homeWon || awayWon) { const w = find(["home/away", "12", "casa/fora"]); if (w) winners.push(w); }
+    if (winners.length === 0) return null;
+    return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
+  }
+
+  // Both Teams To Score
+  if (
+    t === "both teams score" || t === "both teams to score" ||
+    t === "ambas equipes marcam" || t === "ambas marcam" ||
+    t === "ambos os times marcam" || t === "btts"
+  ) {
+    const yes = score.home > 0 && score.away > 0;
+    const w = yes ? find(["yes", "sim"]) : find(["no", "não", "nao"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  return null;
+}
+
+function isPrincipalMatchWinner(title: string | null | undefined) {
+  return [
+    "match winner", "full time result", "resultado final", "1x2",
+    "vencedor", "vencedor da partida", "vencedor do jogo", "resultado",
+  ].includes(norm(title));
 }
 
 async function creditByAccount(supabase: any, ownerId: string, accountId: string, email: string, amount: number) {
