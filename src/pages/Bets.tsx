@@ -1488,7 +1488,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                                     color: isLoser ? muted : text,
                                   }}>
                                   <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
-                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{translateOutcomeLabel(o.label)}</div>
+                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{outcomeLabelForCard(o.label, ev.title)}</div>
                                   <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
                                   <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
                                     <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
