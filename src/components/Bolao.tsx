@@ -22,6 +22,32 @@ type Props = {
 type GroupPick = { first_team: string; second_team: string; third_team: string };
 type BracketState = Record<string, Record<number, string>>; // round -> slot -> code
 
+const CODE_TO_ISO2: Record<string, string> = {
+  ALG: "dz", ARG: "ar", AUS: "au", AUT: "at", BEL: "be", BIH: "ba", BRA: "br",
+  CAN: "ca", CIV: "ci", COD: "cd", COL: "co", CPV: "cv", CRO: "hr", CUW: "cw",
+  CZE: "cz", ECU: "ec", EGY: "eg", ENG: "gb-eng", ESP: "es", FRA: "fr", GER: "de",
+  GHA: "gh", HAI: "ht", IRN: "ir", IRQ: "iq", JOR: "jo", JPN: "jp", KOR: "kr",
+  KSA: "sa", MAR: "ma", MEX: "mx", NED: "nl", NOR: "no", NZL: "nz", PAN: "pa",
+  PAR: "py", POR: "pt", QAT: "qa", RSA: "za", SCO: "gb-sct", SEN: "sn", SUI: "ch",
+  SWE: "se", TUN: "tn", TUR: "tr", URU: "uy", USA: "us", UZB: "uz",
+};
+
+const FlagImg = ({ code, size = 20 }: { code?: string; size?: number }) => {
+  const iso = code ? CODE_TO_ISO2[code] : undefined;
+  if (!iso) return null;
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${iso}.png`}
+      srcSet={`https://flagcdn.com/w80/${iso}.png 2x`}
+      width={size}
+      height={Math.round(size * 0.75)}
+      alt={code}
+      loading="lazy"
+      style={{ display: "inline-block", borderRadius: 2, objectFit: "cover", boxShadow: "0 0 0 1px rgba(255,255,255,0.08)" }}
+    />
+  );
+};
+
 const ROUND_LABELS: Record<string, string> = {
   r16: "Oitavas",
   qf: "Quartas",
