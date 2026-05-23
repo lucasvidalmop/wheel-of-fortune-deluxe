@@ -84,9 +84,9 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
       owner_id: ownerId,
       tag: cleanTag,
       is_active: isActive,
-      page_config: pc,
+      page_config: pc as any,
     };
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('lobby_configs')
       .upsert([payload], { onConflict: 'owner_id' });
     setSaving(false);
