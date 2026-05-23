@@ -1160,6 +1160,11 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                       ⏳ Abre em {formatCountdown(opensAt! - nowTs)}
                     </div>
                   )}
+                  {showClaim && closesAt !== null && (
+                    <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
+                      ⏳ Fecha em {formatCountdown(closesAt - nowTs)}
+                    </div>
+                  )}
                   {showCountdown && (
                     <div className="relative z-10 mt-2 w-full text-center px-2 py-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 text-[10px] font-semibold text-amber-200">
                       ⏳ Próximo resgate em {formatCountdown(nextAvailableTs! - nowTs)}
