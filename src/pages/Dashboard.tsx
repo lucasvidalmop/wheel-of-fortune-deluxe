@@ -3202,6 +3202,8 @@ function Dashboard() {
     wheel: 'Configuração da Roleta',
     batalha_slot: 'Batalha Slot',
     luckybox: 'Luckybox',
+    lobby: 'Lobby do Operador',
+    apostas: 'Apostas',
     auth: 'Página de Login',
     history: 'Histórico de Prêmios',
     analytics: 'Web Analytics',
