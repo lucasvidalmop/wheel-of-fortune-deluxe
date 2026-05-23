@@ -98,6 +98,7 @@ interface LuckyCase {
   claim_quantity?: number;
   claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
   claim_event_name?: string;
+  purchase_disabled?: boolean;
 }
 interface DrawnCase {
   case_id: string;
