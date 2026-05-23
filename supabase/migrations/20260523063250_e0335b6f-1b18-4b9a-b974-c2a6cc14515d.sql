@@ -1,0 +1,1 @@
+ALTER TABLE public.luckybox_cases ADD COLUMN IF NOT EXISTS purchase_disabled boolean NOT NULL DEFAULT false;

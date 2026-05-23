@@ -96,6 +96,7 @@ interface LuckyCase {
   claim_quantity?: number;
   claim_recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
   claim_event_name?: string;
+  purchase_disabled?: boolean;
 }
 
 interface CasePoolItem { case_id: string; weight: number }
@@ -138,7 +139,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
     setLoading(true);
     const [{ data: c }, { data: cs }] = await Promise.all([
       (supabase as any).from('luckybox_configs').select('id,owner_id,tag,is_active,tokens_symbol,coin_name,coin_icon_url,page_config,created_at,updated_at').eq('owner_id', ownerId).maybeSingle(),
-      (supabase as any).from('luckybox_cases').select('id,owner_id,name,image_url,price_tokens,prizes,prize_pool,mode,prize_type,rarity,position,is_active,claim_enabled,claim_recurrence,claim_event_name,claim_opens_at,claim_closes_at,claim_quantity,created_at,updated_at').eq('owner_id', ownerId).order('position').order('created_at').limit(500),
+      (supabase as any).from('luckybox_cases').select('id,owner_id,name,image_url,price_tokens,prizes,prize_pool,mode,prize_type,rarity,position,is_active,claim_enabled,claim_recurrence,claim_event_name,claim_opens_at,claim_closes_at,claim_quantity,purchase_disabled,created_at,updated_at').eq('owner_id', ownerId).order('position').order('created_at').limit(500),
     ]);
     if (!c) {
       // create default
@@ -194,6 +195,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_quantity: 1,
       claim_recurrence: 'none',
       claim_event_name: '',
+      purchase_disabled: false,
     });
     setShowForm(true);
   };
@@ -223,6 +225,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
       claim_quantity: Math.max(1, Number(editingCase.claim_quantity) || 1),
       claim_recurrence: ['daily','weekly','monthly'].includes(String(editingCase.claim_recurrence)) ? editingCase.claim_recurrence : 'none',
       claim_event_name: (editingCase.claim_event_name || '').toString().slice(0, 80),
+      purchase_disabled: !!editingCase.purchase_disabled,
     };
     if (isCasePool) {
       const pool = (editingCase.prize_pool as CasePoolConfig) || emptyCasePool();
@@ -1113,6 +1116,17 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                         <option value="monthly">Mensal (a cada 30 dias)</option>
                       </select>
                       <p className="text-[10px] opacity-60 mt-1">Com recorrência, o usuário pode resgatar novamente após o intervalo.</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={!!editingCase.purchase_disabled}
+                          onChange={e => setEditingCase({ ...editingCase, purchase_disabled: e.target.checked })}
+                        />
+                        🚫 Desabilitar compra (apenas resgate gratuito)
+                      </label>
+                      <p className="text-[10px] opacity-60 mt-1 ml-6">Quando marcado, a caixa não pode ser comprada com {`{moedas}`} — só fica disponível pelo botão de resgate durante o evento.</p>
                     </div>
                   </div>
                 )}
