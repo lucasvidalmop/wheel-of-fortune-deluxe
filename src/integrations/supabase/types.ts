@@ -1064,6 +1064,7 @@ export type Database = {
           prize_pool: Json | null
           prize_type: string
           prizes: Json
+          purchase_disabled: boolean
           rarity: string
           updated_at: string
         }
@@ -1086,6 +1087,7 @@ export type Database = {
           prize_pool?: Json | null
           prize_type?: string
           prizes?: Json
+          purchase_disabled?: boolean
           rarity?: string
           updated_at?: string
         }
@@ -1108,6 +1110,7 @@ export type Database = {
           prize_pool?: Json | null
           prize_type?: string
           prizes?: Json
+          purchase_disabled?: boolean
           rarity?: string
           updated_at?: string
         }
