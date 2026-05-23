@@ -8213,6 +8213,11 @@ function Dashboard() {
               <BetsPanel ownerId={session.user.id} />
             </Suspense>
           )}
+          {activeTab === 'lobby' && session?.user?.id && (
+            <Suspense fallback={<PanelFallback />}>
+              <LobbyPanel ownerId={session.user.id} />
+            </Suspense>
+          )}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
               {/* Sub-tabs */}
