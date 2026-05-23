@@ -1131,6 +1131,8 @@ const Luckybox = ({ tag }: { tag?: string }) => {
                         <span className="text-sm">🎁 Abrir grátis</span>
                       ) : c.claim_enabled ? (
                         <span className="text-sm">🎁 {c.claim_event_name?.trim() || 'Evento'}</span>
+                      ) : c.purchase_disabled ? (
+                        <span className="text-sm opacity-70">🔒 Indisponível</span>
                       ) : (
                         <>
                           <CoinIcon size={20} color={accent} />
