@@ -79,6 +79,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Suspense fallback={<PageFallback />}>
+          <LobbyHomeButton />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
