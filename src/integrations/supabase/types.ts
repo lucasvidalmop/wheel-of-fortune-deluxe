@@ -981,6 +981,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lobby_configs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          owner_id: string
+          page_config: Json
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id: string
+          page_config?: Json
+          tag: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_id?: string
+          page_config?: Json
+          tag?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       luckybox_case_claims: {
         Row: {
           account_id: string

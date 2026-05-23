@@ -29,6 +29,7 @@ const ReferralAnalyticsPanel = lazy(() => import('@/components/casino/ReferralAn
 const RedemptionPagesPanel = lazy(() => import('@/components/casino/RedemptionPagesPanel'));
 const LuckyboxPanel = lazy(() => import('@/components/casino/LuckyboxPanel'));
 const BetsPanel = lazy(() => import('@/components/casino/BetsPanel'));
+const LobbyPanel = lazy(() => import('@/components/casino/LobbyPanel'));
 const WhatsAppShareDialog = lazy(() => import('@/components/casino/WhatsAppShareDialog'));
 const ReferralDefaultEditor = lazy(() => import('@/components/casino/ReferralDefaultEditor'));
 const GorjetaPageEditor = lazy(() => import('@/components/casino/GorjetaPageEditor'));
@@ -316,7 +317,7 @@ function Dashboard() {
     batalha_slot: false, apostas: true,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'lobby' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
@@ -3145,6 +3146,7 @@ function Dashboard() {
     { key: 'batalha_slot', icon: <Swords size={20} />, label: 'Batalha Slot', tool: 'batalha_slot' },
     { key: 'luckybox', icon: <Gift size={20} />, label: 'Luckybox', tool: 'luckybox' },
     { key: 'apostas', icon: <Trophy size={20} />, label: 'Apostas', tool: 'apostas' },
+    { key: 'lobby', icon: <Monitor size={20} />, label: 'Lobby', tool: 'painel_casa' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico', tool: 'history' },
     { key: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics', tool: 'analytics' },
@@ -3170,7 +3172,7 @@ function Dashboard() {
   // ═══ MENU GROUPS ═══
   type GroupKey = 'operacao' | 'disparos' | 'crescimento' | 'sistema';
   const groupDefs: { key: GroupKey; label: string; itemKeys: typeof activeTab[] }[] = [
-    { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'apostas', 'auth', 'history'] },
+    { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'apostas', 'lobby', 'auth', 'history'] },
     { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
     { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
     { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
@@ -3200,6 +3202,8 @@ function Dashboard() {
     wheel: 'Configuração da Roleta',
     batalha_slot: 'Batalha Slot',
     luckybox: 'Luckybox',
+    lobby: 'Lobby do Operador',
+    apostas: 'Apostas',
     auth: 'Página de Login',
     history: 'Histórico de Prêmios',
     analytics: 'Web Analytics',
@@ -8209,6 +8213,11 @@ function Dashboard() {
           {activeTab === 'apostas' && session?.user?.id && (
             <Suspense fallback={<PanelFallback />}>
               <BetsPanel ownerId={session.user.id} />
+            </Suspense>
+          )}
+          {activeTab === 'lobby' && session?.user?.id && (
+            <Suspense fallback={<PanelFallback />}>
+              <LobbyPanel ownerId={session.user.id} />
             </Suspense>
           )}
           {activeTab === 'referral' && (
