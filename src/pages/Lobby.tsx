@@ -38,6 +38,10 @@ const Lobby = ({ tag }: { tag: string }) => {
   const [productTags, setProductTags] = useState({ bets: '', luckybox: '', roleta: '' });
 
   useEffect(() => {
+    try { sessionStorage.setItem('lobby_tag', tag); } catch { /* ignore */ }
+  }, [tag]);
+
+  useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
