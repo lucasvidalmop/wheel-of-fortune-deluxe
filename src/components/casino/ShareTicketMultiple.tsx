@@ -240,14 +240,14 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
                     <span className="tabular-nums">{Number(s.odd).toFixed(2)}</span>
                   </div>
                 </div>
-                {s.status && (
+                {s.status === 'won' || s.status === 'lost' ? (
                   <span
                     className="text-[9px] font-black uppercase tracking-wider shrink-0 mt-0.5"
                     style={{ color: selStatusColor(s.status) }}
                   >
-                    {s.status === 'won' ? '✓' : s.status === 'lost' ? '✗' : '•'}
+                    {s.status === 'won' ? '✓' : '✗'}
                   </span>
-                )}
+                ) : null}
               </div>
             ))}
           </div>
