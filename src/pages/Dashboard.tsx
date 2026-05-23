@@ -3146,6 +3146,7 @@ function Dashboard() {
     { key: 'batalha_slot', icon: <Swords size={20} />, label: 'Batalha Slot', tool: 'batalha_slot' },
     { key: 'luckybox', icon: <Gift size={20} />, label: 'Luckybox', tool: 'luckybox' },
     { key: 'apostas', icon: <Trophy size={20} />, label: 'Apostas', tool: 'apostas' },
+    { key: 'lobby', icon: <Monitor size={20} />, label: 'Lobby', tool: 'painel_casa' },
     { key: 'auth', icon: <Shield size={20} />, label: 'Login', tool: 'auth' },
     { key: 'history', icon: <Trophy size={20} />, label: 'Histórico', tool: 'history' },
     { key: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics', tool: 'analytics' },
