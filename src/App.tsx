@@ -65,6 +65,10 @@ const SlugRouter = () => {
     const tag = slug.substring(5);
     return <Bets tag={tag} />;
   }
+  if (slug && slug.startsWith('lobby=')) {
+    const tag = slug.substring(6);
+    return <Lobby tag={tag} />;
+  }
   return <Roleta />;
 };
 
