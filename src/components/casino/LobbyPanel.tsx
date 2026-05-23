@@ -88,7 +88,7 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
     };
     const { error } = await supabase
       .from('lobby_configs')
-      .upsert(payload, { onConflict: 'owner_id' });
+      .upsert([payload], { onConflict: 'owner_id' });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     setExists(true);
