@@ -1,17 +1,23 @@
 import { Home } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const HIDDEN_PATHS = [/^\/$/, /^\/admin/, /^\/dashboard/, /^\/unsubscribe/, /^\/ref\//, /^\/gorjeta/, /^\/influencer/];
 
 const LobbyHomeButton = () => {
+  const location = useLocation();
   const [tag, setTag] = useState<string>('');
 
   useEffect(() => {
     try {
-      const t = sessionStorage.getItem('lobby_tag') || '';
-      setTag(t);
+      setTag(sessionStorage.getItem('lobby_tag') || '');
     } catch { /* ignore */ }
-  }, []);
+  }, [location.pathname]);
 
   if (!tag) return null;
+  // Hide on the lobby page itself and on pages that don't belong to operator-facing flow.
+  if (location.pathname === `/lobby=${tag}`) return null;
+  if (HIDDEN_PATHS.some((re) => re.test(location.pathname))) return null;
 
   return (
     <a
