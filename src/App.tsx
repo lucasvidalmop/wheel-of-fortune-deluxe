@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
+import LobbyHomeButton from "@/components/LobbyHomeButton";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Roleta = lazy(() => import("./pages/Roleta.tsx"));
@@ -79,6 +80,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Suspense fallback={<PageFallback />}>
+          <LobbyHomeButton />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
