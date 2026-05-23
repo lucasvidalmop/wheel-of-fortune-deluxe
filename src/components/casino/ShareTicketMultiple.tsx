@@ -259,7 +259,6 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
               style={{
                 background: cardBg,
                 border: `1px solid ${accent}33`,
-                boxShadow: `inset 0 -1px 0 ${accent}88, 0 8px 24px -10px ${accent}66`,
               }}
             >
               <div className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: accent }}>VALOR</div>
