@@ -107,7 +107,8 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
   const handleUpload = async (file: File, target: 'bg' | 'logo' | `card-${number}`) => {
     setUploadingKey(target);
     try {
-      const url = await uploadAppAsset(file);
+      const res = await uploadAppAsset(file, 'lobby');
+      const url = res.publicUrl;
       if (target === 'bg') setPc((p) => ({ ...p, bg_image_url: url }));
       else if (target === 'logo') setPc((p) => ({ ...p, logo_url: url }));
       else {
