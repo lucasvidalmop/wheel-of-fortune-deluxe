@@ -726,23 +726,23 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             boxShadow: champion?.code === leftFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
           }}
         >
-          {leftFinalist && <FlagImg code={leftFinalist.code} size={30} />}
+          {leftFinalist && <FlagImg code={leftFinalist.code} size={34} fill />}
         </button>
         <div
-          className="rounded-full flex items-center justify-center"
+          className="rounded-full flex items-center justify-center overflow-hidden"
           style={{
             width: 88, height: 88,
             background: champion ? `radial-gradient(circle, ${accent}44, transparent 70%)` : "transparent",
             border: `2px dashed ${champion ? accent : `${muted}55`}`,
           }}
         >
-          {champion ? <FlagImg code={champion.code} size={66} /> : <Trophy size={40} style={{ color: muted }} />}
+          {champion ? <FlagImg code={champion.code} size={80} fill /> : <Trophy size={40} style={{ color: muted }} />}
         </div>
         <button
           type="button"
           disabled={!rightFinalist || disabled}
           onClick={() => rightFinalist && onPickChampion(rightFinalist.code)}
-          className="rounded-full flex items-center justify-center transition disabled:opacity-40 disabled:cursor-default"
+          className="rounded-full flex items-center justify-center transition disabled:opacity-40 disabled:cursor-default overflow-hidden"
           style={{
             width: 38, height: 38,
             border: `2px solid ${champion?.code === rightFinalist?.code && champion ? accent : `${muted}55`}`,
@@ -750,7 +750,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             boxShadow: champion?.code === rightFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
           }}
         >
-          {rightFinalist && <FlagImg code={rightFinalist.code} size={30} />}
+          {rightFinalist && <FlagImg code={rightFinalist.code} size={34} fill />}
         </button>
       </div>
       <div className="text-center min-h-[32px]">
