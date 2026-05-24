@@ -204,6 +204,65 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
         </button>
       </div>
 
+      {config && (
+        <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+          <h3 className="font-bold text-sm">Abertura das inscrições</h3>
+          <p className="text-xs text-muted-foreground">
+            Defina quando o bolão começa a aceitar inscrições. Antes dessa data, os usuários veem uma contagem regressiva. Deixe em branco para abrir imediatamente.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="datetime-local"
+              value={(() => {
+                if (!config.submission_deadline) return "";
+                const d = new Date(config.submission_deadline);
+                const tz = d.getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - tz).toISOString().slice(0, 16);
+              })()}
+              onChange={(e) => {
+                const v = e.target.value;
+                const iso = v ? new Date(v).toISOString() : null;
+                setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, submission_deadline: iso } : c));
+              }}
+              className="px-3 py-2 rounded-lg bg-muted text-sm"
+            />
+            <button
+              onClick={async () => {
+                setSaving(true);
+                const { error } = await supabase.from("bolao_configs")
+                  .update({ submission_deadline: config.submission_deadline })
+                  .eq("id", config.id);
+                setSaving(false);
+                if (error) toast.error("Erro ao salvar");
+                else toast.success("Abertura atualizada");
+              }}
+              disabled={saving}
+              className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 disabled:opacity-50">
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Salvar
+            </button>
+            {config.submission_deadline && (
+              <button
+                onClick={async () => {
+                  setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, submission_deadline: null } : c));
+                  const { error } = await supabase.from("bolao_configs")
+                    .update({ submission_deadline: null })
+                    .eq("id", config.id);
+                  if (error) toast.error("Erro ao limpar");
+                  else toast.success("Inscrições abertas imediatamente");
+                }}
+                className="px-3 py-2 rounded-lg bg-muted text-sm">
+                Limpar
+              </button>
+            )}
+          </div>
+          {config.submission_deadline && (
+            <div className="text-xs text-muted-foreground">
+              Abre em: {new Date(config.submission_deadline).toLocaleString("pt-BR")}
+            </div>
+          )}
+        </div>
+      )}
+
       {showOfficialEditor && config && (
         <div className="p-4 rounded-xl bg-card border border-border space-y-4">
           <div className="flex items-center justify-between">
