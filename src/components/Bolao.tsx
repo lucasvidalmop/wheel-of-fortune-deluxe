@@ -552,110 +552,92 @@ function R32MatchCard({ teamA, teamB, winnerCode, onPick, disabled, accent, mute
   );
 }
 
-function ColumnSlots({ count, getTeam, isSelected, onPick, accent, muted, mirror, size, disabled }: {
-  count: number;
-  getTeam: (i: number) => Team | undefined;
-  isSelected: (i: number) => boolean;
-  onPick: (i: number, code: string) => void;
-  accent: string; muted: string; mirror?: boolean; size: number; disabled?: boolean;
+// ─── Recursive bracket tree ─────────────────────────────────────────────────
+// Slot circle for any round beyond r32 (winner of two children).
+const ROUND_KEY_BY_DEPTH = ["", "r16", "qf", "sf", "final"] as const;
+const NEXT_ROUND_BY_DEPTH = ["r16", "qf", "sf", "final", "champion"] as const;
+const SLOT_SIZE_BY_DEPTH = [0, 30, 34, 38, 44];
+const R32_HEIGHT = 64;
+const GAP_BY_DEPTH = [6, 10, 16, 28, 0]; // gap between two children at this depth's parent
+
+type Ctx = {
+  r32: { slot: number; teamA?: Team; teamB?: Team }[];
+  bracket: BracketState;
+  teamByCode: Record<string, Team>;
+  pickWinner: (round: any, slot: number, code: string) => void;
+  accent: string; muted: string; disabled?: boolean;
+};
+
+function BracketSubTree({ depth, slot, mirror, ctx }: {
+  depth: 0 | 1 | 2 | 3 | 4;
+  slot: number;
+  mirror: boolean;
+  ctx: Ctx;
 }) {
+  if (depth === 0) {
+    const m = ctx.r32[slot];
+    return (
+      <div className="flex items-center" style={{ height: R32_HEIGHT }}>
+        <R32MatchCard
+          teamA={m?.teamA} teamB={m?.teamB}
+          winnerCode={ctx.bracket.r16?.[slot]}
+          onPick={(code) => ctx.pickWinner("r16", slot, code)}
+          disabled={ctx.disabled}
+          accent={ctx.accent} muted={ctx.muted} mirror={mirror}
+        />
+      </div>
+    );
+  }
+
+  const roundKey = ROUND_KEY_BY_DEPTH[depth];
+  const nextKey = NEXT_ROUND_BY_DEPTH[depth];
+  const code = ctx.bracket[roundKey]?.[slot];
+  const team = code ? ctx.teamByCode[code] : undefined;
+  const parentSlot = Math.floor(slot / 2);
+  const selected = !!code && ctx.bracket[nextKey]?.[parentSlot] === code;
+  const size = SLOT_SIZE_BY_DEPTH[depth];
+  const childGap = GAP_BY_DEPTH[depth - 1];
+
+  const connectorColor = `${ctx.muted}55`;
+  const connectorLen = 14;
+
   return (
-    <div
-      className="flex flex-col justify-around h-full px-2"
-      style={{
-        borderRight: mirror ? "none" : `1px solid ${muted}22`,
-        borderLeft: mirror ? `1px solid ${muted}22` : "none",
-      }}
-    >
-      {Array.from({ length: count }).map((_, i) => {
-        const t = getTeam(i);
-        return (
-          <MatchSlot
-            key={i}
-            team={t}
-            selected={isSelected(i)}
-            onClick={t ? () => onPick(i, t.code) : undefined}
-            disabled={disabled}
-            accent={accent}
-            muted={muted}
-            size={size}
-            mirror={mirror}
-            showName={false}
-          />
-        );
-      })}
+    <div className="flex items-center" style={{ flexDirection: mirror ? "row-reverse" : "row" }}>
+      <div className="flex flex-col justify-center" style={{ gap: childGap }}>
+        <BracketSubTree depth={(depth - 1) as any} slot={slot * 2} mirror={mirror} ctx={ctx} />
+        <BracketSubTree depth={(depth - 1) as any} slot={slot * 2 + 1} mirror={mirror} ctx={ctx} />
+      </div>
+      <div className="flex items-center">
+        <div style={{ width: connectorLen, height: 1, background: connectorColor }} />
+        <MatchSlot
+          team={team}
+          selected={selected}
+          onClick={team ? () => ctx.pickWinner(nextKey, parentSlot, team.code) : undefined}
+          disabled={ctx.disabled}
+          accent={ctx.accent} muted={ctx.muted}
+          size={size} mirror={false} showName={false}
+        />
+      </div>
     </div>
   );
 }
 
-function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted, text, disabled }: {
+function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted, disabled }: {
   side: "left" | "right";
   r32: { slot: number; teamA?: Team; teamB?: Team }[];
   bracket: BracketState;
   teamByCode: Record<string, Team>;
   pickWinner: (round: any, slot: number, code: string) => void;
-  accent: string; muted: string; text: string; disabled?: boolean;
+  accent: string; muted: string; disabled?: boolean;
 }) {
   const mirror = side === "right";
-  const r16Base = mirror ? 8 : 0;
-  const qfBase = mirror ? 4 : 0;
-  const sfBase = mirror ? 2 : 0;
-  const finalSlot = mirror ? 1 : 0;
-
-  const r16 = bracket.r16 || {};
-  const qf = bracket.qf || {};
-  const sf = bracket.sf || {};
-  const fin = bracket.final || {};
-
-  const c1 = (
-    <div className="flex flex-col justify-around h-full" key="c1">
-      {r32.map((m, i) => (
-        <R32MatchCard
-          key={i}
-          teamA={m.teamA} teamB={m.teamB}
-          winnerCode={r16[r16Base + i]}
-          onPick={(code) => pickWinner("r16", r16Base + i, code)}
-          disabled={disabled}
-          accent={accent} muted={muted} mirror={mirror}
-        />
-      ))}
+  const rootSlot = mirror ? 1 : 0;
+  const ctx: Ctx = { r32, bracket, teamByCode, pickWinner, accent, muted, disabled };
+  return (
+    <div className="flex items-center" style={{ justifyContent: mirror ? "flex-start" : "flex-end" }}>
+      <BracketSubTree depth={4} slot={rootSlot} mirror={mirror} ctx={ctx} />
     </div>
   );
-  const c2 = (
-    <ColumnSlots key="c2" count={8}
-      getTeam={(i) => teamByCode[r16[r16Base + i]]}
-      isSelected={(i) => !!r16[r16Base + i] && qf[qfBase + Math.floor(i / 2)] === r16[r16Base + i]}
-      onPick={(i, code) => pickWinner("qf", qfBase + Math.floor(i / 2), code)}
-      accent={accent} muted={muted} mirror={mirror} size={34} disabled={disabled}
-    />
-  );
-  const c3 = (
-    <ColumnSlots key="c3" count={4}
-      getTeam={(i) => teamByCode[qf[qfBase + i]]}
-      isSelected={(i) => !!qf[qfBase + i] && sf[sfBase + Math.floor(i / 2)] === qf[qfBase + i]}
-      onPick={(i, code) => pickWinner("sf", sfBase + Math.floor(i / 2), code)}
-      accent={accent} muted={muted} mirror={mirror} size={38} disabled={disabled}
-    />
-  );
-  const c4 = (
-    <ColumnSlots key="c4" count={2}
-      getTeam={(i) => teamByCode[sf[sfBase + i]]}
-      isSelected={(i) => !!sf[sfBase + i] && fin[finalSlot] === sf[sfBase + i]}
-      onPick={(i, code) => pickWinner("final", finalSlot, code)}
-      accent={accent} muted={muted} mirror={mirror} size={42} disabled={disabled}
-    />
-  );
-  const c5 = (
-    <ColumnSlots key="c5" count={1}
-      getTeam={() => teamByCode[fin[finalSlot]]}
-      isSelected={() => !!fin[finalSlot] && bracket.champion?.[0] === fin[finalSlot]}
-      onPick={(_i, code) => pickWinner("champion", 0, code)}
-      accent={accent} muted={muted} mirror={mirror} size={48} disabled={disabled}
-    />
-  );
-
-  const cols = mirror ? [c5, c4, c3, c2, c1] : [c1, c2, c3, c4, c5];
-  return <div className="flex flex-1 h-full items-stretch">{cols}</div>;
 }
 
 function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, accent, muted, text, disabled }: {
