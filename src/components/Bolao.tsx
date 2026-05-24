@@ -72,12 +72,14 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
   const [config, setConfig] = useState<any>(null);
   const [entry, setEntry] = useState<any>(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
+  const [notStarted, setNotStarted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
   const [picks, setPicks] = useState<Record<string, GroupPick>>({});
   const [bestThirds, setBestThirds] = useState<string[]>([]);
   const [bracket, setBracket] = useState<BracketState>({});
 
   const isLocked = !!entry && (entry.status === "submitted" || entry.status === "locked");
-  const readOnly = isLocked || deadlinePassed;
+  const readOnly = isLocked || deadlinePassed || notStarted;
 
   useEffect(() => {
     if (!open) return;
@@ -97,6 +99,11 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
         setConfig(data.config);
         setEntry(data.entry);
         setDeadlinePassed(!!data.deadlinePassed);
+        const deadline = data.config?.submission_deadline ? new Date(data.config.submission_deadline) : null;
+        const now = Date.now();
+        const notOpen = deadline ? now < deadline.getTime() : false;
+        setNotStarted(notOpen);
+        if (notOpen && deadline) setTimeLeft(Math.max(0, Math.floor((deadline.getTime() - now) / 1000)));
         // Hydrate picks
         const p: Record<string, GroupPick> = {};
         (data.config.groups as Group[]).forEach(g => { p[g.key] = { first_team: "", second_team: "", third_team: "" }; });
@@ -112,6 +119,18 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
     })();
     return () => { cancel = true; };
   }, [open, tag, authed?.email, authed?.account_id]);
+
+  // Countdown timer when bolão hasn't opened yet
+  useEffect(() => {
+    if (!notStarted || timeLeft <= 0) return;
+    const id = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) { clearInterval(id); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [notStarted, timeLeft]);
 
   const groups: Group[] = (config?.groups as Group[]) || [];
   const bracketTemplate: BracketTemplate = (config?.bracket_template as BracketTemplate) || [];
@@ -360,7 +379,35 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           </button>
         </div>
 
-        {!authed && (
+        {notStarted && config?.submission_deadline && (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center" style={{ color: text }}>
+            <Trophy size={48} style={{ color: accent, marginBottom: 16 }} />
+            <div className="text-xl font-bold mb-1">Inscrições em breve</div>
+            <div className="text-sm mb-6" style={{ color: muted }}>O bolão ainda não está aberto. Fique ligado!</div>
+            <div className="flex gap-3 text-center">
+              {(() => {
+                const d = Math.floor(timeLeft / 86400);
+                const h = Math.floor((timeLeft % 86400) / 3600);
+                const m = Math.floor((timeLeft % 3600) / 60);
+                const s = timeLeft % 60;
+                const box = (val: number, label: string) => (
+                  <div key={label} className="flex flex-col items-center">
+                    <div className="text-2xl font-black tabular-nums px-3 py-2 rounded-lg" style={{ background: cardBg, border: `1px solid ${accent}33`, color: accent }}>
+                      {String(val).padStart(2, "0")}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider mt-1" style={{ color: muted }}>{label}</div>
+                  </div>
+                );
+                return [box(d, "dias"), box(h, "horas"), box(m, "min"), box(s, "seg")];
+              })()}
+            </div>
+            <div className="mt-4 text-xs" style={{ color: muted }}>
+              Abertura: {new Date(config.submission_deadline).toLocaleString("pt-BR")}
+            </div>
+          </div>
+        )}
+
+        {!authed && !notStarted && (
           <div className="p-6 text-center" style={{ color: muted }}>
             Faça login na aba "Minhas apostas" para participar do bolão.
           </div>
