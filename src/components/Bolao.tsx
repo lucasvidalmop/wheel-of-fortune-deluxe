@@ -363,33 +363,62 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                       const p = picks[g.key] || { first_team: "", second_team: "", third_team: "" };
                       return (
                         <div key={g.key} className="rounded-xl p-3" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="font-bold" style={{ color: accent }}>Grupo {g.key}</div>
-                            <div className="text-[10px] flex gap-3" style={{ color: muted }}>
-                              <span>1º</span><span>2º</span><span>3º</span>
-                            </div>
-                          </div>
-                          <div className="space-y-1.5">
-                            {g.teams.map(t => (
-                              <div key={t.code} className="flex items-center justify-between gap-2 p-1.5 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <FlagImg code={t.code} size={22} />
-                                  <span className="text-sm truncate">{t.name}</span>
+                          {(() => {
+                            const POS_COLORS: Record<string, string> = {
+                              first_team: "#facc15",   // gold
+                              second_team: "#cbd5e1",  // silver
+                              third_team: "#f97316",   // bronze/orange
+                            };
+                            const POS_LABEL: Record<string, string> = {
+                              first_team: "1º",
+                              second_team: "2º",
+                              third_team: "3º",
+                            };
+                            const POSITIONS = ["first_team", "second_team", "third_team"] as const;
+                            return (
+                              <>
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="font-bold" style={{ color: accent }}>Grupo {g.key}</div>
+                                  <div className="flex gap-1.5 shrink-0">
+                                    {POSITIONS.map(pos => (
+                                      <span key={pos} className="w-6 h-6 flex items-center justify-center rounded-full text-[10px] font-bold"
+                                        style={{ background: `${POS_COLORS[pos]}22`, color: POS_COLORS[pos], border: `1px solid ${POS_COLORS[pos]}55` }}>
+                                        {POS_LABEL[pos]}
+                                      </span>
+                                    ))}
+                                  </div>
                                 </div>
-                                <div className="flex gap-2 shrink-0">
-                                  {(["first_team", "second_team", "third_team"] as const).map(pos => {
-                                    const checked = p[pos] === t.code;
-                                    return (
-                                      <button key={pos} onClick={() => setPosition(g.key, pos, t.code)} disabled={readOnly}
-                                        className="w-5 h-5 rounded-full border-2 transition"
-                                        style={{ borderColor: checked ? accent : `${accent}66`, background: checked ? accent : "transparent" }}
-                                        aria-label={pos} />
-                                    );
-                                  })}
+                                <div className="space-y-1.5">
+                                  {g.teams.map(t => (
+                                    <div key={t.code} className="flex items-center justify-between gap-2 p-1.5 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <FlagImg code={t.code} size={22} />
+                                        <span className="text-sm truncate">{t.name}</span>
+                                      </div>
+                                      <div className="flex gap-1.5 shrink-0">
+                                        {POSITIONS.map(pos => {
+                                          const checked = p[pos] === t.code;
+                                          const color = POS_COLORS[pos];
+                                          return (
+                                            <button key={pos} onClick={() => setPosition(g.key, pos, t.code)} disabled={readOnly}
+                                              className="w-6 h-6 rounded-full border-2 transition flex items-center justify-center text-[9px] font-bold"
+                                              style={{
+                                                borderColor: color,
+                                                background: checked ? color : "transparent",
+                                                color: checked ? "#0a0a14" : `${color}cc`,
+                                              }}
+                                              aria-label={POS_LABEL[pos]}>
+                                              {POS_LABEL[pos]}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                              </div>
-                            ))}
-                          </div>
+                              </>
+                            );
+                          })()}
                           {!readOnly && (
                             <button onClick={() => randomGroup(g.key)} className="mt-2 w-full text-xs py-1.5 rounded-md flex items-center justify-center gap-1.5 hover:opacity-80" style={{ background: "#16a34a22", color: "#22c55e", border: "1px solid #22c55e55" }}>
                               <Shuffle size={12} /> Sorteio aleatório
