@@ -186,7 +186,12 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           thirdSlots.push(slot * 2 + (side === "a" ? 0 : 1));
           return undefined;
         }
-        return resolveSlotTeam(spec, picks, bestThirds, groups);
+        const team = resolveSlotTeam(spec, picks, bestThirds, groups);
+        if (team && !used.has(team.code)) {
+          used.add(team.code);
+          return team;
+        }
+        return undefined;
       };
       return { slot, teamA: resolve(a, "a"), teamB: resolve(b, "b") };
     });
@@ -198,6 +203,8 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
       const slotIdx = Math.floor(flat / 2);
       const side = flat % 2 === 0 ? "teamA" : "teamB";
       const code = leftover[li++];
+      if (used.has(code)) continue;
+      used.add(code);
       const team = groups.flatMap(g => g.teams).find(t => t.code === code);
       (tentative[slotIdx] as any)[side] = team;
     }
