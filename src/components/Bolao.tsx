@@ -187,11 +187,8 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           return undefined;
         }
         const team = resolveSlotTeam(spec, picks, bestThirds, groups);
-        if (team && !used.has(team.code)) {
-          used.add(team.code);
-          return team;
-        }
-        return undefined;
+        if (team) used.add(team.code);
+        return team;
       };
       return { slot, teamA: resolve(a, "a"), teamB: resolve(b, "b") };
     });
