@@ -412,7 +412,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                                       <button
                                         type="button"
                                         key={t.code}
-                                        onClick={cycle}
+                                        onClick={handleClick}
                                         disabled={readOnly}
                                         className="w-full flex items-center justify-between gap-2 p-2 rounded-md transition text-left hover:opacity-90 disabled:cursor-not-allowed"
                                         style={{
