@@ -260,8 +260,24 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
           {config.submission_deadline && (
             <div className="text-xs text-muted-foreground">
               Abre em: {new Date(config.submission_deadline).toLocaleString("pt-BR")}
-            </div>
-          )}
+        </div>
+      )}
+
+      {config && (
+        <PrizesEditor
+          key={config.id}
+          initial={Array.isArray(config.page_config?.prizes) ? config.page_config.prizes : DEFAULT_PRIZES}
+          onSave={async (prizes) => {
+            const nextPC = { ...(config.page_config || {}), prizes };
+            const { error } = await supabase.from("bolao_configs")
+              .update({ page_config: nextPC, updated_at: new Date().toISOString() })
+              .eq("id", config.id);
+            if (error) { toast.error("Erro ao salvar premiação"); return; }
+            setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, page_config: nextPC } : c));
+            toast.success("Premiação salva");
+          }}
+        />
+      )}
         </div>
       )}
 
