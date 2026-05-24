@@ -389,32 +389,37 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                                   </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                  {g.teams.map(t => (
-                                    <div key={t.code} className="flex items-center justify-between gap-2 p-1.5 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
-                                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <FlagImg code={t.code} size={22} />
-                                        <span className="text-sm truncate">{t.name}</span>
+                                  {g.teams.map(t => {
+                                    const selectedPos = POSITIONS.find(pos => p[pos] === t.code);
+                                    const selColor = selectedPos ? POS_COLORS[selectedPos] : null;
+                                    return (
+                                      <div key={t.code} className="flex items-center justify-between gap-2 p-1.5 rounded-md transition" style={{
+                                        background: selColor ? `${selColor}26` : "rgba(255,255,255,0.03)",
+                                        border: selColor ? `1px solid ${selColor}` : "1px solid transparent",
+                                        boxShadow: selColor ? `0 0 0 1px ${selColor}33 inset` : "none",
+                                      }}>
+                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                          <FlagImg code={t.code} size={22} />
+                                          <span className="text-sm truncate" style={{ color: selColor || undefined, fontWeight: selColor ? 600 : 400 }}>{t.name}</span>
+                                        </div>
+                                        <div className="flex gap-1.5 shrink-0">
+                                          {POSITIONS.map(pos => {
+                                            const checked = p[pos] === t.code;
+                                            const color = POS_COLORS[pos];
+                                            return (
+                                              <button key={pos} onClick={() => setPosition(g.key, pos, t.code)} disabled={readOnly}
+                                                className="w-5 h-5 rounded-full border-2 transition"
+                                                style={{
+                                                  borderColor: checked ? color : `${color}66`,
+                                                  background: checked ? color : "transparent",
+                                                }}
+                                                aria-label={POS_LABEL[pos]} />
+                                            );
+                                          })}
+                                        </div>
                                       </div>
-                                      <div className="flex gap-1.5 shrink-0">
-                                        {POSITIONS.map(pos => {
-                                          const checked = p[pos] === t.code;
-                                          const color = POS_COLORS[pos];
-                                          return (
-                                            <button key={pos} onClick={() => setPosition(g.key, pos, t.code)} disabled={readOnly}
-                                              className="w-6 h-6 rounded-full border-2 transition flex items-center justify-center text-[9px] font-bold"
-                                              style={{
-                                                borderColor: color,
-                                                background: checked ? color : "transparent",
-                                                color: checked ? "#0a0a14" : `${color}cc`,
-                                              }}
-                                              aria-label={POS_LABEL[pos]}>
-                                              {POS_LABEL[pos]}
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </>
                             );
