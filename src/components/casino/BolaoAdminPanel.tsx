@@ -8,6 +8,7 @@ interface Props { ownerId: string }
 type Team = { code: string; name: string; flag?: string };
 type Group = { key: string; teams: Team[] };
 
+interface Prize { label: string; value: string; highlight?: boolean }
 interface BolaoConfig {
   id: string; owner_id: string; tag: string; name: string;
   submission_deadline: string | null;
@@ -16,6 +17,7 @@ interface BolaoConfig {
   groups: Group[];
   bracket_template: any;
   official_results: any;
+  page_config: any;
 }
 
 interface Entry {
