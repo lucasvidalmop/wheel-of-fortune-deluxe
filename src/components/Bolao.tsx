@@ -660,6 +660,25 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                   </div>
 
                   <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                    <div className="font-bold text-sm mb-3" style={{ color: accent }}>Premiação</div>
+                    <div className="space-y-2">
+                      {[
+                        { pos: "🥇 1º Lugar", value: "R$ 2.000", highlight: true },
+                        { pos: "🥈 2º Lugar", value: "R$ 1.200", highlight: true },
+                        { pos: "🥉 3º Lugar", value: "R$ 700", highlight: true },
+                        { pos: "4º Lugar", value: "R$ 400", highlight: false },
+                        { pos: "5º Lugar", value: "R$ 250", highlight: false },
+                        { pos: "6º ao 10º Lugar", value: "R$ 90 cada", highlight: false },
+                      ].map((p, i) => (
+                        <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: p.highlight ? `${accent}18` : i % 2 === 0 ? `${accent}0d` : "transparent", border: p.highlight ? `1px solid ${accent}44` : "1px solid transparent" }}>
+                          <span className="text-sm font-semibold" style={{ color: text }}>{p.pos}</span>
+                          <span className="text-sm font-bold tabular-nums" style={{ color: p.highlight ? accent : muted }}>{p.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
                     <div className="font-bold text-sm mb-2" style={{ color: accent }}>Desempate</div>
                     <p className="text-sm" style={{ color: muted }}>
                       Em caso de empate na pontuação, o critério de desempate é o horário de envio do palpite — quem enviou primeiro fica na frente.
