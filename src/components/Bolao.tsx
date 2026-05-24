@@ -186,7 +186,12 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           thirdSlots.push(slot * 2 + (side === "a" ? 0 : 1));
           return undefined;
         }
-        return resolveSlotTeam(spec, picks, bestThirds, groups);
+        const team = resolveSlotTeam(spec, picks, bestThirds, groups);
+        if (team && !used.has(team.code)) {
+          used.add(team.code);
+          return team;
+        }
+        return undefined;
       };
       return { slot, teamA: resolve(a, "a"), teamB: resolve(b, "b") };
     });
@@ -198,6 +203,8 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
       const slotIdx = Math.floor(flat / 2);
       const side = flat % 2 === 0 ? "teamA" : "teamB";
       const code = leftover[li++];
+      if (used.has(code)) continue;
+      used.add(code);
       const team = groups.flatMap(g => g.teams).find(t => t.code === code);
       (tentative[slotIdx] as any)[side] = team;
     }
@@ -217,24 +224,56 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
     setBracket(prev => {
       const order = ["r16", "qf", "sf", "final", "champion"] as const;
       const startIdx = order.indexOf(round as any);
-      const next: BracketState = { ...prev };
-      next[round] = { ...(prev[round] || {}), [slot]: code };
-      // Only clear downstream picks that were derived from the OLD value at this slot.
-      // Siblings' winners in other branches remain untouched.
-      let oldCode = prev[round]?.[slot];
-      let curSlot = slot;
-      for (let i = startIdx + 1; i < order.length; i++) {
-        const r = order[i];
-        curSlot = Math.floor(curSlot / 2);
-        const cur = next[r]?.[curSlot];
-        if (oldCode && cur === oldCode) {
-          next[r] = { ...next[r] };
-          delete next[r]![curSlot];
-          oldCode = cur;
-        } else {
-          break;
+      // Deep-clone each round map immutably
+      const next: BracketState = {};
+      for (const r of order) next[r] = { ...(prev[r] || {}) };
+
+      // 1) Cascade-clear the OLD winner at this slot from all downstream rounds
+      const oldCode = prev[round]?.[slot];
+      if (oldCode && oldCode !== code) {
+        let cs = slot;
+        for (let i = startIdx; i < order.length; i++) {
+          const r = order[i];
+          if (next[r]?.[cs] === oldCode) {
+            delete next[r]![cs];
+            cs = Math.floor(cs / 2);
+          } else {
+            break;
+          }
         }
       }
+
+      // 2) Set the new winner at the picked slot
+      next[round] = { ...next[round], [slot]: code };
+
+      // 3) Remove `code` from any OTHER slot in current and downstream rounds
+      //    (a team can only progress in one branch). Cascade-clear those
+      //    duplicates' parents too.
+      for (let i = startIdx; i < order.length; i++) {
+        const r = order[i];
+        const legitSlot = slot >> (i - startIdx); // path of the new pick
+        for (const sKey of Object.keys(next[r] || {})) {
+          const s = Number(sKey);
+          if (next[r]![s] === code && s !== legitSlot) {
+            // delete this duplicate AND cascade-clear its own parents containing code
+            let cs = s;
+            for (let j = i; j < order.length; j++) {
+              const r2 = order[j];
+              if (next[r2]?.[cs] === code && (j !== startIdx || cs !== slot)) {
+                // never delete the slot we just set
+                if (!(r2 === round && cs === slot)) {
+                  next[r2] = { ...next[r2] };
+                  delete next[r2]![cs];
+                }
+                cs = Math.floor(cs / 2);
+              } else {
+                break;
+              }
+            }
+          }
+        }
+      }
+
       return next;
     });
   };
