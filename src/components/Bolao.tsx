@@ -718,7 +718,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
           type="button"
           disabled={!leftFinalist || disabled}
           onClick={() => leftFinalist && onPickChampion(leftFinalist.code)}
-          className="rounded-full flex items-center justify-center transition disabled:opacity-40 disabled:cursor-default"
+          className="rounded-full flex items-center justify-center transition disabled:opacity-40 disabled:cursor-default overflow-hidden"
           style={{
             width: 38, height: 38,
             border: `2px solid ${champion?.code === leftFinalist?.code && champion ? accent : `${muted}55`}`,
