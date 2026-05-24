@@ -3235,8 +3235,8 @@ function Dashboard() {
         onThemeChange={handleThemeChange}
       />
       <div id="theme-bg-layer" className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-15" style={{ backgroundImage: 'var(--theme-bg-image, none)' }} />
-      {/* Background ambient glow */}
-      <div className="fixed inset-0 pointer-events-none z-0">
+      {/* Background ambient glow — desktop only (expensive on mobile) */}
+      <div className="hidden lg:block fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[150px]" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-accent/[0.03] blur-[120px]" />
       </div>
