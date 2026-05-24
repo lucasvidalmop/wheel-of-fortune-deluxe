@@ -78,6 +78,20 @@ Deno.serve(async (req) => {
       }
     }
 
+    const { data: topRows } = await supabase
+      .from("bolao_entries")
+      .select("user_name, account_id, score, status, submitted_at")
+      .eq("bolao_config_id", bolao.id)
+      .in("status", ["submitted", "locked"])
+      .order("score", { ascending: false })
+      .order("submitted_at", { ascending: true })
+      .limit(10);
+    const ranking = (topRows || []).map((r: any) => ({
+      name: r.user_name || "",
+      account_id: r.account_id || "",
+      score: r.score || 0,
+    }));
+
     return new Response(JSON.stringify({
       found: true,
       config: publicConfig,
@@ -85,6 +99,7 @@ Deno.serve(async (req) => {
       entry,
       entryGroups,
       entryBracket,
+      ranking,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("get-bolao error", err);
