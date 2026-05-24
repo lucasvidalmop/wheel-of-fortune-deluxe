@@ -643,8 +643,8 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                     <div className="space-y-2">
                       {[
                         { label: "Seleção classificada (top 2 ou entre os 8 melhores 3º)", pts: 5 },
-                        { label: "Posição exata no grupo (1º, 2º ou 3º)", pts: 10 },
                         { label: "Terceiro escolhido entre os 8 melhores reais", pts: 8 },
+                        { label: "Posição exata no grupo (1º, 2º ou 3º)", pts: 10 },
                         { label: "Acerto de seleção nas oitavas de final", pts: 10 },
                         { label: "Acerto de seleção nas quartas de final", pts: 15 },
                         { label: "Acerto de seleção na semifinal", pts: 25 },
