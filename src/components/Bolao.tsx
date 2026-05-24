@@ -99,6 +99,11 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
         setConfig(data.config);
         setEntry(data.entry);
         setDeadlinePassed(!!data.deadlinePassed);
+        const deadline = data.config?.submission_deadline ? new Date(data.config.submission_deadline) : null;
+        const now = Date.now();
+        const notOpen = deadline ? now < deadline.getTime() : false;
+        setNotStarted(notOpen);
+        if (notOpen && deadline) setTimeLeft(Math.max(0, Math.floor((deadline.getTime() - now) / 1000)));
         // Hydrate picks
         const p: Record<string, GroupPick> = {};
         (data.config.groups as Group[]).forEach(g => { p[g.key] = { first_team: "", second_team: "", third_team: "" }; });
@@ -114,6 +119,18 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
     })();
     return () => { cancel = true; };
   }, [open, tag, authed?.email, authed?.account_id]);
+
+  // Countdown timer when bolão hasn't opened yet
+  useEffect(() => {
+    if (!notStarted || timeLeft <= 0) return;
+    const id = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) { clearInterval(id); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [notStarted, timeLeft]);
 
   const groups: Group[] = (config?.groups as Group[]) || [];
   const bracketTemplate: BracketTemplate = (config?.bracket_template as BracketTemplate) || [];
