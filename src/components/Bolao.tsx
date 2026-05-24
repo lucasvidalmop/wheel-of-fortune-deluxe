@@ -411,14 +411,14 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                     <div className="text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: accent }}>Mata-mata</div>
                     <div className="text-xs" style={{ color: muted }}>Clique nos vencedores de cada confronto.</div>
                   </div>
-                  <div className="flex items-stretch justify-center gap-0 mx-auto" style={{ minWidth: 880, height: 720 }}>
+                  <div className="flex items-center justify-center gap-2 mx-auto py-4" style={{ minWidth: 880 }}>
                     <BracketHalf
                       side="left"
-                      r32={r32Slots.slice(0, 8)}
+                      r32={r32Slots}
                       bracket={bracket}
                       teamByCode={teamByCode}
                       pickWinner={pickWinner}
-                      accent={accent} muted={muted} text={text}
+                      accent={accent} muted={muted}
                       disabled={readOnly}
                     />
                     <BracketCenter
@@ -430,11 +430,11 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                     />
                     <BracketHalf
                       side="right"
-                      r32={r32Slots.slice(8, 16)}
+                      r32={r32Slots}
                       bracket={bracket}
                       teamByCode={teamByCode}
                       pickWinner={pickWinner}
-                      accent={accent} muted={muted} text={text}
+                      accent={accent} muted={muted}
                       disabled={readOnly}
                     />
                   </div>
