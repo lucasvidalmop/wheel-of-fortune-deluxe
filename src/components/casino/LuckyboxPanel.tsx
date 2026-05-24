@@ -854,8 +854,8 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
           {tokensLoading ? (
             <div className="p-6 text-muted-foreground animate-pulse">Carregando usuários...</div>
           ) : (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <table className="w-full text-sm min-w-[760px]">
                 <thead className="bg-white/5 text-xs uppercase tracking-wider">
                   <tr>
                     <th className="p-3 w-10">
