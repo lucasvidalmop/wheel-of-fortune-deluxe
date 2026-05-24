@@ -68,7 +68,7 @@ const ROUND_SIZES: Record<string, number> = { r16: 16, qf: 8, sf: 4, final: 2, c
 export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", bg = "#0a0a14", cardBg = "#11111c", text = "#ffffff", muted = "#94a3b8" }: Props) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [tab, setTab] = useState<"groups" | "bracket">("groups");
+  const [tab, setTab] = useState<"groups" | "bracket" | "rules">("groups");
   const [config, setConfig] = useState<any>(null);
   const [entry, setEntry] = useState<any>(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
@@ -426,7 +426,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           <>
             {/* Tabs */}
             <div className="flex items-end gap-1 px-4 pt-3 border-b relative" style={{ borderColor: `${accent}22` }}>
-              {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["bracket", "Mata-mata"]] as const).map(([k, l]) => (
+              {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["bracket", "Mata-mata"], ["rules", "Regras"]] as const).map(([k, l]) => (
                 <button key={k} onClick={() => setTab(k)} className="px-4 py-2 rounded-t-lg text-sm font-medium transition"
                   style={{ background: tab === k ? cardBg : "transparent", color: tab === k ? text : muted, borderBottom: tab === k ? `2px solid ${accent}` : "2px solid transparent" }}>
                   {l}
@@ -621,6 +621,49 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                       accent={accent} muted={muted}
                       disabled={readOnly}
                     />
+                  </div>
+                </div>
+              )}
+
+              {tab === "rules" && (
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                    <div className="font-bold text-sm mb-3" style={{ color: accent }}>Como funciona</div>
+                    <ul className="space-y-2 text-sm" style={{ color: muted }}>
+                      <li className="flex gap-2"><span style={{ color: accent }}>1.</span> Preencha a classificação dos 12 grupos (1º, 2º e 3º colocados).</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>2.</span> Os 8 melhores terceiros colocados são definidos automaticamente por ordem de grupos.</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>3.</span> Monte o mata-mata clicando nos vencedores de cada confronto até o campeão.</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>4.</span> Envie seu palpite uma única vez. Após o envio, não é possível alterar.</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>5.</span> A pontuação é calculada automaticamente conforme os resultados oficiais.</li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                    <div className="font-bold text-sm mb-3" style={{ color: accent }}>Pontuação</div>
+                    <div className="space-y-2">
+                      {[
+                        { label: "Seleção classificada (top 2 ou entre os 8 melhores 3º)", pts: 5 },
+                        { label: "Posição exata no grupo (1º, 2º ou 3º)", pts: 10 },
+                        { label: "Terceiro escolhido entre os 8 melhores reais", pts: 8 },
+                        { label: "Acerto de seleção nas oitavas de final", pts: 10 },
+                        { label: "Acerto de seleção nas quartas de final", pts: 15 },
+                        { label: "Acerto de seleção na semifinal", pts: 25 },
+                        { label: "Acerto de finalista", pts: 40 },
+                        { label: "Acerto do campeão", pts: 80 },
+                      ].map((r, i) => (
+                        <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-md" style={{ background: i % 2 === 0 ? `${accent}0d` : "transparent" }}>
+                          <span className="text-sm" style={{ color: text }}>{r.label}</span>
+                          <span className="text-sm font-bold tabular-nums" style={{ color: accent }}>+{r.pts} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                    <div className="font-bold text-sm mb-2" style={{ color: accent }}>Desempate</div>
+                    <p className="text-sm" style={{ color: muted }}>
+                      Em caso de empate na pontuação, o critério de desempate é o horário de envio do palpite — quem enviou primeiro fica na frente.
+                    </p>
                   </div>
                 </div>
               )}
