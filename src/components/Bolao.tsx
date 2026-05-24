@@ -115,6 +115,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
         const br: BracketState = {};
         (data.entryBracket || []).forEach((b: any) => { (br[b.round] ||= {})[b.slot] = b.team_code; });
         setBracket(br);
+        setRanking(Array.isArray(data.ranking) ? data.ranking : []);
       } finally {
         setLoading(false);
       }
