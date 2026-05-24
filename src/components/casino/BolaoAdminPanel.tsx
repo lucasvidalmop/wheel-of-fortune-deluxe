@@ -476,3 +476,70 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
     </div>
   );
 }
+
+const DEFAULT_PRIZES: Prize[] = [
+  { label: "🥇 1º Lugar", value: "R$ 2.000", highlight: true },
+  { label: "🥈 2º Lugar", value: "R$ 1.200", highlight: true },
+  { label: "🥉 3º Lugar", value: "R$ 700", highlight: true },
+  { label: "4º Lugar", value: "R$ 400" },
+  { label: "5º Lugar", value: "R$ 250" },
+  { label: "6º ao 10º Lugar", value: "R$ 90 cada" },
+];
+
+function PrizesEditor({ initial, onSave }: { initial: Prize[]; onSave: (p: Prize[]) => Promise<void> }) {
+  const [prizes, setPrizes] = useState<Prize[]>(initial);
+  const [saving, setSaving] = useState(false);
+
+  const update = (i: number, patch: Partial<Prize>) =>
+    setPrizes(p => p.map((x, idx) => idx === i ? { ...x, ...patch } : x));
+  const remove = (i: number) => setPrizes(p => p.filter((_, idx) => idx !== i));
+  const add = () => setPrizes(p => [...p, { label: `${p.length + 1}º Lugar`, value: "R$ 0", highlight: false }]);
+  const move = (i: number, dir: -1 | 1) => {
+    setPrizes(p => {
+      const j = i + dir;
+      if (j < 0 || j >= p.length) return p;
+      const next = [...p]; [next[i], next[j]] = [next[j], next[i]]; return next;
+    });
+  };
+
+  return (
+    <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-sm">Premiação</h3>
+          <p className="text-xs text-muted-foreground">Exibida na aba "Regras" do bolão para os participantes.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setPrizes(DEFAULT_PRIZES)} className="px-3 py-1.5 rounded-lg bg-muted text-xs">Restaurar padrão</button>
+          <button onClick={add} className="px-3 py-1.5 rounded-lg bg-muted text-xs">+ Adicionar</button>
+          <button onClick={async () => { setSaving(true); await onSave(prizes); setSaving(false); }} disabled={saving}
+            className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs flex items-center gap-2 disabled:opacity-50">
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Salvar
+          </button>
+        </div>
+      </div>
+      <div className="space-y-2">
+        {prizes.map((p, i) => (
+          <div key={i} className="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border">
+            <div className="flex flex-col gap-0.5">
+              <button onClick={() => move(i, -1)} className="text-xs px-1 hover:text-primary" disabled={i === 0}>▲</button>
+              <button onClick={() => move(i, 1)} className="text-xs px-1 hover:text-primary" disabled={i === prizes.length - 1}>▼</button>
+            </div>
+            <input value={p.label} onChange={e => update(i, { label: e.target.value })}
+              placeholder="Posição (ex: 🥇 1º Lugar)"
+              className="flex-1 min-w-[180px] px-2 py-1.5 rounded bg-background border border-border text-sm" />
+            <input value={p.value} onChange={e => update(i, { value: e.target.value })}
+              placeholder="Prêmio (ex: R$ 2.000)"
+              className="w-40 px-2 py-1.5 rounded bg-background border border-border text-sm" />
+            <label className="flex items-center gap-1 text-xs text-muted-foreground">
+              <input type="checkbox" checked={!!p.highlight} onChange={e => update(i, { highlight: e.target.checked })} />
+              Destaque
+            </label>
+            <button onClick={() => remove(i)} className="px-2 py-1.5 rounded bg-destructive/20 text-destructive text-xs">Remover</button>
+          </div>
+        ))}
+        {!prizes.length && <div className="text-xs text-muted-foreground p-2">Nenhum prêmio configurado.</div>}
+      </div>
+    </div>
+  );
+}
