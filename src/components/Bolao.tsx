@@ -601,10 +601,10 @@ function R32MatchCard({ teamA, teamB, winnerCode, onPick, disabled, accent, mute
 }
 
 // ─── Recursive bracket tree ─────────────────────────────────────────────────
-// Slot circle for any round beyond r32 (winner of two children).
-const ROUND_KEY_BY_DEPTH = ["", "r16", "qf", "sf", "final"] as const;
-const NEXT_ROUND_BY_DEPTH = ["r16", "qf", "sf", "final", "champion"] as const;
-const SLOT_SIZE_BY_DEPTH = [0, 30, 34, 38, 44];
+// Each node displays the winner circle for that exact match slot.
+const ROUND_KEY_BY_DEPTH = ["r16", "qf", "sf", "final"] as const;
+const NEXT_ROUND_BY_DEPTH = ["qf", "sf", "final", "champion"] as const;
+const SLOT_SIZE_BY_DEPTH = [30, 34, 38, 44];
 const R32_HEIGHT = 64;
 const GAP_BY_DEPTH = [6, 10, 16, 28, 0]; // gap between two children at this depth's parent
 
@@ -617,15 +617,25 @@ type Ctx = {
 };
 
 function BracketSubTree({ depth, slot, mirror, ctx }: {
-  depth: 0 | 1 | 2 | 3 | 4;
+  depth: 0 | 1 | 2 | 3;
   slot: number;
   mirror: boolean;
   ctx: Ctx;
 }) {
+  const roundKey = ROUND_KEY_BY_DEPTH[depth];
+  const nextKey = NEXT_ROUND_BY_DEPTH[depth];
+  const code = ctx.bracket[roundKey]?.[slot];
+  const team = code ? ctx.teamByCode[code] : undefined;
+  const parentSlot = nextKey === "champion" ? 0 : Math.floor(slot / 2);
+  const selected = !!code && ctx.bracket[nextKey]?.[parentSlot] === code;
+  const size = SLOT_SIZE_BY_DEPTH[depth];
+  const connectorColor = `${ctx.muted}55`;
+  const connectorLen = 14;
+
   if (depth === 0) {
     const m = ctx.r32[slot];
     return (
-      <div className="flex items-center" style={{ height: R32_HEIGHT }}>
+      <div className="flex items-center" style={{ height: R32_HEIGHT, flexDirection: mirror ? "row-reverse" : "row" }}>
         <R32MatchCard
           teamA={m?.teamA} teamB={m?.teamB}
           winnerCode={ctx.bracket.r16?.[slot]}
@@ -633,21 +643,21 @@ function BracketSubTree({ depth, slot, mirror, ctx }: {
           disabled={ctx.disabled}
           accent={ctx.accent} muted={ctx.muted} mirror={mirror}
         />
+        <div className="flex items-center" style={{ flexDirection: mirror ? "row-reverse" : "row" }}>
+          <div style={{ width: connectorLen, height: 1, background: connectorColor }} />
+          <MatchSlot
+            team={team}
+            selected={selected}
+            onClick={team ? () => ctx.pickWinner(nextKey, parentSlot, team.code) : undefined}
+            disabled={ctx.disabled}
+            accent={ctx.accent} muted={ctx.muted}
+            size={size} mirror={false} showName={false}
+          />
+        </div>
       </div>
     );
   }
-
-  const roundKey = ROUND_KEY_BY_DEPTH[depth];
-  const nextKey = NEXT_ROUND_BY_DEPTH[depth];
-  const code = ctx.bracket[roundKey]?.[slot];
-  const team = code ? ctx.teamByCode[code] : undefined;
-  const parentSlot = Math.floor(slot / 2);
-  const selected = !!code && ctx.bracket[nextKey]?.[parentSlot] === code;
-  const size = SLOT_SIZE_BY_DEPTH[depth];
   const childGap = GAP_BY_DEPTH[depth - 1];
-
-  const connectorColor = `${ctx.muted}55`;
-  const connectorLen = 14;
 
   return (
     <div className="flex items-center" style={{ flexDirection: mirror ? "row-reverse" : "row" }}>
@@ -655,7 +665,7 @@ function BracketSubTree({ depth, slot, mirror, ctx }: {
         <BracketSubTree depth={(depth - 1) as any} slot={slot * 2} mirror={mirror} ctx={ctx} />
         <BracketSubTree depth={(depth - 1) as any} slot={slot * 2 + 1} mirror={mirror} ctx={ctx} />
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center" style={{ flexDirection: mirror ? "row-reverse" : "row" }}>
         <div style={{ width: connectorLen, height: 1, background: connectorColor }} />
         <MatchSlot
           team={team}
@@ -683,7 +693,7 @@ function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted
   const ctx: Ctx = { r32, bracket, teamByCode, pickWinner, accent, muted, disabled };
   return (
     <div className="flex items-center" style={{ justifyContent: mirror ? "flex-start" : "flex-end" }}>
-      <BracketSubTree depth={4} slot={rootSlot} mirror={mirror} ctx={ctx} />
+      <BracketSubTree depth={3} slot={rootSlot} mirror={mirror} ctx={ctx} />
     </div>
   );
 }
