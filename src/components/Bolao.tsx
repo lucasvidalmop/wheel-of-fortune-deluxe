@@ -68,7 +68,7 @@ const ROUND_SIZES: Record<string, number> = { r16: 16, qf: 8, sf: 4, final: 2, c
 export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", bg = "#0a0a14", cardBg = "#11111c", text = "#ffffff", muted = "#94a3b8" }: Props) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [tab, setTab] = useState<"groups" | "bracket">("groups");
+  const [tab, setTab] = useState<"groups" | "bracket" | "rules">("groups");
   const [config, setConfig] = useState<any>(null);
   const [entry, setEntry] = useState<any>(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
