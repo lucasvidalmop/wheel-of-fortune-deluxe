@@ -693,7 +693,7 @@ function BracketHalf({ side, r32, bracket, teamByCode, pickWinner, accent, muted
   const ctx: Ctx = { r32, bracket, teamByCode, pickWinner, accent, muted, disabled };
   return (
     <div className="flex items-center" style={{ justifyContent: mirror ? "flex-start" : "flex-end" }}>
-      <BracketSubTree depth={4} slot={rootSlot} mirror={mirror} ctx={ctx} />
+      <BracketSubTree depth={3} slot={rootSlot} mirror={mirror} ctx={ctx} />
     </div>
   );
 }
