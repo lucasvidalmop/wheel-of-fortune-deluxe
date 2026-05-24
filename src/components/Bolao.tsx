@@ -72,12 +72,14 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
   const [config, setConfig] = useState<any>(null);
   const [entry, setEntry] = useState<any>(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
+  const [notStarted, setNotStarted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
   const [picks, setPicks] = useState<Record<string, GroupPick>>({});
   const [bestThirds, setBestThirds] = useState<string[]>([]);
   const [bracket, setBracket] = useState<BracketState>({});
 
   const isLocked = !!entry && (entry.status === "submitted" || entry.status === "locked");
-  const readOnly = isLocked || deadlinePassed;
+  const readOnly = isLocked || deadlinePassed || notStarted;
 
   useEffect(() => {
     if (!open) return;
