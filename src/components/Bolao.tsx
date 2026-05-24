@@ -624,6 +624,49 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                   </div>
                 </div>
               )}
+
+              {tab === "rules" && (
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                    <div className="font-bold text-sm mb-3" style={{ color: accent }}>Como funciona</div>
+                    <ul className="space-y-2 text-sm" style={{ color: muted }}>
+                      <li className="flex gap-2"><span style={{ color: accent }}>1.</span> Preencha a classificação dos 12 grupos (1º, 2º e 3º colocados).</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>2.</span> Os 8 melhores terceiros colocados são definidos automaticamente por ordem de grupos.</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>3.</span> Monte o mata-mata clicando nos vencedores de cada confronto até o campeão.</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>4.</span> Envie seu palpite uma única vez. Após o envio, não é possível alterar.</li>
+                      <li className="flex gap-2"><span style={{ color: accent }}>5.</span> A pontuação é calculada automaticamente conforme os resultados oficiais.</li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                    <div className="font-bold text-sm mb-3" style={{ color: accent }}>Pontuação</div>
+                    <div className="space-y-2">
+                      {[
+                        { label: "Seleção classificada (top 2 ou entre os 8 melhores 3º)", pts: 5 },
+                        { label: "Posição exata no grupo (1º, 2º ou 3º)", pts: 10 },
+                        { label: "Terceiro escolhido entre os 8 melhores reais", pts: 8 },
+                        { label: "Acerto de seleção nas oitavas de final", pts: 10 },
+                        { label: "Acerto de seleção nas quartas de final", pts: 15 },
+                        { label: "Acerto de seleção na semifinal", pts: 25 },
+                        { label: "Acerto de finalista", pts: 40 },
+                        { label: "Acerto do campeão", pts: 80 },
+                      ].map((r, i) => (
+                        <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-md" style={{ background: i % 2 === 0 ? `${accent}0d` : "transparent" }}>
+                          <span className="text-sm" style={{ color: text }}>{r.label}</span>
+                          <span className="text-sm font-bold tabular-nums" style={{ color: accent }}>+{r.pts} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl p-4" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                    <div className="font-bold text-sm mb-2" style={{ color: accent }}>Desempate</div>
+                    <p className="text-sm" style={{ color: muted }}>
+                      Em caso de empate na pontuação, o critério de desempate é o horário de envio do palpite — quem enviou primeiro fica na frente.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
