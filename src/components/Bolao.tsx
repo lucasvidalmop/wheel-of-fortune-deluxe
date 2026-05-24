@@ -382,7 +382,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           </button>
         </div>
 
-        {notStarted && config?.submission_deadline && (
+        {notStarted && config?.submission_deadline && tab !== "rules" && (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center" style={{ color: text }}>
             <Trophy size={48} style={{ color: accent, marginBottom: 16 }} />
             <div className="text-xl font-bold mb-1">Inscrições em breve</div>
