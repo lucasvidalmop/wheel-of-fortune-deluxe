@@ -302,7 +302,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: `${accent}33`, background: `linear-gradient(135deg, ${accent}22, transparent)` }}>
           <div className="flex items-center gap-3">
-            <Trophy size={22} style={{ color: accent }} />
+            <Trophy size={22} className="lucide lucide-trophy bg-transparent text-yellow-500" />
             <div>
               <div className="font-bold text-lg" style={{ color: accent }}>{config?.name || "Bolão da Copa"}</div>
               {config?.submission_deadline && (
