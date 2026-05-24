@@ -208,10 +208,20 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
         <div className="p-4 rounded-xl bg-card border border-border space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold">Resultados oficiais</h3>
-            <button onClick={saveOfficial} disabled={saving}
-              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 disabled:opacity-50">
-              {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Salvar
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => {
+                if (confirm("Desfazer todos os resultados oficiais? Isso limpa grupos, melhores 3º e mata-mata (salve para confirmar).")) {
+                  setEditingOfficial({});
+                }
+              }}
+                className="px-3 py-1.5 rounded-lg bg-muted text-sm">
+                Desfazer
+              </button>
+              <button onClick={saveOfficial} disabled={saving}
+                className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 disabled:opacity-50">
+                {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Salvar
+              </button>
+            </div>
           </div>
 
           <div>
