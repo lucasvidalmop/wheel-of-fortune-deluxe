@@ -32,18 +32,25 @@ const CODE_TO_ISO2: Record<string, string> = {
   SWE: "se", TUN: "tn", TUR: "tr", URU: "uy", USA: "us", UZB: "uz",
 };
 
-const FlagImg = ({ code, size = 20 }: { code?: string; size?: number }) => {
+const FlagImg = ({ code, size = 20, fill = false }: { code?: string; size?: number; fill?: boolean }) => {
   const iso = code ? CODE_TO_ISO2[code] : undefined;
   if (!iso) return null;
   return (
     <img
-      src={`https://flagcdn.com/w40/${iso}.png`}
-      srcSet={`https://flagcdn.com/w80/${iso}.png 2x`}
+      src={`https://flagcdn.com/w80/${iso}.png`}
+      srcSet={`https://flagcdn.com/w160/${iso}.png 2x`}
       width={size}
-      height={Math.round(size * 0.75)}
+      height={fill ? size : Math.round(size * 0.75)}
       alt={code}
       loading="lazy"
-      style={{ display: "inline-block", borderRadius: 2, objectFit: "cover", boxShadow: "0 0 0 1px rgba(255,255,255,0.08)" }}
+      style={{
+        display: "block",
+        borderRadius: fill ? 9999 : 2,
+        objectFit: "cover",
+        width: size,
+        height: fill ? size : Math.round(size * 0.75),
+        boxShadow: fill ? "none" : "0 0 0 1px rgba(255,255,255,0.08)",
+      }}
     />
   );
 };
