@@ -425,13 +425,56 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
         {authed && !loading && config && (
           <>
             {/* Tabs */}
-            <div className="flex gap-1 px-4 pt-3 border-b" style={{ borderColor: `${accent}22` }}>
+            <div className="flex items-end gap-1 px-4 pt-3 border-b relative" style={{ borderColor: `${accent}22` }}>
               {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["bracket", "Mata-mata"]] as const).map(([k, l]) => (
                 <button key={k} onClick={() => setTab(k)} className="px-4 py-2 rounded-t-lg text-sm font-medium transition"
                   style={{ background: tab === k ? cardBg : "transparent", color: tab === k ? text : muted, borderBottom: tab === k ? `2px solid ${accent}` : "2px solid transparent" }}>
                   {l}
                 </button>
               ))}
+              <div className="ml-auto pb-1 relative">
+                <button
+                  onClick={() => setShowRanking(v => !v)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 hover:opacity-80"
+                  style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
+                  <Trophy size={12} /> Ranking {ranking.length > 0 && `(Top ${ranking.length})`}
+                </button>
+                {showRanking && (
+                  <div className="absolute right-0 top-full mt-1 w-72 rounded-lg shadow-xl z-30 overflow-hidden"
+                    style={{ background: cardBg, border: `1px solid ${accent}44` }}>
+                    <div className="px-3 py-2 text-[11px] uppercase tracking-wider font-bold flex items-center justify-between"
+                      style={{ color: accent, background: `${accent}11`, borderBottom: `1px solid ${accent}22` }}>
+                      <span>Top 10 do bolão</span>
+                      <button onClick={() => setShowRanking(false)} style={{ color: muted }}><X size={12} /></button>
+                    </div>
+                    {ranking.length === 0 ? (
+                      <div className="p-4 text-center text-xs" style={{ color: muted }}>Nenhum palpite enviado ainda.</div>
+                    ) : (
+                      <ol className="max-h-80 overflow-y-auto">
+                        {ranking.map((r, i) => {
+                          const first = (r.name || "—").trim().split(/\s+/)[0];
+                          const id = r.account_id || "";
+                          const masked = id.length > 4 ? id.slice(0, -4) + "****" : "****";
+                          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
+                          return (
+                            <li key={i} className="flex items-center gap-2 px-3 py-2 text-xs"
+                              style={{ borderTop: i === 0 ? "none" : `1px solid ${muted}22`, color: text }}>
+                              <span className="w-5 text-center font-mono font-bold" style={{ color: i < 3 ? accent : muted }}>
+                                {medal || i + 1}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold truncate">{first}</div>
+                                <div className="font-mono text-[10px]" style={{ color: muted }}>{masked}</div>
+                              </div>
+                              <span className="font-bold tabular-nums" style={{ color: accent }}>{r.score}</span>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Body */}
