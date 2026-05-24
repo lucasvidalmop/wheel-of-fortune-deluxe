@@ -393,28 +393,26 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                                     const selectedPos = POSITIONS.find(pos => p[pos] === t.code);
                                     const selColor = selectedPos ? POS_COLORS[selectedPos] : null;
                                     const selLabel = selectedPos ? POS_LABEL[selectedPos] : null;
-                                    const cycle = () => {
+                                    const handleClick = () => {
                                       if (readOnly) return;
-                                      const order: (typeof POSITIONS[number] | null)[] = ["first_team", "second_team", "third_team", null];
-                                      const curIdx = selectedPos ? order.indexOf(selectedPos) : -1;
-                                      const next = order[(curIdx + 1) % order.length];
-                                      if (next === null) {
-                                        // clear selection for this team
+                                      if (selectedPos) {
+                                        // clicar novamente remove a sele\u00e7\u00e3o deste time
                                         setPicks(prev => {
                                           const cur = prev[g.key] || { first_team: "", second_team: "", third_team: "" };
-                                          const updated = { ...cur };
-                                          POSITIONS.forEach(k => { if (updated[k] === t.code) updated[k] = ""; });
-                                          return { ...prev, [g.key]: updated };
+                                          return { ...prev, [g.key]: { ...cur, [selectedPos]: "" } };
                                         });
-                                      } else {
-                                        setPosition(g.key, next, t.code);
+                                        return;
                                       }
+                                      // pr\u00f3xima posi\u00e7\u00e3o livre por ordem de clique
+                                      const nextPos = POSITIONS.find(pos => !p[pos]);
+                                      if (!nextPos) return; // grupo j\u00e1 completo
+                                      setPosition(g.key, nextPos, t.code);
                                     };
                                     return (
                                       <button
                                         type="button"
                                         key={t.code}
-                                        onClick={cycle}
+                                        onClick={handleClick}
                                         disabled={readOnly}
                                         className="w-full flex items-center justify-between gap-2 p-2 rounded-md transition text-left hover:opacity-90 disabled:cursor-not-allowed"
                                         style={{
