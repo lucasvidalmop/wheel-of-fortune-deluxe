@@ -572,7 +572,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1 border-b border-border">
+      <div className="flex gap-1 border-b border-border overflow-x-auto [touch-action:pan-x] -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
         {([
           ['config', 'Configuração'],
           ['events', `Eventos (${events.length})`],
@@ -581,7 +581,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           ['analytics', 'Analytics'],
         ] as const).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k as any)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition ${tab === k ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            className={`shrink-0 px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${tab === k ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             {l}
           </button>
         ))}
