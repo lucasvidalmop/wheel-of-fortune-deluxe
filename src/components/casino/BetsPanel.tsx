@@ -6,6 +6,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tool
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
 import { confirmDialog, promptDialog } from '@/components/ui/imperative-dialog';
+import BolaoAdminPanel from '@/components/casino/BolaoAdminPanel';
 
 interface BetsPanelProps { ownerId: string }
 
