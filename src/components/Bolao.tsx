@@ -392,32 +392,48 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                                   {g.teams.map(t => {
                                     const selectedPos = POSITIONS.find(pos => p[pos] === t.code);
                                     const selColor = selectedPos ? POS_COLORS[selectedPos] : null;
+                                    const selLabel = selectedPos ? POS_LABEL[selectedPos] : null;
+                                    const cycle = () => {
+                                      if (readOnly) return;
+                                      const order: (typeof POSITIONS[number] | null)[] = ["first_team", "second_team", "third_team", null];
+                                      const curIdx = selectedPos ? order.indexOf(selectedPos) : -1;
+                                      const next = order[(curIdx + 1) % order.length];
+                                      if (next === null) {
+                                        // clear selection for this team
+                                        setPicks(prev => {
+                                          const cur = prev[g.key] || { first_team: "", second_team: "", third_team: "" };
+                                          const updated = { ...cur };
+                                          POSITIONS.forEach(k => { if (updated[k] === t.code) updated[k] = ""; });
+                                          return { ...prev, [g.key]: updated };
+                                        });
+                                      } else {
+                                        setPosition(g.key, next, t.code);
+                                      }
+                                    };
                                     return (
-                                      <div key={t.code} className="flex items-center justify-between gap-2 p-1.5 rounded-md transition" style={{
-                                        background: selColor ? `${selColor}26` : "rgba(255,255,255,0.03)",
-                                        border: selColor ? `1px solid ${selColor}` : "1px solid transparent",
-                                        boxShadow: selColor ? `0 0 0 1px ${selColor}33 inset` : "none",
-                                      }}>
+                                      <button
+                                        type="button"
+                                        key={t.code}
+                                        onClick={cycle}
+                                        disabled={readOnly}
+                                        className="w-full flex items-center justify-between gap-2 p-2 rounded-md transition text-left hover:opacity-90 disabled:cursor-not-allowed"
+                                        style={{
+                                          background: selColor ? `${selColor}26` : "rgba(255,255,255,0.03)",
+                                          border: selColor ? `1px solid ${selColor}` : "1px solid transparent",
+                                          boxShadow: selColor ? `0 0 0 1px ${selColor}33 inset` : "none",
+                                        }}
+                                      >
                                         <div className="flex items-center gap-2 min-w-0 flex-1">
                                           <FlagImg code={t.code} size={22} />
                                           <span className="text-sm truncate" style={{ color: selColor || undefined, fontWeight: selColor ? 600 : 400 }}>{t.name}</span>
                                         </div>
-                                        <div className="flex gap-1.5 shrink-0">
-                                          {POSITIONS.map(pos => {
-                                            const checked = p[pos] === t.code;
-                                            const color = POS_COLORS[pos];
-                                            return (
-                                              <button key={pos} onClick={() => setPosition(g.key, pos, t.code)} disabled={readOnly}
-                                                className="w-5 h-5 rounded-full border-2 transition"
-                                                style={{
-                                                  borderColor: checked ? color : `${color}66`,
-                                                  background: checked ? color : "transparent",
-                                                }}
-                                                aria-label={POS_LABEL[pos]} />
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
+                                        {selLabel && (
+                                          <span className="w-6 h-6 flex items-center justify-center rounded-full text-[10px] font-bold shrink-0"
+                                            style={{ background: selColor!, color: "#0a0a14" }}>
+                                            {selLabel}
+                                          </span>
+                                        )}
+                                      </button>
                                     );
                                   })}
                                 </div>
