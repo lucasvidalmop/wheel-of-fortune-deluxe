@@ -44,7 +44,7 @@ type EditingMarket = {
 };
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
-  const [tab, setTab] = useState<'config'|'events'|'categories'|'wagers'|'analytics'>('config');
+  const [tab, setTab] = useState<'config'|'events'|'categories'|'wagers'|'analytics'|'bolao'>('config');
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
