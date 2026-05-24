@@ -3192,6 +3192,7 @@ function Dashboard() {
 
   const handleMenuClick = (key: typeof activeTab) => {
     setActiveTab(key);
+    setMobileNavOpen(false);
     if (key === 'history') fetchHistory();
     if (key === 'analytics') fetchAnalytics();
     if (key === 'referral') fetchReferralLinks();
