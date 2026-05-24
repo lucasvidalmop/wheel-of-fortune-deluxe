@@ -554,7 +554,7 @@ function MatchSlot({ team, selected, onClick, disabled, accent, muted, size, mir
       style={{ flexDirection: mirror ? "row-reverse" : "row" }}
     >
       <div
-        className="rounded-full flex items-center justify-center shrink-0 transition"
+        className="rounded-full flex items-center justify-center shrink-0 transition overflow-hidden"
         style={{
           width: size, height: size,
           border: `2px solid ${selected ? accent : team ? `${muted}66` : `${muted}33`}`,
@@ -563,7 +563,7 @@ function MatchSlot({ team, selected, onClick, disabled, accent, muted, size, mir
           opacity: team ? 1 : 0.5,
         }}
       >
-        {team ? <FlagImg code={team.code} size={size - 8} /> : null}
+        {team ? <FlagImg code={team.code} size={size - 4} fill /> : null}
       </div>
       {showName && team && (
         <span
