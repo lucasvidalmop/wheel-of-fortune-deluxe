@@ -6,6 +6,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tool
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
 import { confirmDialog, promptDialog } from '@/components/ui/imperative-dialog';
+import BolaoAdminPanel from '@/components/casino/BolaoAdminPanel';
 
 interface BetsPanelProps { ownerId: string }
 
@@ -44,7 +45,7 @@ type EditingMarket = {
 };
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
-  const [tab, setTab] = useState<'config'|'events'|'categories'|'wagers'|'analytics'>('config');
+  const [tab, setTab] = useState<'config'|'events'|'categories'|'wagers'|'analytics'|'bolao'>('config');
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<BetsConfig | null>(null);
   const [events, setEvents] = useState<BetEvent[]>([]);
@@ -579,6 +580,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           ['categories', `Categorias (${categories.length})`],
           ['wagers', 'Apostas'],
           ['analytics', 'Analytics'],
+          ['bolao', 'Bolão da Copa'],
         ] as const).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k as any)}
             className={`shrink-0 px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${tab === k ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
@@ -586,6 +588,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           </button>
         ))}
       </div>
+
+      {tab === 'bolao' && <BolaoAdminPanel ownerId={ownerId} />}
 
       {tab === 'config' && (
         <div className="space-y-4 max-w-2xl">
