@@ -577,6 +577,9 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       isHot: !!ev.is_hot,
       markets: shareMarkets,
       copyUrl,
+      homeImageUrl: (ev as any).home_image_url || undefined,
+      awayImageUrl: (ev as any).away_image_url || undefined,
+      eventImageUrl: ev.image_url || undefined,
     });
   };
 
