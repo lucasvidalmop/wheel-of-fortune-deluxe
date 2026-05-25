@@ -333,6 +333,9 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [authEmail, setAuthEmail] = useState('');
   const [authAccountId, setAuthAccountId] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    try { return localStorage.getItem(`bets_remember_${tag}`) === '1'; } catch { return false; }
+  });
 
   // bet slip
   const [slip, setSlip] = useState<{ event: EventRow; outcome: OutcomeRow } | null>(null);
@@ -514,8 +517,12 @@ const Bets = ({ tag }: BetsPageProps) => {
   }, [page]);
 
 
-  // restore persisted session
+  // restore persisted session (localStorage first, then sessionStorage)
   useEffect(() => {
+    try {
+      const localRaw = localStorage.getItem(`bets_user_${tag}`);
+      if (localRaw) { setAuthed(JSON.parse(localRaw)); return; }
+    } catch {}
     try {
       const raw = sessionStorage.getItem(`bets_user_${tag}`);
       if (raw) setAuthed(JSON.parse(raw));
@@ -525,10 +532,19 @@ const Bets = ({ tag }: BetsPageProps) => {
   // persist authed user across navigations
   useEffect(() => {
     try {
-      if (authed) sessionStorage.setItem(`bets_user_${tag}`, JSON.stringify(authed));
-      else sessionStorage.removeItem(`bets_user_${tag}`);
+      if (authed) {
+        const data = JSON.stringify(authed);
+        if (rememberMe) {
+          localStorage.setItem(`bets_user_${tag}`, data);
+          localStorage.setItem(`bets_remember_${tag}`, '1');
+        }
+        sessionStorage.setItem(`bets_user_${tag}`, data);
+      } else {
+        localStorage.removeItem(`bets_user_${tag}`);
+        sessionStorage.removeItem(`bets_user_${tag}`);
+      }
     } catch {}
-  }, [authed, tag]);
+  }, [authed, tag, rememberMe]);
 
   useEffect(() => {
     setVisibleEventLimit(18);
@@ -1055,6 +1071,15 @@ const Bets = ({ tag }: BetsPageProps) => {
                 required maxLength={50} autoComplete="off"
                 className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20" />
             </div>
+            <label className="flex items-center gap-2 text-xs cursor-pointer select-none" style={{ color: subtitleColor }}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border border-white/20 bg-white/5 accent-cyan-400"
+              />
+              Lembrar sessão
+            </label>
           </div>
           <button type="submit" disabled={authLoading}
             className="w-full py-3 rounded-xl font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
@@ -1124,7 +1149,14 @@ const Bets = ({ tag }: BetsPageProps) => {
               <Store size={14} />
               <span className="hidden sm:inline">Loja</span>
             </button>
-            <button onClick={() => { setAuthed(null); setMyWagers([]); }} title="Sair"
+            <button onClick={() => {
+              setAuthed(null); setMyWagers([]);
+              try {
+                localStorage.removeItem(`bets_user_${tag}`);
+                localStorage.removeItem(`bets_remember_${tag}`);
+                sessionStorage.removeItem(`bets_user_${tag}`);
+              } catch {}
+            }} title="Sair"
               className="p-2 rounded-lg" style={{ background: '#00000033' }}>
               <LogOut size={16} />
             </button>
