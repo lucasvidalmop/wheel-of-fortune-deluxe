@@ -35,20 +35,29 @@ const CODE_TO_ISO2: Record<string, string> = {
 const FlagImg = ({ code, size = 20, fill = false }: { code?: string; size?: number; fill?: boolean }) => {
   const iso = code ? CODE_TO_ISO2[code] : undefined;
   if (!iso) return null;
+  const h = fill ? size : Math.round(size * 0.75);
+  // jsDelivr serves flag-icons SVGs reliably across mobile networks (flagcdn.com is sometimes blocked).
+  const src = `https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/flags/4x3/${iso}.svg`;
   return (
     <img
-      src={`https://flagcdn.com/w80/${iso}.png`}
-      srcSet={`https://flagcdn.com/w160/${iso}.png 2x`}
-      width={size}
-      height={fill ? size : Math.round(size * 0.75)}
+      src={src}
       alt={code}
-      loading="lazy"
+      decoding="async"
+      onError={(e) => {
+        const img = e.currentTarget;
+        if (!img.dataset.fallback) {
+          img.dataset.fallback = "1";
+          img.src = `https://flagcdn.com/w160/${iso}.png`;
+        }
+      }}
       style={{
         display: "block",
         borderRadius: fill ? 9999 : 2,
         objectFit: "cover",
         width: size,
-        height: fill ? size : Math.round(size * 0.75),
+        height: h,
+        minWidth: size,
+        flexShrink: 0,
         boxShadow: fill ? "none" : "0 0 0 1px rgba(255,255,255,0.08)",
       }}
     />
