@@ -43,6 +43,8 @@ type EditingMarket = {
   min_bet: number; max_bet: number; max_bets_per_user: number;
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   outcomes: Array<{ id?: string; label: string; odd: number }>;
+  /** Source bookmaker (debug/admin badge — not persisted). */
+  bookmaker?: string;
 };
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
