@@ -325,19 +325,23 @@ const parseEventTeams = (title?: string | null): { home: string; away: string } 
   return { home: parts[0].trim(), away: parts.slice(1).join(' ').trim() };
 };
 
-// Para botões de odds principais: troca CASA/EMPATE/FORA por sigla dos times.
+// Para botões de odds: troca HOME/AWAY/DRAW/TIE por sigla dos times, preservando
+// handicaps/sufixos (ex.: "HOME -1" -> "SAO -1", "AWAY +1.5" -> "SAN +1.5").
 const outcomeLabelForCard = (label?: string | null, eventTitle?: string | null) => {
   if (!label) return '';
-  const up = label.trim().toUpperCase();
-  if (up === 'HOME') {
-    const { home } = parseEventTeams(eventTitle);
-    return teamAcronym(home) || 'CASA';
+  const raw = label.trim();
+  // Match leading side keyword + optional handicap/score suffix
+  const m = raw.match(/^(HOME|AWAY|DRAW|TIE)\b\s*(.*)$/i);
+  if (m) {
+    const side = m[1].toUpperCase();
+    const suffix = (m[2] || '').trim();
+    const { home, away } = parseEventTeams(eventTitle);
+    let head = '';
+    if (side === 'HOME') head = teamAcronym(home) || 'CASA';
+    else if (side === 'AWAY') head = teamAcronym(away) || 'FORA';
+    else head = 'EMP';
+    return suffix ? `${head} ${suffix}` : head;
   }
-  if (up === 'AWAY') {
-    const { away } = parseEventTeams(eventTitle);
-    return teamAcronym(away) || 'FORA';
-  }
-  if (up === 'DRAW' || up === 'TIE') return 'EMP';
   return translateOutcomeLabel(label);
 };
 
@@ -1648,7 +1652,14 @@ const Bets = ({ tag }: BetsPageProps) => {
                                     color: isLoser ? muted : text,
                                   }}>
                                   <div aria-hidden className="absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${ticketAccent}, transparent)` }} />
-                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{outcomeLabelForCard(o.label, ev.title)}</div>
+                                  <div className="text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5 truncate pr-6" style={{ color: muted }}>{(() => {
+                                    const lbl = outcomeLabelForCard(o.label, ev.title);
+                                    const parts = lbl.match(/^(\S+)\s+([+\-]?\d[\d.,/]*|\d+:\d+|\([^)]+\))$/);
+                                    if (parts) {
+                                      return (<><span>{parts[1]}</span><span className="ml-1 opacity-60 font-semibold">{parts[2]}</span></>);
+                                    }
+                                    return lbl;
+                                  })()}</div>
                                   <div className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: isWinner ? ticketAccent : text, textShadow: isWinner ? `0 0 12px ${ticketAccent}55` : undefined }}>{Number(o.odd).toFixed(2).replace('.', ',')}</div>
                                   <div className="mt-1.5 pt-1.5 border-t flex items-center justify-between gap-1 text-[9px] tabular-nums" style={{ borderColor: `${ticketAccent}22`, color: muted }}>
                                     <span className="flex items-center gap-1"><Ticket size={9} /><b style={{ color: text }}>{stat.count.toLocaleString('pt-BR')}</b></span>
