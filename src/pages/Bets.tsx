@@ -358,6 +358,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [outcomeStats, setOutcomeStats] = useState<Record<string, { count: number; total: number }>>({});
   const [collapsedMarkets, setCollapsedMarkets] = useState<Record<string, boolean>>({});
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
+  const [marketTab, setMarketTab] = useState<Record<string, string>>({});
   const [selectedEventId, setSelectedEventIdState] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     const m = window.location.hash.match(/(?:^#|&)ev=([^&]+)/);
