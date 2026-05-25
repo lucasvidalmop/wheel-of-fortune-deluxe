@@ -1140,7 +1140,14 @@ const Bets = ({ tag }: BetsPageProps) => {
               <Store size={14} />
               <span className="hidden sm:inline">Loja</span>
             </button>
-            <button onClick={() => { setAuthed(null); setMyWagers([]); }} title="Sair"
+            <button onClick={() => {
+              setAuthed(null); setMyWagers([]);
+              try {
+                localStorage.removeItem(`bets_user_${tag}`);
+                localStorage.removeItem(`bets_remember_${tag}`);
+                sessionStorage.removeItem(`bets_user_${tag}`);
+              } catch {}
+            }} title="Sair"
               className="p-2 rounded-lg" style={{ background: '#00000033' }}>
               <LogOut size={16} />
             </button>
