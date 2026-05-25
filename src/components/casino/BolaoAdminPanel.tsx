@@ -136,6 +136,21 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
     }
   };
 
+  const deleteEntry = async (entry: Entry) => {
+    if (!confirm(`Remover o palpite de ${entry.user_name || entry.user_email || entry.account_id}? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await supabase.from("bolao_entry_groups").delete().eq("entry_id", entry.id);
+      await supabase.from("bolao_entry_bracket").delete().eq("entry_id", entry.id);
+      const { error } = await supabase.from("bolao_entries").delete().eq("id", entry.id);
+      if (error) throw error;
+      toast.success("Palpite removido");
+      setEntries(prev => prev.filter(x => x.id !== entry.id));
+      if (expandedEntry === entry.id) setExpandedEntry("");
+    } catch (e: any) {
+      toast.error("Erro ao remover: " + (e?.message || ""));
+    }
+  };
+
   const setOfficialGroup = (key: string, pos: "first" | "second" | "third", code: string) => {
     setEditingOfficial((prev: any) => {
       const groups = { ...(prev.groups || {}) };
