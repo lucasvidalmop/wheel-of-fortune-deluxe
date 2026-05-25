@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { X, Download, Share2, Loader2, Calendar, Link2, Check, Flame } from 'lucide-react';
+import { X, Download, Share2, Loader2, Calendar, Link2, Check, Flame, Trophy } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 import type { TicketConfig } from './ShareTicket';
@@ -52,6 +52,22 @@ const translateOutcome = (label: string) => {
   }).join('');
 };
 
+// Split "Team A vs Team B" / " x " / " - " into two sides
+const splitTeams = (title: string): [string, string] | null => {
+  const m = title.match(/^(.+?)\s+(?:vs\.?|x|×|-|–)\s+(.+)$/i);
+  if (!m) return null;
+  return [m[1].trim(), m[2].trim()];
+};
+
+const initials = (name: string) =>
+  name
+    .replace(/[^\p{L}\s]/gu, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase())
+    .join('') || name.slice(0, 2).toUpperCase();
+
 export default function ShareEvent({ open, onClose, data, config = {} }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
@@ -65,11 +81,15 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
   const accent = config.accent || '#22d3ee';
   const textColor = config.textColor || '#ffffff';
   const muted = config.mutedColor || '#a0a0c0';
-  const cardBg = config.cardBg || 'rgba(255,255,255,0.05)';
   const brandName = config.brandName || '';
   const ctaText = config.ctaText || 'Aposte agora';
   const ctaUrl = config.ctaUrl || '';
-  const footer = config.footer || 'Não perca esse jogo!';
+
+  const teams = splitTeams(data.eventTitle);
+  const homeName = teams?.[0] ?? data.eventTitle;
+  const awayName = teams?.[1] ?? '';
+
+  const featured = data.markets[0];
 
   const waitForImages = async () => {
     if (!cardRef.current) return;
@@ -125,98 +145,166 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
-      <div className="w-full max-w-sm" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-[360px]" onClick={e => e.stopPropagation()}>
+        {/* Stadium card */}
         <div
           ref={cardRef}
-          className="relative rounded-2xl overflow-hidden p-4"
+          className="relative rounded-3xl overflow-hidden"
           style={{
-            background: `linear-gradient(160deg, ${bgFrom} 0%, ${bgTo} 100%)`,
+            background: `linear-gradient(180deg, ${bgFrom} 0%, ${bgTo} 100%)`,
             color: textColor,
-            border: `2px solid ${accent}55`,
-            boxShadow: `0 0 60px ${accent}33`,
+            boxShadow: `0 30px 80px -20px ${accent}55, 0 0 0 1px ${accent}33 inset`,
           }}
         >
-          <div aria-hidden className="absolute -top-24 -right-24 w-40 h-40 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${accent}15, transparent 70%)` }} />
-
-          {/* Header */}
-          <div className="relative flex items-center justify-center mb-3 pt-1">
-            <div className="flex w-full items-center justify-center min-w-0 px-8">
+          {/* Top stripe band */}
+          <div className="relative px-5 pt-5 pb-4" style={{ background: `linear-gradient(135deg, ${accent}22, transparent 70%)` }}>
+            <div aria-hidden className="absolute inset-0 opacity-[0.08]" style={{
+              backgroundImage: `repeating-linear-gradient(45deg, ${textColor} 0 1px, transparent 1px 14px)`,
+            }} />
+            <div className="relative flex items-center justify-between">
               {config.logoUrl ? (
-                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-12 w-full max-w-[160px] object-contain" />
-              ) : brandName ? (
-                <span className="font-black text-base tracking-tight truncate" style={{ color: accent }}>{brandName}</span>
-              ) : null}
-            </div>
-            <div className="absolute right-0 top-0 text-[9px] font-bold tracking-[0.2em] px-2 py-0.5 rounded-full"
-              style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}>
-              EVENTO
+                <img src={config.logoUrl} alt="" crossOrigin="anonymous" className="h-8 object-contain" />
+              ) : (
+                <span className="font-black tracking-tight text-sm" style={{ color: accent }}>{brandName || 'EVENTO'}</span>
+              )}
+              <div className="flex items-center gap-1.5">
+                {data.isHot && (
+                  <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1"
+                    style={{ background: '#fb923c', color: '#0b0b14' }}>
+                    <Flame size={10} /> Quente
+                  </span>
+                )}
+                {data.category && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                    style={{ background: `${textColor}1a`, color: textColor }}>
+                    {data.category}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Category / hot */}
-          {(data.category || data.isHot) && (
-            <div className="relative flex items-center justify-center gap-2 mb-2">
-              {data.category && (
-                <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full" style={{ background: `${accent}1a`, color: accent }}>
-                  {data.category}
-                </span>
-              )}
-              {data.isHot && (
-                <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: '#f9731622', color: '#fb923c' }}>
-                  <Flame size={10} /> Quente
-                </span>
-              )}
-            </div>
-          )}
+          {/* Versus block */}
+          <div className="relative px-5 py-6">
+            {teams ? (
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                {/* Home */}
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${accent}, ${accent}88)`,
+                      color: '#0b0b14',
+                      boxShadow: `0 10px 30px -10px ${accent}99`,
+                    }}>
+                    {initials(homeName)}
+                  </div>
+                  <div className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: textColor }}>
+                    {homeName}
+                  </div>
+                </div>
 
-          {/* Title */}
-          <div className="relative text-center mb-3">
-            <h2 className="text-lg font-black tracking-tight leading-tight" style={{ color: textColor, textShadow: `0 0 16px ${accent}55` }}>
-              {data.eventTitle}
-            </h2>
+                {/* VS */}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="text-[10px] font-bold tracking-[0.3em]" style={{ color: muted }}>VS</div>
+                  <div className="w-px h-10" style={{ background: `${accent}55` }} />
+                </div>
+
+                {/* Away */}
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl border-2"
+                    style={{
+                      background: `${textColor}0a`,
+                      color: textColor,
+                      borderColor: `${accent}66`,
+                    }}>
+                    {initials(awayName)}
+                  </div>
+                  <div className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: textColor }}>
+                    {awayName}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <h2 className="text-center text-xl font-black tracking-tight" style={{ color: textColor }}>
+                {data.eventTitle}
+              </h2>
+            )}
+
             {data.subtitle && (
-              <p className="text-xs mt-1" style={{ color: muted }}>{data.subtitle}</p>
+              <p className="text-center text-[11px] mt-3" style={{ color: muted }}>{data.subtitle}</p>
+            )}
+
+            {(data.startsAt || data.closesAt) && (
+              <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] font-semibold"
+                style={{ color: textColor }}>
+                <Calendar size={12} style={{ color: accent }} />
+                <span className="tabular-nums">{fmtDate(data.startsAt || data.closesAt)}</span>
+              </div>
             )}
           </div>
 
-          {/* Time */}
-          {(data.startsAt || data.closesAt) && (
-            <div className="relative flex items-center justify-center gap-2 mb-3 text-[11px] font-semibold tabular-nums" style={{ color: textColor }}>
-              <Calendar size={12} />
-              <span>{fmtDate(data.startsAt || data.closesAt)}</span>
+          {/* Divider with notch */}
+          <div className="relative">
+            <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full" style={{ background: bgFrom }} />
+            <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full" style={{ background: bgTo }} />
+            <div className="mx-5 border-t border-dashed" style={{ borderColor: `${textColor}22` }} />
+          </div>
+
+          {/* Featured market */}
+          {featured && (
+            <div className="px-5 py-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: muted }}>
+                  {translateMarketName(featured.title)}
+                </div>
+                <Trophy size={12} style={{ color: accent }} />
+              </div>
+              <div className={`grid gap-2 ${featured.outcomes.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {featured.outcomes.slice(0, 3).map((o, j) => (
+                  <div key={j} className="rounded-xl px-2 py-2.5 text-center"
+                    style={{
+                      background: `linear-gradient(180deg, ${accent}22, ${accent}08)`,
+                      border: `1px solid ${accent}44`,
+                    }}>
+                    <div className="text-[9px] font-bold uppercase tracking-[0.12em] truncate" style={{ color: muted }}>
+                      {translateOutcome(o.label)}
+                    </div>
+                    <div className="font-black text-base tabular-nums leading-tight" style={{ color: accent }}>
+                      {Number(o.odd).toFixed(2).replace('.', ',')}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Markets */}
-          <div className="relative space-y-2 mb-3">
-            {data.markets.slice(0, 3).map((m, i) => (
-              <div key={i} className="rounded-xl p-2.5" style={{ background: cardBg, border: `1px solid ${textColor}11` }}>
-                <div className="text-[9px] uppercase tracking-wider mb-1.5 font-bold" style={{ color: muted }}>
-                  {translateMarketName(m.title)}
-                </div>
-                <div className={`grid gap-1.5 ${m.outcomes.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                  {m.outcomes.slice(0, 3).map((o, j) => (
-                    <div key={j} className="rounded-lg px-2 py-1.5 text-center" style={{ background: `${accent}10`, border: `1px solid ${accent}33` }}>
-                      <div className="text-[9px] uppercase tracking-[0.12em] font-bold truncate" style={{ color: muted }}>
-                        {translateOutcome(o.label)}
-                      </div>
-                      <div className="font-black text-sm tabular-nums" style={{ color: accent }}>
-                        {Number(o.odd).toFixed(2).replace('.', ',')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Extra markets pills */}
+          {data.markets.length > 1 && (
+            <div className="px-5 pb-4 flex flex-wrap gap-1.5">
+              {data.markets.slice(1, 4).map((m, i) => (
+                <span key={i} className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+                  style={{ background: `${textColor}0d`, color: muted, border: `1px solid ${textColor}11` }}>
+                  + {translateMarketName(m.title)}
+                </span>
+              ))}
+              {data.markets.length > 4 && (
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+                  style={{ background: `${accent}1a`, color: accent }}>
+                  +{data.markets.length - 4} mercados
+                </span>
+              )}
+            </div>
+          )}
 
-          {/* Footer */}
-          <div className="relative text-center">
-            <p className="text-sm font-semibold mb-1">{footer}</p>
+          {/* CTA footer */}
+          <div className="px-5 pt-3 pb-5 text-center" style={{ background: `linear-gradient(0deg, ${accent}10, transparent)` }}>
+            <div className="text-[13px] font-black tracking-tight" style={{ color: textColor }}>
+              {ctaText}
+            </div>
             {ctaUrl && (
-              <p className="text-xs font-bold" style={{ color: accent }}>
-                {ctaText} · {ctaUrl.replace(/^https?:\/\//, '')}
-              </p>
+              <div className="text-[10px] font-semibold mt-0.5" style={{ color: accent }}>
+                {ctaUrl.replace(/^https?:\/\//, '')}
+              </div>
             )}
           </div>
         </div>
