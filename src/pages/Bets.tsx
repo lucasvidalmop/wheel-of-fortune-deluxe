@@ -1477,13 +1477,44 @@ const Bets = ({ tag }: BetsPageProps) => {
                   }
                   const hasFullMarkets = detailMode || !!detailedEventIds[ev.id];
                   const extraCount = hasFullMarkets ? Math.max(0, groups.length - 1) : (groups.length > 0 ? 1 : 0);
-                  const visibleGroups = evExpanded ? groups : groups.slice(0, 1);
+                  // Conta por grupo (apenas mercados com odds) para montar tabs.
+                  const groupCounts: Record<MarketGroupKey, number> = { principais: 0, gols: 0, jogadores: 0, escanteios: 0, cartoes: 0 };
+                  groups.forEach(g => { groupCounts[classifyMarketGroup(g.market?.title)]++; });
+                  const availableTabs = MARKET_GROUP_ORDER.filter(k => groupCounts[k] > 0);
+                  const activeTab = (marketTab[ev.id] as MarketGroupKey) || 'principais';
+                  const effectiveTab: MarketGroupKey = availableTabs.includes(activeTab) ? activeTab : (availableTabs[0] || 'principais');
+                  const filteredGroups = evExpanded && availableTabs.length > 1
+                    ? groups.filter(g => classifyMarketGroup(g.market?.title) === effectiveTab)
+                    : groups;
+                  const visibleGroups = evExpanded ? filteredGroups : groups.slice(0, 1);
                   return (
                     <>
                       {groups.length === 0 && !closed && !finalized && (
                         <div className="px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-[0.15em] font-bold text-center flex items-center justify-center gap-2" style={{ background: `${ticketAccent}1a`, color: ticketAccent, border: `1px dashed ${ticketAccent}55` }}>
                           <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: ticketAccent }} />
                           Odds em breve
+                        </div>
+                      )}
+                      {evExpanded && availableTabs.length > 1 && (
+                        <div className="mb-2 flex flex-wrap gap-1.5">
+                          {availableTabs.map(k => {
+                            const isActive = k === effectiveTab;
+                            return (
+                              <button
+                                key={k}
+                                type="button"
+                                onClick={() => setMarketTab(s => ({ ...s, [ev.id]: k }))}
+                                className="px-2.5 py-1 rounded-md text-[10px] uppercase tracking-[0.15em] font-bold transition hover:brightness-110"
+                                style={{
+                                  background: isActive ? ticketAccent : `${ticketAccent}1a`,
+                                  color: isActive ? '#000' : ticketAccent,
+                                  border: `1px solid ${ticketAccent}${isActive ? '' : '55'}`,
+                                }}
+                              >
+                                {MARKET_GROUP_LABEL[k]} <span className="opacity-70 ml-0.5">{groupCounts[k]}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                       {!detailMode && evExpanded && extraCount > 0 && (
