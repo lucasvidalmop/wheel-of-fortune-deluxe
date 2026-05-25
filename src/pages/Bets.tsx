@@ -517,8 +517,12 @@ const Bets = ({ tag }: BetsPageProps) => {
   }, [page]);
 
 
-  // restore persisted session
+  // restore persisted session (localStorage first, then sessionStorage)
   useEffect(() => {
+    try {
+      const localRaw = localStorage.getItem(`bets_user_${tag}`);
+      if (localRaw) { setAuthed(JSON.parse(localRaw)); return; }
+    } catch {}
     try {
       const raw = sessionStorage.getItem(`bets_user_${tag}`);
       if (raw) setAuthed(JSON.parse(raw));
@@ -528,10 +532,19 @@ const Bets = ({ tag }: BetsPageProps) => {
   // persist authed user across navigations
   useEffect(() => {
     try {
-      if (authed) sessionStorage.setItem(`bets_user_${tag}`, JSON.stringify(authed));
-      else sessionStorage.removeItem(`bets_user_${tag}`);
+      if (authed) {
+        const data = JSON.stringify(authed);
+        if (rememberMe) {
+          localStorage.setItem(`bets_user_${tag}`, data);
+          localStorage.setItem(`bets_remember_${tag}`, '1');
+        }
+        sessionStorage.setItem(`bets_user_${tag}`, data);
+      } else {
+        localStorage.removeItem(`bets_user_${tag}`);
+        sessionStorage.removeItem(`bets_user_${tag}`);
+      }
     } catch {}
-  }, [authed, tag]);
+  }, [authed, tag, rememberMe]);
 
   useEffect(() => {
     setVisibleEventLimit(18);
