@@ -32,49 +32,24 @@ const CODE_TO_ISO2: Record<string, string> = {
   SWE: "se", TUN: "tn", TUR: "tr", URU: "uy", USA: "us", UZB: "uz",
 };
 
-// Emoji fallback derived from ISO2 (regional indicator letters). Works offline on iOS/Android.
-const isoToEmoji = (iso: string): string => {
-  if (iso.length !== 2) return "";
-  const A = 0x1f1e6;
-  const a = "a".charCodeAt(0);
-  return String.fromCodePoint(A + (iso.charCodeAt(0) - a)) + String.fromCodePoint(A + (iso.charCodeAt(1) - a));
-};
-
-const FlagImg = ({ code, flag, size = 20, fill = false }: { code?: string; flag?: string; size?: number; fill?: boolean }) => {
+const FlagImg = ({ code, size = 20, fill = false }: { code?: string; size?: number; fill?: boolean }) => {
   const iso = code ? CODE_TO_ISO2[code] : undefined;
-  const h = fill ? size : Math.round(size * 0.75);
-  // Use emoji whenever possible — renders natively, no network, no broken-image icons on mobile.
-  const emoji = flag || (iso && iso.length === 2 ? isoToEmoji(iso) : "");
-  if (emoji) {
-    return (
-      <span
-        aria-label={code}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: size,
-          height: fill ? size : h,
-          minWidth: size,
-          flexShrink: 0,
-          fontSize: Math.round(size * (fill ? 0.95 : 1.1)),
-          lineHeight: 1,
-          borderRadius: fill ? 9999 : 2,
-          overflow: "hidden",
-        }}
-      >
-        {emoji}
-      </span>
-    );
-  }
   if (!iso) return null;
-  // Fallback for sub-region flags (gb-eng, gb-sct) that don't have an emoji.
+  const h = fill ? size : Math.round(size * 0.75);
+  // jsDelivr serves flag-icons SVGs reliably across mobile networks (flagcdn.com is sometimes blocked).
   const src = `https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/flags/4x3/${iso}.svg`;
   return (
     <img
       src={src}
       alt={code}
       decoding="async"
+      onError={(e) => {
+        const img = e.currentTarget;
+        if (!img.dataset.fallback) {
+          img.dataset.fallback = "1";
+          img.src = `https://flagcdn.com/w160/${iso}.png`;
+        }
+      }}
       style={{
         display: "block",
         borderRadius: fill ? 9999 : 2,
@@ -551,7 +526,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                                         }}
                                       >
                                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                                          <FlagImg code={t.code} flag={t.flag} size={22} />
+                                          <FlagImg code={t.code} size={22} />
                                           <span className="text-sm truncate" style={{ color: selColor || undefined, fontWeight: selColor ? 600 : 400 }}>{t.name}</span>
                                         </div>
                                         {selLabel && (
@@ -803,7 +778,7 @@ function MatchSlot({ team, selected, onClick, disabled, accent, muted, size, mir
           opacity: team ? 1 : 0.5,
         }}
       >
-        {team ? <FlagImg code={team.code} flag={team.flag} size={size - 4} fill /> : null}
+        {team ? <FlagImg code={team.code} size={size - 4} fill /> : null}
       </div>
       {showName && team && (
         <span
@@ -966,7 +941,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             boxShadow: champion?.code === leftFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
           }}
         >
-          {leftFinalist && <FlagImg code={leftFinalist.code} flag={leftFinalist.flag} size={34} fill />}
+          {leftFinalist && <FlagImg code={leftFinalist.code} size={34} fill />}
         </button>
         <div
           className="rounded-full flex items-center justify-center overflow-hidden"
@@ -976,7 +951,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             border: `2px dashed ${champion ? accent : `${muted}55`}`,
           }}
         >
-          {champion ? <FlagImg code={champion.code} flag={champion.flag} size={80} fill /> : <Trophy size={40} style={{ color: muted }} />}
+          {champion ? <FlagImg code={champion.code} size={80} fill /> : <Trophy size={40} style={{ color: muted }} />}
         </div>
         <button
           type="button"
@@ -990,7 +965,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             boxShadow: champion?.code === rightFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
           }}
         >
-          {rightFinalist && <FlagImg code={rightFinalist.code} flag={rightFinalist.flag} size={34} fill />}
+          {rightFinalist && <FlagImg code={rightFinalist.code} size={34} fill />}
         </button>
       </div>
       <div className="text-center min-h-[32px]">
