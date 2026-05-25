@@ -333,6 +333,9 @@ const Bets = ({ tag }: BetsPageProps) => {
   const [authEmail, setAuthEmail] = useState('');
   const [authAccountId, setAuthAccountId] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    try { return localStorage.getItem(`bets_remember_${tag}`) === '1'; } catch { return false; }
+  });
 
   // bet slip
   const [slip, setSlip] = useState<{ event: EventRow; outcome: OutcomeRow } | null>(null);
