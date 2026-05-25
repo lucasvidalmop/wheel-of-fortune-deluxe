@@ -549,6 +549,36 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [aFilter, setAFilter] = useState<{ eventId: string; status: string; days: number }>({ eventId: '', status: '', days: 30 });
   const [wFilter, setWFilter] = useState<{ eventId: string; marketId: string; status: string }>({ eventId: '', marketId: '', status: '' });
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
+  const [sharingEvent, setSharingEvent] = useState<ShareEventData | null>(null);
+
+  const openShareEvent = (ev: BetEvent) => {
+    const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
+    const evOuts = outcomes.filter(o => o.event_id === ev.id);
+    const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
+    const shareMarkets = (evMarkets.length ? evMarkets : [{ id: null as any, title: 'Resultado Final' } as any])
+      .slice(0, 3)
+      .map(m => ({
+        title: m.title || 'Resultado Final',
+        outcomes: evOuts
+          .filter(o => (m.id ? o.market_id === m.id : true))
+          .sort((a, b) => a.position - b.position)
+          .slice(0, 3)
+          .map(o => ({ label: o.label, odd: Number(o.odd) })),
+      }))
+      .filter(m => m.outcomes.length > 0);
+    const tag = config?.tag || '';
+    const copyUrl = tag ? `${window.location.origin}/odds=${tag}#ev=${ev.id}` : '';
+    setSharingEvent({
+      eventTitle: ev.title,
+      subtitle: ev.subtitle || undefined,
+      category: cat?.name || ev.category || undefined,
+      startsAt: ev.starts_at,
+      closesAt: ev.closes_at,
+      isHot: !!ev.is_hot,
+      markets: shareMarkets,
+      copyUrl,
+    });
+  };
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
