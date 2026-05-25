@@ -187,20 +187,36 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
             </div>
           </div>
 
+          {/* Event hero image (when no teams) */}
+          {!teams && data.eventImageUrl && (
+            <div className="px-5 pt-4">
+              <div className="rounded-2xl overflow-hidden aspect-[16/9]" style={{ boxShadow: `0 10px 30px -10px ${accent}66` }}>
+                <img src={data.eventImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
+
           {/* Versus block */}
           <div className="relative px-5 py-6">
             {teams ? (
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 {/* Home */}
                 <div className="flex flex-col items-center text-center gap-2">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl"
-                    style={{
-                      background: `linear-gradient(135deg, ${accent}, ${accent}88)`,
-                      color: '#0b0b14',
-                      boxShadow: `0 10px 30px -10px ${accent}99`,
-                    }}>
-                    {initials(homeName)}
-                  </div>
+                  {data.homeImageUrl ? (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center p-2 bg-white"
+                      style={{ boxShadow: `0 10px 30px -10px ${accent}99`, border: `1px solid ${accent}66` }}>
+                      <img src={data.homeImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl"
+                      style={{
+                        background: `linear-gradient(135deg, ${accent}, ${accent}88)`,
+                        color: '#0b0b14',
+                        boxShadow: `0 10px 30px -10px ${accent}99`,
+                      }}>
+                      {initials(homeName)}
+                    </div>
+                  )}
                   <div className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: textColor }}>
                     {homeName}
                   </div>
@@ -214,14 +230,21 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
 
                 {/* Away */}
                 <div className="flex flex-col items-center text-center gap-2">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl border-2"
-                    style={{
-                      background: `${textColor}0a`,
-                      color: textColor,
-                      borderColor: `${accent}66`,
-                    }}>
-                    {initials(awayName)}
-                  </div>
+                  {data.awayImageUrl ? (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center p-2 bg-white"
+                      style={{ border: `1px solid ${accent}66` }}>
+                      <img src={data.awayImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl border-2"
+                      style={{
+                        background: `${textColor}0a`,
+                        color: textColor,
+                        borderColor: `${accent}66`,
+                      }}>
+                      {initials(awayName)}
+                    </div>
+                  )}
                   <div className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: textColor }}>
                     {awayName}
                   </div>
