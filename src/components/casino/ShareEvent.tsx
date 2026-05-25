@@ -22,6 +22,9 @@ export interface ShareEventData {
   isHot?: boolean;
   markets: ShareEventMarket[];
   copyUrl?: string;
+  homeImageUrl?: string;
+  awayImageUrl?: string;
+  eventImageUrl?: string;
 }
 
 interface Props {
