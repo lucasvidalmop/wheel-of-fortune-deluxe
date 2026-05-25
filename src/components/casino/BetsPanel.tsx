@@ -1404,27 +1404,87 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               'double chance': 'Dupla chance',
               'asian handicap': 'Handicap asiático',
               'handicap result': 'Handicap',
-              'corners over under': 'Escanteios',
-              'cards over under': 'Cartões',
               'first half winner': 'Vencedor 1º tempo',
               'second half winner': 'Vencedor 2º tempo',
               'exact score': 'Placar exato',
               'total - home': 'Total gols mandante',
               'total - away': 'Total gols visitante',
+              // Escanteios
+              'corners over under': 'Escanteios Mais/Menos',
+              'corners over/under': 'Escanteios Mais/Menos',
+              'corners 1x2': 'Resultado em Escanteios',
+              'corners asian handicap': 'Handicap Asiático de Escanteios',
+              'home corners over/under': 'Escanteios Casa Mais/Menos',
+              'away corners over/under': 'Escanteios Fora Mais/Menos',
+              'total corners (3 way)': 'Total de Escanteios',
+              'total corners (1st half)': 'Escanteios 1º Tempo',
+              'total corners (2nd half)': 'Escanteios 2º Tempo',
+              'corners. odd/even': 'Escanteios Ímpar/Par',
+              'corners odd/even': 'Escanteios Ímpar/Par',
+              'corners. double chance': 'Dupla Chance Escanteios',
+              'corners double chance': 'Dupla Chance Escanteios',
+              'corners 1x2 (1st half)': 'Resultado Escanteios 1º Tempo',
+              'corners 1x2 (2nd half)': 'Resultado Escanteios 2º Tempo',
+              // Cartões
+              'cards over/under': 'Cartões Mais/Menos',
+              'cards over under': 'Cartões Mais/Menos',
+              'total cards': 'Total de Cartões',
+              'asian cards': 'Handicap Asiático de Cartões',
+              'cards handicap': 'Handicap de Cartões',
+              'yellow cards': 'Cartões Amarelos',
+              'red cards': 'Cartões Vermelhos',
+              'booking points': 'Pontos de Cartões',
+              'team cards': 'Cartões por Time',
+              'home cards over/under': 'Cartões Casa Mais/Menos',
+              'away cards over/under': 'Cartões Fora Mais/Menos',
             };
+
+            // Markets allowed to use fallback bookmakers when Bet365 doesn't offer them
+            const FALLBACK_ALLOWED_KEYS = new Set<string>([
+              'corners over under', 'corners over/under',
+              'corners 1x2',
+              'corners asian handicap',
+              'home corners over/under',
+              'away corners over/under',
+              'total corners (3 way)',
+              'total corners (1st half)',
+              'total corners (2nd half)',
+              'corners. odd/even', 'corners odd/even',
+              'corners. double chance', 'corners double chance',
+              'corners 1x2 (1st half)',
+              'corners 1x2 (2nd half)',
+              'cards over/under', 'cards over under',
+              'total cards',
+              'asian cards',
+              'cards handicap',
+              'yellow cards',
+              'red cards',
+              'booking points',
+              'team cards',
+              'home cards over/under',
+              'away cards over/under',
+            ]);
+            const isFallbackKey = (key: string) => {
+              if (FALLBACK_ALLOWED_KEYS.has(key)) return true;
+              return /corner|card/i.test(key);
+            };
+
+            // Bookmaker fallback priority (Bet365 is primary; others only for corners/cards)
+            const FALLBACK_BOOKMAKERS = ['betano', '1xbet', 'marathonbet', '10bet', 'superbet'];
 
             const translateValue = (raw: string, homeName: string, awayName: string): string => {
               const v = String(raw || '').trim();
               const low = v.toLowerCase();
-              if (low === 'home') return `${homeName} vence`;
-              if (low === 'away') return `${awayName} vence`;
-              if (low === 'draw') return 'Empate';
+              if (low === 'home' || low === '1') return `${homeName} vence`;
+              if (low === 'away' || low === '2') return `${awayName} vence`;
+              if (low === 'draw' || low === 'x') return 'Empate';
               if (low === 'yes') return 'Sim';
               if (low === 'no') return 'Não';
               if (low === 'home/draw' || low === '1x') return `${homeName} ou empate`;
               if (low === 'draw/away' || low === 'x2') return `Empate ou ${awayName}`;
               if (low === 'home/away' || low === '12') return `${homeName} ou ${awayName}`;
-              // Over/Under X.Y
+              if (low === 'odd') return 'Ímpar';
+              if (low === 'even') return 'Par';
               const ov = v.match(/^over\s+([\d.]+)$/i);
               if (ov) return `Mais de ${ov[1]}`;
               const un = v.match(/^under\s+([\d.]+)$/i);
@@ -1432,56 +1492,77 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               return v;
             };
 
+            const buildOutcomesFromBet = (bet: any) => {
+              if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) return null;
+              const seen = new Set<string>();
+              const outs = bet.values
+                .map((v: any) => ({
+                  label: translateValue(String(v.value), homeName, awayName),
+                  odd: Number(v.odd),
+                }))
+                .filter((o: any) => {
+                  if (!o.label || !(o.odd > 1)) return false;
+                  const k = o.label.toLowerCase();
+                  if (seen.has(k)) return false;
+                  seen.add(k);
+                  return true;
+                });
+              if (outs.length < 2) return null;
+              return outs;
+            };
+
             try {
               const r = await fetch(`https://sportsapi.tipspayroleta.com/odds?fixture=${encodeURIComponent(String(fixtureId))}`);
               const oddsRes = await r.json().catch(() => ({}));
               const responses = (oddsRes as any)?.response || [];
-              const bookmakers = responses[0]?.bookmakers || [];
-              // Usar EXCLUSIVAMENTE Bet365 — sem fallback automático para outras casas
-              const bookmaker = bookmakers.find(
-                (b: any) => String(b?.name || '').toLowerCase() === 'bet365',
-              );
-              if (!bookmaker) {
-                console.warn(`Bet365 not available for fixture ${fixtureId}`);
-                setEditingMarkets(fallbackMarkets);
-                toast.info('Bet365 indisponível para este jogo — usando mercado padrão.');
-                setImporterOpen(false);
-                return;
-              }
-              console.log('Using bookmaker: Bet365');
-              const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bookmaker?.bets || [];
+              const bookmakers: any[] = responses[0]?.bookmakers || [];
+              const findBM = (name: string) =>
+                bookmakers.find((b: any) => String(b?.name || '').toLowerCase() === name);
+              const bet365 = findBM('bet365');
 
               const built: EditingMarket[] = [];
-              // Match Winner always first as "Resultado Final"
-              const ordered = [...bets].sort((a, b) => {
-                const aw = (a.name || '').toLowerCase() === 'match winner' ? -1 : 0;
-                const bw = (b.name || '').toLowerCase() === 'match winner' ? -1 : 0;
-                return aw - bw;
-              });
+              const usedKeys = new Set<string>();
 
-              ordered.forEach((bet) => {
-                if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) return;
-                const seen = new Set<string>();
-                const outs = bet.values
-                  .map(v => ({
-                    label: translateValue(String(v.value), homeName, awayName),
-                    odd: Number(v.odd),
-                  }))
-                  .filter(o => {
-                    if (!o.label || !(o.odd > 1)) return false;
-                    const k = o.label.toLowerCase();
-                    if (seen.has(k)) return false;
-                    seen.add(k);
-                    return true;
-                  });
-                if (outs.length < 2) return;
-                const key = (bet.name || '').toLowerCase();
-                const title = MARKET_NAME_PTBR[key] || bet.name;
-                built.push({
-                  title, position: built.length, ...defaultMarketDefaults(),
-                  outcomes: outs,
+              const addBetsFrom = (bets: any[], { fallbackOnly }: { fallbackOnly: boolean }) => {
+                const ordered = [...bets].sort((a, b) => {
+                  const aw = (a.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                  const bw = (b.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                  return aw - bw;
                 });
-              });
+                ordered.forEach((bet) => {
+                  const key = (bet?.name || '').toLowerCase();
+                  if (!key || usedKeys.has(key)) return;
+                  if (fallbackOnly && !isFallbackKey(key)) return;
+                  const outs = buildOutcomesFromBet(bet);
+                  if (!outs) return;
+                  const title = MARKET_NAME_PTBR[key] || bet.name;
+                  built.push({
+                    title, position: built.length, ...defaultMarketDefaults(),
+                    outcomes: outs,
+                  });
+                  usedKeys.add(key);
+                });
+              };
+
+              if (bet365) {
+                console.log('Using bookmaker: Bet365');
+                addBetsFrom(bet365.bets || [], { fallbackOnly: false });
+              } else {
+                console.warn(`Bet365 not available for fixture ${fixtureId}`);
+              }
+
+              // Fallback ONLY for corners/cards
+              const orderedFallback = [
+                ...FALLBACK_BOOKMAKERS.map(findBM).filter(Boolean),
+                ...bookmakers.filter(
+                  (b: any) =>
+                    String(b?.name || '').toLowerCase() !== 'bet365' &&
+                    !FALLBACK_BOOKMAKERS.includes(String(b?.name || '').toLowerCase()),
+                ),
+              ];
+              for (const bm of orderedFallback) {
+                addBetsFrom(bm?.bets || [], { fallbackOnly: true });
+              }
 
               if (built.length === 0) {
                 setEditingMarkets(fallbackMarkets);
@@ -1495,6 +1576,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               setEditingMarkets(fallbackMarkets);
               toast.info('Não foi possível buscar odds — usando mercado padrão.');
             }
+
 
             setImporterOpen(false);
           }}
