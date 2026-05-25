@@ -7,7 +7,6 @@ import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
 import { confirmDialog, promptDialog } from '@/components/ui/imperative-dialog';
 import BolaoAdminPanel from '@/components/casino/BolaoAdminPanel';
-import { mergeBookmakersCached } from '@/lib/oddsMerge';
 
 interface BetsPanelProps { ownerId: string }
 
@@ -43,8 +42,6 @@ type EditingMarket = {
   min_bet: number; max_bet: number; max_bets_per_user: number;
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   outcomes: Array<{ id?: string; label: string; odd: number }>;
-  /** Source bookmaker (debug/admin badge — not persisted). */
-  bookmaker?: string;
 };
 
 const BetsPanel = ({ ownerId }: BetsPanelProps) => {
@@ -1182,14 +1179,6 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     <input value={m.title} placeholder="Título do mercado"
                       onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, title: e.target.value } : x))}
                       className="flex-1 px-3 py-1.5 rounded bg-background border border-border text-sm font-medium" />
-                    {m.bookmaker && (
-                      <span
-                        title="Fonte da odd (debug/admin)"
-                        className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 whitespace-nowrap"
-                      >
-                        via {m.bookmaker}
-                      </span>
-                    )}
                     <button onClick={() => setEditingMarkets(arr => arr.filter((_, j) => j !== mi))}
                       disabled={editingMarkets.length <= 1}
                       title={editingMarkets.length <= 1 ? 'Mantenha ao menos 1 mercado' : 'Excluir mercado'}
@@ -1407,51 +1396,99 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               ],
             }];
 
+            // PT-BR translations for known market names
+            const MARKET_NAME_PTBR: Record<string, string> = {
+              'match winner': 'Resultado Final',
+              'both teams score': 'Ambos marcam',
+              'goals over/under': 'Mais/Menos gols',
+              'double chance': 'Dupla chance',
+              'asian handicap': 'Handicap asiático',
+              'handicap result': 'Handicap',
+              'corners over under': 'Escanteios',
+              'cards over under': 'Cartões',
+              'first half winner': 'Vencedor 1º tempo',
+              'second half winner': 'Vencedor 2º tempo',
+              'exact score': 'Placar exato',
+              'total - home': 'Total gols mandante',
+              'total - away': 'Total gols visitante',
+            };
+
+            const translateValue = (raw: string, homeName: string, awayName: string): string => {
+              const v = String(raw || '').trim();
+              const low = v.toLowerCase();
+              if (low === 'home') return `${homeName} vence`;
+              if (low === 'away') return `${awayName} vence`;
+              if (low === 'draw') return 'Empate';
+              if (low === 'yes') return 'Sim';
+              if (low === 'no') return 'Não';
+              if (low === 'home/draw' || low === '1x') return `${homeName} ou empate`;
+              if (low === 'draw/away' || low === 'x2') return `Empate ou ${awayName}`;
+              if (low === 'home/away' || low === '12') return `${homeName} ou ${awayName}`;
+              // Over/Under X.Y
+              const ov = v.match(/^over\s+([\d.]+)$/i);
+              if (ov) return `Mais de ${ov[1]}`;
+              const un = v.match(/^under\s+([\d.]+)$/i);
+              if (un) return `Menos de ${un[1]}`;
+              return v;
+            };
+
             try {
               const r = await fetch(`https://sportsapi.tipspayroleta.com/odds?fixture=${encodeURIComponent(String(fixtureId))}`);
               const oddsRes = await r.json().catch(() => ({}));
               const responses = (oddsRes as any)?.response || [];
               const bookmakers = responses[0]?.bookmakers || [];
-
-              // 🔎 DIAGNÓSTICO BRUTO DA API
-              console.groupCollapsed(`%c[odds][fixture ${fixtureId}] API recebida`, 'background:#0af;color:#000;font-weight:bold;padding:2px 6px');
-              console.log(`bookmakers (${bookmakers.length}):`, bookmakers.map((b: any) => b?.name));
-              bookmakers.forEach((bk: any) => {
-                const names = (bk?.bets || []).map((b: any) => b?.name).filter(Boolean);
-                console.log(`  • ${bk?.name}: ${names.length} mercados`, names);
-              });
-              console.groupEnd();
-
-              // 🟢 MERGE (normalização + validação + policy por categoria + cache)
-              const { markets: merged, stats, fromCache } = mergeBookmakersCached(
-                fixtureId,
-                bookmakers,
-                { homeName, awayName },
+              // Usar EXCLUSIVAMENTE Bet365 — sem fallback automático para outras casas
+              const bookmaker = bookmakers.find(
+                (b: any) => String(b?.name || '').toLowerCase() === 'bet365',
               );
+              if (!bookmaker) {
+                console.warn(`Bet365 not available for fixture ${fixtureId}`);
+                setEditingMarkets(fallbackMarkets);
+                toast.info('Bet365 indisponível para este jogo — usando mercado padrão.');
+                setImporterOpen(false);
+                return;
+              }
+              console.log('Using bookmaker: Bet365');
+              const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bookmaker?.bets || [];
 
-              console.group(`[odds] RESUMO MERGE${fromCache ? ' (cache)' : ''}`);
-              console.log('bookmaker principal:', stats.primary);
-              console.log('ordem:', stats.ordered);
-              console.log(`base: ${stats.base} | fallback: ${stats.fallback} | total: ${stats.total}`);
-              console.log('mercados por bookmaker:', stats.perBookmaker);
-              console.log('cobertura % por bookmaker:', stats.coverage);
-              console.log(`duplicados ignorados: ${stats.duplicated.length}`, stats.duplicated);
-              console.log(`rejeitados (inválidos/policy): ${stats.rejected.length}`, stats.rejected);
-              console.groupEnd();
+              const built: EditingMarket[] = [];
+              // Match Winner always first as "Resultado Final"
+              const ordered = [...bets].sort((a, b) => {
+                const aw = (a.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                const bw = (b.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                return aw - bw;
+              });
 
-              if (merged.length === 0) {
+              ordered.forEach((bet) => {
+                if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) return;
+                const seen = new Set<string>();
+                const outs = bet.values
+                  .map(v => ({
+                    label: translateValue(String(v.value), homeName, awayName),
+                    odd: Number(v.odd),
+                  }))
+                  .filter(o => {
+                    if (!o.label || !(o.odd > 1)) return false;
+                    const k = o.label.toLowerCase();
+                    if (seen.has(k)) return false;
+                    seen.add(k);
+                    return true;
+                  });
+                if (outs.length < 2) return;
+                const key = (bet.name || '').toLowerCase();
+                const title = MARKET_NAME_PTBR[key] || bet.name;
+                built.push({
+                  title, position: built.length, ...defaultMarketDefaults(),
+                  outcomes: outs,
+                });
+              });
+
+              if (built.length === 0) {
                 setEditingMarkets(fallbackMarkets);
                 toast.info('Sem odds disponíveis na API — usando mercado padrão.');
               } else {
-                const built: EditingMarket[] = merged.map((m, idx) => ({
-                  title: m.title,
-                  position: idx,
-                  ...defaultMarketDefaults(),
-                  outcomes: m.outcomes.map(o => ({ label: o.label, odd: o.odd })),
-                  bookmaker: m.bookmaker,
-                }));
                 setEditingMarkets(built);
-                toast.success(`${built.length} mercado(s) importado(s) (${stats.fallback} via fallback)`);
+                toast.success(`${built.length} mercado(s) importado(s)`);
               }
             } catch (err: any) {
               console.error('odds fetch error', err);
