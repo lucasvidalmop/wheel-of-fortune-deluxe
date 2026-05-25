@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy, Download, BarChart3, TrendingUp, TrendingDown, Users, Coins, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, Copy, Check, X, Edit2, Play, Ban, Trophy, Download, BarChart3, TrendingUp, TrendingDown, Users, Coins, ArrowUp, ArrowDown, Share2 } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
 import { confirmDialog, promptDialog } from '@/components/ui/imperative-dialog';
 import BolaoAdminPanel from '@/components/casino/BolaoAdminPanel';
+import ShareEvent, { type ShareEventData } from '@/components/casino/ShareEvent';
 
 interface BetsPanelProps { ownerId: string }
 
@@ -548,6 +549,36 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [aFilter, setAFilter] = useState<{ eventId: string; status: string; days: number }>({ eventId: '', status: '', days: 30 });
   const [wFilter, setWFilter] = useState<{ eventId: string; marketId: string; status: string }>({ eventId: '', marketId: '', status: '' });
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
+  const [sharingEvent, setSharingEvent] = useState<ShareEventData | null>(null);
+
+  const openShareEvent = (ev: BetEvent) => {
+    const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
+    const evOuts = outcomes.filter(o => o.event_id === ev.id);
+    const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
+    const shareMarkets = (evMarkets.length ? evMarkets : [{ id: null as any, title: 'Resultado Final' } as any])
+      .slice(0, 3)
+      .map(m => ({
+        title: m.title || 'Resultado Final',
+        outcomes: evOuts
+          .filter(o => (m.id ? o.market_id === m.id : true))
+          .sort((a, b) => a.position - b.position)
+          .slice(0, 3)
+          .map(o => ({ label: o.label, odd: Number(o.odd) })),
+      }))
+      .filter(m => m.outcomes.length > 0);
+    const tag = config?.tag || '';
+    const copyUrl = tag ? `${window.location.origin}/odds=${tag}#ev=${ev.id}` : '';
+    setSharingEvent({
+      eventTitle: ev.title,
+      subtitle: ev.subtitle || undefined,
+      category: cat?.name || ev.category || undefined,
+      startsAt: ev.starts_at,
+      closesAt: ev.closes_at,
+      isHot: !!ev.is_hot,
+      markets: shareMarkets,
+      copyUrl,
+    });
+  };
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -848,6 +879,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                         </>
                       );
                     })()}
+                    <button onClick={() => openShareEvent(ev)} title="Compartilhar evento" className="p-1.5 rounded hover:bg-muted text-cyan-500"><Share2 size={14} /></button>
                     <button onClick={() => openEditEvent(ev)} title="Editar" className="p-1.5 rounded hover:bg-muted"><Edit2 size={14} /></button>
                     {ev.status === 'scheduled' && (
                       <button onClick={() => setEventStatus(ev, 'open')} title="Abrir agora" className="p-1.5 rounded hover:bg-muted text-green-500"><Play size={14} /></button>
@@ -1580,6 +1612,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
             setImporterOpen(false);
           }}
+        />
+      )}
+      {sharingEvent && (
+        <ShareEvent
+          open={!!sharingEvent}
+          onClose={() => setSharingEvent(null)}
+          data={sharingEvent}
+          config={config?.page_config?.ticket || {}}
         />
       )}
     </div>
