@@ -1182,6 +1182,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     <input value={m.title} placeholder="Título do mercado"
                       onChange={e => setEditingMarkets(arr => arr.map((x, j) => j === mi ? { ...x, title: e.target.value } : x))}
                       className="flex-1 px-3 py-1.5 rounded bg-background border border-border text-sm font-medium" />
+                    {m.bookmaker && (
+                      <span
+                        title="Fonte da odd (debug/admin)"
+                        className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 whitespace-nowrap"
+                      >
+                        via {m.bookmaker}
+                      </span>
+                    )}
                     <button onClick={() => setEditingMarkets(arr => arr.filter((_, j) => j !== mi))}
                       disabled={editingMarkets.length <= 1}
                       title={editingMarkets.length <= 1 ? 'Mantenha ao menos 1 mercado' : 'Excluir mercado'}
