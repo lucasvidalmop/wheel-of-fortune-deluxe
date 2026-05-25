@@ -1614,6 +1614,14 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
           }}
         />
       )}
+      {sharingEvent && (
+        <ShareEvent
+          open={!!sharingEvent}
+          onClose={() => setSharingEvent(null)}
+          data={sharingEvent}
+          config={config?.page_config?.ticket || {}}
+        />
+      )}
     </div>
   );
 };
