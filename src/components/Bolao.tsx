@@ -32,24 +32,49 @@ const CODE_TO_ISO2: Record<string, string> = {
   SWE: "se", TUN: "tn", TUR: "tr", URU: "uy", USA: "us", UZB: "uz",
 };
 
-const FlagImg = ({ code, size = 20, fill = false }: { code?: string; size?: number; fill?: boolean }) => {
+// Emoji fallback derived from ISO2 (regional indicator letters). Works offline on iOS/Android.
+const isoToEmoji = (iso: string): string => {
+  if (iso.length !== 2) return "";
+  const A = 0x1f1e6;
+  const a = "a".charCodeAt(0);
+  return String.fromCodePoint(A + (iso.charCodeAt(0) - a)) + String.fromCodePoint(A + (iso.charCodeAt(1) - a));
+};
+
+const FlagImg = ({ code, flag, size = 20, fill = false }: { code?: string; flag?: string; size?: number; fill?: boolean }) => {
   const iso = code ? CODE_TO_ISO2[code] : undefined;
-  if (!iso) return null;
   const h = fill ? size : Math.round(size * 0.75);
-  // jsDelivr serves flag-icons SVGs reliably across mobile networks (flagcdn.com is sometimes blocked).
+  // Use emoji whenever possible — renders natively, no network, no broken-image icons on mobile.
+  const emoji = flag || (iso && iso.length === 2 ? isoToEmoji(iso) : "");
+  if (emoji) {
+    return (
+      <span
+        aria-label={code}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: size,
+          height: fill ? size : h,
+          minWidth: size,
+          flexShrink: 0,
+          fontSize: Math.round(size * (fill ? 0.95 : 1.1)),
+          lineHeight: 1,
+          borderRadius: fill ? 9999 : 2,
+          overflow: "hidden",
+        }}
+      >
+        {emoji}
+      </span>
+    );
+  }
+  if (!iso) return null;
+  // Fallback for sub-region flags (gb-eng, gb-sct) that don't have an emoji.
   const src = `https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/flags/4x3/${iso}.svg`;
   return (
     <img
       src={src}
       alt={code}
       decoding="async"
-      onError={(e) => {
-        const img = e.currentTarget;
-        if (!img.dataset.fallback) {
-          img.dataset.fallback = "1";
-          img.src = `https://flagcdn.com/w160/${iso}.png`;
-        }
-      }}
       style={{
         display: "block",
         borderRadius: fill ? 9999 : 2,
