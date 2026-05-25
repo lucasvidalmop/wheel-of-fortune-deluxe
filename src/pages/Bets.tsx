@@ -1071,6 +1071,15 @@ const Bets = ({ tag }: BetsPageProps) => {
                 required maxLength={50} autoComplete="off"
                 className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-white/20" />
             </div>
+            <label className="flex items-center gap-2 text-xs cursor-pointer select-none" style={{ color: subtitleColor }}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border border-white/20 bg-white/5 accent-cyan-400"
+              />
+              Lembrar sessão
+            </label>
           </div>
           <button type="submit" disabled={authLoading}
             className="w-full py-3 rounded-xl font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
