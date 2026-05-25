@@ -1437,6 +1437,21 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               const oddsRes = await r.json().catch(() => ({}));
               const responses = (oddsRes as any)?.response || [];
               const bookmakers = responses[0]?.bookmakers || [];
+
+              // 🔎 DIAGNÓSTICO BRUTO DA API (todas as casas e mercados de cartões)
+              console.groupCollapsed(`[odds][fixture ${fixtureId}] resposta bruta da API`);
+              console.log('bookmakers disponíveis:', bookmakers.map((b: any) => b?.name));
+              bookmakers.forEach((bk: any) => {
+                const names = (bk?.bets || []).map((b: any) => b?.name);
+                const cardLike = names.filter((n: string) => /card|booking|cart[õo]e/i.test(n || ''));
+                console.log(`  • ${bk?.name}: ${names.length} mercados`, {
+                  contemCartoes: cardLike.length > 0,
+                  mercadosDeCartoes: cardLike,
+                  todos: names,
+                });
+              });
+              console.groupEnd();
+
               // Usar EXCLUSIVAMENTE Bet365 — sem fallback automático para outras casas
               const bookmaker = bookmakers.find(
                 (b: any) => String(b?.name || '').toLowerCase() === 'bet365',
@@ -1451,7 +1466,12 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               console.log('Using bookmaker: Bet365');
               const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bookmaker?.bets || [];
 
+              // 🔎 LOG: o que Bet365 retornou
+              console.log(`[odds][Bet365] ${bets.length} mercados:`, bets.map(b => b.name));
+              console.log(`[odds][Bet365] cartões:`, bets.filter(b => /card|booking/i.test(b?.name || '')).map(b => b.name));
+
               const built: EditingMarket[] = [];
+              const rejected: Array<{ name: string; reason: string }> = [];
               // Match Winner always first as "Resultado Final"
               const ordered = [...bets].sort((a, b) => {
                 const aw = (a.name || '').toLowerCase() === 'match winner' ? -1 : 0;
@@ -1460,7 +1480,10 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               });
 
               ordered.forEach((bet) => {
-                if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) return;
+                if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) {
+                  rejected.push({ name: bet?.name || '(sem nome)', reason: 'menos de 2 valores' });
+                  return;
+                }
                 const seen = new Set<string>();
                 const outs = bet.values
                   .map(v => ({
@@ -1474,7 +1497,10 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                     seen.add(k);
                     return true;
                   });
-                if (outs.length < 2) return;
+                if (outs.length < 2) {
+                  rejected.push({ name: bet.name, reason: 'menos de 2 outcomes válidos (odd>1 + dedupe)' });
+                  return;
+                }
                 const key = (bet.name || '').toLowerCase();
                 const title = MARKET_NAME_PTBR[key] || bet.name;
                 built.push({
@@ -1482,6 +1508,13 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                   outcomes: outs,
                 });
               });
+
+              // 🔎 RESUMO DO FILTRO INTERNO
+              console.group('[odds] resumo do filtro interno');
+              console.log(`recebidos da Bet365: ${bets.length}`);
+              console.log(`aprovados: ${built.length}`);
+              console.log(`rejeitados: ${rejected.length}`, rejected);
+              console.groupEnd();
 
               if (built.length === 0) {
                 setEditingMarkets(fallbackMarkets);
