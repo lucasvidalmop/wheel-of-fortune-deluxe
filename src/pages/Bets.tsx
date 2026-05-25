@@ -225,6 +225,10 @@ const PT_BR_DICT: Array<[RegExp, string]> = [
 ];
 const translatePt = (s?: string | null) => {
   if (!s) return s ?? '';
+  // Try centralized market-name translation first (exact + regex). If it
+  // changed the value we treat it as a fully translated market title.
+  const market = translateMarketName(s);
+  if (market && market !== s) return market;
   let out = s;
   for (const [re, rep] of PT_BR_DICT) out = out.replace(re, rep);
   return out;
