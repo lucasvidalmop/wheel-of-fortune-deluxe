@@ -1455,68 +1455,99 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               console.log(`%c[odds] CASAS COM CARTÕES: ${casasComCartoes.length ? casasComCartoes.join(', ') : 'NENHUMA'}`, 'background:#fa0;color:#000;font-weight:bold;padding:2px 6px');
               console.log(`%c[odds] ⚠️ Código atualmente usa APENAS Bet365 — outras casas são descartadas após este log`, 'color:#f44;font-weight:bold');
 
-              // Usar EXCLUSIVAMENTE Bet365 — sem fallback automático para outras casas
-              const bookmaker = bookmakers.find(
-                (b: any) => String(b?.name || '').toLowerCase() === 'bet365',
+              // 🟢 MERGE: Bet365 como principal, completar mercados ausentes com outras casas.
+              const BOOKMAKER_PRIORITY = ['bet365', '1xbet', 'marathonbet', 'bwin'];
+              const priorityOf = (name: string) => {
+                const i = BOOKMAKER_PRIORITY.indexOf(String(name || '').toLowerCase());
+                return i === -1 ? BOOKMAKER_PRIORITY.length + 1 : i;
+              };
+              const orderedBookmakers = [...bookmakers].sort(
+                (a: any, b: any) => priorityOf(a?.name) - priorityOf(b?.name),
               );
-              if (!bookmaker) {
-                console.warn(`Bet365 not available for fixture ${fixtureId}`);
+              console.log('[odds] ordem de prioridade dos bookmakers:', orderedBookmakers.map((b: any) => b?.name));
+
+              const primary = orderedBookmakers[0];
+              if (!primary) {
+                console.warn(`Nenhum bookmaker disponível para fixture ${fixtureId}`);
                 setEditingMarkets(fallbackMarkets);
-                toast.info('Bet365 indisponível para este jogo — usando mercado padrão.');
+                toast.info('Sem bookmakers disponíveis — usando mercado padrão.');
                 setImporterOpen(false);
                 return;
               }
-              console.log('Using bookmaker: Bet365');
-              const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bookmaker?.bets || [];
 
-              // 🔎 LOG: o que Bet365 retornou
-              console.log(`[odds][Bet365] ${bets.length} mercados:`, bets.map(b => b.name));
-              console.log(`[odds][Bet365] cartões:`, bets.filter(b => /card|booking/i.test(b?.name || '')).map(b => b.name));
-
-              const built: EditingMarket[] = [];
-              const rejected: Array<{ name: string; reason: string }> = [];
-              // Match Winner always first as "Resultado Final"
-              const ordered = [...bets].sort((a, b) => {
-                const aw = (a.name || '').toLowerCase() === 'match winner' ? -1 : 0;
-                const bw = (b.name || '').toLowerCase() === 'match winner' ? -1 : 0;
-                return aw - bw;
-              });
-
-              ordered.forEach((bet) => {
-                if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) {
-                  rejected.push({ name: bet?.name || '(sem nome)', reason: 'menos de 2 valores' });
-                  return;
-                }
-                const seen = new Set<string>();
-                const outs = bet.values
-                  .map(v => ({
-                    label: translateValue(String(v.value), homeName, awayName),
-                    odd: Number(v.odd),
-                  }))
-                  .filter(o => {
-                    if (!o.label || !(o.odd > 1)) return false;
-                    const k = o.label.toLowerCase();
-                    if (seen.has(k)) return false;
-                    seen.add(k);
-                    return true;
-                  });
-                if (outs.length < 2) {
-                  rejected.push({ name: bet.name, reason: 'menos de 2 outcomes válidos (odd>1 + dedupe)' });
-                  return;
-                }
-                const key = (bet.name || '').toLowerCase();
-                const title = MARKET_NAME_PTBR[key] || bet.name;
-                built.push({
-                  title, position: built.length, ...defaultMarketDefaults(),
-                  outcomes: outs,
+              const sortBets = (bets: any[]) =>
+                [...bets].sort((a, b) => {
+                  const aw = (a?.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                  const bw = (b?.name || '').toLowerCase() === 'match winner' ? -1 : 0;
+                  return aw - bw;
                 });
-              });
 
-              // 🔎 RESUMO DO FILTRO INTERNO
-              console.group('[odds] resumo do filtro interno');
-              console.log(`recebidos da Bet365: ${bets.length}`);
-              console.log(`aprovados: ${built.length}`);
-              console.log(`rejeitados: ${rejected.length}`, rejected);
+              const built: Array<EditingMarket & { bookmaker?: string }> = [];
+              const rejected: Array<{ name: string; bookmaker: string; reason: string }> = [];
+              const duplicated: Array<{ name: string; bookmaker: string; jaVeioDe: string }> = [];
+              const seenTitles = new Set<string>();
+              const addedByBookmaker: Record<string, number> = {};
+
+              const processBookmaker = (bk: any) => {
+                const bkName = bk?.name || '(desconhecido)';
+                const bets: Array<{ name: string; values: Array<{ value: string; odd: string }> }> = bk?.bets || [];
+                console.log(`[odds][${bkName}] processando ${bets.length} mercados`);
+                sortBets(bets).forEach((bet) => {
+                  if (!bet || !Array.isArray(bet.values) || bet.values.length < 2) {
+                    rejected.push({ name: bet?.name || '(sem nome)', bookmaker: bkName, reason: 'menos de 2 valores' });
+                    return;
+                  }
+                  const key = (bet.name || '').toLowerCase();
+                  const title = MARKET_NAME_PTBR[key] || bet.name;
+                  const titleKey = String(title || '').trim().toLowerCase();
+                  if (seenTitles.has(titleKey)) {
+                    const orig = built.find(m => m.title.trim().toLowerCase() === titleKey)?.bookmaker || 'desconhecido';
+                    duplicated.push({ name: title, bookmaker: bkName, jaVeioDe: orig });
+                    return;
+                  }
+                  const seen = new Set<string>();
+                  const outs = bet.values
+                    .map(v => ({
+                      label: translateValue(String(v.value), homeName, awayName),
+                      odd: Number(v.odd),
+                    }))
+                    .filter(o => {
+                      if (!o.label || !(o.odd > 1)) return false;
+                      const k = o.label.toLowerCase();
+                      if (seen.has(k)) return false;
+                      seen.add(k);
+                      return true;
+                    });
+                  if (outs.length < 2) {
+                    rejected.push({ name: bet.name, bookmaker: bkName, reason: 'menos de 2 outcomes válidos (odd>1 + dedupe)' });
+                    return;
+                  }
+                  seenTitles.add(titleKey);
+                  addedByBookmaker[bkName] = (addedByBookmaker[bkName] || 0) + 1;
+                  built.push({
+                    title,
+                    position: built.length,
+                    ...defaultMarketDefaults(),
+                    outcomes: outs,
+                    bookmaker: bkName,
+                  } as EditingMarket & { bookmaker?: string });
+                });
+              };
+
+              // 1) Principal (geralmente Bet365), depois os demais por prioridade
+              processBookmaker(primary);
+              const baseCount = built.length;
+              for (let i = 1; i < orderedBookmakers.length; i++) processBookmaker(orderedBookmakers[i]);
+              const fallbackCount = built.length - baseCount;
+
+              // 🔎 RESUMO FINAL
+              console.group('[odds] RESUMO MERGE');
+              console.log(`bookmaker principal: ${primary?.name} (${baseCount} mercados)`);
+              console.log(`mercados adicionados por fallback: ${fallbackCount}`);
+              console.log(`TOTAL final de mercados: ${built.length}`);
+              console.log(`adicionados por bookmaker:`, addedByBookmaker);
+              console.log(`mercados ignorados por duplicidade: ${duplicated.length}`, duplicated);
+              console.log(`mercados rejeitados (inválidos): ${rejected.length}`, rejected);
               console.groupEnd();
 
               if (built.length === 0) {
@@ -1524,7 +1555,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                 toast.info('Sem odds disponíveis na API — usando mercado padrão.');
               } else {
                 setEditingMarkets(built);
-                toast.success(`${built.length} mercado(s) importado(s)`);
+                toast.success(`${built.length} mercado(s) importado(s) (${fallbackCount} via fallback)`);
               }
             } catch (err: any) {
               console.error('odds fetch error', err);
