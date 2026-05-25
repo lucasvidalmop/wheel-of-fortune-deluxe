@@ -7,6 +7,7 @@ import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import { betIsoToDateTimeLocal, dateTimeLocalToBetIso, formatBetDateTime } from '@/lib/betsDateTime';
 import { confirmDialog, promptDialog } from '@/components/ui/imperative-dialog';
 import BolaoAdminPanel from '@/components/casino/BolaoAdminPanel';
+import { mergeBookmakersCached } from '@/lib/oddsMerge';
 
 interface BetsPanelProps { ownerId: string }
 
