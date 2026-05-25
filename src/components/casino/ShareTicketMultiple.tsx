@@ -3,6 +3,7 @@ import { X, Download, Share2, Loader2, TrendingDown, Clock, Trophy, Calendar, Ti
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 import type { TicketConfig } from './ShareTicket';
+import { translateMarketName } from '@/lib/marketTranslations';
 
 export interface MultipleSelectionItem {
   eventTitle: string;
