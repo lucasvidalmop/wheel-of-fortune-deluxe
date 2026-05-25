@@ -325,19 +325,23 @@ const parseEventTeams = (title?: string | null): { home: string; away: string } 
   return { home: parts[0].trim(), away: parts.slice(1).join(' ').trim() };
 };
 
-// Para botões de odds principais: troca CASA/EMPATE/FORA por sigla dos times.
+// Para botões de odds: troca HOME/AWAY/DRAW/TIE por sigla dos times, preservando
+// handicaps/sufixos (ex.: "HOME -1" -> "SAO -1", "AWAY +1.5" -> "SAN +1.5").
 const outcomeLabelForCard = (label?: string | null, eventTitle?: string | null) => {
   if (!label) return '';
-  const up = label.trim().toUpperCase();
-  if (up === 'HOME') {
-    const { home } = parseEventTeams(eventTitle);
-    return teamAcronym(home) || 'CASA';
+  const raw = label.trim();
+  // Match leading side keyword + optional handicap/score suffix
+  const m = raw.match(/^(HOME|AWAY|DRAW|TIE)\b\s*(.*)$/i);
+  if (m) {
+    const side = m[1].toUpperCase();
+    const suffix = (m[2] || '').trim();
+    const { home, away } = parseEventTeams(eventTitle);
+    let head = '';
+    if (side === 'HOME') head = teamAcronym(home) || 'CASA';
+    else if (side === 'AWAY') head = teamAcronym(away) || 'FORA';
+    else head = 'EMP';
+    return suffix ? `${head} ${suffix}` : head;
   }
-  if (up === 'AWAY') {
-    const { away } = parseEventTeams(eventTitle);
-    return teamAcronym(away) || 'FORA';
-  }
-  if (up === 'DRAW' || up === 'TIE') return 'EMP';
   return translateOutcomeLabel(label);
 };
 
