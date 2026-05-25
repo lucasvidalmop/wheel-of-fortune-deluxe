@@ -1438,19 +1438,22 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               const responses = (oddsRes as any)?.response || [];
               const bookmakers = responses[0]?.bookmakers || [];
 
-              // 🔎 DIAGNÓSTICO BRUTO DA API (todas as casas e mercados de cartões)
-              console.groupCollapsed(`[odds][fixture ${fixtureId}] resposta bruta da API`);
-              console.log('bookmakers disponíveis:', bookmakers.map((b: any) => b?.name));
+              // 🔎 DIAGNÓSTICO BRUTO DA API — TODAS as casas e mercados de cartões
+              console.log(`%c[odds][fixture ${fixtureId}] === DIAGNÓSTICO API ===`, 'background:#0af;color:#000;font-weight:bold;padding:2px 6px');
+              console.log(`[odds] TOTAL de bookmakers recebidos da API: ${bookmakers.length}`);
+              console.log(`[odds] NOMES dos bookmakers:`, bookmakers.map((b: any) => b?.name));
+              const cardsSummary: Array<{ bookmaker: string; mercados: number; cartoes: string[] }> = [];
               bookmakers.forEach((bk: any) => {
-                const names = (bk?.bets || []).map((b: any) => b?.name);
+                const names = (bk?.bets || []).map((b: any) => b?.name).filter(Boolean);
                 const cardLike = names.filter((n: string) => /card|booking|cart[õo]e/i.test(n || ''));
-                console.log(`  • ${bk?.name}: ${names.length} mercados`, {
-                  contemCartoes: cardLike.length > 0,
-                  mercadosDeCartoes: cardLike,
-                  todos: names,
-                });
+                cardsSummary.push({ bookmaker: bk?.name, mercados: names.length, cartoes: cardLike });
+                console.log(`[odds]   • ${bk?.name}: ${names.length} mercados — cartões: ${cardLike.length ? cardLike.join(', ') : '(nenhum)'}`);
+                console.log(`[odds]       todos mercados de ${bk?.name}:`, names);
               });
-              console.groupEnd();
+              console.table(cardsSummary);
+              const casasComCartoes = cardsSummary.filter(c => c.cartoes.length > 0).map(c => c.bookmaker);
+              console.log(`%c[odds] CASAS COM CARTÕES: ${casasComCartoes.length ? casasComCartoes.join(', ') : 'NENHUMA'}`, 'background:#fa0;color:#000;font-weight:bold;padding:2px 6px');
+              console.log(`%c[odds] ⚠️ Código atualmente usa APENAS Bet365 — outras casas são descartadas após este log`, 'color:#f44;font-weight:bold');
 
               // Usar EXCLUSIVAMENTE Bet365 — sem fallback automático para outras casas
               const bookmaker = bookmakers.find(
