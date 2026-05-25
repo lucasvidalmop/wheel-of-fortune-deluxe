@@ -233,18 +233,49 @@ const translatePt = (s?: string | null) => {
   for (const [re, rep] of PT_BR_DICT) out = out.replace(re, rep);
   return out;
 };
+const OUTCOME_WORD_MAP: Record<string, string> = {
+  HOME: 'CASA',
+  AWAY: 'FORA',
+  DRAW: 'EMPATE',
+  TIE: 'EMPATE',
+  YES: 'SIM',
+  NO: 'NÃO',
+  OVER: 'MAIS',
+  UNDER: 'MENOS',
+  ODD: 'ÍMPAR',
+  EVEN: 'PAR',
+  GOAL: 'GOL',
+  GOALS: 'GOLS',
+  NEITHER: 'NENHUM',
+  BOTH: 'AMBOS',
+  EXACTLY: 'EXATAMENTE',
+  ANY: 'QUALQUER',
+  OR: 'OU',
+  AND: 'E',
+  TEAM: 'TIME',
+  HALF: 'TEMPO',
+  CORNER: 'ESCANTEIO',
+  CORNERS: 'ESCANTEIOS',
+  CARD: 'CARTÃO',
+  CARDS: 'CARTÕES',
+  YELLOW: 'AMARELO',
+  RED: 'VERMELHO',
+};
 const translateOutcomeLabel = (s?: string | null) => {
   if (!s) return s ?? '';
-  const up = s.trim().toUpperCase();
-  if (up === 'HOME') return 'CASA';
-  if (up === 'AWAY') return 'FORA';
-  if (up === 'DRAW' || up === 'TIE') return 'EMPATE';
-  if (up === 'YES') return 'SIM';
-  if (up === 'NO') return 'NÃO';
-  if (up === 'OVER') return 'MAIS';
-  if (up === 'UNDER') return 'MENOS';
-  if (up === 'ODD') return 'ÍMPAR';
-  if (up === 'EVEN') return 'PAR';
+  const trimmed = s.trim();
+  if (!trimmed) return s;
+  // Token-by-token swap preserving numbers/handicaps like "HOME -1", "OVER 4.5"
+  const tokens = trimmed.split(/(\s+)/);
+  let changed = false;
+  const out = tokens.map(tok => {
+    if (/^\s+$/.test(tok)) return tok;
+    const up = tok.toUpperCase();
+    const mapped = OUTCOME_WORD_MAP[up];
+    if (mapped) { changed = true; return mapped; }
+    return tok;
+  }).join('');
+  if (changed) return out;
   return translatePt(s);
 };
 
