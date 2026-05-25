@@ -382,12 +382,13 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           </button>
         </div>
 
-        {notStarted && config?.submission_deadline && tab !== "rules" && (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center" style={{ color: text }}>
-            <Trophy size={48} style={{ color: accent, marginBottom: 16 }} />
-            <div className="text-xl font-bold mb-1">Inscrições em breve</div>
-            <div className="text-sm mb-6" style={{ color: muted }}>O bolão ainda não está aberto. Fique ligado!</div>
-            <div className="flex gap-3 text-center">
+        {notStarted && config?.submission_deadline && (
+          <div className="px-4 py-3 border-b flex flex-wrap items-center justify-center gap-4 text-center shrink-0" style={{ borderColor: `${accent}22`, background: `linear-gradient(135deg, ${accent}11, transparent)` }}>
+            <div className="flex items-center gap-2" style={{ color: text }}>
+              <Trophy size={18} style={{ color: accent }} />
+              <div className="text-sm font-bold">Inscrições em breve</div>
+            </div>
+            <div className="flex gap-2">
               {(() => {
                 const d = Math.floor(timeLeft / 86400);
                 const h = Math.floor((timeLeft % 86400) / 3600);
@@ -395,16 +396,16 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                 const s = timeLeft % 60;
                 const box = (val: number, label: string) => (
                   <div key={label} className="flex flex-col items-center">
-                    <div className="text-2xl font-black tabular-nums px-3 py-2 rounded-lg" style={{ background: cardBg, border: `1px solid ${accent}33`, color: accent }}>
+                    <div className="text-base font-black tabular-nums px-2 py-1 rounded-md leading-none" style={{ background: cardBg, border: `1px solid ${accent}33`, color: accent }}>
                       {String(val).padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] uppercase tracking-wider mt-1" style={{ color: muted }}>{label}</div>
+                    <div className="text-[9px] uppercase tracking-wider mt-0.5" style={{ color: muted }}>{label}</div>
                   </div>
                 );
                 return [box(d, "dias"), box(h, "horas"), box(m, "min"), box(s, "seg")];
               })()}
             </div>
-            <div className="mt-4 text-xs" style={{ color: muted }}>
+            <div className="text-[11px]" style={{ color: muted }}>
               Abertura: {new Date(config.submission_deadline).toLocaleString("pt-BR")}
             </div>
           </div>
