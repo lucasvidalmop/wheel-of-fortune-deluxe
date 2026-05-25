@@ -421,9 +421,14 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
                       <td className="p-2"><span className={`text-[10px] px-2 py-0.5 rounded ${e.status === "submitted" ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"}`}>{e.status}</span></td>
                       <td className="p-2 text-right font-bold">{e.score}</td>
                       <td className="p-2">
-                        <button onClick={() => toggleEntry(e.id)} className="p-1 rounded hover:bg-muted">
-                          <Eye size={14} />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => toggleEntry(e.id)} className="p-1 rounded hover:bg-muted" title="Ver detalhes">
+                            <Eye size={14} />
+                          </button>
+                          <button onClick={() => deleteEntry(e)} className="p-1 rounded hover:bg-destructive/20 text-destructive" title="Remover palpite">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {expanded && (
