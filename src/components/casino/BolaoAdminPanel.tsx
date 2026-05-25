@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Trophy, Save, ChevronDown, ChevronRight, Eye } from "lucide-react";
+import { Loader2, RefreshCw, Trophy, Save, ChevronDown, ChevronRight, Eye, Trash2 } from "lucide-react";
 
 interface Props { ownerId: string }
 
@@ -133,6 +133,21 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
         supabase.from("bolao_entry_bracket").select("round, slot, team_code").eq("entry_id", id),
       ]);
       setEntryDetail(prev => ({ ...prev, [id]: { groups: g || [], bracket: b || [] } }));
+    }
+  };
+
+  const deleteEntry = async (entry: Entry) => {
+    if (!confirm(`Remover o palpite de ${entry.user_name || entry.user_email || entry.account_id}? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await supabase.from("bolao_entry_groups").delete().eq("entry_id", entry.id);
+      await supabase.from("bolao_entry_bracket").delete().eq("entry_id", entry.id);
+      const { error } = await supabase.from("bolao_entries").delete().eq("id", entry.id);
+      if (error) throw error;
+      toast.success("Palpite removido");
+      setEntries(prev => prev.filter(x => x.id !== entry.id));
+      if (expandedEntry === entry.id) setExpandedEntry("");
+    } catch (e: any) {
+      toast.error("Erro ao remover: " + (e?.message || ""));
     }
   };
 
@@ -406,9 +421,14 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
                       <td className="p-2"><span className={`text-[10px] px-2 py-0.5 rounded ${e.status === "submitted" ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"}`}>{e.status}</span></td>
                       <td className="p-2 text-right font-bold">{e.score}</td>
                       <td className="p-2">
-                        <button onClick={() => toggleEntry(e.id)} className="p-1 rounded hover:bg-muted">
-                          <Eye size={14} />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => toggleEntry(e.id)} className="p-1 rounded hover:bg-muted" title="Ver detalhes">
+                            <Eye size={14} />
+                          </button>
+                          <button onClick={() => deleteEntry(e)} className="p-1 rounded hover:bg-destructive/20 text-destructive" title="Remover palpite">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {expanded && (
