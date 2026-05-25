@@ -551,7 +551,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
                                         }}
                                       >
                                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                                          <FlagImg code={t.code} size={22} />
+                                          <FlagImg code={t.code} flag={t.flag} size={22} />
                                           <span className="text-sm truncate" style={{ color: selColor || undefined, fontWeight: selColor ? 600 : 400 }}>{t.name}</span>
                                         </div>
                                         {selLabel && (
@@ -803,7 +803,7 @@ function MatchSlot({ team, selected, onClick, disabled, accent, muted, size, mir
           opacity: team ? 1 : 0.5,
         }}
       >
-        {team ? <FlagImg code={team.code} size={size - 4} fill /> : null}
+        {team ? <FlagImg code={team.code} flag={team.flag} size={size - 4} fill /> : null}
       </div>
       {showName && team && (
         <span
@@ -966,7 +966,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             boxShadow: champion?.code === leftFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
           }}
         >
-          {leftFinalist && <FlagImg code={leftFinalist.code} size={34} fill />}
+          {leftFinalist && <FlagImg code={leftFinalist.code} flag={leftFinalist.flag} size={34} fill />}
         </button>
         <div
           className="rounded-full flex items-center justify-center overflow-hidden"
@@ -976,7 +976,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             border: `2px dashed ${champion ? accent : `${muted}55`}`,
           }}
         >
-          {champion ? <FlagImg code={champion.code} size={80} fill /> : <Trophy size={40} style={{ color: muted }} />}
+          {champion ? <FlagImg code={champion.code} flag={champion.flag} size={80} fill /> : <Trophy size={40} style={{ color: muted }} />}
         </div>
         <button
           type="button"
@@ -990,7 +990,7 @@ function BracketCenter({ leftFinalist, rightFinalist, champion, onPickChampion, 
             boxShadow: champion?.code === rightFinalist?.code && champion ? `0 0 12px ${accent}` : "none",
           }}
         >
-          {rightFinalist && <FlagImg code={rightFinalist.code} size={34} fill />}
+          {rightFinalist && <FlagImg code={rightFinalist.code} flag={rightFinalist.flag} size={34} fill />}
         </button>
       </div>
       <div className="text-center min-h-[32px]">
