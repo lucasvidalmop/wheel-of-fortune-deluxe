@@ -243,6 +243,27 @@ const translateOutcomeLabel = (s?: string | null) => {
   return translatePt(s);
 };
 
+// Classifica mercado em grupos visuais a partir do nome ORIGINAL (não altera no banco).
+type MarketGroupKey = 'principais' | 'gols' | 'jogadores' | 'escanteios' | 'cartoes';
+const MARKET_GROUP_LABEL: Record<MarketGroupKey, string> = {
+  principais: 'Principais',
+  gols: 'Gols',
+  jogadores: 'Jogadores',
+  escanteios: 'Escanteios',
+  cartoes: 'Cartões',
+};
+const MARKET_GROUP_ORDER: MarketGroupKey[] = ['principais', 'gols', 'jogadores', 'escanteios', 'cartoes'];
+const classifyMarketGroup = (title?: string | null): MarketGroupKey => {
+  const t = (title || '').trim().toLowerCase();
+  if (!t) return 'principais';
+  if (/\bcorner(s)?\b/.test(t)) return 'escanteios';
+  if (/\bcard(s)?\b|\byellow\b|\bred\b|\bbooking\b|\bcart(ã|a)o|\bcart(õ|o)es\b/.test(t)) return 'cartoes';
+  if (/\bplayer\b|\bscorer\b|\bgoalkeeper\b|\bassist(s)?\b|\bshots?\b|\bsaves?\b|\bjogador|goleiro|assist(ê|e)ncia|finaliza/.test(t)) return 'jogadores';
+  if (/\bgoal(s)?\b|\bover\/?under\b|\bboth teams (to )?score\b|\bbtts\b|\btotal\b|\bodd\/?even\b|\bexact score\b|\bcorrect score\b|\bg(o|ó)l|ambas marcam|placar|par\/(í|i)mpar/.test(t)) return 'gols';
+  return 'principais';
+};
+
+
 // Gera sigla de 3 letras de um nome de time (visual apenas).
 const teamAcronym = (name?: string | null): string => {
   if (!name) return '';
