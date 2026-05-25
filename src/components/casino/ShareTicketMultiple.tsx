@@ -235,7 +235,7 @@ export default function ShareTicketMultiple({ open, onClose, data, config = {} }
                 <div className="min-w-0 flex-1">
                   <div className="font-bold text-[11px] leading-tight truncate">{s.eventTitle}</div>
                   <div className="text-[10px] mt-0.5 leading-tight" style={{ color: muted }}>
-                    {s.marketTitle ? `${s.marketTitle} · ` : ''}
+                    {s.marketTitle ? `${translateMarketName(s.marketTitle)} · ` : ''}
                     <span style={{ color: accent }}>{s.outcomeLabel}</span>
                     {' · '}
                     <span className="tabular-nums">{Number(s.odd).toFixed(2)}</span>
