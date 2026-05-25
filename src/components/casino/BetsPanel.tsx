@@ -1451,13 +1451,6 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
               toast.info('Não foi possível buscar odds — usando mercado padrão.');
             }
 
-
-            } catch (err: any) {
-              console.error('odds fetch error', err);
-              setEditingMarkets(fallbackMarkets);
-              toast.info('Não foi possível buscar odds — usando mercado padrão.');
-            }
-
             setImporterOpen(false);
           }}
         />
