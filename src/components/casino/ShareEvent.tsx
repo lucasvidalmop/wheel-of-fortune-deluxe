@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { X, Download, Share2, Loader2, Calendar, Link2, Check, Flame, Trophy } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
@@ -76,6 +76,41 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [resolvedImgs, setResolvedImgs] = useState<{ home?: string; away?: string; event?: string }>({});
+
+  // Pre-resolve remote images to data URLs (CORS-safe) for both display and PNG capture.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const toDataUrl = async (url?: string): Promise<string | undefined> => {
+      if (!url) return undefined;
+      // Already a data url / same origin
+      if (url.startsWith('data:')) return url;
+      try {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error('bad status');
+        const blob = await res.blob();
+        return await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result as string);
+          r.onerror = reject;
+          r.readAsDataURL(blob);
+        });
+      } catch {
+        return url; // fallback — will at least show in UI without CORS, may be tainted in PNG
+      }
+    };
+    (async () => {
+      const [home, away, event] = await Promise.all([
+        toDataUrl(data.homeImageUrl),
+        toDataUrl(data.awayImageUrl),
+        toDataUrl(data.eventImageUrl),
+      ]);
+      if (!cancelled) setResolvedImgs({ home, away, event });
+    })();
+    return () => { cancelled = true; };
+  }, [open, data.homeImageUrl, data.awayImageUrl, data.eventImageUrl]);
+
 
   if (!open) return null;
 
@@ -188,13 +223,14 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
           </div>
 
           {/* Event hero image (when no teams) */}
-          {!teams && data.eventImageUrl && (
+          {!teams && (resolvedImgs.event || data.eventImageUrl) && (
             <div className="px-5 pt-4">
               <div className="rounded-2xl overflow-hidden aspect-[16/9]" style={{ boxShadow: `0 10px 30px -10px ${accent}66` }}>
-                <img src={data.eventImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-cover" />
+                <img src={resolvedImgs.event || data.eventImageUrl} alt="" className="w-full h-full object-cover" />
               </div>
             </div>
           )}
+
 
           {/* Versus block */}
           <div className="relative px-5 py-6">
@@ -202,11 +238,12 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 {/* Home */}
                 <div className="flex flex-col items-center text-center gap-2">
-                  {data.homeImageUrl ? (
+                  {(resolvedImgs.home || data.homeImageUrl) ? (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center p-2 bg-white"
                       style={{ boxShadow: `0 10px 30px -10px ${accent}99`, border: `1px solid ${accent}66` }}>
-                      <img src={data.homeImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" />
+                      <img src={resolvedImgs.home || data.homeImageUrl} alt="" className="w-full h-full object-contain" />
                     </div>
+
                   ) : (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl"
                       style={{
@@ -230,11 +267,12 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
 
                 {/* Away */}
                 <div className="flex flex-col items-center text-center gap-2">
-                  {data.awayImageUrl ? (
+                  {(resolvedImgs.away || data.awayImageUrl) ? (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center p-2 bg-white"
                       style={{ border: `1px solid ${accent}66` }}>
-                      <img src={data.awayImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" />
+                      <img src={resolvedImgs.away || data.awayImageUrl} alt="" className="w-full h-full object-contain" />
                     </div>
+
                   ) : (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl border-2"
                       style={{
