@@ -76,6 +76,41 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [resolvedImgs, setResolvedImgs] = useState<{ home?: string; away?: string; event?: string }>({});
+
+  // Pre-resolve remote images to data URLs (CORS-safe) for both display and PNG capture.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const toDataUrl = async (url?: string): Promise<string | undefined> => {
+      if (!url) return undefined;
+      // Already a data url / same origin
+      if (url.startsWith('data:')) return url;
+      try {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error('bad status');
+        const blob = await res.blob();
+        return await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result as string);
+          r.onerror = reject;
+          r.readAsDataURL(blob);
+        });
+      } catch {
+        return url; // fallback — will at least show in UI without CORS, may be tainted in PNG
+      }
+    };
+    (async () => {
+      const [home, away, event] = await Promise.all([
+        toDataUrl(data.homeImageUrl),
+        toDataUrl(data.awayImageUrl),
+        toDataUrl(data.eventImageUrl),
+      ]);
+      if (!cancelled) setResolvedImgs({ home, away, event });
+    })();
+    return () => { cancelled = true; };
+  }, [open, data.homeImageUrl, data.awayImageUrl, data.eventImageUrl]);
+
 
   if (!open) return null;
 
