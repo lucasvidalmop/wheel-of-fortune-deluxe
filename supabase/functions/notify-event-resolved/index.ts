@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
     for (const w of ws) {
       const payout = Number(w.payout_coins || 0);
       const stake = Number(w.amount_coins || 0);
-      const text = `🏆 *Seu bilhete foi premiado!*\n\n⚽ *Evento:* ${ev.title || "-"}${mkTitle ? `\n📊 *Mercado:* ${mkTitle}` : ""}\n✅ *Seleção:* ${outRow?.label || "-"} @ ${Number(outRow?.odd || w.odd_snapshot || 0).toFixed(2)}\n💰 *Apostado:* ${stake}\n💸 *Ganho:* ${payout}\n\nParabéns! 🎉`;
+      const text = `🏆 *Seu bilhete foi premiado!*\n\n⚽ *Evento:* ${ev.title || "-"}${mkTitle ? `\n📊 *Mercado:* ${mkTitle}` : ""}\n✅ *Seleção:* ${outRow?.label || "-"} @ ${Number(outRow?.odd || w.odd_snapshot || 0).toFixed(2)}\n💰 *Apostado:* ${stake} coins\n💸 *Ganho:* ${payout} coins\n\nParabéns! 🎉`;
       userMessages.push({ wheelUserId: w.wheel_user_id, accountId: w.account_id, email: w.user_email, text });
     }
   }
