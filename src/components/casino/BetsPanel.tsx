@@ -59,6 +59,35 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const chunk = <T,>(arr: T[], size: number) => {
+    const out: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+    return out;
+  };
+
+  const fetchRowsByEventIds = async <T,>(table: 'bet_outcomes' | 'bet_markets', eventIds: string[]): Promise<T[]> => {
+    if (eventIds.length === 0) return [];
+    const pageSize = 1000;
+    const rows: T[] = [];
+    for (const ids of chunk(eventIds, 10)) {
+      let from = 0;
+      while (true) {
+        const { data, error } = await (supabase.from(table) as any)
+          .select('*')
+          .in('event_id', ids)
+          .order('event_id')
+          .order('position')
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        const page = (data || []) as T[];
+        rows.push(...page);
+        if (page.length < pageSize) break;
+        from += pageSize;
+      }
+    }
+    return rows;
+  };
+
   // event modal state
   const [editingEvent, setEditingEvent] = useState<Partial<BetEvent> | null>(null);
   const [editingMarkets, setEditingMarkets] = useState<EditingMarket[]>([]);
@@ -85,28 +114,17 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
         const eventList = (evs || []) as BetEvent[];
         const eventIds = eventList.map(e => e.id);
 
-        // Scope outcomes/markets to loaded events. Chunk + raise limit to bypass
-        // PostgREST's default 1000-row cap (football fixtures have ~60 outcomes each).
-        const chunk = <T,>(arr: T[], size: number) => {
-          const out: T[][] = [];
-          for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-          return out;
-        };
-        const eventChunks = eventIds.length ? chunk(eventIds, 50) : [];
-        const [outsArrays, mksArrays, { data: catz }] = await Promise.all([
-          Promise.all(eventChunks.map(ids =>
-            supabase.from('bet_outcomes').select('*').in('event_id', ids).order('position').limit(50000)
-          )),
-          Promise.all(eventChunks.map(ids =>
-            supabase.from('bet_markets').select('*').in('event_id', ids).order('position').limit(10000)
-          )),
+        // Scope outcomes/markets to loaded events with real pagination. The API caps
+        // each response at 1000 rows, so a single large `.limit()` can silently leave
+        // some football events with only the first odd loaded.
+        const [outs, mks, { data: catz }] = await Promise.all([
+          fetchRowsByEventIds<BetOutcome>('bet_outcomes', eventIds),
+          fetchRowsByEventIds<BetMarket>('bet_markets', eventIds),
           supabase.from('bet_categories').select('*').eq('bets_config_id', cfg.id).order('position'),
         ]);
-        const outs = outsArrays.flatMap(r => (r.data || []) as any[]);
-        const mks = mksArrays.flatMap(r => (r.data || []) as any[]);
         setEvents(eventList);
-        setOutcomes(outs as BetOutcome[]);
-        setMarkets(mks as BetMarket[]);
+        setOutcomes(outs);
+        setMarkets(mks);
         setCategories((catz || []) as BetCategory[]);
       }
     } catch (e: any) {
@@ -552,9 +570,23 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
   const [sharingEvent, setSharingEvent] = useState<ShareEventData | null>(null);
 
-  const openShareEvent = (ev: BetEvent) => {
-    const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
-    const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
+  const openShareEvent = async (ev: BetEvent) => {
+    let evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
+    let evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
+    try {
+      const [freshMarkets, freshOuts] = await Promise.all([
+        fetchRowsByEventIds<BetMarket>('bet_markets', [ev.id]),
+        fetchRowsByEventIds<BetOutcome>('bet_outcomes', [ev.id]),
+      ]);
+      if (freshMarkets.length || freshOuts.length) {
+        evMarkets = freshMarkets.sort((a, b) => a.position - b.position);
+        evOuts = freshOuts.sort((a, b) => a.position - b.position);
+        setMarkets(prev => [...prev.filter(m => m.event_id !== ev.id), ...freshMarkets]);
+        setOutcomes(prev => [...prev.filter(o => o.event_id !== ev.id), ...freshOuts]);
+      }
+    } catch {
+      toast.error('Não foi possível atualizar as odds; usando os dados carregados.');
+    }
     const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
     const splitEventTeams = (title: string): [string, string] | null => {
       const m = title.match(/^(.+?)\s+(?:vs\.?|x|×|-|–)\s+(.+)$/i);
