@@ -66,6 +66,7 @@ export interface GorjetaPageConfig {
   successBgColor: string;
   successCtaUrl: string;
   successCtaShow: boolean;
+  signupCoins: number;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
@@ -142,7 +143,7 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
   successBgColor: 'rgba(0,0,0,0.92)',
   successCtaUrl: '',
   successCtaShow: true,
-  
+  signupCoins: 0,
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
@@ -285,6 +286,19 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
             >Apenas números</button>
           </div>
           <p className="text-[10px] text-muted-foreground mt-1.5">Define o que o participante pode digitar no campo de ID da Conta.</p>
+        </div>
+        <div className="pt-2 border-t border-white/5">
+          <label className="block text-xs font-medium mb-1.5">Coins ao se cadastrar</label>
+          <input
+            type="number"
+            min={0}
+            step={1}
+            value={config.signupCoins}
+            onChange={e => update({ signupCoins: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-sm focus:outline-none focus:border-primary/50"
+            placeholder="0"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1.5">Quantidade de coins creditados automaticamente no saldo do usuário ao concluir o cadastro pela página de gorjeta. Use 0 para desativar.</p>
         </div>
       </Section>
 
