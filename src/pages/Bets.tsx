@@ -436,6 +436,14 @@ const Bets = ({ tag }: BetsPageProps) => {
     }
   };
 
+  const resolvedSelectedEventId = useMemo(() => {
+    if (!selectedEventId) return null;
+    if (selectedEventId.length >= 36) return selectedEventId;
+    if (!page?.events?.length) return selectedEventId;
+    const found = page.events.find((e: EventRow) => e.id.startsWith(selectedEventId));
+    return found ? found.id : selectedEventId;
+  }, [selectedEventId, page?.events]);
+
   // multi-bet ticket
   const isMobile = useIsMobile();
   const [ticketDraft, setTicketDraft] = useState<TicketDraft[]>([]);
