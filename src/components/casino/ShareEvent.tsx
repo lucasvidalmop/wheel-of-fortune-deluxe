@@ -223,13 +223,14 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
           </div>
 
           {/* Event hero image (when no teams) */}
-          {!teams && data.eventImageUrl && (
+          {!teams && (resolvedImgs.event || data.eventImageUrl) && (
             <div className="px-5 pt-4">
               <div className="rounded-2xl overflow-hidden aspect-[16/9]" style={{ boxShadow: `0 10px 30px -10px ${accent}66` }}>
-                <img src={data.eventImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-cover" />
+                <img src={resolvedImgs.event || data.eventImageUrl} alt="" className="w-full h-full object-cover" />
               </div>
             </div>
           )}
+
 
           {/* Versus block */}
           <div className="relative px-5 py-6">
