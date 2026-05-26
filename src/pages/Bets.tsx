@@ -1722,7 +1722,7 @@ const Bets = ({ tag }: BetsPageProps) => {
 
           // Detail mode: show only the selected event in full width
           if (selectedEventId) {
-            const selectedEvent = events.find(e => e.id === selectedEventId);
+            const selectedEvent = events.find(e => e.id === resolvedSelectedEventId);
             return (
               <div className="space-y-4">
                 <button
