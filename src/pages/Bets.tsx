@@ -638,11 +638,11 @@ const Bets = ({ tag }: BetsPageProps) => {
             ...prev,
             events: mergeById(prev.events, data.events),
             markets: [
-              ...(prev.markets || []).filter((m: MarketRow) => m.event_id !== selectedEventId),
+              ...(prev.markets || []).filter((m: MarketRow) => m.event_id !== resolvedSelectedEventId),
               ...(data.markets || []),
             ],
             outcomes: [
-              ...(prev.outcomes || []).filter((o: OutcomeRow) => o.event_id !== selectedEventId),
+              ...(prev.outcomes || []).filter((o: OutcomeRow) => o.event_id !== resolvedSelectedEventId),
               ...(data.outcomes || []),
             ],
             cases: mergeById(prev.cases, data.cases),
