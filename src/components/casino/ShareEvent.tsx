@@ -238,11 +238,12 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 {/* Home */}
                 <div className="flex flex-col items-center text-center gap-2">
-                  {data.homeImageUrl ? (
+                  {(resolvedImgs.home || data.homeImageUrl) ? (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center p-2 bg-white"
                       style={{ boxShadow: `0 10px 30px -10px ${accent}99`, border: `1px solid ${accent}66` }}>
-                      <img src={data.homeImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" />
+                      <img src={resolvedImgs.home || data.homeImageUrl} alt="" className="w-full h-full object-contain" />
                     </div>
+
                   ) : (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl"
                       style={{
