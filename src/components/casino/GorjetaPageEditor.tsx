@@ -66,6 +66,7 @@ export interface GorjetaPageConfig {
   successBgColor: string;
   successCtaUrl: string;
   successCtaShow: boolean;
+  signupCoins: number;
 }
 
 export const defaultGorjetaConfig: GorjetaPageConfig = {
