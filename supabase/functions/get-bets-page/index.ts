@@ -207,6 +207,14 @@ Deno.serve(async (req) => {
     }
 
 
+    // active lobby tag for this operator (for the "Back to lobby" button on product pages)
+    const { data: lobbyCfg } = await supabase
+      .from("lobby_configs")
+      .select("tag, is_active")
+      .eq("owner_id", cfg.owner_id)
+      .maybeSingle();
+    const lobbyTag = lobbyCfg?.is_active ? (lobbyCfg.tag || "") : "";
+
     return new Response(JSON.stringify({
       found: true,
       ownerId: cfg.owner_id,
@@ -215,6 +223,7 @@ Deno.serve(async (req) => {
       pageConfig: cfg.page_config || {},
       coinName: cfg.coin_name || "Coins",
       coinIconUrl: cfg.coin_icon_url || "",
+      lobbyTag,
       events: events || [],
       outcomes: Array.from(new Map(outcomes.map((o: any) => [o.id, o])).values()),
       markets: Array.from(new Map(markets.map((m: any) => [m.id, m])).values()),
