@@ -46,7 +46,12 @@ const Lobby = ({ tag }: { tag: string }) => {
       try {
         const { data, error } = await supabase.functions.invoke('get-lobby-page', { body: { tag } });
         if (!alive) return;
-        if (error || !data?.found || !data?.isActive) { setNotFound(true); return; }
+        if (error || !data?.found || !data?.isActive) {
+          try { sessionStorage.removeItem('lobby_tag'); } catch { /* ignore */ }
+          setNotFound(true);
+          return;
+        }
+        try { sessionStorage.setItem('lobby_tag', tag); } catch { /* ignore */ }
         setPageConfig(data.pageConfig || {});
         setProductTags(data.productTags || { bets: '', luckybox: '', roleta: '' });
         if (data.pageConfig?.site_title) document.title = data.pageConfig.site_title;
