@@ -385,6 +385,8 @@ const decodeCopy = async (s: string): Promise<Array<{ e: string; o: string }>> =
   } catch { return []; }
 };
 
+const toShortEventId = (id?: string | null) => (id ? id.slice(0, 10) : '');
+
 const Bets = ({ tag }: BetsPageProps) => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<any | null>(null);
@@ -428,11 +430,19 @@ const Bets = ({ tag }: BetsPageProps) => {
   const setSelectedEventId = (id: string | null) => {
     setSelectedEventIdState(id);
     if (typeof window !== 'undefined') {
-      if (id) window.history.pushState(null, '', `#ev=${encodeURIComponent(id)}`);
+      if (id) window.history.pushState(null, '', `#ev=${encodeURIComponent(toShortEventId(id))}`);
       else window.history.pushState(null, '', window.location.pathname + window.location.search);
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     }
   };
+
+  const resolvedSelectedEventId = useMemo(() => {
+    if (!selectedEventId) return null;
+    if (selectedEventId.length >= 36) return selectedEventId;
+    if (!page?.events?.length) return selectedEventId;
+    const found = page.events.find((e: EventRow) => e.id.startsWith(selectedEventId));
+    return found ? found.id : selectedEventId;
+  }, [selectedEventId, page?.events]);
 
   // multi-bet ticket
   const isMobile = useIsMobile();
@@ -628,11 +638,11 @@ const Bets = ({ tag }: BetsPageProps) => {
             ...prev,
             events: mergeById(prev.events, data.events),
             markets: [
-              ...(prev.markets || []).filter((m: MarketRow) => m.event_id !== selectedEventId),
+              ...(prev.markets || []).filter((m: MarketRow) => m.event_id !== resolvedSelectedEventId),
               ...(data.markets || []),
             ],
             outcomes: [
-              ...(prev.outcomes || []).filter((o: OutcomeRow) => o.event_id !== selectedEventId),
+              ...(prev.outcomes || []).filter((o: OutcomeRow) => o.event_id !== resolvedSelectedEventId),
               ...(data.outcomes || []),
             ],
             cases: mergeById(prev.cases, data.cases),
@@ -1712,7 +1722,7 @@ const Bets = ({ tag }: BetsPageProps) => {
 
           // Detail mode: show only the selected event in full width
           if (selectedEventId) {
-            const selectedEvent = events.find(e => e.id === selectedEventId);
+            const selectedEvent = events.find(e => e.id === resolvedSelectedEventId);
             return (
               <div className="space-y-4">
                 <button

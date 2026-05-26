@@ -47,7 +47,13 @@ Deno.serve(async (req) => {
       .in("status", ["scheduled", "open", "closed", "resolved"])
       .order("position", { ascending: true })
       .order("created_at", { ascending: false });
-    if (detailEventId && typeof detailEventId === "string") evQuery = evQuery.eq("id", detailEventId);
+    if (detailEventId && typeof detailEventId === "string") {
+      if (detailEventId.length >= 36) {
+        evQuery = evQuery.eq("id", detailEventId);
+      } else {
+        evQuery = evQuery.ilike("id", `${detailEventId}%`);
+      }
+    }
     const { data: events, error: evErr } = await evQuery;
     if (evErr) throw evErr;
 

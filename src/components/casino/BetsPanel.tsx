@@ -632,7 +632,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       );
     const shareMarkets = candidates.length ? [{ title: candidates[0].market.title || 'Resultado Final', outcomes: candidates[0].outcomes }] : [];
     const tag = config?.tag || '';
-    const copyUrl = tag ? `${window.location.origin}/odds=${tag}#ev=${ev.id}` : '';
+    const copyUrl = tag ? `${window.location.origin}/n${tag}#ev=${ev.id.slice(0, 10)}` : '';
     setSharingEvent({
       eventTitle: ev.title,
       subtitle: ev.subtitle || undefined,
