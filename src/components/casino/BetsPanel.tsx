@@ -582,7 +582,10 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       }
       return outs.filter(o => Number(o.odd) > 1).slice(0, 3).map(o => ({ label: o.label, odd: Number(o.odd) }));
     };
-    const candidates = (evMarkets.length ? evMarkets : [{ id: null as any, title: 'Resultado Final', position: 0 } as any])
+    const marketSources: Array<{ id: string | null; title: string; position: number }> = evMarkets.length
+      ? evMarkets.map(m => ({ id: m.id, title: m.title, position: m.position }))
+      : [{ id: null, title: 'Resultado Final', position: 0 }];
+    const candidates = marketSources
       .map(m => {
         const marketOuts = evOuts.filter(o => (m.id ? o.market_id === m.id : true));
         return { market: m, outcomes: toShareOutcomes(marketOuts), canonicalCount: marketOuts.filter(o => outcomeSlot(o.label)).length };
