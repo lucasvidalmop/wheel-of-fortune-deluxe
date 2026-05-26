@@ -143,7 +143,7 @@ Ao participar dos sorteios disponibilizados neste aplicativo, o usuário declara
   successBgColor: 'rgba(0,0,0,0.92)',
   successCtaUrl: '',
   successCtaShow: true,
-  
+  signupCoins: 0,
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
