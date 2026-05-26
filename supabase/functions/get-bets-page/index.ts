@@ -40,6 +40,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    let normalizedDetailEventId: string | null = null;
+    if (detailEventId && typeof detailEventId === "string") {
+      normalizedDetailEventId = detailEventId.trim();
+      if (normalizedDetailEventId.length < 36) {
+        const { data: matchingEvents, error: matchErr } = await supabase
+          .from("bet_events")
+          .select("id")
+          .eq("bets_config_id", cfg.id)
+          .in("status", ["scheduled", "open", "closed", "resolved"]);
+        if (matchErr) throw matchErr;
+        normalizedDetailEventId = (matchingEvents || [])
+          .find((event: any) => String(event.id).startsWith(normalizedDetailEventId!))?.id || normalizedDetailEventId;
+      }
+    }
+
     let evQuery = supabase
       .from("bet_events")
       .select("id,title,subtitle,category,category_id,image_url,home_image_url,away_image_url,starts_at,closes_at,status,payout_mode,payout_case_id,payout_case_qty_per_unit,min_bet,max_bet,max_bets_per_user,position,winning_outcome_id,is_hot,competition_id,competition_name,competition_slug,competition_country")
@@ -47,12 +62,8 @@ Deno.serve(async (req) => {
       .in("status", ["scheduled", "open", "closed", "resolved"])
       .order("position", { ascending: true })
       .order("created_at", { ascending: false });
-    if (detailEventId && typeof detailEventId === "string") {
-      if (detailEventId.length >= 36) {
-        evQuery = evQuery.eq("id", detailEventId);
-      } else {
-        evQuery = evQuery.ilike("id", `${detailEventId}%`);
-      }
+    if (normalizedDetailEventId) {
+      evQuery = evQuery.eq("id", normalizedDetailEventId);
     }
     const { data: events, error: evErr } = await evQuery;
     if (evErr) throw evErr;
