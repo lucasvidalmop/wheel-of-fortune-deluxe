@@ -267,11 +267,12 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
 
                 {/* Away */}
                 <div className="flex flex-col items-center text-center gap-2">
-                  {data.awayImageUrl ? (
+                  {(resolvedImgs.away || data.awayImageUrl) ? (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center p-2 bg-white"
                       style={{ border: `1px solid ${accent}66` }}>
-                      <img src={data.awayImageUrl} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" />
+                      <img src={resolvedImgs.away || data.awayImageUrl} alt="" className="w-full h-full object-contain" />
                     </div>
+
                   ) : (
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl border-2"
                       style={{
