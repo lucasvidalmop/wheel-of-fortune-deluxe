@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { X, Download, Share2, Loader2, Calendar, Link2, Check, Flame, Trophy } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
