@@ -19,6 +19,7 @@ interface BetEvent {
   id: string; bets_config_id: string; title: string; subtitle: string; category: string;
   category_id: string | null;
   image_url: string; starts_at: string | null; closes_at: string | null;
+  home_image_url?: string | null; away_image_url?: string | null;
   status: 'scheduled'|'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
@@ -553,19 +554,51 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   const openShareEvent = (ev: BetEvent) => {
     const evMarkets = markets.filter(m => m.event_id === ev.id).sort((a, b) => a.position - b.position);
-    const evOuts = outcomes.filter(o => o.event_id === ev.id);
+    const evOuts = outcomes.filter(o => o.event_id === ev.id).sort((a, b) => a.position - b.position);
     const cat = ev.category_id ? categories.find(x => x.id === ev.category_id) : null;
-    const shareMarkets = (evMarkets.length ? evMarkets : [{ id: null as any, title: 'Resultado Final' } as any])
-      .slice(0, 3)
-      .map(m => ({
-        title: m.title || 'Resultado Final',
-        outcomes: evOuts
-          .filter(o => (m.id ? o.market_id === m.id : true))
-          .sort((a, b) => a.position - b.position)
-          .slice(0, 3)
-          .map(o => ({ label: o.label, odd: Number(o.odd) })),
-      }))
-      .filter(m => m.outcomes.length > 0);
+    const splitEventTeams = (title: string): [string, string] | null => {
+      const m = title.match(/^(.+?)\s+(?:vs\.?|x|×|-|–)\s+(.+)$/i);
+      return m ? [m[1].trim(), m[2].trim()] : null;
+    };
+    const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const [homeName, awayName] = splitEventTeams(ev.title) || ['', ''];
+    const outcomeSlot = (label: string): 'home' | 'draw' | 'away' | null => {
+      const low = norm(label).replace(/\s+/g, ' ');
+      const home = norm(homeName);
+      const away = norm(awayName);
+      if (['home', 'casa', '1'].includes(low) || (home && (low === home || low === `${home} vence`))) return 'home';
+      if (['draw', 'tie', 'empate', 'x'].includes(low)) return 'draw';
+      if (['away', 'fora', 'visitante', '2'].includes(low) || (away && (low === away || low === `${away} vence`))) return 'away';
+      return null;
+    };
+    const marketPriority = (title: string) => /match winner|vencedor|resultado final|full time result|\b1x2\b/i.test(title) ? 0 : 1;
+    const toShareOutcomes = (outs: BetOutcome[]) => {
+      const picked: Partial<Record<'home' | 'draw' | 'away', BetOutcome>> = {};
+      outs.forEach(o => {
+        const slot = outcomeSlot(o.label);
+        if (slot && !picked[slot] && Number(o.odd) > 1) picked[slot] = o;
+      });
+      if (picked.home && picked.draw && picked.away) {
+        return [picked.home, picked.draw, picked.away].map(o => ({ label: o.label, odd: Number(o.odd) }));
+      }
+      return outs.filter(o => Number(o.odd) > 1).slice(0, 3).map(o => ({ label: o.label, odd: Number(o.odd) }));
+    };
+    const marketSources: Array<{ id: string | null; title: string; position: number }> = evMarkets.length
+      ? evMarkets.map(m => ({ id: m.id, title: m.title, position: m.position }))
+      : [{ id: null, title: 'Resultado Final', position: 0 }];
+    const candidates = marketSources
+      .map(m => {
+        const marketOuts = evOuts.filter(o => (m.id ? o.market_id === m.id : true));
+        return { market: m, outcomes: toShareOutcomes(marketOuts), canonicalCount: marketOuts.filter(o => outcomeSlot(o.label)).length };
+      })
+      .filter(c => c.outcomes.length > 0)
+      .sort((a, b) =>
+        (b.outcomes.length >= 3 ? 1 : 0) - (a.outcomes.length >= 3 ? 1 : 0) ||
+        (b.canonicalCount >= 3 ? 1 : 0) - (a.canonicalCount >= 3 ? 1 : 0) ||
+        marketPriority(a.market.title || '') - marketPriority(b.market.title || '') ||
+        (a.market.position ?? 0) - (b.market.position ?? 0)
+      );
+    const shareMarkets = candidates.length ? [{ title: candidates[0].market.title || 'Resultado Final', outcomes: candidates[0].outcomes }] : [];
     const tag = config?.tag || '';
     const copyUrl = tag ? `${window.location.origin}/odds=${tag}#ev=${ev.id}` : '';
     setSharingEvent({
@@ -577,8 +610,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       isHot: !!ev.is_hot,
       markets: shareMarkets,
       copyUrl,
-      homeImageUrl: (ev as any).home_image_url || undefined,
-      awayImageUrl: (ev as any).away_image_url || undefined,
+      homeImageUrl: ev.home_image_url || undefined,
+      awayImageUrl: ev.away_image_url || undefined,
       eventImageUrl: ev.image_url || undefined,
     });
   };
