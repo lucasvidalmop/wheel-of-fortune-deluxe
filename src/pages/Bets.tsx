@@ -430,7 +430,7 @@ const Bets = ({ tag }: BetsPageProps) => {
   const setSelectedEventId = (id: string | null) => {
     setSelectedEventIdState(id);
     if (typeof window !== 'undefined') {
-      if (id) window.history.pushState(null, '', `#ev=${encodeURIComponent(id)}`);
+      if (id) window.history.pushState(null, '', `#ev=${encodeURIComponent(toShortEventId(id))}`);
       else window.history.pushState(null, '', window.location.pathname + window.location.search);
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     }
