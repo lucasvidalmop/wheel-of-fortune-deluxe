@@ -19,6 +19,7 @@ interface BetEvent {
   id: string; bets_config_id: string; title: string; subtitle: string; category: string;
   category_id: string | null;
   image_url: string; starts_at: string | null; closes_at: string | null;
+  home_image_url?: string | null; away_image_url?: string | null;
   status: 'scheduled'|'open'|'closed'|'resolved'|'cancelled';
   payout_mode: 'coins'|'case'; payout_case_id: string | null; payout_case_qty_per_unit: number;
   min_bet: number; max_bet: number; max_bets_per_user: number; position: number; winning_outcome_id: string | null;
@@ -609,8 +610,8 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       isHot: !!ev.is_hot,
       markets: shareMarkets,
       copyUrl,
-      homeImageUrl: (ev as any).home_image_url || undefined,
-      awayImageUrl: (ev as any).away_image_url || undefined,
+      homeImageUrl: ev.home_image_url || undefined,
+      awayImageUrl: ev.away_image_url || undefined,
       eventImageUrl: ev.image_url || undefined,
     });
   };
