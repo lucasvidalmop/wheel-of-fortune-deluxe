@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
         `  ${i + 1}. ${s.event_title || "-"}${s.market_title ? ` (${s.market_title})` : ""} → *${s.selection_label || "-"}* @ ${Number(s.odd || 0).toFixed(2)}`
       ).join("\n");
       const codeLine = t.public_code ? `\n🎟️ *Código:* ${t.public_code}` : "";
-      const text = `🏆 *Seu bilhete múltiplo foi premiado!*${codeLine}\n💰 *Apostado:* ${Number(t.stake || 0)}\n📈 *Odd total:* ${Number(t.total_odd || 0).toFixed(2)}\n💸 *Ganho:* ${Number(t.payout_coins || 0)}\n\n*Seleções:*\n${selLines}\n\nParabéns! 🎉`;
+      const text = `🏆 *Seu bilhete múltiplo foi premiado!*${codeLine}\n💰 *Apostado:* ${Number(t.stake || 0)} coins\n📈 *Odd total:* ${Number(t.total_odd || 0).toFixed(2)}\n💸 *Ganho:* ${Number(t.payout_coins || 0)} coins\n\n*Seleções:*\n${selLines}\n\nParabéns! 🎉`;
       userMessages.push({ wheelUserId: t.wheel_user_id, accountId: t.account_id, email: t.user_email, text });
     }
   }
