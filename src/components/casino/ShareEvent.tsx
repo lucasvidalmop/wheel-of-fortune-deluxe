@@ -323,30 +323,31 @@ export default function ShareEvent({ open, onClose, data, config = {} }: Props) 
                 </div>
                 <Trophy size={12} style={{ color: accent }} />
               </div>
-              {(() => {
-                const o = featured.outcomes[0];
-                if (!o) return null;
-                const up = String(o.label).toUpperCase();
-                let display = o.label;
-                if (/^(HOME|CASA)\b/.test(up)) display = up.replace(/^(HOME|CASA)/, initials(homeName));
-                else if (/^(AWAY|FORA|VISITANTE)\b/.test(up)) display = up.replace(/^(AWAY|FORA|VISITANTE)/, initials(awayName));
-                else if (/^(DRAW|TIE|EMPATE)\b/.test(up)) display = up.replace(/^(DRAW|TIE|EMPATE)/, 'EMP');
-                else display = translateOutcome(o.label);
-                return (
-                  <div className="rounded-xl px-3 py-3 text-center"
-                    style={{
-                      background: `linear-gradient(180deg, ${accent}22, ${accent}08)`,
-                      border: `1px solid ${accent}44`,
-                    }}>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.14em] truncate" style={{ color: muted }}>
-                      {display}
+              <div className={`grid gap-2 ${featured.outcomes.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {featured.outcomes.slice(0, 3).map((o, j) => {
+                  const up = String(o.label).toUpperCase();
+                  let display = o.label;
+                  if (/^(HOME|CASA)\b/.test(up)) display = up.replace(/^(HOME|CASA)/, initials(homeName));
+                  else if (/^(AWAY|FORA|VISITANTE)\b/.test(up)) display = up.replace(/^(AWAY|FORA|VISITANTE)/, initials(awayName));
+                  else if (/^(DRAW|TIE|EMPATE)\b/.test(up)) display = up.replace(/^(DRAW|TIE|EMPATE)/, 'EMP');
+                  else display = translateOutcome(o.label);
+                  return (
+                    <div key={j} className="rounded-xl px-2 py-2.5 text-center"
+                      style={{
+                        background: `linear-gradient(180deg, ${accent}22, ${accent}08)`,
+                        border: `1px solid ${accent}44`,
+                      }}>
+                      <div className="text-[9px] font-bold uppercase tracking-[0.12em] truncate" style={{ color: muted }}>
+                        {display}
+                      </div>
+                      <div className="font-black text-base tabular-nums leading-tight" style={{ color: accent }}>
+                        {Number(o.odd).toFixed(2).replace('.', ',')}
+                      </div>
                     </div>
-                    <div className="font-black text-xl tabular-nums leading-tight mt-0.5" style={{ color: accent }}>
-                      {Number(o.odd).toFixed(2).replace('.', ',')}
-                    </div>
-                  </div>
-                );
-              })()}
+                  );
+                })}
+              </div>
+
 
             </div>
           )}
