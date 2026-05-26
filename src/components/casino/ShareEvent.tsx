@@ -62,14 +62,19 @@ const splitTeams = (title: string): [string, string] | null => {
   return [m[1].trim(), m[2].trim()];
 };
 
-const initials = (name: string) =>
-  name
+const initials = (name: string) => {
+  const clean = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\p{L}\s]/gu, '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(w => w[0]?.toUpperCase())
-    .join('') || name.slice(0, 2).toUpperCase();
+    .trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  const compact = words.join('').toUpperCase();
+  if (!compact) return '---';
+  if (words.length >= 3) return words.slice(0, 3).map(w => w[0]).join('').toUpperCase().padEnd(3, compact[0]).slice(0, 3);
+  if (words.length === 2) return `${words[0].slice(0, 2)}${words[1][0]}`.toUpperCase().padEnd(3, compact[0]).slice(0, 3);
+  return compact.slice(0, 3).padEnd(3, compact[0]);
+};
 
 export default function ShareEvent({ open, onClose, data, config = {} }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
