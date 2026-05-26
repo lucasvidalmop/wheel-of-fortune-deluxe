@@ -385,6 +385,8 @@ const decodeCopy = async (s: string): Promise<Array<{ e: string; o: string }>> =
   } catch { return []; }
 };
 
+const toShortEventId = (id?: string | null) => (id ? id.slice(0, 10) : '');
+
 const Bets = ({ tag }: BetsPageProps) => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<any | null>(null);
