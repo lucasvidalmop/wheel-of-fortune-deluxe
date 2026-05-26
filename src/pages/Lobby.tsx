@@ -37,9 +37,7 @@ const Lobby = ({ tag }: { tag: string }) => {
   const [pageConfig, setPageConfig] = useState<LobbyPageConfig>({});
   const [productTags, setProductTags] = useState({ bets: '', luckybox: '', roleta: '' });
 
-  useEffect(() => {
-    try { sessionStorage.setItem('lobby_tag', tag); } catch { /* ignore */ }
-  }, [tag]);
+  // sessionStorage is updated based on the fetch result (active vs not), see below.
 
   useEffect(() => {
     let alive = true;
