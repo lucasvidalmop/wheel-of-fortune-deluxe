@@ -465,6 +465,10 @@ const Bets = ({ tag }: BetsPageProps) => {
         setPage(data);
         if (data?.wagerCounts) setWagerCounts(data.wagerCounts);
         if (data?.outcomeStats) setOutcomeStats(data.outcomeStats);
+        try {
+          if (data?.lobbyTag) sessionStorage.setItem('lobby_tag', data.lobbyTag);
+          else sessionStorage.removeItem('lobby_tag');
+        } catch { /* ignore */ }
       } catch (e: any) {
         toast.error('Erro ao carregar página');
       } finally {
