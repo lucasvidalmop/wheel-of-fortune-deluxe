@@ -22,7 +22,6 @@ const Luckybox = lazy(() => import("./pages/Luckybox.tsx"));
 const UpdateRegistration = lazy(() => import("./pages/UpdateRegistration.tsx"));
 const Bets = lazy(() => import("./pages/Bets.tsx"));
 const Lobby = lazy(() => import("./pages/Lobby.tsx"));
-const ClawMachine = lazy(() => import("./pages/ClawMachine.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,7 +90,6 @@ const App = () => (
             <Route path="/gorjeta" element={<Registration />} />
             <Route path="/influencer" element={<Influencer />} />
             <Route path="/batalha" element={<Batalha />} />
-            <Route path="/garra" element={<ClawMachine />} />
             <Route path="/:slug" element={<SlugRouter />} />
           </Routes>
         </Suspense>
