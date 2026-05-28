@@ -126,8 +126,8 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
   const resolvedMarketIds = new Set<string>();
   const perMarketLog: string[] = [];
 
-  // Lazy fixture stats (corners/cards). Fetched only once if any
-  // corners/cards market shows up; provided stats in payload short-circuit.
+  // Lazy fixture stats. Includes corners/cards stats AND final/HT score —
+  // fetched once if needed, payload `stats` short-circuits.
   let stats: FixtureStats | null = body.stats ?? null;
   let statsFetchTried = false;
   const ensureStats = async (): Promise<FixtureStats | null> => {
@@ -136,31 +136,55 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
     stats = await fetchFixtureStats(fixtureId);
     return stats;
   };
+  // Effective score: payload > stats. Same for HT.
+  const getScore = async (): Promise<Score | null> => {
+    if (score) return score;
+    const s = await ensureStats();
+    return s?.score || null;
+  };
+  const getScoreHt = async (): Promise<Score | null> => {
+    const s = await ensureStats();
+    return s?.score_ht || null;
+  };
+
+  // Try to resolve a single market using all available signals.
+  const tryResolveMarket = async (m: any, outs: any[]) => {
+    const eff = await getScore();
+    let res: { winnerIds: string[]; winnerLabels: string[] } | null = null;
+    if (eff) res = deriveMarketWinners(m.title, outs, eff, await getScoreHt());
+    if (!res) {
+      const kind = cornersCardsKind(m.title);
+      if (kind) {
+        const s = await ensureStats();
+        const tag = kind === "corners" ? "[resolve-corners]" : "[resolve-cards]";
+        if (!s) {
+          console.log(`${tag} fixture=${fixtureId} market="${m.title}" stats_unavailable -> pending`);
+          return null;
+        }
+        res = deriveCornersCardsMarket(m.title, outs, s, kind);
+        if (!res) {
+          console.log(`${tag} fixture=${fixtureId} market="${m.title}" unrecognized -> pending`);
+          return null;
+        }
+        console.log(`${tag} fixture=${fixtureId} market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(push/no-pay)"}]`);
+      }
+    }
+    return res;
+  };
 
   if (alreadyResolved) {
     // Safety: never re-write winners. Trust what's persisted in the DB.
     for (const o of outcomes) if (o.is_winner) winningIds.add(o.id);
     for (const m of markets || []) if (m.status === "resolved") resolvedMarketIds.add(m.id);
 
-    // BUT: still attempt corners/cards resolution for markets that are still open
-    // (these markets were added after the score-based resolution ran).
+    // Attempt resolution for markets that are still OPEN (added later or
+    // unsupported on previous runs). Uses score (auto-fetched if needed)
+    // and stats for corners/cards.
     for (const m of (markets || [])) {
       if (m.status === "resolved") continue;
-      const kind = cornersCardsKind(m.title);
-      if (!kind) continue;
       const outs = outcomesByMarket.get(m.id) || [];
-      const s = await ensureStats();
-      const tag = kind === "corners" ? "[resolve-corners]" : "[resolve-cards]";
-      if (!s) {
-        console.log(`${tag} fixture=${fixtureId} market="${m.title}" stats_unavailable -> pending`);
-        continue;
-      }
-      const res = deriveCornersCardsMarket(m.title, outs, s, kind);
-      if (!res) {
-        console.log(`${tag} fixture=${fixtureId} market="${m.title}" unrecognized -> pending`);
-        continue;
-      }
-      console.log(`${tag} fixture=${fixtureId} market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(push/no-pay)"}]`);
+      const res = await tryResolveMarket(m, outs);
+      if (!res) continue;
       resolvedMarketIds.add(m.id);
       for (const id of res.winnerIds) winningIds.add(id);
       perMarketLog.push(`market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(none — push/no-pay)"}]`);
@@ -204,39 +228,18 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
       }
     }
 
-    // 2) Score-derived resolution PER MARKET (the real source of truth).
+    // 2) Score-derived + stats-derived resolution PER MARKET.
     for (const m of (markets || [])) {
       const outs = outcomesByMarket.get(m.id) || [];
-      let res: { winnerIds: string[]; winnerLabels: string[] } | null = null;
-
-      if (score) res = deriveMarketWinners(m.title, outs, score);
-
-      if (!res) {
-        const kind = cornersCardsKind(m.title);
-        if (kind) {
-          const s = await ensureStats();
-          const tag = kind === "corners" ? "[resolve-corners]" : "[resolve-cards]";
-          if (!s) {
-            console.log(`${tag} fixture=${fixtureId} market="${m.title}" stats_unavailable -> pending`);
-            continue;
-          }
-          res = deriveCornersCardsMarket(m.title, outs, s, kind);
-          if (!res) {
-            console.log(`${tag} fixture=${fixtureId} market="${m.title}" unrecognized -> pending`);
-            continue;
-          }
-          console.log(`${tag} fixture=${fixtureId} market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(push/no-pay)"}]`);
-        }
-      }
-
+      const res = await tryResolveMarket(m, outs);
       if (!res) continue;
       resolvedMarketIds.add(m.id);
       for (const id of res.winnerIds) winningIds.add(id);
       perMarketLog.push(`market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(none — push/no-pay)"}]`);
     }
 
-    // 3) Convenience fallback: winner=home/away/draw, only when no score is given.
-    if (!score && body.winner && winningIds.size === 0) {
+    // 3) Convenience fallback: winner=home/away/draw, only when no score available.
+    if (!score && !(await getScore()) && body.winner && winningIds.size === 0) {
       const w = String(body.winner).toLowerCase();
       const wantLabels = w === "home" ? ["home", "1", "casa"]
         : w === "away" ? ["away", "2", "fora"]
@@ -253,6 +256,9 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
           if (match.market_id) resolvedMarketIds.add(match.market_id);
         }
       }
+    }
+  }
+
     }
   }
 
