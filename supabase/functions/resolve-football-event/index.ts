@@ -31,6 +31,8 @@ interface FixtureStatsSide {
 interface FixtureStats {
   home: FixtureStatsSide;
   away: FixtureStatsSide;
+  score?: Score | null;      // full-time score
+  score_ht?: Score | null;   // half-time score
 }
 
 interface Payload {
