@@ -122,6 +122,14 @@ Deno.serve(async (req) => {
         mFrom += PAGE;
         if (mFrom > 50000) break;
       }
+      // Hide half-time corner markets (e.g. "Total Corners (1st Half)", "Corners 2nd Half")
+      const isHalfCornerMarket = (title = "") => {
+        const t = String(title).toLowerCase();
+        const hasCorner = /\bcorner|escanteio/.test(t);
+        const hasHalf = /(1st|2nd|first|second)\s*[- ]?\s*half|\bht\b|1º\s*tempo|2º\s*tempo|1o\s*tempo|2o\s*tempo|primeiro\s*tempo|segundo\s*tempo/.test(t);
+        return hasCorner && hasHalf;
+      };
+      markets = markets.filter((m) => !isHalfCornerMarket(m?.title));
       markets.sort((a, b) =>
         String(a.event_id).localeCompare(String(b.event_id)) ||
         marketRank(a) - marketRank(b) ||
