@@ -31,6 +31,8 @@ interface FixtureStatsSide {
 interface FixtureStats {
   home: FixtureStatsSide;
   away: FixtureStatsSide;
+  score?: Score | null;      // full-time score
+  score_ht?: Score | null;   // half-time score
 }
 
 interface Payload {
@@ -124,8 +126,8 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
   const resolvedMarketIds = new Set<string>();
   const perMarketLog: string[] = [];
 
-  // Lazy fixture stats (corners/cards). Fetched only once if any
-  // corners/cards market shows up; provided stats in payload short-circuit.
+  // Lazy fixture stats. Includes corners/cards stats AND final/HT score —
+  // fetched once if needed, payload `stats` short-circuits.
   let stats: FixtureStats | null = body.stats ?? null;
   let statsFetchTried = false;
   const ensureStats = async (): Promise<FixtureStats | null> => {
@@ -134,31 +136,55 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
     stats = await fetchFixtureStats(fixtureId);
     return stats;
   };
+  // Effective score: payload > stats. Same for HT.
+  const getScore = async (): Promise<Score | null> => {
+    if (score) return score;
+    const s = await ensureStats();
+    return s?.score || null;
+  };
+  const getScoreHt = async (): Promise<Score | null> => {
+    const s = await ensureStats();
+    return s?.score_ht || null;
+  };
+
+  // Try to resolve a single market using all available signals.
+  const tryResolveMarket = async (m: any, outs: any[]) => {
+    const eff = await getScore();
+    let res: { winnerIds: string[]; winnerLabels: string[] } | null = null;
+    if (eff) res = deriveMarketWinners(m.title, outs, eff, await getScoreHt());
+    if (!res) {
+      const kind = cornersCardsKind(m.title);
+      if (kind) {
+        const s = await ensureStats();
+        const tag = kind === "corners" ? "[resolve-corners]" : "[resolve-cards]";
+        if (!s) {
+          console.log(`${tag} fixture=${fixtureId} market="${m.title}" stats_unavailable -> pending`);
+          return null;
+        }
+        res = deriveCornersCardsMarket(m.title, outs, s, kind);
+        if (!res) {
+          console.log(`${tag} fixture=${fixtureId} market="${m.title}" unrecognized -> pending`);
+          return null;
+        }
+        console.log(`${tag} fixture=${fixtureId} market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(push/no-pay)"}]`);
+      }
+    }
+    return res;
+  };
 
   if (alreadyResolved) {
     // Safety: never re-write winners. Trust what's persisted in the DB.
     for (const o of outcomes) if (o.is_winner) winningIds.add(o.id);
     for (const m of markets || []) if (m.status === "resolved") resolvedMarketIds.add(m.id);
 
-    // BUT: still attempt corners/cards resolution for markets that are still open
-    // (these markets were added after the score-based resolution ran).
+    // Attempt resolution for markets that are still OPEN (added later or
+    // unsupported on previous runs). Uses score (auto-fetched if needed)
+    // and stats for corners/cards.
     for (const m of (markets || [])) {
       if (m.status === "resolved") continue;
-      const kind = cornersCardsKind(m.title);
-      if (!kind) continue;
       const outs = outcomesByMarket.get(m.id) || [];
-      const s = await ensureStats();
-      const tag = kind === "corners" ? "[resolve-corners]" : "[resolve-cards]";
-      if (!s) {
-        console.log(`${tag} fixture=${fixtureId} market="${m.title}" stats_unavailable -> pending`);
-        continue;
-      }
-      const res = deriveCornersCardsMarket(m.title, outs, s, kind);
-      if (!res) {
-        console.log(`${tag} fixture=${fixtureId} market="${m.title}" unrecognized -> pending`);
-        continue;
-      }
-      console.log(`${tag} fixture=${fixtureId} market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(push/no-pay)"}]`);
+      const res = await tryResolveMarket(m, outs);
+      if (!res) continue;
       resolvedMarketIds.add(m.id);
       for (const id of res.winnerIds) winningIds.add(id);
       perMarketLog.push(`market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(none — push/no-pay)"}]`);
@@ -202,39 +228,18 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
       }
     }
 
-    // 2) Score-derived resolution PER MARKET (the real source of truth).
+    // 2) Score-derived + stats-derived resolution PER MARKET.
     for (const m of (markets || [])) {
       const outs = outcomesByMarket.get(m.id) || [];
-      let res: { winnerIds: string[]; winnerLabels: string[] } | null = null;
-
-      if (score) res = deriveMarketWinners(m.title, outs, score);
-
-      if (!res) {
-        const kind = cornersCardsKind(m.title);
-        if (kind) {
-          const s = await ensureStats();
-          const tag = kind === "corners" ? "[resolve-corners]" : "[resolve-cards]";
-          if (!s) {
-            console.log(`${tag} fixture=${fixtureId} market="${m.title}" stats_unavailable -> pending`);
-            continue;
-          }
-          res = deriveCornersCardsMarket(m.title, outs, s, kind);
-          if (!res) {
-            console.log(`${tag} fixture=${fixtureId} market="${m.title}" unrecognized -> pending`);
-            continue;
-          }
-          console.log(`${tag} fixture=${fixtureId} market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(push/no-pay)"}]`);
-        }
-      }
-
+      const res = await tryResolveMarket(m, outs);
       if (!res) continue;
       resolvedMarketIds.add(m.id);
       for (const id of res.winnerIds) winningIds.add(id);
       perMarketLog.push(`market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(none — push/no-pay)"}]`);
     }
 
-    // 3) Convenience fallback: winner=home/away/draw, only when no score is given.
-    if (!score && body.winner && winningIds.size === 0) {
+    // 3) Convenience fallback: winner=home/away/draw, only when no score available.
+    if (!score && !(await getScore()) && body.winner && winningIds.size === 0) {
       const w = String(body.winner).toLowerCase();
       const wantLabels = w === "home" ? ["home", "1", "casa"]
         : w === "away" ? ["away", "2", "fora"]
@@ -253,8 +258,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
       }
     }
   }
-
-
 
   if (winningIds.size === 0 && resolvedMarketIds.size === 0 && !alreadyResolved) {
     console.log(`[resolve] fixture=${fixtureId} event=${ev.id} skipped=no_winners_declared`);
@@ -551,6 +554,7 @@ function deriveMarketWinners(
   title: string | null | undefined,
   outcomes: any[],
   score: Score,
+  scoreHt?: Score | null,
 ): { winnerIds: string[]; winnerLabels: string[] } | null {
   const t = norm(title);
   const find = (labels: string[]) => outcomes.find((o: any) => labels.includes(norm(o.label)));
@@ -598,6 +602,79 @@ function deriveMarketWinners(
     const w = yes ? find(["yes", "sim"]) : find(["no", "não", "nao"]);
     if (!w) return null;
     return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  // ─── Halves: First/Second Half Winner ───
+  // First Half Winner needs HT score; Second Half = FT - HT.
+  if (
+    t === "first half winner" || t === "1st half winner" ||
+    t === "vencedor do 1º tempo" || t === "vencedor do 1o tempo" ||
+    t === "result of first half" || t === "resultado 1º tempo"
+  ) {
+    if (!scoreHt) return null;
+    const hh = scoreHt.home > scoreHt.away;
+    const aa = scoreHt.away > scoreHt.home;
+    const w = hh ? find(["home", "1", "casa"])
+      : aa ? find(["away", "2", "fora"])
+      : find(["draw", "x", "empate"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+  if (
+    t === "second half winner" || t === "2nd half winner" ||
+    t === "vencedor do 2º tempo" || t === "vencedor do 2o tempo" ||
+    t === "result of second half" || t === "resultado 2º tempo"
+  ) {
+    if (!scoreHt) return null;
+    const sh = { home: score.home - scoreHt.home, away: score.away - scoreHt.away };
+    const hh = sh.home > sh.away;
+    const aa = sh.away > sh.home;
+    const w = hh ? find(["home", "1", "casa"])
+      : aa ? find(["away", "2", "fora"])
+      : find(["draw", "x", "empate"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  // ─── Goals Over/Under (full match), incl. Home/Away team totals ───
+  const isOU = /\bover\s*\/?\s*under\b|mais\s*\/?\s*menos/i.test(title || "");
+  const isGoals = /\bgoal/i.test(title || "") || /\bgols?\b/i.test(title || "");
+  const isHomeScoped = /\bhome\b|\bcasa\b|\bmandante\b/i.test(title || "");
+  const isAwayScoped = /\baway\b|\bfora\b|\bvisitante\b/i.test(title || "");
+  if (
+    t === "goals over/under" || t === "goals over under" || t === "mais/menos gols" ||
+    (isOU && (isGoals || t === "over/under" || t === "mais/menos")) ||
+    /^home\s+team\s+total\s+goals/i.test(title || "") ||
+    /^away\s+team\s+total\s+goals/i.test(title || "") ||
+    /^total\s+goals/i.test(title || "")
+  ) {
+    const value = isHomeScoped ? score.home : isAwayScoped ? score.away : (score.home + score.away);
+    const winners: any[] = [];
+    for (const o of outcomes) {
+      const parsed = parseOverUnder(o.label);
+      if (!parsed) continue;
+      if (parsed.side === "over" && value > parsed.line) winners.push(o);
+      else if (parsed.side === "under" && value < parsed.line) winners.push(o);
+    }
+    return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
+  }
+
+  // ─── Asian Handicap on goals (full match) ───
+  if (
+    t === "asian handicap" || t === "handicap asiático" || t === "handicap asiatico" ||
+    t === "handicap" || t === "european handicap"
+  ) {
+    const winners: any[] = [];
+    for (const o of outcomes) {
+      const parsed = parseHandicap(o.label);
+      if (!parsed) continue;
+      if (parsed.team === "home") {
+        if (score.home + parsed.line > score.away) winners.push(o);
+      } else {
+        if (score.away + parsed.line > score.home) winners.push(o);
+      }
+    }
+    return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
   }
 
   return null;
@@ -789,7 +866,19 @@ async function fetchFixtureStats(fixtureId: string): Promise<FixtureStats | null
       };
     };
     const out: FixtureStats = { home: sideOf(homeId), away: sideOf(awayId) };
-    console.log(`[resolve-stats] fixture=${fixtureId} home=${JSON.stringify(out.home)} away=${JSON.stringify(out.away)}`);
+    // Extract FT + HT scores from /fixtures response so we can resolve
+    // score-based markets even when the caller didn't include a score.
+    const ftH = fx?.score?.fulltime?.home ?? fx?.goals?.home;
+    const ftA = fx?.score?.fulltime?.away ?? fx?.goals?.away;
+    if (Number.isFinite(Number(ftH)) && Number.isFinite(Number(ftA))) {
+      out.score = { home: Number(ftH), away: Number(ftA) };
+    }
+    const htH = fx?.score?.halftime?.home;
+    const htA = fx?.score?.halftime?.away;
+    if (Number.isFinite(Number(htH)) && Number.isFinite(Number(htA))) {
+      out.score_ht = { home: Number(htH), away: Number(htA) };
+    }
+    console.log(`[resolve-stats] fixture=${fixtureId} score=${out.score ? `${out.score.home}-${out.score.away}` : "n/a"} ht=${out.score_ht ? `${out.score_ht.home}-${out.score_ht.away}` : "n/a"} home=${JSON.stringify(out.home)} away=${JSON.stringify(out.away)}`);
     return out;
   } catch (e) {
     console.error(`[resolve-stats] fixture=${fixtureId} error`, e);
