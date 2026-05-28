@@ -124,10 +124,45 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
   const resolvedMarketIds = new Set<string>();
   const perMarketLog: string[] = [];
 
+  // Lazy fixture stats (corners/cards). Fetched only once if any
+  // corners/cards market shows up; provided stats in payload short-circuit.
+  let stats: FixtureStats | null = body.stats ?? null;
+  let statsFetchTried = false;
+  const ensureStats = async (): Promise<FixtureStats | null> => {
+    if (stats || statsFetchTried) return stats;
+    statsFetchTried = true;
+    stats = await fetchFixtureStats(fixtureId);
+    return stats;
+  };
+
   if (alreadyResolved) {
     // Safety: never re-write winners. Trust what's persisted in the DB.
     for (const o of outcomes) if (o.is_winner) winningIds.add(o.id);
     for (const m of markets || []) if (m.status === "resolved") resolvedMarketIds.add(m.id);
+
+    // BUT: still attempt corners/cards resolution for markets that are still open
+    // (these markets were added after the score-based resolution ran).
+    for (const m of (markets || [])) {
+      if (m.status === "resolved") continue;
+      const kind = cornersCardsKind(m.title);
+      if (!kind) continue;
+      const outs = outcomesByMarket.get(m.id) || [];
+      const s = await ensureStats();
+      const tag = kind === "corners" ? "[resolve-corners]" : "[resolve-cards]";
+      if (!s) {
+        console.log(`${tag} fixture=${fixtureId} market="${m.title}" stats_unavailable -> pending`);
+        continue;
+      }
+      const res = deriveCornersCardsMarket(m.title, outs, s, kind);
+      if (!res) {
+        console.log(`${tag} fixture=${fixtureId} market="${m.title}" unrecognized -> pending`);
+        continue;
+      }
+      console.log(`${tag} fixture=${fixtureId} market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(push/no-pay)"}]`);
+      resolvedMarketIds.add(m.id);
+      for (const id of res.winnerIds) winningIds.add(id);
+      perMarketLog.push(`market="${m.title}" winners=[${res.winnerLabels.join(", ") || "(none — push/no-pay)"}]`);
+    }
   } else {
     // 1) Explicit winners from caller (preferred when given)
     if (Array.isArray(body.winning_outcome_ids)) {
@@ -168,19 +203,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
     }
 
     // 2) Score-derived resolution PER MARKET (the real source of truth).
-    //    Recognises: Match Winner/1X2, Home/Away, Double Chance, Both Teams Score.
-    //    Unknown markets are left untouched.
-    // Lazy fixture stats (corners/cards). Fetched only once if any
-    // corners/cards market shows up; provided stats in payload short-circuit.
-    let stats: FixtureStats | null = body.stats ?? null;
-    let statsFetchTried = false;
-    const ensureStats = async (): Promise<FixtureStats | null> => {
-      if (stats || statsFetchTried) return stats;
-      statsFetchTried = true;
-      stats = await fetchFixtureStats(fixtureId);
-      return stats;
-    };
-
     for (const m of (markets || [])) {
       const outs = outcomesByMarket.get(m.id) || [];
       let res: { winnerIds: string[]; winnerLabels: string[] } | null = null;
@@ -212,7 +234,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
     }
 
     // 3) Convenience fallback: winner=home/away/draw, only when no score is given.
-    //    Resolves the principal Match Winner market only.
     if (!score && body.winner && winningIds.size === 0) {
       const w = String(body.winner).toLowerCase();
       const wantLabels = w === "home" ? ["home", "1", "casa"]
@@ -232,6 +253,8 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
       }
     }
   }
+
+
 
   if (winningIds.size === 0 && resolvedMarketIds.size === 0 && !alreadyResolved) {
     console.log(`[resolve] fixture=${fixtureId} event=${ev.id} skipped=no_winners_declared`);
