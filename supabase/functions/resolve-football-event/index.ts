@@ -553,6 +553,7 @@ function deriveMarketWinners(
   title: string | null | undefined,
   outcomes: any[],
   score: Score,
+  scoreHt?: Score | null,
 ): { winnerIds: string[]; winnerLabels: string[] } | null {
   const t = norm(title);
   const find = (labels: string[]) => outcomes.find((o: any) => labels.includes(norm(o.label)));
@@ -600,6 +601,80 @@ function deriveMarketWinners(
     const w = yes ? find(["yes", "sim"]) : find(["no", "não", "nao"]);
     if (!w) return null;
     return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  // ─── Halves: First/Second Half Winner ───
+  // First Half Winner needs HT score; Second Half = FT - HT.
+  if (
+    t === "first half winner" || t === "1st half winner" ||
+    t === "vencedor do 1º tempo" || t === "vencedor do 1o tempo" ||
+    t === "result of first half" || t === "resultado 1º tempo"
+  ) {
+    if (!scoreHt) return null;
+    const hh = scoreHt.home > scoreHt.away;
+    const aa = scoreHt.away > scoreHt.home;
+    const w = hh ? find(["home", "1", "casa"])
+      : aa ? find(["away", "2", "fora"])
+      : find(["draw", "x", "empate"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+  if (
+    t === "second half winner" || t === "2nd half winner" ||
+    t === "vencedor do 2º tempo" || t === "vencedor do 2o tempo" ||
+    t === "result of second half" || t === "resultado 2º tempo"
+  ) {
+    if (!scoreHt) return null;
+    const sh = { home: score.home - scoreHt.home, away: score.away - scoreHt.away };
+    const hh = sh.home > sh.away;
+    const aa = sh.away > sh.home;
+    const w = hh ? find(["home", "1", "casa"])
+      : aa ? find(["away", "2", "fora"])
+      : find(["draw", "x", "empate"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  // ─── Goals Over/Under (full match), incl. Home/Away team totals ───
+  const isOU = /\bover\s*\/?\s*under\b|mais\s*\/?\s*menos/i.test(title || "");
+  const isGoals = /\bgoal/i.test(title || "") || /\bgols?\b/i.test(title || "");
+  const isHomeScoped = /\bhome\b|\bcasa\b|\bmandante\b/i.test(title || "");
+  const isAwayScoped = /\baway\b|\bfora\b|\bvisitante\b/i.test(title || "");
+  if (
+    t === "goals over/under" || t === "goals over under" || t === "mais/menos gols" ||
+    (isOU && (isGoals || t === "over/under" || t === "mais/menos")) ||
+    /^home\s+team\s+total\s+goals/i.test(title || "") ||
+    /^away\s+team\s+total\s+goals/i.test(title || "") ||
+    /^total\s+goals/i.test(title || "")
+  ) {
+    const value = isHomeScoped ? score.home : isAwayScoped ? score.away : (score.home + score.away);
+    const winners: any[] = [];
+    for (const o of outcomes) {
+      const parsed = parseOverUnder(o.label);
+      if (!parsed) continue;
+      if (parsed.kind === "over" && value > parsed.line) winners.push(o);
+      else if (parsed.kind === "under" && value < parsed.line) winners.push(o);
+    }
+    return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
+  }
+
+  // ─── Asian Handicap on goals (full match) ───
+  if (
+    t === "asian handicap" || t === "handicap asiático" || t === "handicap asiatico" ||
+    t === "handicap" || t === "european handicap"
+  ) {
+    const winners: any[] = [];
+    for (const o of outcomes) {
+      const parsed = parseHandicap(o.label);
+      if (!parsed) continue;
+      // Home -X means home wins if home+h > away. Away similarly.
+      if (parsed.side === "home") {
+        if (score.home + parsed.handicap > score.away) winners.push(o);
+      } else if (parsed.side === "away") {
+        if (score.away + parsed.handicap > score.home) winners.push(o);
+      }
+    }
+    return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
   }
 
   return null;
