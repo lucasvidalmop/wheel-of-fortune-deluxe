@@ -791,7 +791,19 @@ async function fetchFixtureStats(fixtureId: string): Promise<FixtureStats | null
       };
     };
     const out: FixtureStats = { home: sideOf(homeId), away: sideOf(awayId) };
-    console.log(`[resolve-stats] fixture=${fixtureId} home=${JSON.stringify(out.home)} away=${JSON.stringify(out.away)}`);
+    // Extract FT + HT scores from /fixtures response so we can resolve
+    // score-based markets even when the caller didn't include a score.
+    const ftH = fx?.score?.fulltime?.home ?? fx?.goals?.home;
+    const ftA = fx?.score?.fulltime?.away ?? fx?.goals?.away;
+    if (Number.isFinite(Number(ftH)) && Number.isFinite(Number(ftA))) {
+      out.score = { home: Number(ftH), away: Number(ftA) };
+    }
+    const htH = fx?.score?.halftime?.home;
+    const htA = fx?.score?.halftime?.away;
+    if (Number.isFinite(Number(htH)) && Number.isFinite(Number(htA))) {
+      out.score_ht = { home: Number(htH), away: Number(htA) };
+    }
+    console.log(`[resolve-stats] fixture=${fixtureId} score=${out.score ? `${out.score.home}-${out.score.away}` : "n/a"} ht=${out.score_ht ? `${out.score_ht.home}-${out.score_ht.away}` : "n/a"} home=${JSON.stringify(out.home)} away=${JSON.stringify(out.away)}`);
     return out;
   } catch (e) {
     console.error(`[resolve-stats] fixture=${fixtureId} error`, e);
