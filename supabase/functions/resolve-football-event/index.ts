@@ -259,11 +259,6 @@ async function resolveEvent(supabase: any, ev: any, body: Payload, score: Score 
     }
   }
 
-    }
-  }
-
-
-
   if (winningIds.size === 0 && resolvedMarketIds.size === 0 && !alreadyResolved) {
     console.log(`[resolve] fixture=${fixtureId} event=${ev.id} skipped=no_winners_declared`);
     return { skipped: "no_winners_declared" };
