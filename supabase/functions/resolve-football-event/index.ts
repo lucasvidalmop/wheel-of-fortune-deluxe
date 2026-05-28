@@ -580,6 +580,200 @@ function deriveMarketWinners(
   return null;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Corners / Cards markets
+// ─────────────────────────────────────────────────────────────
+function cornersCardsKind(title: string | null | undefined): "corners" | "cards" | null {
+  const t = norm(title);
+  if (!t) return null;
+  if (t.includes("corner") || t.includes("escanteio")) return "corners";
+  if (t.includes("card") || t.includes("cartao") || t.includes("cartão") || t.includes("cartões") || t.includes("cartoes")) return "cards";
+  return null;
+}
+
+// Returns side-scoped value depending on title keywords (home/away/total).
+function pickMetric(
+  title: string,
+  stats: FixtureStats,
+  kind: "corners" | "cards",
+): { home: number | null; away: number | null; total: number | null; scope: "home" | "away" | "total" } {
+  const t = norm(title);
+  const scope: "home" | "away" | "total" =
+    /\b(home|casa|mandante)\b/.test(t) ? "home" :
+    /\b(away|fora|visitante)\b/.test(t) ? "away" :
+    "total";
+
+  let metricKey: "corners" | "yellow" | "red" | "cards" = kind;
+  if (kind === "cards") {
+    if (t.includes("yellow") || t.includes("amarelo")) metricKey = "yellow";
+    else if (t.includes("red") || t.includes("vermelho")) metricKey = "red";
+    else metricKey = "cards";
+  }
+
+  const h = stats.home?.[metricKey] ?? null;
+  const a = stats.away?.[metricKey] ?? null;
+  const total = h == null || a == null ? null : Number(h) + Number(a);
+  return { home: h == null ? null : Number(h), away: a == null ? null : Number(a), total, scope };
+}
+
+function parseOverUnder(label: string): { side: "over" | "under"; line: number } | null {
+  const l = norm(label);
+  const m = l.match(/^(over|under|acima|abaixo|mais de|menos de|mais|menos|\+|\-)\s*([0-9]+(?:[.,][0-9]+)?)/);
+  if (!m) {
+    const m2 = l.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(over|under|acima|abaixo|\+|\-)$/);
+    if (!m2) return null;
+    const line = parseFloat(m2[1].replace(",", "."));
+    const sideRaw = m2[2];
+    return { side: /over|acima|\+/.test(sideRaw) ? "over" : "under", line };
+  }
+  const sideRaw = m[1];
+  const line = parseFloat(m[2].replace(",", "."));
+  const side: "over" | "under" =
+    /over|acima|mais de|mais|\+/.test(sideRaw) ? "over" : "under";
+  return { side, line };
+}
+
+// "home -1.5", "+2.5 away", "casa -1", "away +0"
+function parseHandicap(label: string): { team: "home" | "away"; line: number } | null {
+  const l = norm(label);
+  const m = l.match(/(home|away|casa|fora|mandante|visitante)\s*([+\-]?\s*[0-9]+(?:[.,][0-9]+)?)/);
+  if (!m) {
+    const m2 = l.match(/([+\-]?\s*[0-9]+(?:[.,][0-9]+)?)\s*(home|away|casa|fora|mandante|visitante)/);
+    if (!m2) return null;
+    const team: "home" | "away" = /home|casa|mandante/.test(m2[2]) ? "home" : "away";
+    const line = parseFloat(m2[1].replace(/\s+/g, "").replace(",", "."));
+    return { team, line };
+  }
+  const team: "home" | "away" = /home|casa|mandante/.test(m[1]) ? "home" : "away";
+  const line = parseFloat(m[2].replace(/\s+/g, "").replace(",", "."));
+  return { team, line };
+}
+
+function deriveCornersCardsMarket(
+  title: string | null | undefined,
+  outcomes: any[],
+  stats: FixtureStats,
+  kind: "corners" | "cards",
+): { winnerIds: string[]; winnerLabels: string[] } | null {
+  const t = norm(title);
+  const metric = pickMetric(String(title || ""), stats, kind);
+  const scopedValue =
+    metric.scope === "home" ? metric.home :
+    metric.scope === "away" ? metric.away :
+    metric.total;
+
+  // Over/Under (any scope)
+  if (t.includes("over") || t.includes("under") || t.includes("acima") || t.includes("abaixo")) {
+    if (scopedValue == null) return null;
+    const winners: any[] = [];
+    for (const o of outcomes) {
+      const p = parseOverUnder(o.label);
+      if (!p) continue;
+      if (p.side === "over" && scopedValue > p.line) winners.push(o);
+      else if (p.side === "under" && scopedValue < p.line) winners.push(o);
+      // equality => push, no winner
+    }
+    if (winners.length === 0 && !outcomes.some((o) => parseOverUnder(o.label))) return null;
+    return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
+  }
+
+  // Asian Handicap / Handicap
+  if (t.includes("handicap") || t.includes("asian")) {
+    if (metric.home == null || metric.away == null) return null;
+    const winners: any[] = [];
+    for (const o of outcomes) {
+      const p = parseHandicap(o.label);
+      if (!p) continue;
+      const adjusted = p.team === "home"
+        ? (metric.home + p.line) - metric.away
+        : (metric.away + p.line) - metric.home;
+      if (adjusted > 0) winners.push(o);
+    }
+    if (winners.length === 0 && !outcomes.some((o) => parseHandicap(o.label))) return null;
+    return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
+  }
+
+  // 1x2 style (home / draw / away) — compare home vs away stat
+  const find = (labels: string[]) => outcomes.find((o: any) => labels.includes(norm(o.label)));
+  const has1x2 =
+    find(["home", "1", "casa", "mandante"]) ||
+    find(["away", "2", "fora", "visitante"]) ||
+    find(["draw", "x", "empate"]);
+  if (has1x2) {
+    if (metric.home == null || metric.away == null) return null;
+    const homeWon = metric.home > metric.away;
+    const awayWon = metric.away > metric.home;
+    const w = homeWon ? find(["home", "1", "casa", "mandante"])
+      : awayWon ? find(["away", "2", "fora", "visitante"])
+      : find(["draw", "x", "empate"]);
+    if (!w) return null;
+    return { winnerIds: [w.id], winnerLabels: [w.label] };
+  }
+
+  return null;
+}
+
+async function fetchFixtureStats(fixtureId: string): Promise<FixtureStats | null> {
+  const apiKey = Deno.env.get("API_FOOTBALL_KEY");
+  if (!apiKey) {
+    console.log(`[resolve-stats] API_FOOTBALL_KEY missing; cannot fetch fixture stats`);
+    return null;
+  }
+  try {
+    const [statsRes, fxRes] = await Promise.all([
+      fetch(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${encodeURIComponent(fixtureId)}`, {
+        headers: { "x-apisports-key": apiKey },
+      }),
+      fetch(`https://v3.football.api-sports.io/fixtures?id=${encodeURIComponent(fixtureId)}`, {
+        headers: { "x-apisports-key": apiKey },
+      }),
+    ]);
+    if (!statsRes.ok || !fxRes.ok) {
+      console.log(`[resolve-stats] fetch failed stats=${statsRes.status} fx=${fxRes.status}`);
+      return null;
+    }
+    const statsJson = await statsRes.json();
+    const fxJson = await fxRes.json();
+    const fx = fxJson?.response?.[0];
+    const homeId = fx?.teams?.home?.id;
+    const awayId = fx?.teams?.away?.id;
+    const rows: any[] = statsJson?.response || [];
+    if (!homeId || !awayId || rows.length === 0) {
+      console.log(`[resolve-stats] fixture=${fixtureId} stats_empty`);
+      return null;
+    }
+    const sideOf = (teamId: number): FixtureStatsSide => {
+      const r = rows.find((x: any) => x?.team?.id === teamId);
+      const list: any[] = r?.statistics || [];
+      const pick = (names: string[]) => {
+        for (const n of names) {
+          const found = list.find((s: any) => norm(s?.type) === norm(n));
+          if (found && found.value != null) {
+            const v = Number(String(found.value).replace("%", ""));
+            if (Number.isFinite(v)) return v;
+          }
+        }
+        return null;
+      };
+      const yellow = pick(["Yellow Cards"]);
+      const red = pick(["Red Cards"]);
+      const cards = yellow == null && red == null ? null : (Number(yellow || 0) + Number(red || 0));
+      return {
+        corners: pick(["Corner Kicks", "Corners"]),
+        yellow,
+        red,
+        cards,
+      };
+    };
+    const out: FixtureStats = { home: sideOf(homeId), away: sideOf(awayId) };
+    console.log(`[resolve-stats] fixture=${fixtureId} home=${JSON.stringify(out.home)} away=${JSON.stringify(out.away)}`);
+    return out;
+  } catch (e) {
+    console.error(`[resolve-stats] fixture=${fixtureId} error`, e);
+    return null;
+  }
+}
+
 function isPrincipalMatchWinner(title: string | null | undefined) {
   return [
     "match winner", "full time result", "resultado final", "1x2",
