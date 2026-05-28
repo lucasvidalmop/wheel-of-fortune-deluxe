@@ -724,9 +724,18 @@ const Bets = ({ tag }: BetsPageProps) => {
   const coinIcon = page?.coinIconUrl || '';
 
   const events: EventRow[] = page?.events || [];
+  const isHiddenHalfCornerMarket = (title?: string | null) => {
+    const t = String(title || '').toLowerCase();
+    const hasCorner = /\bcorner|escanteio/.test(t);
+    const hasHalf = /(1st|2nd|first|second)\s*[- ]?\s*half|\bht\b|1º\s*tempo|2º\s*tempo|1o\s*tempo|2o\s*tempo|primeiro\s*tempo|segundo\s*tempo/.test(t);
+    return hasCorner && hasHalf;
+  };
   const marketsByEvent = useMemo(() => {
     const m: Record<string, MarketRow[]> = {};
-    (page?.markets || []).forEach((mk: MarketRow) => { (m[mk.event_id] ||= []).push(mk); });
+    (page?.markets || []).forEach((mk: MarketRow) => {
+      if (isHiddenHalfCornerMarket(mk.title)) return;
+      (m[mk.event_id] ||= []).push(mk);
+    });
     Object.values(m).forEach(arr => arr.sort((a, b) => a.position - b.position));
     return m;
   }, [page]);
