@@ -22,6 +22,17 @@ interface WinnerHint {
   outcome_id?: string | null;
 }
 
+interface FixtureStatsSide {
+  corners?: number | null;
+  yellow?: number | null;
+  red?: number | null;
+  cards?: number | null; // yellow + red
+}
+interface FixtureStats {
+  home: FixtureStatsSide;
+  away: FixtureStatsSide;
+}
+
 interface Payload {
   external_fixture_id: string;
   status?: string;
@@ -29,6 +40,7 @@ interface Payload {
   winner?: "home" | "away" | "draw" | string | null;
   winning_outcome_ids?: string[];
   winners?: WinnerHint[];
+  stats?: FixtureStats | null;
 }
 
 interface Score { home: number; away: number }
