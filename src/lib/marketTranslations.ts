@@ -137,15 +137,33 @@ const REGEX_RULES: Array<[RegExp, string]> = [
 
 const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
 
+// Detects half-period suffix like "(1st Half)", "(2nd Half)", "1st Half", etc.
+function extractHalfSuffix(raw: string): { stripped: string; suffix: string } {
+  const re = /\s*\(?\s*(1st|first|2nd|second)\s+half\s*\)?\s*$/i;
+  const m = raw.match(re);
+  if (!m) return { stripped: raw, suffix: '' };
+  const which = m[1].toLowerCase();
+  const isFirst = which === '1st' || which === 'first';
+  return {
+    stripped: raw.slice(0, m.index).trim(),
+    suffix: isFirst ? ' (1º Tempo)' : ' (2º Tempo)',
+  };
+}
+
 export function translateMarketName(name?: string | null): string {
   if (!name) return name ?? '';
   const raw = String(name);
-  const key = norm(raw);
-  if (!key) return raw;
+  if (!raw.trim()) return raw;
+
+  // Preserve half-period info so users distinguish full-match vs half markets.
+  const { stripped, suffix } = extractHalfSuffix(raw.trim());
+  const target = stripped || raw.trim();
+  const key = norm(target);
+
   const exact = EXACT[key];
-  if (exact) return exact;
+  if (exact) return exact + suffix;
   for (const [re, rep] of REGEX_RULES) {
-    if (re.test(raw.trim())) return rep;
+    if (re.test(target)) return rep + suffix;
   }
-  return raw;
+  return target + suffix;
 }
