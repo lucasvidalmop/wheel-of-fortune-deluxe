@@ -652,8 +652,8 @@ function deriveMarketWinners(
     for (const o of outcomes) {
       const parsed = parseOverUnder(o.label);
       if (!parsed) continue;
-      if (parsed.kind === "over" && value > parsed.line) winners.push(o);
-      else if (parsed.kind === "under" && value < parsed.line) winners.push(o);
+      if (parsed.side === "over" && value > parsed.line) winners.push(o);
+      else if (parsed.side === "under" && value < parsed.line) winners.push(o);
     }
     return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
   }
@@ -667,11 +667,10 @@ function deriveMarketWinners(
     for (const o of outcomes) {
       const parsed = parseHandicap(o.label);
       if (!parsed) continue;
-      // Home -X means home wins if home+h > away. Away similarly.
-      if (parsed.side === "home") {
-        if (score.home + parsed.handicap > score.away) winners.push(o);
-      } else if (parsed.side === "away") {
-        if (score.away + parsed.handicap > score.home) winners.push(o);
+      if (parsed.team === "home") {
+        if (score.home + parsed.line > score.away) winners.push(o);
+      } else {
+        if (score.away + parsed.line > score.home) winners.push(o);
       }
     }
     return { winnerIds: winners.map((w) => w.id), winnerLabels: winners.map((w) => w.label) };
