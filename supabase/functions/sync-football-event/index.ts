@@ -184,7 +184,8 @@ async function syncForOwner(
     external_fixture_id: ev.external_fixture_id,
     // is_hot só é aplicado na CRIAÇÃO (removido em updates abaixo).
     // Fase de mata-mata força true; caso contrário usa payload ou false.
-    is_hot: isFinalsPhase ? true : Boolean(ev.is_hot ?? false),
+  // Mata-mata força hot; jogos de seleção respeitam o is_hot do payload (sem auto-promoção).
+  is_hot: isFinalsPhase ? true : Boolean(ev.is_hot ?? false),
     competition_id: ev.competition_id != null ? String(ev.competition_id) : null,
     competition_name: ev.competition_name ?? null,
     competition_slug: ev.competition_slug ?? null,
