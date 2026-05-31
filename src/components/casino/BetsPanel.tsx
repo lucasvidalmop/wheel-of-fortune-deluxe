@@ -1716,16 +1716,38 @@ function ApiFootballImporter({ existingFixtureIds, categories, onClose, onPick }
     const t = overrides?.team ?? team;
     setLoading(true); setErrored(''); setResults([]);
     try {
-      const qs = new URLSearchParams();
-      if (l.trim()) qs.set('league', l.trim());
-      if (s.trim()) qs.set('season', s.trim());
-      if (d.trim()) qs.set('date', d.trim());
-      if (t.trim()) qs.set('team', t.trim());
-      const r = await fetch(`https://sportsapi.tipspayroleta.com/fixtures?${qs.toString()}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      if ((data as any)?.error) throw new Error((data as any).error);
-      let list: any[] = (data as any)?.response || [];
+      const body: Record<string, string> = { resource: 'fixtures' };
+      if (l.trim()) body.league = l.trim();
+      if (s.trim()) body.season = s.trim();
+      if (d.trim()) body.date = d.trim();
+      if (t.trim()) body.team = t.trim();
+
+      let list: any[] = [];
+      let lastErr: any = null;
+
+      // Caminho principal: edge function (Lovable Cloud) — não depende da VPS
+      try {
+        const { data, error } = await supabase.functions.invoke('api-football-search', { body });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        list = (data as any)?.response || [];
+      } catch (e) {
+        lastErr = e;
+        // Fallback: VPS direta (caso a edge function falhe)
+        try {
+          const qs = new URLSearchParams();
+          Object.entries(body).forEach(([k, v]) => { if (k !== 'resource') qs.set(k, v); });
+          const r = await fetch(`https://sportsapi.tipspayroleta.com/fixtures?${qs.toString()}`);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const data = await r.json();
+          if ((data as any)?.error) throw new Error((data as any).error);
+          list = (data as any)?.response || [];
+          lastErr = null;
+        } catch (e2) {
+          throw lastErr || e2;
+        }
+      }
+
       if (overrides?.nsOnly) {
         list = list.filter((fx: any) => fx?.fixture?.status?.short === 'NS');
       }
