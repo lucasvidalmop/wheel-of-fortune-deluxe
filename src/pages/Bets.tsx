@@ -1846,6 +1846,9 @@ const Bets = ({ tag }: BetsPageProps) => {
                     { key: 'competition:libertadores', label: 'Libertadores', icon: '🌎' },
                   ],
                 };
+                const COMPETITION_LABEL_OVERRIDES: Record<string, { label: string; icon?: string }> = {
+                  'selecoes': { label: 'Jogos da Seleção', icon: '🇧🇷' },
+                };
                 const futebolDynamic: Array<{ key: string; label: string; icon?: string }> = [];
                 const seenSlugs = new Set(BASE_SUBS['category:futebol'].map(s => s.key));
                 nonHot.forEach(e => {
@@ -1855,7 +1858,12 @@ const Bets = ({ tag }: BetsPageProps) => {
                   const key = `competition:${e.competition_slug}`;
                   if (seenSlugs.has(key)) return;
                   seenSlugs.add(key);
-                  futebolDynamic.push({ key, label: e.competition_name || e.competition_slug });
+                  const override = COMPETITION_LABEL_OVERRIDES[e.competition_slug.toLowerCase()];
+                  futebolDynamic.push({
+                    key,
+                    label: override?.label || e.competition_name || e.competition_slug,
+                    icon: override?.icon,
+                  });
                 });
                 const SUBS: Record<string, Array<{ key: string; label: string; icon?: string }>> = {
                   'category:futebol': [...BASE_SUBS['category:futebol'], ...futebolDynamic],
