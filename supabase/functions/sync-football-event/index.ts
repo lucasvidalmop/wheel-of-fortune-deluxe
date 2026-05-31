@@ -122,6 +122,16 @@ async function syncForOwner(
   ev: EventPayload,
   markets: MarketPayload[],
 ) {
+  // ---- Detecta jogo de seleções (Copa do Mundo, Eliminatórias, Amistosos de seleção, etc.) ----
+  const isNationalTeam =
+    Boolean(ev.is_national_team) ||
+    (ev.competition_slug ?? "").toLowerCase() === "selecoes";
+
+  // Se for jogo de seleção e não veio categoria, força "Futebol"
+  if (isNationalTeam && !ev.category) {
+    ev.category = "Futebol";
+  }
+
   // ---- Resolve category_id if a category name was provided ----
   let categoryId: string | null = ev.category_id ?? null;
   if (!categoryId && ev.category) {
