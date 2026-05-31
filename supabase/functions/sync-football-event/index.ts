@@ -34,6 +34,7 @@ interface EventPayload {
   away_logo?: string;
   image_url?: string;
   is_hot?: boolean;
+  is_national_team?: boolean;
   // Competição / liga
   competition_id?: string | number | null;
   competition_name?: string | null;
@@ -121,6 +122,16 @@ async function syncForOwner(
   ev: EventPayload,
   markets: MarketPayload[],
 ) {
+  // ---- Detecta jogo de seleções (Copa do Mundo, Eliminatórias, Amistosos de seleção, etc.) ----
+  const isNationalTeam =
+    Boolean(ev.is_national_team) ||
+    (ev.competition_slug ?? "").toLowerCase() === "selecoes";
+
+  // Se for jogo de seleção e não veio categoria, força "Futebol"
+  if (isNationalTeam && !ev.category) {
+    ev.category = "Futebol";
+  }
+
   // ---- Resolve category_id if a category name was provided ----
   let categoryId: string | null = ev.category_id ?? null;
   if (!categoryId && ev.category) {
@@ -172,7 +183,7 @@ async function syncForOwner(
     image_url: ev.image_url ?? "",
     external_fixture_id: ev.external_fixture_id,
     // is_hot só é aplicado na CRIAÇÃO (removido em updates abaixo).
-    // Fase de mata-mata força true; caso contrário usa payload ou false.
+    // Mata-mata força true; jogos de seleção respeitam o is_hot do payload (sem auto-promoção).
     is_hot: isFinalsPhase ? true : Boolean(ev.is_hot ?? false),
     competition_id: ev.competition_id != null ? String(ev.competition_id) : null,
     competition_name: ev.competition_name ?? null,
