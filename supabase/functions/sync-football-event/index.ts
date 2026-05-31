@@ -34,6 +34,7 @@ interface EventPayload {
   away_logo?: string;
   image_url?: string;
   is_hot?: boolean;
+  is_national_team?: boolean;
   // Competição / liga
   competition_id?: string | number | null;
   competition_name?: string | null;
