@@ -1164,6 +1164,7 @@ export type Database = {
           created_at: string
           forced_prizes: Json | null
           id: string
+          one_per_day: boolean
           one_per_user: boolean
           owner_id: string
           quantity: number
@@ -1194,6 +1195,7 @@ export type Database = {
           created_at?: string
           forced_prizes?: Json | null
           id?: string
+          one_per_day?: boolean
           one_per_user?: boolean
           owner_id: string
           quantity?: number
@@ -1224,6 +1226,7 @@ export type Database = {
           created_at?: string
           forced_prizes?: Json | null
           id?: string
+          one_per_day?: boolean
           one_per_user?: boolean
           owner_id?: string
           quantity?: number
