@@ -586,7 +586,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
             </button>
           </div>
         </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+        <div className="rounded-xl border border-white/10 bg-black/20 p-3 space-y-3">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -600,6 +600,22 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
                 {bulkOnePerUser
                   ? 'Cada usuário (e-mail/ID) só conseguirá resgatar 1 código deste lote. Os demais códigos do lote ficam bloqueados para essa pessoa.'
                   : 'A mesma pessoa pode resgatar vários códigos deste lote.'}
+              </div>
+            </div>
+          </label>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={bulkOnePerDay}
+              onChange={e => setBulkOnePerDay(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-fuchsia-500"
+            />
+            <div>
+              <div className="text-sm font-medium">Limitar a 1 resgate por dia por pessoa</div>
+              <div className="text-xs opacity-60 mt-0.5">
+                {bulkOnePerDay
+                  ? 'Cada usuário só conseguirá resgatar 1 código deste lote por dia. O limite reseta todo dia às 00h (horário de Brasília).'
+                  : 'Sem limite diário — a pessoa pode resgatar vários códigos deste lote no mesmo dia.'}
               </div>
             </div>
           </label>
