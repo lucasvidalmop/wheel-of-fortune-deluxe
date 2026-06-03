@@ -245,6 +245,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [bulkCaseId, setBulkCaseId] = useState<string>(cases[0]?.id || '');
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [bulkOnePerUser, setBulkOnePerUser] = useState(false);
+  const [bulkOnePerDay, setBulkOnePerDay] = useState(false);
   const [lastBulkCodes, setLastBulkCodes] = useState<{ code: string; prizes: string[] }[]>([]);
 
   const describeForcedEntry = (entry: any, caseObj: any): string => {
