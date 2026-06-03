@@ -341,6 +341,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         forced_prizes: forcedPrizes,
         batch_id: batchId,
         one_per_user: bulkOnePerUser,
+        one_per_day: bulkOnePerDay,
       };
     });
 
