@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
       found: true,
       config: publicConfig,
       deadlinePassed: past,
+      notStarted,
       entry,
       entryGroups,
       entryBracket,
