@@ -12,6 +12,7 @@ interface Prize { label: string; value: string; highlight?: boolean }
 interface BolaoConfig {
   id: string; owner_id: string; tag: string; name: string;
   submission_deadline: string | null;
+  submissions_open_at: string | null;
   is_active: boolean;
   scoring: any;
   groups: Group[];
