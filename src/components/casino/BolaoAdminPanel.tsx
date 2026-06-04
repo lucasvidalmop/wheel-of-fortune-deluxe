@@ -355,8 +355,8 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
           }}
         />
       )}
-        </div>
-      )}
+
+
 
       {showOfficialEditor && config && (
         <div className="p-4 rounded-xl bg-card border border-border space-y-4">
