@@ -47,7 +47,9 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const deadline = bolao.submission_deadline ? new Date(bolao.submission_deadline) : null;
+    const openAt = bolao.submissions_open_at ? new Date(bolao.submissions_open_at) : null;
     const past = deadline ? now > deadline : false;
+    const notStarted = openAt ? now < openAt : false;
 
     // Hide official results before deadline
     const publicConfig = {
