@@ -217,6 +217,29 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
           Recalcular pontuações
         </button>
         <button onClick={exportCSV} className="px-3 py-2 rounded-lg bg-muted text-sm">Exportar CSV</button>
+        {config && (
+          <button
+            onClick={async () => {
+              const url = `${window.location.origin}/odds=${config.tag}?bolao=1`;
+              const text = `Participe do ${config.name}! Faça seu palpite: ${url}`;
+              try {
+                if (navigator.share) {
+                  await navigator.share({ title: config.name, text, url });
+                } else {
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Link copiado!");
+                }
+              } catch (e: any) {
+                if (e?.name !== "AbortError") {
+                  try { await navigator.clipboard.writeText(url); toast.success("Link copiado!"); }
+                  catch { toast.error("Não foi possível compartilhar"); }
+                }
+              }
+            }}
+            className="px-3 py-2 rounded-lg bg-muted text-sm flex items-center gap-2">
+            <Share2 size={14} /> Compartilhar bolão
+          </button>
+        )}
         <button onClick={() => setShowOfficialEditor(v => !v)} className="px-3 py-2 rounded-lg bg-muted text-sm flex items-center gap-1">
           {showOfficialEditor ? <ChevronDown size={14} /> : <ChevronRight size={14} />} Resultados oficiais
         </button>
