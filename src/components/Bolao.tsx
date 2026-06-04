@@ -391,7 +391,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           </button>
         </div>
 
-        {notStarted && config?.submission_deadline && (
+        {notStarted && config?.submissions_open_at && (
           <div className="px-4 py-3 border-b flex flex-wrap items-center justify-center gap-4 text-center shrink-0" style={{ borderColor: `${accent}22`, background: `linear-gradient(135deg, ${accent}11, transparent)` }}>
             <div className="flex items-center gap-2" style={{ color: text }}>
               <Trophy size={18} style={{ color: accent }} />
@@ -415,7 +415,7 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
               })()}
             </div>
             <div className="text-[11px]" style={{ color: muted }}>
-              Abertura: {new Date(config.submission_deadline).toLocaleString("pt-BR")}
+              Abertura: {new Date(config.submissions_open_at).toLocaleString("pt-BR")}
             </div>
           </div>
         )}
