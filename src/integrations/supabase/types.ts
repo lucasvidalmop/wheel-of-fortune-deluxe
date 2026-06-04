@@ -600,6 +600,7 @@ export type Database = {
           page_config: Json
           scoring: Json
           submission_deadline: string | null
+          submissions_open_at: string | null
           tag: string
           updated_at: string
         }
@@ -615,6 +616,7 @@ export type Database = {
           page_config?: Json
           scoring?: Json
           submission_deadline?: string | null
+          submissions_open_at?: string | null
           tag: string
           updated_at?: string
         }
@@ -630,6 +632,7 @@ export type Database = {
           page_config?: Json
           scoring?: Json
           submission_deadline?: string | null
+          submissions_open_at?: string | null
           tag?: string
           updated_at?: string
         }
