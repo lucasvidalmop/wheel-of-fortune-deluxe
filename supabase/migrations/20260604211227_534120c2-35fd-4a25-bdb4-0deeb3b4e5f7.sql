@@ -1,0 +1,1 @@
+ALTER TABLE public.bolao_configs ADD COLUMN IF NOT EXISTS submissions_open_at timestamptz;

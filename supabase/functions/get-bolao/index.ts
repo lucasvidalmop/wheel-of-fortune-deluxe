@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     const { data: bolao } = await supabase
       .from("bolao_configs")
-      .select("id, name, submission_deadline, is_active, page_config, scoring, groups, bracket_template, official_results")
+      .select("id, name, submission_deadline, submissions_open_at, is_active, page_config, scoring, groups, bracket_template, official_results")
       .eq("owner_id", betsCfg.owner_id)
       .eq("tag", tag)
       .maybeSingle();
@@ -47,7 +47,9 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const deadline = bolao.submission_deadline ? new Date(bolao.submission_deadline) : null;
+    const openAt = bolao.submissions_open_at ? new Date(bolao.submissions_open_at) : null;
     const past = deadline ? now > deadline : false;
+    const notStarted = openAt ? now < openAt : false;
 
     // Hide official results before deadline
     const publicConfig = {
@@ -96,6 +98,7 @@ Deno.serve(async (req) => {
       found: true,
       config: publicConfig,
       deadlinePassed: past,
+      notStarted,
       entry,
       entryGroups,
       entryBracket,

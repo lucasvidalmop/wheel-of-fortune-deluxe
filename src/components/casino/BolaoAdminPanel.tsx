@@ -12,6 +12,7 @@ interface Prize { label: string; value: string; highlight?: boolean }
 interface BolaoConfig {
   id: string; owner_id: string; tag: string; name: string;
   submission_deadline: string | null;
+  submissions_open_at: string | null;
   is_active: boolean;
   scoring: any;
   groups: Group[];
@@ -63,7 +64,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
     setLoading(true);
     try {
       const { data: cfgs } = await supabase.from("bolao_configs")
-        .select("id, owner_id, tag, name, submission_deadline, is_active, scoring, groups, bracket_template, official_results, page_config")
+        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, scoring, groups, bracket_template, official_results, page_config")
         .eq("owner_id", ownerId).order("created_at", { ascending: false });
       const list = (cfgs || []) as BolaoConfig[];
       setConfigs(list);
@@ -225,7 +226,66 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
         <div className="p-4 rounded-xl bg-card border border-border space-y-3">
           <h3 className="font-bold text-sm">Abertura das inscrições</h3>
           <p className="text-xs text-muted-foreground">
-            Defina quando o bolão começa a aceitar inscrições. Antes dessa data, os usuários veem uma contagem regressiva. Deixe em branco para abrir imediatamente.
+            Quando o bolão começa a aceitar inscrições. Antes dessa data, os usuários veem uma contagem regressiva. Deixe em branco para abrir imediatamente.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="datetime-local"
+              value={(() => {
+                if (!config.submissions_open_at) return "";
+                const d = new Date(config.submissions_open_at);
+                const tz = d.getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - tz).toISOString().slice(0, 16);
+              })()}
+              onChange={(e) => {
+                const v = e.target.value;
+                const iso = v ? new Date(v).toISOString() : null;
+                setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, submissions_open_at: iso } : c));
+              }}
+              className="px-3 py-2 rounded-lg bg-muted text-sm"
+            />
+            <button
+              onClick={async () => {
+                setSaving(true);
+                const { error } = await supabase.from("bolao_configs")
+                  .update({ submissions_open_at: config.submissions_open_at })
+                  .eq("id", config.id);
+                setSaving(false);
+                if (error) toast.error("Erro ao salvar");
+                else toast.success("Abertura atualizada");
+              }}
+              disabled={saving}
+              className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 disabled:opacity-50">
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Salvar
+            </button>
+            {config.submissions_open_at && (
+              <button
+                onClick={async () => {
+                  setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, submissions_open_at: null } : c));
+                  const { error } = await supabase.from("bolao_configs")
+                    .update({ submissions_open_at: null })
+                    .eq("id", config.id);
+                  if (error) toast.error("Erro ao limpar");
+                  else toast.success("Inscrições abertas imediatamente");
+                }}
+                className="px-3 py-2 rounded-lg bg-muted text-sm">
+                Limpar
+              </button>
+            )}
+          </div>
+          {config.submissions_open_at && (
+            <div className="text-xs text-muted-foreground">
+              Abre em: {new Date(config.submissions_open_at).toLocaleString("pt-BR")}
+            </div>
+          )}
+        </div>
+      )}
+
+      {config && (
+        <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+          <h3 className="font-bold text-sm">Fechamento das inscrições</h3>
+          <p className="text-xs text-muted-foreground">
+            Data e hora em que os palpites deixam de ser aceitos. Após essa data, ninguém mais pode enviar ou alterar palpites. Deixe em branco para nunca fechar automaticamente.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -251,7 +311,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
                   .eq("id", config.id);
                 setSaving(false);
                 if (error) toast.error("Erro ao salvar");
-                else toast.success("Abertura atualizada");
+                else toast.success("Fechamento atualizado");
               }}
               disabled={saving}
               className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 disabled:opacity-50">
@@ -265,7 +325,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
                     .update({ submission_deadline: null })
                     .eq("id", config.id);
                   if (error) toast.error("Erro ao limpar");
-                  else toast.success("Inscrições abertas imediatamente");
+                  else toast.success("Fechamento removido");
                 }}
                 className="px-3 py-2 rounded-lg bg-muted text-sm">
                 Limpar
@@ -274,7 +334,9 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
           </div>
           {config.submission_deadline && (
             <div className="text-xs text-muted-foreground">
-              Abre em: {new Date(config.submission_deadline).toLocaleString("pt-BR")}
+              Fecha em: {new Date(config.submission_deadline).toLocaleString("pt-BR")}
+            </div>
+          )}
         </div>
       )}
 
@@ -293,8 +355,8 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
           }}
         />
       )}
-        </div>
-      )}
+
+
 
       {showOfficialEditor && config && (
         <div className="p-4 rounded-xl bg-card border border-border space-y-4">
