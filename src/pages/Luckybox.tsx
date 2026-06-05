@@ -1060,17 +1060,25 @@ const Luckybox = ({ tag }: { tag?: string }) => {
               const grantQty = (authedUser.case_grants?.[c.id] || 0);
               const isFree = grantQty > 0;
               const cantAfford = !isFree && (c.claim_enabled || c.purchase_disabled || authedUser.tokens_balance < c.price_tokens);
-              const opensAt = c.claim_opens_at ? new Date(c.claim_opens_at).getTime() : null;
-              const closesAt = c.claim_closes_at ? new Date(c.claim_closes_at).getTime() : null;
-              const windowOpen = !!c.claim_enabled
-                && (opensAt === null || nowTs >= opensAt)
-                && (closesAt === null || nowTs <= closesAt);
-              const claimUpcoming = !!c.claim_enabled && opensAt !== null && nowTs < opensAt;
               const recurrence = c.claim_recurrence || 'none';
               const intervalMs = recurrence === 'daily' ? 86400000
                 : recurrence === 'weekly' ? 604800000
                 : recurrence === 'monthly' ? 2592000000
                 : 0;
+              let opensAt = c.claim_opens_at ? new Date(c.claim_opens_at).getTime() : null;
+              let closesAt = c.claim_closes_at ? new Date(c.claim_closes_at).getTime() : null;
+              // With recurrence, the configured window is the FIRST cycle; shift forward
+              // by `intervalMs` until it covers (or is ahead of) "now" so the window reopens.
+              if (intervalMs > 0 && opensAt !== null && nowTs > opensAt) {
+                const windowLen = (closesAt !== null && closesAt > opensAt) ? (closesAt - opensAt) : intervalMs;
+                const cycles = Math.floor((nowTs - opensAt) / intervalMs);
+                opensAt = opensAt + cycles * intervalMs;
+                if (closesAt !== null) closesAt = opensAt + windowLen;
+              }
+              const windowOpen = !!c.claim_enabled
+                && (opensAt === null || nowTs >= opensAt)
+                && (closesAt === null || nowTs <= closesAt);
+              const claimUpcoming = !!c.claim_enabled && opensAt !== null && nowTs < opensAt;
               const lastClaimStr = userClaims[c.id];
               const lastClaimTs = lastClaimStr ? new Date(lastClaimStr).getTime() : null;
               const nextAvailableTs = (lastClaimTs && intervalMs > 0) ? lastClaimTs + intervalMs : null;
