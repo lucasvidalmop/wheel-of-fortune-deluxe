@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import LobbyHomeButton from "@/components/LobbyHomeButton";
+import { useBlockDevtools } from "@/hooks/useBlockDevtools";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Roleta = lazy(() => import("./pages/Roleta.tsx"));
@@ -73,7 +74,10 @@ const SlugRouter = () => {
   return <Roleta />;
 };
 
-const App = () => (
+const App = () => {
+  useBlockDevtools();
+  return (
+
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -96,6 +100,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
