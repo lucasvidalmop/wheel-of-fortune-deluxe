@@ -86,7 +86,7 @@ const App = () => {
         <Suspense fallback={<PageFallback />}>
           <LobbyHomeButton />
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<NotFound />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
