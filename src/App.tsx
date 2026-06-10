@@ -7,7 +7,7 @@ import { lazy, Suspense } from "react";
 import LobbyHomeButton from "@/components/LobbyHomeButton";
 import { useBlockDevtools } from "@/hooks/useBlockDevtools";
 
-const Index = lazy(() => import("./pages/Index.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Roleta = lazy(() => import("./pages/Roleta.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
