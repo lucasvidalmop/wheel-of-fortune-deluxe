@@ -46,22 +46,9 @@ export const useBlockDevtools = () => {
       }
     };
 
-    const threshold = 160;
-    let blocked = false;
-    const detect = () => {
-      if (blocked) return;
-      const widthDiff = window.outerWidth - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
-      if (widthDiff > threshold || heightDiff > threshold) {
-        blocked = true;
-        try {
-          document.body.innerHTML = '';
-        } catch {}
-        window.location.replace('about:blank');
-      }
-    };
-
-    const interval = window.setInterval(detect, 1000);
+    // Atenção: a antiga detecção por diferença outerWidth/innerWidth foi removida
+    // porque gerava falso-positivo (barra lateral do navegador, zoom, mobile com
+    // teclado virtual, monitor secundário) e causava tela branca ao limpar o body.
 
     document.addEventListener('contextmenu', onContextMenu);
     document.addEventListener('keydown', onKeyDown);
@@ -69,7 +56,6 @@ export const useBlockDevtools = () => {
     return () => {
       document.removeEventListener('contextmenu', onContextMenu);
       document.removeEventListener('keydown', onKeyDown);
-      window.clearInterval(interval);
     };
   }, []);
 };
