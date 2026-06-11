@@ -436,8 +436,13 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
           <>
             {/* Tabs */}
             <div className="flex items-end gap-1 px-4 pt-3 border-b overflow-x-auto" style={{ borderColor: `${accent}22` }}>
-              {([["groups", `Grupos (${groupsFilled}/${groups.length})`], ["bracket", "Mata-mata"], ["rules", "Regras"], ["ranking", `Ranking${ranking.length > 0 ? ` (Top ${ranking.length})` : ""}`]] as const).map(([k, l]) => (
-                <button key={k} onClick={() => setTab(k)} className="px-4 py-2 rounded-t-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-1.5"
+              {(([
+                ["groups", `Grupos (${groupsFilled}/${groups.length})`],
+                ["bracket", "Mata-mata"],
+                ["rules", "Regras"],
+                ...(config?.ranking_visible ? [["ranking", `Ranking${ranking.length > 0 ? ` (Top ${ranking.length})` : ""}`]] : []),
+              ] as const) as ReadonlyArray<readonly [string, string]>).map(([k, l]) => (
+                <button key={k} onClick={() => setTab(k as any)} className="px-4 py-2 rounded-t-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-1.5"
                   style={{ background: tab === k ? cardBg : "transparent", color: tab === k ? text : muted, borderBottom: tab === k ? `2px solid ${accent}` : "2px solid transparent" }}>
                   {k === "ranking" && <Trophy size={13} />}
                   {l}
