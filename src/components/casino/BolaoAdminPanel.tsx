@@ -14,6 +14,7 @@ interface BolaoConfig {
   submission_deadline: string | null;
   submissions_open_at: string | null;
   is_active: boolean;
+  ranking_visible: boolean;
   scoring: any;
   groups: Group[];
   bracket_template: any;
@@ -64,7 +65,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
     setLoading(true);
     try {
       const { data: cfgs } = await supabase.from("bolao_configs")
-        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, scoring, groups, bracket_template, official_results, page_config")
+        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, ranking_visible, scoring, groups, bracket_template, official_results, page_config")
         .eq("owner_id", ownerId).order("created_at", { ascending: false });
       const list = (cfgs || []) as BolaoConfig[];
       setConfigs(list);
@@ -301,6 +302,29 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
               Abre em: {new Date(config.submissions_open_at).toLocaleString("pt-BR")}
             </div>
           )}
+        </div>
+      )}
+
+      {config && (
+        <div className="p-4 rounded-xl bg-card border border-border space-y-2">
+          <h3 className="font-bold text-sm">Visibilidade do ranking</h3>
+          <p className="text-xs text-muted-foreground">
+            Quando ativado, os participantes veem a aba "Ranking" com o Top 10. Mantenha desativado até liberar os resultados.
+          </p>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!!config.ranking_visible}
+              onChange={async (e) => {
+                const v = e.target.checked;
+                setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ranking_visible: v } : c));
+                const { error } = await supabase.from("bolao_configs")
+                  .update({ ranking_visible: v }).eq("id", config.id);
+                if (error) toast.error("Erro ao atualizar"); else toast.success(v ? "Ranking liberado" : "Ranking ocultado");
+              }}
+            />
+            Mostrar ranking para os participantes
+          </label>
         </div>
       )}
 

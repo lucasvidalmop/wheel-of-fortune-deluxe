@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     const { data: bolao } = await supabase
       .from("bolao_configs")
-      .select("id, name, submission_deadline, submissions_open_at, is_active, page_config, scoring, groups, bracket_template, official_results")
+      .select("id, name, submission_deadline, submissions_open_at, is_active, page_config, scoring, groups, bracket_template, official_results, ranking_visible")
       .eq("owner_id", betsCfg.owner_id)
       .eq("tag", tag)
       .maybeSingle();
@@ -80,19 +80,22 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data: topRows } = await supabase
-      .from("bolao_entries")
-      .select("user_name, account_id, score, status, submitted_at")
-      .eq("bolao_config_id", bolao.id)
-      .in("status", ["submitted", "locked"])
-      .order("score", { ascending: false })
-      .order("submitted_at", { ascending: true })
-      .limit(10);
-    const ranking = (topRows || []).map((r: any) => ({
-      name: r.user_name || "",
-      account_id: r.account_id || "",
-      score: r.score || 0,
-    }));
+    let ranking: Array<{ name: string; account_id: string; score: number }> = [];
+    if ((bolao as any).ranking_visible) {
+      const { data: topRows } = await supabase
+        .from("bolao_entries")
+        .select("user_name, account_id, score, status, submitted_at")
+        .eq("bolao_config_id", bolao.id)
+        .in("status", ["submitted", "locked"])
+        .order("score", { ascending: false })
+        .order("submitted_at", { ascending: true })
+        .limit(10);
+      ranking = (topRows || []).map((r: any) => ({
+        name: r.user_name || "",
+        account_id: r.account_id || "",
+        score: r.score || 0,
+      }));
+    }
 
     return new Response(JSON.stringify({
       found: true,

@@ -1,0 +1,1 @@
+ALTER TABLE public.bolao_configs ADD COLUMN IF NOT EXISTS ranking_visible boolean NOT NULL DEFAULT false;

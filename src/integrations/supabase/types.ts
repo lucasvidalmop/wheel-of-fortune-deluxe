@@ -598,6 +598,7 @@ export type Database = {
           official_results: Json
           owner_id: string
           page_config: Json
+          ranking_visible: boolean
           scoring: Json
           submission_deadline: string | null
           submissions_open_at: string | null
@@ -614,6 +615,7 @@ export type Database = {
           official_results?: Json
           owner_id: string
           page_config?: Json
+          ranking_visible?: boolean
           scoring?: Json
           submission_deadline?: string | null
           submissions_open_at?: string | null
@@ -630,6 +632,7 @@ export type Database = {
           official_results?: Json
           owner_id?: string
           page_config?: Json
+          ranking_visible?: boolean
           scoring?: Json
           submission_deadline?: string | null
           submissions_open_at?: string | null
