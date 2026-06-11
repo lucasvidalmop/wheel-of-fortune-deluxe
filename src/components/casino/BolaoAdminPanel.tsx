@@ -14,6 +14,7 @@ interface BolaoConfig {
   submission_deadline: string | null;
   submissions_open_at: string | null;
   is_active: boolean;
+  ranking_visible: boolean;
   scoring: any;
   groups: Group[];
   bracket_template: any;
@@ -64,7 +65,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
     setLoading(true);
     try {
       const { data: cfgs } = await supabase.from("bolao_configs")
-        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, scoring, groups, bracket_template, official_results, page_config")
+        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, ranking_visible, scoring, groups, bracket_template, official_results, page_config")
         .eq("owner_id", ownerId).order("created_at", { ascending: false });
       const list = (cfgs || []) as BolaoConfig[];
       setConfigs(list);
