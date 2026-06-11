@@ -176,11 +176,13 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     }
 
     const qty = Math.max(1, Number(quantity) || 1);
-    const forcedPrizes = buildForcedPrizes(forcedMode, forcedFixed, forcedList, qty);
-    if (forcedPrizes.length !== qty || forcedPrizes.some(e => !e || (Object.keys(e).length === 0))) {
-      setSending(false);
-      toast.error('Defina o prêmio garantido para todas as aberturas antes de enviar');
-      return;
+    const forcedPrizes = randomMode ? [] : buildForcedPrizes(forcedMode, forcedFixed, forcedList, qty);
+    if (!randomMode) {
+      if (forcedPrizes.length !== qty || forcedPrizes.some(e => !e || (Object.keys(e).length === 0))) {
+        setSending(false);
+        toast.error('Defina o prêmio garantido para todas as aberturas antes de enviar');
+        return;
+      }
     }
     setSending(true);
     const targets = users.filter(u => selected.has(u.id));
