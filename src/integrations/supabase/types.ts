@@ -2522,6 +2522,10 @@ export type Database = {
           spins_available: number
         }[]
       }
+      auto_credit_luckybox_grant: {
+        Args: { p_grant_id: string }
+        Returns: Json
+      }
       build_fixed_prize_queue:
         | {
             Args: {

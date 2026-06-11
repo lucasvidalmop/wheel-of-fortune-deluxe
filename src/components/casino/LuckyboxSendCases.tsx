@@ -208,6 +208,16 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       if (error) { console.error(error); continue; }
       okCount++;
 
+      // If we're NOT sending via WhatsApp, auto-credit the case directly to the recipient's account
+      // (so it appears in their balance without needing to type the code).
+      if (!sendWhats) {
+        try {
+          await (supabase as any).rpc('auto_credit_luckybox_grant', { p_grant_id: ins.id });
+        } catch (e) {
+          console.error('auto_credit_luckybox_grant failed', e);
+        }
+      }
+
       if (sendWhats && u.phone) {
         const link = `${baseUrl}/luckybox=${cfg.tag}`;
         const msg = template
