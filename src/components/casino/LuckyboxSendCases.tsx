@@ -474,14 +474,32 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
         </div>
 
         {selectedCaseObj && (
-          <ForcedPrizePicker
-            selectedCase={selectedCaseObj}
-            allCases={cases}
-            openingsCount={Math.max(1, Number(quantity) || 1)}
-            mode={forcedMode} setMode={setForcedMode}
-            fixed={forcedFixed} setFixed={setForcedFixed}
-            list={forcedList} setList={setForcedList}
-          />
+          <div className="space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <input
+                type="checkbox"
+                checked={randomMode}
+                onChange={e => setRandomMode(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-cyan-500"
+              />
+              <div>
+                <div className="text-sm font-medium text-cyan-200">Prêmio aleatório (seguir porcentagens da caixa)</div>
+                <div className="text-xs opacity-60 mt-0.5">
+                  Quando ativo, o prêmio NÃO é fixado — cada abertura sorteia normalmente conforme as porcentagens configuradas na caixa.
+                </div>
+              </div>
+            </label>
+            {!randomMode && (
+              <ForcedPrizePicker
+                selectedCase={selectedCaseObj}
+                allCases={cases}
+                openingsCount={Math.max(1, Number(quantity) || 1)}
+                mode={forcedMode} setMode={setForcedMode}
+                fixed={forcedFixed} setFixed={setForcedFixed}
+                list={forcedList} setList={setForcedList}
+              />
+            )}
+          </div>
         )}
 
         {sendWhats && (
