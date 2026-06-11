@@ -11210,6 +11210,25 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
                       <div>
                         <h3 className="text-sm font-bold text-foreground">Aprovações de Prêmios</h3>
                         <p className="text-xs text-muted-foreground">Gerencie os pagamentos de prêmios ganhos</p>
+                        {(() => {
+                          const pendingStatuses = ['pending', 'auto_pending', 'approved', 'failed', 'processing'];
+                          const pendingList = prizePayments.filter((p: any) => pendingStatuses.includes(p.status));
+                          const totalPending = pendingList.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+                          const selectedList = prizePayments.filter((p: any) => selectedPrizeIds.has(p.id));
+                          const totalSelected = selectedList.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+                          return (
+                            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                                Pendente: R$ {totalPending.toFixed(2).replace('.', ',')} ({pendingList.length})
+                              </span>
+                              {selectedPrizeIds.size > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                  Selecionados: R$ {totalSelected.toFixed(2).replace('.', ',')} ({selectedPrizeIds.size})
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                     <button
