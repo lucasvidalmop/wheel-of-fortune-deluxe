@@ -307,7 +307,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     // In pool mode, the number of codes = sum of per-prize counts (shuffled distribution)
     let perCodeForcedEntry: ForcedEntry[] | null = null;
     let totalCodes = Math.max(1, Math.min(2000, Number(bulkCount) || 0));
-    if (bulkForcedMode === 'pool') {
+    if (!bulkRandomMode && bulkForcedMode === 'pool') {
       perCodeForcedEntry = buildPoolDistribution(bulkForcedPool);
       if (!perCodeForcedEntry || perCodeForcedEntry.length === 0) {
         toast.error('Adicione ao menos um prêmio possível ao sorteio');
@@ -324,7 +324,9 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
     const batchId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : undefined;
     const rows = Array.from({ length: totalCodes }).map((_, idx) => {
       let forcedPrizes: ForcedEntry[];
-      if (bulkForcedMode === 'pool' && perCodeForcedEntry) {
+      if (bulkRandomMode) {
+        forcedPrizes = [];
+      } else if (bulkForcedMode === 'pool' && perCodeForcedEntry) {
         const entry = perCodeForcedEntry[idx];
         forcedPrizes = Array.from({ length: qty }).map(() => ({ ...entry }));
       } else {
@@ -349,12 +351,14 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
       };
     });
 
-    // Validate that every row got valid forced prizes
-    const invalid = rows.find(r => r.forced_prizes.length !== qty || r.forced_prizes.some((e: any) => !e || Object.keys(e).length === 0));
-    if (invalid) {
-      setBulkGenerating(false);
-      toast.error('Defina o prêmio garantido para todas as aberturas antes de gerar');
-      return;
+    // Validate that every row got valid forced prizes (skip in random mode)
+    if (!bulkRandomMode) {
+      const invalid = rows.find(r => r.forced_prizes.length !== qty || r.forced_prizes.some((e: any) => !e || Object.keys(e).length === 0));
+      if (invalid) {
+        setBulkGenerating(false);
+        toast.error('Defina o prêmio garantido para todas as aberturas antes de gerar');
+        return;
+      }
     }
 
     const { data, error } = await (supabase as any).from('luckybox_grants').insert(rows).select('code, forced_prizes');
