@@ -306,6 +306,29 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
       )}
 
       {config && (
+        <div className="p-4 rounded-xl bg-card border border-border space-y-2">
+          <h3 className="font-bold text-sm">Visibilidade do ranking</h3>
+          <p className="text-xs text-muted-foreground">
+            Quando ativado, os participantes veem a aba "Ranking" com o Top 10. Mantenha desativado até liberar os resultados.
+          </p>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!!config.ranking_visible}
+              onChange={async (e) => {
+                const v = e.target.checked;
+                setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ranking_visible: v } : c));
+                const { error } = await supabase.from("bolao_configs")
+                  .update({ ranking_visible: v }).eq("id", config.id);
+                if (error) toast.error("Erro ao atualizar"); else toast.success(v ? "Ranking liberado" : "Ranking ocultado");
+              }}
+            />
+            Mostrar ranking para os participantes
+          </label>
+        </div>
+      )}
+
+      {config && (
         <div className="p-4 rounded-xl bg-card border border-border space-y-3">
           <h3 className="font-bold text-sm">Fechamento das inscrições</h3>
           <p className="text-xs text-muted-foreground">
