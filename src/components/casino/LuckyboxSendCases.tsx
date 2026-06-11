@@ -59,6 +59,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   const [sendWhats, setSendWhats] = useState(true);
 
   // Forced prize selection (send-to-users)
+  const [randomMode, setRandomMode] = useState<boolean>(false);
   const [forcedMode, setForcedMode] = useState<ForcedMode>('fixed');
   const [forcedFixed, setForcedFixed] = useState<ForcedEntry | null>(null);
   const [forcedList, setForcedList] = useState<(ForcedEntry | null)[]>([]);
@@ -67,6 +68,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
   useEffect(() => { setForcedFixed(null); setForcedList([]); }, [caseId]);
 
   // Forced prize selection (bulk codes)
+  const [bulkRandomMode, setBulkRandomMode] = useState<boolean>(false);
   const [bulkForcedMode, setBulkForcedMode] = useState<ForcedMode>('fixed');
   const [bulkForcedFixed, setBulkForcedFixed] = useState<ForcedEntry | null>(null);
   const [bulkForcedList, setBulkForcedList] = useState<(ForcedEntry | null)[]>([]);
