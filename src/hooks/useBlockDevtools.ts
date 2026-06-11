@@ -20,6 +20,9 @@ export const useBlockDevtools = () => {
       host.endsWith('.lovable.dev');
     if (isDev) return;
 
+    // Permitir DevTools na dashboard
+    if (window.location.pathname.startsWith('/dashboard')) return;
+
     const onContextMenu = (e: MouseEvent) => e.preventDefault();
 
     const onKeyDown = (e: KeyboardEvent) => {
