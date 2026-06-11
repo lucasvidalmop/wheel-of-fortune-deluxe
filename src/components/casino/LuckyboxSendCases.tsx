@@ -647,17 +647,35 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
           </label>
         </div>
         {bulkSelectedCase && (
-          <ForcedPrizePicker
-            selectedCase={bulkSelectedCase}
-            allCases={cases}
-            openingsCount={Math.max(1, Number(bulkQty) || 1)}
-            mode={bulkForcedMode} setMode={setBulkForcedMode}
-            fixed={bulkForcedFixed} setFixed={setBulkForcedFixed}
-            list={bulkForcedList} setList={setBulkForcedList}
-            allowPool
-            pool={bulkForcedPool} setPool={setBulkForcedPool}
-            poolLabel={`Cada um dos ${Math.max(1, Number(bulkCount) || 1)} código(s) sorteia ${Math.max(1, Number(bulkQty) || 1) > 1 ? `${Math.max(1, Number(bulkQty) || 1)} prêmios` : '1 prêmio'} aleatório(s) desta lista no momento da geração:`}
-          />
+          <div className="space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/5 p-3">
+              <input
+                type="checkbox"
+                checked={bulkRandomMode}
+                onChange={e => setBulkRandomMode(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-fuchsia-500"
+              />
+              <div>
+                <div className="text-sm font-medium text-fuchsia-200">Prêmio aleatório (seguir porcentagens da caixa)</div>
+                <div className="text-xs opacity-60 mt-0.5">
+                  Quando ativo, cada código sorteia normalmente o prêmio no momento da abertura, conforme as porcentagens da caixa — nenhum prêmio é fixado.
+                </div>
+              </div>
+            </label>
+            {!bulkRandomMode && (
+              <ForcedPrizePicker
+                selectedCase={bulkSelectedCase}
+                allCases={cases}
+                openingsCount={Math.max(1, Number(bulkQty) || 1)}
+                mode={bulkForcedMode} setMode={setBulkForcedMode}
+                fixed={bulkForcedFixed} setFixed={setBulkForcedFixed}
+                list={bulkForcedList} setList={setBulkForcedList}
+                allowPool
+                pool={bulkForcedPool} setPool={setBulkForcedPool}
+                poolLabel={`Cada um dos ${Math.max(1, Number(bulkCount) || 1)} código(s) sorteia ${Math.max(1, Number(bulkQty) || 1) > 1 ? `${Math.max(1, Number(bulkQty) || 1)} prêmios` : '1 prêmio'} aleatório(s) desta lista no momento da geração:`}
+              />
+            )}
+          </div>
         )}
         {lastBulkCodes.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-black/30 p-3 space-y-2">
