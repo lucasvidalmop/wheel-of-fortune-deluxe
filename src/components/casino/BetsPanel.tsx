@@ -1143,11 +1143,19 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       )}
 
       {tab === 'wagers' && (() => {
-        const filtered = wagers.filter(w =>
-          (!wFilter.eventId || w.event_id === wFilter.eventId) &&
-          (!wFilter.marketId || w.market_id === wFilter.marketId) &&
-          (!wFilter.status || w.status === wFilter.status)
-        );
+        const filtered = wagers.filter(w => {
+          if (w._isTicket) {
+            // Tickets match event/market filter if any selection matches
+            if (wFilter.eventId && !(w._selections || []).some((s: any) => s.event_id === wFilter.eventId)) return false;
+            if (wFilter.marketId && !(w._selections || []).some((s: any) => s.market_id === wFilter.marketId)) return false;
+            if (wFilter.status && w.status !== wFilter.status) return false;
+            return true;
+          }
+          return (!wFilter.eventId || w.event_id === wFilter.eventId) &&
+            (!wFilter.marketId || w.market_id === wFilter.marketId) &&
+            (!wFilter.status || w.status === wFilter.status);
+        });
+
         const availableMarkets = wFilter.eventId
           ? markets.filter(m => m.event_id === wFilter.eventId)
           : markets;
