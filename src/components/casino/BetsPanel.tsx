@@ -1208,6 +1208,29 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                 </tr></thead>
                 <tbody>
                   {filtered.map(w => {
+                    if (w._isTicket) {
+                      const sels = (w._selections || []) as any[];
+                      return (
+                        <tr key={w.id} className="border-b border-border/50 bg-primary/[0.03]">
+                          <td className="py-2 text-xs">{new Date(w.created_at).toLocaleString('pt-BR')}</td>
+                          <td>{w.user_name || w.user_email}<div className="text-xs text-muted-foreground">{w.account_id}</div></td>
+                          <td className="text-xs" colSpan={3}>
+                            <div className="font-semibold text-primary">Múltipla ({sels.length}x) {w.public_code ? `· ${w.public_code}` : ''}</div>
+                            <div className="text-[11px] text-muted-foreground mt-0.5 space-y-0.5">
+                              {sels.map((s: any) => (
+                                <div key={s.id}>
+                                  • {s.event_title || '—'} — <span className="text-muted-foreground/80">{s.market_title || '—'}</span> → <span className="text-foreground">{s.selection_label || '—'}</span> <span className="opacity-70">@{Number(s.odd).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="text-right tabular-nums">{w.amount_coins}</td>
+                          <td className="text-right tabular-nums">{Number(w.odd_snapshot).toFixed(2)}</td>
+                          <td><span className="text-xs px-2 py-0.5 rounded bg-muted">{w.status}</span></td>
+                          <td className="text-right tabular-nums text-xs">{w.payout_coins || '—'}</td>
+                        </tr>
+                      );
+                    }
                     const ev = events.find(e => e.id === w.event_id);
                     const out = outcomes.find(o => o.id === w.outcome_id);
                     const mk = w.market_id ? markets.find(m => m.id === w.market_id) : null;
@@ -1225,6 +1248,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       </tr>
                     );
                   })}
+
                   {filtered.length === 0 && <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Nenhuma aposta.</td></tr>}
                 </tbody>
               </table>
