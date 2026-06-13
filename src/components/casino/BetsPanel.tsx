@@ -2176,9 +2176,25 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   });
   const byDay = Array.from(byDayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
-  // By event (bar)
+  // By event (bar) — expande tickets múltiplos pelas suas seleções
   const byEventMap = new Map<string, { title: string; apostas: number; valor: number; pago: number }>();
   filtered.forEach(w => {
+    if (w._isTicket) {
+      const sels = (w._selections || []) as any[];
+      if (!sels.length) return;
+      const share = (w.amount_coins || 0) / sels.length;
+      const paidShare = (w.status === 'won' ? (w.payout_coins || 0) : 0) / sels.length;
+      sels.forEach((s: any) => {
+        const ev = events.find(e => e.id === s.event_id);
+        const title = ev?.title || s.event_title || (s.event_id || '').slice(0, 8);
+        const e = byEventMap.get(s.event_id) || { title, apostas: 0, valor: 0, pago: 0 };
+        e.apostas += 1;
+        e.valor += share;
+        e.pago += paidShare;
+        byEventMap.set(s.event_id, e);
+      });
+      return;
+    }
     const ev = events.find(e => e.id === w.event_id);
     const title = ev?.title || w.event_id.slice(0, 8);
     const e = byEventMap.get(w.event_id) || { title, apostas: 0, valor: 0, pago: 0 };
@@ -2189,9 +2205,24 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   });
   const byEvent = Array.from(byEventMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
 
-  // By outcome (top picks)
+  // By outcome (top picks) — inclui seleções de múltiplas
   const byOutcomeMap = new Map<string, { label: string; event: string; apostas: number; valor: number }>();
   filtered.forEach(w => {
+    if (w._isTicket) {
+      const sels = (w._selections || []) as any[];
+      if (!sels.length) return;
+      const share = (w.amount_coins || 0) / sels.length;
+      sels.forEach((s: any) => {
+        const out = outcomes.find(o => o.id === s.outcome_id);
+        const ev = events.find(e => e.id === s.event_id);
+        const key = s.outcome_id;
+        const e = byOutcomeMap.get(key) || { label: out?.label || s.selection_label || '?', event: ev?.title || s.event_title || '', apostas: 0, valor: 0 };
+        e.apostas += 1;
+        e.valor += share;
+        byOutcomeMap.set(key, e);
+      });
+      return;
+    }
     const out = outcomes.find(o => o.id === w.outcome_id);
     const ev = events.find(e => e.id === w.event_id);
     const key = w.outcome_id;
@@ -2201,6 +2232,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
     byOutcomeMap.set(key, e);
   });
   const byOutcome = Array.from(byOutcomeMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
+
 
   // Top users
   type UserPick = { id: string; event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
