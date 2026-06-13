@@ -2247,17 +2247,31 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
       if (w.payout_mode !== 'case') e.pago += w.payout_coins || 0;
     }
     if (w.status === 'lost') e.perdidas += 1;
-    const ev = events.find(x => x.id === w.event_id);
-    const out = outcomes.find(o => o.id === w.outcome_id);
-    e.picks.push({
-      id: w.id,
-      event: ev?.title || '—',
-      outcome: out?.label || '—',
-      amount: w.amount_coins || 0,
-      odd: Number(w.odd_snapshot) || 0,
-      status: w.status,
-      createdAt: w.created_at,
-    });
+    if (w._isTicket) {
+      const sels = (w._selections || []) as any[];
+      e.picks.push({
+        id: w.id,
+        event: `Múltipla (${sels.length}x)`,
+        outcome: sels.map((s: any) => s.selection_label).filter(Boolean).join(' + ') || '—',
+        amount: w.amount_coins || 0,
+        odd: Number(w.odd_snapshot) || 0,
+        status: w.status,
+        createdAt: w.created_at,
+      });
+    } else {
+      const ev = events.find(x => x.id === w.event_id);
+      const out = outcomes.find(o => o.id === w.outcome_id);
+      e.picks.push({
+        id: w.id,
+        event: ev?.title || '—',
+        outcome: out?.label || '—',
+        amount: w.amount_coins || 0,
+        odd: Number(w.odd_snapshot) || 0,
+        status: w.status,
+        createdAt: w.created_at,
+      });
+    }
+
     byUserMap.set(key, e);
   });
 
