@@ -523,27 +523,87 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   const loadWagers = async () => {
     if (!config) return;
-    const { data } = await supabase
-      .from('bet_wagers')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .order('created_at', { ascending: false })
-      .limit(500);
-    const list = data || [];
+    const [{ data: wagersData }, { data: ticketsData }] = await Promise.all([
+      supabase
+        .from('bet_wagers')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase
+        .from('bet_tickets')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(500),
+    ]);
+    const wagersList = wagersData || [];
+    const ticketsList = ticketsData || [];
+
+    // Fetch selections for tickets
+    let selectionsByTicket: Record<string, any[]> = {};
+    if (ticketsList.length) {
+      const { data: selsData } = await supabase
+        .from('bet_ticket_selections')
+        .select('*')
+        .in('ticket_id', ticketsList.map((t: any) => t.id));
+      (selsData || []).forEach((s: any) => {
+        (selectionsByTicket[s.ticket_id] = selectionsByTicket[s.ticket_id] || []).push(s);
+      });
+    }
+
+    // Convert tickets to synthetic wager rows so they appear in Apostas/Analytics
+    const ticketRows = ticketsList.map((t: any) => {
+      const sels = selectionsByTicket[t.id] || [];
+      return {
+        id: `t_${t.id}`,
+        ticket_id: t.id,
+        created_at: t.created_at,
+        resolved_at: t.resolved_at,
+        user_name: t.user_name,
+        user_email: t.user_email,
+        account_id: t.account_id,
+        event_id: '',
+        market_id: null,
+        outcome_id: null,
+        amount_coins: t.stake,
+        odd_snapshot: Number(t.total_odd) || 1,
+        status: t.status,
+        payout_mode: 'coins',
+        payout_coins: t.payout_coins,
+        payout_grant_id: null,
+        public_code: t.public_code,
+        _isTicket: true,
+        _selections: sels,
+      };
+    });
+
+    const list = [...wagersList, ...ticketRows].sort(
+      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
     setWagers(list);
 
-    // Backfill events/outcomes/markets referenced by wagers but missing from
-    // the initial scope (events list is capped at 500 newest; outcomes may have
-    // been re-synced for football fixtures). Without this, the "Apostas deste
-    // usuário" detail row renders "—" for the selection label.
+    // Backfill events/outcomes/markets referenced by wagers/selections but missing
+    const refEventIds = [
+      ...wagersList.map((w: any) => w.event_id),
+      ...ticketRows.flatMap((t: any) => (t._selections as any[]).map(s => s.event_id)),
+    ];
+    const refOutcomeIds = [
+      ...wagersList.map((w: any) => w.outcome_id),
+      ...ticketRows.flatMap((t: any) => (t._selections as any[]).map(s => s.outcome_id)),
+    ];
+    const refMarketIds = [
+      ...wagersList.map((w: any) => w.market_id),
+      ...ticketRows.flatMap((t: any) => (t._selections as any[]).map(s => s.market_id)),
+    ];
     const missingEventIds = Array.from(new Set(
-      list.map((w: any) => w.event_id).filter((id: string) => id && !events.some(e => e.id === id))
+      refEventIds.filter((id: string) => id && !events.some(e => e.id === id))
     )) as string[];
     const missingOutcomeIds = Array.from(new Set(
-      list.map((w: any) => w.outcome_id).filter((id: string) => id && !outcomes.some(o => o.id === id))
+      refOutcomeIds.filter((id: string) => id && !outcomes.some(o => o.id === id))
     )) as string[];
     const missingMarketIds = Array.from(new Set(
-      list.map((w: any) => w.market_id).filter((id: string) => id && !markets.some(m => m.id === id))
+      refMarketIds.filter((id: string) => id && !markets.some(m => m.id === id))
     )) as string[];
 
     const [evRes, outRes, mkRes] = await Promise.all([
@@ -561,6 +621,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     if (outRes.data?.length) setOutcomes(prev => [...prev, ...(outRes.data as BetOutcome[]).filter(o => !prev.some(p => p.id === o.id))]);
     if (mkRes.data?.length) setMarkets(prev => [...prev, ...(mkRes.data as BetMarket[]).filter(m => !prev.some(p => p.id === m.id))]);
   };
+
 
   useEffect(() => { if (tab === 'wagers' || tab === 'analytics') loadWagers(); }, [tab, config?.id]);
 
@@ -1082,11 +1143,19 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
       )}
 
       {tab === 'wagers' && (() => {
-        const filtered = wagers.filter(w =>
-          (!wFilter.eventId || w.event_id === wFilter.eventId) &&
-          (!wFilter.marketId || w.market_id === wFilter.marketId) &&
-          (!wFilter.status || w.status === wFilter.status)
-        );
+        const filtered = wagers.filter(w => {
+          if (w._isTicket) {
+            // Tickets match event/market filter if any selection matches
+            if (wFilter.eventId && !(w._selections || []).some((s: any) => s.event_id === wFilter.eventId)) return false;
+            if (wFilter.marketId && !(w._selections || []).some((s: any) => s.market_id === wFilter.marketId)) return false;
+            if (wFilter.status && w.status !== wFilter.status) return false;
+            return true;
+          }
+          return (!wFilter.eventId || w.event_id === wFilter.eventId) &&
+            (!wFilter.marketId || w.market_id === wFilter.marketId) &&
+            (!wFilter.status || w.status === wFilter.status);
+        });
+
         const availableMarkets = wFilter.eventId
           ? markets.filter(m => m.event_id === wFilter.eventId)
           : markets;
@@ -1139,6 +1208,29 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                 </tr></thead>
                 <tbody>
                   {filtered.map(w => {
+                    if (w._isTicket) {
+                      const sels = (w._selections || []) as any[];
+                      return (
+                        <tr key={w.id} className="border-b border-border/50 bg-primary/[0.03]">
+                          <td className="py-2 text-xs">{new Date(w.created_at).toLocaleString('pt-BR')}</td>
+                          <td>{w.user_name || w.user_email}<div className="text-xs text-muted-foreground">{w.account_id}</div></td>
+                          <td className="text-xs" colSpan={3}>
+                            <div className="font-semibold text-primary">Múltipla ({sels.length}x) {w.public_code ? `· ${w.public_code}` : ''}</div>
+                            <div className="text-[11px] text-muted-foreground mt-0.5 space-y-0.5">
+                              {sels.map((s: any) => (
+                                <div key={s.id}>
+                                  • {s.event_title || '—'} — <span className="text-muted-foreground/80">{s.market_title || '—'}</span> → <span className="text-foreground">{s.selection_label || '—'}</span> <span className="opacity-70">@{Number(s.odd).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="text-right tabular-nums">{w.amount_coins}</td>
+                          <td className="text-right tabular-nums">{Number(w.odd_snapshot).toFixed(2)}</td>
+                          <td><span className="text-xs px-2 py-0.5 rounded bg-muted">{w.status}</span></td>
+                          <td className="text-right tabular-nums text-xs">{w.payout_coins || '—'}</td>
+                        </tr>
+                      );
+                    }
                     const ev = events.find(e => e.id === w.event_id);
                     const out = outcomes.find(o => o.id === w.outcome_id);
                     const mk = w.market_id ? markets.find(m => m.id === w.market_id) : null;
@@ -1156,6 +1248,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                       </tr>
                     );
                   })}
+
                   {filtered.length === 0 && <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Nenhuma aposta.</td></tr>}
                 </tbody>
               </table>
@@ -2041,11 +2134,16 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   // Apply filters
   const cutoff = filter.days > 0 ? Date.now() - filter.days * 86400_000 : 0;
   const filtered = wagers.filter(w => {
-    if (filter.eventId && w.event_id !== filter.eventId) return false;
+    if (filter.eventId) {
+      if (w._isTicket) {
+        if (!(w._selections || []).some((s: any) => s.event_id === filter.eventId)) return false;
+      } else if (w.event_id !== filter.eventId) return false;
+    }
     if (filter.status && w.status !== filter.status) return false;
     if (cutoff && new Date(w.created_at).getTime() < cutoff) return false;
     return true;
   });
+
 
   // KPIs
   const totalWagers = filtered.length;
@@ -2078,9 +2176,25 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   });
   const byDay = Array.from(byDayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
-  // By event (bar)
+  // By event (bar) — expande tickets múltiplos pelas suas seleções
   const byEventMap = new Map<string, { title: string; apostas: number; valor: number; pago: number }>();
   filtered.forEach(w => {
+    if (w._isTicket) {
+      const sels = (w._selections || []) as any[];
+      if (!sels.length) return;
+      const share = (w.amount_coins || 0) / sels.length;
+      const paidShare = (w.status === 'won' ? (w.payout_coins || 0) : 0) / sels.length;
+      sels.forEach((s: any) => {
+        const ev = events.find(e => e.id === s.event_id);
+        const title = ev?.title || s.event_title || (s.event_id || '').slice(0, 8);
+        const e = byEventMap.get(s.event_id) || { title, apostas: 0, valor: 0, pago: 0 };
+        e.apostas += 1;
+        e.valor += share;
+        e.pago += paidShare;
+        byEventMap.set(s.event_id, e);
+      });
+      return;
+    }
     const ev = events.find(e => e.id === w.event_id);
     const title = ev?.title || w.event_id.slice(0, 8);
     const e = byEventMap.get(w.event_id) || { title, apostas: 0, valor: 0, pago: 0 };
@@ -2091,9 +2205,24 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   });
   const byEvent = Array.from(byEventMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
 
-  // By outcome (top picks)
+  // By outcome (top picks) — inclui seleções de múltiplas
   const byOutcomeMap = new Map<string, { label: string; event: string; apostas: number; valor: number }>();
   filtered.forEach(w => {
+    if (w._isTicket) {
+      const sels = (w._selections || []) as any[];
+      if (!sels.length) return;
+      const share = (w.amount_coins || 0) / sels.length;
+      sels.forEach((s: any) => {
+        const out = outcomes.find(o => o.id === s.outcome_id);
+        const ev = events.find(e => e.id === s.event_id);
+        const key = s.outcome_id;
+        const e = byOutcomeMap.get(key) || { label: out?.label || s.selection_label || '?', event: ev?.title || s.event_title || '', apostas: 0, valor: 0 };
+        e.apostas += 1;
+        e.valor += share;
+        byOutcomeMap.set(key, e);
+      });
+      return;
+    }
     const out = outcomes.find(o => o.id === w.outcome_id);
     const ev = events.find(e => e.id === w.event_id);
     const key = w.outcome_id;
@@ -2103,6 +2232,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
     byOutcomeMap.set(key, e);
   });
   const byOutcome = Array.from(byOutcomeMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 10);
+
 
   // Top users
   type UserPick = { id: string; event: string; outcome: string; amount: number; odd: number; status: string; createdAt: string };
@@ -2117,17 +2247,31 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
       if (w.payout_mode !== 'case') e.pago += w.payout_coins || 0;
     }
     if (w.status === 'lost') e.perdidas += 1;
-    const ev = events.find(x => x.id === w.event_id);
-    const out = outcomes.find(o => o.id === w.outcome_id);
-    e.picks.push({
-      id: w.id,
-      event: ev?.title || '—',
-      outcome: out?.label || '—',
-      amount: w.amount_coins || 0,
-      odd: Number(w.odd_snapshot) || 0,
-      status: w.status,
-      createdAt: w.created_at,
-    });
+    if (w._isTicket) {
+      const sels = (w._selections || []) as any[];
+      e.picks.push({
+        id: w.id,
+        event: `Múltipla (${sels.length}x)`,
+        outcome: sels.map((s: any) => s.selection_label).filter(Boolean).join(' + ') || '—',
+        amount: w.amount_coins || 0,
+        odd: Number(w.odd_snapshot) || 0,
+        status: w.status,
+        createdAt: w.created_at,
+      });
+    } else {
+      const ev = events.find(x => x.id === w.event_id);
+      const out = outcomes.find(o => o.id === w.outcome_id);
+      e.picks.push({
+        id: w.id,
+        event: ev?.title || '—',
+        outcome: out?.label || '—',
+        amount: w.amount_coins || 0,
+        odd: Number(w.odd_snapshot) || 0,
+        status: w.status,
+        createdAt: w.created_at,
+      });
+    }
+
     byUserMap.set(key, e);
   });
 
@@ -2339,7 +2483,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
                                   'bg-muted text-muted-foreground'
                                 }`}>{p.status}</span>
                                 <span className="text-muted-foreground ml-auto">{new Date(p.createdAt).toLocaleString('pt-BR')}</span>
-                                {p.status === 'pending' && (
+                                {p.status === 'pending' && !p.id.startsWith('t_') && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); cancelWager(p.id, u.name); }}
                                     disabled={cancelling === p.id}
@@ -2350,6 +2494,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
                                     Cancelar
                                   </button>
                                 )}
+
                               </div>
                             ))}
                           </div>
