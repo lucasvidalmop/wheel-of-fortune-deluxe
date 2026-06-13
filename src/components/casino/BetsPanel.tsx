@@ -2483,7 +2483,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
                                   'bg-muted text-muted-foreground'
                                 }`}>{p.status}</span>
                                 <span className="text-muted-foreground ml-auto">{new Date(p.createdAt).toLocaleString('pt-BR')}</span>
-                                {p.status === 'pending' && (
+                                {p.status === 'pending' && !p.id.startsWith('t_') && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); cancelWager(p.id, u.name); }}
                                     disabled={cancelling === p.id}
@@ -2494,6 +2494,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
                                     Cancelar
                                   </button>
                                 )}
+
                               </div>
                             ))}
                           </div>
