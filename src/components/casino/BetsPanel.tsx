@@ -523,27 +523,87 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
 
   const loadWagers = async () => {
     if (!config) return;
-    const { data } = await supabase
-      .from('bet_wagers')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .order('created_at', { ascending: false })
-      .limit(500);
-    const list = data || [];
+    const [{ data: wagersData }, { data: ticketsData }] = await Promise.all([
+      supabase
+        .from('bet_wagers')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase
+        .from('bet_tickets')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(500),
+    ]);
+    const wagersList = wagersData || [];
+    const ticketsList = ticketsData || [];
+
+    // Fetch selections for tickets
+    let selectionsByTicket: Record<string, any[]> = {};
+    if (ticketsList.length) {
+      const { data: selsData } = await supabase
+        .from('bet_ticket_selections')
+        .select('*')
+        .in('ticket_id', ticketsList.map((t: any) => t.id));
+      (selsData || []).forEach((s: any) => {
+        (selectionsByTicket[s.ticket_id] = selectionsByTicket[s.ticket_id] || []).push(s);
+      });
+    }
+
+    // Convert tickets to synthetic wager rows so they appear in Apostas/Analytics
+    const ticketRows = ticketsList.map((t: any) => {
+      const sels = selectionsByTicket[t.id] || [];
+      return {
+        id: `t_${t.id}`,
+        ticket_id: t.id,
+        created_at: t.created_at,
+        resolved_at: t.resolved_at,
+        user_name: t.user_name,
+        user_email: t.user_email,
+        account_id: t.account_id,
+        event_id: '',
+        market_id: null,
+        outcome_id: null,
+        amount_coins: t.stake,
+        odd_snapshot: Number(t.total_odd) || 1,
+        status: t.status,
+        payout_mode: 'coins',
+        payout_coins: t.payout_coins,
+        payout_grant_id: null,
+        public_code: t.public_code,
+        _isTicket: true,
+        _selections: sels,
+      };
+    });
+
+    const list = [...wagersList, ...ticketRows].sort(
+      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
     setWagers(list);
 
-    // Backfill events/outcomes/markets referenced by wagers but missing from
-    // the initial scope (events list is capped at 500 newest; outcomes may have
-    // been re-synced for football fixtures). Without this, the "Apostas deste
-    // usuário" detail row renders "—" for the selection label.
+    // Backfill events/outcomes/markets referenced by wagers/selections but missing
+    const refEventIds = [
+      ...wagersList.map((w: any) => w.event_id),
+      ...ticketRows.flatMap((t: any) => (t._selections as any[]).map(s => s.event_id)),
+    ];
+    const refOutcomeIds = [
+      ...wagersList.map((w: any) => w.outcome_id),
+      ...ticketRows.flatMap((t: any) => (t._selections as any[]).map(s => s.outcome_id)),
+    ];
+    const refMarketIds = [
+      ...wagersList.map((w: any) => w.market_id),
+      ...ticketRows.flatMap((t: any) => (t._selections as any[]).map(s => s.market_id)),
+    ];
     const missingEventIds = Array.from(new Set(
-      list.map((w: any) => w.event_id).filter((id: string) => id && !events.some(e => e.id === id))
+      refEventIds.filter((id: string) => id && !events.some(e => e.id === id))
     )) as string[];
     const missingOutcomeIds = Array.from(new Set(
-      list.map((w: any) => w.outcome_id).filter((id: string) => id && !outcomes.some(o => o.id === id))
+      refOutcomeIds.filter((id: string) => id && !outcomes.some(o => o.id === id))
     )) as string[];
     const missingMarketIds = Array.from(new Set(
-      list.map((w: any) => w.market_id).filter((id: string) => id && !markets.some(m => m.id === id))
+      refMarketIds.filter((id: string) => id && !markets.some(m => m.id === id))
     )) as string[];
 
     const [evRes, outRes, mkRes] = await Promise.all([
@@ -561,6 +621,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
     if (outRes.data?.length) setOutcomes(prev => [...prev, ...(outRes.data as BetOutcome[]).filter(o => !prev.some(p => p.id === o.id))]);
     if (mkRes.data?.length) setMarkets(prev => [...prev, ...(mkRes.data as BetMarket[]).filter(m => !prev.some(p => p.id === m.id))]);
   };
+
 
   useEffect(() => { if (tab === 'wagers' || tab === 'analytics') loadWagers(); }, [tab, config?.id]);
 
