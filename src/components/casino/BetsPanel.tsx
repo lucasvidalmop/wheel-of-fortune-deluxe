@@ -2134,11 +2134,16 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
   // Apply filters
   const cutoff = filter.days > 0 ? Date.now() - filter.days * 86400_000 : 0;
   const filtered = wagers.filter(w => {
-    if (filter.eventId && w.event_id !== filter.eventId) return false;
+    if (filter.eventId) {
+      if (w._isTicket) {
+        if (!(w._selections || []).some((s: any) => s.event_id === filter.eventId)) return false;
+      } else if (w.event_id !== filter.eventId) return false;
+    }
     if (filter.status && w.status !== filter.status) return false;
     if (cutoff && new Date(w.created_at).getTime() < cutoff) return false;
     return true;
   });
+
 
   // KPIs
   const totalWagers = filtered.length;
