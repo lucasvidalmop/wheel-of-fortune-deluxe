@@ -1485,7 +1485,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       {ev.is_hot && <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mb-1" style={{ background: '#f9731633', color: '#f97316', border: '#f9731655' }}>🔥</span>}
-                      <h2 className="font-black text-base sm:text-base leading-tight line-clamp-2" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{ev.title}</h2>
+                      <h2 className="font-black text-base sm:text-base leading-tight line-clamp-2" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{translateTeamsInTitle(ev.title)}</h2>
                       {ev.subtitle && <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: muted }}>{translatePt(ev.subtitle)}</p>}
                     </div>
                     {(ev.home_image_url || ev.away_image_url) ? (
