@@ -2411,8 +2411,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                     return (
                       <div key={s.outcomeId} className="rounded-lg p-3 flex items-start justify-between gap-2" style={{ background: closed ? 'rgba(239,68,68,0.10)' : 'rgba(0,0,0,0.4)', border: `1px solid ${closed ? '#ef4444' : `${accent}33`}` }}>
                         <div className="min-w-0 flex-1">
-                          <div className="text-xs font-bold truncate">{s.eventTitle}</div>
-                          <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{translatePt(s.marketTitle)}</div>
+                          <div className="text-xs font-bold truncate">{translateTeamsInTitle(s.eventTitle)}</div>
+                          <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{translateMarketName(translatePt(s.marketTitle))}</div>
                           <div className="text-sm mt-1">
                             <span className="font-semibold">{translateOutcomeLabel(s.outcomeLabel)}</span>
                             <span className="ml-2 font-black tabular-nums" style={{ color: closed ? '#f87171' : accent, textDecoration: closed ? 'line-through' : undefined }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
