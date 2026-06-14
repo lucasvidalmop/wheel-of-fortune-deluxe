@@ -1455,7 +1455,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         style={{ background: `${ticketAccent}22`, color: ticketAccent, border: `1px solid ${ticketAccent}44` }}
                         title={ev.competition_name}
                       >
-                        🏆 {ev.competition_name}
+                        🏆 {translateCompetitionName(ev.competition_name)}
                       </span>
                     )}
                     <span className="flex items-center gap-1 truncate tabular-nums" style={closed ? { color: '#f87171', fontWeight: 800, letterSpacing: '0.08em' } : { color: muted }}>
