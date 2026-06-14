@@ -1394,7 +1394,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             });
           } else if (categoryFilter.startsWith('competition:')) {
             const slug = categoryFilter.slice('competition:'.length);
-            const label = filtered[0]?.competition_name || slug;
+            const label = translateCompetitionName(filtered[0]?.competition_name || slug);
             if (filtered.length) grouped.push({ cat: null, items: filtered, label });
           } else if (categoryFilter.startsWith('category:')) {
             const name = categoryFilter.slice('category:'.length);
