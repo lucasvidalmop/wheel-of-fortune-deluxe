@@ -653,12 +653,14 @@ Deno.serve(async (req) => {
     return json(400, { error: "event.external_fixture_id and event.title are required" });
   }
 
-  // ---- Normalização de nomes de seleções ----
+  // ---- Normalização PT-BR (times, competição, mercados) ----
   ev.title = normalizeInTitle(ev.title);
   if (ev.subtitle) ev.subtitle = normalizeInTitle(ev.subtitle);
   if (ev.home_team) ev.home_team = normalizeTeamName(ev.home_team);
   if (ev.away_team) ev.away_team = normalizeTeamName(ev.away_team);
+  if (ev.competition_name) ev.competition_name = normalizeCompetitionName(ev.competition_name);
   for (const mk of markets) {
+    if (mk?.name) mk.name = normalizeMarketName(mk.name);
     if (Array.isArray(mk.outcomes)) {
       for (const oc of mk.outcomes) {
         if (oc?.label) oc.label = normalizeTeamName(oc.label);
