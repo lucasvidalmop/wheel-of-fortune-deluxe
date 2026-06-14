@@ -2160,15 +2160,15 @@ const Bets = ({ tag }: BetsPageProps) => {
                     const marketTitle = mk?.title || 'Resultado Final';
                     return (
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{ev?.title || w.event_id.slice(0, 8)}</div>
+                        <div className="font-medium truncate">{translateTeamsInTitle(ev?.title || w.event_id.slice(0, 8))}</div>
                         <div className="text-xs mt-1 flex flex-wrap items-center gap-1.5">
                           <span
                             className="inline-block px-2 py-0.5 rounded-md font-bold"
                             style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
                           >
-                            {outcome?.label || '—'}
+                            {translateOutcomeLabel(outcome?.label || '—')}
                           </span>
-                          <span style={{ color: muted }}>{marketTitle}</span>
+                          <span style={{ color: muted }}>{translateMarketName(marketTitle)}</span>
                         </div>
                         <div className="text-xs mt-1" style={{ color: muted }}>
                           {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
