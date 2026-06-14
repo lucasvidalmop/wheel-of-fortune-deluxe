@@ -2085,9 +2085,9 @@ const Bets = ({ tag }: BetsPageProps) => {
                           {sels.map(s => (
                             <div key={s.id} className="flex items-center justify-between gap-2 text-xs">
                               <div className="min-w-0 flex-1">
-                                <div className="truncate font-medium">{s.event_title}</div>
+                                <div className="truncate font-medium">{translateTeamsInTitle(s.event_title)}</div>
                                 <div className="truncate" style={{ color: muted }}>
-                                  {translatePt(s.market_title)} · <span style={{ color: accent }}>{translateOutcomeLabel(s.selection_label)}</span> · {Number(s.odd).toFixed(2)}
+                                  {translateMarketName(translatePt(s.market_title))} · <span style={{ color: accent }}>{translateOutcomeLabel(s.selection_label)}</span> · {Number(s.odd).toFixed(2)}
                                 </div>
                               </div>
                               <span className="text-[10px] font-bold shrink-0" style={{ color: selStatusColor[s.status] }}>
@@ -2160,15 +2160,15 @@ const Bets = ({ tag }: BetsPageProps) => {
                     const marketTitle = mk?.title || 'Resultado Final';
                     return (
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{ev?.title || w.event_id.slice(0, 8)}</div>
+                        <div className="font-medium truncate">{translateTeamsInTitle(ev?.title || w.event_id.slice(0, 8))}</div>
                         <div className="text-xs mt-1 flex flex-wrap items-center gap-1.5">
                           <span
                             className="inline-block px-2 py-0.5 rounded-md font-bold"
                             style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}55` }}
                           >
-                            {outcome?.label || '—'}
+                            {translateOutcomeLabel(outcome?.label || '—')}
                           </span>
-                          <span style={{ color: muted }}>{marketTitle}</span>
+                          <span style={{ color: muted }}>{translateMarketName(marketTitle)}</span>
                         </div>
                         <div className="text-xs mt-1" style={{ color: muted }}>
                           {w.amount_coins} {coinName} · odd {Number(w.odd_snapshot).toFixed(2)}
@@ -2411,8 +2411,8 @@ const Bets = ({ tag }: BetsPageProps) => {
                     return (
                       <div key={s.outcomeId} className="rounded-lg p-3 flex items-start justify-between gap-2" style={{ background: closed ? 'rgba(239,68,68,0.10)' : 'rgba(0,0,0,0.4)', border: `1px solid ${closed ? '#ef4444' : `${accent}33`}` }}>
                         <div className="min-w-0 flex-1">
-                          <div className="text-xs font-bold truncate">{s.eventTitle}</div>
-                          <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{translatePt(s.marketTitle)}</div>
+                          <div className="text-xs font-bold truncate">{translateTeamsInTitle(s.eventTitle)}</div>
+                          <div className="text-[10px] uppercase tracking-wider" style={{ color: muted }}>{translateMarketName(translatePt(s.marketTitle))}</div>
                           <div className="text-sm mt-1">
                             <span className="font-semibold">{translateOutcomeLabel(s.outcomeLabel)}</span>
                             <span className="ml-2 font-black tabular-nums" style={{ color: closed ? '#f87171' : accent, textDecoration: closed ? 'line-through' : undefined }}>{Number(s.odd).toFixed(2).replace('.', ',')}</span>
