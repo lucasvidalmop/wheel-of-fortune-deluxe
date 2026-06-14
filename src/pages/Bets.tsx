@@ -1865,7 +1865,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   const override = COMPETITION_LABEL_OVERRIDES[e.competition_slug.toLowerCase()];
                   futebolDynamic.push({
                     key,
-                    label: override?.label || e.competition_name || e.competition_slug,
+                    label: override?.label || translateCompetitionName(e.competition_name || e.competition_slug),
                     icon: override?.icon,
                   });
                 });
