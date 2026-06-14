@@ -11,6 +11,7 @@ import type { ShareMultipleData } from '@/components/casino/ShareTicketMultiple'
 import { optimizedImage } from '@/lib/imageUrl';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { translateMarketName } from '@/lib/marketTranslations';
+import { translateTeamsInTitle, translateCompetitionName, translateTeamName } from '@/lib/footballTranslations';
 
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
@@ -1393,7 +1394,7 @@ const Bets = ({ tag }: BetsPageProps) => {
             });
           } else if (categoryFilter.startsWith('competition:')) {
             const slug = categoryFilter.slice('competition:'.length);
-            const label = filtered[0]?.competition_name || slug;
+            const label = translateCompetitionName(filtered[0]?.competition_name || slug);
             if (filtered.length) grouped.push({ cat: null, items: filtered, label });
           } else if (categoryFilter.startsWith('category:')) {
             const name = categoryFilter.slice('category:'.length);
@@ -1454,7 +1455,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                         style={{ background: `${ticketAccent}22`, color: ticketAccent, border: `1px solid ${ticketAccent}44` }}
                         title={ev.competition_name}
                       >
-                        🏆 {ev.competition_name}
+                        🏆 {translateCompetitionName(ev.competition_name)}
                       </span>
                     )}
                     <span className="flex items-center gap-1 truncate tabular-nums" style={closed ? { color: '#f87171', fontWeight: 800, letterSpacing: '0.08em' } : { color: muted }}>
@@ -1484,7 +1485,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       {ev.is_hot && <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mb-1" style={{ background: '#f9731633', color: '#f97316', border: '#f9731655' }}>🔥</span>}
-                      <h2 className="font-black text-base sm:text-base leading-tight line-clamp-2" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{ev.title}</h2>
+                      <h2 className="font-black text-base sm:text-base leading-tight line-clamp-2" style={{ color: text, textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}>{translateTeamsInTitle(ev.title)}</h2>
                       {ev.subtitle && <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: muted }}>{translatePt(ev.subtitle)}</p>}
                     </div>
                     {(ev.home_image_url || ev.away_image_url) ? (
@@ -1864,7 +1865,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   const override = COMPETITION_LABEL_OVERRIDES[e.competition_slug.toLowerCase()];
                   futebolDynamic.push({
                     key,
-                    label: override?.label || e.competition_name || e.competition_slug,
+                    label: override?.label || translateCompetitionName(e.competition_name || e.competition_slug),
                     icon: override?.icon,
                   });
                 });

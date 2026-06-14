@@ -72,40 +72,290 @@ function json(status: number, body: unknown) {
   });
 }
 
-// ---- Normalização de nomes de seleções ----
+// ---- Normalização de nomes (times, competições, mercados) para PT-BR ----
 const TEAM_NAME_MAP: Record<string, string> = {
-  "congo dr": "República Democrática do Congo",
-  "dr congo": "República Democrática do Congo",
-  "korea republic": "Coreia do Sul",
-  "republic of korea": "Coreia do Sul",
-  "south korea": "Coreia do Sul",
-  "korea dpr": "Coreia do Norte",
-  "dpr korea": "Coreia do Norte",
-  "north korea": "Coreia do Norte",
-  "usa": "Estados Unidos",
+  "south africa": "África do Sul",
+  "czech republic": "República Tcheca",
+  "czechia": "República Tcheca",
   "united states": "Estados Unidos",
   "united states of america": "Estados Unidos",
-  "uae": "Emirados Árabes Unidos",
-  "united arab emirates": "Emirados Árabes Unidos",
-  "ir iran": "Irã",
-  "iran": "Irã",
+  "usa": "Estados Unidos",
+  "south korea": "Coreia do Sul",
+  "korea republic": "Coreia do Sul",
+  "republic of korea": "Coreia do Sul",
+  "north korea": "Coreia do Norte",
+  "korea dpr": "Coreia do Norte",
+  "dpr korea": "Coreia do Norte",
   "ivory coast": "Costa do Marfim",
   "cote d'ivoire": "Costa do Marfim",
   "côte d'ivoire": "Costa do Marfim",
+  "netherlands": "Holanda",
+  "holland": "Holanda",
+  "germany": "Alemanha",
+  "spain": "Espanha",
+  "england": "Inglaterra",
+  "switzerland": "Suíça",
+  "france": "França",
+  "italy": "Itália",
+  "belgium": "Bélgica",
+  "portugal": "Portugal",
+  "croatia": "Croácia",
+  "serbia": "Sérvia",
+  "poland": "Polônia",
+  "denmark": "Dinamarca",
+  "sweden": "Suécia",
+  "norway": "Noruega",
+  "finland": "Finlândia",
+  "ireland": "Irlanda",
+  "scotland": "Escócia",
+  "wales": "País de Gales",
+  "northern ireland": "Irlanda do Norte",
+  "iceland": "Islândia",
+  "austria": "Áustria",
+  "hungary": "Hungria",
+  "greece": "Grécia",
+  "turkey": "Turquia",
+  "türkiye": "Turquia",
+  "russia": "Rússia",
+  "ukraine": "Ucrânia",
+  "romania": "Romênia",
+  "bulgaria": "Bulgária",
+  "slovakia": "Eslováquia",
+  "slovenia": "Eslovênia",
+  "albania": "Albânia",
+  "bosnia and herzegovina": "Bósnia e Herzegovina",
+  "north macedonia": "Macedônia do Norte",
+  "cyprus": "Chipre",
+  "luxembourg": "Luxemburgo",
+  "estonia": "Estônia",
+  "latvia": "Letônia",
+  "lithuania": "Lituânia",
+  "belarus": "Bielorrússia",
+  "moldova": "Moldávia",
+  "georgia": "Geórgia",
+  "armenia": "Armênia",
+  "azerbaijan": "Azerbaijão",
+  "kazakhstan": "Cazaquistão",
+  "uzbekistan": "Uzbequistão",
+  "china": "China",
+  "china pr": "China",
+  "japan": "Japão",
+  "australia": "Austrália",
+  "new zealand": "Nova Zelândia",
+  "india": "Índia",
+  "indonesia": "Indonésia",
+  "thailand": "Tailândia",
+  "vietnam": "Vietnã",
+  "philippines": "Filipinas",
+  "singapore": "Singapura",
+  "malaysia": "Malásia",
+  "saudi arabia": "Arábia Saudita",
+  "united arab emirates": "Emirados Árabes Unidos",
+  "uae": "Emirados Árabes Unidos",
+  "qatar": "Catar",
+  "kuwait": "Kuwait",
+  "bahrain": "Bahrein",
+  "oman": "Omã",
+  "jordan": "Jordânia",
+  "lebanon": "Líbano",
+  "syria": "Síria",
+  "iraq": "Iraque",
+  "iran": "Irã",
+  "ir iran": "Irã",
+  "israel": "Israel",
+  "palestine": "Palestina",
+  "egypt": "Egito",
+  "morocco": "Marrocos",
+  "algeria": "Argélia",
+  "tunisia": "Tunísia",
+  "libya": "Líbia",
+  "senegal": "Senegal",
+  "nigeria": "Nigéria",
+  "ghana": "Gana",
+  "cameroon": "Camarões",
+  "kenya": "Quênia",
+  "ethiopia": "Etiópia",
+  "mali": "Mali",
   "cape verde": "Cabo Verde",
   "cape verde islands": "Cabo Verde",
-  "saudi arabia": "Arábia Saudita",
+  "congo": "Congo",
+  "congo dr": "República Democrática do Congo",
+  "dr congo": "República Democrática do Congo",
+  "gabon": "Gabão",
+  "angola": "Angola",
+  "mozambique": "Moçambique",
+  "zimbabwe": "Zimbábue",
+  "zambia": "Zâmbia",
+  "sudan": "Sudão",
+  "brazil": "Brasil",
+  "argentina": "Argentina",
+  "chile": "Chile",
+  "uruguay": "Uruguai",
+  "paraguay": "Paraguai",
+  "peru": "Peru",
+  "colombia": "Colômbia",
+  "ecuador": "Equador",
+  "bolivia": "Bolívia",
+  "venezuela": "Venezuela",
+  "mexico": "México",
+  "canada": "Canadá",
+  "panama": "Panamá",
+  "costa rica": "Costa Rica",
+  "honduras": "Honduras",
+  "guatemala": "Guatemala",
+  "el salvador": "El Salvador",
+  "nicaragua": "Nicarágua",
+  "jamaica": "Jamaica",
+  "haiti": "Haiti",
+  "dominican republic": "República Dominicana",
+  "cuba": "Cuba",
+  "trinidad and tobago": "Trinidad e Tobago",
 };
+
+const COMPETITION_NAME_MAP: Record<string, string> = {
+  "world cup": "Copa do Mundo",
+  "fifa world cup": "Copa do Mundo",
+  "world cup qualification": "Eliminatórias da Copa",
+  "world cup - qualification": "Eliminatórias da Copa",
+  "uefa champions league": "Liga dos Campeões",
+  "champions league": "Liga dos Campeões",
+  "uefa europa league": "Liga Europa",
+  "europa league": "Liga Europa",
+  "uefa europa conference league": "Liga Conferência",
+  "uefa nations league": "Liga das Nações",
+  "uefa euro": "Eurocopa",
+  "european championship": "Eurocopa",
+  "copa libertadores": "Libertadores",
+  "conmebol libertadores": "Libertadores",
+  "copa sudamericana": "Sul-Americana",
+  "conmebol sudamericana": "Sul-Americana",
+  "copa america": "Copa América",
+  "copa américa": "Copa América",
+  "brasileirao": "Brasileirão",
+  "brasileirão": "Brasileirão",
+  "serie a": "Brasileirão",
+  "brasileirao serie a": "Brasileirão",
+  "brasileirão série a": "Brasileirão",
+  "brazilian serie a": "Brasileirão",
+  "serie b": "Brasileirão Série B",
+  "brasileirao serie b": "Brasileirão Série B",
+  "copa do brasil": "Copa do Brasil",
+  "fa cup": "Copa da Inglaterra",
+  "efl cup": "Copa da Liga Inglesa",
+  "carabao cup": "Copa da Liga Inglesa",
+  "copa del rey": "Copa do Rei",
+  "coppa italia": "Copa da Itália",
+  "club world cup": "Mundial de Clubes",
+  "fifa club world cup": "Mundial de Clubes",
+  "africa cup of nations": "Copa Africana de Nações",
+  "afc asian cup": "Copa Asiática",
+  "gold cup": "Copa Ouro",
+  "concacaf gold cup": "Copa Ouro",
+};
+
+// Mercados (exact match, lowercased)
+const MARKET_NAME_MAP: Record<string, string> = {
+  "match winner": "Vencedor da Partida",
+  "full time result": "Vencedor da Partida",
+  "1x2": "Vencedor da Partida",
+  "home/away": "Casa/Fora",
+  "double chance": "Dupla Chance",
+  "both teams score": "Ambas Marcam",
+  "both teams to score": "Ambas Marcam",
+  "btts": "Ambas Marcam",
+  "goals over/under": "Total de Gols",
+  "goals over under": "Total de Gols",
+  "total goals": "Total de Gols",
+  "over/under": "Mais/Menos",
+  "first half winner": "Vencedor do 1º Tempo",
+  "second half winner": "Vencedor do 2º Tempo",
+  "result of first half": "Resultado 1º Tempo",
+  "result of second half": "Resultado 2º Tempo",
+  "asian handicap": "Handicap Asiático",
+  "handicap": "Handicap",
+  "odd/even": "Ímpar/Par",
+  "odd / even": "Ímpar/Par",
+  "exact score": "Placar Exato",
+  "correct score": "Placar Exato",
+  "exact goals number": "Quantidade Exata de Gols",
+  "home team total goals": "Total de Gols da Casa",
+  "away team total goals": "Total de Gols do Fora",
+  "corners over/under": "Total de Escanteios",
+  "corners over under": "Total de Escanteios",
+  "total corners": "Total de Escanteios",
+  "total corners (3 way)": "Total de Escanteios",
+  "corners 1x2": "Resultado em Escanteios",
+  "corners asian handicap": "Handicap Asiático de Escanteios",
+  "corners handicap": "Handicap de Escanteios",
+  "corners odd/even": "Escanteios Ímpar/Par",
+  "corners double chance": "Dupla Chance Escanteios",
+  "home corners over/under": "Escanteios Casa Mais/Menos",
+  "away corners over/under": "Escanteios Fora Mais/Menos",
+  "cards over/under": "Total de Cartões",
+  "cards over under": "Total de Cartões",
+  "total cards": "Total de Cartões",
+  "asian cards": "Handicap Asiático de Cartões",
+  "cards handicap": "Handicap de Cartões",
+  "cards asian handicap": "Handicap Asiático de Cartões",
+  "yellow cards": "Cartões Amarelos",
+  "red cards": "Cartões Vermelhos",
+  "booking points": "Pontos de Cartões",
+  "team cards": "Cartões por Time",
+  "home team total cards": "Cartões Casa",
+  "away team total cards": "Cartões Fora",
+  "anytime goal scorer": "Jogador Marca a Qualquer Momento",
+  "first goal scorer": "Primeiro Marcador",
+  "last goal scorer": "Último Marcador",
+  "player assists": "Assistências",
+  "player shots on target": "Chutes no Gol",
+  "player shots": "Finalizações do Jogador",
+  "goalkeeper saves": "Defesas do Goleiro",
+  "win to nil": "Vencer Sem Sofrer",
+  "clean sheet": "Não Sofrer Gol",
+  "to qualify": "Para Se Classificar",
+  "half time/full time": "Intervalo/Final",
+};
+
+const normKey = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
 
 function normalizeTeamName(name: string | null | undefined): string {
   if (!name) return name ?? "";
-  const key = name.trim().toLowerCase();
-  return TEAM_NAME_MAP[key] ?? name;
+  return TEAM_NAME_MAP[normKey(name)] ?? name;
+}
+
+function normalizeCompetitionName(name: string | null | undefined): string {
+  if (!name) return name ?? "";
+  const raw = String(name);
+  const key = normKey(raw);
+  if (COMPETITION_NAME_MAP[key]) return COMPETITION_NAME_MAP[key];
+  for (const [k, v] of Object.entries(COMPETITION_NAME_MAP)) {
+    if (key.includes(k)) return raw.replace(new RegExp(k, "i"), v);
+  }
+  return raw;
+}
+
+function normalizeMarketName(name: string | null | undefined): string {
+  if (!name) return name ?? "";
+  const raw = String(name);
+  // Detect half-period suffix like "(1st Half)", "2nd Half"
+  const re = /\s*\(?\s*(1st|first|2nd|second)\s+half\s*\)?\s*$/i;
+  const m = raw.match(re);
+  let base = raw;
+  let suffix = "";
+  if (m) {
+    const which = m[1].toLowerCase();
+    const isFirst = which === "1st" || which === "first";
+    base = raw.slice(0, m.index).trim();
+    suffix = isFirst ? " (1º Tempo)" : " (2º Tempo)";
+  }
+  const key = normKey(base);
+  const mapped = MARKET_NAME_MAP[key];
+  if (mapped) return mapped + suffix;
+  return raw;
 }
 
 function normalizeInTitle(title: string | null | undefined): string {
   if (!title) return title ?? "";
-  // Replace " x " / " vs " separators preserving them
   const sepMatch = title.match(/^(.*?)(\s+(?:x|vs|×|@|-)\s+)(.*)$/i);
   if (sepMatch) {
     const home = normalizeTeamName(sepMatch[1]);
@@ -403,12 +653,14 @@ Deno.serve(async (req) => {
     return json(400, { error: "event.external_fixture_id and event.title are required" });
   }
 
-  // ---- Normalização de nomes de seleções ----
+  // ---- Normalização PT-BR (times, competição, mercados) ----
   ev.title = normalizeInTitle(ev.title);
   if (ev.subtitle) ev.subtitle = normalizeInTitle(ev.subtitle);
   if (ev.home_team) ev.home_team = normalizeTeamName(ev.home_team);
   if (ev.away_team) ev.away_team = normalizeTeamName(ev.away_team);
+  if (ev.competition_name) ev.competition_name = normalizeCompetitionName(ev.competition_name);
   for (const mk of markets) {
+    if (mk?.name) mk.name = normalizeMarketName(mk.name);
     if (Array.isArray(mk.outcomes)) {
       for (const oc of mk.outcomes) {
         if (oc?.label) oc.label = normalizeTeamName(oc.label);
