@@ -82,6 +82,7 @@ const Lobby = ({ tag }: { tag: string }) => {
         try { sessionStorage.setItem('lobby_tag', tag); } catch { /* ignore */ }
         setPageConfig(data.pageConfig || {});
         setProductTags(data.productTags || { bets: '', luckybox: '', roleta: '' });
+        setCoinIconUrl(data.coinIconUrl || '');
         if (data.pageConfig?.site_title) document.title = data.pageConfig.site_title;
       } catch {
         if (alive) setNotFound(true);
