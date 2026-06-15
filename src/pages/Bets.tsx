@@ -2276,7 +2276,7 @@ const Bets = ({ tag }: BetsPageProps) => {
 
       {/* Bet slip */}
       {slip && (
-        <div className="fixed inset-0 z-30 bg-black/75 flex items-end sm:items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 bg-black/75 flex items-end sm:items-center justify-center p-4"
           onClick={() => setSlip(null)}>
           <div
             className="w-full max-w-sm rounded-2xl p-5 relative overflow-hidden"
