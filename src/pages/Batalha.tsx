@@ -166,10 +166,43 @@ export default function Batalha() {
     };
   }, [session?.user?.id, hasAccess]);
 
-  // Load battle_participants from BS deposits + subscribe to realtime inserts
+  // Resolve current battle (running > collecting > create new collecting)
   useEffect(() => {
     if (!session?.user?.id || hasAccess !== true) return;
     const ownerId = session.user.id;
+    let cancelled = false;
+    (async () => {
+      const { data: running } = await (supabase as any)
+        .from('battles').select('id,status')
+        .eq('owner_id', ownerId).eq('status', 'running')
+        .maybeSingle();
+      if (cancelled) return;
+      if (running) {
+        setCurrentBattle({ id: running.id, status: 'running' });
+        return;
+      }
+      const { data: collecting } = await (supabase as any)
+        .from('battles').select('id,status')
+        .eq('owner_id', ownerId).eq('status', 'collecting')
+        .maybeSingle();
+      if (cancelled) return;
+      if (collecting) {
+        setCurrentBattle({ id: collecting.id, status: 'collecting' });
+        return;
+      }
+      const { data: newId } = await (supabase as any)
+        .rpc('get_or_create_collecting_battle', { _owner: ownerId });
+      if (cancelled) return;
+      if (newId) setCurrentBattle({ id: newId as string, status: 'collecting' });
+    })();
+    return () => { cancelled = true; };
+  }, [session?.user?.id, hasAccess]);
+
+  // Load battle_participants for current battle + realtime
+  useEffect(() => {
+    if (!session?.user?.id || hasAccess !== true || !currentBattle?.id) return;
+    const ownerId = session.user.id;
+    const battleId = currentBattle.id;
     let cancelled = false;
 
     (async () => {
@@ -177,6 +210,7 @@ export default function Batalha() {
         .from('battle_participants')
         .select('id, name, game')
         .eq('owner_id', ownerId)
+        .eq('battle_id', battleId)
         .eq('consumed', false)
         .order('created_at', { ascending: true });
       if (cancelled || error || !Array.isArray(data)) return;
@@ -197,14 +231,14 @@ export default function Batalha() {
     })();
 
     const channel = (supabase as any)
-      .channel(`battle_participants_${ownerId}`)
+      .channel(`battle_participants_${battleId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'battle_participants',
-          filter: `owner_id=eq.${ownerId}`,
+          filter: `battle_id=eq.${battleId}`,
         },
         (payload: any) => {
           const row = payload?.new;
@@ -230,7 +264,47 @@ export default function Batalha() {
       cancelled = true;
       try { (supabase as any).removeChannel(channel); } catch (_) { /* noop */ }
     };
-  }, [session?.user?.id, hasAccess]);
+  }, [session?.user?.id, hasAccess, currentBattle?.id]);
+
+  // Track the "next battle" count (collecting battle) while current is running
+  useEffect(() => {
+    if (!session?.user?.id || hasAccess !== true) { setNextBattleCount(0); return; }
+    if (currentBattle?.status !== 'running') { setNextBattleCount(0); return; }
+    const ownerId = session.user.id;
+    let cancelled = false;
+    let nextBattleId: string | null = null;
+
+    const refresh = async () => {
+      const { data: nextB } = await (supabase as any)
+        .from('battles').select('id')
+        .eq('owner_id', ownerId).eq('status', 'collecting').maybeSingle();
+      if (cancelled) return;
+      nextBattleId = nextB?.id ?? null;
+      if (!nextBattleId) { setNextBattleCount(0); return; }
+      const { count } = await (supabase as any)
+        .from('battle_participants')
+        .select('id', { count: 'exact', head: true })
+        .eq('battle_id', nextBattleId)
+        .eq('consumed', false);
+      if (!cancelled) setNextBattleCount(count ?? 0);
+    };
+    refresh();
+
+    const channel = (supabase as any)
+      .channel(`battle_next_${ownerId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'battles', filter: `owner_id=eq.${ownerId}` }, refresh)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'battle_participants', filter: `owner_id=eq.${ownerId}` }, (payload: any) => {
+        if (nextBattleId && payload?.new?.battle_id === nextBattleId) refresh();
+      })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      try { (supabase as any).removeChannel(channel); } catch (_) { /* noop */ }
+    };
+  }, [session?.user?.id, hasAccess, currentBattle?.id, currentBattle?.status]);
+
+
 
   // SEO
   useEffect(() => {
