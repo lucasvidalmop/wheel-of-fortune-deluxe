@@ -6,9 +6,12 @@ import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
+import { useLobbyEmbed } from '@/contexts/LobbyEmbed';
 
-const Roleta = () => {
-  const { slug } = useParams();
+const Roleta = ({ slugOverride }: { slugOverride?: string } = {}) => {
+  const params = useParams();
+  const lobbyEmbed = useLobbyEmbed();
+  const slug = slugOverride || params.slug;
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
