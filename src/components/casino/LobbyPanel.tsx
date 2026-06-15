@@ -16,6 +16,27 @@ interface CardConfig {
   order?: number;
 }
 
+interface LobbyTheme {
+  primary?: string;
+  bg_color?: string;
+  text_color?: string;
+  heading_font?: string;
+  body_font?: string;
+  overlay_strength?: number;
+}
+
+interface LobbyLoginConfig {
+  title?: string;
+  subtitle?: string;
+  button_label?: string;
+  remember_label?: string;
+  signup_text?: string;
+  signup_link_text?: string;
+  signup_url?: string;
+  show_signup?: boolean;
+  show_lobby_pill?: boolean;
+}
+
 interface PageConfig {
   site_title?: string;
   site_description?: string;
@@ -23,7 +44,35 @@ interface PageConfig {
   logo_url?: string;
   footer_text?: string;
   cards?: CardConfig[];
+  theme?: LobbyTheme;
+  login?: LobbyLoginConfig;
 }
+
+const FONT_OPTIONS = [
+  'Bebas Neue', 'Barlow', 'Inter', 'Poppins', 'Montserrat', 'Oswald',
+  'Playfair Display', 'Roboto', 'Anton', 'Archivo Black', 'Space Grotesk', 'DM Sans',
+];
+
+const DEFAULT_THEME: LobbyTheme = {
+  primary: '#00d4ff',
+  bg_color: '#0a0a0f',
+  text_color: '#ffffff',
+  heading_font: 'Bebas Neue',
+  body_font: 'Barlow',
+  overlay_strength: 65,
+};
+
+const DEFAULT_LOGIN: LobbyLoginConfig = {
+  title: '',
+  subtitle: '',
+  button_label: 'Entrar',
+  remember_label: 'Lembrar sessão',
+  signup_text: 'Crie sua conta na gorjeta',
+  signup_link_text: 'Clique aqui',
+  signup_url: '',
+  show_signup: true,
+  show_lobby_pill: true,
+};
 
 const PRODUCT_LABELS: Record<ProductKey, string> = {
   roleta: 'Roleta',
@@ -49,7 +98,7 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
   const [exists, setExists] = useState(false);
   const [tag, setTag] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [pc, setPc] = useState<PageConfig>({ cards: DEFAULT_CARDS });
+  const [pc, setPc] = useState<PageConfig>({ cards: DEFAULT_CARDS, theme: DEFAULT_THEME, login: DEFAULT_LOGIN });
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,16 +114,25 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
         setTag(data.tag);
         setIsActive(data.is_active);
         const conf = (data.page_config || {}) as PageConfig;
-        // merge default cards with stored
         const stored = conf.cards || [];
         const merged = DEFAULT_CARDS.map((d) => ({ ...d, ...(stored.find((s) => s.key === d.key) || {}) }));
-        setPc({ ...conf, cards: merged });
+        setPc({
+          ...conf,
+          cards: merged,
+          theme: { ...DEFAULT_THEME, ...(conf.theme || {}) },
+          login: { ...DEFAULT_LOGIN, ...(conf.login || {}) },
+        });
       } else {
-        setPc({ cards: DEFAULT_CARDS });
+        setPc({ cards: DEFAULT_CARDS, theme: DEFAULT_THEME, login: DEFAULT_LOGIN });
       }
       setLoading(false);
     })();
   }, [ownerId]);
+
+  const updateTheme = (patch: Partial<LobbyTheme>) =>
+    setPc((p) => ({ ...p, theme: { ...DEFAULT_THEME, ...(p.theme || {}), ...patch } }));
+  const updateLogin = (patch: Partial<LobbyLoginConfig>) =>
+    setPc((p) => ({ ...p, login: { ...DEFAULT_LOGIN, ...(p.login || {}), ...patch } }));
 
   const save = async () => {
     const cleanTag = slugify(tag);
@@ -199,6 +257,108 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Texto do rodapé</label>
             <input type="text" value={pc.footer_text || ''} onChange={(e) => setPc({ ...pc, footer_text: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground" />
           </div>
+        </div>
+      </div>
+
+      {/* ─── Tema visual ─── */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+        <div>
+          <h3 className="text-lg font-bold text-foreground">Tema visual</h3>
+          <p className="text-xs text-muted-foreground">Personalize as cores e fontes do lobby e da tela de login do seu operador.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Cor primária (botões, destaques)</label>
+            <div className="flex gap-2 items-center">
+              <input type="color" value={pc.theme?.primary || '#00d4ff'} onChange={(e) => updateTheme({ primary: e.target.value })} className="h-10 w-12 rounded-md border border-white/10 bg-background cursor-pointer" />
+              <input type="text" value={pc.theme?.primary || ''} onChange={(e) => updateTheme({ primary: e.target.value })} placeholder="#00d4ff" className="flex-1 px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Cor de fundo</label>
+            <div className="flex gap-2 items-center">
+              <input type="color" value={pc.theme?.bg_color || '#0a0a0f'} onChange={(e) => updateTheme({ bg_color: e.target.value })} className="h-10 w-12 rounded-md border border-white/10 bg-background cursor-pointer" />
+              <input type="text" value={pc.theme?.bg_color || ''} onChange={(e) => updateTheme({ bg_color: e.target.value })} placeholder="#0a0a0f" className="flex-1 px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Cor do texto</label>
+            <div className="flex gap-2 items-center">
+              <input type="color" value={pc.theme?.text_color || '#ffffff'} onChange={(e) => updateTheme({ text_color: e.target.value })} className="h-10 w-12 rounded-md border border-white/10 bg-background cursor-pointer" />
+              <input type="text" value={pc.theme?.text_color || ''} onChange={(e) => updateTheme({ text_color: e.target.value })} placeholder="#ffffff" className="flex-1 px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Escurecimento do fundo ({pc.theme?.overlay_strength ?? 65}%)</label>
+            <input type="range" min={0} max={100} value={pc.theme?.overlay_strength ?? 65} onChange={(e) => updateTheme({ overlay_strength: Number(e.target.value) })} className="w-full accent-primary" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Fonte dos títulos</label>
+            <select value={pc.theme?.heading_font || 'Bebas Neue'} onChange={(e) => updateTheme({ heading_font: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm">
+              {FONT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Fonte do corpo</label>
+            <select value={pc.theme?.body_font || 'Barlow'} onChange={(e) => updateTheme({ body_font: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm">
+              {FONT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+        </div>
+        {/* Preview */}
+        <div className="rounded-xl p-5 border border-white/10" style={{ background: pc.theme?.bg_color || '#0a0a0f', color: pc.theme?.text_color || '#fff' }}>
+          <div className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-2" style={{ fontFamily: `${pc.theme?.body_font || 'Barlow'}, sans-serif` }}>Preview</div>
+          <div style={{ fontFamily: `${pc.theme?.heading_font || 'Bebas Neue'}, sans-serif`, fontSize: 42, lineHeight: 1 }}>SEU LOBBY</div>
+          <div className="mt-2 text-sm opacity-70" style={{ fontFamily: `${pc.theme?.body_font || 'Barlow'}, sans-serif` }}>Veja como ficará a tipografia e as cores.</div>
+          <button type="button" className="mt-3 px-4 py-2 rounded-lg font-semibold text-sm" style={{ background: pc.theme?.primary || '#00d4ff', color: '#0a0a0f', fontFamily: `${pc.theme?.body_font || 'Barlow'}, sans-serif` }}>
+            Botão primário
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Tela de login ─── */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+        <div>
+          <h3 className="text-lg font-bold text-foreground">Tela de login</h3>
+          <p className="text-xs text-muted-foreground">Textos exibidos na tela de login do lobby. Deixe em branco para usar o padrão.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Título do login</label>
+            <input type="text" value={pc.login?.title || ''} onChange={(e) => updateLogin({ title: e.target.value })} placeholder="Acesse o Lobby" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Subtítulo do login</label>
+            <input type="text" value={pc.login?.subtitle || ''} onChange={(e) => updateLogin({ subtitle: e.target.value })} placeholder="Entre com seu e-mail e ID da conta" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Texto do botão</label>
+            <input type="text" value={pc.login?.button_label || ''} onChange={(e) => updateLogin({ button_label: e.target.value })} placeholder="Entrar" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Texto "lembrar sessão"</label>
+            <input type="text" value={pc.login?.remember_label || ''} onChange={(e) => updateLogin({ remember_label: e.target.value })} placeholder="Lembrar sessão" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Texto antes do link de cadastro</label>
+            <input type="text" value={pc.login?.signup_text || ''} onChange={(e) => updateLogin({ signup_text: e.target.value })} placeholder="Crie sua conta na gorjeta" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Texto do link de cadastro</label>
+            <input type="text" value={pc.login?.signup_link_text || ''} onChange={(e) => updateLogin({ signup_link_text: e.target.value })} placeholder="Clique aqui" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">URL do cadastro (vazio = página de gorjeta do operador)</label>
+            <input type="text" value={pc.login?.signup_url || ''} onChange={(e) => updateLogin({ signup_url: e.target.value })} placeholder="https://..." className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input type="checkbox" checked={pc.login?.show_signup !== false} onChange={(e) => updateLogin({ show_signup: e.target.checked })} />
+            Mostrar link de cadastro
+          </label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input type="checkbox" checked={pc.login?.show_lobby_pill !== false} onChange={(e) => updateLogin({ show_lobby_pill: e.target.checked })} />
+            Mostrar selo "Lobby" no canto
+          </label>
         </div>
       </div>
 
