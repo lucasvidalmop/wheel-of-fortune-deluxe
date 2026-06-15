@@ -1,79 +1,109 @@
-## Objetivo
 
-Transformar o lobby (`/g=:tag`) em uma SPA: o usuário faz login uma única vez (e-mail + ID da conta, padrão atual do sistema), a sessão persiste em `localStorage`, e ele navega entre Apostas / Roleta / Batalha / Luckybox sem trocar de rota nem precisar logar novamente.
+# Redesign Mobile-First do Lobby da Gorjeta
 
-## 1. Sessão única do lobby
+Reformulação completa do lobby para parecer um app nativo no celular, com SPA real, sessão persistente e todas as promoções (Roleta, Batalha, Luckybox, Apostas) acessíveis sob um único login.
 
-Criar `src/lib/lobbySession.ts` com:
-- Chave única `gorjeta_session_v1` em `localStorage` contendo `{ wheel_user_id, account_id, email, name, lobby_tag, signed_in_at }`.
-- Funções `getLobbySession()`, `setLobbySession()`, `clearLobbySession()`, hook `useLobbySession()`.
-- A sessão é global ao lobby (não por-tag), então qualquer promoção dentro do lobby reconhece o mesmo usuário.
+## 1. Sessão e autenticação (uma vez só)
 
-Autenticação reaproveita a RPC `authenticate_wheel_user` (já usada por Roleta/Bets/Luckybox), que valida `p_email + p_account_id`.
+- Persistir sessão em `localStorage` (em vez de `sessionStorage`) com chave única `gorjeta_lobby_session`.
+- Hidratar a sessão no boot do `Lobby` antes de decidir entre login/home — sem flicker para a tela de login quando já está logado.
+- Manter a RPC `authenticate_wheel_user` atual (e-mail + ID).
+- Logout só por ação manual (botão Sair) ou quando a RPC rejeitar a sessão.
+- Mesma sessão é injetada nos módulos embutidos (Roleta, Bets, Luckybox) via `LobbyEmbedProvider` — nenhum deles pede login de novo.
+- Botão "Inscrever-se" abre a página de cadastro da Gorjeta (URL configurável) com parâmetro `return=lobby:<tag>`; o cadastro existente já redireciona de volta.
 
-## 2. Novo `src/pages/Lobby.tsx` como shell SPA
+## 2. SPA real — sem trocar de rota
 
-Estrutura interna por estado, sem react-router para sub-views:
+- `Lobby.tsx` mantém um `view` interno: `'home' | 'roleta' | 'apostas' | 'luckybox' | 'perfil' | 'batalha'`.
+- Trocar de view NÃO altera a URL nem desmonta o container — só troca o conteúdo central.
+- Pré-carregar (`prefetch`) os bundles lazy das views logo após o login, para a primeira transição já ser instantânea.
+- Batalha continua abrindo a página de depósito do operador em nova aba (regra já definida).
+
+## 3. Arquitetura mobile-first
+
+Estrutura do shell em todas as telas:
 
 ```text
-Lobby (shell)
- ├─ Header persistente (logo, nome do usuário, botão Sair)
- ├─ view = 'login'   → <LobbyLogin />            (email + ID + "Clique aqui para se inscrever")
- ├─ view = 'home'    → grid de cards atuais
- ├─ view = 'apostas' → <BetsView embedded />
- ├─ view = 'roleta'  → <RoletaView embedded />
- ├─ view = 'batalha' → <BatalhaView embedded />
- └─ view = 'luckybox'→ <LuckyboxView embedded />
+┌──────────────────────────────┐
+│ Header fixo (logo • coins • avatar)
+├──────────────────────────────┤
+│                              │
+│   Conteúdo da view ativa     │
+│   (rolável)                  │
+│                              │
+├──────────────────────────────┤
+│ Bottom Nav fixo (Home • Promos • Perfil)
+└──────────────────────────────┘
 ```
 
-Regras:
-- Ao montar: tenta restaurar sessão do `localStorage`. Se inválida (RPC falha) → `view = 'login'`. Se válida → `view = 'home'`.
-- Cards do lobby disparam `setView('apostas' | ...)` em vez de navegar.
-- Botão "Voltar ao lobby" sempre visível dentro das sub-views.
-- Se a sub-view tentar checar auth e não houver sessão → volta automaticamente para `view = 'login'`.
+- Larguras: tudo em `w-full max-w-[480px] mx-auto` no mobile e expande para `max-w-6xl` no desktop usando breakpoints (`sm`, `md`, `lg`).
+- `safe-area-inset` para iPhone (notch + home indicator).
+- Padding base `px-4` no mobile, `px-8` no desktop. Sem margens exageradas.
 
-## 3. Tela de login do lobby
+## 4. Novas telas / componentes
 
-Componente novo `src/components/lobby/LobbyLogin.tsx`:
-- Campos: **E-mail** e **ID da conta** (mesmo padrão das outras telas).
-- Botão "Entrar" → chama `authenticate_wheel_user` → salva sessão única → `view = 'home'`.
-- Link grande: **"Ainda não tem conta? Clique aqui para se inscrever"** → navega para `/registration?return=lobby:<tag>` (rota nova querystring).
+Tudo dentro de `src/components/lobby/`:
 
-## 4. Retorno do cadastro para o lobby
+- `LobbyShell.tsx` — wrapper com header + bottom nav + safe-area + tema do operador.
+- `LobbyHeader.tsx` — logo da Gorjeta + nome do usuário + coins + botão de perfil.
+- `LobbyBottomNav.tsx` — 3 abas (Início, Promoções, Perfil), fixa no rodapé do mobile, vira sidebar discreta no desktop.
+- `LobbyHome.tsx` — saudação curta + carrossel de destaque + lista de cards grandes.
+- `LobbyPromoCard.tsx` — card grande com imagem, nome, descrição, badge e botão "Acessar". Toque com `active:scale-[0.98]`.
+- `LobbyProfile.tsx` — dados do usuário, ID da conta, botão "Sair".
+- `LobbyLogin.tsx` — já existe, será simplificado para alinhar com o novo shell e ganhar estado de "carregando sessão" para evitar flicker.
 
-Editar `src/pages/Registration.tsx`:
-- Ler `?return=lobby:<tag>` da URL.
-- Após cadastro bem-sucedido, se `return` for `lobby:*`, redirecionar para `/g=<tag>` em vez do destino padrão.
-- O lobby, ao carregar com sessão já criada pelo fluxo de cadastro (se aplicável), entra direto. Caso contrário mostra a tela de login com o e-mail pré-preenchido via querystring `?email=` (opcional).
+## 5. Tema do operador
 
-## 5. Refatorar as 4 páginas em "views embarcáveis"
+Continuar consumindo `pageConfig.theme` + `pageConfig.login` (sistema de configuração visual já criado no painel). O novo shell aplica:
 
-Para cada uma das páginas, extrair o conteúdo atual em um componente `*View` que aceita props `{ embedded?: boolean; session: LobbySession; tag: string; onExitToLobby: () => void }`. As rotas standalone (`/odds=:tag`, `/<roletaTag>`, `/luckybox=:tag`, `/batalha`) continuam funcionando, agora apenas montando a mesma view com `embedded={false}` e usando o próprio fluxo de login.
+- `--lobby-primary`, `--lobby-bg`, `--lobby-text`, `--lobby-font-heading`, `--lobby-font-body` no container raiz.
+- Bottom nav, header e cards usam esses tokens — operador customiza tudo de um lugar só.
 
-Quando `embedded=true`:
-- Pulam a própria tela de login (usam a `session` recebida).
-- Pulam `LobbyHomeButton` próprio (o shell já tem header).
-- Não escrevem em `sessionStorage` específico — usam a sessão única do lobby.
+## 6. Auditoria de responsividade
 
-Páginas afetadas:
-- `src/pages/Bets.tsx` → extrai `BetsView`.
-- `src/pages/Roleta.tsx` → extrai `RoletaView`.
-- `src/pages/Luckybox.tsx` → extrai `LuckyboxView`.
-- `src/pages/Batalha.tsx` → **caso especial**: hoje usa `supabase.auth.signInWithPassword` (admin). No contexto do lobby, Batalha vira read-only/participante usando a sessão de `wheel_user` (sem acesso admin). Confirmar se isso atende ou se a Batalha embarcada deve apenas mostrar status/inscrição.
+Antes de fechar, testar manualmente cada view nos breakpoints 320, 360, 375, 390, 412, 430, 768, 820, 1024, 1280, 1440, 1920:
 
-## 6. Persistência e logout
+- Login
+- Home do lobby
+- Roleta embutida
+- Luckybox embutido
+- Apostas embutidas
+- Perfil
+- Modais e formulários internos das views
 
-- `localStorage` (não `sessionStorage`) garante que fechar e abrir o navegador mantém o login.
-- Botão "Sair" no header chama `clearLobbySession()` e volta para `view = 'login'`.
-- Se qualquer RPC dentro de uma sub-view responder com erro de autenticação → `clearLobbySession()` + voltar pro login.
+Critérios obrigatórios (zero ocorrências):
+- Sem scroll horizontal (`overflow-x: hidden` no shell + auditoria visual).
+- Sem texto/botão cortado.
+- Sem componente saindo da viewport.
+- Modais sempre com `max-h-[90vh]` e scroll interno.
 
-## 7. Detalhes técnicos
+## 7. Performance
 
-- Manter `App.tsx` com a rota `/g=:tag` existente apontando para o novo `Lobby`.
-- `useLobbySession` expõe `session, signIn, signOut, refresh`.
-- Nenhuma mudança de schema. Nenhuma edge function nova.
-- Tradução PT-BR já existente continua valendo (footballTranslations).
+- Lazy-load real das views (`React.lazy` + `Suspense`) — já existe, manter.
+- `prefetch` no hover/após login para reduzir latência da primeira troca.
+- Memoizar `cards`, `theme`, `productMeta`.
+- Imagens com `loading="lazy"` e `optimizedImage` (já em uso).
+- Evitar re-renderizar o shell quando só a view interna muda — `LobbyShell` recebe `children` e nada mais.
 
-## Ponto que precisa de confirmação antes de eu começar
+## Arquivos afetados
 
-**Batalha embarcada**: a página `/batalha` atual exige login admin (`signInWithPassword`). Faz sentido que, dentro do lobby, ela apareça apenas como visualização da batalha em andamento + inscrição do usuário, sem o painel admin? Ou prefere que o card "Batalha" no lobby simplesmente abra a `/batalha` em nova aba até definirmos esse fluxo?
+**Novos**
+- `src/components/lobby/LobbyShell.tsx`
+- `src/components/lobby/LobbyHeader.tsx`
+- `src/components/lobby/LobbyBottomNav.tsx`
+- `src/components/lobby/LobbyHome.tsx`
+- `src/components/lobby/LobbyPromoCard.tsx`
+- `src/components/lobby/LobbyProfile.tsx`
+
+**Editados**
+- `src/pages/Lobby.tsx` — passa a apenas orquestrar `view` + sessão e renderizar o shell.
+- `src/components/lobby/LobbyLogin.tsx` — encaixa no novo shell, sem flicker.
+- `src/lib/lobbySession.ts` — migra para `localStorage` mantendo retrocompat com `sessionStorage`.
+- `src/index.css` — utilitários `safe-area`, `lobby-tap` (feedback de toque), classes de tipografia do tema.
+
+## Fora do escopo desta entrega
+
+- Não vou refazer o visual interno de Roleta / Bets / Luckybox / Batalha — eles ficam dentro do shell e herdam o tema, mas o redesign dos jogos em si é outra task. Posso atacar um por vez depois, na ordem que você preferir.
+- Painel de configuração no dashboard fica como está (já tem cores, fontes, textos do login).
+
+Quer que eu siga assim?

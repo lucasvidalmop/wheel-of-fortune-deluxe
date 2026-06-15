@@ -133,6 +133,27 @@ input[type="checkbox"].lobby-login-checkbox:checked::after {
   .font-display {
     font-family: 'Orbitron', sans-serif;
   }
+
+  /* iOS safe area */
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
+  .mb-safe-nav { margin-bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+  /* Touch feedback */
+  .lobby-tap {
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 200ms ease;
+  }
+  .lobby-tap:active { transform: scale(0.97); }
+
+  /* Hide scrollbar */
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Lobby scope — prevents horizontal scroll on app shell */
+  .lobby-scope { overflow-x: hidden; }
 }
 
 /* Glass Scrollbar */
