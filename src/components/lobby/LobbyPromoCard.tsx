@@ -23,7 +23,9 @@ const meta: Record<ProductKey, { icon: string; accent: string }> = {
 
 const LobbyPromoCard = ({ product, title, subtitle, imageUrl, badge, external, featured, onClick }: Props) => {
   const m = meta[product];
-  const img = imageUrl ? (optimizedImage(imageUrl, { width: featured ? 900 : 600, quality: 78 }) || imageUrl) : null;
+  const imgWidth = featured ? 900 : 600;
+  const imgHeight = Math.round(imgWidth / (16 / 9));
+  const img = imageUrl ? (optimizedImage(imageUrl, { width: imgWidth, quality: 78 }) || imageUrl) : null;
 
   return (
     <button
@@ -35,6 +37,8 @@ const LobbyPromoCard = ({ product, title, subtitle, imageUrl, badge, external, f
         <img
           src={img}
           alt={title}
+          width={imgWidth}
+          height={imgHeight}
           loading="lazy"
           className={`absolute inset-0 h-full w-full object-cover ${featured ? 'opacity-80' : 'opacity-65'} group-hover:scale-[1.04] transition-transform duration-700`}
         />
