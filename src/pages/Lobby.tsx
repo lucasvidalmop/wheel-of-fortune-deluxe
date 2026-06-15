@@ -268,7 +268,7 @@ const Lobby = ({ tag }: { tag: string }) => {
       <LobbyEmbedProvider value={embedValue}>
         <Suspense fallback={<ViewFallback />}>
           {view === 'apostas' && productTags.bets && <Bets tag={productTags.bets} />}
-          {view === 'roleta' && productTags.roleta && <Roleta />}
+          {view === 'roleta' && productTags.roleta && <Roleta slugOverride={productTags.roleta} />}
           {view === 'luckybox' && productTags.luckybox && <Luckybox tag={productTags.luckybox} />}
         </Suspense>
       </LobbyEmbedProvider>
