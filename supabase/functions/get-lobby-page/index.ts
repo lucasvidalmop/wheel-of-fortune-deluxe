@@ -42,10 +42,14 @@ Deno.serve(async (req) => {
 
     // Discover tags of operator's other products to suggest defaults for hrefs.
     const [{ data: bets }, { data: lucky }, { data: wheel }] = await Promise.all([
-      supabase.from("bets_configs").select("tag").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
-      supabase.from("luckybox_configs").select("tag").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
+      supabase.from("bets_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
+      supabase.from("luckybox_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
       supabase.from("wheel_configs").select("slug").eq("user_id", cfg.owner_id).maybeSingle().then((r) => r as any),
     ]);
+
+    // Prefer Luckybox coin assets, fall back to Bets — they reflect the operator's brand.
+    const coinIconUrl = (lucky as any)?.coin_icon_url || (bets as any)?.coin_icon_url || "";
+    const coinName = (lucky as any)?.coin_name || (bets as any)?.coin_name || "";
 
     return new Response(JSON.stringify({
       found: true,
@@ -53,6 +57,8 @@ Deno.serve(async (req) => {
       tag: cfg.tag,
       isActive: cfg.is_active,
       pageConfig: cfg.page_config || {},
+      coinIconUrl,
+      coinName,
       productTags: {
         bets: bets?.tag || "",
         luckybox: lucky?.tag || "",

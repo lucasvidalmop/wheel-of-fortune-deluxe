@@ -19,6 +19,7 @@ interface LobbyShellProps {
   logoUrl?: string;
   session: LobbySession | null;
   coins?: number | null;
+  coinIconUrl?: string;
   activeTab: LobbyTab;
   onTabChange: (tab: LobbyTab) => void;
   /** Hides bottom nav (login screen) */
@@ -34,6 +35,7 @@ const LobbyShell = ({
   logoUrl,
   session,
   coins,
+  coinIconUrl,
   activeTab,
   onTabChange,
   hideNav = false,
@@ -78,7 +80,7 @@ const LobbyShell = ({
 
       <div className="relative z-10 flex min-h-[100dvh] flex-col">
         {!hideHeader && (
-          <LobbyHeader logoUrl={logoUrl} session={session} coins={coins} onProfile={() => onTabChange('perfil')} />
+          <LobbyHeader logoUrl={logoUrl} session={session} coins={coins} coinIconUrl={coinIconUrl} onProfile={() => onTabChange('perfil')} />
         )}
 
         <main className={`flex-1 w-full ${hideNav ? '' : 'mb-safe-nav'}`}>

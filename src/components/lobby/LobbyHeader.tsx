@@ -5,10 +5,11 @@ interface Props {
   logoUrl?: string;
   session: LobbySession | null;
   coins?: number | null;
+  coinIconUrl?: string;
   onProfile: () => void;
 }
 
-const LobbyHeader = ({ logoUrl, session, coins, onProfile }: Props) => {
+const LobbyHeader = ({ logoUrl, session, coins, coinIconUrl, onProfile }: Props) => {
   const firstName = session?.name?.split(' ')[0] || session?.email?.split('@')[0] || 'Você';
   const initial = (session?.name?.[0] || session?.email?.[0] || '?').toUpperCase();
 
@@ -44,7 +45,11 @@ const LobbyHeader = ({ logoUrl, session, coins, onProfile }: Props) => {
             style={{ fontFamily: 'var(--lobby-font-body, Barlow), sans-serif' }}
             aria-label="Coins disponíveis"
           >
-            <Coins size={15} style={{ color: 'var(--lobby-primary, #00d4ff)' }} />
+            {coinIconUrl ? (
+              <img src={coinIconUrl} alt="" className="h-4 w-4 object-contain" decoding="async" />
+            ) : (
+              <Coins size={15} style={{ color: 'var(--lobby-primary, #00d4ff)' }} />
+            )}
             <span>{coins.toLocaleString('pt-BR')}</span>
           </div>
         )}
