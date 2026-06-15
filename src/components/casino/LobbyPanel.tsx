@@ -135,6 +135,8 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
     setPc((p) => ({ ...p, theme: { ...DEFAULT_THEME, ...(p.theme || {}), ...patch } }));
   const updateLogin = (patch: Partial<LobbyLoginConfig>) =>
     setPc((p) => ({ ...p, login: { ...DEFAULT_LOGIN, ...(p.login || {}), ...patch } }));
+  const updateSEO = (patch: Partial<LobbySEOConfig>) =>
+    setPc((p) => ({ ...p, seo: { ...(p.seo || {}), ...patch } }));
 
   const save = async () => {
     const cleanTag = slugify(tag);
