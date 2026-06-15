@@ -36,6 +36,7 @@ interface LobbyLoginConfig {
   signup_url?: string;
   show_signup?: boolean;
   show_lobby_pill?: boolean;
+  brand_mode?: 'logo_text' | 'logo' | 'text';
 }
 
 interface PageConfig {
