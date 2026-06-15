@@ -62,6 +62,7 @@ const Lobby = ({ tag }: { tag: string }) => {
   const [pageConfig, setPageConfig] = useState<LobbyPageConfig>({});
   const [productTags, setProductTags] = useState({ bets: '', luckybox: '', roleta: '' });
   const [coinIconUrl, setCoinIconUrl] = useState<string>('');
+  const [gorjetaRef, setGorjetaRef] = useState<string>('');
   // Hidrata sessão de forma síncrona — evita flicker para a tela de login.
   const [session, setSession] = useState<LobbySession | null>(() => getLobbySession());
   const [view, setView] = useState<View>(() => (getLobbySession() ? 'home' : 'login'));
@@ -84,6 +85,7 @@ const Lobby = ({ tag }: { tag: string }) => {
         setPageConfig(data.pageConfig || {});
         setProductTags(data.productTags || { bets: '', luckybox: '', roleta: '' });
         setCoinIconUrl(data.coinIconUrl || '');
+        setGorjetaRef(data.gorjetaRef || '');
         if (data.pageConfig?.site_title) document.title = data.pageConfig.site_title;
       } catch {
         if (alive) setNotFound(true);
@@ -209,7 +211,7 @@ const Lobby = ({ tag }: { tag: string }) => {
             rememberLabel={loginCfg.remember_label}
             signupText={loginCfg.signup_text}
             signupLinkText={loginCfg.signup_link_text}
-            signupUrl={loginCfg.signup_url}
+            signupUrl={loginCfg.signup_url || (gorjetaRef ? `/gorjeta?ref=${encodeURIComponent(gorjetaRef)}&return=lobby:${encodeURIComponent(tag)}` : '')}
             showSignup={loginCfg.show_signup !== false}
             showLobbyPill={loginCfg.show_lobby_pill !== false}
             brandMode={loginCfg.brand_mode || 'logo_text'}
