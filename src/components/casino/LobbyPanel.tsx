@@ -259,7 +259,7 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Logo</label>
             <div className="flex gap-2 items-center">
-              <input type="text" value={pc.logo_url || ''} onChange={(e) => setPc({ ...pc, logo_url: url })} placeholder="URL do logo" className="flex-1 px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
+              <input type="text" value={pc.logo_url || ''} onChange={(e) => setPc({ ...pc, logo_url: e.target.value })} placeholder="URL do logo" className="flex-1 px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
               <label className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm cursor-pointer flex items-center gap-1">
                 {uploadingKey === 'logo' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                 <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'logo')} />
