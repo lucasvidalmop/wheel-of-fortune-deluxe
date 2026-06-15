@@ -255,6 +255,41 @@ const Luckybox = ({ tag }: { tag?: string }) => {
     }
   }, [cfg]);
 
+  // Auto-login quando embarcado no lobby da Gorjeta
+  useEffect(() => {
+    if (!cfg || !lobbyEmbed || authedUser) return;
+    const sess = lobbyEmbed.session;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await (supabase as any).rpc('authenticate_luckybox_user', {
+          p_email: sess.email,
+          p_account_id: sess.account_id,
+          p_owner_id: cfg.owner_id,
+        });
+        const user = Array.isArray(data) ? data[0] : data;
+        if (cancelled || error || !user?.id) return;
+        const { data: uData } = await (supabase as any).rpc('get_luckybox_user_state', { p_user_id: user.id });
+        const u = uData?.found ? uData : null;
+        const newSess = {
+          id: user.id,
+          name: u?.name || user.name || sess.name || '',
+          account_id: u?.account_id || user.account_id || sess.account_id,
+          email: u?.email || user.email || sess.email,
+          tokens_balance: u?.tokens_balance ?? 0,
+          case_grants: (u?.case_grants as Record<string, number>) || {},
+        };
+        if (cancelled) return;
+        setAuthedUser(newSess);
+        try { sessionStorage.setItem(`luckybox_user_${cfg.tag}`, JSON.stringify(newSess)); } catch {}
+        fetchUserClaims(cfg.owner_id, newSess.email, newSess.account_id);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cfg, lobbyEmbed, authedUser]);
+
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail.trim() || !loginAccount.trim()) {
