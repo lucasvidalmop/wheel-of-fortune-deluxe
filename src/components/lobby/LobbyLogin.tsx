@@ -18,6 +18,7 @@ interface LobbyLoginProps {
   signupUrl?: string;
   showSignup?: boolean;
   showLobbyPill?: boolean;
+  brandMode?: 'logo_text' | 'logo' | 'text';
   primary?: string;
   headingFont?: string;
   bodyFont?: string;
