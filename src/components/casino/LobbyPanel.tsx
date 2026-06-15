@@ -483,7 +483,7 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
         <h3 className="text-lg font-bold text-foreground">Cards dos produtos</h3>
-        <p className="text-xs text-muted-foreground">Deixe o link em branco para usar o padrão configurado nas tags de cada produto. Desative cards que você não usa.</p>
+        <p className="text-xs text-muted-foreground">Deixe o link em branco para usar o padrão configurado nas tags de cada produto. Desative cards que você não usa. Recomendamos SVG na proporção 16:9 (ex: 800×450) para fundo dos cards.</p>
         <div className="space-y-3">
           {(pc.cards || DEFAULT_CARDS).map((card, idx) => (
             <div key={card.key} className="rounded-xl border border-white/10 bg-background/50 p-4 space-y-3">
