@@ -47,6 +47,7 @@ interface PageConfig {
   cards?: CardConfig[];
   theme?: LobbyTheme;
   login?: LobbyLoginConfig;
+  seo?: LobbySEOConfig;
 }
 
 const FONT_OPTIONS = [
