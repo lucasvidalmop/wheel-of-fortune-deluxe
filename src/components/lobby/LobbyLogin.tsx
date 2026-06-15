@@ -18,6 +18,7 @@ interface LobbyLoginProps {
   signupUrl?: string;
   showSignup?: boolean;
   showLobbyPill?: boolean;
+  brandMode?: 'logo_text' | 'logo' | 'text';
   primary?: string;
   headingFont?: string;
   bodyFont?: string;
@@ -38,6 +39,7 @@ export default function LobbyLogin({
   signupUrl,
   showSignup = true,
   showLobbyPill = true,
+  brandMode = 'logo_text',
   primary = '#00d4ff',
   headingFont = 'Bebas Neue',
   bodyFont = 'Barlow',
@@ -99,18 +101,26 @@ export default function LobbyLogin({
 
       <div className="flex-1 flex items-center justify-center px-4 py-10 sm:py-14">
         <div className="w-full max-w-[420px] bg-[#0a0a0f]/85 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 md:p-9 shadow-2xl">
-          {logoUrl && (
-            <img src={logoUrl} alt="Logo" className="mx-auto h-14 sm:h-16 md:h-20 object-contain mb-4 sm:mb-5" />
+          {logoUrl && brandMode !== 'text' && (
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className={`mx-auto object-contain ${brandMode === 'logo' ? 'h-20 sm:h-24 md:h-28 mb-2' : 'h-14 sm:h-16 md:h-20 mb-4 sm:mb-5'}`}
+            />
           )}
-          <h1
-            className="text-3xl md:text-4xl font-bold text-center text-white uppercase tracking-wide leading-tight"
-            style={{ fontFamily: fontHead }}
-          >
-            {title}
-          </h1>
-          <p className="text-sm text-center text-white/60 mt-1.5" style={{ fontFamily: fontBody }}>
-            {subtitle}
-          </p>
+          {brandMode !== 'logo' && (
+            <>
+              <h1
+                className="text-3xl md:text-4xl font-bold text-center text-white uppercase tracking-wide leading-tight"
+                style={{ fontFamily: fontHead }}
+              >
+                {title}
+              </h1>
+              <p className="text-sm text-center text-white/60 mt-1.5" style={{ fontFamily: fontBody }}>
+                {subtitle}
+              </p>
+            </>
+          )}
 
           <form onSubmit={submit} className="mt-7 space-y-4">
             <div>

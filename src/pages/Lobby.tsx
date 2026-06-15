@@ -28,6 +28,7 @@ interface LobbyLoginConfig {
   signup_url?: string;
   show_signup?: boolean;
   show_lobby_pill?: boolean;
+  brand_mode?: 'logo_text' | 'logo' | 'text';
 }
 
 interface LobbyPageConfig {
@@ -211,6 +212,7 @@ const Lobby = ({ tag }: { tag: string }) => {
             signupUrl={loginCfg.signup_url}
             showSignup={loginCfg.show_signup !== false}
             showLobbyPill={loginCfg.show_lobby_pill !== false}
+            brandMode={loginCfg.brand_mode || 'logo_text'}
             primary={theme.primary || '#00d4ff'}
             headingFont={theme.heading_font || 'Bebas Neue'}
             bodyFont={theme.body_font || 'Barlow'}
