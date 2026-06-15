@@ -13,6 +13,7 @@ import type { ProductKey } from '@/components/lobby/LobbyPromoCard';
 const Bets = lazy(() => import('./Bets.tsx'));
 const Roleta = lazy(() => import('./Roleta.tsx'));
 const Luckybox = lazy(() => import('./Luckybox.tsx'));
+const DepositBS = lazy(() => import('./DepositBS.tsx'));
 
 type View = 'login' | 'home' | 'perfil' | ProductKey;
 
