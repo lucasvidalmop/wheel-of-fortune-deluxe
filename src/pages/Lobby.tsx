@@ -272,6 +272,7 @@ const Lobby = ({ tag }: { tag: string }) => {
         logoUrl={pageConfig.logo_url}
         session={session}
         coins={coins}
+        coinIconUrl={coinIconUrl}
         activeTab={activeTab}
         onTabChange={handleTabChange}
       >
