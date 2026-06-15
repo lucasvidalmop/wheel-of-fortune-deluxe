@@ -165,11 +165,17 @@ const Lobby = ({ tag }: { tag: string }) => {
 
   // ─── Background wrapper ───
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: '#0a0a0f' }}>
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={{ background: bgColor, color: textColor, ['--lobby-primary' as any]: primary }}
+    >
       {bg && (
         <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bg})` }} />
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/65 to-black/90" />
+      <div
+        className="absolute inset-0"
+        style={{ background: `linear-gradient(to bottom, rgba(0,0,0,${overlay * 0.75}), rgba(0,0,0,${overlay}), rgba(0,0,0,${Math.min(1, overlay * 1.35)}))` }}
+      />
       <div className="relative z-10">{children}</div>
     </div>
   );
