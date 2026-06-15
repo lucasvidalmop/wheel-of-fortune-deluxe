@@ -254,6 +254,7 @@ const Registration = () => {
       if (result?.success) {
         setSpinsGranted(0);
         if (result.slug) setWheelSlug(result.slug);
+        if (result.user_id) setWheelUserId(String(result.user_id));
         setSuccess(true);
 
         toast.success('Inscrição realizada com sucesso!');
