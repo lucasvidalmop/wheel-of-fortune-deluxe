@@ -211,7 +211,7 @@ const Lobby = ({ tag }: { tag: string }) => {
             rememberLabel={loginCfg.remember_label}
             signupText={loginCfg.signup_text}
             signupLinkText={loginCfg.signup_link_text}
-            signupUrl={loginCfg.signup_url}
+            signupUrl={loginCfg.signup_url || (gorjetaRef ? `/gorjeta?ref=${encodeURIComponent(gorjetaRef)}&return=lobby:${encodeURIComponent(tag)}` : '')}
             showSignup={loginCfg.show_signup !== false}
             showLobbyPill={loginCfg.show_lobby_pill !== false}
             brandMode={loginCfg.brand_mode || 'logo_text'}
