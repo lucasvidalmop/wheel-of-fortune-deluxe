@@ -862,6 +862,37 @@ export default function Batalha() {
                 </div>
               </div>
 
+              {currentBattle?.status === 'collecting' && (
+                <button
+                  onClick={startBattle}
+                  disabled={startingBattle || participants.length === 0}
+                  className="mt-2 w-full h-9 rounded-full inline-flex items-center justify-center gap-2 text-[11px] font-bold tracking-[0.25em] transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+                  style={{
+                    backgroundColor: config.headerAccentColor,
+                    color: config.bgColor,
+                    boxShadow: `0 0 16px ${config.headerAccentColor}55`,
+                  }}
+                  aria-label="Iniciar batalha"
+                >
+                  <Swords size={12} />
+                  {startingBattle ? 'INICIANDO...' : 'INICIAR BATALHA'}
+                </button>
+              )}
+
+              {currentBattle?.status === 'running' && nextBattleCount > 0 && (
+                <div
+                  className="mt-2 w-full h-8 rounded-full inline-flex items-center justify-center gap-2 text-[10px] font-semibold tracking-[0.2em]"
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: `1px dashed ${config.headerAccentColor}66`,
+                    color: config.headerAccentColor,
+                  }}
+                  title="Pagamentos aguardando a próxima batalha"
+                >
+                  FILA: {nextBattleCount} {nextBattleCount === 1 ? 'JOGADOR' : 'JOGADORES'}
+                </div>
+              )}
+
               <button
                 onClick={resetTournament}
                 className="mt-2 w-full h-8 rounded-full inline-flex items-center justify-center gap-2 text-[10px] font-semibold tracking-[0.25em] transition-opacity hover:opacity-80 active:scale-[0.98]"
@@ -870,11 +901,12 @@ export default function Batalha() {
                   border: `1px solid ${config.panelBorderColor}`,
                   color: config.panelLabelColor,
                 }}
-                aria-label="Resetar sorteio"
+                aria-label="Encerrar batalha"
               >
                 <RotateCcw size={12} />
                 ENCERRAR BATALHA
               </button>
+
             </section>
 
             {winnerHistory.length > 0 && (
