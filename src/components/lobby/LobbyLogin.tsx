@@ -39,6 +39,7 @@ export default function LobbyLogin({
   signupUrl,
   showSignup = true,
   showLobbyPill = true,
+  brandMode = 'logo_text',
   primary = '#00d4ff',
   headingFont = 'Bebas Neue',
   bodyFont = 'Barlow',
