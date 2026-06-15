@@ -121,10 +121,18 @@ Deno.serve(async (req) => {
               const ytName = String(meta.userName || "").trim();
               const gameName = String(meta.userAccountId || "").trim();
               if (ytName) {
+                // Always queue into the "collecting" battle so payments during
+                // a running battle fall into the NEXT battle automatically.
+                const { data: battleId, error: rpcErr } = await supabase
+                  .rpc("get_or_create_collecting_battle", { _owner: txData.owner_id });
+                if (rpcErr) {
+                  console.error("get_or_create_collecting_battle error:", rpcErr);
+                }
                 const { error: bpErr } = await supabase
                   .from("battle_participants")
                   .insert({
                     owner_id: txData.owner_id,
+                    battle_id: battleId ?? null,
                     name: ytName,
                     game: gameName,
                     source: "deposit_bs",
