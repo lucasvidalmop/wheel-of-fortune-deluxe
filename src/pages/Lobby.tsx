@@ -113,6 +113,17 @@ const Lobby = ({ tag }: { tag: string }) => {
 
   const bg = optimizedImage(pageConfig.bg_image_url, { width: 1920, quality: 70 });
 
+  const theme = pageConfig.theme || {};
+  const loginCfg = pageConfig.login || {};
+  const primary = theme.primary || '#00d4ff';
+  const bgColor = theme.bg_color || '#0a0a0f';
+  const textColor = theme.text_color || '#ffffff';
+  const headingFont = theme.heading_font || 'Bebas Neue';
+  const bodyFont = theme.body_font || 'Barlow';
+  const fontHead = `${headingFont}, sans-serif`;
+  const fontBody = `${bodyFont}, sans-serif`;
+  const overlay = Math.max(0, Math.min(100, theme.overlay_strength ?? 65)) / 100;
+
   const handleSignOut = () => {
     clearLobbySession();
     setSession(null);
