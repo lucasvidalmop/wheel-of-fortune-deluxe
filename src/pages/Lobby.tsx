@@ -164,7 +164,7 @@ const Lobby = ({ tag }: { tag: string }) => {
             <button
               onClick={() => setView('home')}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white text-[11px] uppercase tracking-[0.18em] font-semibold transition border border-white/10"
-              style={{ fontFamily: 'Barlow, sans-serif' }}
+              style={{ fontFamily: fontBody }}
             >
               <ArrowLeft size={13} /> Lobby
             </button>
@@ -179,7 +179,7 @@ const Lobby = ({ tag }: { tag: string }) => {
               )}
               <span
                 className="hidden sm:inline text-[11px] uppercase tracking-[0.28em] text-white/50 font-medium truncate"
-                style={{ fontFamily: 'Barlow, sans-serif' }}
+                style={{ fontFamily: fontBody }}
               >
                 Lobby
               </span>
@@ -190,13 +190,13 @@ const Lobby = ({ tag }: { tag: string }) => {
           <div className="hidden sm:flex flex-col items-end leading-tight">
             <span
               className="text-[9px] uppercase tracking-[0.24em] text-white/40"
-              style={{ fontFamily: 'Barlow, sans-serif' }}
+              style={{ fontFamily: fontBody }}
             >
               Conectado
             </span>
             <span
               className="text-xs text-white/85 truncate max-w-[180px]"
-              style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+              style={{ fontFamily: fontBody, fontWeight: 600 }}
             >
               {session.name || session.email}
             </span>
@@ -204,7 +204,7 @@ const Lobby = ({ tag }: { tag: string }) => {
           <button
             onClick={handleSignOut}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-red-500/80 text-white text-[11px] uppercase tracking-[0.18em] font-semibold transition border border-white/10"
-            style={{ fontFamily: 'Barlow, sans-serif' }}
+            style={{ fontFamily: fontBody }}
           >
             <LogOut size={13} /> Sair
           </button>
@@ -240,7 +240,7 @@ const Lobby = ({ tag }: { tag: string }) => {
             <div className="col-span-12 md:col-span-8">
               <div
                 className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-white/50 mb-4"
-                style={{ fontFamily: 'Barlow, sans-serif' }}
+                style={{ fontFamily: fontBody }}
               >
                 <span className="h-px w-8 bg-white/40" />
                 {session.name ? `Olá, ${session.name.split(' ')[0]}` : 'Bem-vindo'}
@@ -248,7 +248,7 @@ const Lobby = ({ tag }: { tag: string }) => {
               <h1
                 className="text-white leading-[0.88] tracking-tight"
                 style={{
-                  fontFamily: 'Bebas Neue, sans-serif',
+                  fontFamily: fontHead,
                   fontSize: 'clamp(56px, 9vw, 132px)',
                   letterSpacing: '0.01em',
                 }}
@@ -258,7 +258,7 @@ const Lobby = ({ tag }: { tag: string }) => {
               {pageConfig.site_description && (
                 <p
                   className="mt-5 text-white/65 max-w-xl text-base md:text-lg leading-relaxed"
-                  style={{ fontFamily: 'Barlow, sans-serif' }}
+                  style={{ fontFamily: fontBody }}
                 >
                   {pageConfig.site_description}
                 </p>
@@ -268,13 +268,13 @@ const Lobby = ({ tag }: { tag: string }) => {
               <div className="text-right">
                 <div
                   className="text-[10px] uppercase tracking-[0.32em] text-white/40 mb-1"
-                  style={{ fontFamily: 'Barlow, sans-serif' }}
+                  style={{ fontFamily: fontBody }}
                 >
                   Promoções ativas
                 </div>
                 <div
                   className="text-white/90"
-                  style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '88px', lineHeight: 0.9 }}
+                  style={{ fontFamily: fontHead, fontSize: '88px', lineHeight: 0.9 }}
                 >
                   {String(cards.length).padStart(2, '0')}
                 </div>
@@ -285,7 +285,7 @@ const Lobby = ({ tag }: { tag: string }) => {
           {cards.length === 0 ? (
             <div
               className="text-center text-white/60 py-20 border border-dashed border-white/10 rounded-3xl"
-              style={{ fontFamily: 'Barlow, sans-serif' }}
+              style={{ fontFamily: fontBody }}
             >
               Nenhuma promoção configurada.
             </div>
@@ -321,14 +321,14 @@ const Lobby = ({ tag }: { tag: string }) => {
                       <div className="flex items-start justify-between gap-3">
                         <span
                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] uppercase tracking-[0.24em] text-white/90"
-                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                          style={{ fontFamily: fontBody, fontWeight: 600 }}
                         >
                           <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                           Destaque
                         </span>
                         <span
                           className="text-white/40 text-sm"
-                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                          style={{ fontFamily: fontBody, fontWeight: 600 }}
                         >
                           01
                         </span>
@@ -337,7 +337,7 @@ const Lobby = ({ tag }: { tag: string }) => {
                       <div>
                         <div
                           className="text-[10px] uppercase tracking-[0.32em] text-white/60 mb-2"
-                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                          style={{ fontFamily: fontBody, fontWeight: 600 }}
                         >
                           {meta.tag}
                           {featured.key === 'batalha' && <span className="ml-2 text-white/40">· abre em nova aba</span>}
@@ -345,7 +345,7 @@ const Lobby = ({ tag }: { tag: string }) => {
                         <h2
                           className="text-white leading-[0.9]"
                           style={{
-                            fontFamily: 'Bebas Neue, sans-serif',
+                            fontFamily: fontHead,
                             fontSize: 'clamp(44px, 6vw, 76px)',
                             letterSpacing: '0.01em',
                           }}
@@ -355,14 +355,14 @@ const Lobby = ({ tag }: { tag: string }) => {
                         {featured.subtitle && (
                           <p
                             className="mt-3 text-white/75 max-w-md text-base md:text-lg"
-                            style={{ fontFamily: 'Barlow, sans-serif' }}
+                            style={{ fontFamily: fontBody }}
                           >
                             {featured.subtitle}
                           </p>
                         )}
                         <div
                           className="mt-6 inline-flex items-center gap-2 text-white text-xs uppercase tracking-[0.24em] group-hover:gap-4 transition-all"
-                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 700 }}
+                          style={{ fontFamily: fontBody, fontWeight: 700 }}
                         >
                           <span className="h-px w-8 bg-white group-hover:w-14 transition-all" />
                           Entrar agora
@@ -404,14 +404,14 @@ const Lobby = ({ tag }: { tag: string }) => {
                         <div className="flex items-center gap-3 mb-1.5">
                           <span
                             className="text-[9px] uppercase tracking-[0.28em] text-white/55"
-                            style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                            style={{ fontFamily: fontBody, fontWeight: 600 }}
                           >
                             {meta.tag}
                           </span>
                           {card.key === 'batalha' && (
                             <span
                               className="inline-flex items-center gap-1 text-[9px] text-white/40"
-                              style={{ fontFamily: 'Barlow, sans-serif' }}
+                              style={{ fontFamily: fontBody }}
                             >
                               <ExternalLink size={9} /> nova aba
                             </span>
@@ -420,7 +420,7 @@ const Lobby = ({ tag }: { tag: string }) => {
                         <h3
                           className="text-white leading-[0.95] truncate"
                           style={{
-                            fontFamily: 'Bebas Neue, sans-serif',
+                            fontFamily: fontHead,
                             fontSize: 'clamp(28px, 3.4vw, 40px)',
                             letterSpacing: '0.02em',
                           }}
@@ -430,7 +430,7 @@ const Lobby = ({ tag }: { tag: string }) => {
                         {card.subtitle && (
                           <p
                             className="text-white/65 text-sm mt-1 line-clamp-1"
-                            style={{ fontFamily: 'Barlow, sans-serif' }}
+                            style={{ fontFamily: fontBody }}
                           >
                             {card.subtitle}
                           </p>
@@ -438,7 +438,7 @@ const Lobby = ({ tag }: { tag: string }) => {
                       </div>
                       <div
                         className="hidden md:flex shrink-0 self-start text-white/30 text-sm group-hover:text-white/70 transition"
-                        style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                        style={{ fontFamily: fontBody, fontWeight: 600 }}
                       >
                         {num}
                       </div>
@@ -452,7 +452,7 @@ const Lobby = ({ tag }: { tag: string }) => {
           {pageConfig.footer_text && (
             <footer
               className="mt-16 pt-6 border-t border-white/10 text-center text-white/40 text-xs uppercase tracking-[0.24em]"
-              style={{ fontFamily: 'Barlow, sans-serif' }}
+              style={{ fontFamily: fontBody }}
             >
               {pageConfig.footer_text}
             </footer>

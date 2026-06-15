@@ -67,7 +67,7 @@ export default function LobbyLogin({
     <div className="min-h-screen flex flex-col relative">
       {/* Top-left Lobby pill */}
       <div className="absolute top-5 left-5 z-20">
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/80 text-xs font-medium backdrop-blur-md" style={{ fontFamily: 'Barlow, sans-serif' }}>
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/80 text-xs font-medium backdrop-blur-md" style={{ fontFamily: fontBody }}>
           <Home size={13} /> Lobby
         </div>
       </div>
@@ -79,17 +79,17 @@ export default function LobbyLogin({
           )}
           <h1
             className="text-3xl md:text-4xl font-bold text-center text-white uppercase tracking-wide leading-tight"
-            style={{ fontFamily: 'Bebas Neue, sans-serif' }}
+            style={{ fontFamily: fontHead }}
           >
             {title}
           </h1>
-          <p className="text-sm text-center text-white/60 mt-1.5" style={{ fontFamily: 'Barlow, sans-serif' }}>
+          <p className="text-sm text-center text-white/60 mt-1.5" style={{ fontFamily: fontBody }}>
             {subtitle}
           </p>
 
           <form onSubmit={submit} className="mt-7 space-y-4">
             <div>
-              <label className="block text-xs font-medium text-white/80 mb-1.5" style={{ fontFamily: 'Barlow, sans-serif' }}>
+              <label className="block text-xs font-medium text-white/80 mb-1.5" style={{ fontFamily: fontBody }}>
                 E-mail
               </label>
               <input
@@ -100,11 +100,11 @@ export default function LobbyLogin({
                 autoComplete="email"
                 placeholder="seu@email.com"
                 className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/30 placeholder:text-white/20 transition"
-                style={{ fontFamily: 'Barlow, sans-serif' }}
+                style={{ fontFamily: fontBody }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-white/80 mb-1.5" style={{ fontFamily: 'Barlow, sans-serif' }}>
+              <label className="block text-xs font-medium text-white/80 mb-1.5" style={{ fontFamily: fontBody }}>
                 ID da Conta
               </label>
               <input
@@ -115,7 +115,7 @@ export default function LobbyLogin({
                 autoComplete="username"
                 placeholder="Digite seu ID"
                 className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/30 placeholder:text-white/20 transition"
-                style={{ fontFamily: 'Barlow, sans-serif' }}
+                style={{ fontFamily: fontBody }}
               />
             </div>
 
@@ -130,7 +130,7 @@ export default function LobbyLogin({
               <label
                 htmlFor="remember"
                 className="text-sm text-white/70 select-none cursor-pointer"
-                style={{ fontFamily: 'Barlow, sans-serif' }}
+                style={{ fontFamily: fontBody }}
               >
                 Lembrar sessão
               </label>
@@ -140,14 +140,14 @@ export default function LobbyLogin({
               type="submit"
               disabled={loading}
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#00d4ff] text-[#0a0a0f] font-semibold hover:bg-[#00b8e6] active:scale-[0.98] transition disabled:opacity-60 shadow-lg shadow-[#00d4ff]/20"
-              style={{ fontFamily: 'Barlow, sans-serif' }}
+              style={{ fontFamily: fontBody }}
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
-          <div className="mt-6 text-center" style={{ fontFamily: 'Barlow, sans-serif' }}>
+          <div className="mt-6 text-center" style={{ fontFamily: fontBody }}>
             <p className="text-sm text-white/50">
               Crie sua conta na gorjeta{' '}
               <a
