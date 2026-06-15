@@ -630,6 +630,7 @@ const Bets = ({ tag }: BetsPageProps) => {
           name: row.name || sess.name || '',
           email: row.email || sess.email,
           account_id: row.account_id || sess.account_id,
+          tokens_balance: row.tokens_balance ?? 0,
         } as AuthedUser);
       } catch { /* ignore */ }
     })();
