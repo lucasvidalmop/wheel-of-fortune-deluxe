@@ -1,9 +1,8 @@
-import { Home } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-// Routes where we never show the back-to-lobby button (operator/admin areas).
+// Routes where we never show the back-to-lobby button (operator/admin areas + lobby itself).
 const HIDDEN_PATHS = [/^\/$/, /^\/admin/, /^\/dashboard/, /^\/unsubscribe/];
 
 const cache = new Map<string, string>(); // path -> lobbyTag ("" means none)
@@ -16,13 +15,11 @@ const LobbyHomeButton = () => {
     const path = location.pathname;
 
     if (HIDDEN_PATHS.some((re) => re.test(path))) { setTag(''); return; }
-    // Hide on the lobby page itself
-    if (/^\/lobby=/.test(path)) { setTag(''); return; }
+    // Hide on the lobby page itself (any casing / nested form)
+    if (path.toLowerCase().includes('lobby=')) { setTag(''); return; }
 
-    // Quick cache hit
     if (cache.has(path)) { setTag(cache.get(path) || ''); return; }
 
-    // Seed from sessionStorage so it shows immediately while we resolve.
     try {
       const cached = sessionStorage.getItem('lobby_tag') || '';
       setTag(cached);
@@ -51,9 +48,13 @@ const LobbyHomeButton = () => {
     <a
       href={`/lobby=${tag}`}
       aria-label="Voltar ao lobby"
-      className="fixed top-3 left-3 z-[100] flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-semibold backdrop-blur-md border border-white/15 shadow-lg transition-colors"
+      className="group fixed top-3 left-3 z-[100] inline-flex items-center gap-2 pl-3 pr-4 py-2 rounded-full text-[12px] font-semibold tracking-wide text-white/95 bg-gradient-to-br from-white/15 to-white/[0.04] hover:from-white/25 hover:to-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-all duration-200 active:scale-95"
     >
-      <Home size={14} />
+      <span className="grid place-items-center w-5 h-5 rounded-full bg-white/15 group-hover:bg-white/25 transition-colors">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </span>
       <span>Lobby</span>
     </a>
   );
