@@ -74,6 +74,13 @@ export default function Batalha() {
     } catch { /* ignore */ }
   }, [tournamentEntry]);
 
+  // ═══ Battle queue state ═══
+  type CurrentBattle = { id: string; status: 'collecting' | 'running' } | null;
+  const [currentBattle, setCurrentBattle] = useState<CurrentBattle>(null);
+  const [nextBattleCount, setNextBattleCount] = useState<number>(0);
+  const [startingBattle, setStartingBattle] = useState(false);
+
+
   // ═══ Auth state (linked to operator) ═══
   const [session, setSession] = useState<any>(null);
   const [authReady, setAuthReady] = useState(false);
