@@ -982,7 +982,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       .filter(Boolean) as CasePrize[];
   };
   return (
-    <div className="min-h-screen text-white" style={bgStyle}>
+    <div className={`${lobbyEmbed ? '' : 'min-h-screen'} text-white`} style={lobbyEmbed ? { color: 'inherit' } : bgStyle}>
       {/* Header */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/40 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
