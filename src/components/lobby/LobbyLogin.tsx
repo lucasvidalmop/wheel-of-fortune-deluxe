@@ -88,19 +88,19 @@ export default function LobbyLogin({
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className="min-h-[100dvh] flex flex-col relative pt-safe pb-safe">
       {showLobbyPill && (
-        <div className="absolute top-5 left-5 z-20">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/80 text-xs font-medium backdrop-blur-md" style={{ fontFamily: fontBody }}>
+        <div className="absolute top-[max(env(safe-area-inset-top),1rem)] left-4 z-20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/80 text-xs font-medium backdrop-blur-md" style={{ fontFamily: fontBody }}>
             <Home size={13} /> Lobby
           </div>
         </div>
       )}
 
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-[420px] bg-[#0a0a0f]/85 backdrop-blur-xl border border-white/10 rounded-2xl p-7 md:p-9 shadow-2xl">
+      <div className="flex-1 flex items-center justify-center px-4 py-10 sm:py-14">
+        <div className="w-full max-w-[420px] bg-[#0a0a0f]/85 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 md:p-9 shadow-2xl">
           {logoUrl && (
-            <img src={logoUrl} alt="Logo" className="mx-auto h-16 md:h-20 object-contain mb-5" />
+            <img src={logoUrl} alt="Logo" className="mx-auto h-14 sm:h-16 md:h-20 object-contain mb-4 sm:mb-5" />
           )}
           <h1
             className="text-3xl md:text-4xl font-bold text-center text-white uppercase tracking-wide leading-tight"
