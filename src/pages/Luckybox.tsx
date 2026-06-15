@@ -5,6 +5,7 @@ import { Coins, Eye, LogOut, Package, Sparkles, X, HelpCircle } from 'lucide-rea
 import ScratchCell from '@/components/casino/ScratchCell';
 import { scheduleCaseTicks, cancelCaseTicks, primeCaseTicks } from '@/lib/caseTickSound';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
+import { useLobbyEmbed } from '@/contexts/LobbyEmbed';
 
 const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
 let prizeWinAudio: HTMLAudioElement | null = null;
