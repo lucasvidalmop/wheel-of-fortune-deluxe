@@ -41,10 +41,11 @@ Deno.serve(async (req) => {
     }
 
     // Discover tags of operator's other products to suggest defaults for hrefs.
-    const [{ data: bets }, { data: lucky }, { data: wheel }] = await Promise.all([
+    const [{ data: bets }, { data: lucky }, { data: wheel }, { data: refLink }] = await Promise.all([
       supabase.from("bets_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
       supabase.from("luckybox_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
       supabase.from("wheel_configs").select("slug").eq("user_id", cfg.owner_id).maybeSingle().then((r) => r as any),
+      supabase.from("referral_links").select("code, created_at").eq("owner_id", cfg.owner_id).eq("is_active", true).order("created_at", { ascending: true }).limit(1).maybeSingle(),
     ]);
 
     // Prefer Luckybox coin assets, fall back to Bets — they reflect the operator's brand.
@@ -59,6 +60,7 @@ Deno.serve(async (req) => {
       pageConfig: cfg.page_config || {},
       coinIconUrl,
       coinName,
+      gorjetaRef: (refLink as any)?.code || "",
       productTags: {
         bets: bets?.tag || "",
         luckybox: lucky?.tag || "",
