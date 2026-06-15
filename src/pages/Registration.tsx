@@ -78,9 +78,11 @@ const Registration = () => {
       };
       localStorage.setItem('gorjeta_session_v1', JSON.stringify(sess));
     } catch { /* ignore */ }
+    // Aguarda a animação do SlotMachineSuccess concluir antes de voltar ao lobby
+    // (phases: reveal ~2800ms + tempo para o usuário ver a tela de sucesso)
     const t = setTimeout(() => {
       window.location.href = `/lobby=${encodeURIComponent(lobbyReturnTag)}`;
-    }, 1800);
+    }, 6000);
     return () => clearTimeout(t);
   }, [success, lobbyReturnTag, accountId, email, name]);
 
