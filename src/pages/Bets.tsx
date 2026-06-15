@@ -2276,7 +2276,7 @@ const Bets = ({ tag }: BetsPageProps) => {
 
       {/* Bet slip */}
       {slip && (
-        <div className="fixed inset-0 z-30 bg-black/75 flex items-end sm:items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 bg-black/75 flex items-end sm:items-center justify-center p-4"
           onClick={() => setSlip(null)}>
           <div
             className="w-full max-w-sm rounded-2xl p-5 relative overflow-hidden"
@@ -2398,8 +2398,12 @@ const Bets = ({ tag }: BetsPageProps) => {
       {authed && ticketDraft.length > 0 && !ticketOpen && (
         <button
           onClick={() => setTicketOpen(true)}
-          className="fixed bottom-4 right-4 z-40 px-4 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 transition hover:scale-105"
-          style={{ background: accent, color: '#000' }}
+          className="fixed right-4 z-50 px-4 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 transition hover:scale-105"
+          style={{
+            background: accent,
+            color: '#000',
+            bottom: lobbyEmbed ? 'calc(env(safe-area-inset-bottom, 0px) + 88px)' : '1rem',
+          }}
         >
           <Ticket size={18} />
           Meu Bilhete
