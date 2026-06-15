@@ -1,36 +1,20 @@
-import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { useEffect, useMemo, useState, lazy, Suspense, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, LogOut, Home, ArrowLeft, ExternalLink } from 'lucide-react';
-import { optimizedImage } from '@/lib/imageUrl';
+import { Loader2 } from 'lucide-react';
 import { getLobbySession, clearLobbySession, type LobbySession } from '@/lib/lobbySession';
 import { LobbyEmbedProvider } from '@/contexts/LobbyEmbed';
 import LobbyLogin from '@/components/lobby/LobbyLogin';
+import LobbyShell, { type LobbyTheme } from '@/components/lobby/LobbyShell';
+import LobbyHome, { type PromoCard } from '@/components/lobby/LobbyHome';
+import LobbyProfile from '@/components/lobby/LobbyProfile';
+import type { LobbyTab } from '@/components/lobby/LobbyBottomNav';
+import type { ProductKey } from '@/components/lobby/LobbyPromoCard';
 
 const Bets = lazy(() => import('./Bets.tsx'));
 const Roleta = lazy(() => import('./Roleta.tsx'));
 const Luckybox = lazy(() => import('./Luckybox.tsx'));
 
-type ProductKey = 'roleta' | 'batalha' | 'luckybox' | 'apostas';
-type View = 'login' | 'home' | ProductKey;
-
-interface CardConfig {
-  key: ProductKey;
-  enabled: boolean;
-  title: string;
-  subtitle?: string;
-  image_url?: string;
-  href?: string;
-  order?: number;
-}
-
-interface LobbyTheme {
-  primary?: string;
-  bg_color?: string;
-  text_color?: string;
-  heading_font?: string;
-  body_font?: string;
-  overlay_strength?: number; // 0..100
-}
+type View = 'login' | 'home' | 'perfil' | ProductKey;
 
 interface LobbyLoginConfig {
   title?: string;
@@ -49,22 +33,22 @@ interface LobbyPageConfig {
   site_description?: string;
   bg_image_url?: string;
   logo_url?: string;
-  cards?: CardConfig[];
+  cards?: PromoCard[];
   footer_text?: string;
   theme?: LobbyTheme;
   login?: LobbyLoginConfig;
 }
 
-const DEFAULT_CARDS = (tags: { bets: string; luckybox: string; roleta: string }): CardConfig[] => [
-  { key: 'roleta', enabled: !!tags.roleta, title: 'Roleta', subtitle: 'Gire e ganhe prêmios', order: 1 },
+const DEFAULT_CARDS = (tags: { bets: string; luckybox: string; roleta: string }): PromoCard[] => [
+  { key: 'roleta', enabled: !!tags.roleta, title: 'Roleta', subtitle: 'Gire e ganhe prêmios incríveis', order: 1 },
   { key: 'apostas', enabled: !!tags.bets, title: 'Apostas', subtitle: 'Aposte nos jogos do dia', order: 2 },
   { key: 'luckybox', enabled: !!tags.luckybox, title: 'Luckybox', subtitle: 'Abra caixas e descubra prêmios', order: 3 },
-  { key: 'batalha', enabled: true, title: 'Batalha de Slots', subtitle: 'Competição ao vivo', order: 4 },
+  { key: 'batalha', enabled: true, title: 'Batalha de Slots', subtitle: 'Competição ao vivo entre apostadores', order: 4 },
 ];
 
 const ViewFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--lobby-primary, #00d4ff)' }} />
   </div>
 );
 
@@ -73,9 +57,12 @@ const Lobby = ({ tag }: { tag: string }) => {
   const [notFound, setNotFound] = useState(false);
   const [pageConfig, setPageConfig] = useState<LobbyPageConfig>({});
   const [productTags, setProductTags] = useState({ bets: '', luckybox: '', roleta: '' });
+  // Hidrata sessão de forma síncrona — evita flicker para a tela de login.
   const [session, setSession] = useState<LobbySession | null>(() => getLobbySession());
   const [view, setView] = useState<View>(() => (getLobbySession() ? 'home' : 'login'));
+  const [coins, setCoins] = useState<number | null>(null);
 
+  // ─── Carrega config do lobby ───
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -101,6 +88,30 @@ const Lobby = ({ tag }: { tag: string }) => {
     return () => { alive = false; };
   }, [tag]);
 
+  // ─── Prefetch dos módulos após login (transição instantânea) ───
+  useEffect(() => {
+    if (!session) return;
+    // dispara em background, sem await
+    void import('./Bets.tsx');
+    void import('./Roleta.tsx');
+    void import('./Luckybox.tsx');
+  }, [session]);
+
+  // ─── Coins (tokens_balance) ───
+  const fetchCoins = useCallback(async () => {
+    if (!session?.wheel_user_id) { setCoins(null); return; }
+    try {
+      const { data } = await (supabase as any)
+        .from('wheel_users')
+        .select('tokens_balance')
+        .eq('id', session.wheel_user_id)
+        .maybeSingle();
+      if (typeof data?.tokens_balance === 'number') setCoins(data.tokens_balance);
+    } catch { /* ignore */ }
+  }, [session?.wheel_user_id]);
+
+  useEffect(() => { void fetchCoins(); }, [fetchCoins]);
+
   const cards = useMemo(() => {
     const defaults = DEFAULT_CARDS(productTags);
     const configured = pageConfig.cards || [];
@@ -111,79 +122,70 @@ const Lobby = ({ tag }: { tag: string }) => {
     return merged.filter((c) => c.enabled).sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
   }, [pageConfig.cards, productTags]);
 
-  const bg = optimizedImage(pageConfig.bg_image_url, { width: 1920, quality: 70 });
-
-  const theme = pageConfig.theme || {};
+  const theme: LobbyTheme = pageConfig.theme || {};
   const loginCfg = pageConfig.login || {};
-  const primary = theme.primary || '#00d4ff';
-  const bgColor = theme.bg_color || '#0a0a0f';
-  const textColor = theme.text_color || '#ffffff';
-  const headingFont = theme.heading_font || 'Bebas Neue';
-  const bodyFont = theme.body_font || 'Barlow';
-  const fontHead = `${headingFont}, sans-serif`;
-  const fontBody = `${bodyFont}, sans-serif`;
-  const overlay = Math.max(0, Math.min(100, theme.overlay_strength ?? 65)) / 100;
 
-  const handleSignOut = () => {
+  const handleSignOut = useCallback(() => {
     clearLobbySession();
     setSession(null);
+    setCoins(null);
     setView('login');
-  };
+  }, []);
 
-  const handleSignedIn = () => {
+  const handleSignedIn = useCallback(() => {
     setSession(getLobbySession());
     setView('home');
-  };
+  }, []);
 
-  const openProduct = (key: ProductKey) => {
+  const openProduct = useCallback((key: ProductKey) => {
     if (!session) { setView('login'); return; }
     if (key === 'batalha') {
-      // Abre a página pública de depósito da Batalha de Slots do operador.
       window.open(`/depbs=${tag}`, '_blank', 'noopener,noreferrer');
       return;
     }
     setView(key);
-  };
+  }, [session, tag]);
 
+  const handleTabChange = useCallback((tab: LobbyTab) => {
+    if (tab === 'home' || tab === 'promos') setView('home');
+    else if (tab === 'perfil') setView('perfil');
+  }, []);
+
+  const activeTab: LobbyTab = view === 'perfil' ? 'perfil' : 'home';
+
+  // ─── Loading inicial ───
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-[100dvh] flex items-center justify-center bg-[#0a0a0f]">
+        <Loader2 className="h-8 w-8 animate-spin text-white/70" />
       </div>
     );
   }
   if (notFound) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-[#0a0a0f] text-white px-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Lobby indisponível</h1>
-          <p className="text-muted-foreground">Verifique o link e tente novamente.</p>
+          <p className="text-white/60">Verifique o link e tente novamente.</p>
         </div>
       </div>
     );
   }
 
-  // ─── Background wrapper ───
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <div
-      className="min-h-screen relative overflow-hidden"
-      style={{ background: bgColor, color: textColor, ['--lobby-primary' as any]: primary }}
-    >
-      {bg && (
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bg})` }} />
-      )}
-      <div
-        className="absolute inset-0"
-        style={{ background: `linear-gradient(to bottom, rgba(0,0,0,${overlay * 0.75}), rgba(0,0,0,${overlay}), rgba(0,0,0,${Math.min(1, overlay * 1.35)}))` }}
-      />
-      <div className="relative z-10">{children}</div>
-    </div>
-  );
-
-  // ─── Login view ───
+  // ─── Login (sem header/nav) ───
   if (view === 'login' || !session) {
     return (
-      <Wrapper>
+      <LobbyShell
+        theme={theme}
+        bgImageUrl={pageConfig.bg_image_url}
+        logoUrl={pageConfig.logo_url}
+        session={null}
+        coins={null}
+        activeTab="home"
+        onTabChange={() => {}}
+        hideHeader
+        hideNav
+      >
         <LobbyLogin
           tag={tag}
           logoUrl={pageConfig.logo_url}
@@ -196,332 +198,45 @@ const Lobby = ({ tag }: { tag: string }) => {
           signupUrl={loginCfg.signup_url}
           showSignup={loginCfg.show_signup !== false}
           showLobbyPill={loginCfg.show_lobby_pill !== false}
-          primary={primary}
-          headingFont={headingFont}
-          bodyFont={bodyFont}
+          primary={theme.primary || '#00d4ff'}
+          headingFont={theme.heading_font || 'Bebas Neue'}
+          bodyFont={theme.body_font || 'Barlow'}
           onSignedIn={handleSignedIn}
         />
-      </Wrapper>
+      </LobbyShell>
     );
   }
 
-  // ─── Header (visible on home + embedded views) ───
-  const Header = ({ showBack }: { showBack: boolean }) => (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-black/30 border-b border-white/[0.06]">
-      <div className="max-w-7xl mx-auto px-5 md:px-8 py-3.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          {showBack ? (
-            <button
-              onClick={() => setView('home')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white text-[11px] uppercase tracking-[0.18em] font-semibold transition border border-white/10"
-              style={{ fontFamily: fontBody }}
-            >
-              <ArrowLeft size={13} /> Lobby
-            </button>
-          ) : (
-            <div className="inline-flex items-center gap-2.5 text-white min-w-0">
-              {pageConfig.logo_url ? (
-                <img src={pageConfig.logo_url} alt="Logo" className="h-8 object-contain" />
-              ) : (
-                <div className="h-8 w-8 rounded-md bg-white/10 flex items-center justify-center">
-                  <Home size={16} />
-                </div>
-              )}
-              <span
-                className="hidden sm:inline text-[11px] uppercase tracking-[0.28em] text-white/50 font-medium truncate"
-                style={{ fontFamily: fontBody }}
-              >
-                Lobby
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end leading-tight">
-            <span
-              className="text-[9px] uppercase tracking-[0.24em] text-white/40"
-              style={{ fontFamily: fontBody }}
-            >
-              Conectado
-            </span>
-            <span
-              className="text-xs text-white/85 truncate max-w-[180px]"
-              style={{ fontFamily: fontBody, fontWeight: 600 }}
-            >
-              {session.name || session.email}
-            </span>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-red-500/80 text-white text-[11px] uppercase tracking-[0.18em] font-semibold transition border border-white/10"
-            style={{ fontFamily: fontBody }}
-          >
-            <LogOut size={13} /> Sair
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-
-  // ─── Home (composição moderna assimétrica) ───
-  if (view === 'home') {
-    const featured = cards[0];
-    const rest = cards.slice(1);
-    const productMeta: Record<ProductKey, { tag: string; icon: string; accent: string }> = {
-      roleta: { tag: 'Jackpot', icon: '🎰', accent: 'from-amber-400/40 to-orange-600/10' },
-      apostas: { tag: 'Esportes', icon: '⚽', accent: 'from-emerald-400/40 to-sky-600/10' },
-      luckybox: { tag: 'Caixas', icon: '🎁', accent: 'from-fuchsia-400/40 to-purple-600/10' },
-      batalha: { tag: 'Ao vivo', icon: '⚔️', accent: 'from-rose-400/40 to-red-600/10' },
-    };
-
-    return (
-      <Wrapper>
-        <Header showBack={false} />
-
-        {/* Decorative ambient blobs */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-32 -left-24 w-[520px] h-[520px] rounded-full bg-white/[0.04] blur-3xl" />
-          <div className="absolute top-1/3 -right-32 w-[480px] h-[480px] rounded-full bg-white/[0.05] blur-3xl" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-5 md:px-8 pt-10 md:pt-16 pb-16">
-          {/* Hero block — editorial style */}
-          <div className="grid grid-cols-12 gap-6 mb-10 md:mb-14 items-end">
-            <div className="col-span-12 md:col-span-8">
-              <div
-                className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-white/50 mb-4"
-                style={{ fontFamily: fontBody }}
-              >
-                <span className="h-px w-8 bg-white/40" />
-                {session.name ? `Olá, ${session.name.split(' ')[0]}` : 'Bem-vindo'}
-              </div>
-              <h1
-                className="text-white leading-[0.88] tracking-tight"
-                style={{
-                  fontFamily: fontHead,
-                  fontSize: 'clamp(56px, 9vw, 132px)',
-                  letterSpacing: '0.01em',
-                }}
-              >
-                {pageConfig.site_title || 'Central de Promoções'}
-              </h1>
-              {pageConfig.site_description && (
-                <p
-                  className="mt-5 text-white/65 max-w-xl text-base md:text-lg leading-relaxed"
-                  style={{ fontFamily: fontBody }}
-                >
-                  {pageConfig.site_description}
-                </p>
-              )}
-            </div>
-            <div className="hidden md:flex col-span-4 justify-end">
-              <div className="text-right">
-                <div
-                  className="text-[10px] uppercase tracking-[0.32em] text-white/40 mb-1"
-                  style={{ fontFamily: fontBody }}
-                >
-                  Promoções ativas
-                </div>
-                <div
-                  className="text-white/90"
-                  style={{ fontFamily: fontHead, fontSize: '88px', lineHeight: 0.9 }}
-                >
-                  {String(cards.length).padStart(2, '0')}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {cards.length === 0 ? (
-            <div
-              className="text-center text-white/60 py-20 border border-dashed border-white/10 rounded-3xl"
-              style={{ fontFamily: fontBody }}
-            >
-              Nenhuma promoção configurada.
-            </div>
-          ) : (
-            <div className="grid grid-cols-12 gap-5 md:gap-6">
-              {/* Featured card — large */}
-              {featured && (() => {
-                const meta = productMeta[featured.key];
-                return (
-                  <button
-                    onClick={() => openProduct(featured.key)}
-                    className="group relative col-span-12 lg:col-span-7 row-span-2 text-left overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.01] hover:border-white/30 transition-all duration-500"
-                    style={{ minHeight: '440px' }}
-                  >
-                    {featured.image_url ? (
-                      <img
-                        src={optimizedImage(featured.image_url, { width: 1200, quality: 80 }) || featured.image_url}
-                        alt={featured.title}
-                        className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-[1.04] transition-transform duration-[1200ms] ease-out"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-br ${meta.accent}`}>
-                        <div className="absolute inset-0 flex items-center justify-center text-[180px] opacity-60">
-                          {meta.icon}
-                        </div>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
-
-                    <div className="relative h-full flex flex-col justify-between p-6 md:p-9 z-10">
-                      <div className="flex items-start justify-between gap-3">
-                        <span
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] uppercase tracking-[0.24em] text-white/90"
-                          style={{ fontFamily: fontBody, fontWeight: 600 }}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                          Destaque
-                        </span>
-                        <span
-                          className="text-white/40 text-sm"
-                          style={{ fontFamily: fontBody, fontWeight: 600 }}
-                        >
-                          01
-                        </span>
-                      </div>
-
-                      <div>
-                        <div
-                          className="text-[10px] uppercase tracking-[0.32em] text-white/60 mb-2"
-                          style={{ fontFamily: fontBody, fontWeight: 600 }}
-                        >
-                          {meta.tag}
-                          {featured.key === 'batalha' && <span className="ml-2 text-white/40">· abre em nova aba</span>}
-                        </div>
-                        <h2
-                          className="text-white leading-[0.9]"
-                          style={{
-                            fontFamily: fontHead,
-                            fontSize: 'clamp(44px, 6vw, 76px)',
-                            letterSpacing: '0.01em',
-                          }}
-                        >
-                          {featured.title}
-                        </h2>
-                        {featured.subtitle && (
-                          <p
-                            className="mt-3 text-white/75 max-w-md text-base md:text-lg"
-                            style={{ fontFamily: fontBody }}
-                          >
-                            {featured.subtitle}
-                          </p>
-                        )}
-                        <div
-                          className="mt-6 inline-flex items-center gap-2 text-white text-xs uppercase tracking-[0.24em] group-hover:gap-4 transition-all"
-                          style={{ fontFamily: fontBody, fontWeight: 700 }}
-                        >
-                          <span className="h-px w-8 bg-white group-hover:w-14 transition-all" />
-                          Entrar agora
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })()}
-
-              {/* Secondary cards — vertical stack */}
-              {rest.map((card, idx) => {
-                const meta = productMeta[card.key];
-                const num = String(idx + 2).padStart(2, '0');
-                return (
-                  <button
-                    key={card.key}
-                    onClick={() => openProduct(card.key)}
-                    className="group relative col-span-12 sm:col-span-6 lg:col-span-5 text-left overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/25 hover:-translate-y-1 transition-all duration-500"
-                    style={{ minHeight: '210px' }}
-                  >
-                    {card.image_url ? (
-                      <img
-                        src={optimizedImage(card.image_url, { width: 700, quality: 75 }) || card.image_url}
-                        alt={card.title}
-                        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-[1.06] group-hover:opacity-90 transition-all duration-700"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-br ${meta.accent}`} />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/20" />
-
-                    <div className="relative h-full flex items-center gap-5 p-6 md:p-7 z-10">
-                      <div className="shrink-0 h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/[0.08] border border-white/15 backdrop-blur-md flex items-center justify-center text-3xl md:text-4xl group-hover:bg-white/15 transition">
-                        {meta.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1.5">
-                          <span
-                            className="text-[9px] uppercase tracking-[0.28em] text-white/55"
-                            style={{ fontFamily: fontBody, fontWeight: 600 }}
-                          >
-                            {meta.tag}
-                          </span>
-                          {card.key === 'batalha' && (
-                            <span
-                              className="inline-flex items-center gap-1 text-[9px] text-white/40"
-                              style={{ fontFamily: fontBody }}
-                            >
-                              <ExternalLink size={9} /> nova aba
-                            </span>
-                          )}
-                        </div>
-                        <h3
-                          className="text-white leading-[0.95] truncate"
-                          style={{
-                            fontFamily: fontHead,
-                            fontSize: 'clamp(28px, 3.4vw, 40px)',
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {card.title}
-                        </h3>
-                        {card.subtitle && (
-                          <p
-                            className="text-white/65 text-sm mt-1 line-clamp-1"
-                            style={{ fontFamily: fontBody }}
-                          >
-                            {card.subtitle}
-                          </p>
-                        )}
-                      </div>
-                      <div
-                        className="hidden md:flex shrink-0 self-start text-white/30 text-sm group-hover:text-white/70 transition"
-                        style={{ fontFamily: fontBody, fontWeight: 600 }}
-                      >
-                        {num}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {pageConfig.footer_text && (
-            <footer
-              className="mt-16 pt-6 border-t border-white/10 text-center text-white/40 text-xs uppercase tracking-[0.24em]"
-              style={{ fontFamily: fontBody }}
-            >
-              {pageConfig.footer_text}
-            </footer>
-          )}
-        </div>
-      </Wrapper>
-    );
-  }
-
-  // ─── Promotional view embedded ───
+  // ─── Conteúdo das views ───
   const embedValue = {
     session,
     onExitToLobby: () => setView('home'),
     onSignOut: handleSignOut,
   };
 
-  return (
-    <Wrapper>
-      <Header showBack={true} />
+  let content: React.ReactNode;
+  if (view === 'home') {
+    content = (
+      <LobbyHome
+        title={pageConfig.site_title || 'Central de promoções'}
+        description={pageConfig.site_description}
+        greeting={session.name ? `Olá, ${session.name.split(' ')[0]}` : 'Bem-vindo'}
+        cards={cards}
+        footerText={pageConfig.footer_text}
+        onOpenProduct={openProduct}
+      />
+    );
+  } else if (view === 'perfil') {
+    content = (
+      <LobbyProfile
+        session={session}
+        coins={coins}
+        onSignOut={handleSignOut}
+        onBackToHome={() => setView('home')}
+      />
+    );
+  } else {
+    content = (
       <LobbyEmbedProvider value={embedValue}>
         <Suspense fallback={<ViewFallback />}>
           {view === 'apostas' && productTags.bets && <Bets tag={productTags.bets} />}
@@ -529,7 +244,21 @@ const Lobby = ({ tag }: { tag: string }) => {
           {view === 'luckybox' && productTags.luckybox && <Luckybox tag={productTags.luckybox} />}
         </Suspense>
       </LobbyEmbedProvider>
-    </Wrapper>
+    );
+  }
+
+  return (
+    <LobbyShell
+      theme={theme}
+      bgImageUrl={pageConfig.bg_image_url}
+      logoUrl={pageConfig.logo_url}
+      session={session}
+      coins={coins}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+    >
+      {content}
+    </LobbyShell>
   );
 };
 
