@@ -11,6 +11,16 @@ interface LobbyLoginProps {
   title?: string;
   subtitle?: string;
   initialEmail?: string;
+  buttonLabel?: string;
+  rememberLabel?: string;
+  signupText?: string;
+  signupLinkText?: string;
+  signupUrl?: string;
+  showSignup?: boolean;
+  showLobbyPill?: boolean;
+  primary?: string;
+  headingFont?: string;
+  bodyFont?: string;
   onSignedIn: () => void;
 }
 
@@ -21,12 +31,26 @@ export default function LobbyLogin({
   title = 'Acesse o Lobby',
   subtitle = 'Entre com seu e-mail e ID da conta',
   initialEmail = '',
+  buttonLabel = 'Entrar',
+  rememberLabel = 'Lembrar sessão',
+  signupText = 'Crie sua conta na gorjeta',
+  signupLinkText = 'Clique aqui',
+  signupUrl,
+  showSignup = true,
+  showLobbyPill = true,
+  primary = '#00d4ff',
+  headingFont = 'Bebas Neue',
+  bodyFont = 'Barlow',
   onSignedIn,
 }: LobbyLoginProps) {
   const [email, setEmail] = useState(initialEmail);
   const [accountId, setAccountId] = useState('');
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const fontHead = `${headingFont}, sans-serif`;
+  const fontBody = `${bodyFont}, sans-serif`;
+  const finalSignupUrl = signupUrl || `/gorjeta?return=lobby:${encodeURIComponent(tag)}`;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,12 +89,13 @@ export default function LobbyLogin({
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      {/* Top-left Lobby pill */}
-      <div className="absolute top-5 left-5 z-20">
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/80 text-xs font-medium backdrop-blur-md" style={{ fontFamily: fontBody }}>
-          <Home size={13} /> Lobby
+      {showLobbyPill && (
+        <div className="absolute top-5 left-5 z-20">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/80 text-xs font-medium backdrop-blur-md" style={{ fontFamily: fontBody }}>
+            <Home size={13} /> Lobby
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-[420px] bg-[#0a0a0f]/85 backdrop-blur-xl border border-white/10 rounded-2xl p-7 md:p-9 shadow-2xl">
@@ -99,8 +124,8 @@ export default function LobbyLogin({
                 required
                 autoComplete="email"
                 placeholder="seu@email.com"
-                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/30 placeholder:text-white/20 transition"
-                style={{ fontFamily: fontBody }}
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 placeholder:text-white/20 transition"
+                style={{ fontFamily: fontBody, boxShadow: 'none', ['--tw-ring-color' as any]: `${primary}80` }}
               />
             </div>
             <div>
@@ -114,8 +139,8 @@ export default function LobbyLogin({
                 required
                 autoComplete="username"
                 placeholder="Digite seu ID"
-                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/30 placeholder:text-white/20 transition"
-                style={{ fontFamily: fontBody }}
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 placeholder:text-white/20 transition"
+                style={{ fontFamily: fontBody, ['--tw-ring-color' as any]: `${primary}80` }}
               />
             </div>
 
@@ -132,32 +157,35 @@ export default function LobbyLogin({
                 className="text-sm text-white/70 select-none cursor-pointer"
                 style={{ fontFamily: fontBody }}
               >
-                Lembrar sessão
+                {rememberLabel}
               </label>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#00d4ff] text-[#0a0a0f] font-semibold hover:bg-[#00b8e6] active:scale-[0.98] transition disabled:opacity-60 shadow-lg shadow-[#00d4ff]/20"
-              style={{ fontFamily: fontBody }}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold active:scale-[0.98] transition disabled:opacity-60 shadow-lg"
+              style={{ fontFamily: fontBody, background: primary, color: '#0a0a0f', boxShadow: `0 10px 30px -10px ${primary}55` }}
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Entrando...' : buttonLabel}
             </button>
           </form>
 
-          <div className="mt-6 text-center" style={{ fontFamily: fontBody }}>
-            <p className="text-sm text-white/50">
-              Crie sua conta na gorjeta{' '}
-              <a
-                href={`/gorjeta?return=lobby:${encodeURIComponent(tag)}`}
-                className="text-[#00d4ff] hover:text-[#00e5ff] font-semibold underline underline-offset-4 transition"
-              >
-                Clique aqui
-              </a>
-            </p>
-          </div>
+          {showSignup && (
+            <div className="mt-6 text-center" style={{ fontFamily: fontBody }}>
+              <p className="text-sm text-white/50">
+                {signupText}{' '}
+                <a
+                  href={finalSignupUrl}
+                  className="font-semibold underline underline-offset-4 transition hover:opacity-80"
+                  style={{ color: primary }}
+                >
+                  {signupLinkText}
+                </a>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
