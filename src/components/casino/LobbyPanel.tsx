@@ -98,7 +98,7 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
   const [exists, setExists] = useState(false);
   const [tag, setTag] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [pc, setPc] = useState<PageConfig>({ cards: DEFAULT_CARDS });
+  const [pc, setPc] = useState<PageConfig>({ cards: DEFAULT_CARDS, theme: DEFAULT_THEME, login: DEFAULT_LOGIN });
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -114,16 +114,25 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
         setTag(data.tag);
         setIsActive(data.is_active);
         const conf = (data.page_config || {}) as PageConfig;
-        // merge default cards with stored
         const stored = conf.cards || [];
         const merged = DEFAULT_CARDS.map((d) => ({ ...d, ...(stored.find((s) => s.key === d.key) || {}) }));
-        setPc({ ...conf, cards: merged });
+        setPc({
+          ...conf,
+          cards: merged,
+          theme: { ...DEFAULT_THEME, ...(conf.theme || {}) },
+          login: { ...DEFAULT_LOGIN, ...(conf.login || {}) },
+        });
       } else {
-        setPc({ cards: DEFAULT_CARDS });
+        setPc({ cards: DEFAULT_CARDS, theme: DEFAULT_THEME, login: DEFAULT_LOGIN });
       }
       setLoading(false);
     })();
   }, [ownerId]);
+
+  const updateTheme = (patch: Partial<LobbyTheme>) =>
+    setPc((p) => ({ ...p, theme: { ...DEFAULT_THEME, ...(p.theme || {}), ...patch } }));
+  const updateLogin = (patch: Partial<LobbyLoginConfig>) =>
+    setPc((p) => ({ ...p, login: { ...DEFAULT_LOGIN, ...(p.login || {}), ...patch } }));
 
   const save = async () => {
     const cleanTag = slugify(tag);
