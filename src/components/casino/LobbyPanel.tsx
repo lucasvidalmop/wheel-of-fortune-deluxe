@@ -492,6 +492,19 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
             <label className="block text-xs font-semibold text-muted-foreground mb-1">URL do cadastro (vazio = página de gorjeta do operador)</label>
             <input type="text" value={pc.login?.signup_url || ''} onChange={(e) => updateLogin({ signup_url: e.target.value })} placeholder="https://..." className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />
           </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Identidade no topo do login</label>
+            <select
+              value={pc.login?.brand_mode || 'logo_text'}
+              onChange={(e) => updateLogin({ brand_mode: e.target.value as 'logo_text' | 'logo' | 'text' })}
+              className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm"
+            >
+              <option value="logo_text">Logo + Texto (título)</option>
+              <option value="logo">Somente logo</option>
+              <option value="text">Somente texto (título)</option>
+            </select>
+            <p className="text-[11px] text-muted-foreground mt-1">Defina como a marca aparece no card de login. "Somente logo" oculta o título; "Somente texto" oculta a imagem.</p>
+          </div>
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input type="checkbox" checked={pc.login?.show_signup !== false} onChange={(e) => updateLogin({ show_signup: e.target.checked })} />
             Mostrar link de cadastro
