@@ -107,16 +107,41 @@ const Lobby = ({ tag }: { tag: string }) => {
 
   // ─── Coins (tokens_balance) ───
   const fetchCoins = useCallback(async () => {
-    if (!session?.wheel_user_id) { setCoins(null); return; }
+    if (!session) { setCoins(null); return; }
     try {
+      let userId = session.wheel_user_id;
+      // Fallback: resolve wheel_user_id by email + account_id (for sessions
+      // created before wheel_user_id was persisted).
+      if (!userId && session.email && session.account_id) {
+        const { data: u } = await (supabase as any)
+          .from('wheel_users')
+          .select('id')
+          .ilike('email', session.email.trim())
+          .eq('account_id', session.account_id.trim())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (u?.id) {
+          userId = u.id;
+          try {
+            const raw = localStorage.getItem('gorjeta_session_v1');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              parsed.wheel_user_id = userId;
+              localStorage.setItem('gorjeta_session_v1', JSON.stringify(parsed));
+            }
+          } catch { /* ignore */ }
+        }
+      }
+      if (!userId) { setCoins(null); return; }
       const { data } = await (supabase as any)
         .from('wheel_users')
         .select('tokens_balance')
-        .eq('id', session.wheel_user_id)
+        .eq('id', userId)
         .maybeSingle();
       if (typeof data?.tokens_balance === 'number') setCoins(data.tokens_balance);
     } catch { /* ignore */ }
-  }, [session?.wheel_user_id]);
+  }, [session?.wheel_user_id, session?.email, session?.account_id]);
 
   useEffect(() => { void fetchCoins(); }, [fetchCoins]);
 

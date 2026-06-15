@@ -62,6 +62,7 @@ const Registration = () => {
   const [success, setSuccess] = useState(false);
   const [spinsGranted, setSpinsGranted] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
+  const [wheelUserId, setWheelUserId] = useState<string>('');
 
   // Retorno automático ao lobby após cadastro (quando vier ?return=lobby:<tag>)
   const returnParam = searchParams.get('return') || '';
@@ -70,6 +71,7 @@ const Registration = () => {
     if (!success || !lobbyReturnTag) return;
     try {
       const sess = {
+        wheel_user_id: wheelUserId || undefined,
         account_id: accountId.trim(),
         email: email.trim(),
         name: name.trim(),
@@ -84,7 +86,7 @@ const Registration = () => {
       window.location.href = `/lobby=${encodeURIComponent(lobbyReturnTag)}`;
     }, 6000);
     return () => clearTimeout(t);
-  }, [success, lobbyReturnTag, accountId, email, name]);
+  }, [success, lobbyReturnTag, accountId, email, name, wheelUserId]);
 
 
   useEffect(() => {
@@ -252,6 +254,7 @@ const Registration = () => {
       if (result?.success) {
         setSpinsGranted(0);
         if (result.slug) setWheelSlug(result.slug);
+        if (result.user_id) setWheelUserId(String(result.user_id));
         setSuccess(true);
 
         toast.success('Inscrição realizada com sucesso!');
