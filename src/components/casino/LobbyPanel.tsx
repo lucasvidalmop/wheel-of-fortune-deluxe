@@ -75,6 +75,7 @@ const DEFAULT_LOGIN: LobbyLoginConfig = {
   signup_url: '',
   show_signup: true,
   show_lobby_pill: true,
+  brand_mode: 'logo_text',
 };
 
 const PRODUCT_LABELS: Record<ProductKey, string> = {
