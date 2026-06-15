@@ -239,6 +239,7 @@ const Lobby = ({ tag }: { tag: string }) => {
           {view === 'apostas' && productTags.bets && <Bets tag={productTags.bets} />}
           {view === 'roleta' && productTags.roleta && <Roleta slugOverride={productTags.roleta} />}
           {view === 'luckybox' && productTags.luckybox && <Luckybox tag={productTags.luckybox} />}
+          {view === 'batalha' && <DepositBS tag={tag} />}
         </Suspense>
       </LobbyEmbedProvider>
     );
