@@ -13,6 +13,7 @@ import type { ProductKey } from '@/components/lobby/LobbyPromoCard';
 const Bets = lazy(() => import('./Bets.tsx'));
 const Roleta = lazy(() => import('./Roleta.tsx'));
 const Luckybox = lazy(() => import('./Luckybox.tsx'));
+const DepositBS = lazy(() => import('./DepositBS.tsx'));
 
 type View = 'login' | 'home' | 'perfil' | ProductKey;
 
@@ -139,15 +140,11 @@ const Lobby = ({ tag }: { tag: string }) => {
 
   const openProduct = useCallback((key: ProductKey) => {
     if (!session) { setView('login'); return; }
-    if (key === 'batalha') {
-      window.open(`/depbs=${tag}`, '_blank', 'noopener,noreferrer');
-      return;
-    }
     setView(key);
-  }, [session, tag]);
+  }, [session]);
 
   const handleTabChange = useCallback((tab: LobbyTab) => {
-    if (tab === 'home' || tab === 'promos') setView('home');
+    if (tab === 'home') setView('home');
     else if (tab === 'perfil') setView('perfil');
   }, []);
 
@@ -242,6 +239,7 @@ const Lobby = ({ tag }: { tag: string }) => {
           {view === 'apostas' && productTags.bets && <Bets tag={productTags.bets} />}
           {view === 'roleta' && productTags.roleta && <Roleta slugOverride={productTags.roleta} />}
           {view === 'luckybox' && productTags.luckybox && <Luckybox tag={productTags.luckybox} />}
+          {view === 'batalha' && <DepositBS tag={tag} />}
         </Suspense>
       </LobbyEmbedProvider>
     );

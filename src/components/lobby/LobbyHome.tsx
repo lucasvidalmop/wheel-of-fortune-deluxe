@@ -79,7 +79,7 @@ const LobbyHome = ({ title, description, greeting, cards, footerText, onOpenProd
                 subtitle={featured.subtitle}
                 imageUrl={featured.image_url}
                 badge={productBadge[featured.key]}
-                external={featured.key === 'batalha'}
+                external={false}
                 featured
                 onClick={() => onOpenProduct(featured.key)}
               />
@@ -93,7 +93,7 @@ const LobbyHome = ({ title, description, greeting, cards, footerText, onOpenProd
               subtitle={card.subtitle}
               imageUrl={card.image_url}
               badge={productBadge[card.key]}
-              external={card.key === 'batalha'}
+              external={false}
               onClick={() => onOpenProduct(card.key)}
             />
           ))}
