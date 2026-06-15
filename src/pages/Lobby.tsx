@@ -85,6 +85,7 @@ const Lobby = ({ tag }: { tag: string }) => {
         setPageConfig(data.pageConfig || {});
         setProductTags(data.productTags || { bets: '', luckybox: '', roleta: '' });
         setCoinIconUrl(data.coinIconUrl || '');
+        setGorjetaRef(data.gorjetaRef || '');
         if (data.pageConfig?.site_title) document.title = data.pageConfig.site_title;
       } catch {
         if (alive) setNotFound(true);
