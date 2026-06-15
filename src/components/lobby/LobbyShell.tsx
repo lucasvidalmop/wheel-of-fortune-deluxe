@@ -19,6 +19,7 @@ interface LobbyShellProps {
   logoUrl?: string;
   session: LobbySession | null;
   coins?: number | null;
+  coinIconUrl?: string;
   activeTab: LobbyTab;
   onTabChange: (tab: LobbyTab) => void;
   /** Hides bottom nav (login screen) */
@@ -34,6 +35,7 @@ const LobbyShell = ({
   logoUrl,
   session,
   coins,
+  coinIconUrl,
   activeTab,
   onTabChange,
   hideNav = false,
