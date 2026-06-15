@@ -390,6 +390,7 @@ const decodeCopy = async (s: string): Promise<Array<{ e: string; o: string }>> =
 const toShortEventId = (id?: string | null) => (id ? id.slice(0, 10) : '');
 
 const Bets = ({ tag }: BetsPageProps) => {
+  const lobbyEmbed = useLobbyEmbed();
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<any | null>(null);
   const [authed, setAuthed] = useState<AuthedUser | null>(null);
