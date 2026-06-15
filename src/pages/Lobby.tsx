@@ -60,6 +60,7 @@ const Lobby = ({ tag }: { tag: string }) => {
   const [notFound, setNotFound] = useState(false);
   const [pageConfig, setPageConfig] = useState<LobbyPageConfig>({});
   const [productTags, setProductTags] = useState({ bets: '', luckybox: '', roleta: '' });
+  const [coinIconUrl, setCoinIconUrl] = useState<string>('');
   // Hidrata sessão de forma síncrona — evita flicker para a tela de login.
   const [session, setSession] = useState<LobbySession | null>(() => getLobbySession());
   const [view, setView] = useState<View>(() => (getLobbySession() ? 'home' : 'login'));
