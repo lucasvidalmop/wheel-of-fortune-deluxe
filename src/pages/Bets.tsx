@@ -1227,7 +1227,7 @@ const Bets = ({ tag }: BetsPageProps) => {
       : { background: bg };
 
   return (
-    <div className="relative isolate min-h-screen overflow-x-hidden" style={{ background: bg, color: text }}>
+    <div className={`relative isolate ${lobbyEmbed ? '' : 'min-h-screen'} overflow-x-hidden`} style={lobbyEmbed ? { color: text } : { background: bg, color: text }}>
       <div aria-hidden className="fixed inset-0 pointer-events-none -z-10" style={pageBackgroundLayerStyle} />
       {/* header */}
       <header className="sticky top-0 z-20 backdrop-blur" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: `1px solid ${accent}33` }}>
