@@ -27,7 +27,7 @@ const LobbyHeader = ({ logoUrl, session, coins, onProfile }: Props) => {
               GORJETA
             </div>
           )}
-          <div className="hidden xs:flex sm:flex flex-col leading-tight min-w-0">
+          <div className="hidden sm:flex flex-col leading-tight min-w-0">
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: 'var(--lobby-font-body, Barlow), sans-serif' }}>
               Olá
             </span>
