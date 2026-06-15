@@ -7,6 +7,7 @@ import LobbyLogin from '@/components/lobby/LobbyLogin';
 import LobbyShell, { type LobbyTheme } from '@/components/lobby/LobbyShell';
 import LobbyHome, { type PromoCard } from '@/components/lobby/LobbyHome';
 import LobbyProfile from '@/components/lobby/LobbyProfile';
+import LobbySEO, { type LobbySEOConfig } from '@/components/lobby/LobbySEO';
 import type { LobbyTab } from '@/components/lobby/LobbyBottomNav';
 import type { ProductKey } from '@/components/lobby/LobbyPromoCard';
 
@@ -38,6 +39,7 @@ interface LobbyPageConfig {
   footer_text?: string;
   theme?: LobbyTheme;
   login?: LobbyLoginConfig;
+  seo?: LobbySEOConfig;
 }
 
 const DEFAULT_CARDS = (tags: { bets: string; luckybox: string; roleta: string }): PromoCard[] => [
@@ -170,39 +172,53 @@ const Lobby = ({ tag }: { tag: string }) => {
   }
 
   // ─── Login (sem header/nav) ───
+  const seoEl = (
+    <LobbySEO
+      tag={tag}
+      config={pageConfig.seo || {}}
+      fallbackTitle={pageConfig.site_title}
+      fallbackDescription={pageConfig.site_description}
+      fallbackImage={pageConfig.bg_image_url}
+    />
+  );
+
   if (view === 'login' || !session) {
     return (
-      <LobbyShell
-        theme={theme}
-        bgImageUrl={pageConfig.bg_image_url}
-        logoUrl={pageConfig.logo_url}
-        session={null}
-        coins={null}
-        activeTab="home"
-        onTabChange={() => {}}
-        hideHeader
-        hideNav
-      >
-        <LobbyLogin
-          tag={tag}
+      <>
+        {seoEl}
+        <LobbyShell
+          theme={theme}
+          bgImageUrl={pageConfig.bg_image_url}
           logoUrl={pageConfig.logo_url}
-          title={loginCfg.title || pageConfig.site_title || 'Acesse o Lobby'}
-          subtitle={loginCfg.subtitle || pageConfig.site_description || 'Entre com seu e-mail e ID da conta'}
-          buttonLabel={loginCfg.button_label}
-          rememberLabel={loginCfg.remember_label}
-          signupText={loginCfg.signup_text}
-          signupLinkText={loginCfg.signup_link_text}
-          signupUrl={loginCfg.signup_url}
-          showSignup={loginCfg.show_signup !== false}
-          showLobbyPill={loginCfg.show_lobby_pill !== false}
-          primary={theme.primary || '#00d4ff'}
-          headingFont={theme.heading_font || 'Bebas Neue'}
-          bodyFont={theme.body_font || 'Barlow'}
-          onSignedIn={handleSignedIn}
-        />
-      </LobbyShell>
+          session={null}
+          coins={null}
+          activeTab="home"
+          onTabChange={() => {}}
+          hideHeader
+          hideNav
+        >
+          <LobbyLogin
+            tag={tag}
+            logoUrl={pageConfig.logo_url}
+            title={loginCfg.title || pageConfig.site_title || 'Acesse o Lobby'}
+            subtitle={loginCfg.subtitle || pageConfig.site_description || 'Entre com seu e-mail e ID da conta'}
+            buttonLabel={loginCfg.button_label}
+            rememberLabel={loginCfg.remember_label}
+            signupText={loginCfg.signup_text}
+            signupLinkText={loginCfg.signup_link_text}
+            signupUrl={loginCfg.signup_url}
+            showSignup={loginCfg.show_signup !== false}
+            showLobbyPill={loginCfg.show_lobby_pill !== false}
+            primary={theme.primary || '#00d4ff'}
+            headingFont={theme.heading_font || 'Bebas Neue'}
+            bodyFont={theme.body_font || 'Barlow'}
+            onSignedIn={handleSignedIn}
+          />
+        </LobbyShell>
+      </>
     );
   }
+
 
   // ─── Conteúdo das views ───
   const embedValue = {
@@ -246,17 +262,20 @@ const Lobby = ({ tag }: { tag: string }) => {
   }
 
   return (
-    <LobbyShell
-      theme={theme}
-      bgImageUrl={pageConfig.bg_image_url}
-      logoUrl={pageConfig.logo_url}
-      session={session}
-      coins={coins}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-    >
-      {content}
-    </LobbyShell>
+    <>
+      {seoEl}
+      <LobbyShell
+        theme={theme}
+        bgImageUrl={pageConfig.bg_image_url}
+        logoUrl={pageConfig.logo_url}
+        session={session}
+        coins={coins}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      >
+        {content}
+      </LobbyShell>
+    </>
   );
 };
 
