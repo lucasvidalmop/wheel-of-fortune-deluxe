@@ -12,6 +12,7 @@ import { optimizedImage } from '@/lib/imageUrl';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { translateMarketName } from '@/lib/marketTranslations';
 import { translateTeamsInTitle, translateCompetitionName, translateTeamName } from '@/lib/footballTranslations';
+import { useLobbyEmbed } from '@/contexts/LobbyEmbed';
 
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
