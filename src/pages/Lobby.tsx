@@ -104,8 +104,8 @@ const Lobby = ({ tag }: { tag: string }) => {
   const openProduct = (key: ProductKey) => {
     if (!session) { setView('login'); return; }
     if (key === 'batalha') {
-      // Batalha standalone abre em nova aba (requer login admin separado).
-      window.open('/batalha', '_blank', 'noopener,noreferrer');
+      // Abre a página pública de depósito da Batalha de Slots do operador.
+      window.open(`/depbs=${tag}`, '_blank', 'noopener,noreferrer');
       return;
     }
     setView(key);
