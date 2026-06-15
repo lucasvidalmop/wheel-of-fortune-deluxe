@@ -166,13 +166,18 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
     });
   };
 
-  const handleUpload = async (file: File, target: 'bg' | 'logo' | `card-${number}`) => {
+  const handleUpload = async (
+    file: File,
+    target: 'bg' | 'logo' | 'seo-image' | 'favicon' | `card-${number}`,
+  ) => {
     setUploadingKey(target);
     try {
       const res = await uploadAppAsset(file, 'lobby');
       const url = res.publicUrl;
       if (target === 'bg') setPc((p) => ({ ...p, bg_image_url: url }));
       else if (target === 'logo') setPc((p) => ({ ...p, logo_url: url }));
+      else if (target === 'seo-image') updateSEO({ seo_image_url: url });
+      else if (target === 'favicon') updateSEO({ favicon_url: url });
       else {
         const idx = Number(target.split('-')[1]);
         updateCard(idx, { image_url: url });
