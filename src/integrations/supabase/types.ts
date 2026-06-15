@@ -85,6 +85,7 @@ export type Database = {
       }
       battle_participants: {
         Row: {
+          battle_id: string | null
           consumed: boolean
           created_at: string
           edpay_transaction_id: string | null
@@ -96,6 +97,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          battle_id?: string | null
           consumed?: boolean
           created_at?: string
           edpay_transaction_id?: string | null
@@ -107,6 +109,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          battle_id?: string | null
           consumed?: boolean
           created_at?: string
           edpay_transaction_id?: string | null
@@ -115,6 +118,53 @@ export type Database = {
           name?: string
           owner_id?: string
           source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_participants_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battles: {
+        Row: {
+          champion_game: string | null
+          champion_name: string | null
+          champion_score: number | null
+          created_at: string
+          finished_at: string | null
+          id: string
+          owner_id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          champion_game?: string | null
+          champion_name?: string | null
+          champion_score?: number | null
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          owner_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          champion_game?: string | null
+          champion_name?: string | null
+          champion_score?: number | null
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          owner_id?: string
+          started_at?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -2670,6 +2720,10 @@ export type Database = {
       }
       get_luckybox_page_by_tag: { Args: { p_tag: string }; Returns: Json }
       get_luckybox_user_state: { Args: { p_user_id: string }; Returns: Json }
+      get_or_create_collecting_battle: {
+        Args: { _owner: string }
+        Returns: string
+      }
       get_prize_history: {
         Args: { p_account_id: string; p_owner_id: string }
         Returns: {

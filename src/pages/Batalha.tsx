@@ -74,6 +74,13 @@ export default function Batalha() {
     } catch { /* ignore */ }
   }, [tournamentEntry]);
 
+  // ═══ Battle queue state ═══
+  type CurrentBattle = { id: string; status: 'collecting' | 'running' } | null;
+  const [currentBattle, setCurrentBattle] = useState<CurrentBattle>(null);
+  const [nextBattleCount, setNextBattleCount] = useState<number>(0);
+  const [startingBattle, setStartingBattle] = useState(false);
+
+
   // ═══ Auth state (linked to operator) ═══
   const [session, setSession] = useState<any>(null);
   const [authReady, setAuthReady] = useState(false);
@@ -159,10 +166,43 @@ export default function Batalha() {
     };
   }, [session?.user?.id, hasAccess]);
 
-  // Load battle_participants from BS deposits + subscribe to realtime inserts
+  // Resolve current battle (running > collecting > create new collecting)
   useEffect(() => {
     if (!session?.user?.id || hasAccess !== true) return;
     const ownerId = session.user.id;
+    let cancelled = false;
+    (async () => {
+      const { data: running } = await (supabase as any)
+        .from('battles').select('id,status')
+        .eq('owner_id', ownerId).eq('status', 'running')
+        .maybeSingle();
+      if (cancelled) return;
+      if (running) {
+        setCurrentBattle({ id: running.id, status: 'running' });
+        return;
+      }
+      const { data: collecting } = await (supabase as any)
+        .from('battles').select('id,status')
+        .eq('owner_id', ownerId).eq('status', 'collecting')
+        .maybeSingle();
+      if (cancelled) return;
+      if (collecting) {
+        setCurrentBattle({ id: collecting.id, status: 'collecting' });
+        return;
+      }
+      const { data: newId } = await (supabase as any)
+        .rpc('get_or_create_collecting_battle', { _owner: ownerId });
+      if (cancelled) return;
+      if (newId) setCurrentBattle({ id: newId as string, status: 'collecting' });
+    })();
+    return () => { cancelled = true; };
+  }, [session?.user?.id, hasAccess]);
+
+  // Load battle_participants for current battle + realtime
+  useEffect(() => {
+    if (!session?.user?.id || hasAccess !== true || !currentBattle?.id) return;
+    const ownerId = session.user.id;
+    const battleId = currentBattle.id;
     let cancelled = false;
 
     (async () => {
@@ -170,6 +210,7 @@ export default function Batalha() {
         .from('battle_participants')
         .select('id, name, game')
         .eq('owner_id', ownerId)
+        .eq('battle_id', battleId)
         .eq('consumed', false)
         .order('created_at', { ascending: true });
       if (cancelled || error || !Array.isArray(data)) return;
@@ -190,14 +231,14 @@ export default function Batalha() {
     })();
 
     const channel = (supabase as any)
-      .channel(`battle_participants_${ownerId}`)
+      .channel(`battle_participants_${battleId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'battle_participants',
-          filter: `owner_id=eq.${ownerId}`,
+          filter: `battle_id=eq.${battleId}`,
         },
         (payload: any) => {
           const row = payload?.new;
@@ -223,7 +264,47 @@ export default function Batalha() {
       cancelled = true;
       try { (supabase as any).removeChannel(channel); } catch (_) { /* noop */ }
     };
-  }, [session?.user?.id, hasAccess]);
+  }, [session?.user?.id, hasAccess, currentBattle?.id]);
+
+  // Track the "next battle" count (collecting battle) while current is running
+  useEffect(() => {
+    if (!session?.user?.id || hasAccess !== true) { setNextBattleCount(0); return; }
+    if (currentBattle?.status !== 'running') { setNextBattleCount(0); return; }
+    const ownerId = session.user.id;
+    let cancelled = false;
+    let nextBattleId: string | null = null;
+
+    const refresh = async () => {
+      const { data: nextB } = await (supabase as any)
+        .from('battles').select('id')
+        .eq('owner_id', ownerId).eq('status', 'collecting').maybeSingle();
+      if (cancelled) return;
+      nextBattleId = nextB?.id ?? null;
+      if (!nextBattleId) { setNextBattleCount(0); return; }
+      const { count } = await (supabase as any)
+        .from('battle_participants')
+        .select('id', { count: 'exact', head: true })
+        .eq('battle_id', nextBattleId)
+        .eq('consumed', false);
+      if (!cancelled) setNextBattleCount(count ?? 0);
+    };
+    refresh();
+
+    const channel = (supabase as any)
+      .channel(`battle_next_${ownerId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'battles', filter: `owner_id=eq.${ownerId}` }, refresh)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'battle_participants', filter: `owner_id=eq.${ownerId}` }, (payload: any) => {
+        if (nextBattleId && payload?.new?.battle_id === nextBattleId) refresh();
+      })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      try { (supabase as any).removeChannel(channel); } catch (_) { /* noop */ }
+    };
+  }, [session?.user?.id, hasAccess, currentBattle?.id, currentBattle?.status]);
+
+
 
   // SEO
   useEffect(() => {
@@ -347,11 +428,35 @@ export default function Batalha() {
 
   const resetWheel = () => setEliminatedIds(new Set());
 
+  // Promote the current "collecting" battle to "running" and create a new
+  // "collecting" so payments arriving during the running battle queue up
+  // for the next one.
+  const startBattle = async () => {
+    if (!session?.user?.id || !currentBattle || currentBattle.status !== 'collecting') return;
+    setStartingBattle(true);
+    try {
+      const { error: upErr } = await (supabase as any)
+        .from('battles')
+        .update({ status: 'running', started_at: new Date().toISOString() })
+        .eq('id', currentBattle.id);
+      if (upErr) {
+        toast.error('Falha ao iniciar batalha');
+        return;
+      }
+      // Create the queue for the next battle.
+      await (supabase as any).rpc('get_or_create_collecting_battle', { _owner: session.user.id });
+      setCurrentBattle({ id: currentBattle.id, status: 'running' });
+      toast.success('Batalha iniciada! Novos pagamentos vão para a próxima.');
+    } finally {
+      setStartingBattle(false);
+    }
+  };
+
   const resetTournament = async () => {
     const ok = await confirm({
       title: 'Encerrar batalha?',
-      message: 'O campeão atual (1º do ranking) será gravado no histórico de vencedores e uma nova batalha será iniciada.',
-      confirmLabel: 'Encerrar e iniciar nova',
+      message: 'O campeão atual (1º do ranking) será gravado no histórico de vencedores e a próxima batalha (fila) será carregada.',
+      confirmLabel: 'Encerrar batalha',
       cancelLabel: 'Cancelar',
       variant: 'danger',
     });
@@ -359,7 +464,6 @@ export default function Batalha() {
 
     // Determine the champion: highest score in the ranking.
     const champion = [...participants].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
-    // Final prize = total bankroll at end of tournament (banca total), not the champion's individual bonus.
     const finalPrize = totalBankroll;
     if (champion && finalPrize > 0) {
       setWinnerHistory((prev) => [
@@ -379,6 +483,21 @@ export default function Batalha() {
           if (error) console.warn('Failed to mark participants consumed on reset:', error);
         });
     }
+
+    // Finalize current battle row + persist champion
+    if (currentBattle) {
+      await (supabase as any)
+        .from('battles')
+        .update({
+          status: 'finished',
+          finished_at: new Date().toISOString(),
+          champion_name: champion?.name ?? null,
+          champion_game: champion?.game ?? null,
+          champion_score: finalPrize > 0 ? finalPrize : null,
+        })
+        .eq('id', currentBattle.id);
+    }
+
     setParticipants([]);
     setEliminatedIds(new Set());
     setLastDrawn(null);
@@ -392,8 +511,18 @@ export default function Batalha() {
       window.localStorage.removeItem('battle_initial_bankroll');
       window.localStorage.removeItem('battle_tournament_entry');
     } catch { /* ignore */ }
-    toast.success(champion && finalPrize > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
+
+    // Resolve the next battle (existing collecting, or create one)
+    if (session?.user?.id) {
+      const { data: nextId } = await (supabase as any)
+        .rpc('get_or_create_collecting_battle', { _owner: session.user.id });
+      if (nextId) setCurrentBattle({ id: nextId as string, status: 'collecting' });
+      else setCurrentBattle(null);
+    }
+
+    toast.success(champion && finalPrize > 0 ? `Campeão: ${champion.name}` : 'Batalha encerrada');
   };
+
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
   const rankedParticipants = useMemo(() => {
@@ -733,6 +862,37 @@ export default function Batalha() {
                 </div>
               </div>
 
+              {currentBattle?.status === 'collecting' && (
+                <button
+                  onClick={startBattle}
+                  disabled={startingBattle || participants.length === 0}
+                  className="mt-2 w-full h-9 rounded-full inline-flex items-center justify-center gap-2 text-[11px] font-bold tracking-[0.25em] transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+                  style={{
+                    backgroundColor: config.headerAccentColor,
+                    color: config.bgColor,
+                    boxShadow: `0 0 16px ${config.headerAccentColor}55`,
+                  }}
+                  aria-label="Iniciar batalha"
+                >
+                  <Swords size={12} />
+                  {startingBattle ? 'INICIANDO...' : 'INICIAR BATALHA'}
+                </button>
+              )}
+
+              {currentBattle?.status === 'running' && nextBattleCount > 0 && (
+                <div
+                  className="mt-2 w-full h-8 rounded-full inline-flex items-center justify-center gap-2 text-[10px] font-semibold tracking-[0.2em]"
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: `1px dashed ${config.headerAccentColor}66`,
+                    color: config.headerAccentColor,
+                  }}
+                  title="Pagamentos aguardando a próxima batalha"
+                >
+                  FILA: {nextBattleCount} {nextBattleCount === 1 ? 'JOGADOR' : 'JOGADORES'}
+                </div>
+              )}
+
               <button
                 onClick={resetTournament}
                 className="mt-2 w-full h-8 rounded-full inline-flex items-center justify-center gap-2 text-[10px] font-semibold tracking-[0.25em] transition-opacity hover:opacity-80 active:scale-[0.98]"
@@ -741,11 +901,12 @@ export default function Batalha() {
                   border: `1px solid ${config.panelBorderColor}`,
                   color: config.panelLabelColor,
                 }}
-                aria-label="Resetar sorteio"
+                aria-label="Encerrar batalha"
               >
                 <RotateCcw size={12} />
                 ENCERRAR BATALHA
               </button>
+
             </section>
 
             {winnerHistory.length > 0 && (
