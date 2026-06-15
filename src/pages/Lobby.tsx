@@ -39,6 +39,7 @@ interface LobbyPageConfig {
   footer_text?: string;
   theme?: LobbyTheme;
   login?: LobbyLoginConfig;
+  seo?: LobbySEOConfig;
 }
 
 const DEFAULT_CARDS = (tags: { bets: string; luckybox: string; roleta: string }): PromoCard[] => [
