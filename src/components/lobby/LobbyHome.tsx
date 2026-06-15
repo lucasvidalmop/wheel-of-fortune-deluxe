@@ -79,7 +79,7 @@ const LobbyHome = ({ title, description, greeting, cards, footerText, onOpenProd
                 subtitle={featured.subtitle}
                 imageUrl={featured.image_url}
                 badge={productBadge[featured.key]}
-                external={featured.key === 'batalha'}
+                external={false}
                 featured
                 onClick={() => onOpenProduct(featured.key)}
               />
