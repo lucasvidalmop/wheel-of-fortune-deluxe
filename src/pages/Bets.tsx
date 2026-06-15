@@ -12,6 +12,7 @@ import { optimizedImage } from '@/lib/imageUrl';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { translateMarketName } from '@/lib/marketTranslations';
 import { translateTeamsInTitle, translateCompetitionName, translateTeamName } from '@/lib/footballTranslations';
+import { useLobbyEmbed } from '@/contexts/LobbyEmbed';
 
 const ShareTicket = lazy(() => import('@/components/casino/ShareTicket'));
 const ShareTicketMultiple = lazy(() => import('@/components/casino/ShareTicketMultiple'));
@@ -389,6 +390,7 @@ const decodeCopy = async (s: string): Promise<Array<{ e: string; o: string }>> =
 const toShortEventId = (id?: string | null) => (id ? id.slice(0, 10) : '');
 
 const Bets = ({ tag }: BetsPageProps) => {
+  const lobbyEmbed = useLobbyEmbed();
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<any | null>(null);
   const [authed, setAuthed] = useState<AuthedUser | null>(null);
@@ -608,6 +610,33 @@ const Bets = ({ tag }: BetsPageProps) => {
       if (raw) setAuthed(JSON.parse(raw));
     } catch {}
   }, [tag]);
+
+  // Auto-login quando embarcado dentro do lobby da Gorjeta
+  useEffect(() => {
+    if (!lobbyEmbed || authed) return;
+    const sess = lobbyEmbed.session;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await (supabase as any).rpc('authenticate_wheel_user', {
+          p_email: sess.email,
+          p_account_id: sess.account_id,
+          p_owner_id: sess.owner_id || null,
+        });
+        const row = Array.isArray(data) ? data[0] : data;
+        if (cancelled || error || !row) return;
+        setAuthed({
+          id: row.id || sess.wheel_user_id || '',
+          name: row.name || sess.name || '',
+          email: row.email || sess.email,
+          account_id: row.account_id || sess.account_id,
+          tokens_balance: row.tokens_balance ?? 0,
+        } as AuthedUser);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [lobbyEmbed, authed]);
+
 
   // persist authed user across navigations
   useEffect(() => {

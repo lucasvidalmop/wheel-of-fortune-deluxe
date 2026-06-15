@@ -5,6 +5,7 @@ import { Coins, Eye, LogOut, Package, Sparkles, X, HelpCircle } from 'lucide-rea
 import ScratchCell from '@/components/casino/ScratchCell';
 import { scheduleCaseTicks, cancelCaseTicks, primeCaseTicks } from '@/lib/caseTickSound';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
+import { useLobbyEmbed } from '@/contexts/LobbyEmbed';
 
 const PRIZE_WIN_SOUND_URL = '/sounds/prize-win.mp3';
 let prizeWinAudio: HTMLAudioElement | null = null;
@@ -135,6 +136,7 @@ const SYNCED_LUCKYBOX_AUDIO_STEPS = 37;
 const SYNCED_LUCKYBOX_AUDIO_EASING = 'linear(0 0%, 0.0270 0.70%, 0.0541 3.51%, 0.0811 5.88%, 0.1081 7.90%, 0.1351 9.57%, 0.1622 11.06%, 0.1892 13.96%, 0.2162 16.07%, 0.2432 17.38%, 0.2703 18.53%, 0.2973 19.58%, 0.3243 20.81%, 0.3514 22.13%, 0.3784 23.18%, 0.4054 24.41%, 0.4324 25.73%, 0.4595 26.60%, 0.4865 27.92%, 0.5135 33.89%, 0.5405 40.21%, 0.5676 41.97%, 0.5946 43.64%, 0.6216 45.57%, 0.6486 47.32%, 0.6757 49.43%, 0.7027 51.45%, 0.7297 53.73%, 0.7568 56.28%, 0.7838 58.91%, 0.8108 61.55%, 0.8378 64.71%, 0.8649 68.13%, 0.8919 72.00%, 0.9189 76.39%, 0.9459 81.74%, 0.9730 88.06%, 1.0000 97.20%, 1 100%)';
 
 const Luckybox = ({ tag }: { tag?: string }) => {
+  const lobbyEmbed = useLobbyEmbed();
   const [loading, setLoading] = useState(true);
   const [cfg, setCfg] = useState<LuckyConfig | null>(null);
   const [cases, setCases] = useState<LuckyCase[]>([]);
@@ -252,6 +254,41 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       } catch {}
     }
   }, [cfg]);
+
+  // Auto-login quando embarcado no lobby da Gorjeta
+  useEffect(() => {
+    if (!cfg || !lobbyEmbed || authedUser) return;
+    const sess = lobbyEmbed.session;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await (supabase as any).rpc('authenticate_luckybox_user', {
+          p_email: sess.email,
+          p_account_id: sess.account_id,
+          p_owner_id: cfg.owner_id,
+        });
+        const user = Array.isArray(data) ? data[0] : data;
+        if (cancelled || error || !user?.id) return;
+        const { data: uData } = await (supabase as any).rpc('get_luckybox_user_state', { p_user_id: user.id });
+        const u = uData?.found ? uData : null;
+        const newSess = {
+          id: user.id,
+          name: u?.name || user.name || sess.name || '',
+          account_id: u?.account_id || user.account_id || sess.account_id,
+          email: u?.email || user.email || sess.email,
+          tokens_balance: u?.tokens_balance ?? 0,
+          case_grants: (u?.case_grants as Record<string, number>) || {},
+        };
+        if (cancelled) return;
+        setAuthedUser(newSess);
+        try { sessionStorage.setItem(`luckybox_user_${cfg.tag}`, JSON.stringify(newSess)); } catch {}
+        fetchUserClaims(cfg.owner_id, newSess.email, newSess.account_id);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cfg, lobbyEmbed, authedUser]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -63,6 +63,28 @@ const Registration = () => {
   const [spinsGranted, setSpinsGranted] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
 
+  // Retorno automático ao lobby após cadastro (quando vier ?return=lobby:<tag>)
+  const returnParam = searchParams.get('return') || '';
+  const lobbyReturnTag = returnParam.startsWith('lobby:') ? returnParam.slice(6) : '';
+  useEffect(() => {
+    if (!success || !lobbyReturnTag) return;
+    try {
+      const sess = {
+        account_id: accountId.trim(),
+        email: email.trim(),
+        name: name.trim(),
+        lobby_tag: lobbyReturnTag,
+        signed_in_at: Date.now(),
+      };
+      localStorage.setItem('gorjeta_session_v1', JSON.stringify(sess));
+    } catch { /* ignore */ }
+    const t = setTimeout(() => {
+      window.location.href = `/lobby=${encodeURIComponent(lobbyReturnTag)}`;
+    }, 1800);
+    return () => clearTimeout(t);
+  }, [success, lobbyReturnTag, accountId, email, name]);
+
+
   useEffect(() => {
     const fetchLink = async () => {
       if (!code) { setLoading(false); return; }

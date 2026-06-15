@@ -6,9 +6,12 @@ import { WheelConfig, defaultConfig } from '@/components/casino/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AuthNoticeBanner from '@/components/AuthNoticeBanner';
+import { useLobbyEmbed } from '@/contexts/LobbyEmbed';
 
-const Roleta = () => {
-  const { slug } = useParams();
+const Roleta = ({ slugOverride }: { slugOverride?: string } = {}) => {
+  const params = useParams();
+  const lobbyEmbed = useLobbyEmbed();
+  const slug = slugOverride || params.slug;
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -468,6 +471,35 @@ const Roleta = () => {
     if (config.postLoginDialogEnabled) setShowPostLoginDialog(true);
     setAuthLoading(false);
   };
+
+  // Auto-identify quando embarcado dentro do lobby da Gorjeta
+  useEffect(() => {
+    if (!lobbyEmbed || identified || configLoading) return;
+    const sess = lobbyEmbed.session;
+    let cancelled = false;
+    (async () => {
+      const { data: rpcData, error } = await (supabase as any).rpc('authenticate_wheel_user', {
+        p_email: sess.email,
+        p_account_id: sess.account_id,
+        p_owner_id: ownerId || sess.owner_id || null,
+      });
+      const data = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+      if (cancelled || error || !data) return;
+      setAccountId(data.account_id);
+      setEmailValue(sess.email);
+      setUserName(data.name);
+      setSpinsRemaining(data.spins_available);
+      setCanSpin(data.spins_available >= 1);
+      setFixedPrizeEnabled(data.fixed_prize_enabled ?? false);
+      setFixedPrizeSegment(data.fixed_prize_segment ?? null);
+      setIsBlacklisted(data.blacklisted ?? false);
+      if (data.owner_id) setOwnerId(data.owner_id);
+      if (data.spins_available < 1) setMessage('Sem giros disponíveis');
+      setIdentified(true);
+    })();
+    return () => { cancelled = true; };
+  }, [lobbyEmbed, identified, configLoading, ownerId]);
+
 
   const handleSpinEnd = async (segmentIndex: number) => {
     const seg = config.segments[segmentIndex];
