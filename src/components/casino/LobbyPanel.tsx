@@ -269,6 +269,116 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
         </div>
       </div>
 
+      {/* ─── SEO ─── */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+        <div>
+          <h3 className="text-lg font-bold text-foreground">SEO &amp; compartilhamento</h3>
+          <p className="text-xs text-muted-foreground">
+            Define como o lobby aparece no Google e ao ser compartilhado em WhatsApp, Instagram, X e Facebook.
+            Deixe em branco para usar o título / descrição da página acima.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Título SEO <span className="opacity-60">(até ~60 caracteres)</span>
+            </label>
+            <input
+              type="text"
+              maxLength={70}
+              value={pc.seo?.seo_title || ''}
+              onChange={(e) => updateSEO({ seo_title: e.target.value })}
+              placeholder={pc.site_title || 'Seu lobby de promoções'}
+              className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">{(pc.seo?.seo_title || '').length}/60</p>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Descrição SEO <span className="opacity-60">(até ~160 caracteres)</span>
+            </label>
+            <textarea
+              maxLength={200}
+              rows={2}
+              value={pc.seo?.seo_description || ''}
+              onChange={(e) => updateSEO({ seo_description: e.target.value })}
+              placeholder={pc.site_description || 'Acesse promoções exclusivas, roleta, caixas e apostas em um só lugar.'}
+              className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground resize-none"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">{(pc.seo?.seo_description || '').length}/160</p>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Palavras-chave (separadas por vírgula)</label>
+            <input
+              type="text"
+              value={pc.seo?.seo_keywords || ''}
+              onChange={(e) => updateSEO({ seo_keywords: e.target.value })}
+              placeholder="roleta, apostas, promoção, cassino"
+              className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Imagem de compartilhamento (1200×630)</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={pc.seo?.seo_image_url || ''}
+                onChange={(e) => updateSEO({ seo_image_url: e.target.value })}
+                placeholder="URL da imagem"
+                className="flex-1 px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm"
+              />
+              <label className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm cursor-pointer flex items-center gap-1">
+                {uploadingKey === 'seo-image' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'seo-image')} />
+              </label>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Favicon (ícone da aba)</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={pc.seo?.favicon_url || ''}
+                onChange={(e) => updateSEO({ favicon_url: e.target.value })}
+                placeholder="URL do favicon"
+                className="flex-1 px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm"
+              />
+              <label className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm cursor-pointer flex items-center gap-1">
+                {uploadingKey === 'favicon' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'favicon')} />
+              </label>
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={!!pc.seo?.noindex}
+                onChange={(e) => updateSEO({ noindex: e.target.checked })}
+              />
+              Ocultar do Google (noindex)
+            </label>
+            <p className="text-[11px] text-muted-foreground mt-1 ml-6">
+              Marque se este lobby for privado e não deve aparecer em buscas.
+            </p>
+          </div>
+        </div>
+
+        {/* Preview de busca */}
+        <div className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-1">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-white/40 mb-1">Preview no Google</div>
+          <div className="text-[13px] text-emerald-300/90 truncate">
+            {`https://tipspayroleta.com/lobby=${slugify(tag) || 'sua-tag'}`}
+          </div>
+          <div className="text-[18px] leading-tight text-blue-300 truncate">
+            {pc.seo?.seo_title || pc.site_title || 'Seu lobby de promoções'}
+          </div>
+          <div className="text-[13px] text-white/65 line-clamp-2">
+            {pc.seo?.seo_description || pc.site_description || 'Acesse promoções exclusivas, roleta, caixas e apostas em um só lugar.'}
+          </div>
+        </div>
+      </div>
+
       {/* ─── Tema visual ─── */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
         <div>
