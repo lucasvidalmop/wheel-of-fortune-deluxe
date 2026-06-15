@@ -7,6 +7,7 @@ import LobbyLogin from '@/components/lobby/LobbyLogin';
 import LobbyShell, { type LobbyTheme } from '@/components/lobby/LobbyShell';
 import LobbyHome, { type PromoCard } from '@/components/lobby/LobbyHome';
 import LobbyProfile from '@/components/lobby/LobbyProfile';
+import LobbySEO, { type LobbySEOConfig } from '@/components/lobby/LobbySEO';
 import type { LobbyTab } from '@/components/lobby/LobbyBottomNav';
 import type { ProductKey } from '@/components/lobby/LobbyPromoCard';
 
