@@ -140,15 +140,11 @@ const Lobby = ({ tag }: { tag: string }) => {
 
   const openProduct = useCallback((key: ProductKey) => {
     if (!session) { setView('login'); return; }
-    if (key === 'batalha') {
-      window.open(`/depbs=${tag}`, '_blank', 'noopener,noreferrer');
-      return;
-    }
     setView(key);
-  }, [session, tag]);
+  }, [session]);
 
   const handleTabChange = useCallback((tab: LobbyTab) => {
-    if (tab === 'home' || tab === 'promos') setView('home');
+    if (tab === 'home') setView('home');
     else if (tab === 'perfil') setView('perfil');
   }, []);
 
