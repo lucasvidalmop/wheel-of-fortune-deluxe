@@ -187,8 +187,18 @@ const Lobby = ({ tag }: { tag: string }) => {
         <LobbyLogin
           tag={tag}
           logoUrl={pageConfig.logo_url}
-          title={pageConfig.site_title || 'Acesse o Lobby'}
-          subtitle={pageConfig.site_description || 'Entre com seu e-mail e ID da conta'}
+          title={loginCfg.title || pageConfig.site_title || 'Acesse o Lobby'}
+          subtitle={loginCfg.subtitle || pageConfig.site_description || 'Entre com seu e-mail e ID da conta'}
+          buttonLabel={loginCfg.button_label}
+          rememberLabel={loginCfg.remember_label}
+          signupText={loginCfg.signup_text}
+          signupLinkText={loginCfg.signup_link_text}
+          signupUrl={loginCfg.signup_url}
+          showSignup={loginCfg.show_signup !== false}
+          showLobbyPill={loginCfg.show_lobby_pill !== false}
+          primary={primary}
+          headingFont={headingFont}
+          bodyFont={bodyFont}
           onSignedIn={handleSignedIn}
         />
       </Wrapper>
