@@ -16,6 +16,27 @@ interface CardConfig {
   order?: number;
 }
 
+interface LobbyTheme {
+  primary?: string;
+  bg_color?: string;
+  text_color?: string;
+  heading_font?: string;
+  body_font?: string;
+  overlay_strength?: number;
+}
+
+interface LobbyLoginConfig {
+  title?: string;
+  subtitle?: string;
+  button_label?: string;
+  remember_label?: string;
+  signup_text?: string;
+  signup_link_text?: string;
+  signup_url?: string;
+  show_signup?: boolean;
+  show_lobby_pill?: boolean;
+}
+
 interface PageConfig {
   site_title?: string;
   site_description?: string;
@@ -23,7 +44,35 @@ interface PageConfig {
   logo_url?: string;
   footer_text?: string;
   cards?: CardConfig[];
+  theme?: LobbyTheme;
+  login?: LobbyLoginConfig;
 }
+
+const FONT_OPTIONS = [
+  'Bebas Neue', 'Barlow', 'Inter', 'Poppins', 'Montserrat', 'Oswald',
+  'Playfair Display', 'Roboto', 'Anton', 'Archivo Black', 'Space Grotesk', 'DM Sans',
+];
+
+const DEFAULT_THEME: LobbyTheme = {
+  primary: '#00d4ff',
+  bg_color: '#0a0a0f',
+  text_color: '#ffffff',
+  heading_font: 'Bebas Neue',
+  body_font: 'Barlow',
+  overlay_strength: 65,
+};
+
+const DEFAULT_LOGIN: LobbyLoginConfig = {
+  title: '',
+  subtitle: '',
+  button_label: 'Entrar',
+  remember_label: 'Lembrar sessão',
+  signup_text: 'Crie sua conta na gorjeta',
+  signup_link_text: 'Clique aqui',
+  signup_url: '',
+  show_signup: true,
+  show_lobby_pill: true,
+};
 
 const PRODUCT_LABELS: Record<ProductKey, string> = {
   roleta: 'Roleta',
