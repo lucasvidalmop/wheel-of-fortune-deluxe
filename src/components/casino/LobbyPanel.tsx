@@ -232,15 +232,19 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
-        <h3 className="text-lg font-bold text-foreground">Visual da página</h3>
+        <div>
+          <h3 className="text-lg font-bold text-foreground">Visual da página</h3>
+          <p className="text-xs text-muted-foreground">Personalize o título, descrição e imagens que aparecem no lobby.</p>
+        </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1">Título</label>
-            <input type="text" value={pc.site_title || ''} onChange={(e) => setPc({ ...pc, site_title: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground" />
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Título principal da página (h1)</label>
+            <input type="text" value={pc.site_title || ''} onChange={(e) => setPc({ ...pc, site_title: e.target.value })} placeholder="Central de promoções" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground" />
+            <p className="text-[11px] text-muted-foreground mt-1">Esse texto substitui o título grande do lobby.</p>
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Descrição</label>
-            <input type="text" value={pc.site_description || ''} onChange={(e) => setPc({ ...pc, site_description: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground" />
+            <input type="text" value={pc.site_description || ''} onChange={(e) => setPc({ ...pc, site_description: e.target.value })} placeholder="Subtítulo abaixo do título" className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Imagem de fundo</label>
@@ -266,6 +270,22 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Texto do rodapé</label>
             <input type="text" value={pc.footer_text || ''} onChange={(e) => setPc({ ...pc, footer_text: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground" />
           </div>
+        </div>
+
+        {/* Preview do título principal */}
+        <div className="rounded-xl border border-white/10 bg-black/40 p-4">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-white/40 mb-1">Preview do título</div>
+          <h1
+            className="text-white leading-[0.92]"
+            style={{ fontFamily: `'${pc.theme?.heading_font || 'Bebas Neue'}', sans-serif`, fontSize: 'clamp(36px, 9vw, 84px)', letterSpacing: '0.01em' }}
+          >
+            {pc.site_title || 'Central de promoções'}
+          </h1>
+          {pc.site_description && (
+            <p className="mt-2.5 text-white/65 text-sm sm:text-base max-w-xl" style={{ fontFamily: `'${pc.theme?.body_font || 'Barlow'}', sans-serif` }}>
+              {pc.site_description}
+            </p>
+          )}
         </div>
       </div>
 
