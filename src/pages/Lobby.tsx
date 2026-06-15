@@ -157,98 +157,305 @@ const Lobby = ({ tag }: { tag: string }) => {
 
   // ─── Header (visible on home + embedded views) ───
   const Header = ({ showBack }: { showBack: boolean }) => (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-black/40 border-b border-white/10">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-black/30 border-b border-white/[0.06]">
+      <div className="max-w-7xl mx-auto px-5 md:px-8 py-3.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {showBack ? (
             <button
               onClick={() => setView('home')}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white text-[11px] uppercase tracking-[0.18em] font-semibold transition border border-white/10"
+              style={{ fontFamily: 'Barlow, sans-serif' }}
             >
-              <ArrowLeft size={14} /> Lobby
+              <ArrowLeft size={13} /> Lobby
             </button>
           ) : (
-            <div className="inline-flex items-center gap-2 text-white">
+            <div className="inline-flex items-center gap-2.5 text-white min-w-0">
               {pageConfig.logo_url ? (
-                <img src={pageConfig.logo_url} alt="Logo" className="h-7 object-contain" />
+                <img src={pageConfig.logo_url} alt="Logo" className="h-8 object-contain" />
               ) : (
-                <Home size={18} />
+                <div className="h-8 w-8 rounded-md bg-white/10 flex items-center justify-center">
+                  <Home size={16} />
+                </div>
               )}
-              <span className="font-semibold text-sm truncate">{pageConfig.site_title || 'Lobby'}</span>
+              <span
+                className="hidden sm:inline text-[11px] uppercase tracking-[0.28em] text-white/50 font-medium truncate"
+                style={{ fontFamily: 'Barlow, sans-serif' }}
+              >
+                Lobby
+              </span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden sm:inline text-xs text-white/70 truncate max-w-[160px]">
-            {session.name || session.email}
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end leading-tight">
+            <span
+              className="text-[9px] uppercase tracking-[0.24em] text-white/40"
+              style={{ fontFamily: 'Barlow, sans-serif' }}
+            >
+              Conectado
+            </span>
+            <span
+              className="text-xs text-white/85 truncate max-w-[180px]"
+              style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+            >
+              {session.name || session.email}
+            </span>
+          </div>
           <button
             onClick={handleSignOut}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-destructive/80 text-white text-xs font-semibold transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-red-500/80 text-white text-[11px] uppercase tracking-[0.18em] font-semibold transition border border-white/10"
+            style={{ fontFamily: 'Barlow, sans-serif' }}
           >
-            <LogOut size={14} /> Sair
+            <LogOut size={13} /> Sair
           </button>
         </div>
       </div>
     </header>
   );
 
-  // ─── Home (grid de cards) ───
+  // ─── Home (composição moderna assimétrica) ───
   if (view === 'home') {
+    const featured = cards[0];
+    const rest = cards.slice(1);
+    const productMeta: Record<ProductKey, { tag: string; icon: string; accent: string }> = {
+      roleta: { tag: 'Jackpot', icon: '🎰', accent: 'from-amber-400/40 to-orange-600/10' },
+      apostas: { tag: 'Esportes', icon: '⚽', accent: 'from-emerald-400/40 to-sky-600/10' },
+      luckybox: { tag: 'Caixas', icon: '🎁', accent: 'from-fuchsia-400/40 to-purple-600/10' },
+      batalha: { tag: 'Ao vivo', icon: '⚔️', accent: 'from-rose-400/40 to-red-600/10' },
+    };
+
     return (
       <Wrapper>
         <Header showBack={false} />
-        <div className="max-w-6xl mx-auto px-4 py-10 md:py-14">
-          <div className="text-center mb-10 space-y-2">
-            <h1 className="text-3xl md:text-5xl font-black tracking-wide uppercase text-white" style={{ textShadow: '0 0 40px rgba(255,255,255,0.15)' }}>
-              {pageConfig.site_title || 'Bem-vindo'}
-            </h1>
-            {pageConfig.site_description && (
-              <p className="text-base md:text-lg text-white/70 max-w-2xl mx-auto">{pageConfig.site_description}</p>
-            )}
+
+        {/* Decorative ambient blobs */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-32 -left-24 w-[520px] h-[520px] rounded-full bg-white/[0.04] blur-3xl" />
+          <div className="absolute top-1/3 -right-32 w-[480px] h-[480px] rounded-full bg-white/[0.05] blur-3xl" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-5 md:px-8 pt-10 md:pt-16 pb-16">
+          {/* Hero block — editorial style */}
+          <div className="grid grid-cols-12 gap-6 mb-10 md:mb-14 items-end">
+            <div className="col-span-12 md:col-span-8">
+              <div
+                className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-white/50 mb-4"
+                style={{ fontFamily: 'Barlow, sans-serif' }}
+              >
+                <span className="h-px w-8 bg-white/40" />
+                {session.name ? `Olá, ${session.name.split(' ')[0]}` : 'Bem-vindo'}
+              </div>
+              <h1
+                className="text-white leading-[0.88] tracking-tight"
+                style={{
+                  fontFamily: 'Bebas Neue, sans-serif',
+                  fontSize: 'clamp(56px, 9vw, 132px)',
+                  letterSpacing: '0.01em',
+                }}
+              >
+                {pageConfig.site_title || 'Central de Promoções'}
+              </h1>
+              {pageConfig.site_description && (
+                <p
+                  className="mt-5 text-white/65 max-w-xl text-base md:text-lg leading-relaxed"
+                  style={{ fontFamily: 'Barlow, sans-serif' }}
+                >
+                  {pageConfig.site_description}
+                </p>
+              )}
+            </div>
+            <div className="hidden md:flex col-span-4 justify-end">
+              <div className="text-right">
+                <div
+                  className="text-[10px] uppercase tracking-[0.32em] text-white/40 mb-1"
+                  style={{ fontFamily: 'Barlow, sans-serif' }}
+                >
+                  Promoções ativas
+                </div>
+                <div
+                  className="text-white/90"
+                  style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '88px', lineHeight: 0.9 }}
+                >
+                  {String(cards.length).padStart(2, '0')}
+                </div>
+              </div>
+            </div>
           </div>
 
           {cards.length === 0 ? (
-            <div className="text-center text-white/60 py-16">Nenhum produto configurado.</div>
+            <div
+              className="text-center text-white/60 py-20 border border-dashed border-white/10 rounded-3xl"
+              style={{ fontFamily: 'Barlow, sans-serif' }}
+            >
+              Nenhuma promoção configurada.
+            </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
-              {cards.map((card) => (
-                <button
-                  key={card.key}
-                  onClick={() => openProduct(card.key)}
-                  className="text-left group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm hover:border-primary/60 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/20"
-                >
-                  <div className="aspect-[16/9] relative overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
-                    {card.image_url ? (
+            <div className="grid grid-cols-12 gap-5 md:gap-6">
+              {/* Featured card — large */}
+              {featured && (() => {
+                const meta = productMeta[featured.key];
+                return (
+                  <button
+                    onClick={() => openProduct(featured.key)}
+                    className="group relative col-span-12 lg:col-span-7 row-span-2 text-left overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.01] hover:border-white/30 transition-all duration-500"
+                    style={{ minHeight: '440px' }}
+                  >
+                    {featured.image_url ? (
                       <img
-                        src={optimizedImage(card.image_url, { width: 800, quality: 75 }) || card.image_url}
-                        alt={card.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        src={optimizedImage(featured.image_url, { width: 1200, quality: 80 }) || featured.image_url}
+                        alt={featured.title}
+                        className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-[1.04] transition-transform duration-[1200ms] ease-out"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-6xl">
-                        {card.key === 'roleta' ? '🎰' : card.key === 'apostas' ? '⚽' : card.key === 'luckybox' ? '🎁' : '⚔️'}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${meta.accent}`}>
+                        <div className="absolute inset-0 flex items-center justify-center text-[180px] opacity-60">
+                          {meta.icon}
+                        </div>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    {card.key === 'batalha' && (
-                      <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 text-[10px] text-white/80">
-                        <ExternalLink size={10} /> nova aba
-                      </span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+
+                    <div className="relative h-full flex flex-col justify-between p-6 md:p-9 z-10">
+                      <div className="flex items-start justify-between gap-3">
+                        <span
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] uppercase tracking-[0.24em] text-white/90"
+                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                          Destaque
+                        </span>
+                        <span
+                          className="text-white/40 text-sm"
+                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                        >
+                          01
+                        </span>
+                      </div>
+
+                      <div>
+                        <div
+                          className="text-[10px] uppercase tracking-[0.32em] text-white/60 mb-2"
+                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                        >
+                          {meta.tag}
+                          {featured.key === 'batalha' && <span className="ml-2 text-white/40">· abre em nova aba</span>}
+                        </div>
+                        <h2
+                          className="text-white leading-[0.9]"
+                          style={{
+                            fontFamily: 'Bebas Neue, sans-serif',
+                            fontSize: 'clamp(44px, 6vw, 76px)',
+                            letterSpacing: '0.01em',
+                          }}
+                        >
+                          {featured.title}
+                        </h2>
+                        {featured.subtitle && (
+                          <p
+                            className="mt-3 text-white/75 max-w-md text-base md:text-lg"
+                            style={{ fontFamily: 'Barlow, sans-serif' }}
+                          >
+                            {featured.subtitle}
+                          </p>
+                        )}
+                        <div
+                          className="mt-6 inline-flex items-center gap-2 text-white text-xs uppercase tracking-[0.24em] group-hover:gap-4 transition-all"
+                          style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 700 }}
+                        >
+                          <span className="h-px w-8 bg-white group-hover:w-14 transition-all" />
+                          Entrar agora
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })()}
+
+              {/* Secondary cards — vertical stack */}
+              {rest.map((card, idx) => {
+                const meta = productMeta[card.key];
+                const num = String(idx + 2).padStart(2, '0');
+                return (
+                  <button
+                    key={card.key}
+                    onClick={() => openProduct(card.key)}
+                    className="group relative col-span-12 sm:col-span-6 lg:col-span-5 text-left overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/25 hover:-translate-y-1 transition-all duration-500"
+                    style={{ minHeight: '210px' }}
+                  >
+                    {card.image_url ? (
+                      <img
+                        src={optimizedImage(card.image_url, { width: 700, quality: 75 }) || card.image_url}
+                        alt={card.title}
+                        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-[1.06] group-hover:opacity-90 transition-all duration-700"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${meta.accent}`} />
                     )}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-                    <h2 className="text-xl md:text-2xl font-bold text-white">{card.title}</h2>
-                    {card.subtitle && <p className="text-sm md:text-base text-white/80 mt-1">{card.subtitle}</p>}
-                  </div>
-                </button>
-              ))}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/20" />
+
+                    <div className="relative h-full flex items-center gap-5 p-6 md:p-7 z-10">
+                      <div className="shrink-0 h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/[0.08] border border-white/15 backdrop-blur-md flex items-center justify-center text-3xl md:text-4xl group-hover:bg-white/15 transition">
+                        {meta.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-1.5">
+                          <span
+                            className="text-[9px] uppercase tracking-[0.28em] text-white/55"
+                            style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                          >
+                            {meta.tag}
+                          </span>
+                          {card.key === 'batalha' && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[9px] text-white/40"
+                              style={{ fontFamily: 'Barlow, sans-serif' }}
+                            >
+                              <ExternalLink size={9} /> nova aba
+                            </span>
+                          )}
+                        </div>
+                        <h3
+                          className="text-white leading-[0.95] truncate"
+                          style={{
+                            fontFamily: 'Bebas Neue, sans-serif',
+                            fontSize: 'clamp(28px, 3.4vw, 40px)',
+                            letterSpacing: '0.02em',
+                          }}
+                        >
+                          {card.title}
+                        </h3>
+                        {card.subtitle && (
+                          <p
+                            className="text-white/65 text-sm mt-1 line-clamp-1"
+                            style={{ fontFamily: 'Barlow, sans-serif' }}
+                          >
+                            {card.subtitle}
+                          </p>
+                        )}
+                      </div>
+                      <div
+                        className="hidden md:flex shrink-0 self-start text-white/30 text-sm group-hover:text-white/70 transition"
+                        style={{ fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}
+                      >
+                        {num}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
 
           {pageConfig.footer_text && (
-            <footer className="mt-12 text-center text-white/50 text-sm">{pageConfig.footer_text}</footer>
+            <footer
+              className="mt-16 pt-6 border-t border-white/10 text-center text-white/40 text-xs uppercase tracking-[0.24em]"
+              style={{ fontFamily: 'Barlow, sans-serif' }}
+            >
+              {pageConfig.footer_text}
+            </footer>
           )}
         </div>
       </Wrapper>
