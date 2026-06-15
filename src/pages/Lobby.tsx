@@ -23,6 +23,27 @@ interface CardConfig {
   order?: number;
 }
 
+interface LobbyTheme {
+  primary?: string;
+  bg_color?: string;
+  text_color?: string;
+  heading_font?: string;
+  body_font?: string;
+  overlay_strength?: number; // 0..100
+}
+
+interface LobbyLoginConfig {
+  title?: string;
+  subtitle?: string;
+  button_label?: string;
+  remember_label?: string;
+  signup_text?: string;
+  signup_link_text?: string;
+  signup_url?: string;
+  show_signup?: boolean;
+  show_lobby_pill?: boolean;
+}
+
 interface LobbyPageConfig {
   site_title?: string;
   site_description?: string;
@@ -30,6 +51,8 @@ interface LobbyPageConfig {
   logo_url?: string;
   cards?: CardConfig[];
   footer_text?: string;
+  theme?: LobbyTheme;
+  login?: LobbyLoginConfig;
 }
 
 const DEFAULT_CARDS = (tags: { bets: string; luckybox: string; roleta: string }): CardConfig[] => [
