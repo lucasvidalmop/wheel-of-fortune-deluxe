@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { setLobbySession } from '@/lib/lobbySession';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Home } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface LobbyLoginProps {
@@ -25,6 +25,7 @@ export default function LobbyLogin({
 }: LobbyLoginProps) {
   const [email, setEmail] = useState(initialEmail);
   const [accountId, setAccountId] = useState('');
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -63,55 +64,100 @@ export default function LobbyLogin({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl">
-        {logoUrl && (
-          <img src={logoUrl} alt="Logo" className="mx-auto h-14 md:h-16 object-contain mb-4" />
-        )}
-        <h1 className="text-2xl md:text-3xl font-bold text-center text-white">{title}</h1>
-        <p className="text-sm text-white/70 text-center mt-1">{subtitle}</p>
+    <div className="min-h-screen flex flex-col relative">
+      {/* Top-left Lobby pill */}
+      <div className="absolute top-5 left-5 z-20">
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/80 text-xs font-medium backdrop-blur-md" style={{ fontFamily: 'Barlow, sans-serif' }}>
+          <Home size={13} /> Lobby
+        </div>
+      </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-4">
-          <div>
-            <label className="block text-sm text-white/80 mb-1">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-white/80 mb-1">ID da conta</label>
-            <input
-              type="text"
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              required
-              autoComplete="username"
-              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-60"
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[420px] bg-[#0a0a0f]/85 backdrop-blur-xl border border-white/10 rounded-2xl p-7 md:p-9 shadow-2xl">
+          {logoUrl && (
+            <img src={logoUrl} alt="Logo" className="mx-auto h-16 md:h-20 object-contain mb-5" />
+          )}
+          <h1
+            className="text-3xl md:text-4xl font-bold text-center text-white uppercase tracking-wide leading-tight"
+            style={{ fontFamily: 'Bebas Neue, sans-serif' }}
           >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
+            {title}
+          </h1>
+          <p className="text-sm text-center text-white/60 mt-1.5" style={{ fontFamily: 'Barlow, sans-serif' }}>
+            {subtitle}
+          </p>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-white/60 mb-2">Ainda não tem conta na Gorjeta?</p>
-          <a
-            href={`/gorjeta?return=lobby:${encodeURIComponent(tag)}`}
-            className="inline-block px-5 py-2.5 rounded-xl border border-primary/60 text-primary font-semibold hover:bg-primary/10 transition"
-          >
-            Clique aqui para se inscrever
-          </a>
+          <form onSubmit={submit} className="mt-7 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-white/80 mb-1.5" style={{ fontFamily: 'Barlow, sans-serif' }}>
+                E-mail
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="seu@email.com"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/30 placeholder:text-white/20 transition"
+                style={{ fontFamily: 'Barlow, sans-serif' }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-white/80 mb-1.5" style={{ fontFamily: 'Barlow, sans-serif' }}>
+                ID da Conta
+              </label>
+              <input
+                type="text"
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                required
+                autoComplete="username"
+                placeholder="Digite seu ID"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111319] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/30 placeholder:text-white/20 transition"
+                style={{ fontFamily: 'Barlow, sans-serif' }}
+              />
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <input
+                type="checkbox"
+                id="remember"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="lobby-login-checkbox"
+              />
+              <label
+                htmlFor="remember"
+                className="text-sm text-white/70 select-none cursor-pointer"
+                style={{ fontFamily: 'Barlow, sans-serif' }}
+              >
+                Lembrar sessão
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#00d4ff] text-[#0a0a0f] font-semibold hover:bg-[#00b8e6] active:scale-[0.98] transition disabled:opacity-60 shadow-lg shadow-[#00d4ff]/20"
+              style={{ fontFamily: 'Barlow, sans-serif' }}
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center" style={{ fontFamily: 'Barlow, sans-serif' }}>
+            <p className="text-sm text-white/50">
+              Crie sua conta na gorjeta{' '}
+              <a
+                href={`/gorjeta?return=lobby:${encodeURIComponent(tag)}`}
+                className="text-[#00d4ff] hover:text-[#00e5ff] font-semibold underline underline-offset-4 transition"
+              >
+                Clique aqui
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

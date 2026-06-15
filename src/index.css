@@ -119,6 +119,16 @@ input[type="checkbox"]:checked::after {
   transform: rotate(45deg);
 }
 
+/* Lobby login checkbox — yellow accent (operator theme) */
+input[type="checkbox"].lobby-login-checkbox:checked {
+  background: #facc15;
+  border-color: #facc15;
+}
+
+input[type="checkbox"].lobby-login-checkbox:checked::after {
+  border-color: #0a0a0f;
+}
+
 @layer utilities {
   .font-display {
     font-family: 'Orbitron', sans-serif;
