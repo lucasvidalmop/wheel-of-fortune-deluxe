@@ -1,6 +1,6 @@
-import { Home, Sparkles, UserCircle2 } from 'lucide-react';
+import { Home, UserCircle2 } from 'lucide-react';
 
-export type LobbyTab = 'home' | 'promos' | 'perfil';
+export type LobbyTab = 'home' | 'perfil';
 
 interface Props {
   active: LobbyTab;
@@ -9,7 +9,6 @@ interface Props {
 
 const tabs: { key: LobbyTab; label: string; Icon: typeof Home }[] = [
   { key: 'home', label: 'Início', Icon: Home },
-  { key: 'promos', label: 'Promoções', Icon: Sparkles },
   { key: 'perfil', label: 'Perfil', Icon: UserCircle2 },
 ];
 
@@ -19,7 +18,7 @@ const LobbyBottomNav = ({ active, onChange }: Props) => (
     className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-xl bg-black/55 border-t border-white/10 pb-safe"
     style={{ fontFamily: 'var(--lobby-font-body, Barlow), sans-serif' }}
   >
-    <ul className="mx-auto w-full max-w-md grid grid-cols-3">
+    <ul className="mx-auto w-full max-w-xs grid grid-cols-2">
       {tabs.map(({ key, label, Icon }) => {
         const isActive = active === key;
         return (
