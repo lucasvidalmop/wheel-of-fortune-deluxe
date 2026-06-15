@@ -262,17 +262,20 @@ const Lobby = ({ tag }: { tag: string }) => {
   }
 
   return (
-    <LobbyShell
-      theme={theme}
-      bgImageUrl={pageConfig.bg_image_url}
-      logoUrl={pageConfig.logo_url}
-      session={session}
-      coins={coins}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-    >
-      {content}
-    </LobbyShell>
+    <>
+      {seoEl}
+      <LobbyShell
+        theme={theme}
+        bgImageUrl={pageConfig.bg_image_url}
+        logoUrl={pageConfig.logo_url}
+        session={session}
+        coins={coins}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      >
+        {content}
+      </LobbyShell>
+    </>
   );
 };
 
