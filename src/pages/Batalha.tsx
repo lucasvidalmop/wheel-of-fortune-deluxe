@@ -428,11 +428,35 @@ export default function Batalha() {
 
   const resetWheel = () => setEliminatedIds(new Set());
 
+  // Promote the current "collecting" battle to "running" and create a new
+  // "collecting" so payments arriving during the running battle queue up
+  // for the next one.
+  const startBattle = async () => {
+    if (!session?.user?.id || !currentBattle || currentBattle.status !== 'collecting') return;
+    setStartingBattle(true);
+    try {
+      const { error: upErr } = await (supabase as any)
+        .from('battles')
+        .update({ status: 'running', started_at: new Date().toISOString() })
+        .eq('id', currentBattle.id);
+      if (upErr) {
+        toast.error('Falha ao iniciar batalha');
+        return;
+      }
+      // Create the queue for the next battle.
+      await (supabase as any).rpc('get_or_create_collecting_battle', { _owner: session.user.id });
+      setCurrentBattle({ id: currentBattle.id, status: 'running' });
+      toast.success('Batalha iniciada! Novos pagamentos vão para a próxima.');
+    } finally {
+      setStartingBattle(false);
+    }
+  };
+
   const resetTournament = async () => {
     const ok = await confirm({
       title: 'Encerrar batalha?',
-      message: 'O campeão atual (1º do ranking) será gravado no histórico de vencedores e uma nova batalha será iniciada.',
-      confirmLabel: 'Encerrar e iniciar nova',
+      message: 'O campeão atual (1º do ranking) será gravado no histórico de vencedores e a próxima batalha (fila) será carregada.',
+      confirmLabel: 'Encerrar batalha',
       cancelLabel: 'Cancelar',
       variant: 'danger',
     });
@@ -440,7 +464,6 @@ export default function Batalha() {
 
     // Determine the champion: highest score in the ranking.
     const champion = [...participants].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
-    // Final prize = total bankroll at end of tournament (banca total), not the champion's individual bonus.
     const finalPrize = totalBankroll;
     if (champion && finalPrize > 0) {
       setWinnerHistory((prev) => [
@@ -460,6 +483,21 @@ export default function Batalha() {
           if (error) console.warn('Failed to mark participants consumed on reset:', error);
         });
     }
+
+    // Finalize current battle row + persist champion
+    if (currentBattle) {
+      await (supabase as any)
+        .from('battles')
+        .update({
+          status: 'finished',
+          finished_at: new Date().toISOString(),
+          champion_name: champion?.name ?? null,
+          champion_game: champion?.game ?? null,
+          champion_score: finalPrize > 0 ? finalPrize : null,
+        })
+        .eq('id', currentBattle.id);
+    }
+
     setParticipants([]);
     setEliminatedIds(new Set());
     setLastDrawn(null);
@@ -473,8 +511,18 @@ export default function Batalha() {
       window.localStorage.removeItem('battle_initial_bankroll');
       window.localStorage.removeItem('battle_tournament_entry');
     } catch { /* ignore */ }
-    toast.success(champion && finalPrize > 0 ? `Campeão: ${champion.name}` : 'Nova batalha iniciada');
+
+    // Resolve the next battle (existing collecting, or create one)
+    if (session?.user?.id) {
+      const { data: nextId } = await (supabase as any)
+        .rpc('get_or_create_collecting_battle', { _owner: session.user.id });
+      if (nextId) setCurrentBattle({ id: nextId as string, status: 'collecting' });
+      else setCurrentBattle(null);
+    }
+
+    toast.success(champion && finalPrize > 0 ? `Campeão: ${champion.name}` : 'Batalha encerrada');
   };
+
 
   // Ranking sorted by manual score (highest first), then by name as tiebreaker.
   const rankedParticipants = useMemo(() => {
