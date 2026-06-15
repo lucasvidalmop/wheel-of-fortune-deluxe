@@ -611,6 +611,32 @@ const Bets = ({ tag }: BetsPageProps) => {
     } catch {}
   }, [tag]);
 
+  // Auto-login quando embarcado dentro do lobby da Gorjeta
+  useEffect(() => {
+    if (!lobbyEmbed || authed) return;
+    const sess = lobbyEmbed.session;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await (supabase as any).rpc('authenticate_wheel_user', {
+          p_email: sess.email,
+          p_account_id: sess.account_id,
+          p_owner_id: sess.owner_id || null,
+        });
+        const row = Array.isArray(data) ? data[0] : data;
+        if (cancelled || error || !row) return;
+        setAuthed({
+          id: row.id || sess.wheel_user_id || '',
+          name: row.name || sess.name || '',
+          email: row.email || sess.email,
+          account_id: row.account_id || sess.account_id,
+        } as AuthedUser);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [lobbyEmbed, authed]);
+
+
   // persist authed user across navigations
   useEffect(() => {
     try {
