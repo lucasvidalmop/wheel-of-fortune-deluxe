@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Copy, Upload, ExternalLink } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import type { LobbySEOConfig } from '@/components/lobby/LobbySEO';
 
 type ProductKey = 'roleta' | 'batalha' | 'luckybox' | 'apostas';
 
