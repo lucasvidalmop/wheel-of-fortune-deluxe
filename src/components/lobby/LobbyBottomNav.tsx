@@ -18,7 +18,7 @@ const LobbyBottomNav = ({ active, onChange }: Props) => (
     className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-xl bg-black/55 border-t border-white/10 pb-safe"
     style={{ fontFamily: 'var(--lobby-font-body, Barlow), sans-serif' }}
   >
-    <ul className="mx-auto w-full max-w-xs grid grid-cols-2">
+    <ul className="mx-auto w-full max-w-[220px] grid grid-cols-2">
       {tabs.map(({ key, label, Icon }) => {
         const isActive = active === key;
         return (
@@ -27,18 +27,18 @@ const LobbyBottomNav = ({ active, onChange }: Props) => (
               type="button"
               onClick={() => onChange(key)}
               aria-current={isActive ? 'page' : undefined}
-              className="lobby-tap flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em]"
+              className="lobby-tap flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 text-[9px] font-semibold uppercase tracking-[0.12em]"
               style={{
                 color: isActive ? 'var(--lobby-primary, #00d4ff)' : 'rgba(255,255,255,0.55)',
               }}
             >
               <span
-                className="inline-flex items-center justify-center h-9 w-9 rounded-full transition"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-full transition"
                 style={{
                   background: isActive ? 'color-mix(in srgb, var(--lobby-primary, #00d4ff) 18%, transparent)' : 'transparent',
                 }}
               >
-                <Icon size={20} strokeWidth={isActive ? 2.4 : 2} />
+                <Icon size={16} strokeWidth={isActive ? 2.4 : 2} />
               </span>
               {label}
             </button>
