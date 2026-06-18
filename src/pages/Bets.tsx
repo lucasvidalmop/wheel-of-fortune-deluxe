@@ -619,14 +619,16 @@ const Bets = ({ tag }: BetsPageProps) => {
     let cancelled = false;
     (async () => {
       try {
+        const ownerIdForAuth = sess.owner_id || page?.ownerId || null;
+        if (!sess.wheel_user_id && !ownerIdForAuth) return;
         const { data, error } = await (supabase as any).rpc('authenticate_wheel_user', {
           p_email: sess.email,
           p_account_id: sess.account_id,
-          p_owner_id: sess.owner_id || null,
+          p_owner_id: ownerIdForAuth,
         });
         const row = Array.isArray(data) ? data[0] : data;
         if (cancelled || error || !row) return;
-        const userId = row.id || sess.wheel_user_id || '';
+        const userId = sess.wheel_user_id || row.id || '';
         let tokensBalance = 0;
         if (userId) {
           const { data: balanceRow } = await (supabase as any)
@@ -647,7 +649,7 @@ const Bets = ({ tag }: BetsPageProps) => {
       } catch { /* ignore */ }
     })();
     return () => { cancelled = true; };
-  }, [lobbyEmbed]);
+  }, [lobbyEmbed, page?.ownerId]);
 
 
   // persist authed user across navigations
