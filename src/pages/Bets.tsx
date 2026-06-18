@@ -626,12 +626,23 @@ const Bets = ({ tag }: BetsPageProps) => {
         });
         const row = Array.isArray(data) ? data[0] : data;
         if (cancelled || error || !row) return;
+        const userId = row.id || sess.wheel_user_id || '';
+        let tokensBalance = 0;
+        if (userId) {
+          const { data: balanceRow } = await (supabase as any)
+            .from('wheel_users')
+            .select('tokens_balance')
+            .eq('id', userId)
+            .maybeSingle();
+          tokensBalance = Number(balanceRow?.tokens_balance ?? 0);
+        }
+        if (cancelled) return;
         setAuthed(prev => ({
-          id: row.id || prev?.id || sess.wheel_user_id || '',
+          id: userId || prev?.id,
           name: row.name || prev?.name || sess.name || '',
           email: row.email || prev?.email || sess.email,
           account_id: row.account_id || prev?.account_id || sess.account_id,
-          tokens_balance: row.tokens_balance ?? 0,
+          tokens_balance: tokensBalance,
         } as AuthedUser));
       } catch { /* ignore */ }
     })();
