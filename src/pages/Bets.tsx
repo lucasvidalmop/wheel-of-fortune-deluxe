@@ -619,24 +619,37 @@ const Bets = ({ tag }: BetsPageProps) => {
     let cancelled = false;
     (async () => {
       try {
+        const ownerIdForAuth = sess.owner_id || page?.ownerId || null;
+        if (!sess.wheel_user_id && !ownerIdForAuth) return;
         const { data, error } = await (supabase as any).rpc('authenticate_wheel_user', {
           p_email: sess.email,
           p_account_id: sess.account_id,
-          p_owner_id: sess.owner_id || null,
+          p_owner_id: ownerIdForAuth,
         });
         const row = Array.isArray(data) ? data[0] : data;
         if (cancelled || error || !row) return;
+        const userId = sess.wheel_user_id || row.id || '';
+        let tokensBalance = 0;
+        if (userId) {
+          const { data: balanceRow } = await (supabase as any)
+            .from('wheel_users')
+            .select('tokens_balance')
+            .eq('id', userId)
+            .maybeSingle();
+          tokensBalance = Number(balanceRow?.tokens_balance ?? 0);
+        }
+        if (cancelled) return;
         setAuthed(prev => ({
-          id: row.id || prev?.id || sess.wheel_user_id || '',
+          id: userId || prev?.id,
           name: row.name || prev?.name || sess.name || '',
           email: row.email || prev?.email || sess.email,
           account_id: row.account_id || prev?.account_id || sess.account_id,
-          tokens_balance: row.tokens_balance ?? 0,
+          tokens_balance: tokensBalance,
         } as AuthedUser));
       } catch { /* ignore */ }
     })();
     return () => { cancelled = true; };
-  }, [lobbyEmbed]);
+  }, [lobbyEmbed, page?.ownerId]);
 
 
   // persist authed user across navigations
