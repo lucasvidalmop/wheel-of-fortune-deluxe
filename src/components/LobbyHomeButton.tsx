@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 const HIDDEN_PATHS = [/^\/$/, /^\/admin/, /^\/dashboard/, /^\/unsubscribe/];
 
 const cache = new Map<string, string>(); // path -> lobbyTag ("" means none)
+const SS_PREFIX = 'lobby_tag_for:'; // sessionStorage cache key per path
 
 const LobbyHomeButton = () => {
   const location = useLocation();
@@ -18,11 +19,25 @@ const LobbyHomeButton = () => {
     // Hide on the lobby page itself (any casing / nested form)
     if (path.toLowerCase().includes('lobby=')) { setTag(''); return; }
 
+    // 1) In-memory cache (instant, no network)
     if (cache.has(path)) { setTag(cache.get(path) || ''); return; }
 
+    // 2) sessionStorage cache per-path — persists across navigations & reloads in the tab.
+    //    If we already resolved this exact path in this session, skip the edge function entirely.
     try {
-      const cached = sessionStorage.getItem('lobby_tag') || '';
-      setTag(cached);
+      const ssKey = SS_PREFIX + path;
+      const stored = sessionStorage.getItem(ssKey);
+      if (stored !== null) {
+        cache.set(path, stored);
+        setTag(stored);
+        return;
+      }
+    } catch { /* ignore */ }
+
+    // 3) Optimistic: show last-known global tag while resolving (avoids flicker on first load)
+    try {
+      const hint = sessionStorage.getItem('lobby_tag') || '';
+      if (hint) setTag(hint);
     } catch { /* ignore */ }
 
     let alive = true;
@@ -34,8 +49,8 @@ const LobbyHomeButton = () => {
         cache.set(path, resolved);
         setTag(resolved);
         try {
+          sessionStorage.setItem(SS_PREFIX + path, resolved);
           if (resolved) sessionStorage.setItem('lobby_tag', resolved);
-          else sessionStorage.removeItem('lobby_tag');
         } catch { /* ignore */ }
       } catch { /* ignore */ }
     })();

@@ -71,10 +71,12 @@ Deno.serve(async (req) => {
     else if (first.startsWith("lobby=")) ownerId = await tryLobby(first.substring(6));
     else if (first.startsWith("dep=") || first.startsWith("depbs=")) {
       const tag = first.split("=")[1] || "";
-      ownerId = (await tryBets(tag)) || (await tryLucky(tag)) || (await tryWheel(tag));
+      const [b, l, w] = await Promise.all([tryBets(tag), tryLucky(tag), tryWheel(tag)]);
+      ownerId = b || l || w;
     } else if (first.startsWith("resgate=") || first.startsWith("atualizar=")) {
       const tag = first.split("=")[1] || "";
-      ownerId = (await tryWheel(tag)) || (await tryBets(tag)) || (await tryLucky(tag));
+      const [w, b, l] = await Promise.all([tryWheel(tag), tryBets(tag), tryLucky(tag)]);
+      ownerId = w || b || l;
     } else if (first === "ref" && segments[1]) {
       ownerId = await tryReferral(segments[1]);
     } else if (first && !["admin", "dashboard", "unsubscribe", "gorjeta", "influencer", "batalha"].includes(first)) {
