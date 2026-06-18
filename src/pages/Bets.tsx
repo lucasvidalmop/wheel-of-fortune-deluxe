@@ -612,8 +612,9 @@ const Bets = ({ tag }: BetsPageProps) => {
   }, [tag]);
 
   // Auto-login quando embarcado dentro do lobby da Gorjeta
+  // Sempre revalida saldo via RPC (mesmo se já existir authed restaurado do storage)
   useEffect(() => {
-    if (!lobbyEmbed || authed) return;
+    if (!lobbyEmbed) return;
     const sess = lobbyEmbed.session;
     let cancelled = false;
     (async () => {
@@ -625,17 +626,17 @@ const Bets = ({ tag }: BetsPageProps) => {
         });
         const row = Array.isArray(data) ? data[0] : data;
         if (cancelled || error || !row) return;
-        setAuthed({
-          id: row.id || sess.wheel_user_id || '',
-          name: row.name || sess.name || '',
-          email: row.email || sess.email,
-          account_id: row.account_id || sess.account_id,
+        setAuthed(prev => ({
+          id: row.id || prev?.id || sess.wheel_user_id || '',
+          name: row.name || prev?.name || sess.name || '',
+          email: row.email || prev?.email || sess.email,
+          account_id: row.account_id || prev?.account_id || sess.account_id,
           tokens_balance: row.tokens_balance ?? 0,
-        } as AuthedUser);
+        } as AuthedUser));
       } catch { /* ignore */ }
     })();
     return () => { cancelled = true; };
-  }, [lobbyEmbed, authed]);
+  }, [lobbyEmbed]);
 
 
   // persist authed user across navigations
