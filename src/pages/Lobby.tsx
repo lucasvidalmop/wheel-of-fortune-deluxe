@@ -113,11 +113,15 @@ const Lobby = ({ tag }: { tag: string }) => {
       // Fallback: resolve wheel_user_id by email + account_id (for sessions
       // created before wheel_user_id was persisted).
       if (!userId && session.email && session.account_id) {
-        const { data: u } = await (supabase as any)
+        let query = (supabase as any)
           .from('wheel_users')
           .select('id')
           .ilike('email', session.email.trim())
-          .eq('account_id', session.account_id.trim())
+          .eq('account_id', session.account_id.trim());
+        // Filtra pelo operador do lobby para não pegar registro de outro owner
+        // (mesmo jogador pode existir em vários operadores com saldos distintos).
+        if (session.owner_id) query = query.eq('owner_id', session.owner_id);
+        const { data: u } = await query
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -133,6 +137,7 @@ const Lobby = ({ tag }: { tag: string }) => {
           } catch { /* ignore */ }
         }
       }
+
       if (!userId) { setCoins(null); return; }
       const { data } = await (supabase as any)
         .from('wheel_users')
