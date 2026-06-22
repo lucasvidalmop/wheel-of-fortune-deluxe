@@ -141,12 +141,42 @@ const Lobby = ({ tag }: { tag: string }) => {
       if (!userId) { setCoins(null); return; }
       const { data } = await (supabase as any)
         .from('wheel_users')
-        .select('tokens_balance')
+        .select('tokens_balance, owner_id')
         .eq('id', userId)
         .maybeSingle();
+
+      // Se o wheel_user_id persistido pertence a outro operador, re-resolve
+      // pelo owner_id do lobby atual (corrige sessões antigas que ficaram
+      // apontando para o registro errado e mostravam saldo zerado).
+      if (data && session.owner_id && data.owner_id && data.owner_id !== session.owner_id) {
+        let query = (supabase as any)
+          .from('wheel_users')
+          .select('id, tokens_balance')
+          .ilike('email', session.email.trim())
+          .eq('account_id', session.account_id.trim())
+          .eq('owner_id', session.owner_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const { data: fixed } = await query;
+        if (fixed?.id) {
+          try {
+            const raw = localStorage.getItem('gorjeta_session_v1');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              parsed.wheel_user_id = fixed.id;
+              localStorage.setItem('gorjeta_session_v1', JSON.stringify(parsed));
+            }
+          } catch { /* ignore */ }
+          if (typeof fixed.tokens_balance === 'number') setCoins(fixed.tokens_balance);
+          return;
+        }
+      }
+
       if (typeof data?.tokens_balance === 'number') setCoins(data.tokens_balance);
     } catch { /* ignore */ }
-  }, [session?.wheel_user_id, session?.email, session?.account_id]);
+  }, [session?.wheel_user_id, session?.email, session?.account_id, session?.owner_id]);
+
 
   useEffect(() => { void fetchCoins(); }, [fetchCoins]);
 
