@@ -628,7 +628,11 @@ const Bets = ({ tag }: BetsPageProps) => {
         });
         const row = Array.isArray(data) ? data[0] : data;
         if (cancelled || error || !row) return;
-        const userId = sess.wheel_user_id || row.id || '';
+        // Prefer the id returned by authenticate_wheel_user (already filtered
+        // by owner_id) over a possibly-stale sess.wheel_user_id from a previous
+        // session under a different operator.
+        const userId = row.id || sess.wheel_user_id || '';
+
         let tokensBalance = 0;
         if (userId) {
           const { data: balanceRow } = await (supabase as any)
