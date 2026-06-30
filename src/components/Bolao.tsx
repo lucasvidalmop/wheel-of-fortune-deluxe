@@ -452,12 +452,51 @@ export default function Bolao({ open, onClose, tag, authed, accent = "#d4af37", 
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-4" style={{ color: text }}>
-              {isLocked && (
-                <div className="mb-4 p-3 rounded-lg flex items-center gap-2" style={{ background: `${accent}22`, color: accent }}>
-                  <CheckCircle2 size={18} /> Palpite enviado. Boa sorte!
-                  {entry?.score > 0 && <span className="ml-auto font-bold">{entry.score} pts</span>}
-                </div>
-              )}
+              {isLocked && (() => {
+                const bd = (entry?.score_breakdown || {}) as Record<string, number>;
+                const total = Number(entry?.score || 0);
+                const items: Array<[string, number]> = [
+                  ["Acertos de grupo", (bd.qualified_group || 0)],
+                  ["Posição exata", (bd.exact_group_position || 0)],
+                  ["Melhores 3ºs", (bd.best_third || 0)],
+                  ["Oitavas", (bd.r16 || 0)],
+                  ["Quartas", (bd.qf || 0)],
+                  ["Semifinal", (bd.sf || 0)],
+                  ["Finalistas", (bd.finalist || 0)],
+                  ["Campeão", (bd.champion || 0)],
+                ];
+                const scored = items.filter(([, v]) => v > 0);
+                const hasBreakdown = scored.length > 0;
+                return (
+                  <div className="mb-4 rounded-xl overflow-hidden" style={{ background: `${accent}18`, border: `1px solid ${accent}55` }}>
+                    <div className="flex items-center gap-2 px-3 py-2.5" style={{ color: accent }}>
+                      <CheckCircle2 size={18} />
+                      <span className="text-sm font-semibold">Palpite enviado. Boa sorte!</span>
+                      <span className="ml-auto flex items-baseline gap-1">
+                        <span className="text-[10px] uppercase tracking-wider opacity-70">Minha pontuação</span>
+                        <span className="text-xl font-black tabular-nums">{total}</span>
+                        <span className="text-[11px] font-semibold opacity-80">pts</span>
+                      </span>
+                    </div>
+                    {hasBreakdown && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: `${accent}33` }}>
+                        {scored.map(([label, v]) => (
+                          <div key={label} className="px-3 py-2 flex flex-col" style={{ background: cardBg }}>
+                            <span className="text-[10px] uppercase tracking-wide" style={{ color: muted }}>{label}</span>
+                            <span className="text-sm font-bold tabular-nums" style={{ color: text }}>+{v} pts</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!hasBreakdown && total === 0 && (
+                      <div className="px-3 py-2 text-[11px]" style={{ color: muted, background: cardBg }}>
+                        A pontuação será exibida aqui assim que os resultados oficiais forem lançados.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {tab === "groups" && (
                 <>
                   {!readOnly && (
