@@ -327,6 +327,10 @@ const Lobby = ({ tag }: { tag: string }) => {
     );
   }
 
+  // Dentro de um produto, ocultamos o chrome do lobby para não cobrir/comer o
+  // conteúdo do app embutido (cada produto tem sua própria UI + LobbyHomeButton).
+  const isProductView = view !== 'home' && view !== 'perfil';
+
   return (
     <>
       {seoEl}
@@ -339,6 +343,8 @@ const Lobby = ({ tag }: { tag: string }) => {
         coinIconUrl={coinIconUrl}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        hideHeader={isProductView}
+        hideNav={isProductView}
       >
         {content}
       </LobbyShell>
