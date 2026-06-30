@@ -119,23 +119,12 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
       if (error) throw error;
       toast.success("Resultados oficiais salvos");
       await load();
-      // Recalcula automaticamente para que os usuários vejam a pontuação
-      // assim que parte dos resultados oficiais é lançada.
-      try {
-        const { data, error: scoreErr } = await supabase.functions.invoke("score-bolao", { body: { bolao_config_id: selectedId } });
-        if (scoreErr || data?.error) throw new Error(data?.error || scoreErr?.message);
-        toast.success(`Pontuação atualizada (${data.updated} palpites)`);
-        await loadEntries();
-      } catch (e: any) {
-        toast.error("Salvo, mas falha ao recalcular: " + (e?.message || ""));
-      }
     } catch (e: any) {
       toast.error("Erro: " + e?.message);
     } finally {
       setSaving(false);
     }
   };
-
 
   const toggleEntry = async (id: string) => {
     if (expandedEntry === id) { setExpandedEntry(""); return; }
