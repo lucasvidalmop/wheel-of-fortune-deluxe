@@ -979,7 +979,7 @@ const Influencer = () => {
                   <span className="text-lg">🏆</span>
                   <h2 className="text-base font-bold" style={{ color: textColor }}>Sortear Ganhadores</h2>
                 </div>
-                <p className="text-[11px] text-white/40">{users.length} participante(s) · {prizesRemaining} prêmios restantes</p>
+                <p className="text-[11px] text-white/40">{allParticipants.length} participante(s) · {prizesRemaining} prêmios restantes</p>
               </div>
               {raffleStep !== 'sending' && (
                 <button onClick={closeRaffle} className="p-1 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white">
