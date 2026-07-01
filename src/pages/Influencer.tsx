@@ -101,6 +101,14 @@ const Influencer = () => {
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [resetCountdown, setResetCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const winnersListRef = useRef<HTMLDivElement | null>(null);
+  const lastWinnerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (lastWinnerRef.current) {
+      lastWinnerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  });
 
   // Individual prize dialog
   const [showPrizeDialog, setShowPrizeDialog] = useState(false);
@@ -979,7 +987,7 @@ const Influencer = () => {
                   <span className="text-lg">🏆</span>
                   <h2 className="text-base font-bold" style={{ color: textColor }}>Sortear Ganhadores</h2>
                 </div>
-                <p className="text-[11px] text-white/40">{users.length} participante(s) · {prizesRemaining} prêmios restantes</p>
+                <p className="text-[11px] text-white/40">{allParticipants.length} participante(s) · {prizesRemaining} prêmios restantes</p>
               </div>
               {raffleStep !== 'sending' && (
                 <button onClick={closeRaffle} className="p-1 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white">
@@ -1088,9 +1096,9 @@ const Influencer = () => {
                   </div>
 
                   {/* Winners list with staggered animation */}
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {winners.filter(w => w.status !== 'pending').map((w, i) => (
-                      <div key={i} className="flex items-center gap-2 p-2.5 rounded-xl border animate-fade-in"
+                  <div ref={winnersListRef} className="space-y-2 max-h-60 overflow-y-auto scroll-smooth">
+                    {winners.filter(w => w.status !== 'pending').map((w, i, arr) => (
+                      <div key={i} ref={i === arr.length - 1 ? lastWinnerRef : undefined} className="flex items-center gap-2 p-2.5 rounded-xl border animate-fade-in"
                         style={{ borderColor: w.status === 'sent' ? `${accent}30` : 'rgba(255,255,255,0.06)', background: w.status === 'sent' ? `${accent}08` : 'rgba(255,255,255,0.02)' }}>
                         <span className="text-sm">💵</span>
                         <span className="text-xs text-white/80 flex-1 truncate">{formatCurrency(w.amount)} → <strong>{w.user.name}</strong></span>
