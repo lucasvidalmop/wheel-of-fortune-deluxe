@@ -1088,9 +1088,9 @@ const Influencer = () => {
                   </div>
 
                   {/* Winners list with staggered animation */}
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {winners.filter(w => w.status !== 'pending').map((w, i) => (
-                      <div key={i} className="flex items-center gap-2 p-2.5 rounded-xl border animate-fade-in"
+                  <div ref={winnersListRef} className="space-y-2 max-h-60 overflow-y-auto scroll-smooth">
+                    {winners.filter(w => w.status !== 'pending').map((w, i, arr) => (
+                      <div key={i} ref={i === arr.length - 1 ? lastWinnerRef : undefined} className="flex items-center gap-2 p-2.5 rounded-xl border animate-fade-in"
                         style={{ borderColor: w.status === 'sent' ? `${accent}30` : 'rgba(255,255,255,0.06)', background: w.status === 'sent' ? `${accent}08` : 'rgba(255,255,255,0.02)' }}>
                         <span className="text-sm">💵</span>
                         <span className="text-xs text-white/80 flex-1 truncate">{formatCurrency(w.amount)} → <strong>{w.user.name}</strong></span>
