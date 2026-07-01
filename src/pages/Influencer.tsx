@@ -101,6 +101,14 @@ const Influencer = () => {
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [resetCountdown, setResetCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const winnersListRef = useRef<HTMLDivElement | null>(null);
+  const lastWinnerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (lastWinnerRef.current) {
+      lastWinnerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  });
 
   // Individual prize dialog
   const [showPrizeDialog, setShowPrizeDialog] = useState(false);
