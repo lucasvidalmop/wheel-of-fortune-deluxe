@@ -512,6 +512,24 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     }
   };
 
+  const resendNow = async (id: string) => {
+    try {
+      const nowIso = new Date().toISOString();
+      const { error } = await supabase
+        .from('scheduled_brevo_emails')
+        .update({ status: 'pending', next_run_at: nowIso, scheduled_at: nowIso, last_result: null })
+        .eq('id', id);
+      if (error) throw error;
+      toast.success('Reenviando agora...');
+      try {
+        await supabase.functions.invoke('process-scheduled-brevo', { body: {} });
+      } catch { /* cron picks up in até 1 min */ }
+      setTimeout(loadScheduled, 1500);
+    } catch (e: any) {
+      toast.error(`Erro ao reenviar: ${e?.message || 'falha desconhecida'}`);
+    }
+  };
+
   const previewContent = useMemo(() => {
     const sample = csvRecipients[0] || { email: 'exemplo@email.com', name: 'Exemplo' };
     const raw = contentMode === 'html' ? htmlContent : textContent;
