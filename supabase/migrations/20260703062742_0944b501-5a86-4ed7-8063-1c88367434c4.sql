@@ -1,0 +1,1 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.scheduled_brevo_emails TO authenticated; GRANT ALL ON public.scheduled_brevo_emails TO service_role;
