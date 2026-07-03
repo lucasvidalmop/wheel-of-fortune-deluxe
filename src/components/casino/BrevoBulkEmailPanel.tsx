@@ -110,7 +110,7 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
     try {
       const { data, error } = await supabase
         .from('scheduled_brevo_emails')
-        .select('id,owner_id,subject,html,recipients,recurrence,next_run_at,last_run_at,status,created_at')
+        .select('id,owner_id,subject,recurrence,scheduled_at,next_run_at,last_sent_at,last_result,status,created_at')
         .eq('owner_id', ownerId)
         .order('next_run_at', { ascending: true })
         .limit(50);
