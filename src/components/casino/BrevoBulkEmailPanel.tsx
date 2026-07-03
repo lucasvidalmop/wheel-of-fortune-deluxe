@@ -916,6 +916,14 @@ export default function BrevoBulkEmailPanel({ ownerId }: { ownerId: string | nul
                   </div>
                   <button
                     type="button"
+                    onClick={() => resendNow(s.id)}
+                    className="p-1.5 rounded-md text-emerald-300 hover:bg-emerald-500/10 transition"
+                    title="Enviar agora / Reenviar"
+                  >
+                    <Send size={13} />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => deleteScheduled(s.id)}
                     className="p-1.5 rounded-md text-rose-300 hover:bg-rose-500/10 transition"
                     title="Remover agendamento"
