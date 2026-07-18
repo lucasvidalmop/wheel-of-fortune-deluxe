@@ -66,7 +66,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
     setLoading(true);
     try {
       const { data: cfgs } = await supabase.from("bolao_configs")
-        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, ranking_visible, scoring, groups, bracket_template, official_results, page_config")
+        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, ranking_visible, scoring, groups, bracket_template, official_results, page_config, ghost_ranking")
         .eq("owner_id", ownerId).order("created_at", { ascending: false });
       const list = (cfgs || []) as BolaoConfig[];
       setConfigs(list);
