@@ -20,6 +20,7 @@ interface BolaoConfig {
   bracket_template: any;
   official_results: any;
   page_config: any;
+  ghost_ranking: Array<{ name: string; account_id: string; score: number }>;
 }
 
 interface Entry {
@@ -65,7 +66,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
     setLoading(true);
     try {
       const { data: cfgs } = await supabase.from("bolao_configs")
-        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, ranking_visible, scoring, groups, bracket_template, official_results, page_config")
+        .select("id, owner_id, tag, name, submission_deadline, submissions_open_at, is_active, ranking_visible, scoring, groups, bracket_template, official_results, page_config, ghost_ranking")
         .eq("owner_id", ownerId).order("created_at", { ascending: false });
       const list = (cfgs || []) as BolaoConfig[];
       setConfigs(list);
@@ -325,6 +326,123 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
             />
             Mostrar ranking para os participantes
           </label>
+        </div>
+      )}
+
+      {config && (
+        <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h3 className="font-bold text-sm">Fantasmas do ranking</h3>
+              <p className="text-xs text-muted-foreground">
+                Participantes fictícios que aparecem no Top 10 apenas quando o ranking estiver visível. Não afetam pontuação real nem podem ganhar prêmios.
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                const next = [...(config.ghost_ranking || []), { name: "", account_id: "", score: 0 }];
+                setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ghost_ranking: next } : c));
+              }}
+              className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap">
+              + Adicionar
+            </button>
+          </div>
+
+          {(config.ghost_ranking || []).length > 0 && (
+            <div className="space-y-2">
+              {(config.ghost_ranking || []).map((g, idx) => (
+                <div key={idx} className="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border">
+                  <input
+                    type="text"
+                    placeholder="Nome"
+                    value={g.name}
+                    onChange={(e) => {
+                      const next = [...config.ghost_ranking];
+                      next[idx] = { ...next[idx], name: e.target.value };
+                      setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ghost_ranking: next } : c));
+                    }}
+                    className="flex-1 min-w-[140px] px-2 py-1.5 rounded bg-background border border-border text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="ID"
+                    value={g.account_id}
+                    onChange={(e) => {
+                      const next = [...config.ghost_ranking];
+                      next[idx] = { ...next[idx], account_id: e.target.value };
+                      setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ghost_ranking: next } : c));
+                    }}
+                    className="w-32 px-2 py-1.5 rounded bg-background border border-border text-sm"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Pontos"
+                    value={g.score}
+                    onChange={(e) => {
+                      const next = [...config.ghost_ranking];
+                      next[idx] = { ...next[idx], score: Number(e.target.value) || 0 };
+                      setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ghost_ranking: next } : c));
+                    }}
+                    className="w-24 px-2 py-1.5 rounded bg-background border border-border text-sm"
+                  />
+                  <button
+                    onClick={() => {
+                      const next = config.ghost_ranking.filter((_, i) => i !== idx);
+                      setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ghost_ranking: next } : c));
+                    }}
+                    className="p-2 rounded bg-destructive/10 text-destructive hover:bg-destructive/20">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
+            <button
+              onClick={async () => {
+                const clean = (config.ghost_ranking || [])
+                  .filter(g => g.name.trim())
+                  .map(g => ({ name: g.name.trim(), account_id: String(g.account_id || "").trim(), score: Number(g.score) || 0 }));
+                const { error } = await supabase.from("bolao_configs")
+                  .update({ ghost_ranking: clean }).eq("id", config.id);
+                if (error) toast.error("Erro ao salvar fantasmas");
+                else {
+                  toast.success("Fantasmas salvos");
+                  setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ghost_ranking: clean } : c));
+                }
+              }}
+              className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
+              <Save className="w-4 h-4 inline mr-1" /> Salvar fantasmas
+            </button>
+            <button
+              onClick={() => {
+                const nStr = prompt("Quantos fantasmas gerar?", "10");
+                const n = Math.max(1, Math.min(50, Number(nStr) || 0));
+                if (!n) return;
+                const minStr = prompt("Pontuação mínima?", "50");
+                const maxStr = prompt("Pontuação máxima?", "200");
+                const min = Number(minStr) || 0;
+                const max = Math.max(min, Number(maxStr) || min);
+                const NAMES = ["Lucas","Mateus","João","Pedro","Gabriel","Rafael","Bruno","Thiago","Diego","Felipe","Rodrigo","Vinicius","Gustavo","Leonardo","André","Eduardo","Marcelo","Ricardo","Fernando","Daniel","Camila","Juliana","Fernanda","Amanda","Beatriz","Larissa","Mariana","Aline","Patrícia","Renata"];
+                const SURN = ["Silva","Souza","Santos","Oliveira","Pereira","Costa","Almeida","Rodrigues","Nunes","Lima","Ferreira","Gomes","Ribeiro","Carvalho","Barbosa","Martins","Araújo","Cardoso","Teixeira","Moreira"];
+                const gen = Array.from({ length: n }).map(() => {
+                  const first = NAMES[Math.floor(Math.random() * NAMES.length)];
+                  const last = SURN[Math.floor(Math.random() * SURN.length)];
+                  const acc = String(Math.floor(100000 + Math.random() * 899999));
+                  const score = Math.floor(min + Math.random() * (max - min + 1));
+                  return { name: `${first} ${last}`, account_id: acc, score };
+                });
+                const next = [...(config.ghost_ranking || []), ...gen];
+                setConfigs(cs => cs.map(c => c.id === config.id ? { ...c, ghost_ranking: next } : c));
+              }}
+              className="px-3 py-2 rounded-lg bg-muted text-sm">
+              Gerar N fantasmas
+            </button>
+            <span className="text-xs text-muted-foreground ml-auto">
+              {(config.ghost_ranking || []).length} fantasma(s) — {config.ranking_visible ? "visíveis no ranking" : "ocultos (ranking desativado)"}
+            </span>
+          </div>
         </div>
       )}
 

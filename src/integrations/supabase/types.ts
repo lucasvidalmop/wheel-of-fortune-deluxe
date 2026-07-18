@@ -641,6 +641,7 @@ export type Database = {
         Row: {
           bracket_template: Json
           created_at: string
+          ghost_ranking: Json
           groups: Json
           id: string
           is_active: boolean
@@ -658,6 +659,7 @@ export type Database = {
         Insert: {
           bracket_template?: Json
           created_at?: string
+          ghost_ranking?: Json
           groups?: Json
           id?: string
           is_active?: boolean
@@ -675,6 +677,7 @@ export type Database = {
         Update: {
           bracket_template?: Json
           created_at?: string
+          ghost_ranking?: Json
           groups?: Json
           id?: string
           is_active?: boolean

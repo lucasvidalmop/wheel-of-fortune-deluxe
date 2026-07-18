@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     const { data: bolao } = await supabase
       .from("bolao_configs")
-      .select("id, name, submission_deadline, submissions_open_at, is_active, page_config, scoring, groups, bracket_template, official_results, ranking_visible")
+      .select("id, name, submission_deadline, submissions_open_at, is_active, page_config, scoring, groups, bracket_template, official_results, ranking_visible, ghost_ranking")
       .eq("owner_id", betsCfg.owner_id)
       .eq("tag", tag)
       .maybeSingle();
@@ -89,12 +89,23 @@ Deno.serve(async (req) => {
         .in("status", ["submitted", "locked"])
         .order("score", { ascending: false })
         .order("submitted_at", { ascending: true })
-        .limit(10);
-      ranking = (topRows || []).map((r: any) => ({
+        .limit(50);
+      const real = (topRows || []).map((r: any) => ({
         name: r.user_name || "",
         account_id: r.account_id || "",
         score: r.score || 0,
       }));
+      const ghosts = Array.isArray((bolao as any).ghost_ranking) ? (bolao as any).ghost_ranking : [];
+      const ghostsClean = ghosts
+        .filter((g: any) => g && (g.name || "").trim())
+        .map((g: any) => ({
+          name: String(g.name || ""),
+          account_id: String(g.account_id || ""),
+          score: Number(g.score) || 0,
+        }));
+      ranking = [...real, ...ghostsClean]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
     }
 
     return new Response(JSON.stringify({
