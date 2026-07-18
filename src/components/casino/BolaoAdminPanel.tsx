@@ -20,6 +20,7 @@ interface BolaoConfig {
   bracket_template: any;
   official_results: any;
   page_config: any;
+  ghost_ranking: Array<{ name: string; account_id: string; score: number }>;
 }
 
 interface Entry {
