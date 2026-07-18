@@ -60,14 +60,16 @@ const mergeContacts = (items: Contact[]) => {
       map.set(phone, {
         ...normalizedItem,
         lead: normalizedItem.lead || existing.lead,
+        account_id: normalizedItem.account_id || existing.account_id,
       });
       return;
     }
 
-    if (!existing.lead && normalizedItem.lead) {
+    if ((!existing.lead && normalizedItem.lead) || (!existing.account_id && normalizedItem.account_id)) {
       map.set(phone, {
         ...existing,
-        lead: normalizedItem.lead,
+        lead: normalizedItem.lead || existing.lead,
+        account_id: normalizedItem.account_id || existing.account_id,
       });
     }
   });
