@@ -233,7 +233,8 @@ const WhatsAppShareDialog = ({
 
       return (
         (contact.lead || '').toLowerCase().includes(q) ||
-        (contact.numero || '').includes(q)
+        (contact.numero || '').includes(q) ||
+        (contact.account_id || '').toLowerCase().includes(q)
       );
     });
   }, [contacts, groupFilter, search]);
