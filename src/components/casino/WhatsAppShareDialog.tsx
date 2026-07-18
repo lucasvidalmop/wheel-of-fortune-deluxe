@@ -25,6 +25,7 @@ interface Contact {
   numero: string;
   group_name: string;
   source: 'csv' | 'subscriber';
+  account_id?: string;
 }
 
 const DEFAULT_MESSAGE = (label: string, url: string) =>
