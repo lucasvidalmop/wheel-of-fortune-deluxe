@@ -120,6 +120,15 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
       if (error) throw error;
       toast.success("Resultados oficiais salvos");
       await load();
+      // Recalcula automaticamente após salvar resultados oficiais
+      try {
+        const { data, error: sErr } = await supabase.functions.invoke("score-bolao", { body: { bolao_config_id: selectedId } });
+        if (sErr || data?.error) throw new Error(data?.error || sErr?.message);
+        toast.success(`Pontuação recalculada (${data.updated} palpites)`);
+        await loadEntries();
+      } catch (e: any) {
+        toast.error("Salvo, mas falhou recalcular: " + (e?.message || ""));
+      }
     } catch (e: any) {
       toast.error("Erro: " + e?.message);
     } finally {
