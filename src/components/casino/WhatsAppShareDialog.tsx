@@ -156,7 +156,7 @@ const WhatsAppShareDialog = ({
     while (true) {
       const { data, error } = await (supabase as any)
         .from('wheel_users')
-        .select('id, name, phone')
+        .select('id, name, phone, account_id')
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false })
         .range(from, from + PAGE - 1);
@@ -173,6 +173,7 @@ const WhatsAppShareDialog = ({
             numero: item.phone || '',
             group_name: 'Inscritos',
             source: 'subscriber' as const,
+            account_id: item.account_id ? String(item.account_id) : '',
           })),
       );
 
