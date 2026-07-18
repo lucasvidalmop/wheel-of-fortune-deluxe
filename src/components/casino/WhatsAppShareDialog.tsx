@@ -643,7 +643,7 @@ const WhatsAppShareDialog = ({
                         <input
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
-                          placeholder="Buscar nome ou número..."
+                          placeholder="Buscar nome, número ou ID..."
                           className="w-full pl-7 pr-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-xs focus:outline-none focus:border-primary/50"
                         />
                       </div>
