@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     const { data: bolao } = await supabase
       .from("bolao_configs")
-      .select("id, name, submission_deadline, submissions_open_at, is_active, page_config, scoring, groups, bracket_template, official_results, ranking_visible")
+      .select("id, name, submission_deadline, submissions_open_at, is_active, page_config, scoring, groups, bracket_template, official_results, ranking_visible, ghost_ranking")
       .eq("owner_id", betsCfg.owner_id)
       .eq("tag", tag)
       .maybeSingle();
