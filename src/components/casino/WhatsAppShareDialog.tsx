@@ -25,6 +25,7 @@ interface Contact {
   numero: string;
   group_name: string;
   source: 'csv' | 'subscriber';
+  account_id?: string;
 }
 
 const DEFAULT_MESSAGE = (label: string, url: string) =>
@@ -59,14 +60,16 @@ const mergeContacts = (items: Contact[]) => {
       map.set(phone, {
         ...normalizedItem,
         lead: normalizedItem.lead || existing.lead,
+        account_id: normalizedItem.account_id || existing.account_id,
       });
       return;
     }
 
-    if (!existing.lead && normalizedItem.lead) {
+    if ((!existing.lead && normalizedItem.lead) || (!existing.account_id && normalizedItem.account_id)) {
       map.set(phone, {
         ...existing,
-        lead: normalizedItem.lead,
+        lead: normalizedItem.lead || existing.lead,
+        account_id: normalizedItem.account_id || existing.account_id,
       });
     }
   });
@@ -155,7 +158,7 @@ const WhatsAppShareDialog = ({
     while (true) {
       const { data, error } = await (supabase as any)
         .from('wheel_users')
-        .select('id, name, phone')
+        .select('id, name, phone, account_id')
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false })
         .range(from, from + PAGE - 1);
@@ -172,6 +175,7 @@ const WhatsAppShareDialog = ({
             numero: item.phone || '',
             group_name: 'Inscritos',
             source: 'subscriber' as const,
+            account_id: item.account_id ? String(item.account_id) : '',
           })),
       );
 
@@ -229,7 +233,8 @@ const WhatsAppShareDialog = ({
 
       return (
         (contact.lead || '').toLowerCase().includes(q) ||
-        (contact.numero || '').includes(q)
+        (contact.numero || '').includes(q) ||
+        (contact.account_id || '').toLowerCase().includes(q)
       );
     });
   }, [contacts, groupFilter, search]);
@@ -638,7 +643,7 @@ const WhatsAppShareDialog = ({
                         <input
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
-                          placeholder="Buscar nome ou número..."
+                          placeholder="Buscar nome, número ou ID..."
                           className="w-full pl-7 pr-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground text-xs focus:outline-none focus:border-primary/50"
                         />
                       </div>
