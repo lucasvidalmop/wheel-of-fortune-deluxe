@@ -203,48 +203,61 @@ export default function LiveDrawPanel({ ownerId }: { ownerId: string }) {
   );
   const remaining = draft ? Math.max(0, draft.winners_count - results.length) : 0;
 
-  const drawNext = async () => {
+  const ghostNames = useMemo(
+    () => ghostText.split('\n').map(s => s.trim()).filter(Boolean),
+    [ghostText],
+  );
+
+  // Hydrate the draw settings stored on the event
+  useEffect(() => {
+    const ev = events.find(e => e.id === selectedId);
+    const cfg = (ev?.page_config as any)?.draw || {};
+    setGhostText(Array.isArray(cfg.ghosts) ? cfg.ghosts.join('\n') : '');
+    setProbability(typeof cfg.probability === 'number' ? cfg.probability : 100);
+    setMinReal(typeof cfg.minReal === 'number' ? cfg.minReal : 0);
+    setDrawQty(1);
+    setReveals([]);
+  }, [selectedId, events]);
+
+  const saveDrawSettings = async () => {
     if (!draft) return;
-    if (remaining <= 0) { toast.error('Todos os premiados já foram sorteados'); return; }
-    if (eligible.length === 0) { toast.error('Nenhum participante elegível'); return; }
+    setSavingDraw(true);
+    const page_config = {
+      ...(draft.page_config || {}),
+      draw: { ghosts: ghostNames, probability, minReal },
+    };
+    const { error } = await (supabase as any).from('gorjeta_events').update({ page_config }).eq('id', draft.id);
+    setSavingDraw(false);
+    if (error) { toast.error('Erro ao salvar ajustes'); return; }
+    setEvents(prev => prev.map(e => (e.id === draft.id ? { ...e, page_config } : e)));
+    toast.success('Ajustes do sorteio salvos');
+  };
 
-    setDrawing(true);
-    try {
-      // Suspense animation cycling through candidate names
-      const spinMs = 2200;
-      const start = Date.now();
-      await new Promise<void>(resolve => {
-        const timer = window.setInterval(() => {
-          const rnd = eligible[Math.floor(Math.random() * eligible.length)];
-          setRolling(rnd?.user_name || '');
-          if (Date.now() - start >= spinMs) {
-            window.clearInterval(timer);
-            resolve();
-          }
-        }, 80);
-      });
+  const delay = (ms: number) => new Promise<void>(r => window.setTimeout(r, ms));
+  const fakeAccountId = () => Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
 
-      const winner = eligible[Math.floor(Math.random() * eligible.length)];
-      setRolling(winner.user_name);
+  const persistWinner = async (row: RevealRow) => {
+    if (!draft) return;
+    let paymentId: string | null = null;
+    let wheelUserId: string | null = null;
 
-      const amount = Number(draft.prize_amount || 0);
-
+    if (!row.isGhost) {
       const { data: wu } = await (supabase as any)
         .from('wheel_users')
         .select('id, auto_payment')
         .eq('owner_id', ownerId)
-        .eq('account_id', winner.account_id)
+        .eq('account_id', row.accountId)
         .maybeSingle();
+      wheelUserId = wu?.id || null;
 
-      let paymentId: string | null = null;
-      if (amount > 0) {
+      if (row.amount > 0) {
         const { data: pay, error: payErr } = await (supabase as any).rpc('create_prize_payment', {
           p_owner_id: ownerId,
-          p_account_id: winner.account_id,
-          p_user_name: winner.user_name,
-          p_user_email: winner.user_email,
-          p_prize: `Sorteio ao Vivo — ${draft.name} (${fmtBRL(amount)})`,
-          p_amount: amount,
+          p_account_id: row.accountId,
+          p_user_name: row.name,
+          p_user_email: row.email,
+          p_prize: `Sorteio ao Vivo — ${draft.name} (${fmtBRL(row.amount)})`,
+          p_amount: row.amount,
           p_force_auto: !!wu?.auto_payment,
         });
         if (payErr) throw payErr;
@@ -255,40 +268,117 @@ export default function LiveDrawPanel({ ownerId }: { ownerId: string }) {
           }).catch(console.error);
         }
       }
+    }
 
-      const { error: resErr } = await (supabase as any).from('gorjeta_event_results').insert({
-        event_id: draft.id,
-        owner_id: ownerId,
-        participant_id: winner.id,
-        wheel_user_id: wu?.id || null,
-        user_name: winner.user_name,
-        user_email: winner.user_email,
-        account_id: winner.account_id,
-        game: 'live_draw',
-        outcome: { entry_number: winner.entry_number },
-        is_winner: true,
-        prize_type: 'pix',
-        prize_label: fmtBRL(amount),
-        prize_amount: amount,
-        prize_payment_id: paymentId,
+    const { error: resErr } = await (supabase as any).from('gorjeta_event_results').insert({
+      event_id: draft.id,
+      owner_id: ownerId,
+      participant_id: row.participantId,
+      wheel_user_id: wheelUserId,
+      user_name: row.name,
+      user_email: row.email,
+      account_id: row.accountId,
+      game: 'live_draw',
+      outcome: { entry_number: row.entryNumber },
+      is_winner: true,
+      prize_type: 'pix',
+      prize_label: fmtBRL(row.amount),
+      prize_amount: row.amount,
+      prize_payment_id: paymentId,
+      is_ghost: row.isGhost,
+    });
+    if (resErr) throw resErr;
+
+    if (row.participantId) {
+      await (supabase as any).from('gorjeta_event_participants').update({ has_won: true }).eq('id', row.participantId);
+    }
+  };
+
+  const executeDraw = async () => {
+    if (!draft) return;
+    if (remaining <= 0) { toast.error('Todos os premiados já foram sorteados'); return; }
+    if (eligible.length === 0 && ghostNames.length === 0) { toast.error('Nenhum participante elegível'); return; }
+
+    const qty = Math.max(1, Math.min(drawQty, remaining));
+    const amount = Number(draft.prize_amount || 0);
+    const realPool = [...eligible].sort(() => Math.random() - 0.5);
+    const ghostPool = [...ghostNames].sort(() => Math.random() - 0.5);
+
+    const picked: RevealRow[] = [];
+    let ri = 0;
+    let gi = 0;
+
+    const pushReal = () => {
+      const p = realPool[ri++];
+      picked.push({
+        key: p.id, name: p.user_name, accountId: p.account_id, email: p.user_email,
+        amount, isGhost: false, participantId: p.id, entryNumber: p.entry_number, status: 'hidden',
       });
-      if (resErr) throw resErr;
+    };
+    const pushGhost = () => {
+      const name = ghostPool[gi++];
+      picked.push({
+        key: `ghost-${gi}-${Math.random().toString(36).slice(2, 8)}`, name,
+        accountId: fakeAccountId(), email: '', amount,
+        isGhost: true, participantId: null, entryNumber: null, status: 'hidden',
+      });
+    };
 
-      await (supabase as any).from('gorjeta_event_participants').update({ has_won: true }).eq('id', winner.id);
+    const forcedReal = Math.min(minReal, realPool.length, qty);
+    for (let i = 0; i < forcedReal; i++) pushReal();
+
+    while (picked.length < qty) {
+      const wantReal = Math.random() * 100 < probability;
+      if (wantReal && ri < realPool.length) pushReal();
+      else if (gi < ghostPool.length) pushGhost();
+      else if (ri < realPool.length) pushReal();
+      else break;
+    }
+
+    if (!picked.length) { toast.error('Sem participantes suficientes'); return; }
+    picked.sort(() => Math.random() - 0.5);
+
+    setDrawing(true);
+    setReveals(picked);
+    try {
+      await (supabase as any).from('gorjeta_events').update({ status: 'running' }).eq('id', draft.id);
+
+      // Suspense: cycle through every candidate name
+      const spinNames = [...eligible.map(e => e.user_name), ...ghostNames];
+      const spinMs = 2200;
+      const start = Date.now();
+      await new Promise<void>(resolve => {
+        const timer = window.setInterval(() => {
+          setRolling(spinNames[Math.floor(Math.random() * spinNames.length)] || '');
+          if (Date.now() - start >= spinMs) { window.clearInterval(timer); resolve(); }
+        }, 70);
+      });
+      setRolling('');
+
+      for (let i = 0; i < picked.length; i++) {
+        setReveals(prev => prev.map((r, idx) => (idx === i ? { ...r, status: 'revealed' } : r)));
+        await delay(650);
+        await persistWinner(picked[i]);
+        setReveals(prev => prev.map((r, idx) => (idx === i ? { ...r, status: 'paid' } : r)));
+        await delay(180);
+      }
+
+      const total = results.length + picked.length;
       await (supabase as any).from('gorjeta_events')
-        .update({ drawn_count: results.length + 1, status: results.length + 1 >= draft.winners_count ? 'finished' : 'running' })
+        .update({ drawn_count: total, status: total >= draft.winners_count ? 'finished' : 'running' })
         .eq('id', draft.id);
 
-      toast.success(`🎉 ${winner.user_name} foi sorteado!`);
+      toast.success(`🎉 ${picked.length} ganhador(es) sorteado(s)!`);
       await loadEntries(draft.id);
-      setEvents(prev => prev.map(e => (e.id === draft.id ? { ...e, drawn_count: results.length + 1 } : e)));
+      setEvents(prev => prev.map(e => (e.id === draft.id ? { ...e, drawn_count: total } : e)));
     } catch (err: any) {
       toast.error('Erro ao sortear: ' + (err?.message || ''));
     } finally {
       setDrawing(false);
-      window.setTimeout(() => setRolling(''), 1500);
+      setRolling('');
     }
   };
+
 
   const publicUrl = draft ? `${window.location.origin}/sorteio=${draft.tag}` : '';
   const accent = draft?.theme?.accentColor || '#22d3ee';
