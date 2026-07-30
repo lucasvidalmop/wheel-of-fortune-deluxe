@@ -165,7 +165,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               </div>
             </div>
           ) : (
-            <div className="p-4 sm:p-5">
+            <div className="p-4 sm:p-5 flex flex-col min-h-0 flex-1 overflow-y-auto">
               <div
                 className="rounded-2xl border p-4 mb-3 text-center transition-colors"
                 style={{
