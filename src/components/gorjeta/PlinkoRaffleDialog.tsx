@@ -217,7 +217,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 </div>
               )}
 
-              <div className="mt-4 grid sm:grid-cols-2 gap-3">
+              <div className="mt-3 grid sm:grid-cols-2 gap-3 shrink-0">
                 <button
                   onClick={drawParticipant}
                   disabled={phase === 'drawing' || phase === 'playing' || candidates.length === 0}
