@@ -160,8 +160,9 @@ export default function LiveDrawPanel({ ownerId }: { ownerId: string }) {
     if (!draft) return;
     const ok = await confirm({
       title: 'Excluir evento',
-      description: 'Isso remove o evento, os inscritos e os resultados. Os pagamentos já criados são mantidos no Financeiro.',
-      confirmText: 'Excluir',
+      message: 'Isso remove o evento, os inscritos e os resultados. Os pagamentos já criados são mantidos no Financeiro.',
+      confirmLabel: 'Excluir',
+      variant: 'danger',
     });
     if (!ok) return;
     const { error } = await (supabase as any).from('gorjeta_events').delete().eq('id', draft.id);
