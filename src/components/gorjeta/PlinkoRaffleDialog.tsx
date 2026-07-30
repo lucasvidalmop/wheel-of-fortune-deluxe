@@ -142,8 +142,8 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && phase === 'idle') onClose(); }}>
-      <DialogContent className="max-w-none w-screen h-[100dvh] p-0 border-none bg-transparent shadow-none rounded-none translate-x-0 translate-y-0 top-0 left-0 [&>button]:hidden">
-        <div className="flex h-[100dvh] w-screen flex-col overflow-hidden bg-background text-foreground">
+      <DialogContent className="w-[calc(100vw-24px)] max-w-[1180px] max-h-[96dvh] overflow-hidden rounded-2xl border border-border bg-background p-0 text-foreground shadow-2xl [&>button]:hidden">
+        <div className="flex max-h-[96dvh] flex-col overflow-hidden">
 
           <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
             <div>
@@ -187,8 +187,8 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               </div>
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col items-center overflow-hidden p-3 sm:p-4">
-              <div className="flex min-h-0 w-full max-w-[1120px] flex-1 flex-col">
+            <div className="min-h-0 overflow-y-auto p-3 sm:p-4">
+              <div className="mx-auto flex w-full max-w-[1080px] flex-col">
 
 
               {/* seletor de modo */}
@@ -228,8 +228,8 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 )}
               </div>
 
-              <div className={`flex min-h-0 flex-1 flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-90' : 'opacity-100'}`}>
-                <div className="min-h-[360px] flex-1">
+              <div className={`flex flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-90' : 'opacity-100'}`}>
+                <div className="aspect-[16/10] min-h-[320px] max-h-[680px] w-full">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>
 
@@ -254,7 +254,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 </div>
               )}
 
-              <div className="mt-3 flex justify-center gap-2 shrink-0">
+              <div className="mt-3 flex flex-wrap justify-center gap-2 shrink-0">
                 <Button
                   variant="outline"
                   onClick={drawParticipant}
