@@ -89,11 +89,8 @@ const LiveRoomPanel = ({
             </span>
           )}
         </div>
-        <label className="flex items-center gap-1.5 text-[10px] text-white/45 cursor-pointer shrink-0">
-          <input type="checkbox" checked={useGhosts} onChange={(e) => onToggleGhosts(e.target.checked)} className="accent-current" />
-          Incluir fantasmas ({ghostCount})
-        </label>
       </div>
+
     </div>
   );
 };
