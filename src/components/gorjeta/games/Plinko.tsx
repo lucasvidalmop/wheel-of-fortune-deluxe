@@ -243,7 +243,7 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
         const startX = cx - ((count - 1) * pitch) / 2;
         for (let c = 0; c < count; c++) {
           const x = startX + c * pitch;
-          if (x < bx + innerPad * 0.6 || x > bx + bw - innerPad * 0.6) continue;
+          if (x < bx + sideGutterUnits * pitch * 0.35 || x > bx + bw - sideGutterUnits * pitch * 0.35) continue;
 
           let flash = 0;
           hits.forEach((tHit, key) => {
