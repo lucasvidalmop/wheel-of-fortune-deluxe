@@ -24,7 +24,7 @@ const UpdateRegistration = lazy(() => import("./pages/UpdateRegistration.tsx"));
 const Bets = lazy(() => import("./pages/Bets.tsx"));
 const Lobby = lazy(() => import("./pages/Lobby.tsx"));
 const GorjetaEvent = lazy(() => import("./pages/GorjetaEvent.tsx"));
-const GorjetaEventHost = lazy(() => import("./pages/GorjetaEventHost.tsx"));
+
 
 
 const queryClient = new QueryClient({
@@ -102,7 +102,7 @@ const App = () => {
             <Route path="/gorjeta" element={<Registration />} />
             <Route path="/influencer" element={<Influencer />} />
             <Route path="/batalha" element={<Batalha />} />
-            <Route path="/evento-host" element={<GorjetaEventHost />} />
+            
 
             <Route path="/:slug" element={<SlugRouter />} />
           </Routes>

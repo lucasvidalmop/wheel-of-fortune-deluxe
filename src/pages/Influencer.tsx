@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import PlinkoRaffleDialog, { type PlinkoCandidate } from '@/components/gorjeta/PlinkoRaffleDialog';
+import { normalizePlinko, type PlinkoConfig } from '@/components/gorjeta/plinkoConfig';
 
 interface WheelUser {
   id: string;
@@ -89,6 +91,9 @@ const Influencer = () => {
   const [historyWinners, setHistoryWinners] = useState<TodayWinner[]>([]);
 
   const [timer, setTimer] = useState('');
+
+  const [showPlinko, setShowPlinko] = useState(false);
+  const [plinkoConfig, setPlinkoConfig] = useState<PlinkoConfig>(normalizePlinko(null));
 
   const [showRaffle, setShowRaffle] = useState(false);
   const [raffleStep, setRaffleStep] = useState<RaffleStep>('config');
@@ -204,6 +209,7 @@ const Influencer = () => {
       setMinRealWinners(rawConfig.minRealWinners ?? 0);
       setGhostUsers(rawConfig.ghostUsers || []);
       setMaxWinsPerDay(rawConfig.maxWinsPerDay ?? 1);
+      setPlinkoConfig(normalizePlinko(rawConfig.plinko));
     }
     setLoading(false);
     fetchUsers(userId);
@@ -366,6 +372,82 @@ const Influencer = () => {
     setRaffleStep('config'); setRaffleQty(1); setRaffleAmount(30);
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
   };
+
+  /* ─── Plinko: sorteio alternativo da gorjeta ─── */
+  const plinkoCandidates: PlinkoCandidate[] = useMemo(() => {
+    const reals = users
+      .filter(u => !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay)
+      .map(u => ({ ...u }));
+    const ghosts = ghostParticipants.map(g => ({ ...g, _isGhost: true }));
+    // aplica a mesma probabilidade de ganhador real configurada na gorjeta
+    if (drawProbability > 0 && ghosts.length > 0 && reals.length > 0) {
+      const realWeight = Math.max(1, Math.round((drawProbability / 100) * (reals.length + ghosts.length)));
+      const shuffledReals = [...reals].sort(() => Math.random() - 0.5).slice(0, realWeight);
+      return [...shuffledReals, ...ghosts];
+    }
+    return [...reals, ...ghosts];
+  }, [users, ghostParticipants, maxWinsPerDay, todayWinners, drawProbability]);
+
+  const savePlinkoConfig = async (cfg: PlinkoConfig) => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const nextConfig = { ...topLevelConfig, plinko: cfg };
+    const { error } = await (supabase as any)
+      .from('wheel_configs').update({ config: nextConfig }).eq('user_id', uid);
+    if (error) { toast.error('Erro ao salvar configuração do Plinko'); return; }
+    setTopLevelConfig(nextConfig);
+    setPlinkoConfig(cfg);
+    toast.success('Configuração do Plinko salva!');
+  };
+
+  const handlePlinkoWinner = async (winner: PlinkoCandidate, amount: number, multiplier: number) => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const prizeLabel = plinkoConfig.prize_type === 'pix'
+      ? `Plinko ${multiplier}x — R$ ${amount.toFixed(2)}`
+      : `Plinko ${multiplier}x — ${Math.round(amount)} ${plinkoConfig.prize_type === 'spins' ? 'giros' : 'coins'}`;
+
+    if (winner._isGhost) {
+      const ghost: TodayWinner = {
+        id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
+        user_name: winner.name,
+        account_id: winner.account_id,
+        amount: plinkoConfig.prize_type === 'pix' ? amount : 0,
+        created_at: new Date().toISOString(),
+        prize: prizeLabel,
+      };
+      saveGhostWinners([ghost, ...loadGhostWinners(uid)], uid);
+      await Promise.all([fetchTodayWinners(uid), fetchHistory(uid)]);
+      return;
+    }
+
+    try {
+      if (plinkoConfig.prize_type === 'spins') {
+        await (supabase as any).from('wheel_users')
+          .update({ spins_available: (winner.spins_available || 0) + Math.round(amount) })
+          .eq('id', winner.id);
+      } else {
+        const result = await (supabase as any).rpc('create_prize_payment', {
+          p_owner_id: uid,
+          p_account_id: winner.account_id,
+          p_user_name: winner.name,
+          p_user_email: winner.email,
+          p_prize: prizeLabel,
+          p_amount: plinkoConfig.prize_type === 'pix' ? amount : 0,
+          p_force_auto: !!winner.auto_payment,
+        });
+        if (result?.data?.id && (result?.data?.auto_payment || winner.auto_payment) && plinkoConfig.prize_type === 'pix') {
+          triggerAutoPay(result.data.id).catch(console.error);
+        }
+      }
+      await Promise.all([fetchUsers(uid), fetchTodayWinners(uid), fetchHistory(uid)]);
+    } catch (err) {
+      console.error('Erro ao registrar prêmio do Plinko:', err);
+      toast.error('Erro ao registrar o prêmio do Plinko.');
+    }
+  };
+
+
 
   const persistRaffleResults = async (finalSelected: Winner[]) => {
     if (!session?.user?.id) return;
@@ -965,6 +1047,13 @@ const Influencer = () => {
             <Play size={18} fill="currentColor" />
             REALIZAR SORTEIO
           </button>
+          <button
+            onClick={() => setShowPlinko(true)}
+            className="w-full py-3 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 border transition-all hover:bg-white/[0.05] active:scale-[0.98]"
+            style={{ borderColor: `${accent}55`, color: accent }}
+          >
+            🎯 SORTEIO NO PLINKO
+          </button>
           <p className="text-center text-[11px] text-white/30">
             Você pode enviar mais <strong style={{ color: accent }}>{prizesRemaining}</strong> prêmios hoje
           </p>
@@ -976,6 +1065,17 @@ const Influencer = () => {
       <button onClick={handleLogout} className="fixed top-4 right-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-white/40 hover:text-white/70 transition bg-black/30 backdrop-blur-sm border border-white/[0.06]">
         <LogOut size={12} /> Sair
       </button>
+
+      {/* ─── Plinko Dialog ─── */}
+      <PlinkoRaffleDialog
+        open={showPlinko}
+        onClose={() => setShowPlinko(false)}
+        accent={accent}
+        config={plinkoConfig}
+        onSaveConfig={savePlinkoConfig}
+        candidates={plinkoCandidates}
+        onWinner={handlePlinkoWinner}
+      />
 
       {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
