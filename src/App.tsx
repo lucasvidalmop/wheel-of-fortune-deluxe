@@ -24,7 +24,7 @@ const UpdateRegistration = lazy(() => import("./pages/UpdateRegistration.tsx"));
 const Bets = lazy(() => import("./pages/Bets.tsx"));
 const Lobby = lazy(() => import("./pages/Lobby.tsx"));
 const GorjetaEvent = lazy(() => import("./pages/GorjetaEvent.tsx"));
-const GorjetaEventHost = lazy(() => import("./pages/GorjetaEventHost.tsx"));
+
 
 
 const queryClient = new QueryClient({
