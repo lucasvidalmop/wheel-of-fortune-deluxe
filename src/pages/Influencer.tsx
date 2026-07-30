@@ -7,6 +7,9 @@ import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import PlinkoRaffleDialog, { type PlinkoCandidate } from '@/components/gorjeta/PlinkoRaffleDialog';
 import { normalizePlinko, type PlinkoConfig } from '@/components/gorjeta/plinkoConfig';
+import { useLiveRoom } from '@/components/gorjeta/useLiveRoom';
+import LiveRoomPanel from '@/components/gorjeta/LiveRoomPanel';
+
 
 interface WheelUser {
   id: string;
