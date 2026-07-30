@@ -71,7 +71,17 @@ export default function LiveDrawPanel({ ownerId }: { ownerId: string }) {
   const [rolling, setRolling] = useState<string>('');
   const winnersRef = useRef<HTMLDivElement>(null);
 
+  // Live draw dynamics (same model as the influencer raffle)
+  const [drawQty, setDrawQty] = useState(1);
+  const [ghostText, setGhostText] = useState('');
+  const [probability, setProbability] = useState(100);
+  const [minReal, setMinReal] = useState(0);
+  const [reveals, setReveals] = useState<RevealRow[]>([]);
+  const [savingDraw, setSavingDraw] = useState(false);
+  const revealEndRef = useRef<HTMLDivElement>(null);
+
   const [draft, setDraft] = useState<LiveEventRow | null>(null);
+
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
