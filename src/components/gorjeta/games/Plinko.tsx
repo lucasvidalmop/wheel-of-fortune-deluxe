@@ -153,6 +153,10 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
         }
       }
 
+      // fade da bolinha: ela some ao entrar no slot
+      const ballAlpha = done ? Math.max(0, 1 - Math.max(0, (settleT - 0.5) / 0.3)) : 1;
+      const revealed = done && ballAlpha <= 0.001;
+
       // ---- slots ----
       multipliers.forEach((m, i) => {
         const sx = left + i * slotW;
@@ -162,9 +166,11 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
         const lift = isWin ? Math.sin(pop * Math.PI) * 8 : 0;
         const sy = bottomY + 40 - lift;
 
+        ctx.globalAlpha = done && !isWin ? 0.45 : 1;
+
         if (isWin) {
           ctx.shadowColor = accent;
-          ctx.shadowBlur = 28;
+          ctx.shadowBlur = revealed ? 26 + Math.sin(now / 260) * 12 : 28;
         }
         ctx.fillStyle = st.bg;
         ctx.beginPath();
@@ -172,41 +178,66 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
         ctx.fill();
         ctx.shadowBlur = 0;
 
+        if (isWin) {
+          // contorno + marcador acima do slot vencedor
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(sx + 3, sy, slotW - 6, 54, 12);
+          ctx.stroke();
+
+          const mk = 1 - Math.max(0, Math.min(1, (settleT - 0.6) / 0.3));
+          const my = sy - 16 - mk * 8;
+          ctx.beginPath();
+          ctx.moveTo(sx + slotW / 2, my + 10);
+          ctx.lineTo(sx + slotW / 2 - 8, my - 2);
+          ctx.lineTo(sx + slotW / 2 + 8, my - 2);
+          ctx.closePath();
+          ctx.fillStyle = accent;
+          ctx.fill();
+        }
+
         ctx.fillStyle = st.fg;
         ctx.font = `bold ${slots > 12 ? 14 : 18}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(`${m}x`, sx + slotW / 2, sy + 27);
+        ctx.globalAlpha = 1;
       });
 
       // ---- bolinha ----
       if (path && steps > 0) {
-        trail.push({ x, y, t: now });
-        while (trail.length && now - trail[0].t > 300) trail.shift();
-        trail.forEach((p, i) => {
-          const a = (i / trail.length) * 0.3;
+        if (ballAlpha > 0.001) {
+          ctx.save();
+          ctx.globalAlpha = ballAlpha;
+
+          trail.push({ x, y, t: now });
+          while (trail.length && now - trail[0].t > 300) trail.shift();
+          trail.forEach((p, i) => {
+            const a = (i / trail.length) * 0.3;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3 + (i / trail.length) * 7, 0, Math.PI * 2);
+            ctx.fillStyle = hexA(accent, a);
+            ctx.fill();
+          });
+
+          const grad = ctx.createRadialGradient(x - 4, y - 5, 1, x, y, 13);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.45, accent);
+          grad.addColorStop(1, hexA(accent, 0.85));
+
+          ctx.translate(x, y);
+          ctx.scale(1 / squash, squash * (0.6 + 0.4 * ballAlpha));
           ctx.beginPath();
-          ctx.arc(p.x, p.y, 3 + (i / trail.length) * 7, 0, Math.PI * 2);
-          ctx.fillStyle = hexA(accent, a);
+          ctx.arc(0, 0, 12, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.shadowColor = accent;
+          ctx.shadowBlur = 26;
           ctx.fill();
-        });
-
-        const grad = ctx.createRadialGradient(x - 4, y - 5, 1, x, y, 13);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.45, accent);
-        grad.addColorStop(1, hexA(accent, 0.85));
-
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(1 / squash, squash);
-        ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.shadowColor = accent;
-        ctx.shadowBlur = 26;
-        ctx.fill();
-        ctx.restore();
-        ctx.shadowBlur = 0;
+          ctx.restore();
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1;
+        }
 
         if (done && !finishedRef.current && elapsed - DROP_MS - totalRowsMs > SETTLE_MS) {
           finishedRef.current = true;
