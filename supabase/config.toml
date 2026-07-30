@@ -38,3 +38,5 @@ project_id = "zrijrsntmmzyykuqjbno"
   [functions.join-event]
     verify_jwt = false
 
+  [functions.play-event-round]
+    verify_jwt = false
