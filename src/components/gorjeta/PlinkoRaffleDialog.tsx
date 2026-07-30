@@ -128,8 +128,9 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && phase === 'idle') onClose(); }}>
-      <DialogContent className="max-w-3xl w-[96vw] p-0 border-none bg-transparent shadow-none [&>button]:hidden">
-        <div className="flex flex-col rounded-2xl border border-white/10 bg-[#080b11] text-white overflow-hidden max-h-[90vh]">
+      <DialogContent className="max-w-none w-screen h-[100dvh] p-0 border-none bg-transparent shadow-none rounded-none translate-x-0 translate-y-0 top-0 left-0 [&>button]:hidden">
+        <div className="flex flex-col h-[100dvh] w-screen bg-[#080b11] text-white overflow-hidden">
+
           <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.07] shrink-0">
             <div>
               <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">Sorteio</div>
