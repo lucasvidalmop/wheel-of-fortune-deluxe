@@ -131,10 +131,10 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       ctx.stroke();
 
       // ---- geometria dos slots ----
-      const innerPad = Math.max(12, bw * 0.02);
-      const slotGap = Math.max(6, bw * 0.006);
+      const innerPad = Math.max(22, bw * 0.045);
+      const slotGap = Math.max(5, bw * 0.007);
       const slotW = (bw - innerPad * 2 - slotGap * (slots - 1)) / slots;
-      const slotH = Math.max(38, Math.min(74, slotW * 0.85));
+      const slotH = Math.max(24, Math.min(44, slotW * 0.46));
       const slotX0 = bx + innerPad;
       const slotBottom = by + bh - Math.max(8, bh * 0.02);
       const slotY = slotBottom - slotH;
@@ -259,8 +259,8 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       }
 
       // ---- postes divisores entre slots ----
-      const postW = Math.max(4, slotW * 0.075);
-      const postH = slotH * 1.16;
+      const postW = Math.max(2.5, slotW * 0.035);
+      const postH = slotH * 1.18;
       for (let i = 0; i <= slots; i++) {
         const px = i === 0
           ? slotX0 - postW * 0.6
@@ -290,13 +290,13 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
         const g = ctx.createLinearGradient(0, y, 0, y + slotH);
         g.addColorStop(0, isWinner ? '#5cfffb' : c.top);
         g.addColorStop(1, isWinner ? '#1ad6d2' : c.bottom);
-        roundedRect(ctx, x, y, slotW, slotH, Math.max(5, slotW * 0.11));
+        roundedRect(ctx, x, y, slotW, slotH, Math.max(4, Math.min(8, slotW * 0.06)));
         ctx.fillStyle = g;
         ctx.globalAlpha = phase === 'settle' && !isWinner ? 0.55 : 1;
         ctx.fill();
         ctx.restore();
 
-        const fontSize = Math.max(12, Math.min(24, slotW * 0.3));
+        const fontSize = Math.max(10, Math.min(17, slotW * 0.2));
         ctx.globalAlpha = phase === 'settle' && !isWinner ? 0.6 : 1;
         ctx.fillStyle = isWinner ? '#04201f' : c.text;
         ctx.font = `800 ${fontSize}px Inter, system-ui, sans-serif`;
