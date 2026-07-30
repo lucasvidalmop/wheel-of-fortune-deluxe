@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import EventStage from '@/components/gorjeta/EventStage';
+import PlinkoConfigEditor from '@/components/gorjeta/PlinkoConfigEditor';
+import { DEFAULT_PLINKO, normalizePlinko } from '@/components/gorjeta/plinkoConfig';
+
 
 
 interface EventRow {
@@ -18,6 +21,8 @@ interface EventRow {
   require_pix: boolean;
   is_active: boolean;
   theme: Record<string, string>;
+  page_config: Record<string, any>;
+
 }
 
 const STATUSES = [
@@ -39,6 +44,8 @@ const emptyEvent = (): Partial<EventRow> => ({
   max_participants: null,
   require_pix: true,
   is_active: true,
+  page_config: { plinko: DEFAULT_PLINKO },
+
   theme: { accent: '#22c55e', bg: '#07090d' },
 });
 
@@ -127,6 +134,8 @@ const GorjetaEventHost = () => {
       require_pix: editing.require_pix ?? true,
       is_active: editing.is_active ?? true,
       theme: editing.theme || { accent: '#22c55e', bg: '#07090d' },
+      page_config: { ...(editing.page_config || {}), plinko: normalizePlinko((editing.page_config || {}).plinko) },
+
     };
 
     const res = editing.id
@@ -248,7 +257,7 @@ const GorjetaEventHost = () => {
 
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 bg-[#0c1016] p-5">
+          <div className="w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 bg-[#0c1016] p-5">
             <h2 className="text-lg font-bold mb-4">{editing.id ? 'Editar evento' : 'Novo evento'}</h2>
             <div className="space-y-4">
               <div>
@@ -312,6 +321,12 @@ const GorjetaEventHost = () => {
                 <label className={label}>Regras</label>
                 <textarea className={`${field} h-24 py-2.5`} value={editing.rules || ''} onChange={(e) => setEditing({ ...editing, rules: e.target.value })} />
               </div>
+              <PlinkoConfigEditor
+                value={normalizePlinko((editing.page_config || {}).plinko)}
+                accent={editing.theme?.accent || '#22c55e'}
+                onChange={(plinko) => setEditing({ ...editing, page_config: { ...(editing.page_config || {}), plinko } })}
+              />
+
             </div>
 
             <div className="flex gap-3 mt-6">
