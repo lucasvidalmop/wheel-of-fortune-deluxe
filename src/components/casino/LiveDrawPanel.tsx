@@ -27,7 +27,9 @@ interface LiveEventRow {
   require_pix: boolean;
   is_active: boolean;
   drawn_count: number;
+  page_config: Record<string, any>;
 }
+
 
 interface ParticipantRow {
   id: string;
