@@ -166,7 +166,8 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               </div>
             </div>
           ) : (
-            <div className="p-4 sm:p-5 flex flex-col min-h-0 flex-1 overflow-hidden">
+            <div className="p-4 sm:p-5 flex flex-col min-h-0 flex-1 overflow-hidden items-center">
+              <div className="w-full max-w-[560px] flex flex-col min-h-0 flex-1">
               <div
                 className="rounded-2xl border p-3 mb-3 text-center transition-colors shrink-0"
                 style={{
@@ -218,18 +219,18 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 </div>
               )}
 
-              <div className="mt-3 grid sm:grid-cols-2 gap-3 shrink-0">
+              <div className="mt-3 grid grid-cols-2 gap-2 shrink-0">
                 <button
                   onClick={drawParticipant}
                   disabled={phase === 'drawing' || phase === 'playing' || candidates.length === 0}
-                  className="h-12 rounded-xl font-black text-sm uppercase tracking-wider border border-white/15 bg-white/[0.05] text-white disabled:opacity-40"
+                  className="h-10 rounded-lg font-bold text-[12px] uppercase tracking-wide border border-white/15 bg-white/[0.05] text-white disabled:opacity-40"
                 >
-                  {phase === 'drawing' ? 'Sorteando...' : '1 · Sortear participante'}
+                  {phase === 'drawing' ? 'Sorteando...' : '1 · Sortear'}
                 </button>
                 <button
                   onClick={play}
                   disabled={phase !== 'drawn'}
-                  className="h-12 rounded-xl font-black text-sm uppercase tracking-wider disabled:opacity-40"
+                  className="h-10 rounded-lg font-bold text-[12px] uppercase tracking-wide disabled:opacity-40"
                   style={{ background: accent, color: '#04150a' }}
                 >
                   {phase === 'playing' ? 'Soltando...' : '2 · Jogar plinko'}
@@ -238,7 +239,9 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               <p className="mt-2 text-center text-[11px] text-white/30">
                 Prêmio base {formatPrize(cfg.base_amount)} × multiplicador do slot · {candidates.length} participante(s) elegíveis
               </p>
+              </div>
             </div>
+
           )}
         </div>
       </DialogContent>
