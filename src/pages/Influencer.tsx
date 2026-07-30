@@ -442,9 +442,14 @@ const Influencer = () => {
   const handlePlinkoWinner = async (winner: PlinkoCandidate, amount: number, multiplier: number) => {
     const uid = session?.user?.id;
     if (!uid) return;
+    // no modo ao vivo, marca o participante como premiado para não repetir
+    if (winner._liveParticipantId) {
+      liveRoom.markWon(winner._liveParticipantId as string).catch(console.error);
+    }
     const prizeLabel = plinkoConfig.prize_type === 'pix'
       ? `Plinko ${multiplier}x — R$ ${amount.toFixed(2)}`
       : `Plinko ${multiplier}x — ${Math.round(amount)} ${plinkoConfig.prize_type === 'spins' ? 'giros' : 'coins'}`;
+
 
     if (winner._isGhost) {
       const ghost: TodayWinner = {
