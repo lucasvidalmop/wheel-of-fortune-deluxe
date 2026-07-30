@@ -182,7 +182,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
 
 
               {/* seletor de modo */}
-              <div className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-xl bg-white/[0.04] border border-white/10 shrink-0">
+              <div className="mx-auto inline-flex gap-1 p-1 mb-3 rounded-lg bg-white/[0.04] border border-white/10 shrink-0">
                 {([
                   { key: 'base' as const, label: 'Base + fantasmas' },
                   { key: 'live' as const, label: 'Ao vivo' },
@@ -190,7 +190,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                   <button
                     key={m.key}
                     onClick={() => { if (phase !== 'drawing' && phase !== 'playing') onModeChange(m.key); }}
-                    className="h-8 rounded-lg text-[11px] font-black uppercase tracking-wider transition-colors"
+                    className="h-7 px-4 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors"
                     style={mode === m.key
                       ? { background: accent, color: '#04150a' }
                       : { color: 'rgba(255,255,255,0.45)' }}
@@ -203,22 +203,22 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               {mode === 'live' && livePanel}
 
               <div
-                className="rounded-2xl border px-4 py-2 mb-2 text-center transition-colors shrink-0"
-
+                className="rounded-xl border px-4 py-2.5 mb-3 text-center transition-colors shrink-0"
                 style={{
                   borderColor: phase === 'drawing' ? `${accent}66` : 'rgba(255,255,255,0.08)',
                   background: phase === 'drawing' ? `${accent}0f` : 'rgba(255,255,255,0.02)',
                 }}
               >
-                <div className="text-[10px] uppercase tracking-[0.28em] text-white/40 mb-1">
+                <div className="text-[9px] uppercase tracking-[0.28em] text-white/35 mb-0.5">
                   {phase === 'drawing' ? 'Sorteando participante...' : current ? 'Participante sorteado' : 'Etapa 1 · Sorteio'}
                 </div>
                 <div
-                  className={`text-xl sm:text-2xl xl:text-3xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
+                  className={`text-lg sm:text-xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
                   style={{ color: current || phase === 'drawing' ? accent : 'rgba(255,255,255,0.25)' }}
                 >
                   {phase === 'drawing' ? rollingName || '—' : current?.name || 'Aguardando sorteio'}
                 </div>
+
 
                 {current && phase !== 'drawing' && (
                   <div className="text-[11px] text-white/40 mt-1 font-mono">{current.account_id}</div>
