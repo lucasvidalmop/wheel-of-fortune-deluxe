@@ -167,8 +167,10 @@ export default function Sorteio({ tag }: { tag: string }) {
   const cd = countdownParts(targetMs);
 
   const handleJoin = async () => {
-    const mail = email.trim().toLowerCase();
-    const acc = accountId.trim();
+    const useSaved = hasSavedAccount && !manualEntry;
+    const mail = (useSaved ? session?.email || '' : email).trim().toLowerCase();
+    const acc = (useSaved ? session?.account_id || '' : accountId).trim();
+
     if (!mail || !acc) { toast.error('Informe o e-mail e o ID da conta'); return; }
     setJoining(true);
     try {
