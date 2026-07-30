@@ -257,7 +257,7 @@ const GorjetaEventHost = () => {
 
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 bg-[#0c1016] p-5">
+          <div className="w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 bg-[#0c1016] p-5">
             <h2 className="text-lg font-bold mb-4">{editing.id ? 'Editar evento' : 'Novo evento'}</h2>
             <div className="space-y-4">
               <div>
