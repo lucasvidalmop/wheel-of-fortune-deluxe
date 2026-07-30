@@ -36,9 +36,10 @@ const EventStage = ({ event, onClose }: Props) => {
   const [results, setResults] = useState<ResultRow[]>([]);
   const [baseAmount, setBaseAmount] = useState(cfg.base_amount);
   const [prizeType, setPrizeType] = useState<'pix' | 'spins' | 'coins'>(cfg.prize_type);
-  const [playing, setPlaying] = useState(false);
+  const [phase, setPhase] = useState<'idle' | 'drawing' | 'drawn' | 'playing'>('idle');
+  const [rollingName, setRollingName] = useState('');
   const [path, setPath] = useState<number[] | null>(null);
-  const [current, setCurrent] = useState<{ name: string; account_id: string; entry_number: number } | null>(null);
+  const [current, setCurrent] = useState<{ id: string; name: string; account_id: string; entry_number: number } | null>(null);
   const [reveal, setReveal] = useState<{ label: string; win: boolean } | null>(null);
 
   const load = useCallback(async () => {
@@ -66,16 +67,46 @@ const EventStage = ({ event, onClose }: Props) => {
 
   const available = useMemo(() => participants.filter((p) => !p.has_won), [participants]);
 
-  const play = async () => {
-    if (playing) return;
+  /** Etapa 1 — sorteio do participante com animação de nomes. */
+  const drawParticipant = () => {
+    if (phase !== 'idle' && phase !== 'drawn') return;
     if (available.length === 0) { toast.error('Nenhum participante disponível.'); return; }
-    setPlaying(true);
+    setPhase('drawing');
+    setReveal(null);
+    setPath(null);
+    setCurrent(null);
+
+    const winner = available[Math.floor(Math.random() * available.length)];
+    const startedAt = performance.now();
+    const DURATION = 2600;
+
+    const tick = () => {
+      const t = (performance.now() - startedAt) / DURATION;
+      if (t >= 1) {
+        setRollingName(winner.user_name);
+        setCurrent({ id: winner.id, name: winner.user_name, account_id: winner.account_id, entry_number: winner.entry_number });
+        setPhase('drawn');
+        return;
+      }
+      // vai desacelerando
+      const delay = 40 + Math.pow(t, 3) * 260;
+      setRollingName(available[Math.floor(Math.random() * available.length)].user_name);
+      setTimeout(tick, delay);
+    };
+    tick();
+  };
+
+  /** Etapa 2 — o participante sorteado joga o plinko. */
+  const play = async () => {
+    if (phase !== 'drawn' || !current) return;
+    setPhase('playing');
     setReveal(null);
     setPath(null);
 
     const { data, error } = await supabase.functions.invoke('play-event-round', {
       body: {
         event_id: event.id,
+        participant_id: current.id,
         game: 'plinko',
         prize_type: prizeType,
         base_amount: baseAmount,
@@ -88,18 +119,18 @@ const EventStage = ({ event, onClose }: Props) => {
     });
 
     const err = (data as any)?.error || (error ? 'Falha ao rodar a jogada.' : '');
-    if (err) { toast.error(err); setPlaying(false); return; }
+    if (err) { toast.error(err); setPhase('drawn'); return; }
 
-    setCurrent((data as any).participant);
     setPath((data as any).outcome.path);
     const label = (data as any).prize_label;
     const win = (data as any).is_winner;
     setTimeout(() => {
       setReveal({ label, win });
-      setPlaying(false);
+      setPhase('idle');
       load();
-    }, rows * 150 + 400);
+    }, rows * 190 + 900);
   };
+
 
   return (
     <div className="fixed inset-0 z-50 bg-[#05070a] text-white overflow-y-auto">
@@ -141,7 +172,31 @@ const EventStage = ({ event, onClose }: Props) => {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-black/40 border border-white/5 p-2 sm:p-4">
+            {/* Etapa 1 — sorteio do participante */}
+            <div
+              className="rounded-2xl border p-5 mb-4 text-center transition-colors"
+              style={{
+                borderColor: phase === 'drawing' ? `${accent}66` : 'rgba(255,255,255,0.08)',
+                background: phase === 'drawing' ? `${accent}0f` : 'rgba(255,255,255,0.02)',
+              }}
+            >
+              <div className="text-[10px] uppercase tracking-[0.28em] text-white/40 mb-1">
+                {phase === 'drawing' ? 'Sorteando participante...' : phase === 'idle' ? 'Etapa 1 · Sorteio' : 'Participante sorteado'}
+              </div>
+              <div
+                className={`text-2xl sm:text-3xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
+                style={{ color: phase === 'idle' && !current ? 'rgba(255,255,255,0.25)' : accent }}
+              >
+                {phase === 'drawing' ? rollingName || '—' : current?.name || 'Aguardando sorteio'}
+              </div>
+              {current && phase !== 'drawing' && (
+                <div className="text-[11px] text-white/40 mt-1">
+                  #{String(current.entry_number).padStart(4, '0')} · {current.account_id}
+                </div>
+              )}
+            </div>
+
+            <div className={`rounded-2xl bg-black/40 border border-white/5 p-2 sm:p-4 transition-opacity ${phase === 'idle' && !path ? 'opacity-40' : 'opacity-100'}`}>
               <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
               {cfg.use_chances && (
                 <div className="mt-2 flex flex-wrap justify-center gap-1.5 px-1">
@@ -153,6 +208,7 @@ const EventStage = ({ event, onClose }: Props) => {
                 </div>
               )}
             </div>
+
 
             {reveal && (
               <div
@@ -191,16 +247,24 @@ const EventStage = ({ event, onClose }: Props) => {
                   <option value="coins" className="bg-neutral-900">Coins</option>
                 </select>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end gap-3">
+                <button
+                  onClick={drawParticipant}
+                  disabled={phase === 'drawing' || phase === 'playing' || available.length === 0}
+                  className="flex-1 h-12 rounded-xl font-black text-sm uppercase tracking-wider border border-white/15 bg-white/[0.05] text-white transition-transform active:scale-[0.98] disabled:opacity-40"
+                >
+                  {phase === 'drawing' ? 'Sorteando...' : '1 · Sortear'}
+                </button>
                 <button
                   onClick={play}
-                  disabled={playing || available.length === 0}
-                  className="w-full h-12 rounded-xl font-black text-sm uppercase tracking-wider transition-transform active:scale-[0.98] disabled:opacity-50"
+                  disabled={phase !== 'drawn'}
+                  className="flex-1 h-12 rounded-xl font-black text-sm uppercase tracking-wider transition-transform active:scale-[0.98] disabled:opacity-40"
                   style={{ background: accent, color: '#04150a' }}
                 >
-                  {playing ? 'Soltando a bolinha...' : 'Sortear e jogar'}
+                  {phase === 'playing' ? 'Soltando...' : '2 · Jogar plinko'}
                 </button>
               </div>
+
             </div>
           </section>
 
