@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import PlinkoRaffleDialog, { type PlinkoCandidate } from '@/components/gorjeta/PlinkoRaffleDialog';
+import { normalizePlinko, type PlinkoConfig } from '@/components/gorjeta/plinkoConfig';
 
 interface WheelUser {
   id: string;
