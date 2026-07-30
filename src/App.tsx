@@ -102,7 +102,7 @@ const App = () => {
             <Route path="/gorjeta" element={<Registration />} />
             <Route path="/influencer" element={<Influencer />} />
             <Route path="/batalha" element={<Batalha />} />
-            <Route path="/evento-host" element={<GorjetaEventHost />} />
+            
 
             <Route path="/:slug" element={<SlugRouter />} />
           </Routes>
