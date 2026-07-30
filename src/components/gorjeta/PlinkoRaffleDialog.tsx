@@ -58,7 +58,7 @@ const buildPath = (rows: number, slots: number, target: number) => {
   return path;
 };
 
-const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candidates, onWinner }: Props) => {
+const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candidates, onWinner, mode, onModeChange, livePanel }: Props) => {
   const [cfg, setCfg] = useState<PlinkoConfig>(config);
   const [showConfig, setShowConfig] = useState(false);
   const [saving, setSaving] = useState(false);
