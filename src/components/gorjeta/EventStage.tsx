@@ -247,16 +247,24 @@ const EventStage = ({ event, onClose }: Props) => {
                   <option value="coins" className="bg-neutral-900">Coins</option>
                 </select>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end gap-3">
+                <button
+                  onClick={drawParticipant}
+                  disabled={phase === 'drawing' || phase === 'playing' || available.length === 0}
+                  className="flex-1 h-12 rounded-xl font-black text-sm uppercase tracking-wider border border-white/15 bg-white/[0.05] text-white transition-transform active:scale-[0.98] disabled:opacity-40"
+                >
+                  {phase === 'drawing' ? 'Sorteando...' : '1 · Sortear'}
+                </button>
                 <button
                   onClick={play}
-                  disabled={playing || available.length === 0}
-                  className="w-full h-12 rounded-xl font-black text-sm uppercase tracking-wider transition-transform active:scale-[0.98] disabled:opacity-50"
+                  disabled={phase !== 'drawn'}
+                  className="flex-1 h-12 rounded-xl font-black text-sm uppercase tracking-wider transition-transform active:scale-[0.98] disabled:opacity-40"
                   style={{ background: accent, color: '#04150a' }}
                 >
-                  {playing ? 'Soltando a bolinha...' : 'Sortear e jogar'}
+                  {phase === 'playing' ? 'Soltando...' : '2 · Jogar plinko'}
                 </button>
               </div>
+
             </div>
           </section>
 
