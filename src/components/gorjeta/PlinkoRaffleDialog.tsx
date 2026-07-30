@@ -219,19 +219,20 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               </div>
 
               <div className={`flex-1 min-h-0 flex flex-col rounded-2xl bg-black/40 border border-white/5 p-2 sm:p-3 transition-opacity ${!path && phase !== 'playing' ? 'opacity-50' : 'opacity-100'}`}>
-                <div className="flex-1 min-h-[220px] flex items-center justify-center overflow-hidden">
+                <div className="flex-1 min-h-[280px] flex items-center justify-center overflow-hidden">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>
                 {cfg.use_chances && (
                   <div className="mt-2 flex flex-wrap justify-center gap-1.5 px-1">
                     {cfg.slots.map((s, i) => (
-                      <span key={i} className="rounded-md bg-white/[0.04] border border-white/10 px-1.5 py-0.5 text-[10px] text-white/45 tabular-nums">
+                      <span key={i} className="rounded-md bg-white/[0.04] border border-white/10 px-2 py-1 text-[11px] text-white/45 tabular-nums">
                         {s.multiplier}x · {percents[i].toFixed(1)}%
                       </span>
                     ))}
                   </div>
                 )}
               </div>
+
 
               {reveal && (
                 <div
