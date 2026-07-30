@@ -1021,6 +1021,7 @@ export type Database = {
           event_id: string
           has_won: boolean
           id: string
+          ip_address: string | null
           is_ghost: boolean
           owner_id: string
           source: string
@@ -1036,6 +1037,7 @@ export type Database = {
           event_id: string
           has_won?: boolean
           id?: string
+          ip_address?: string | null
           is_ghost?: boolean
           owner_id: string
           source?: string
@@ -1051,6 +1053,7 @@ export type Database = {
           event_id?: string
           has_won?: boolean
           id?: string
+          ip_address?: string | null
           is_ghost?: boolean
           owner_id?: string
           source?: string
@@ -1209,10 +1212,12 @@ export type Database = {
       }
       gorjeta_events: {
         Row: {
+          block_by_ip: boolean
           closes_at: string | null
           cover_url: string
           created_at: string
           description: string
+          drawn_count: number
           id: string
           is_active: boolean
           max_participants: number | null
@@ -1220,18 +1225,22 @@ export type Database = {
           opens_at: string | null
           owner_id: string
           page_config: Json
+          prize_amount: number
           require_pix: boolean
           rules: string
           status: string
           tag: string
           theme: Json
           updated_at: string
+          winners_count: number
         }
         Insert: {
+          block_by_ip?: boolean
           closes_at?: string | null
           cover_url?: string
           created_at?: string
           description?: string
+          drawn_count?: number
           id?: string
           is_active?: boolean
           max_participants?: number | null
@@ -1239,18 +1248,22 @@ export type Database = {
           opens_at?: string | null
           owner_id: string
           page_config?: Json
+          prize_amount?: number
           require_pix?: boolean
           rules?: string
           status?: string
           tag: string
           theme?: Json
           updated_at?: string
+          winners_count?: number
         }
         Update: {
+          block_by_ip?: boolean
           closes_at?: string | null
           cover_url?: string
           created_at?: string
           description?: string
+          drawn_count?: number
           id?: string
           is_active?: boolean
           max_participants?: number | null
@@ -1258,12 +1271,14 @@ export type Database = {
           opens_at?: string | null
           owner_id?: string
           page_config?: Json
+          prize_amount?: number
           require_pix?: boolean
           rules?: string
           status?: string
           tag?: string
           theme?: Json
           updated_at?: string
+          winners_count?: number
         }
         Relationships: []
       }
@@ -1641,6 +1656,7 @@ export type Database = {
           sms: boolean
           sms_cs: boolean
           sms_mb: boolean
+          sorteio: boolean
           updated_at: string
           user_id: string
           whatsapp: boolean
@@ -1668,6 +1684,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           user_id: string
           whatsapp?: boolean
@@ -1695,6 +1712,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           user_id?: string
           whatsapp?: boolean
@@ -1725,6 +1743,7 @@ export type Database = {
           sms: boolean
           sms_cs: boolean
           sms_mb: boolean
+          sorteio: boolean
           updated_at: string
           whatsapp: boolean
           whatsapp2: boolean
@@ -1751,6 +1770,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           whatsapp?: boolean
           whatsapp2?: boolean
@@ -1777,6 +1797,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           whatsapp?: boolean
           whatsapp2?: boolean
