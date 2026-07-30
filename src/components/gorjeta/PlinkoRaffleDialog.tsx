@@ -153,7 +153,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
           </header>
 
           {showConfig ? (
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-4 overflow-y-auto">
               <PlinkoConfigEditor value={cfg} onChange={setCfg} accent={accent} />
               <div className="flex justify-end gap-2">
                 <button onClick={() => { setCfg(config); setShowConfig(false); }} className="h-10 px-4 rounded-xl border border-white/12 text-xs font-semibold text-white/60">
