@@ -72,6 +72,11 @@ Deno.serve(async (req) => {
       if (p) me = { entry_number: p.entry_number, has_won: p.has_won };
     }
 
+    const pageConfig = { ...((ev.page_config || {}) as Record<string, unknown>) };
+    const drawCfg = (pageConfig.draw || {}) as Record<string, unknown>;
+    const ghostCount = Array.isArray(drawCfg.ghosts) ? (drawCfg.ghosts as unknown[]).length : 0;
+    delete pageConfig.draw;
+
     return new Response(JSON.stringify({
       found: true,
       event: {
@@ -83,7 +88,7 @@ Deno.serve(async (req) => {
         rules: ev.rules,
         coverUrl: ev.cover_url,
         theme: ev.theme || {},
-        pageConfig: ev.page_config || {},
+        pageConfig,
         status: ev.status,
         opensAt: ev.opens_at,
         closesAt: ev.closes_at,
@@ -91,7 +96,7 @@ Deno.serve(async (req) => {
         prizeAmount: Number(ev.prize_amount || 0),
         winnersCount: ev.winners_count,
       },
-      participantsCount: count || 0,
+      participantsCount: (count || 0) + ghostCount,
       winners: (results || []).map((r) => ({
         id: r.id,
         name: maskName(r.user_name),
@@ -102,6 +107,7 @@ Deno.serve(async (req) => {
       me,
       gorjetaRef: (refLink as any)?.data?.code || "",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (err) {
     console.error("get-live-event error", err);
     return new Response(JSON.stringify({ error: "Failed to load event" }), {

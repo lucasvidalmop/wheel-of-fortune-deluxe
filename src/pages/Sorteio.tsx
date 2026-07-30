@@ -60,12 +60,33 @@ export default function Sorteio({ tag }: { tag: string }) {
   const [meWon, setMeWon] = useState(false);
   const [gorjetaRef, setGorjetaRef] = useState('');
   const [now, setNow] = useState(Date.now());
+  const [reveal, setReveal] = useState<LiveWinner | null>(null);
+  const seenWinnersRef = useRef<Set<string>>(new Set());
+  const bootstrappedRef = useRef(false);
+  const revealQueueRef = useRef<LiveWinner[]>([]);
+  const revealBusyRef = useRef(false);
 
   const session = getLobbySession();
+  const hasSavedAccount = !!(session?.email && session?.account_id);
+  const [manualEntry, setManualEntry] = useState(!hasSavedAccount);
   const [email, setEmail] = useState(session?.email || '');
   const [accountId, setAccountId] = useState(session?.account_id || '');
   const [joining, setJoining] = useState(false);
+
   const winnersRef = useRef<HTMLDivElement>(null);
+
+  const pumpReveals = useCallback(() => {
+    if (revealBusyRef.current) return;
+    const next = revealQueueRef.current.shift();
+    if (!next) return;
+    revealBusyRef.current = true;
+    setReveal(next);
+    window.setTimeout(() => {
+      setReveal(null);
+      revealBusyRef.current = false;
+      window.setTimeout(pumpReveals, 350);
+    }, 3800);
+  }, []);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -77,7 +98,18 @@ export default function Sorteio({ tag }: { tag: string }) {
       if (error) throw error;
       if (!data?.found) { setNotFound(true); return; }
       setEvent(data.event);
-      setWinners(data.winners || []);
+      const list: LiveWinner[] = data.winners || [];
+      // Queue live reveals for winners drawn while the page is open
+      if (bootstrappedRef.current) {
+        const fresh = list.filter(w => !seenWinnersRef.current.has(w.id));
+        if (fresh.length) {
+          revealQueueRef.current.push(...fresh);
+          pumpReveals();
+        }
+      }
+      list.forEach(w => seenWinnersRef.current.add(w.id));
+      bootstrappedRef.current = true;
+      setWinners(list);
       setParticipantsCount(data.participantsCount || 0);
       setEntryNumber(data.me?.entry_number ?? null);
       setMeWon(!!data.me?.has_won);
@@ -89,14 +121,14 @@ export default function Sorteio({ tag }: { tag: string }) {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [tag]);
+  }, [tag, pumpReveals]);
 
   useEffect(() => { load(); }, [load]);
 
   // Live refresh + clock
   useEffect(() => {
     const clock = window.setInterval(() => setNow(Date.now()), 1000);
-    const poll = window.setInterval(() => load(true), 5000);
+    const poll = window.setInterval(() => load(true), 2500);
     return () => { window.clearInterval(clock); window.clearInterval(poll); };
   }, [load]);
 
@@ -111,6 +143,7 @@ export default function Sorteio({ tag }: { tag: string }) {
       winnersRef.current.scrollTop = winnersRef.current.scrollHeight;
     }
   }, [winners.length]);
+
 
   const theme = event?.theme || {};
   const accent = theme.accentColor || '#22d3ee';
@@ -134,8 +167,10 @@ export default function Sorteio({ tag }: { tag: string }) {
   const cd = countdownParts(targetMs);
 
   const handleJoin = async () => {
-    const mail = email.trim().toLowerCase();
-    const acc = accountId.trim();
+    const useSaved = hasSavedAccount && !manualEntry;
+    const mail = (useSaved ? session?.email || '' : email).trim().toLowerCase();
+    const acc = (useSaved ? session?.account_id || '' : accountId).trim();
+
     if (!mail || !acc) { toast.error('Informe o e-mail e o ID da conta'); return; }
     setJoining(true);
     try {
@@ -169,7 +204,9 @@ export default function Sorteio({ tag }: { tag: string }) {
     setEntryNumber(null);
     setMeWon(false);
     setEmail(''); setAccountId('');
+    setManualEntry(true);
   };
+
 
   if (loading) {
     return (
@@ -203,6 +240,31 @@ export default function Sorteio({ tag }: { tag: string }) {
         className="pointer-events-none absolute bottom-0 right-[-10%] h-[360px] w-[520px] rounded-full blur-[130px] opacity-20"
         style={{ background: accent }}
       />
+
+      {/* LIVE REVEAL OVERLAY */}
+      {reveal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 backdrop-blur-md animate-fade-in" style={{ background: `${bg}e6` }}>
+          <div className="text-center animate-scale-in">
+            <div className="text-6xl animate-bounce">🏆</div>
+            <div className="mt-4 text-[11px] uppercase tracking-[0.25em] opacity-70">Ganhador sorteado</div>
+            <div className="mt-2 text-4xl sm:text-6xl font-extrabold" style={{ color: accent, textShadow: `0 0 60px ${accent}80` }}>
+              {reveal.name}
+            </div>
+            <div className="mt-2 text-sm opacity-60">ID {reveal.accountId}</div>
+            <div className="mt-5 inline-block rounded-2xl px-6 py-3 text-2xl font-extrabold" style={{ background: `${accent}22`, color: accent }}>
+              {fmtBRL(reveal.amount)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DRAW IN PROGRESS BANNER */}
+      {event.status === 'running' && winners.length < event.winnersCount && (
+        <div className="relative z-10 text-center py-2 text-[11px] font-bold uppercase tracking-[0.2em] animate-pulse" style={{ background: `${accent}22`, color: accent }}>
+          Sorteio acontecendo agora — fique nesta tela
+        </div>
+      )}
+
 
       {/* HERO */}
       <header className="relative">
@@ -302,24 +364,38 @@ export default function Sorteio({ tag }: { tag: string }) {
           >
             <div>
               <h2 className="text-lg font-bold">Participar do sorteio</h2>
-              <p className="text-xs opacity-60 mt-1">Use o e-mail e o ID da sua conta cadastrada.</p>
+              <p className="text-xs opacity-60 mt-1">
+                {hasSavedAccount && !manualEntry
+                  ? 'Sua conta já está reconhecida. É só confirmar.'
+                  : 'Use o e-mail e o ID da sua conta cadastrada.'}
+              </p>
             </div>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Seu e-mail"
-              className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
-              style={{ borderColor: `${accent}3a`, color: textColor }}
-            />
-            <input
-              type="text"
-              value={accountId}
-              onChange={e => setAccountId(e.target.value)}
-              placeholder="ID da sua conta"
-              className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
-              style={{ borderColor: `${accent}3a`, color: textColor }}
-            />
+            {hasSavedAccount && !manualEntry ? (
+              <div className="rounded-2xl px-4 py-3 border" style={{ borderColor: `${accent}3a`, background: 'rgba(0,0,0,0.25)' }}>
+                <div className="text-sm font-semibold truncate">{session?.email}</div>
+                <div className="text-[11px] opacity-55">ID {session?.account_id}</div>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="Seu e-mail"
+                  className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
+                  style={{ borderColor: `${accent}3a`, color: textColor }}
+                />
+                <input
+                  type="text"
+                  value={accountId}
+                  onChange={e => setAccountId(e.target.value)}
+                  placeholder="ID da sua conta"
+                  className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
+                  style={{ borderColor: `${accent}3a`, color: textColor }}
+                />
+              </>
+            )}
+
             <button
               onClick={handleJoin}
               disabled={joining || phase !== 'open'}
@@ -327,8 +403,22 @@ export default function Sorteio({ tag }: { tag: string }) {
               style={{ background: accent, color: '#04121a', boxShadow: `0 12px 40px -12px ${accent}` }}
             >
               {joining && <Loader2 size={16} className="animate-spin" />}
-              {phase === 'waiting' ? 'Aguarde a abertura' : phase === 'open' ? 'Quero participar' : 'Inscrições encerradas'}
+              {phase === 'waiting'
+                ? 'Aguarde a abertura'
+                : phase !== 'open'
+                  ? 'Inscrições encerradas'
+                  : hasSavedAccount && !manualEntry
+                    ? 'Confirmar participação'
+                    : 'Quero participar'}
             </button>
+            {hasSavedAccount && !manualEntry && (
+              <button
+                onClick={() => { setManualEntry(true); setEmail(''); setAccountId(''); }}
+                className="block w-full text-center text-[11px] opacity-55 hover:opacity-100"
+              >
+                Usar outra conta
+              </button>
+            )}
             {gorjetaRef && (
               <a
                 href={`/gorjeta?ref=${gorjetaRef}&return=${encodeURIComponent(`sorteio:${event.tag}`)}`}
@@ -337,6 +427,7 @@ export default function Sorteio({ tag }: { tag: string }) {
                 Não tenho cadastro — quero me inscrever
               </a>
             )}
+
             <div className="pt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] opacity-45">
               {event.opensAt && <span>Abre {fmtDateTime(event.opensAt)}</span>}
               {event.closesAt && <span>Fecha {fmtDateTime(event.closesAt)}</span>}
