@@ -148,82 +148,46 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
         for (let c = 0; c < count; c++) {
           const px = pinX(r, c);
           const hitAt = hits.get(`${r}:${c}`);
-          const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 520) : 0;
-          const rad = 5.2 + flash * 4.2;
-
-          // halo permanente sutil + halo forte na batida
+          const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 380) : 0;
           ctx.beginPath();
-          ctx.arc(px, py, rad + 7 + 13 * flash, 0, Math.PI * 2);
-          ctx.fillStyle = hexA(accent, 0.05 + 0.22 * flash);
-          ctx.fill();
-
-          const pg = ctx.createRadialGradient(px - 1.4, py - 1.8, 0.5, px, py, rad);
-          pg.addColorStop(0, `rgba(255,255,255,${0.95})`);
-          pg.addColorStop(1, flash > 0 ? hexA(accent, 0.9) : 'rgba(150,170,190,0.5)');
-          ctx.beginPath();
-          ctx.arc(px, py, rad, 0, Math.PI * 2);
-          ctx.fillStyle = pg;
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fillStyle = flash > 0
+            ? hexA(accent, 0.55 + 0.45 * flash)
+            : 'rgba(255,255,255,0.35)';
           ctx.fill();
         }
       }
 
       // fade da bolinha: ela some ao entrar no slot
       const ballAlpha = done ? Math.max(0, 1 - Math.max(0, (settleT - 0.5) / 0.3)) : 1;
-      const revealed = done && ballAlpha <= 0.001;
 
       // ---- slots ----
-      const SLOT_H = 68;
+      const SLOT_H = 66;
       multipliers.forEach((m, i) => {
         const sx = left + i * slotW;
         const st = slotStyle(m, accent);
         const isWin = done && i === landedSlot;
         const pop = isWin ? Math.min(1, (elapsed - DROP_MS - totalRowsMs) / 320) : 0;
-        const lift = isWin ? Math.sin(pop * Math.PI) * 10 : 0;
+        const lift = isWin ? Math.sin(pop * Math.PI) * 8 : 0;
         const sy = bottomY + 40 - lift;
 
-        ctx.globalAlpha = done && !isWin ? 0.35 : 1;
+        ctx.globalAlpha = done && !isWin ? 0.3 : 1;
 
-        if (isWin) {
-          ctx.shadowColor = accent;
-          ctx.shadowBlur = revealed ? 30 + Math.sin(now / 260) * 14 : 30;
-        }
-
-        // corpo do slot com profundidade
-        const sg = ctx.createLinearGradient(0, sy, 0, sy + SLOT_H);
-        sg.addColorStop(0, st.bg);
-        sg.addColorStop(1, m > 0 ? hexA(accent, m >= 8 ? 0.75 : 0.18) : 'rgba(255,255,255,0.03)');
-        ctx.fillStyle = sg;
+        ctx.fillStyle = isWin ? accent : st.bg;
         ctx.beginPath();
-        ctx.roundRect(sx + 4, sy, slotW - 8, SLOT_H, 14);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // brilho superior (highlight de vidro)
-        ctx.beginPath();
-        ctx.roundRect(sx + 8, sy + 3, slotW - 16, SLOT_H * 0.42, 10);
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.roundRect(sx + 4, sy, slotW - 8, SLOT_H, 12);
         ctx.fill();
 
-        ctx.strokeStyle = isWin ? '#ffffff' : 'rgba(255,255,255,0.10)';
-        ctx.lineWidth = isWin ? 2.5 : 1;
-        ctx.beginPath();
-        ctx.roundRect(sx + 4, sy, slotW - 8, SLOT_H, 14);
-        ctx.stroke();
-
         if (isWin) {
-          const mk = 1 - Math.max(0, Math.min(1, (settleT - 0.6) / 0.3));
-          const my = sy - 18 - mk * 8;
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(sx + slotW / 2, my + 11);
-          ctx.lineTo(sx + slotW / 2 - 9, my - 3);
-          ctx.lineTo(sx + slotW / 2 + 9, my - 3);
-          ctx.closePath();
-          ctx.fillStyle = accent;
-          ctx.fill();
+          ctx.roundRect(sx + 4, sy, slotW - 8, SLOT_H, 12);
+          ctx.stroke();
         }
 
-        ctx.fillStyle = st.fg;
-        ctx.font = `900 ${slots > 12 ? 18 : 24}px system-ui, sans-serif`;
+        ctx.fillStyle = isWin ? '#06170c' : st.fg;
+        ctx.font = `800 ${slots > 12 ? 18 : 23}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(`${m}x`, sx + slotW / 2, sy + SLOT_H / 2 + 1);
@@ -238,32 +202,25 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
           ctx.globalAlpha = ballAlpha;
 
           trail.push({ x, y, t: now });
-          while (trail.length && now - trail[0].t > 300) trail.shift();
+          while (trail.length && now - trail[0].t > 220) trail.shift();
           trail.forEach((p, i) => {
-            const a = (i / trail.length) * 0.3;
+            const a = (i / trail.length) * 0.14;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 4 + (i / trail.length) * 9, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 5 + (i / trail.length) * 6, 0, Math.PI * 2);
             ctx.fillStyle = hexA(accent, a);
             ctx.fill();
           });
 
-          const grad = ctx.createRadialGradient(x - 5, y - 6, 1, x, y, 17);
-          grad.addColorStop(0, '#ffffff');
-          grad.addColorStop(0.45, accent);
-          grad.addColorStop(1, hexA(accent, 0.85));
-
           ctx.translate(x, y);
           ctx.scale(1 / squash, squash * (0.6 + 0.4 * ballAlpha));
           ctx.beginPath();
-          ctx.arc(0, 0, 16, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.shadowColor = accent;
-          ctx.shadowBlur = 34;
+          ctx.arc(0, 0, 15, 0, Math.PI * 2);
+          ctx.fillStyle = accent;
           ctx.fill();
           ctx.restore();
-          ctx.shadowBlur = 0;
           ctx.globalAlpha = 1;
         }
+
 
         if (done && !finishedRef.current && elapsed - DROP_MS - totalRowsMs > SETTLE_MS) {
           finishedRef.current = true;
