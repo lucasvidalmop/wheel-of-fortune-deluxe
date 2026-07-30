@@ -174,8 +174,31 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
           ) : (
             <div className="p-4 sm:p-5 flex flex-col min-h-0 flex-1 overflow-hidden items-center">
               <div className="w-full max-w-[560px] flex flex-col min-h-0 flex-1">
+
+              {/* seletor de modo */}
+              <div className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-xl bg-white/[0.04] border border-white/10 shrink-0">
+                {([
+                  { key: 'base' as const, label: 'Base + fantasmas' },
+                  { key: 'live' as const, label: 'Ao vivo' },
+                ]).map((m) => (
+                  <button
+                    key={m.key}
+                    onClick={() => { if (phase !== 'drawing' && phase !== 'playing') onModeChange(m.key); }}
+                    className="h-8 rounded-lg text-[11px] font-black uppercase tracking-wider transition-colors"
+                    style={mode === m.key
+                      ? { background: accent, color: '#04150a' }
+                      : { color: 'rgba(255,255,255,0.45)' }}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {mode === 'live' && livePanel}
+
               <div
                 className="rounded-2xl border p-3 mb-3 text-center transition-colors shrink-0"
+
                 style={{
                   borderColor: phase === 'drawing' ? `${accent}66` : 'rgba(255,255,255,0.08)',
                   background: phase === 'drawing' ? `${accent}0f` : 'rgba(255,255,255,0.02)',
