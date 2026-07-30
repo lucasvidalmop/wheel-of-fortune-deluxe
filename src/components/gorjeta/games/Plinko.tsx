@@ -78,32 +78,15 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       ctx.clearRect(0, 0, W, H);
       const elapsed = now - start;
 
-      // ---- fundo do tabuleiro ----
-      const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, '#0d1420');
-      bg.addColorStop(0.55, '#0a0f18');
-      bg.addColorStop(1, '#070a11');
+      // ---- fundo do tabuleiro (limpo, sem brilhos) ----
       ctx.beginPath();
-      ctx.roundRect(8, 8, W - 16, H - 16, 26);
-      ctx.fillStyle = bg;
+      ctx.roundRect(8, 8, W - 16, H - 16, 24);
+      ctx.fillStyle = '#0b0f16';
       ctx.fill();
-      ctx.strokeStyle = hexA(accent, 0.16);
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
-      // brilho superior de onde a bolinha cai
-      const halo = ctx.createRadialGradient(W / 2, 24, 4, W / 2, 24, 180);
-      halo.addColorStop(0, hexA(accent, 0.22));
-      halo.addColorStop(1, hexA(accent, 0));
-      ctx.fillStyle = halo;
-      ctx.fillRect(8, 8, W - 16, 240);
-
-      // piso luminoso atrás dos slots
-      const floor = ctx.createLinearGradient(0, H - 190, 0, H - 20);
-      floor.addColorStop(0, hexA(accent, 0));
-      floor.addColorStop(1, hexA(accent, 0.09));
-      ctx.fillStyle = floor;
-      ctx.fillRect(8, H - 190, W - 16, 170);
 
 
       // ---- posição lógica da bolinha ----
