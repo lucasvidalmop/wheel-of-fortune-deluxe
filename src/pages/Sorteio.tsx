@@ -234,6 +234,31 @@ export default function Sorteio({ tag }: { tag: string }) {
         style={{ background: accent }}
       />
 
+      {/* LIVE REVEAL OVERLAY */}
+      {reveal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 backdrop-blur-md animate-fade-in" style={{ background: `${bg}e6` }}>
+          <div className="text-center animate-scale-in">
+            <div className="text-6xl animate-bounce">🏆</div>
+            <div className="mt-4 text-[11px] uppercase tracking-[0.25em] opacity-70">Ganhador sorteado</div>
+            <div className="mt-2 text-4xl sm:text-6xl font-extrabold" style={{ color: accent, textShadow: `0 0 60px ${accent}80` }}>
+              {reveal.name}
+            </div>
+            <div className="mt-2 text-sm opacity-60">ID {reveal.accountId}</div>
+            <div className="mt-5 inline-block rounded-2xl px-6 py-3 text-2xl font-extrabold" style={{ background: `${accent}22`, color: accent }}>
+              {fmtBRL(reveal.amount)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DRAW IN PROGRESS BANNER */}
+      {event.status === 'running' && winners.length < event.winnersCount && (
+        <div className="relative z-10 text-center py-2 text-[11px] font-bold uppercase tracking-[0.2em] animate-pulse" style={{ background: `${accent}22`, color: accent }}>
+          Sorteio acontecendo agora — fique nesta tela
+        </div>
+      )}
+
+
       {/* HERO */}
       <header className="relative">
         {event.coverUrl && (
