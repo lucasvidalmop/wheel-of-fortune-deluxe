@@ -193,116 +193,138 @@ export default function Sorteio({ tag }: { tag: string }) {
   const iWon = isRegistered && meWon;
 
   return (
-    <div className="min-h-screen pb-16" style={{ background: bg, color: textColor }}>
-      {/* Cover */}
-      <div className="relative w-full h-44 sm:h-64 overflow-hidden">
-        {event.coverUrl ? (
-          <img src={event.coverUrl} alt={event.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${accent}33, ${bg})` }} />
+    <div className="min-h-screen relative overflow-hidden" style={{ background: bg, color: textColor }}>
+      {/* Ambient glow */}
+      <div
+        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[420px] w-[820px] rounded-full blur-[120px] opacity-40"
+        style={{ background: accent }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 right-[-10%] h-[360px] w-[520px] rounded-full blur-[130px] opacity-20"
+        style={{ background: accent }}
+      />
+
+      {/* HERO */}
+      <header className="relative">
+        {event.coverUrl && (
+          <>
+            <img src={event.coverUrl} alt={event.name} className="absolute inset-0 w-full h-full object-cover opacity-45" />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${bg}99, ${bg})` }} />
+          </>
         )}
-        <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${bg}, transparent 70%)` }} />
-        <div className="absolute bottom-3 left-0 right-0 px-5">
+        <div className="relative max-w-5xl mx-auto px-5 pt-10 pb-8 sm:pt-16 sm:pb-12 text-center">
           <span
-            className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-            style={{ background: accent, color: '#04121a' }}
+            className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.18em] px-3 py-1.5 rounded-full border backdrop-blur"
+            style={{ borderColor: `${accent}55`, background: `${accent}1a`, color: accent }}
           >
-            Sorteio ao Vivo
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full animate-ping opacity-75" style={{ background: accent }} />
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: accent }} />
+            </span>
+            Sorteio ao vivo
           </span>
-          <h1 className="mt-2 text-2xl sm:text-4xl font-extrabold leading-tight">{event.name || 'Sorteio'}</h1>
-        </div>
-      </div>
 
-      <div className="max-w-lg mx-auto px-4 space-y-4 -mt-1">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: 'Prêmio', value: fmtBRL(event.prizeAmount), icon: <Trophy size={14} /> },
-            { label: 'Premiados', value: `${winners.length}/${event.winnersCount}`, icon: <PartyPopper size={14} /> },
-            { label: 'Inscritos', value: String(participantsCount), icon: <Users size={14} /> },
-          ].map(s => (
-            <div key={s.label} className="rounded-2xl p-3 text-center border" style={{ background: cardBg, borderColor: `${accent}26` }}>
-              <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wide opacity-60">{s.icon}{s.label}</div>
-              <div className="mt-1 text-base font-bold" style={{ color: accent }}>{s.value}</div>
-            </div>
-          ))}
-        </div>
+          <h1 className="mt-5 text-[2.1rem] leading-[1.05] sm:text-6xl font-extrabold tracking-tight">
+            {event.name || 'Sorteio'}
+          </h1>
 
-        {/* Countdown / status */}
-        <div className="rounded-2xl p-4 border" style={{ background: cardBg, borderColor: `${accent}26` }}>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-70">
-            <Clock size={14} />
-            {phase === 'waiting' && 'Abre em'}
-            {phase === 'open' && (event.closesAt ? 'Encerra em' : 'Inscrições abertas')}
-            {phase === 'closed' && 'Inscrições encerradas'}
-            {phase === 'finished' && 'Evento finalizado'}
+          <div className="mt-6 inline-flex flex-col items-center">
+            <span className="text-[11px] uppercase tracking-[0.2em] opacity-60">Prêmio por ganhador</span>
+            <span
+              className="mt-1 text-5xl sm:text-7xl font-extrabold tabular-nums"
+              style={{ color: accent, textShadow: `0 0 48px ${accent}66` }}
+            >
+              {fmtBRL(event.prizeAmount)}
+            </span>
           </div>
-          {(phase === 'waiting' || (phase === 'open' && event.closesAt)) ? (
-            <div className="mt-2 flex gap-2">
-              {[{ v: cd.d, l: 'd' }, { v: cd.h, l: 'h' }, { v: cd.m, l: 'm' }, { v: cd.s, l: 's' }].map(u => (
-                <div key={u.l} className="flex-1 rounded-xl py-2 text-center" style={{ background: `${accent}14` }}>
-                  <div className="text-xl font-extrabold tabular-nums" style={{ color: accent }}>{String(u.v).padStart(2, '0')}</div>
-                  <div className="text-[10px] opacity-60">{u.l}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-1 text-sm opacity-70">
-              {phase === 'open' ? 'Participe agora para concorrer.' : 'Acompanhe os ganhadores abaixo.'}
+
+          {event.description && (
+            <p className="mt-5 mx-auto max-w-xl text-sm sm:text-base leading-relaxed opacity-70 whitespace-pre-line">
+              {event.description}
             </p>
           )}
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] opacity-60">
-            {event.opensAt && <span>Abertura: {fmtDateTime(event.opensAt)}</span>}
-            {event.closesAt && <span>Fechamento: {fmtDateTime(event.closesAt)}</span>}
-            {spotsLeft !== null && <span>Vagas restantes: {spotsLeft}</span>}
+
+          <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-2xl mx-auto">
+            {[
+              { label: 'Premiados', value: `${winners.length}/${event.winnersCount}`, icon: <PartyPopper size={13} /> },
+              { label: 'Inscritos', value: String(participantsCount), icon: <Users size={13} /> },
+              { label: 'Vagas', value: spotsLeft === null ? 'Ilimitadas' : String(spotsLeft), icon: <Trophy size={13} /> },
+              {
+                label: phase === 'waiting' ? 'Abre em' : phase === 'open' ? 'Encerra em' : 'Status',
+                value:
+                  phase === 'waiting' || (phase === 'open' && event.closesAt)
+                    ? `${cd.d > 0 ? `${cd.d}d ` : ''}${String(cd.h).padStart(2, '0')}:${String(cd.m).padStart(2, '0')}:${String(cd.s).padStart(2, '0')}`
+                    : phase === 'open' ? 'Aberto' : phase === 'finished' ? 'Finalizado' : 'Encerrado',
+                icon: <Clock size={13} />,
+              },
+            ].map(s => (
+              <div
+                key={s.label}
+                className="rounded-2xl px-3 py-3 border backdrop-blur-sm"
+                style={{ background: `${cardBg}cc`, borderColor: `${accent}26` }}
+              >
+                <div className="flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-wide opacity-55">
+                  {s.icon}{s.label}
+                </div>
+                <div className="mt-1 text-sm sm:text-base font-bold tabular-nums truncate">{s.value}</div>
+              </div>
+            ))}
           </div>
         </div>
+      </header>
 
-        {event.description && (
-          <div className="rounded-2xl p-4 border text-sm leading-relaxed whitespace-pre-line" style={{ background: cardBg, borderColor: `${accent}26` }}>
-            {event.description}
-          </div>
-        )}
-
-        {/* Join */}
+      {/* BODY */}
+      <main className="relative max-w-5xl mx-auto px-4 sm:px-5 pb-20 grid gap-4 lg:grid-cols-[1fr_1fr] lg:items-start">
+        {/* Join / status card */}
         {isRegistered ? (
-          <div className="rounded-2xl p-4 border text-center" style={{ background: `${accent}12`, borderColor: accent }}>
-            <div className="text-xs uppercase tracking-wide opacity-70">Você está participando</div>
-            <div className="mt-1 text-3xl font-extrabold" style={{ color: accent }}>#{entryNumber}</div>
+          <section
+            className="rounded-3xl p-6 border text-center relative overflow-hidden"
+            style={{ background: `${accent}12`, borderColor: `${accent}66` }}
+          >
+            <div className="text-[11px] uppercase tracking-[0.2em] opacity-70">Você está participando</div>
+            <div className="mt-2 text-6xl font-extrabold tabular-nums" style={{ color: accent, textShadow: `0 0 40px ${accent}55` }}>
+              #{entryNumber}
+            </div>
             <div className="text-xs opacity-60 mt-1">Seu número de participação</div>
             {iWon && (
-              <div className="mt-3 text-sm font-bold" style={{ color: accent }}>
+              <div className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold" style={{ background: `${accent}22`, color: accent }}>
                 🎉 Você foi sorteado! O PIX será enviado para a chave do seu cadastro.
               </div>
             )}
-            <button onClick={signOut} className="mt-3 inline-flex items-center gap-1 text-[11px] opacity-60 hover:opacity-100">
+            <button onClick={signOut} className="mt-5 inline-flex items-center gap-1.5 text-[11px] opacity-55 hover:opacity-100 transition-opacity">
               <LogOut size={12} /> Sair desta conta
             </button>
-          </div>
+          </section>
         ) : (
-          <div className="rounded-2xl p-4 border space-y-3" style={{ background: cardBg, borderColor: `${accent}26` }}>
-            <div className="text-sm font-bold">Participar do sorteio</div>
+          <section
+            className="rounded-3xl p-6 border space-y-3 backdrop-blur"
+            style={{ background: `${cardBg}e6`, borderColor: `${accent}33` }}
+          >
+            <div>
+              <h2 className="text-lg font-bold">Participar do sorteio</h2>
+              <p className="text-xs opacity-60 mt-1">Use o e-mail e o ID da sua conta cadastrada.</p>
+            </div>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="Seu e-mail"
-              className="w-full rounded-xl px-3 py-3 text-sm bg-black/30 border outline-none"
-              style={{ borderColor: `${accent}40`, color: textColor }}
+              className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
+              style={{ borderColor: `${accent}3a`, color: textColor }}
             />
             <input
               type="text"
               value={accountId}
               onChange={e => setAccountId(e.target.value)}
               placeholder="ID da sua conta"
-              className="w-full rounded-xl px-3 py-3 text-sm bg-black/30 border outline-none"
-              style={{ borderColor: `${accent}40`, color: textColor }}
+              className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
+              style={{ borderColor: `${accent}3a`, color: textColor }}
             />
             <button
               onClick={handleJoin}
               disabled={joining || phase !== 'open'}
-              className="w-full rounded-xl py-3 text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: accent, color: '#04121a' }}
+              className="w-full rounded-2xl py-4 text-sm font-extrabold uppercase tracking-wide disabled:opacity-45 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+              style={{ background: accent, color: '#04121a', boxShadow: `0 12px 40px -12px ${accent}` }}
             >
               {joining && <Loader2 size={16} className="animate-spin" />}
               {phase === 'waiting' ? 'Aguarde a abertura' : phase === 'open' ? 'Quero participar' : 'Inscrições encerradas'}
@@ -310,45 +332,69 @@ export default function Sorteio({ tag }: { tag: string }) {
             {gorjetaRef && (
               <a
                 href={`/gorjeta?ref=${gorjetaRef}&return=${encodeURIComponent(`sorteio:${event.tag}`)}`}
-                className="block text-center text-xs underline opacity-70 hover:opacity-100"
+                className="block text-center text-xs opacity-65 hover:opacity-100 underline underline-offset-4"
               >
                 Não tenho cadastro — quero me inscrever
               </a>
             )}
-          </div>
+            <div className="pt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] opacity-45">
+              {event.opensAt && <span>Abre {fmtDateTime(event.opensAt)}</span>}
+              {event.closesAt && <span>Fecha {fmtDateTime(event.closesAt)}</span>}
+            </div>
+          </section>
         )}
 
         {/* Winners */}
-        <div className="rounded-2xl p-4 border" style={{ background: cardBg, borderColor: `${accent}26` }}>
+        <section
+          className="rounded-3xl p-6 border backdrop-blur"
+          style={{ background: `${cardBg}e6`, borderColor: `${accent}33` }}
+        >
           <div className="flex items-center justify-between">
-            <div className="text-sm font-bold">Ganhadores</div>
-            <div className="text-[11px] opacity-60">{winners.length} de {event.winnersCount}</div>
+            <h2 className="text-lg font-bold">Ganhadores</h2>
+            <span className="text-[11px] px-2.5 py-1 rounded-full" style={{ background: `${accent}1a`, color: accent }}>
+              {winners.length} de {event.winnersCount}
+            </span>
           </div>
           {winners.length === 0 ? (
-            <p className="mt-3 text-xs opacity-60">Nenhum ganhador sorteado ainda. Fique de olho na live!</p>
+            <div className="mt-5 rounded-2xl border border-dashed px-4 py-10 text-center text-xs opacity-55" style={{ borderColor: `${accent}33` }}>
+              Nenhum ganhador sorteado ainda.<br />Fique de olho na live!
+            </div>
           ) : (
-            <div ref={winnersRef} className="mt-3 space-y-2 max-h-72 overflow-y-auto scroll-smooth">
+            <div ref={winnersRef} className="mt-4 space-y-2 max-h-[22rem] overflow-y-auto scroll-smooth pr-1">
               {winners.map((w, i) => (
-                <div key={w.id} className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: `${accent}0f` }}>
-                  <div className="w-6 text-center text-xs font-bold opacity-60">{i + 1}</div>
+                <div
+                  key={w.id}
+                  className="flex items-center gap-3 rounded-2xl px-3.5 py-3 border"
+                  style={{ background: `${accent}0f`, borderColor: `${accent}1f` }}
+                >
+                  <div
+                    className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: `${accent}26`, color: accent }}
+                  >
+                    {i + 1}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">{w.name}</div>
-                    <div className="text-[11px] opacity-60">ID {w.accountId}</div>
+                    <div className="text-[11px] opacity-55">ID {w.accountId}</div>
                   </div>
-                  <div className="text-sm font-bold" style={{ color: accent }}>{fmtBRL(w.amount)}</div>
+                  <div className="text-sm font-bold tabular-nums" style={{ color: accent }}>{fmtBRL(w.amount)}</div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {event.rules && (
-          <div className="rounded-2xl p-4 border text-xs leading-relaxed opacity-70 whitespace-pre-line" style={{ background: cardBg, borderColor: `${accent}1a` }}>
-            <div className="font-bold mb-1 opacity-100">Regras</div>
-            {event.rules}
-          </div>
+          <section
+            className="rounded-3xl p-6 border text-xs leading-relaxed whitespace-pre-line lg:col-span-2"
+            style={{ background: `${cardBg}99`, borderColor: `${accent}1f` }}
+          >
+            <div className="font-bold text-sm mb-2">Regras</div>
+            <div className="opacity-65">{event.rules}</div>
+          </section>
         )}
-      </div>
+      </main>
     </div>
   );
 }
+
