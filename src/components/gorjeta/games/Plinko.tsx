@@ -28,12 +28,13 @@ const hexA = (hex: string, a: number) => {
 };
 
 const slotStyle = (m: number, accent: string) => {
-  if (m <= 0) return { bg: 'rgba(255,255,255,0.07)', fg: 'rgba(255,255,255,0.45)' };
-  if (m < 1) return { bg: hexA(accent, 0.22), fg: 'rgba(255,255,255,0.85)' };
-  if (m < 3) return { bg: hexA(accent, 0.42), fg: '#04150a' };
-  if (m < 8) return { bg: hexA(accent, 0.7), fg: '#04150a' };
-  return { bg: accent, fg: '#04150a' };
+  if (m <= 0) return { bg: 'rgba(255,255,255,0.06)', fg: 'rgba(255,255,255,0.4)' };
+  if (m < 1) return { bg: hexA(accent, 0.16), fg: 'rgba(255,255,255,0.8)' };
+  if (m < 3) return { bg: hexA(accent, 0.34), fg: 'rgba(255,255,255,0.92)' };
+  if (m < 8) return { bg: hexA(accent, 0.6), fg: '#06170c' };
+  return { bg: accent, fg: '#06170c' };
 };
+
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
