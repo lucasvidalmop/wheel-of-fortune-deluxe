@@ -25,6 +25,9 @@ interface Props {
   onModeChange: (m: 'base' | 'live') => void;
   /** Painel de gestão da sala ao vivo (renderizado apenas no modo live). */
   livePanel?: React.ReactNode;
+  /** Controles extras exibidos apenas na aba "Configurar". */
+  configExtra?: React.ReactNode;
+
   /** Persiste o prêmio do ganhador (PIX / giros / coins conforme o tipo). */
   onWinner: (winner: PlinkoCandidate, amount: number, multiplier: number) => Promise<void> | void;
 }
