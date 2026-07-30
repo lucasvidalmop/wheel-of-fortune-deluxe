@@ -204,7 +204,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
 
               {reveal && (
                 <div
-                  className="mt-3 rounded-2xl border p-4 text-center"
+                  className="mt-3 rounded-2xl border p-3 text-center shrink-0"
                   style={{
                     borderColor: reveal.win ? `${accent}66` : 'rgba(255,255,255,0.12)',
                     background: reveal.win ? `${accent}12` : 'rgba(255,255,255,0.02)',
