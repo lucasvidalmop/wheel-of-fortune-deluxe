@@ -94,6 +94,9 @@ const Influencer = () => {
 
   const [showPlinko, setShowPlinko] = useState(false);
   const [plinkoConfig, setPlinkoConfig] = useState<PlinkoConfig>(normalizePlinko(null));
+  const [plinkoMode, setPlinkoMode] = useState<'base' | 'live'>('base');
+  const [liveGhosts, setLiveGhosts] = useState(false);
+
 
   const [showRaffle, setShowRaffle] = useState(false);
   const [raffleStep, setRaffleStep] = useState<RaffleStep>('config');
