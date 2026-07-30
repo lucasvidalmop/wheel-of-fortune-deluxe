@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Plinko from './games/Plinko';
+import { normalizePlinko, plinkoRows, chancePercents } from './plinkoConfig';
 
 interface Props {
-  event: { id: string; name: string; tag: string; theme?: Record<string, string> };
+  event: { id: string; name: string; tag: string; theme?: Record<string, string>; page_config?: Record<string, any> };
   onClose: () => void;
 }
 
@@ -25,15 +26,16 @@ interface ResultRow {
   created_at: string;
 }
 
-const DEFAULT_MULTIPLIERS = [10, 5, 2, 1, 0.5, 0, 0.5, 1, 2, 5, 10];
-const ROWS = 12;
-
 const EventStage = ({ event, onClose }: Props) => {
   const accent = event.theme?.accent || '#22c55e';
+  const cfg = useMemo(() => normalizePlinko((event.page_config || {}).plinko), [event.page_config]);
+  const multipliers = useMemo(() => cfg.slots.map((s) => s.multiplier), [cfg]);
+  const rows = useMemo(() => plinkoRows(cfg.slots), [cfg]);
+  const percents = useMemo(() => chancePercents(cfg.slots), [cfg]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [results, setResults] = useState<ResultRow[]>([]);
-  const [baseAmount, setBaseAmount] = useState(10);
-  const [prizeType, setPrizeType] = useState<'pix' | 'spins' | 'coins'>('pix');
+  const [baseAmount, setBaseAmount] = useState(cfg.base_amount);
+  const [prizeType, setPrizeType] = useState<'pix' | 'spins' | 'coins'>(cfg.prize_type);
   const [playing, setPlaying] = useState(false);
   const [path, setPath] = useState<number[] | null>(null);
   const [current, setCurrent] = useState<{ name: string; account_id: string; entry_number: number } | null>(null);
@@ -77,7 +79,11 @@ const EventStage = ({ event, onClose }: Props) => {
         game: 'plinko',
         prize_type: prizeType,
         base_amount: baseAmount,
-        game_config: { rows: ROWS, multipliers: DEFAULT_MULTIPLIERS },
+        game_config: {
+          rows,
+          multipliers,
+          weights: cfg.use_chances ? cfg.slots.map((s) => s.chance) : null,
+        },
       },
     });
 
@@ -92,7 +98,7 @@ const EventStage = ({ event, onClose }: Props) => {
       setReveal({ label, win });
       setPlaying(false);
       load();
-    }, ROWS * 150 + 400);
+    }, rows * 150 + 400);
   };
 
   return (
@@ -136,7 +142,16 @@ const EventStage = ({ event, onClose }: Props) => {
             </div>
 
             <div className="rounded-2xl bg-black/40 border border-white/5 p-2 sm:p-4">
-              <Plinko rows={ROWS} multipliers={DEFAULT_MULTIPLIERS} path={path} accent={accent} />
+              <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
+              {cfg.use_chances && (
+                <div className="mt-2 flex flex-wrap justify-center gap-1.5 px-1">
+                  {cfg.slots.map((s, i) => (
+                    <span key={i} className="rounded-md bg-white/[0.04] border border-white/10 px-1.5 py-0.5 text-[10px] text-white/45 tabular-nums">
+                      {s.multiplier}x · {percents[i].toFixed(1)}%
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {reveal && (
