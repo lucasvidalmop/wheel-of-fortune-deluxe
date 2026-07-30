@@ -1113,8 +1113,25 @@ const Influencer = () => {
         config={plinkoConfig}
         onSaveConfig={savePlinkoConfig}
         candidates={plinkoCandidates}
+        mode={plinkoMode}
+        onModeChange={setPlinkoMode}
+        livePanel={
+          <LiveRoomPanel
+            accent={accent}
+            room={liveRoom.room}
+            participants={liveRoom.participants}
+            busy={liveRoom.busy}
+            link={liveRoom.link}
+            useGhosts={liveGhosts}
+            onToggleGhosts={setLiveGhosts}
+            ghostCount={ghostParticipants.length}
+            onOpenRoom={(name) => liveRoom.openRoom(name).catch(() => toast.error('Erro ao abrir a sala ao vivo'))}
+            onCloseRoom={() => liveRoom.closeRoom()}
+          />
+        }
         onWinner={handlePlinkoWinner}
       />
+
 
       {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
