@@ -142,8 +142,9 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && phase === 'idle') onClose(); }}>
-      <DialogContent className="w-[calc(100vw-24px)] max-w-[1180px] max-h-[96dvh] overflow-hidden rounded-2xl border border-border bg-background p-0 text-foreground shadow-2xl [&>button]:hidden">
-        <div className="flex max-h-[96dvh] flex-col overflow-hidden">
+      <DialogContent className="flex h-[92dvh] w-[calc(100vw-24px)] max-w-[1180px] flex-col overflow-hidden rounded-2xl border border-border bg-background p-0 text-foreground shadow-2xl [&>button]:hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+
 
           <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
             <div>
