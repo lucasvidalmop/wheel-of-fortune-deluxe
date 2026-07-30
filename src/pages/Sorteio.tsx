@@ -399,8 +399,22 @@ export default function Sorteio({ tag }: { tag: string }) {
               style={{ background: accent, color: '#04121a', boxShadow: `0 12px 40px -12px ${accent}` }}
             >
               {joining && <Loader2 size={16} className="animate-spin" />}
-              {phase === 'waiting' ? 'Aguarde a abertura' : phase === 'open' ? 'Quero participar' : 'Inscrições encerradas'}
+              {phase === 'waiting'
+                ? 'Aguarde a abertura'
+                : phase !== 'open'
+                  ? 'Inscrições encerradas'
+                  : hasSavedAccount && !manualEntry
+                    ? 'Confirmar participação'
+                    : 'Quero participar'}
             </button>
+            {hasSavedAccount && !manualEntry && (
+              <button
+                onClick={() => { setManualEntry(true); setEmail(''); setAccountId(''); }}
+                className="block w-full text-center text-[11px] opacity-55 hover:opacity-100"
+              >
+                Usar outra conta
+              </button>
+            )}
             {gorjetaRef && (
               <a
                 href={`/gorjeta?ref=${gorjetaRef}&return=${encodeURIComponent(`sorteio:${event.tag}`)}`}
@@ -409,6 +423,7 @@ export default function Sorteio({ tag }: { tag: string }) {
                 Não tenho cadastro — quero me inscrever
               </a>
             )}
+
             <div className="pt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] opacity-45">
               {event.opensAt && <span>Abre {fmtDateTime(event.opensAt)}</span>}
               {event.closesAt && <span>Fecha {fmtDateTime(event.closesAt)}</span>}
