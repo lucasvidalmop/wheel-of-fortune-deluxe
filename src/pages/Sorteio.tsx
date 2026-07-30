@@ -60,12 +60,30 @@ export default function Sorteio({ tag }: { tag: string }) {
   const [meWon, setMeWon] = useState(false);
   const [gorjetaRef, setGorjetaRef] = useState('');
   const [now, setNow] = useState(Date.now());
+  const [reveal, setReveal] = useState<LiveWinner | null>(null);
+  const seenWinnersRef = useRef<Set<string>>(new Set());
+  const bootstrappedRef = useRef(false);
+  const revealQueueRef = useRef<LiveWinner[]>([]);
+  const revealBusyRef = useRef(false);
 
   const session = getLobbySession();
   const [email, setEmail] = useState(session?.email || '');
   const [accountId, setAccountId] = useState(session?.account_id || '');
   const [joining, setJoining] = useState(false);
   const winnersRef = useRef<HTMLDivElement>(null);
+
+  const pumpReveals = useCallback(() => {
+    if (revealBusyRef.current) return;
+    const next = revealQueueRef.current.shift();
+    if (!next) return;
+    revealBusyRef.current = true;
+    setReveal(next);
+    window.setTimeout(() => {
+      setReveal(null);
+      revealBusyRef.current = false;
+      window.setTimeout(pumpReveals, 350);
+    }, 3800);
+  }, []);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -77,7 +95,18 @@ export default function Sorteio({ tag }: { tag: string }) {
       if (error) throw error;
       if (!data?.found) { setNotFound(true); return; }
       setEvent(data.event);
-      setWinners(data.winners || []);
+      const list: LiveWinner[] = data.winners || [];
+      // Queue live reveals for winners drawn while the page is open
+      if (bootstrappedRef.current) {
+        const fresh = list.filter(w => !seenWinnersRef.current.has(w.id));
+        if (fresh.length) {
+          revealQueueRef.current.push(...fresh);
+          pumpReveals();
+        }
+      }
+      list.forEach(w => seenWinnersRef.current.add(w.id));
+      bootstrappedRef.current = true;
+      setWinners(list);
       setParticipantsCount(data.participantsCount || 0);
       setEntryNumber(data.me?.entry_number ?? null);
       setMeWon(!!data.me?.has_won);
@@ -89,14 +118,14 @@ export default function Sorteio({ tag }: { tag: string }) {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [tag]);
+  }, [tag, pumpReveals]);
 
   useEffect(() => { load(); }, [load]);
 
   // Live refresh + clock
   useEffect(() => {
     const clock = window.setInterval(() => setNow(Date.now()), 1000);
-    const poll = window.setInterval(() => load(true), 5000);
+    const poll = window.setInterval(() => load(true), 2500);
     return () => { window.clearInterval(clock); window.clearInterval(poll); };
   }, [load]);
 
@@ -111,6 +140,7 @@ export default function Sorteio({ tag }: { tag: string }) {
       winnersRef.current.scrollTop = winnersRef.current.scrollHeight;
     }
   }, [winners.length]);
+
 
   const theme = event?.theme || {};
   const accent = theme.accentColor || '#22d3ee';
