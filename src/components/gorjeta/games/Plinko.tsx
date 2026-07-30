@@ -154,18 +154,18 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       const boardH = H - boardY * 2;
       const radius = Math.max(18, Math.min(26, boardW * 0.025));
 
-      const slotGap = Math.max(7, boardW * 0.012);
+      const slotGap = Math.max(9, boardW * 0.014);
       const slotW = (boardW - outerPad * 0.9 - slotGap * (slots - 1)) / slots;
-      const slotH = Math.max(46, Math.min(66, slotW * 0.84));
+      const slotH = Math.max(40, Math.min(58, slotW * 0.62));
       const slotX0 = boardX + (boardW - (slotW * slots + slotGap * (slots - 1))) / 2;
       const slotY = boardY + boardH - slotH - Math.max(18, boardH * 0.08);
 
       const pinTop = boardY + Math.max(28, boardH * 0.1);
       const pinBottom = slotY - Math.max(42, boardH * 0.09);
       const rowGap = (pinBottom - pinTop) / Math.max(1, visibleRows - 1);
-      const pegStep = (slotW + slotGap) * 0.98;
-      const pinR = Math.max(5, Math.min(8, slotW * 0.13));
-      const ballR = Math.max(9, Math.min(15, slotW * 0.22));
+      const pegStep = (slotW + slotGap) * 0.96;
+      const pinR = Math.max(4, Math.min(7, slotW * 0.085));
+      const ballR = Math.max(8, Math.min(13, slotW * 0.16));
       const centerX = boardX + boardW / 2;
 
       const slotCenter = (index: number) => slotX0 + index * (slotW + slotGap) + slotW / 2;
@@ -261,7 +261,7 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
         const pop = isWinner ? Math.sin(Math.min(1, settleT) * Math.PI) * 5 : 0;
 
         ctx.globalAlpha = phase === 'settle' && !isWinner ? 0.42 : 1;
-        roundedRect(ctx, x, slotY - pop, slotW, slotH, Math.min(14, slotW * 0.24));
+        roundedRect(ctx, x, slotY - pop, slotW, slotH, Math.min(9, slotW * 0.12));
         ctx.fillStyle = isWinner ? colors.slotStrong : tone.bg;
         ctx.fill();
 
@@ -271,7 +271,7 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
           ctx.stroke();
         }
 
-        const fontSize = Math.max(17, Math.min(24, slotW * 0.32));
+        const fontSize = Math.max(14, Math.min(20, slotW * 0.24));
         ctx.fillStyle = isWinner ? colors.textStrong : tone.fg;
         ctx.font = `800 ${fontSize}px Inter, system-ui, sans-serif`;
         ctx.textAlign = 'center';
