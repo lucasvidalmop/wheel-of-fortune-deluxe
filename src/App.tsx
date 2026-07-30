@@ -23,9 +23,6 @@ const Luckybox = lazy(() => import("./pages/Luckybox.tsx"));
 const UpdateRegistration = lazy(() => import("./pages/UpdateRegistration.tsx"));
 const Bets = lazy(() => import("./pages/Bets.tsx"));
 const Lobby = lazy(() => import("./pages/Lobby.tsx"));
-const GorjetaEvent = lazy(() => import("./pages/GorjetaEvent.tsx"));
-
-
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,11 +71,6 @@ const SlugRouter = () => {
     const tag = slug.substring(6);
     return <Lobby tag={tag} />;
   }
-  if (slug && slug.startsWith('live=')) {
-    const tag = slug.substring(5);
-    return <GorjetaEvent tag={tag} />;
-  }
-
   return <Roleta />;
 };
 
@@ -102,8 +94,6 @@ const App = () => {
             <Route path="/gorjeta" element={<Registration />} />
             <Route path="/influencer" element={<Influencer />} />
             <Route path="/batalha" element={<Batalha />} />
-            
-
             <Route path="/:slug" element={<SlugRouter />} />
           </Routes>
         </Suspense>

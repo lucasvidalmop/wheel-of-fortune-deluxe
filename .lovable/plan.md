@@ -1,90 +1,109 @@
 
-# Sistema de Eventos de Gorjeta ao Vivo
+# Redesign Mobile-First do Lobby da Gorjeta
 
-Evolução da página de gorjeta atual (`/influencer`) para um sistema de **eventos**: você cria um evento para a live, divulga um link, o pessoal se inscreve dentro da janela de tempo, e você joga os mini games de cassino no palco pelos participantes. Quem for sorteado/vencer recebe o prêmio configurado.
+Reformulação completa do lobby para parecer um app nativo no celular, com SPA real, sessão persistente e todas as promoções (Roleta, Batalha, Luckybox, Apostas) acessíveis sob um único login.
 
-## Conceito central
+## 1. Sessão e autenticação (uma vez só)
+
+- Persistir sessão em `localStorage` (em vez de `sessionStorage`) com chave única `gorjeta_lobby_session`.
+- Hidratar a sessão no boot do `Lobby` antes de decidir entre login/home — sem flicker para a tela de login quando já está logado.
+- Manter a RPC `authenticate_wheel_user` atual (e-mail + ID).
+- Logout só por ação manual (botão Sair) ou quando a RPC rejeitar a sessão.
+- Mesma sessão é injetada nos módulos embutidos (Roleta, Bets, Luckybox) via `LobbyEmbedProvider` — nenhum deles pede login de novo.
+- Botão "Inscrever-se" abre a página de cadastro da Gorjeta (URL configurável) com parâmetro `return=lobby:<tag>`; o cadastro existente já redireciona de volta.
+
+## 2. SPA real — sem trocar de rota
+
+- `Lobby.tsx` mantém um `view` interno: `'home' | 'roleta' | 'apostas' | 'luckybox' | 'perfil' | 'batalha'`.
+- Trocar de view NÃO altera a URL nem desmonta o container — só troca o conteúdo central.
+- Pré-carregar (`prefetch`) os bundles lazy das views logo após o login, para a primeira transição já ser instantânea.
+- Batalha continua abrindo a página de depósito do operador em nova aba (regra já definida).
+
+## 3. Arquitetura mobile-first
+
+Estrutura do shell em todas as telas:
 
 ```text
-EVENTO (live de 30/11, 20h–22h)
- ├── Link público  /evento=<tag>
- ├── Janela de inscrição (abre / fecha)
- ├── Participantes inscritos (novos + usuários já cadastrados)
- └── RODADAS (você dispara ao vivo, uma de cada vez)
-      ├── Rodada 1 · Plinko     · prêmio: PIX
-      ├── Rodada 2 · Roleta     · prêmio: giros
-      └── Rodada 3 · Raspadinha · prêmio: coins
+┌──────────────────────────────┐
+│ Header fixo (logo • coins • avatar)
+├──────────────────────────────┤
+│                              │
+│   Conteúdo da view ativa     │
+│   (rolável)                  │
+│                              │
+├──────────────────────────────┤
+│ Bottom Nav fixo (Home • Promos • Perfil)
+└──────────────────────────────┘
 ```
 
-A mecânica é sempre: o sistema sorteia um participante (ou você escolhe) → você joga o mini game na tela → o resultado do jogo define se ganha e quanto → o prêmio é creditado automaticamente.
+- Larguras: tudo em `w-full max-w-[480px] mx-auto` no mobile e expande para `max-w-6xl` no desktop usando breakpoints (`sm`, `md`, `lg`).
+- `safe-area-inset` para iPhone (notch + home indicator).
+- Padding base `px-4` no mobile, `px-8` no desktop. Sem margens exageradas.
 
-## 1. Página pública do evento (`/evento=<tag>`)
+## 4. Novas telas / componentes
 
-- Capa do evento, título, descrição e **contador regressivo** para abertura/fechamento das inscrições.
-- Dois caminhos de entrada: cadastro rápido no evento (nome, e-mail, telefone, ID, CPF/PIX) **ou** login com e-mail + ID para quem já é da base.
-- Depois de inscrito: tela "Você está participando", número de inscrição, e o feed ao vivo dos ganhadores conforme você joga.
-- Estados: `agendado` → `inscrições abertas` → `ao vivo` → `encerrado`, cada um com tela própria.
+Tudo dentro de `src/components/lobby/`:
 
-## 2. Painel do host (novo `/evento-host` ou aba dentro da gorjeta atual)
+- `LobbyShell.tsx` — wrapper com header + bottom nav + safe-area + tema do operador.
+- `LobbyHeader.tsx` — logo da Gorjeta + nome do usuário + coins + botão de perfil.
+- `LobbyBottomNav.tsx` — 3 abas (Início, Promoções, Perfil), fixa no rodapé do mobile, vira sidebar discreta no desktop.
+- `LobbyHome.tsx` — saudação curta + carrossel de destaque + lista de cards grandes.
+- `LobbyPromoCard.tsx` — card grande com imagem, nome, descrição, badge e botão "Acessar". Toque com `active:scale-[0.98]`.
+- `LobbyProfile.tsx` — dados do usuário, ID da conta, botão "Sair".
+- `LobbyLogin.tsx` — já existe, será simplificado para alinhar com o novo shell e ganhar estado de "carregando sessão" para evitar flicker.
 
-- Lista de eventos com status e nº de inscritos.
-- Criar/editar evento: nome, tag do link, capa, janela de inscrição, limite de participantes, texto de regras.
-- **Palco ao vivo**: painel em tela cheia (pensado para compartilhamento de tela na live) com:
-  - contador de inscritos em tempo real,
-  - botão "Sortear participante",
-  - seletor de mini game da rodada,
-  - o jogo em si, em tamanho grande,
-  - histórico de ganhadores da sessão com status de pagamento.
-- Reaproveita o que já existe hoje: limite diário, probabilidade de prêmio, mínimo de ganhadores reais, participantes fantasma e envio automático de PIX.
+## 5. Tema do operador
 
-## 3. Mini games (cassino)
+Continuar consumindo `pageConfig.theme` + `pageConfig.login` (sistema de configuração visual já criado no painel). O novo shell aplica:
 
-Todos rodam no painel do host, com animação grande e som. Resultado calculado no backend (não dá para burlar) e depois animado na tela.
+- `--lobby-primary`, `--lobby-bg`, `--lobby-text`, `--lobby-font-heading`, `--lobby-font-body` no container raiz.
+- Bottom nav, header e cards usam esses tokens — operador customiza tudo de um lugar só.
 
-- **Plinko** — bolinha cai pela pirâmide de pinos até um slot de multiplicador. Multiplicadores e pesos configuráveis por rodada.
-- **Roleta de prêmios** — reaproveita o componente de roleta já existente do sistema.
-- **Raspadinha** — reaproveita o `ScratchCell` já existente.
-- **Caça-níquel** — reaproveita a `BattleWheel`/slot já existente.
+## 6. Auditoria de responsividade
 
-Começamos pelo **Plinko** (é o novo de verdade) e plugamos os outros três reusando componentes prontos. Cada rodada tem seu próprio prêmio: PIX automático, giros na roleta, coins/Luckybox ou caixa da Luckybox — **misto por game**, como você pediu.
+Antes de fechar, testar manualmente cada view nos breakpoints 320, 360, 375, 390, 412, 430, 768, 820, 1024, 1280, 1440, 1920:
 
-## 4. Prêmios e pagamento
+- Login
+- Home do lobby
+- Roleta embutida
+- Luckybox embutido
+- Apostas embutidas
+- Perfil
+- Modais e formulários internos das views
 
-- PIX: mesma rota de hoje (`create_prize_payment` + EdPay, com pagamento automático quando ativado).
-- Giros: incrementa os giros do usuário na roleta.
-- Coins/Luckybox: credita saldo ou concede uma caixa.
-- Tudo registrado com o evento e a rodada de origem, para relatório depois.
+Critérios obrigatórios (zero ocorrências):
+- Sem scroll horizontal (`overflow-x: hidden` no shell + auditoria visual).
+- Sem texto/botão cortado.
+- Sem componente saindo da viewport.
+- Modais sempre com `max-h-[90vh]` e scroll interno.
 
-## 5. Tempo real
+## 7. Performance
 
-Os inscritos veem o contador de participantes e o feed de ganhadores atualizando ao vivo (realtime do banco). Não precisam interagir — só assistir e torcer, que é exatamente o formato que você descreveu.
+- Lazy-load real das views (`React.lazy` + `Suspense`) — já existe, manter.
+- `prefetch` no hover/após login para reduzir latência da primeira troca.
+- Memoizar `cards`, `theme`, `productMeta`.
+- Imagens com `loading="lazy"` e `optimizedImage` (já em uso).
+- Evitar re-renderizar o shell quando só a view interna muda — `LobbyShell` recebe `children` e nada mais.
 
-## Detalhes técnicos
+## Arquivos afetados
 
-**Novas tabelas**
-- `gorjeta_events` — dono, tag, nome, capa, config visual, abertura/fechamento das inscrições, status, limite de inscritos.
-- `gorjeta_event_participants` — vínculo evento ↔ usuário da roleta, origem (novo cadastro ou login), nº de inscrição, flag de já premiado.
-- `gorjeta_event_rounds` — evento, tipo de mini game, config do jogo (multiplicadores/pesos), tipo e valor do prêmio, status.
-- `gorjeta_event_results` — rodada, participante, resultado do jogo, prêmio ganho, referência do pagamento.
+**Novos**
+- `src/components/lobby/LobbyShell.tsx`
+- `src/components/lobby/LobbyHeader.tsx`
+- `src/components/lobby/LobbyBottomNav.tsx`
+- `src/components/lobby/LobbyHome.tsx`
+- `src/components/lobby/LobbyPromoCard.tsx`
+- `src/components/lobby/LobbyProfile.tsx`
 
-Todas com RLS por `owner_id` (operador gerencia as suas) + leitura pública restrita do que o evento precisa expor, via função `security definer` — mesmo padrão de `get_referral_page_data`.
+**Editados**
+- `src/pages/Lobby.tsx` — passa a apenas orquestrar `view` + sessão e renderizar o shell.
+- `src/components/lobby/LobbyLogin.tsx` — encaixa no novo shell, sem flicker.
+- `src/lib/lobbySession.ts` — migra para `localStorage` mantendo retrocompat com `sessionStorage`.
+- `src/index.css` — utilitários `safe-area`, `lobby-tap` (feedback de toque), classes de tipografia do tema.
 
-**Edge Functions**
-- `get-event-page` — dados públicos do evento por tag.
-- `join-event` — inscrição (cria/reaproveita `wheel_users`, valida janela e limite).
-- `play-event-round` — sorteia o participante, roda a lógica do jogo no servidor, grava o resultado e dispara o prêmio.
+## Fora do escopo desta entrega
 
-**Frontend**
-- `src/pages/GorjetaEvent.tsx` (público) e `src/pages/GorjetaEventHost.tsx` (palco).
-- `src/components/gorjeta/games/Plinko.tsx` — novo, com física simples em canvas.
-- Rota `/evento=<tag>` adicionada ao `SlugRouter`.
-- A página `/influencer` atual continua funcionando como está; o sistema de eventos é uma camada nova ao lado dela.
+- Não vou refazer o visual interno de Roleta / Bets / Luckybox / Batalha — eles ficam dentro do shell e herdam o tema, mas o redesign dos jogos em si é outra task. Posso atacar um por vez depois, na ordem que você preferir.
+- Painel de configuração no dashboard fica como está (já tem cores, fontes, textos do login).
 
-## Entrega sugerida em fases
-
-1. Evento + inscrição + página pública + painel de criação.
-2. Palco ao vivo com sorteio de participante e Plinko + prêmio PIX.
-3. Demais mini games e demais tipos de prêmio.
-4. Realtime no feed público e relatório do evento.
-
-Quer que eu siga por aqui, começando pela fase 1?
+Quer que eu siga assim?
