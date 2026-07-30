@@ -1066,6 +1066,17 @@ const Influencer = () => {
         <LogOut size={12} /> Sair
       </button>
 
+      {/* ─── Plinko Dialog ─── */}
+      <PlinkoRaffleDialog
+        open={showPlinko}
+        onClose={() => setShowPlinko(false)}
+        accent={accent}
+        config={plinkoConfig}
+        onSaveConfig={savePlinkoConfig}
+        candidates={plinkoCandidates}
+        onWinner={handlePlinkoWinner}
+      />
+
       {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
         <DialogContent className="max-w-md p-0 border-none bg-transparent shadow-none [&>button]:hidden">
