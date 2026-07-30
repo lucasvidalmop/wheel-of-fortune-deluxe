@@ -27,32 +27,37 @@ type TokenPalette = {
   ball: string;
 };
 
-const cssVar = (name: string, fallback: string) => `hsl(var(${name}, ${fallback}))`;
-const cssVarAlpha = (name: string, alpha: number, fallback: string) => `hsl(var(${name}, ${fallback}) / ${alpha})`;
+const token = (styles: CSSStyleDeclaration, name: string, fallback: string, alpha?: number) => {
+  const value = styles.getPropertyValue(name).trim() || fallback;
+  return alpha === undefined ? `hsl(${value})` : `hsl(${value} / ${alpha})`;
+};
 
-const palette: TokenPalette = {
-  board: cssVar('--card', '240 8% 8%'),
-  boardBorder: cssVarAlpha('--border', 0.7, '240 6% 20%'),
-  pin: cssVarAlpha('--foreground', 0.32, '45 20% 90%'),
-  pinHit: cssVar('--accent', '45 80% 55%'),
-  slotStrong: cssVar('--primary', '45 100% 50%'),
-  slotMid: cssVarAlpha('--accent', 0.56, '45 80% 55%'),
-  slotSoft: cssVarAlpha('--accent', 0.28, '45 80% 55%'),
-  slotEmpty: cssVarAlpha('--secondary', 0.52, '240 8% 14%'),
-  textStrong: cssVar('--primary-foreground', '240 10% 4%'),
-  textMuted: cssVarAlpha('--foreground', 0.58, '45 20% 90%'),
-  ball: cssVar('--primary', '45 100% 50%'),
+const getPalette = (): TokenPalette => {
+  const styles = getComputedStyle(document.documentElement);
+  return {
+    board: token(styles, '--card', '240 8% 8%'),
+    boardBorder: token(styles, '--border', '240 6% 20%', 0.7),
+    pin: token(styles, '--foreground', '45 20% 90%', 0.32),
+    pinHit: token(styles, '--accent', '45 80% 55%'),
+    slotStrong: token(styles, '--primary', '45 100% 50%'),
+    slotMid: token(styles, '--accent', '45 80% 55%', 0.56),
+    slotSoft: token(styles, '--accent', '45 80% 55%', 0.28),
+    slotEmpty: token(styles, '--secondary', '240 8% 14%', 0.52),
+    textStrong: token(styles, '--primary-foreground', '240 10% 4%'),
+    textMuted: token(styles, '--foreground', '45 20% 90%', 0.58),
+    ball: token(styles, '--primary', '45 100% 50%'),
+  };
 };
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-const slotTone = (m: number) => {
-  if (m <= 0) return { bg: palette.slotEmpty, fg: palette.textMuted };
-  if (m < 1) return { bg: palette.slotSoft, fg: palette.textMuted };
-  if (m < 3) return { bg: palette.slotSoft, fg: palette.textMuted };
-  if (m < 8) return { bg: palette.slotMid, fg: palette.textStrong };
-  return { bg: palette.slotStrong, fg: palette.textStrong };
+const slotTone = (m: number, colors: TokenPalette) => {
+  if (m <= 0) return { bg: colors.slotEmpty, fg: colors.textMuted };
+  if (m < 1) return { bg: colors.slotSoft, fg: colors.textMuted };
+  if (m < 3) return { bg: colors.slotSoft, fg: colors.textMuted };
+  if (m < 8) return { bg: colors.slotMid, fg: colors.textStrong };
+  return { bg: colors.slotStrong, fg: colors.textStrong };
 };
 
 const roundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
@@ -120,6 +125,7 @@ const Plinko = ({ rows, multipliers, path, onFinish }: Props) => {
 
     finishedRef.current = false;
     const start = performance.now();
+    const colors = getPalette();
     const hits = new Map<string, number>();
     const steps = path ? Math.min(path.length, rows) : 0;
     const animationRows = Math.max(1, steps);
@@ -173,9 +179,9 @@ const Plinko = ({ rows, multipliers, path, onFinish }: Props) => {
       };
 
       roundedRect(ctx, boardX + 0.5, boardY + 0.5, boardW - 1, boardH - 1, radius);
-      ctx.fillStyle = palette.board;
+      ctx.fillStyle = colors.board;
       ctx.fill();
-      ctx.strokeStyle = palette.boardBorder;
+      ctx.strokeStyle = colors.boardBorder;
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -232,30 +238,30 @@ const Plinko = ({ rows, multipliers, path, onFinish }: Props) => {
           const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 340) : 0;
           ctx.beginPath();
           ctx.arc(x, y, pinR + flash * 2, 0, Math.PI * 2);
-          ctx.fillStyle = flash > 0 ? palette.pinHit : palette.pin;
+          ctx.fillStyle = flash > 0 ? colors.pinHit : colors.pin;
           ctx.fill();
         }
       }
 
       multipliers.forEach((m, i) => {
         const x = slotX0 + i * (slotW + slotGap);
-        const tone = slotTone(m);
+        const tone = slotTone(m, colors);
         const isWinner = phase === 'settle' && i === targetSlot;
         const pop = isWinner ? Math.sin(Math.min(1, settleT) * Math.PI) * 5 : 0;
 
         ctx.globalAlpha = phase === 'settle' && !isWinner ? 0.42 : 1;
         roundedRect(ctx, x, slotY - pop, slotW, slotH, Math.min(14, slotW * 0.24));
-        ctx.fillStyle = isWinner ? palette.slotStrong : tone.bg;
+        ctx.fillStyle = isWinner ? colors.slotStrong : tone.bg;
         ctx.fill();
 
         if (isWinner) {
-          ctx.strokeStyle = cssVarAlpha('--foreground', 0.72, '45 20% 90%');
+          ctx.strokeStyle = colors.textMuted;
           ctx.lineWidth = 2;
           ctx.stroke();
         }
 
         const fontSize = Math.max(17, Math.min(24, slotW * 0.32));
-        ctx.fillStyle = isWinner ? palette.textStrong : tone.fg;
+        ctx.fillStyle = isWinner ? colors.textStrong : tone.fg;
         ctx.font = `800 ${fontSize}px Inter, system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -270,7 +276,7 @@ const Plinko = ({ rows, multipliers, path, onFinish }: Props) => {
           ctx.globalAlpha = ballAlpha;
           ctx.beginPath();
           ctx.arc(ballX, ballY, ballR, 0, Math.PI * 2);
-          ctx.fillStyle = palette.ball;
+          ctx.fillStyle = colors.ball;
           ctx.fill();
           ctx.restore();
         }
