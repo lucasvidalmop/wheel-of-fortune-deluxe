@@ -7,6 +7,9 @@ import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import PlinkoRaffleDialog, { type PlinkoCandidate } from '@/components/gorjeta/PlinkoRaffleDialog';
 import { normalizePlinko, type PlinkoConfig } from '@/components/gorjeta/plinkoConfig';
+import { useLiveRoom } from '@/components/gorjeta/useLiveRoom';
+import LiveRoomPanel from '@/components/gorjeta/LiveRoomPanel';
+
 
 interface WheelUser {
   id: string;
@@ -94,6 +97,9 @@ const Influencer = () => {
 
   const [showPlinko, setShowPlinko] = useState(false);
   const [plinkoConfig, setPlinkoConfig] = useState<PlinkoConfig>(normalizePlinko(null));
+  const [plinkoMode, setPlinkoMode] = useState<'base' | 'live'>('base');
+  const [liveGhosts, setLiveGhosts] = useState(false);
+
 
   const [showRaffle, setShowRaffle] = useState(false);
   const [raffleStep, setRaffleStep] = useState<RaffleStep>('config');
@@ -374,19 +380,52 @@ const Influencer = () => {
   };
 
   /* ─── Plinko: sorteio alternativo da gorjeta ─── */
-  const plinkoCandidates: PlinkoCandidate[] = useMemo(() => {
-    const reals = users
-      .filter(u => !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay)
-      .map(u => ({ ...u }));
-    const ghosts = ghostParticipants.map(g => ({ ...g, _isGhost: true }));
-    // aplica a mesma probabilidade de ganhador real configurada na gorjeta
+
+  const mixWithGhosts = (reals: PlinkoCandidate[], ghosts: PlinkoCandidate[]) => {
     if (drawProbability > 0 && ghosts.length > 0 && reals.length > 0) {
       const realWeight = Math.max(1, Math.round((drawProbability / 100) * (reals.length + ghosts.length)));
       const shuffledReals = [...reals].sort(() => Math.random() - 0.5).slice(0, realWeight);
       return [...shuffledReals, ...ghosts];
     }
     return [...reals, ...ghosts];
+  };
+
+  const baseCandidates: PlinkoCandidate[] = useMemo(() => {
+    const reals = users
+      .filter(u => !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay)
+      .map(u => ({ ...u }));
+    const ghosts = ghostParticipants.map(g => ({ ...g, _isGhost: true }));
+    return mixWithGhosts(reals, ghosts);
   }, [users, ghostParticipants, maxWinsPerDay, todayWinners, drawProbability]);
+
+  /* ─── Modo ao vivo: participantes que entraram na sala durante a transmissão ─── */
+  const liveRoom = useLiveRoom(session?.user?.id, showPlinko && plinkoMode === 'live');
+
+  const liveCandidates: PlinkoCandidate[] = useMemo(() => {
+    const reals = liveRoom.participants
+      .filter(p => !p.has_won)
+      .map(p => {
+        const match = users.find(u =>
+          (p.wheel_user_id && u.id === p.wheel_user_id) ||
+          u.account_id === p.account_id ||
+          (!!p.user_email && u.email?.toLowerCase() === p.user_email.toLowerCase()));
+        return {
+          ...(match || {}),
+          id: match?.id || p.id,
+          name: p.user_name || match?.name || 'Participante',
+          account_id: p.account_id || match?.account_id || '',
+          email: match?.email || p.user_email,
+          _liveParticipantId: p.id,
+        } as PlinkoCandidate;
+      })
+      .filter(c => !c.blacklisted && todayWinsForUser(c.account_id) < maxWinsPerDay);
+    const ghosts = liveGhosts ? ghostParticipants.map(g => ({ ...g, _isGhost: true })) : [];
+    return mixWithGhosts(reals, ghosts);
+  }, [liveRoom.participants, users, ghostParticipants, liveGhosts, maxWinsPerDay, todayWinners, drawProbability]);
+
+  const plinkoCandidates = plinkoMode === 'live' ? liveCandidates : baseCandidates;
+
+
 
   const savePlinkoConfig = async (cfg: PlinkoConfig) => {
     const uid = session?.user?.id;
@@ -403,9 +442,14 @@ const Influencer = () => {
   const handlePlinkoWinner = async (winner: PlinkoCandidate, amount: number, multiplier: number) => {
     const uid = session?.user?.id;
     if (!uid) return;
+    // no modo ao vivo, marca o participante como premiado para não repetir
+    if (winner._liveParticipantId) {
+      liveRoom.markWon(winner._liveParticipantId as string).catch(console.error);
+    }
     const prizeLabel = plinkoConfig.prize_type === 'pix'
       ? `Plinko ${multiplier}x — R$ ${amount.toFixed(2)}`
       : `Plinko ${multiplier}x — ${Math.round(amount)} ${plinkoConfig.prize_type === 'spins' ? 'giros' : 'coins'}`;
+
 
     if (winner._isGhost) {
       const ghost: TodayWinner = {
@@ -1074,8 +1118,25 @@ const Influencer = () => {
         config={plinkoConfig}
         onSaveConfig={savePlinkoConfig}
         candidates={plinkoCandidates}
+        mode={plinkoMode}
+        onModeChange={setPlinkoMode}
+        livePanel={
+          <LiveRoomPanel
+            accent={accent}
+            room={liveRoom.room}
+            participants={liveRoom.participants}
+            busy={liveRoom.busy}
+            link={liveRoom.link}
+            useGhosts={liveGhosts}
+            onToggleGhosts={setLiveGhosts}
+            ghostCount={ghostParticipants.length}
+            onOpenRoom={(name) => liveRoom.openRoom(name).catch(() => toast.error('Erro ao abrir a sala ao vivo'))}
+            onCloseRoom={() => liveRoom.closeRoom()}
+          />
+        }
         onWinner={handlePlinkoWinner}
       />
+
 
       {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
