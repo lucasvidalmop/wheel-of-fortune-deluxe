@@ -323,7 +323,10 @@ const GorjetaEventHost = () => {
           </div>
         </div>
       )}
+
+      {stage && <EventStage event={stage} onClose={() => setStage(null)} />}
     </div>
+
   );
 };
 
