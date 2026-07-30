@@ -373,6 +373,82 @@ const Influencer = () => {
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
   };
 
+  /* ─── Plinko: sorteio alternativo da gorjeta ─── */
+  const plinkoCandidates: PlinkoCandidate[] = useMemo(() => {
+    const reals = users
+      .filter(u => !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay)
+      .map(u => ({ ...u }));
+    const ghosts = ghostParticipants.map(g => ({ ...g, _isGhost: true }));
+    // aplica a mesma probabilidade de ganhador real configurada na gorjeta
+    if (drawProbability > 0 && ghosts.length > 0 && reals.length > 0) {
+      const realWeight = Math.max(1, Math.round((drawProbability / 100) * (reals.length + ghosts.length)));
+      const shuffledReals = [...reals].sort(() => Math.random() - 0.5).slice(0, realWeight);
+      return [...shuffledReals, ...ghosts];
+    }
+    return [...reals, ...ghosts];
+  }, [users, ghostParticipants, maxWinsPerDay, todayWinners, drawProbability]);
+
+  const savePlinkoConfig = async (cfg: PlinkoConfig) => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const nextConfig = { ...topLevelConfig, plinko: cfg };
+    const { error } = await (supabase as any)
+      .from('wheel_configs').update({ config: nextConfig }).eq('user_id', uid);
+    if (error) { toast.error('Erro ao salvar configuração do Plinko'); return; }
+    setTopLevelConfig(nextConfig);
+    setPlinkoConfig(cfg);
+    toast.success('Configuração do Plinko salva!');
+  };
+
+  const handlePlinkoWinner = async (winner: PlinkoCandidate, amount: number, multiplier: number) => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const prizeLabel = plinkoConfig.prize_type === 'pix'
+      ? `Plinko ${multiplier}x — R$ ${amount.toFixed(2)}`
+      : `Plinko ${multiplier}x — ${Math.round(amount)} ${plinkoConfig.prize_type === 'spins' ? 'giros' : 'coins'}`;
+
+    if (winner._isGhost) {
+      const ghost: TodayWinner = {
+        id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
+        user_name: winner.name,
+        account_id: winner.account_id,
+        amount: plinkoConfig.prize_type === 'pix' ? amount : 0,
+        created_at: new Date().toISOString(),
+        prize: prizeLabel,
+      };
+      saveGhostWinners([ghost, ...loadGhostWinners(uid)], uid);
+      await Promise.all([fetchTodayWinners(uid), fetchHistory(uid)]);
+      return;
+    }
+
+    try {
+      if (plinkoConfig.prize_type === 'spins') {
+        await (supabase as any).from('wheel_users')
+          .update({ spins_available: (winner.spins_available || 0) + Math.round(amount) })
+          .eq('id', winner.id);
+      } else {
+        const result = await (supabase as any).rpc('create_prize_payment', {
+          p_owner_id: uid,
+          p_account_id: winner.account_id,
+          p_user_name: winner.name,
+          p_user_email: winner.email,
+          p_prize: prizeLabel,
+          p_amount: plinkoConfig.prize_type === 'pix' ? amount : 0,
+          p_force_auto: !!winner.auto_payment,
+        });
+        if (result?.data?.id && (result?.data?.auto_payment || winner.auto_payment) && plinkoConfig.prize_type === 'pix') {
+          triggerAutoPay(result.data.id).catch(console.error);
+        }
+      }
+      await Promise.all([fetchUsers(uid), fetchTodayWinners(uid), fetchHistory(uid)]);
+    } catch (err) {
+      console.error('Erro ao registrar prêmio do Plinko:', err);
+      toast.error('Erro ao registrar o prêmio do Plinko.');
+    }
+  };
+
+
+
   const persistRaffleResults = async (finalSelected: Winner[]) => {
     if (!session?.user?.id) return;
 
