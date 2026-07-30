@@ -154,10 +154,10 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       const tubeH = Math.max(24, bh * 0.075);
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(cx - tubeW / 2, by - tubeH * 0.4);
-      ctx.lineTo(cx - tubeW / 2, by + tubeH * 0.25);
-      ctx.quadraticCurveTo(cx, by + tubeH * 1.05, cx + tubeW / 2, by + tubeH * 0.25);
-      ctx.lineTo(cx + tubeW / 2, by - tubeH * 0.4);
+      ctx.moveTo(cx - tubeW / 2, by + 4);
+      ctx.lineTo(cx - tubeW / 2, by + tubeH * 0.5);
+      ctx.quadraticCurveTo(cx, by + tubeH * 1.25, cx + tubeW / 2, by + tubeH * 0.5);
+      ctx.lineTo(cx + tubeW / 2, by + 4);
       ctx.strokeStyle = accentColor;
       ctx.lineWidth = 2;
       ctx.shadowColor = accentColor;

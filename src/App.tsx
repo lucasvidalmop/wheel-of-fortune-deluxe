@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import PlinkoPreview from "./pages/PlinkoPreview";
 import { BrowserRouter, Route, Routes, useParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -102,7 +101,6 @@ const App = () => {
             <Route path="/ref/:code" element={<Referral />} />
             <Route path="/gorjeta" element={<Registration />} />
             <Route path="/influencer" element={<Influencer />} />
-            <Route path="/__plinko" element={<PlinkoPreview />} />
             <Route path="/batalha" element={<Batalha />} />
             
 
