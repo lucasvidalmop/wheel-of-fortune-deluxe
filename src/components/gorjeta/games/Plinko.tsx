@@ -27,25 +27,36 @@ type TokenPalette = {
   ball: string;
 };
 
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace('#', '').trim();
+  if (!/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(normalized)) return hex;
+  const full = normalized.length === 3 ? normalized.split('').map((c) => c + c).join('') : normalized;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const token = (styles: CSSStyleDeclaration, name: string, fallback: string, alpha?: number) => {
   const value = styles.getPropertyValue(name).trim() || fallback;
   return alpha === undefined ? `hsl(${value})` : `hsl(${value} / ${alpha})`;
 };
 
-const getPalette = (): TokenPalette => {
+const getPalette = (accent?: string): TokenPalette => {
   const styles = getComputedStyle(document.documentElement);
+  const strong = accent || token(styles, '--primary', '45 100% 50%');
   return {
     board: token(styles, '--card', '240 8% 8%'),
     boardBorder: token(styles, '--border', '240 6% 20%', 0.7),
     pin: token(styles, '--foreground', '45 20% 90%', 0.32),
-    pinHit: token(styles, '--accent', '45 80% 55%'),
-    slotStrong: token(styles, '--primary', '45 100% 50%'),
-    slotMid: token(styles, '--accent', '45 80% 55%', 0.56),
-    slotSoft: token(styles, '--accent', '45 80% 55%', 0.28),
+    pinHit: strong,
+    slotStrong: strong,
+    slotMid: accent ? hexToRgba(accent, 0.56) : token(styles, '--accent', '45 80% 55%', 0.56),
+    slotSoft: accent ? hexToRgba(accent, 0.28) : token(styles, '--accent', '45 80% 55%', 0.28),
     slotEmpty: token(styles, '--secondary', '240 8% 14%', 0.52),
     textStrong: token(styles, '--primary-foreground', '240 10% 4%'),
     textMuted: token(styles, '--foreground', '45 20% 90%', 0.58),
-    ball: token(styles, '--primary', '45 100% 50%'),
+    ball: strong,
   };
 };
 
@@ -85,7 +96,7 @@ const setCanvasSize = (canvas: HTMLCanvasElement, width: number, height: number)
   if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 };
 
-const Plinko = ({ rows, multipliers, path, onFinish }: Props) => {
+const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef({ w: 960, h: 620 });
@@ -125,7 +136,7 @@ const Plinko = ({ rows, multipliers, path, onFinish }: Props) => {
 
     finishedRef.current = false;
     const start = performance.now();
-    const colors = getPalette();
+    const colors = getPalette(accent);
     const hits = new Map<string, number>();
     const steps = path ? Math.min(path.length, rows) : 0;
     const animationRows = Math.max(1, steps);
@@ -292,7 +303,7 @@ const Plinko = ({ rows, multipliers, path, onFinish }: Props) => {
 
     rafRef.current = requestAnimationFrame(draw);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [rows, visibleRows, multipliers, slots, path]);
+  }, [rows, visibleRows, multipliers, slots, path, accent]);
 
   return (
     <div ref={wrapRef} className="h-full min-h-[360px] w-full">
