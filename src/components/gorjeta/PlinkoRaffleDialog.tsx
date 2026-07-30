@@ -62,9 +62,9 @@ const buildPath = (rows: number, slots: number, target: number) => {
   return path;
 };
 
-const PLINKO_DROP_MS = 720;
-const PLINKO_ROW_MS = 360;
-const PLINKO_SETTLE_MS = 760;
+const PLINKO_DROP_MS = 620;
+const PLINKO_ROW_MS = 300;
+const PLINKO_SETTLE_MS = 700;
 
 const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candidates, onWinner, mode, onModeChange, livePanel, configExtra }: Props) => {
   const [cfg, setCfg] = useState<PlinkoConfig>(config);
