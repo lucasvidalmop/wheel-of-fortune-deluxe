@@ -11,8 +11,12 @@ interface Props {
 
 const W = 720;
 const H = 660;
-const ROW_MS = 190;
-const SETTLE_MS = 520;
+/** tempo de queda do topo até a primeira fileira de pinos */
+const DROP_MS = 620;
+/** tempo por fileira (mais lento = mais legível na live) */
+const ROW_MS = 320;
+/** tempo da acomodação no slot vencedor */
+const SETTLE_MS = 900;
 
 const hexA = (hex: string, a: number) => {
   const h = hex.replace('#', '');
@@ -31,7 +35,7 @@ const slotStyle = (m: number, accent: string) => {
   return { bg: accent, fg: '#04150a' };
 };
 
-const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,52 +51,98 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
     if (!ctx) return;
 
     const slots = Math.max(2, multipliers.length);
-    const topY = 74;
+    const topY = 110;
     const bottomY = H - 118;
-    const rowH = (bottomY - topY) / rows;
+    const rowH = (bottomY - topY) / Math.max(1, rows);
     const spread = W * 0.8;
     const left = (W - spread) / 2;
     const slotW = spread / slots;
-    const step = spread / rows;
+    // espaçamento entre pinos: a última fileira tem rows+1 pinos e deve caber no spread
+    const step = spread / (rows + 1);
 
-    const xAt = (rights: number) => left + (rights / rows) * spread;
+    /** centro X da bolinha depois de `k` fileiras, tendo ido `r` vezes à direita */
+    const ballX = (k: number, r: number) => W / 2 + (2 * r - k) * (step / 2);
+    /** X do pino c da fileira row (row tem row+2 pinos) */
+    const pinX = (row: number, c: number) => W / 2 + (c - (row + 1) / 2) * step;
 
     finishedRef.current = false;
     const start = performance.now();
-    // pino -> tempo do último toque (para o flash)
     const hits = new Map<string, number>();
     const trail: { x: number; y: number; t: number }[] = [];
 
+    const steps = path ? Math.min(path.length, rows) : 0;
+    const totalRowsMs = steps * ROW_MS;
+
     const draw = (now: number) => {
       ctx.clearRect(0, 0, W, H);
-
       const elapsed = now - start;
-      const total = path?.length ?? 0;
-      const idx = path ? Math.min(total, Math.floor(elapsed / ROW_MS)) : -1;
-      const frac = path ? Math.min(1, (elapsed - idx * ROW_MS) / ROW_MS) : 0;
 
-      let rights = 0;
-      if (path) for (let i = 0; i < Math.min(idx, total); i++) rights += path[i];
-      const landedSlot = path ? Math.round((rights / rows) * (slots - 1)) : -1;
-      const done = path ? idx >= total : false;
+      // ---- posição lógica da bolinha ----
+      let phase: 'drop' | 'rows' | 'settle' = 'drop';
+      let x = W / 2;
+      let y = 30;
+      let squash = 1;
+      let rightsDone = 0;
 
-      // pinos
+      if (path && steps > 0) {
+        if (elapsed < DROP_MS) {
+          const t = Math.min(1, elapsed / DROP_MS);
+          y = 30 + (topY - 30) * (t * t);
+          x = W / 2;
+        } else if (elapsed < DROP_MS + totalRowsMs) {
+          phase = 'rows';
+          const e = elapsed - DROP_MS;
+          const idx = Math.min(steps - 1, Math.floor(e / ROW_MS));
+          const frac = Math.min(1, (e - idx * ROW_MS) / ROW_MS);
+          for (let i = 0; i < idx; i++) rightsDone += path[i];
+          const fromX = ballX(idx, rightsDone);
+          const toX = ballX(idx + 1, rightsDone + path[idx]);
+          x = fromX + (toX - fromX) * easeInOut(frac);
+          y = topY + idx * rowH + frac * frac * rowH;
+          y -= Math.sin(frac * Math.PI) * 6;
+          squash = 1 + Math.sin(frac * Math.PI) * 0.1;
+
+          if (frac < 0.08) {
+            const c = Math.round((fromX - pinX(idx, 0)) / step);
+            hits.set(`${idx}:${Math.max(0, Math.min(idx + 1, c))}`, now);
+          }
+        } else {
+          phase = 'settle';
+          for (let i = 0; i < steps; i++) rightsDone += path[i];
+          const t = Math.min(1, (elapsed - DROP_MS - totalRowsMs) / SETTLE_MS);
+          const landed = Math.max(0, Math.min(slots - 1, Math.round((rightsDone / Math.max(1, steps)) * (slots - 1))));
+          const fromX = ballX(steps, rightsDone);
+          const toX = left + landed * slotW + slotW / 2;
+          x = fromX + (toX - fromX) * easeInOut(Math.min(1, t * 1.8));
+          const bounce = Math.abs(Math.sin(t * Math.PI * 2.5)) * (1 - t) * 26;
+          y = bottomY + 34 - bounce;
+        }
+      }
+
+      let rightsTotal = 0;
+      if (path) for (let i = 0; i < steps; i++) rightsTotal += path[i];
+      const landedSlot = path && steps
+        ? Math.max(0, Math.min(slots - 1, Math.round((rightsTotal / steps) * (slots - 1))))
+        : -1;
+      const done = phase === 'settle';
+
+      // ---- pinos ----
       for (let r = 0; r < rows; r++) {
         const count = r + 2;
-        const y = topY + r * rowH;
+        const py = topY + r * rowH;
         for (let c = 0; c < count; c++) {
-          const x = W / 2 + (c - (count - 1) / 2) * step;
+          const px = pinX(r, c);
           const hitAt = hits.get(`${r}:${c}`);
-          const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 420) : 0;
-          const rad = 3.4 + flash * 3.4;
+          const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 520) : 0;
+          const rad = 3.4 + flash * 3.2;
           if (flash > 0) {
             ctx.beginPath();
-            ctx.arc(x, y, rad + 7 * flash, 0, Math.PI * 2);
-            ctx.fillStyle = hexA(accent, 0.18 * flash);
+            ctx.arc(px, py, rad + 9 * flash, 0, Math.PI * 2);
+            ctx.fillStyle = hexA(accent, 0.2 * flash);
             ctx.fill();
           }
           ctx.beginPath();
-          ctx.arc(x, y, rad, 0, Math.PI * 2);
+          ctx.arc(px, py, rad, 0, Math.PI * 2);
           ctx.fillStyle = flash > 0
             ? `rgba(255,255,255,${0.35 + 0.6 * flash})`
             : 'rgba(255,255,255,0.24)';
@@ -100,65 +150,40 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
         }
       }
 
-      // slots
+      // ---- slots ----
       multipliers.forEach((m, i) => {
-        const x = left + i * slotW;
+        const sx = left + i * slotW;
         const st = slotStyle(m, accent);
         const isWin = done && i === landedSlot;
-        const pop = isWin ? Math.min(1, (elapsed - total * ROW_MS) / 260) : 0;
-        const lift = isWin ? Math.sin(Math.min(1, pop) * Math.PI) * 7 : 0;
-        const y = bottomY + 26 - lift;
+        const pop = isWin ? Math.min(1, (elapsed - DROP_MS - totalRowsMs) / 320) : 0;
+        const lift = isWin ? Math.sin(pop * Math.PI) * 8 : 0;
+        const sy = bottomY + 40 - lift;
 
         if (isWin) {
           ctx.shadowColor = accent;
-          ctx.shadowBlur = 26;
+          ctx.shadowBlur = 28;
         }
         ctx.fillStyle = st.bg;
         ctx.beginPath();
-        ctx.roundRect(x + 3, y, slotW - 6, 54, 12);
+        ctx.roundRect(sx + 3, sy, slotW - 6, 54, 12);
         ctx.fill();
         ctx.shadowBlur = 0;
 
         ctx.fillStyle = st.fg;
-        ctx.font = `bold ${slots > 12 ? 15 : 18}px system-ui, sans-serif`;
+        ctx.font = `bold ${slots > 12 ? 14 : 18}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${m}x`, x + slotW / 2, y + 27);
+        ctx.fillText(`${m}x`, sx + slotW / 2, sy + 27);
       });
 
-      // bolinha
-      if (path && path.length) {
-        let x: number;
-        let y: number;
-        let squash = 1;
-
-        if (!done) {
-          const nextRights = rights + path[idx];
-          const e = frac * frac; // acelera na queda (gravidade)
-          x = xAt(rights) + (xAt(nextRights) - xAt(rights)) * easeOutCubic(frac);
-          y = topY + idx * rowH + e * rowH;
-          // pequena quicada logo após tocar o pino
-          y -= Math.sin(frac * Math.PI) * 5;
-          squash = 1 + Math.sin(frac * Math.PI) * 0.12;
-
-          if (frac < 0.06) {
-            const count = idx + 2;
-            const c = Math.round((x - (W / 2 - ((count - 1) / 2) * step)) / step);
-            hits.set(`${idx}:${Math.max(0, Math.min(count - 1, c))}`, now);
-          }
-        } else {
-          const t = Math.min(1, (elapsed - total * ROW_MS) / SETTLE_MS);
-          const bounce = Math.abs(Math.sin(t * Math.PI * 2)) * (1 - t) * 22;
-          x = left + landedSlot * slotW + slotW / 2;
-          y = bottomY + 30 - bounce;
-        }
-
+      // ---- bolinha ----
+      if (path && steps > 0) {
         trail.push({ x, y, t: now });
-        while (trail.length && now - trail[0].t > 260) trail.shift();
+        while (trail.length && now - trail[0].t > 300) trail.shift();
         trail.forEach((p, i) => {
-          const a = (i / trail.length) * 0.32;
+          const a = (i / trail.length) * 0.3;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, 4 + (i / trail.length) * 6, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, 3 + (i / trail.length) * 7, 0, Math.PI * 2);
           ctx.fillStyle = hexA(accent, a);
           ctx.fill();
         });
@@ -180,7 +205,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
         ctx.restore();
         ctx.shadowBlur = 0;
 
-        if (done && !finishedRef.current && elapsed - total * ROW_MS > SETTLE_MS) {
+        if (done && !finishedRef.current && elapsed - DROP_MS - totalRowsMs > SETTLE_MS) {
           finishedRef.current = true;
           finishRef.current?.();
         }
