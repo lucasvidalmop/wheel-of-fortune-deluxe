@@ -321,6 +321,12 @@ const GorjetaEventHost = () => {
                 <label className={label}>Regras</label>
                 <textarea className={`${field} h-24 py-2.5`} value={editing.rules || ''} onChange={(e) => setEditing({ ...editing, rules: e.target.value })} />
               </div>
+              <PlinkoConfigEditor
+                value={normalizePlinko((editing.page_config || {}).plinko)}
+                accent={editing.theme?.accent || '#22c55e'}
+                onChange={(plinko) => setEditing({ ...editing, page_config: { ...(editing.page_config || {}), plinko } })}
+              />
+
             </div>
 
             <div className="flex gap-3 mt-6">
