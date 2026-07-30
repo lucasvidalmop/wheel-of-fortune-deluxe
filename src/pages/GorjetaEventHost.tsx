@@ -55,6 +55,8 @@ const GorjetaEventHost = () => {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<Partial<EventRow> | null>(null);
+  const [stage, setStage] = useState<EventRow | null>(null);
+
   const [saving, setSaving] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState('');
