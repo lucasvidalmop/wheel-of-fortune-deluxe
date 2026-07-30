@@ -187,12 +187,12 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               </div>
             </div>
           ) : (
-            <div className="min-h-0 overflow-y-auto p-3 sm:p-4">
-              <div className="mx-auto flex w-full max-w-[1080px] flex-col">
+            <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
+              <div className="mx-auto flex w-full min-h-0 max-w-[1080px] flex-1 flex-col">
 
 
               {/* seletor de modo */}
-              <div className="mx-auto mb-3 inline-flex shrink-0 gap-1 rounded-lg border border-border bg-secondary/40 p-1">
+              <div className="mx-auto mb-2 inline-flex shrink-0 gap-1 rounded-lg border border-border bg-secondary/40 p-1">
                 {([
                   { key: 'base' as const, label: 'Base + fantasmas' },
                   { key: 'live' as const, label: 'Ao vivo' },
@@ -210,31 +210,31 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 ))}
               </div>
 
-              {mode === 'live' && livePanel}
+              {mode === 'live' && <div className="shrink-0">{livePanel}</div>}
 
-              <div className={`mb-3 shrink-0 rounded-xl border px-4 py-2.5 text-center transition-colors ${phase === 'drawing' ? 'border-primary/60 bg-primary/10' : 'border-border bg-card'}`}>
+              <div className={`mb-2 shrink-0 rounded-xl border px-4 py-2 text-center transition-colors ${phase === 'drawing' ? 'border-primary/60 bg-primary/10' : 'border-border bg-card'}`}>
                 <div className="mb-0.5 text-[9px] uppercase tracking-[0.28em] text-muted-foreground">
                   {phase === 'drawing' ? 'Sorteando participante...' : current ? 'Participante sorteado' : 'Etapa 1 · Sorteio'}
                 </div>
                 <div
-                  className={`truncate text-lg font-black sm:text-xl ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''} ${current || phase === 'drawing' ? 'text-primary' : 'text-muted-foreground/60'}`}
+                  className={`truncate text-base font-black sm:text-lg ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''} ${current || phase === 'drawing' ? 'text-primary' : 'text-muted-foreground/60'}`}
                 >
                   {phase === 'drawing' ? rollingName || '—' : current?.name || 'Aguardando sorteio'}
                 </div>
 
 
                 {current && phase !== 'drawing' && (
-                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">{current.account_id}</div>
+                  <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">{current.account_id}</div>
                 )}
               </div>
 
-              <div className={`flex flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-90' : 'opacity-100'}`}>
-                <div className="aspect-[16/10] min-h-[320px] max-h-[680px] w-full">
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-[240px] w-full flex-1">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>
 
                 {cfg.use_chances && (
-                  <div className="mt-1 flex flex-wrap justify-center gap-1 px-1 shrink-0">
+                  <div className="mt-1 flex shrink-0 flex-wrap justify-center gap-1 px-1">
                     {cfg.slots.map((s, i) => (
                       <span key={i} className="rounded-md border border-border bg-secondary/30 px-2 py-0.5 text-[10px] tabular-nums text-muted-foreground">
                         {s.multiplier}x · {percents[i].toFixed(1)}%
@@ -243,6 +243,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                   </div>
                 )}
               </div>
+
 
 
               {reveal && (
