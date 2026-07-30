@@ -208,11 +208,12 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                   {phase === 'drawing' ? 'Sorteando participante...' : current ? 'Participante sorteado' : 'Etapa 1 · Sorteio'}
                 </div>
                 <div
-                  className={`text-2xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
+                  className={`text-2xl xl:text-4xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
                   style={{ color: current || phase === 'drawing' ? accent : 'rgba(255,255,255,0.25)' }}
                 >
                   {phase === 'drawing' ? rollingName || '—' : current?.name || 'Aguardando sorteio'}
                 </div>
+
                 {current && phase !== 'drawing' && (
                   <div className="text-[11px] text-white/40 mt-1 font-mono">{current.account_id}</div>
                 )}
