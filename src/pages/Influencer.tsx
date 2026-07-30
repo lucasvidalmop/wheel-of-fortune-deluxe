@@ -1127,14 +1127,27 @@ const Influencer = () => {
             participants={liveRoom.participants}
             busy={liveRoom.busy}
             link={liveRoom.link}
-            useGhosts={liveGhosts}
-            onToggleGhosts={setLiveGhosts}
-            ghostCount={ghostParticipants.length}
             onOpenRoom={(name) => liveRoom.openRoom(name).catch(() => toast.error('Erro ao abrir a sala ao vivo'))}
             onCloseRoom={() => liveRoom.closeRoom()}
           />
         }
+        configExtra={
+          <label className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 cursor-pointer">
+            <span className="text-xs text-white/70">
+              Incluir fantasmas no sorteio ao vivo
+              <span className="block text-[10px] text-white/35">{ghostParticipants.length} fantasma(s) configurado(s)</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={liveGhosts}
+              onChange={(e) => setLiveGhosts(e.target.checked)}
+              className="h-4 w-4 accent-current"
+              style={{ color: accent }}
+            />
+          </label>
+        }
         onWinner={handlePlinkoWinner}
+
       />
 
 
