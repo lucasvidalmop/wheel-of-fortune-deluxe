@@ -604,26 +604,95 @@ export default function LiveDrawPanel({ ownerId }: { ownerId: string }) {
 
           {tab === 'sorteio' && (
             <div className="rounded-xl border border-border p-4 space-y-4">
+              {/* Draw dynamics */}
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div>
+                  <label className={label}>Sortear quantos por rodada</label>
+                  <input
+                    type="number" min={1} className={field}
+                    value={drawQty}
+                    onChange={e => setDrawQty(Math.max(1, Number(e.target.value) || 1))}
+                  />
+                </div>
+                <div>
+                  <label className={label}>Chance de ganhador real (%)</label>
+                  <input
+                    type="number" min={0} max={100} className={field}
+                    value={probability}
+                    onChange={e => setProbability(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                  />
+                </div>
+                <div>
+                  <label className={label}>Mínimo de ganhadores reais</label>
+                  <input
+                    type="number" min={0} className={field}
+                    value={minReal}
+                    onChange={e => setMinReal(Math.max(0, Number(e.target.value) || 0))}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={label}>Participantes fantasmas (um nome por linha)</label>
+                <textarea
+                  className={`${field} min-h-[90px] font-mono text-xs`}
+                  placeholder={'Maria Souza\nJoão Pedro'}
+                  value={ghostText}
+                  onChange={e => setGhostText(e.target.value)}
+                />
+                <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>{ghostNames.length} fantasma(s) · somam na contagem pública de inscritos</span>
+                  <button onClick={saveDrawSettings} disabled={savingDraw} className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1">
+                    {savingDraw ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Salvar ajustes
+                  </button>
+                </div>
+              </div>
+
+              {/* Stage */}
               <div className="rounded-xl p-6 text-center" style={{ background: `${accent}12`, border: `1px solid ${accent}40` }}>
                 <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {drawing ? 'Sorteando...' : rolling ? 'Ganhador' : 'Pronto para sortear'}
+                  {drawing ? (rolling ? 'Sorteando...' : 'Revelando ganhadores') : 'Pronto para sortear'}
                 </div>
                 <div className="mt-2 text-2xl font-extrabold min-h-[2rem]" style={{ color: accent }}>
                   {rolling || (remaining > 0 ? `${remaining} prêmio(s) restante(s)` : 'Sorteio concluído')}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  {eligible.length} participante(s) elegível(is) · {fmtBRL(Number(draft.prize_amount || 0))} por premiado
+                  {eligible.length} inscrito(s) elegível(is) + {ghostNames.length} fantasma(s) · {fmtBRL(Number(draft.prize_amount || 0))} por premiado
                 </div>
+
+                {reveals.length > 0 && (
+                  <div className="mt-4 space-y-2 max-h-64 overflow-y-auto text-left">
+                    {reveals.map(r => (
+                      <div
+                        key={r.key}
+                        className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-all ${r.status === 'hidden' ? 'opacity-40' : 'animate-scale-in'}`}
+                        style={{ borderColor: `${accent}40`, background: r.status === 'hidden' ? 'transparent' : `${accent}14` }}
+                      >
+                        <Trophy size={14} style={{ color: accent }} />
+                        <span className="flex-1 min-w-0 truncate font-semibold">
+                          {r.status === 'hidden' ? '• • • • •' : r.name}
+                        </span>
+                        {r.status !== 'hidden' && (
+                          <span className="text-xs font-bold" style={{ color: accent }}>{fmtBRL(r.amount)}</span>
+                        )}
+                        {r.status === 'revealed' && <Loader2 size={13} className="animate-spin text-muted-foreground" />}
+                        {r.status === 'paid' && <span className="text-[10px] text-emerald-400">ok</span>}
+                      </div>
+                    ))}
+                    <div ref={revealEndRef} />
+                  </div>
+                )}
+
                 <button
-                  onClick={drawNext}
-                  disabled={drawing || remaining <= 0 || eligible.length === 0}
+                  onClick={executeDraw}
+                  disabled={drawing || remaining <= 0 || (eligible.length === 0 && ghostNames.length === 0)}
                   className="mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold disabled:opacity-50"
                   style={{ background: accent, color: '#04121a' }}
                 >
                   {drawing ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-                  Sortear próximo
+                  Sortear agora
                 </button>
               </div>
+
 
               <div>
                 <div className="flex items-center gap-2 text-sm font-semibold">
