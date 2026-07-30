@@ -174,7 +174,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
           </header>
 
           {showConfig ? (
-            <div className="p-5 space-y-4 overflow-y-auto">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
               <PlinkoConfigEditor value={cfg} onChange={setCfg} accent={accent} />
               {configExtra}
 
