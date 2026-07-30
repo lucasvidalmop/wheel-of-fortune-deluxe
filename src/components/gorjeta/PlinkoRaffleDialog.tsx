@@ -173,7 +173,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
             </div>
           ) : (
             <div className="p-4 sm:p-5 flex flex-col min-h-0 flex-1 overflow-hidden items-center">
-              <div className="w-full max-w-[560px] flex flex-col min-h-0 flex-1">
+              <div className="w-full max-w-[560px] xl:max-w-[820px] 2xl:max-w-[1000px] flex flex-col min-h-0 flex-1">
 
               {/* seletor de modo */}
               <div className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-xl bg-white/[0.04] border border-white/10 shrink-0">
