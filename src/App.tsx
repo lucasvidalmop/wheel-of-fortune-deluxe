@@ -74,6 +74,11 @@ const SlugRouter = () => {
     const tag = slug.substring(6);
     return <Lobby tag={tag} />;
   }
+  if (slug && slug.startsWith('evento=')) {
+    const tag = slug.substring(7);
+    return <GorjetaEvent tag={tag} />;
+  }
+
   return <Roleta />;
 };
 
