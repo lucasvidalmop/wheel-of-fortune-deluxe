@@ -42,12 +42,6 @@ const roundedRect = (
 const slotColors = (m: number, max: number) => {
   if (m <= 0) return { top: '#26292d', bottom: '#1c1f22', text: '#8b9096', glow: 0 };
   const ratio = max > 0 ? Math.min(1, m / max) : 0;
-  const ramp: Array<{ t: number; top: string; bottom: string; glow: number }> = [
-    { t: 0.0, top: '#0f4f4d', bottom: '#0b3a39', glow: 0 },
-    { t: 0.15, top: '#12615f', bottom: '#0d4746', glow: 0 },
-    { t: 0.3, top: '#137a76', bottom: '#0e5insert', glow: 0 },
-  ];
-  void ramp;
   if (ratio >= 0.9) return { top: '#2ff0ec', bottom: '#16c9c5', text: '#04201f', glow: 22 };
   if (ratio >= 0.45) return { top: '#1cb5b1', bottom: '#128e8b', text: '#03211f', glow: 10 };
   if (ratio >= 0.18) return { top: '#12817e', bottom: '#0d6360', text: '#e9fbfa', glow: 0 };
