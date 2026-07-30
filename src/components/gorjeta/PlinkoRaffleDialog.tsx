@@ -20,9 +20,15 @@ interface Props {
   config: PlinkoConfig;
   onSaveConfig: (cfg: PlinkoConfig) => Promise<void> | void;
   candidates: PlinkoCandidate[];
+  /** Modo do sorteio: base cadastrada ou sala ao vivo. */
+  mode: 'base' | 'live';
+  onModeChange: (m: 'base' | 'live') => void;
+  /** Painel de gestão da sala ao vivo (renderizado apenas no modo live). */
+  livePanel?: React.ReactNode;
   /** Persiste o prêmio do ganhador (PIX / giros / coins conforme o tipo). */
   onWinner: (winner: PlinkoCandidate, amount: number, multiplier: number) => Promise<void> | void;
 }
+
 
 /** Sorteia um índice de slot respeitando os pesos configurados. */
 const pickSlot = (cfg: PlinkoConfig) => {
