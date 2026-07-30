@@ -57,6 +57,7 @@ export default function Sorteio({ tag }: { tag: string }) {
   const [winners, setWinners] = useState<LiveWinner[]>([]);
   const [participantsCount, setParticipantsCount] = useState(0);
   const [entryNumber, setEntryNumber] = useState<number | null>(null);
+  const [meWon, setMeWon] = useState(false);
   const [gorjetaRef, setGorjetaRef] = useState('');
   const [now, setNow] = useState(Date.now());
 
@@ -79,6 +80,7 @@ export default function Sorteio({ tag }: { tag: string }) {
       setWinners(data.winners || []);
       setParticipantsCount(data.participantsCount || 0);
       setEntryNumber(data.me?.entry_number ?? null);
+      setMeWon(!!data.me?.has_won);
       setGorjetaRef(data.gorjetaRef || '');
       setNotFound(false);
     } catch (err) {
@@ -165,6 +167,7 @@ export default function Sorteio({ tag }: { tag: string }) {
   const signOut = () => {
     clearLobbySession();
     setEntryNumber(null);
+    setMeWon(false);
     setEmail(''); setAccountId('');
   };
 
@@ -187,7 +190,7 @@ export default function Sorteio({ tag }: { tag: string }) {
 
   const spotsLeft = event.maxParticipants ? Math.max(0, event.maxParticipants - participantsCount) : null;
   const isRegistered = entryNumber !== null;
-  const iWon = winners.some(w => isRegistered && w.accountId.startsWith(accountId.slice(0, 4)) && accountId);
+  const iWon = isRegistered && meWon;
 
   return (
     <div className="min-h-screen pb-16" style={{ background: bg, color: textColor }}>

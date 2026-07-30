@@ -67,6 +67,24 @@ const Registration = () => {
   // Retorno automático ao lobby após cadastro (quando vier ?return=lobby:<tag>)
   const returnParam = searchParams.get('return') || '';
   const lobbyReturnTag = returnParam.startsWith('lobby:') ? returnParam.slice(6) : '';
+  const sorteioReturnTag = returnParam.startsWith('sorteio:') ? returnParam.slice(8) : '';
+  useEffect(() => {
+    if (!success || !sorteioReturnTag) return;
+    try {
+      localStorage.setItem('gorjeta_session_v1', JSON.stringify({
+        wheel_user_id: wheelUserId || undefined,
+        account_id: accountId.trim(),
+        email: email.trim(),
+        name: name.trim(),
+        lobby_tag: '',
+        signed_in_at: Date.now(),
+      }));
+    } catch { /* ignore */ }
+    const t = setTimeout(() => {
+      window.location.href = `/sorteio=${encodeURIComponent(sorteioReturnTag)}`;
+    }, 6000);
+    return () => clearTimeout(t);
+  }, [success, sorteioReturnTag, accountId, email, name, wheelUserId]);
   useEffect(() => {
     if (!success || !lobbyReturnTag) return;
     try {

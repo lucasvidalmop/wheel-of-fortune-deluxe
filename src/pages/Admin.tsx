@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Users, Shield, Trophy, LogOut, Search, Plus, FileDown, FileUp, Pencil, Trash2, ChevronLeft, ChevronRight, RotateCcw, UserPlus, Eye, X, AlertTriangle, KeyRound, Globe, Upload, Copy, Monitor, ToggleLeft, RotateCw } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
-const TOOL_DEFS: { key: 'roleta' | 'sms' | 'sms_mb' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox'; label: string }[] = [
+const TOOL_DEFS: { key: 'roleta' | 'sms' | 'sms_mb' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' | 'sorteio'; label: string }[] = [
   { key: 'inscritos', label: 'Inscritos' },
   { key: 'roleta', label: 'Roleta' },
   { key: 'batalha_slot', label: 'Batalha Slot' },
@@ -24,6 +24,7 @@ const TOOL_DEFS: { key: 'roleta' | 'sms' | 'sms_mb' | 'sms_cs' | 'email' | 'emai
   { key: 'notificacoes', label: 'Notificações' },
   { key: 'referral', label: 'Link de Referência' },
   { key: 'gorjeta', label: 'Gorjeta' },
+  { key: 'sorteio', label: 'Sorteio ao Vivo' },
   { key: 'configuracoes', label: 'Configurações' },
   { key: 'painel_casa', label: 'Painel da Casa' },
 ];
@@ -32,7 +33,7 @@ type Perms = Record<ToolKey, boolean>;
 const DEFAULT_PERMS: Perms = {
   roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, email_brevo: true, whatsapp: true, whatsapp2: true, financeiro: true, gorjeta: true, referral: true,
   inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
-  batalha_slot: false, luckybox: false,
+  batalha_slot: false, luckybox: false, sorteio: true,
 };
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import ThemeSettingsPanel from '@/components/casino/ThemeSettingsPanel';

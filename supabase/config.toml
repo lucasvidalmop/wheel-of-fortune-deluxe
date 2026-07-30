@@ -33,3 +33,7 @@ project_id = "zrijrsntmmzyykuqjbno"
     verify_jwt = false
   [functions.resolve-football-event]
     verify_jwt = false
+  [functions.get-live-event]
+    verify_jwt = false
+  [functions.join-live-event]
+    verify_jwt = false
