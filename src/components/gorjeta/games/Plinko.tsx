@@ -193,31 +193,32 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       const ballAlpha = done ? Math.max(0, 1 - Math.max(0, (settleT - 0.5) / 0.3)) : 1;
 
       // ---- slots ----
-      const gap = Math.max(3, slotW * 0.06);
+      const gap = slotW * 0.14;
+      const rad = (slotW - gap) * 0.26;
       multipliers.forEach((m, i) => {
         const sx = left + i * slotW;
         const st = slotStyle(m, accent);
         const isWin = done && i === landedSlot;
         const pop = isWin ? Math.min(1, (elapsed - DROP_MS - totalRowsMs) / 320) : 0;
-        const lift = isWin ? Math.sin(pop * Math.PI) * 8 : 0;
-        const sy = bottomY + slotH * 0.15 - lift;
+        const lift = isWin ? Math.sin(pop * Math.PI) * slotH * 0.16 : 0;
+        const sy = bottomY - lift;
 
-        ctx.globalAlpha = done && !isWin ? 0.3 : 1;
+        ctx.globalAlpha = done && !isWin ? 0.32 : 1;
         ctx.fillStyle = isWin ? accent : st.bg;
         ctx.beginPath();
-        ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, Math.min(14, slotH * 0.24));
+        ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, rad);
         ctx.fill();
 
         if (isWin) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.85)';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, Math.min(14, slotH * 0.24));
+          ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, rad);
           ctx.stroke();
         }
 
-        const fs = Math.max(12, Math.min(28, slotW * 0.34, slotH * 0.42));
-        ctx.fillStyle = isWin ? '#06170c' : st.fg;
+        const fs = Math.min(slotW * 0.32, slotH * 0.44);
+        ctx.fillStyle = isWin ? '#04150a' : st.fg;
         ctx.font = `800 ${fs}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
