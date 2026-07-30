@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { X, Settings2 } from 'lucide-react';
 import Plinko from './games/Plinko';
 import PlinkoConfigEditor from './PlinkoConfigEditor';
@@ -60,6 +61,10 @@ const buildPath = (rows: number, slots: number, target: number) => {
   idx.forEach((i) => { path[i] = 1; });
   return path;
 };
+
+const PLINKO_DROP_MS = 720;
+const PLINKO_ROW_MS = 360;
+const PLINKO_SETTLE_MS = 760;
 
 const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candidates, onWinner, mode, onModeChange, livePanel, configExtra }: Props) => {
   const [cfg, setCfg] = useState<PlinkoConfig>(config);
@@ -125,7 +130,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
       if (multiplier > 0) {
         try { await onWinner(current, amount, multiplier); } catch (e) { console.error(e); }
       }
-    }, 620 + rows * 320 + 900);
+    }, PLINKO_DROP_MS + rows * PLINKO_ROW_MS + PLINKO_SETTLE_MS);
   };
 
   const saveConfig = async () => {
@@ -138,27 +143,32 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && phase === 'idle') onClose(); }}>
       <DialogContent className="max-w-none w-screen h-[100dvh] p-0 border-none bg-transparent shadow-none rounded-none translate-x-0 translate-y-0 top-0 left-0 [&>button]:hidden">
-        <div className="flex flex-col h-[100dvh] w-screen bg-[#080b11] text-white overflow-hidden">
+        <div className="flex h-[100dvh] w-screen flex-col overflow-hidden bg-background text-foreground">
 
-          <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.07] shrink-0">
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">Sorteio</div>
+              <div className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Sorteio</div>
               <h2 className="text-lg font-black">Plinko da gorjeta</h2>
             </div>
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowConfig((v) => !v)}
-                className="h-9 px-3 rounded-lg border border-white/12 text-xs font-semibold text-white/60 flex items-center gap-1.5"
+                className="text-xs font-semibold"
               >
                 <Settings2 size={13} /> Configurar
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={onClose}
                 disabled={phase === 'drawing' || phase === 'playing'}
-                className="h-9 w-9 rounded-lg border border-white/12 text-white/60 flex items-center justify-center disabled:opacity-30"
+                className="h-9 w-9"
+                aria-label="Fechar"
               >
                 <X size={14} />
-              </button>
+              </Button>
             </div>
           </header>
 
@@ -168,72 +178,65 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               {configExtra}
 
               <div className="flex justify-end gap-2">
-                <button onClick={() => { setCfg(config); setShowConfig(false); }} className="h-10 px-4 rounded-xl border border-white/12 text-xs font-semibold text-white/60">
+                <Button variant="outline" size="sm" onClick={() => { setCfg(config); setShowConfig(false); }} className="text-xs font-semibold">
                   Cancelar
-                </button>
-                <button onClick={saveConfig} disabled={saving} className="h-10 px-5 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-50" style={{ background: accent, color: '#04150a' }}>
+                </Button>
+                <Button size="sm" onClick={saveConfig} disabled={saving} className="text-xs font-black uppercase tracking-wider">
                   {saving ? 'Salvando...' : 'Salvar configuração'}
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
-            <div className="p-3 sm:p-4 flex flex-col min-h-0 flex-1 overflow-hidden items-center">
-              <div className="w-full max-w-[1000px] flex flex-col min-h-0 flex-1">
+            <div className="flex min-h-0 flex-1 flex-col items-center overflow-hidden p-3 sm:p-4">
+              <div className="flex min-h-0 w-full max-w-[1120px] flex-1 flex-col">
 
 
               {/* seletor de modo */}
-              <div className="mx-auto inline-flex gap-1 p-1 mb-3 rounded-lg bg-white/[0.04] border border-white/10 shrink-0">
+              <div className="mx-auto mb-3 inline-flex shrink-0 gap-1 rounded-lg border border-border bg-secondary/40 p-1">
                 {([
                   { key: 'base' as const, label: 'Base + fantasmas' },
                   { key: 'live' as const, label: 'Ao vivo' },
                 ]).map((m) => (
-                  <button
+                  <Button
                     key={m.key}
+                    type="button"
+                    size="sm"
+                    variant={mode === m.key ? 'default' : 'ghost'}
                     onClick={() => { if (phase !== 'drawing' && phase !== 'playing') onModeChange(m.key); }}
-                    className="h-7 px-4 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors"
-                    style={mode === m.key
-                      ? { background: accent, color: '#04150a' }
-                      : { color: 'rgba(255,255,255,0.45)' }}
+                    className="h-7 rounded-md px-4 text-[10px] font-bold uppercase tracking-wider"
                   >
                     {m.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
               {mode === 'live' && livePanel}
 
-              <div
-                className="rounded-xl border px-4 py-2.5 mb-3 text-center transition-colors shrink-0"
-                style={{
-                  borderColor: phase === 'drawing' ? `${accent}66` : 'rgba(255,255,255,0.08)',
-                  background: phase === 'drawing' ? `${accent}0f` : 'rgba(255,255,255,0.02)',
-                }}
-              >
-                <div className="text-[9px] uppercase tracking-[0.28em] text-white/35 mb-0.5">
+              <div className={`mb-3 shrink-0 rounded-xl border px-4 py-2.5 text-center transition-colors ${phase === 'drawing' ? 'border-primary/60 bg-primary/10' : 'border-border bg-card'}`}>
+                <div className="mb-0.5 text-[9px] uppercase tracking-[0.28em] text-muted-foreground">
                   {phase === 'drawing' ? 'Sorteando participante...' : current ? 'Participante sorteado' : 'Etapa 1 · Sorteio'}
                 </div>
                 <div
-                  className={`text-lg sm:text-xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
-                  style={{ color: current || phase === 'drawing' ? accent : 'rgba(255,255,255,0.25)' }}
+                  className={`truncate text-lg font-black sm:text-xl ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''} ${current || phase === 'drawing' ? 'text-primary' : 'text-muted-foreground/60'}`}
                 >
                   {phase === 'drawing' ? rollingName || '—' : current?.name || 'Aguardando sorteio'}
                 </div>
 
 
                 {current && phase !== 'drawing' && (
-                  <div className="text-[11px] text-white/40 mt-1 font-mono">{current.account_id}</div>
+                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">{current.account_id}</div>
                 )}
               </div>
 
-              <div className={`flex-1 min-h-0 flex flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-80' : 'opacity-100'}`}>
-                <div className="flex-1 min-h-[300px]">
+              <div className={`flex min-h-0 flex-1 flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-90' : 'opacity-100'}`}>
+                <div className="min-h-[360px] flex-1">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>
 
                 {cfg.use_chances && (
                   <div className="mt-1 flex flex-wrap justify-center gap-1 px-1 shrink-0">
                     {cfg.slots.map((s, i) => (
-                      <span key={i} className="rounded-md bg-white/[0.04] border border-white/10 px-2 py-0.5 text-[10px] text-white/45 tabular-nums">
+                      <span key={i} className="rounded-md border border-border bg-secondary/30 px-2 py-0.5 text-[10px] tabular-nums text-muted-foreground">
                         {s.multiplier}x · {percents[i].toFixed(1)}%
                       </span>
                     ))}
@@ -243,40 +246,34 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
 
 
               {reveal && (
-                <div
-                  className="mt-3 rounded-2xl border p-3 text-center shrink-0"
-                  style={{
-                    borderColor: reveal.win ? `${accent}66` : 'rgba(255,255,255,0.12)',
-                    background: reveal.win ? `${accent}12` : 'rgba(255,255,255,0.02)',
-                  }}
-                >
+                <div className={`mt-3 shrink-0 rounded-2xl border p-3 text-center ${reveal.win ? 'border-primary/60 bg-primary/10' : 'border-border bg-card'}`}>
                   <div className="text-2xl mb-1">{reveal.win ? '🎉' : '😬'}</div>
-                  <div className="text-lg font-black" style={{ color: reveal.win ? accent : 'rgba(255,255,255,0.6)' }}>
+                  <div className={`text-lg font-black ${reveal.win ? 'text-primary' : 'text-muted-foreground'}`}>
                     {reveal.win ? `${current?.name} ganhou ${reveal.label}!` : 'Não foi dessa vez'}
                   </div>
                 </div>
               )}
 
               <div className="mt-3 flex justify-center gap-2 shrink-0">
-                <button
+                <Button
+                  variant="outline"
                   onClick={drawParticipant}
                   disabled={phase === 'drawing' || phase === 'playing' || candidates.length === 0}
-                  className="h-10 px-6 rounded-lg font-bold text-[12px] uppercase tracking-wide border border-white/15 bg-white/[0.05] text-white disabled:opacity-40"
+                  className="h-10 px-6 text-[12px] font-bold uppercase tracking-wide"
                 >
                   {phase === 'drawing' ? 'Sorteando...' : '1 · Sortear'}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={play}
                   disabled={phase !== 'drawn'}
-                  className="h-10 px-6 rounded-lg font-bold text-[12px] uppercase tracking-wide disabled:opacity-40"
-                  style={{ background: accent, color: '#04150a' }}
+                  className="h-10 px-6 text-[12px] font-bold uppercase tracking-wide"
                 >
                   {phase === 'playing' ? 'Soltando...' : '2 · Jogar plinko'}
-                </button>
+                </Button>
               </div>
 
 
-              <p className="mt-1 text-center text-[10px] text-white/30">
+              <p className="mt-1 text-center text-[10px] text-muted-foreground">
                 Prêmio base {formatPrize(cfg.base_amount)} × multiplicador do slot · {candidates.length} participante(s) elegíveis
               </p>
               </div>
