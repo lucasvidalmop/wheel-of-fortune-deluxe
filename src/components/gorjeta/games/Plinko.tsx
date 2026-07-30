@@ -9,8 +9,8 @@ interface Props {
   onFinish?: () => void;
 }
 
-const W = 720;
-const H = 660;
+const W = 1120;
+const H = 700;
 /** tempo de queda do topo até a primeira fileira de pinos */
 const DROP_MS = 620;
 /** tempo por fileira (mais lento = mais legível na live) */
@@ -51,10 +51,10 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
     if (!ctx) return;
 
     const slots = Math.max(2, multipliers.length);
-    const topY = 110;
-    const bottomY = H - 118;
+    const topY = 96;
+    const bottomY = H - 134;
     const rowH = (bottomY - topY) / Math.max(1, rows);
-    const spread = W * 0.8;
+    const spread = W * 0.9;
     const left = (W - spread) / 2;
     const slotW = spread / slots;
     // espaçamento entre pinos: a última fileira tem rows+1 pinos e deve caber no spread
@@ -108,7 +108,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       // ---- posição lógica da bolinha ----
       let phase: 'drop' | 'rows' | 'settle' = 'drop';
       let x = W / 2;
-      let y = 30;
+      let y = 24;
       let squash = 1;
       let rightsDone = 0;
       let settleT = 0;
@@ -116,7 +116,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       if (path && steps > 0) {
         if (elapsed < DROP_MS) {
           const t = Math.min(1, elapsed / DROP_MS);
-          y = 30 + (topY - 30) * (t * t);
+          y = 24 + (topY - 24) * (t * t);
           x = W / 2;
         } else if (elapsed < DROP_MS + totalRowsMs) {
           phase = 'rows';
@@ -144,7 +144,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
           const fromX = ballX(steps, rightsDone);
           const toX = left + landed * slotW + slotW / 2;
           x = fromX + (toX - fromX) * easeInOut(Math.min(1, t * 1.8));
-          const bounce = Math.abs(Math.sin(t * Math.PI * 2.5)) * (1 - t) * 26;
+          const bounce = Math.abs(Math.sin(t * Math.PI * 2.5)) * (1 - t) * 30;
           // a bolinha desce para dentro do slot e desaparece
           y = bottomY + 34 - bounce + Math.max(0, (t - 0.55) / 0.45) * 18;
         }
@@ -165,11 +165,11 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
           const px = pinX(r, c);
           const hitAt = hits.get(`${r}:${c}`);
           const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 520) : 0;
-          const rad = 4.2 + flash * 3.4;
+          const rad = 5.2 + flash * 4.2;
 
           // halo permanente sutil + halo forte na batida
           ctx.beginPath();
-          ctx.arc(px, py, rad + 5 + 10 * flash, 0, Math.PI * 2);
+          ctx.arc(px, py, rad + 7 + 13 * flash, 0, Math.PI * 2);
           ctx.fillStyle = hexA(accent, 0.05 + 0.22 * flash);
           ctx.fill();
 
@@ -188,7 +188,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       const revealed = done && ballAlpha <= 0.001;
 
       // ---- slots ----
-      const SLOT_H = 58;
+      const SLOT_H = 68;
       multipliers.forEach((m, i) => {
         const sx = left + i * slotW;
         const st = slotStyle(m, accent);
@@ -239,7 +239,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
         }
 
         ctx.fillStyle = st.fg;
-        ctx.font = `900 ${slots > 12 ? 15 : 20}px system-ui, sans-serif`;
+        ctx.font = `900 ${slots > 12 ? 18 : 24}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(`${m}x`, sx + slotW / 2, sy + SLOT_H / 2 + 1);
@@ -258,12 +258,12 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
           trail.forEach((p, i) => {
             const a = (i / trail.length) * 0.3;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 3 + (i / trail.length) * 7, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 4 + (i / trail.length) * 9, 0, Math.PI * 2);
             ctx.fillStyle = hexA(accent, a);
             ctx.fill();
           });
 
-          const grad = ctx.createRadialGradient(x - 4, y - 5, 1, x, y, 13);
+          const grad = ctx.createRadialGradient(x - 5, y - 6, 1, x, y, 17);
           grad.addColorStop(0, '#ffffff');
           grad.addColorStop(0.45, accent);
           grad.addColorStop(1, hexA(accent, 0.85));
@@ -271,10 +271,10 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
           ctx.translate(x, y);
           ctx.scale(1 / squash, squash * (0.6 + 0.4 * ballAlpha));
           ctx.beginPath();
-          ctx.arc(0, 0, 12, 0, Math.PI * 2);
+          ctx.arc(0, 0, 16, 0, Math.PI * 2);
           ctx.fillStyle = grad;
           ctx.shadowColor = accent;
-          ctx.shadowBlur = 26;
+          ctx.shadowBlur = 34;
           ctx.fill();
           ctx.restore();
           ctx.shadowBlur = 0;
