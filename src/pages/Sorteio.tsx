@@ -67,9 +67,12 @@ export default function Sorteio({ tag }: { tag: string }) {
   const revealBusyRef = useRef(false);
 
   const session = getLobbySession();
+  const hasSavedAccount = !!(session?.email && session?.account_id);
+  const [manualEntry, setManualEntry] = useState(!hasSavedAccount);
   const [email, setEmail] = useState(session?.email || '');
   const [accountId, setAccountId] = useState(session?.account_id || '');
   const [joining, setJoining] = useState(false);
+
   const winnersRef = useRef<HTMLDivElement>(null);
 
   const pumpReveals = useCallback(() => {
