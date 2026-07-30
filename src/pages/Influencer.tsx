@@ -378,18 +378,52 @@ const Influencer = () => {
 
   /* ─── Plinko: sorteio alternativo da gorjeta ─── */
   const plinkoCandidates: PlinkoCandidate[] = useMemo(() => {
-    const reals = users
-      .filter(u => !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay)
-      .map(u => ({ ...u }));
-    const ghosts = ghostParticipants.map(g => ({ ...g, _isGhost: true }));
-    // aplica a mesma probabilidade de ganhador real configurada na gorjeta
+  /* ─── Plinko: sorteio alternativo da gorjeta ─── */
+  const mixWithGhosts = (reals: PlinkoCandidate[], ghosts: PlinkoCandidate[]) => {
     if (drawProbability > 0 && ghosts.length > 0 && reals.length > 0) {
       const realWeight = Math.max(1, Math.round((drawProbability / 100) * (reals.length + ghosts.length)));
       const shuffledReals = [...reals].sort(() => Math.random() - 0.5).slice(0, realWeight);
       return [...shuffledReals, ...ghosts];
     }
     return [...reals, ...ghosts];
+  };
+
+  const baseCandidates: PlinkoCandidate[] = useMemo(() => {
+    const reals = users
+      .filter(u => !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay)
+      .map(u => ({ ...u }));
+    const ghosts = ghostParticipants.map(g => ({ ...g, _isGhost: true }));
+    return mixWithGhosts(reals, ghosts);
   }, [users, ghostParticipants, maxWinsPerDay, todayWinners, drawProbability]);
+
+  /* ─── Modo ao vivo: participantes que entraram na sala durante a transmissão ─── */
+  const liveRoom = useLiveRoom(session?.user?.id, showPlinko && plinkoMode === 'live');
+
+  const liveCandidates: PlinkoCandidate[] = useMemo(() => {
+    const reals = liveRoom.participants
+      .filter(p => !p.has_won)
+      .map(p => {
+        const match = users.find(u =>
+          (p.wheel_user_id && u.id === p.wheel_user_id) ||
+          u.account_id === p.account_id ||
+          (!!p.user_email && u.email?.toLowerCase() === p.user_email.toLowerCase()));
+        return {
+          ...(match || {}),
+          id: match?.id || p.id,
+          name: p.user_name || match?.name || 'Participante',
+          account_id: p.account_id || match?.account_id || '',
+          email: match?.email || p.user_email,
+          _liveParticipantId: p.id,
+        } as PlinkoCandidate;
+      })
+      .filter(c => !c.blacklisted && todayWinsForUser(c.account_id) < maxWinsPerDay);
+    const ghosts = liveGhosts ? ghostParticipants.map(g => ({ ...g, _isGhost: true })) : [];
+    return mixWithGhosts(reals, ghosts);
+  }, [liveRoom.participants, users, ghostParticipants, liveGhosts, maxWinsPerDay, todayWinners, drawProbability]);
+
+  const plinkoCandidates = plinkoMode === 'live' ? liveCandidates : baseCandidates;
+
+
 
   const savePlinkoConfig = async (cfg: PlinkoConfig) => {
     const uid = session?.user?.id;
