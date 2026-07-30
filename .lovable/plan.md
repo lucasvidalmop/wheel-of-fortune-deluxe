@@ -1,109 +1,49 @@
+## Sistema de Sorteio ao Vivo (Live Draw)
 
-# Redesign Mobile-First do Lobby da Gorjeta
+Novo módulo de sorteio para participantes da live, aproveitando as tabelas `gorjeta_events*` que já existem no banco mas ainda não têm código.
 
-Reformulação completa do lobby para parecer um app nativo no celular, com SPA real, sessão persistente e todas as promoções (Roleta, Batalha, Luckybox, Apostas) acessíveis sob um único login.
+### Como vai funcionar
 
-## 1. Sessão e autenticação (uma vez só)
+**1. Você cria o evento (dashboard do operador)**
+- Nome, descrição e regras do evento
+- Data/hora de **abertura** e de **fechamento** das inscrições
+- **Valor da gorjeta** (prêmio por ganhador, em R$)
+- **Quantidade de premiados** (X ganhadores)
+- Limite máximo de participantes (opcional)
+- Capa, cores e textos da página pública
+- Ativar/desativar e link público com tag (ex.: `/sorteio/live-natal`)
 
-- Persistir sessão em `localStorage` (em vez de `sessionStorage`) com chave única `gorjeta_lobby_session`.
-- Hidratar a sessão no boot do `Lobby` antes de decidir entre login/home — sem flicker para a tela de login quando já está logado.
-- Manter a RPC `authenticate_wheel_user` atual (e-mail + ID).
-- Logout só por ação manual (botão Sair) ou quando a RPC rejeitar a sessão.
-- Mesma sessão é injetada nos módulos embutidos (Roleta, Bets, Luckybox) via `LobbyEmbedProvider` — nenhum deles pede login de novo.
-- Botão "Inscrever-se" abre a página de cadastro da Gorjeta (URL configurável) com parâmetro `return=lobby:<tag>`; o cadastro existente já redireciona de volta.
+**2. O participante entra (página pública)**
+- Entra com **E-mail + ID da conta** (mesma sessão do lobby, sem pagar nada)
+- Se ainda não tem conta, botão para cadastro que retorna ao evento
+- **Uma entrada por IP** — o sistema bloqueia a segunda tentativa do mesmo IP
+- Só aceita inscrição dentro da janela de horário; antes mostra contagem regressiva, depois mostra "inscrições encerradas"
+- Depois de inscrito vê seu número de participação e a lista/contador de inscritos
 
-## 2. SPA real — sem trocar de rota
+**3. Você sorteia ao vivo**
+- Tela de sorteio no dashboard com a lista de inscritos
+- Botão "Sortear próximo" — anima e revela um ganhador por vez, até completar os X premiados
+- Ninguém é sorteado duas vezes
+- Cada ganhador aparece também na página pública em tempo real, para quem está assistindo
 
-- `Lobby.tsx` mantém um `view` interno: `'home' | 'roleta' | 'apostas' | 'luckybox' | 'perfil' | 'batalha'`.
-- Trocar de view NÃO altera a URL nem desmonta o container — só troca o conteúdo central.
-- Pré-carregar (`prefetch`) os bundles lazy das views logo após o login, para a primeira transição já ser instantânea.
-- Batalha continua abrindo a página de depósito do operador em nova aba (regra já definida).
+**4. Pagamento PIX automático**
+- Ao ser sorteado, o sistema cria o pagamento do valor da gorjeta para a chave PIX cadastrada do ganhador e dispara via EdPay, igual ao fluxo já existente de prêmios
+- Se o ganhador não tiver chave PIX, o pagamento fica pendente no financeiro para você resolver manualmente
+- Todos os ganhadores e status de pagamento ficam registrados no histórico do evento
 
-## 3. Arquitetura mobile-first
+### Detalhes técnicos
 
-Estrutura do shell em todas as telas:
+- **Banco**: reutilizar `gorjeta_events` (adicionar `prize_amount`, `winners_count`), `gorjeta_event_participants` (adicionar `ip_address` + índice único por evento+IP) e `gorjeta_event_results`. Revisar RLS: leitura pública do evento via função, escrita apenas por edge function.
+- **Edge functions**:
+  - `get-live-event` (pública, por tag): retorna config, janela, contadores e ganhadores já sorteados
+  - `join-live-event` (pública): valida janela, sessão E-mail+ID, captura IP do header e grava a inscrição de forma idempotente
+  - `draw-live-winner` (autenticada, operador): sorteia 1 ganhador dentro de uma transação, grava resultado e chama `create_prize_payment` para o PIX
+- **Frontend**:
+  - `src/pages/LiveDraw.tsx` — página pública do evento (mobile-first, mesmo padrão visual do lobby)
+  - `src/components/casino/LiveDrawPanel.tsx` — painel do operador: criar/editar eventos, ver inscritos, conduzir o sorteio, histórico de ganhadores e pagamentos
+  - Nova aba no dashboard + permissão de operador correspondente
+  - Atualização em tempo real (realtime na tabela de resultados) para a página pública
 
-```text
-┌──────────────────────────────┐
-│ Header fixo (logo • coins • avatar)
-├──────────────────────────────┤
-│                              │
-│   Conteúdo da view ativa     │
-│   (rolável)                  │
-│                              │
-├──────────────────────────────┤
-│ Bottom Nav fixo (Home • Promos • Perfil)
-└──────────────────────────────┘
-```
+### Observação sobre "1 por IP"
 
-- Larguras: tudo em `w-full max-w-[480px] mx-auto` no mobile e expande para `max-w-6xl` no desktop usando breakpoints (`sm`, `md`, `lg`).
-- `safe-area-inset` para iPhone (notch + home indicator).
-- Padding base `px-4` no mobile, `px-8` no desktop. Sem margens exageradas.
-
-## 4. Novas telas / componentes
-
-Tudo dentro de `src/components/lobby/`:
-
-- `LobbyShell.tsx` — wrapper com header + bottom nav + safe-area + tema do operador.
-- `LobbyHeader.tsx` — logo da Gorjeta + nome do usuário + coins + botão de perfil.
-- `LobbyBottomNav.tsx` — 3 abas (Início, Promoções, Perfil), fixa no rodapé do mobile, vira sidebar discreta no desktop.
-- `LobbyHome.tsx` — saudação curta + carrossel de destaque + lista de cards grandes.
-- `LobbyPromoCard.tsx` — card grande com imagem, nome, descrição, badge e botão "Acessar". Toque com `active:scale-[0.98]`.
-- `LobbyProfile.tsx` — dados do usuário, ID da conta, botão "Sair".
-- `LobbyLogin.tsx` — já existe, será simplificado para alinhar com o novo shell e ganhar estado de "carregando sessão" para evitar flicker.
-
-## 5. Tema do operador
-
-Continuar consumindo `pageConfig.theme` + `pageConfig.login` (sistema de configuração visual já criado no painel). O novo shell aplica:
-
-- `--lobby-primary`, `--lobby-bg`, `--lobby-text`, `--lobby-font-heading`, `--lobby-font-body` no container raiz.
-- Bottom nav, header e cards usam esses tokens — operador customiza tudo de um lugar só.
-
-## 6. Auditoria de responsividade
-
-Antes de fechar, testar manualmente cada view nos breakpoints 320, 360, 375, 390, 412, 430, 768, 820, 1024, 1280, 1440, 1920:
-
-- Login
-- Home do lobby
-- Roleta embutida
-- Luckybox embutido
-- Apostas embutidas
-- Perfil
-- Modais e formulários internos das views
-
-Critérios obrigatórios (zero ocorrências):
-- Sem scroll horizontal (`overflow-x: hidden` no shell + auditoria visual).
-- Sem texto/botão cortado.
-- Sem componente saindo da viewport.
-- Modais sempre com `max-h-[90vh]` e scroll interno.
-
-## 7. Performance
-
-- Lazy-load real das views (`React.lazy` + `Suspense`) — já existe, manter.
-- `prefetch` no hover/após login para reduzir latência da primeira troca.
-- Memoizar `cards`, `theme`, `productMeta`.
-- Imagens com `loading="lazy"` e `optimizedImage` (já em uso).
-- Evitar re-renderizar o shell quando só a view interna muda — `LobbyShell` recebe `children` e nada mais.
-
-## Arquivos afetados
-
-**Novos**
-- `src/components/lobby/LobbyShell.tsx`
-- `src/components/lobby/LobbyHeader.tsx`
-- `src/components/lobby/LobbyBottomNav.tsx`
-- `src/components/lobby/LobbyHome.tsx`
-- `src/components/lobby/LobbyPromoCard.tsx`
-- `src/components/lobby/LobbyProfile.tsx`
-
-**Editados**
-- `src/pages/Lobby.tsx` — passa a apenas orquestrar `view` + sessão e renderizar o shell.
-- `src/components/lobby/LobbyLogin.tsx` — encaixa no novo shell, sem flicker.
-- `src/lib/lobbySession.ts` — migra para `localStorage` mantendo retrocompat com `sessionStorage`.
-- `src/index.css` — utilitários `safe-area`, `lobby-tap` (feedback de toque), classes de tipografia do tema.
-
-## Fora do escopo desta entrega
-
-- Não vou refazer o visual interno de Roleta / Bets / Luckybox / Batalha — eles ficam dentro do shell e herdam o tema, mas o redesign dos jogos em si é outra task. Posso atacar um por vez depois, na ordem que você preferir.
-- Painel de configuração no dashboard fica como está (já tem cores, fontes, textos do login).
-
-Quer que eu siga assim?
+Bloqueio por IP funciona bem contra inscrições repetidas casuais, mas quem estiver na mesma rede (casa, empresa, Wi-Fi público) compartilha o mesmo IP e só o primeiro conseguirá entrar. Vou combinar **IP + ID da conta**: bloqueia o mesmo ID sempre, e o mesmo IP por padrão — com um interruptor no evento para desligar a trava de IP caso você veja bloqueios indevidos durante a live.
