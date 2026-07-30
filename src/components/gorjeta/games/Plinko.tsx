@@ -257,7 +257,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       ref={canvasRef}
       width={W}
       height={H}
-      className="w-full h-auto max-w-[720px] mx-auto block"
+      className="mx-auto block w-auto h-auto max-w-full max-h-full"
       aria-label="Plinko"
     />
   );
