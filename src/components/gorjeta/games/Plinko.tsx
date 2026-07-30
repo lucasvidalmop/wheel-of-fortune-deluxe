@@ -12,9 +12,13 @@ interface Props {
 const DROP_MS = 620;
 const ROW_MS = 300;
 const SETTLE_MS = 700;
+const EQUILATERAL_ROW_RATIO = Math.sqrt(3) / 2;
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+const sumRights = (path: number[], limit = path.length) => (
+  path.slice(0, Math.max(0, Math.min(limit, path.length))).reduce((acc, n) => acc + (n ? 1 : 0), 0)
+);
 
 const roundedRect = (
   ctx: CanvasRenderingContext2D,
@@ -70,7 +74,7 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
 
   const slots = Math.max(3, multipliers.length);
   const maxMult = useMemo(() => Math.max(...multipliers, 1), [multipliers]);
-  const pinRows = useMemo(() => Math.max(6, Math.min(14, slots + 1)), [slots]);
+  const pinRows = useMemo(() => Math.max(4, Math.min(16, rows || slots - 1)), [rows, slots]);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -111,12 +115,32 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       ctx.fillStyle = '#08090b';
       ctx.fillRect(0, 0, W, H);
 
-      // ---- moldura do tabuleiro ----
-      const pad = Math.max(10, W * 0.014);
-      const bx = pad;
-      const by = pad;
-      const bw = W - pad * 2;
-      const bh = H - pad * 2;
+      // ---- geometria profissional do tabuleiro ----
+      // A malha é triangular de verdade: a distância horizontal entre pinos
+      // e a distância diagonal usam a proporção de triângulo equilátero.
+      const pad = Math.max(10, Math.min(18, Math.min(W, H) * 0.018));
+      const availableW = W - pad * 2;
+      const availableH = H - pad * 2;
+      const rowCount = Math.max(4, pinRows);
+      const slotWidthUnits = 0.72;
+      const sideGutterUnits = 0.74;
+      const topClearanceRows = 1.08;
+      const slotClearanceRows = 0.86;
+      const slotHeightUnits = 0.34;
+      const bottomUnits = 0.22;
+      const widthUnits = (slots - 1) + slotWidthUnits + sideGutterUnits * 2;
+      const heightUnits = (topClearanceRows + rowCount - 1 + slotClearanceRows) * EQUILATERAL_ROW_RATIO
+        + slotHeightUnits
+        + bottomUnits;
+      const pitch = Math.max(24, Math.min(availableW / widthUnits, availableH / heightUnits));
+      const rowGap = pitch * EQUILATERAL_ROW_RATIO;
+      const slotW = pitch * slotWidthUnits;
+      const slotGap = pitch - slotW;
+      const slotH = pitch * slotHeightUnits;
+      const bw = widthUnits * pitch;
+      const bh = heightUnits * pitch;
+      const bx = (W - bw) / 2;
+      const by = (H - bh) / 2;
       const brad = Math.max(14, Math.min(26, bw * 0.02));
 
       const bg = ctx.createLinearGradient(0, by, 0, by + bh);
@@ -130,34 +154,25 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // ---- geometria dos slots ----
-      const innerPad = Math.max(22, bw * 0.045);
-      const slotGap = Math.max(5, bw * 0.007);
-      const slotW = (bw - innerPad * 2 - slotGap * (slots - 1)) / slots;
-      const slotH = Math.max(24, Math.min(44, slotW * 0.46));
-      const slotX0 = bx + innerPad;
-      const slotBottom = by + bh - Math.max(8, bh * 0.02);
-      const slotY = slotBottom - slotH;
-      const slotCenter = (i: number) => slotX0 + i * (slotW + slotGap) + slotW / 2;
-
-      // ---- geometria dos pinos (pirâmide) ----
-      const pitch = (slotW + slotGap) * 0.98;
-      const pinTop = by + Math.max(34, bh * 0.11);
-      const pinBottom = slotY - Math.max(26, bh * 0.06);
-      const rowGap = (pinBottom - pinTop) / Math.max(1, pinRows - 1);
-      const pinR = Math.max(4, Math.min(9, pitch * 0.085));
-      const ballR = Math.max(7, Math.min(14, pitch * 0.16));
+      // ---- geometria dos slots e pinos ----
       const cx = bx + bw / 2;
+      const slotBottom = by + bh - bottomUnits * pitch;
+      const slotY = slotBottom - slotH;
+      const firstSlotCenter = cx - ((slots - 1) * pitch) / 2;
+      const slotCenter = (i: number) => firstSlotCenter + i * pitch;
+      const pinTop = by + topClearanceRows * rowGap;
+      const pinR = Math.max(3.6, Math.min(7.2, pitch * 0.072));
+      const ballR = Math.max(6, Math.min(12, pitch * 0.14));
 
       // ---- tubo de lançamento no topo ----
-      const tubeW = pitch * 0.95;
-      const tubeH = Math.max(24, bh * 0.075);
+      const tubeW = pitch * 0.92;
+      const tubeH = rowGap * 0.72;
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(cx - tubeW / 2, by + 4);
-      ctx.lineTo(cx - tubeW / 2, by + tubeH * 0.5);
-      ctx.quadraticCurveTo(cx, by + tubeH * 1.25, cx + tubeW / 2, by + tubeH * 0.5);
-      ctx.lineTo(cx + tubeW / 2, by + 4);
+      ctx.moveTo(cx - tubeW / 2, by + pitch * 0.08);
+      ctx.lineTo(cx - tubeW / 2, by + tubeH * 0.66);
+      ctx.quadraticCurveTo(cx, by + tubeH * 1.32, cx + tubeW / 2, by + tubeH * 0.66);
+      ctx.lineTo(cx + tubeW / 2, by + pitch * 0.08);
       ctx.strokeStyle = accentColor;
       ctx.lineWidth = 2;
       ctx.shadowColor = accentColor;
@@ -168,18 +183,20 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       // ---- posição da bola ----
       const landedSlot = (() => {
         if (!path || !steps) return -1;
-        const rights = path.slice(0, steps).reduce((a, n) => a + n, 0);
-        return Math.max(0, Math.min(slots - 1, Math.round((rights / Math.max(1, steps)) * (slots - 1))));
+        const rights = sumRights(path, steps);
+        const directSlot = steps === slots - 1
+          ? rights
+          : Math.round((rights / Math.max(1, steps)) * (slots - 1));
+        return Math.max(0, Math.min(slots - 1, directSlot));
       })();
 
       const pathPoint = (stepIndex: number) => {
-        const t = Math.min(1, stepIndex / Math.max(1, steps));
-        const laneX = landedSlot >= 0 ? slotCenter(landedSlot) : cx;
-        const wave = Math.sin(t * Math.PI * 3.1) * pitch * 0.22 * (1 - t);
-        const x = cx + (laneX - cx) * Math.pow(t, 1.3) + wave;
-        const y = pinTop + (pinBottom - pinTop) * t;
-        const minX = bx + innerPad + ballR;
-        const maxX = bx + bw - innerPad - ballR;
+        const step = Math.max(0, Math.min(stepIndex, steps));
+        const rights = path ? sumRights(path, step) : 0;
+        const x = cx + (rights - step / 2) * pitch;
+        const y = pinTop + step * rowGap;
+        const minX = bx + sideGutterUnits * pitch * 0.45 + ballR;
+        const maxX = bx + bw - sideGutterUnits * pitch * 0.45 - ballR;
         return { x: Math.max(minX, Math.min(maxX, x)), y };
       };
 
@@ -189,7 +206,7 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       let settleT = 0;
 
       if (path && steps > 0) {
-        const y0 = by + tubeH * 0.6;
+        const y0 = by + tubeH * 0.68;
         if (elapsed < DROP_MS) {
           phase = 'drop';
           const t = Math.min(1, elapsed / DROP_MS);
@@ -203,10 +220,11 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
           const to = pathPoint(idx + 1);
           const eased = easeInOut(frac);
           ballX = from.x + (to.x - from.x) * eased;
-          ballY = from.y + (to.y - from.y) * eased - Math.sin(frac * Math.PI) * rowGap * 0.25;
+          ballY = from.y + (to.y - from.y) * eased - Math.sin(frac * Math.PI) * rowGap * 0.16;
           if (frac < 0.15) {
-            const rowIdx = Math.min(pinRows - 1, Math.round((idx / Math.max(1, steps)) * (pinRows - 1)));
-            hits.set(`${rowIdx}:${Math.round(ballX)}`, now);
+            const rowIdx = Math.min(pinRows - 1, idx);
+            const rightsBefore = sumRights(path, idx);
+            hits.set(`${rowIdx}:${rightsBefore}`, now);
           }
         } else {
           phase = 'settle';
@@ -229,8 +247,8 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
 
           let flash = 0;
           hits.forEach((tHit, key) => {
-            const [kr, kx] = key.split(':');
-            if (Number(kr) === r && Math.abs(Number(kx) - x) < pitch * 0.5) {
+            const [kr, kc] = key.split(':');
+            if (Number(kr) === r && Number(kc) === c) {
               flash = Math.max(flash, Math.max(0, 1 - (now - tHit) / 300));
             }
           });
@@ -262,9 +280,7 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
       const postW = Math.max(2.5, slotW * 0.035);
       const postH = slotH * 1.18;
       for (let i = 0; i <= slots; i++) {
-        const px = i === 0
-          ? slotX0 - postW * 0.6
-          : slotX0 + i * (slotW + slotGap) - slotGap / 2 - postW / 2;
+        const px = firstSlotCenter - pitch / 2 + i * pitch - postW / 2;
         const pg = ctx.createLinearGradient(px, slotY - (postH - slotH), px + postW, slotY);
         pg.addColorStop(0, '#5c6167');
         pg.addColorStop(0.5, '#3a3f45');
@@ -276,7 +292,7 @@ const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
 
       // ---- slots ----
       multipliers.forEach((m, i) => {
-        const x = slotX0 + i * (slotW + slotGap);
+        const x = slotCenter(i) - slotW / 2;
         const isWinner = phase === 'settle' && i === landedSlot;
         const c = slotColors(m, maxMult);
         const pop = isWinner ? Math.sin(Math.min(1, settleT) * Math.PI) * slotH * 0.1 : 0;
