@@ -92,6 +92,9 @@ const Influencer = () => {
 
   const [timer, setTimer] = useState('');
 
+  const [showPlinko, setShowPlinko] = useState(false);
+  const [plinkoConfig, setPlinkoConfig] = useState<PlinkoConfig>(normalizePlinko(null));
+
   const [showRaffle, setShowRaffle] = useState(false);
   const [raffleStep, setRaffleStep] = useState<RaffleStep>('config');
   const [raffleQty, setRaffleQty] = useState(1);
