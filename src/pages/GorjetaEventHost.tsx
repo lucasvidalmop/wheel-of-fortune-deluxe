@@ -134,6 +134,8 @@ const GorjetaEventHost = () => {
       require_pix: editing.require_pix ?? true,
       is_active: editing.is_active ?? true,
       theme: editing.theme || { accent: '#22c55e', bg: '#07090d' },
+      page_config: { ...(editing.page_config || {}), plinko: normalizePlinko((editing.page_config || {}).plinko) },
+
     };
 
     const res = editing.id
