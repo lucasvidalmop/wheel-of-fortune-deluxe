@@ -41,6 +41,8 @@ const emptyEvent = (): Partial<EventRow> => ({
   max_participants: null,
   require_pix: true,
   is_active: true,
+  page_config: { plinko: DEFAULT_PLINKO },
+
   theme: { accent: '#22c55e', bg: '#07090d' },
 });
 
