@@ -209,6 +209,7 @@ const Influencer = () => {
       setMinRealWinners(rawConfig.minRealWinners ?? 0);
       setGhostUsers(rawConfig.ghostUsers || []);
       setMaxWinsPerDay(rawConfig.maxWinsPerDay ?? 1);
+      setPlinkoConfig(normalizePlinko(rawConfig.plinko));
     }
     setLoading(false);
     fetchUsers(userId);
