@@ -202,7 +202,9 @@ export default function Sorteio({ tag }: { tag: string }) {
     setEntryNumber(null);
     setMeWon(false);
     setEmail(''); setAccountId('');
+    setManualEntry(true);
   };
+
 
   if (loading) {
     return (
