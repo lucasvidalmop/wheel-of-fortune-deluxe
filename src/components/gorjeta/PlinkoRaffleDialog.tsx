@@ -128,9 +128,9 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && phase === 'idle') onClose(); }}>
-      <DialogContent className="max-w-3xl p-0 border-none bg-transparent shadow-none [&>button]:hidden">
-        <div className="rounded-2xl border border-white/10 bg-[#080b11] text-white overflow-hidden max-h-[88vh] overflow-y-auto">
-          <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.07]">
+      <DialogContent className="max-w-3xl w-[96vw] p-0 border-none bg-transparent shadow-none [&>button]:hidden">
+        <div className="flex flex-col rounded-2xl border border-white/10 bg-[#080b11] text-white overflow-hidden max-h-[90vh]">
+          <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.07] shrink-0">
             <div>
               <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">Sorteio</div>
               <h2 className="text-lg font-black">Plinko da gorjeta</h2>
