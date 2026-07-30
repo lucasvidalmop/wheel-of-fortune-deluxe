@@ -217,6 +217,14 @@ const GorjetaEventHost = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => setStage(ev)}
+                      className="h-9 px-3 rounded-lg text-xs font-bold text-emerald-950"
+                      style={{ background: ev.theme?.accent || '#22c55e' }}
+                    >
+                      Abrir palco
+                    </button>
+                    <button
+
                       onClick={() => navigator.clipboard.writeText(`${window.location.origin}/evento=${ev.tag}`).then(() => toast.success('Link copiado!'))}
                       className="h-9 px-3 rounded-lg border border-white/15 text-xs font-semibold text-white/70"
                     >
