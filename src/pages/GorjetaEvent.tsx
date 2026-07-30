@@ -74,7 +74,7 @@ const GorjetaEvent = ({ tag }: { tag: string }) => {
   const [loading, setLoading] = useState(true);
   const [ev, setEv] = useState<EventData | null>(null);
   const [joined, setJoined] = useState<{ entry_number: number; user_name: string } | null>(null);
-  const [mode, setMode] = useState<'signup' | 'login'>('signup');
+  const [mode, setMode] = useState<'signup' | 'login'>('login');
   const [submitting, setSubmitting] = useState(false);
 
   const [name, setName] = useState('');
