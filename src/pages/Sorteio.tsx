@@ -357,24 +357,38 @@ export default function Sorteio({ tag }: { tag: string }) {
           >
             <div>
               <h2 className="text-lg font-bold">Participar do sorteio</h2>
-              <p className="text-xs opacity-60 mt-1">Use o e-mail e o ID da sua conta cadastrada.</p>
+              <p className="text-xs opacity-60 mt-1">
+                {hasSavedAccount && !manualEntry
+                  ? 'Sua conta já está reconhecida. É só confirmar.'
+                  : 'Use o e-mail e o ID da sua conta cadastrada.'}
+              </p>
             </div>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Seu e-mail"
-              className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
-              style={{ borderColor: `${accent}3a`, color: textColor }}
-            />
-            <input
-              type="text"
-              value={accountId}
-              onChange={e => setAccountId(e.target.value)}
-              placeholder="ID da sua conta"
-              className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
-              style={{ borderColor: `${accent}3a`, color: textColor }}
-            />
+            {hasSavedAccount && !manualEntry ? (
+              <div className="rounded-2xl px-4 py-3 border" style={{ borderColor: `${accent}3a`, background: 'rgba(0,0,0,0.25)' }}>
+                <div className="text-sm font-semibold truncate">{session?.email}</div>
+                <div className="text-[11px] opacity-55">ID {session?.account_id}</div>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="Seu e-mail"
+                  className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
+                  style={{ borderColor: `${accent}3a`, color: textColor }}
+                />
+                <input
+                  type="text"
+                  value={accountId}
+                  onChange={e => setAccountId(e.target.value)}
+                  placeholder="ID da sua conta"
+                  className="w-full rounded-2xl px-4 py-3.5 text-sm bg-black/35 border outline-none transition-colors focus:bg-black/50"
+                  style={{ borderColor: `${accent}3a`, color: textColor }}
+                />
+              </>
+            )}
+
             <button
               onClick={handleJoin}
               disabled={joining || phase !== 'open'}
