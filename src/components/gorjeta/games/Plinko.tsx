@@ -90,28 +90,36 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       ctx.clearRect(0, 0, W, H);
       const elapsed = now - start;
 
-      // ---- geometria responsiva ----
-      const slotH = Math.max(42, Math.min(78, H * 0.11));
-      const padX = Math.max(8, W * 0.015);
-      const spread = W - padX * 2;
-      const left = padX;
+      // ---- tabuleiro com proporção fixa, centralizado (nunca esticado) ----
+      const AR = Math.min(1.6, Math.max(1.05, slots * 0.13));
+      let BH = H;
+      let BW = BH * AR;
+      if (BW > W) { BW = W; BH = BW / AR; }
+      const ox = (W - BW) / 2;
+      const oy = (H - BH) / 2;
+      const cx = ox + BW / 2;
+
+      const padX = BW * 0.02;
+      const spread = BW - padX * 2;
+      const left = ox + padX;
       const slotW = spread / slots;
-      const topY = Math.max(48, H * 0.11);
-      const bottomY = H - slotH - Math.max(14, H * 0.035);
+      const slotH = Math.min(slotW * 0.92, BH * 0.15);
+      const topY = oy + BH * 0.1;
+      const bottomY = oy + BH - slotH - BH * 0.045;
       const rowH = (bottomY - topY) / Math.max(1, rows);
       const step = spread / (rows + 1);
-      const pinR = Math.max(3, Math.min(7, step * 0.11));
-      const ballR = Math.max(7, Math.min(18, step * 0.3));
+      const pinR = Math.max(2.5, step * 0.1);
+      const ballR = Math.max(6, step * 0.32);
 
-      const ballX = (k: number, r: number) => W / 2 + (2 * r - k) * (step / 2);
-      const pinX = (row: number, c: number) => W / 2 + (c - (row + 1) / 2) * step;
+      const ballX = (k: number, r: number) => cx + (2 * r - k) * (step / 2);
+      const pinX = (row: number, c: number) => cx + (c - (row + 1) / 2) * step;
 
       // ---- fundo do tabuleiro ----
       ctx.beginPath();
-      ctx.roundRect(0.5, 0.5, W - 1, H - 1, 20);
+      ctx.roundRect(ox + 0.5, oy + 0.5, BW - 1, BH - 1, Math.min(24, BW * 0.02));
       ctx.fillStyle = '#0b0f16';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
