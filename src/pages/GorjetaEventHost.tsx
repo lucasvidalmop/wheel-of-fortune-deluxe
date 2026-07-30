@@ -218,7 +218,7 @@ const GorjetaEventHost = () => {
                       <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/10 text-white/60">
                         {STATUSES.find((s) => s.value === ev.status)?.label || ev.status}
                       </span>
-                      <span className="text-[11px] text-white/35">/evento={ev.tag}</span>
+                      <span className="text-[11px] text-white/35">/live={ev.tag}</span>
                     </div>
                     <h2 className="text-lg font-bold truncate">{ev.name}</h2>
                     <p className="text-white/45 text-xs mt-0.5">
@@ -236,7 +236,7 @@ const GorjetaEventHost = () => {
                     </button>
                     <button
 
-                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/evento=${ev.tag}`).then(() => toast.success('Link copiado!'))}
+                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/live=${ev.tag}`).then(() => toast.success('Link copiado!'))}
                       className="h-9 px-3 rounded-lg border border-white/15 text-xs font-semibold text-white/70"
                     >
                       Copiar link
@@ -267,7 +267,7 @@ const GorjetaEventHost = () => {
               <div>
                 <label className={label}>Link (tag)</label>
                 <input className={field} value={editing.tag || ''} onChange={(e) => setEditing({ ...editing, tag: e.target.value })} placeholder="live-sexta" />
-                <p className="text-[11px] text-white/30 mt-1">{window.location.origin}/evento={(editing.tag || 'sua-tag')}</p>
+                <p className="text-[11px] text-white/30 mt-1">{window.location.origin}/live={(editing.tag || 'sua-tag')}</p>
               </div>
               <div>
                 <label className={label}>Descrição</label>

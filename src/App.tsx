@@ -74,8 +74,8 @@ const SlugRouter = () => {
     const tag = slug.substring(6);
     return <Lobby tag={tag} />;
   }
-  if (slug && slug.startsWith('evento=')) {
-    const tag = slug.substring(7);
+  if (slug && slug.startsWith('live=')) {
+    const tag = slug.substring(5);
     return <GorjetaEvent tag={tag} />;
   }
 
