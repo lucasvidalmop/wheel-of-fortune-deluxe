@@ -51,6 +51,19 @@ interface ResultRow {
   created_at: string;
 }
 
+interface RevealRow {
+  key: string;
+  name: string;
+  accountId: string;
+  email: string;
+  amount: number;
+  isGhost: boolean;
+  participantId: string | null;
+  entryNumber: number | null;
+  status: 'hidden' | 'revealed' | 'paid';
+}
+
+
 const fmtBRL = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const slugify = (s: string) =>
   s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
