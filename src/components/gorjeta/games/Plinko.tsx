@@ -125,18 +125,18 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
 
       // ---- posição lógica da bolinha ----
       let phase: 'drop' | 'rows' | 'settle' = 'drop';
-      let x = W / 2;
-      let y = topY * 0.3;
+      let x = cx;
+      let y = oy + BH * 0.035;
       let squash = 1;
       let rightsDone = 0;
       let settleT = 0;
 
       if (path && steps > 0) {
-        const y0 = topY * 0.3;
+        const y0 = oy + BH * 0.035;
         if (elapsed < DROP_MS) {
           const t = Math.min(1, elapsed / DROP_MS);
           y = y0 + (topY - y0) * (t * t);
-          x = W / 2;
+          x = cx;
         } else if (elapsed < DROP_MS + totalRowsMs) {
           phase = 'rows';
           const e = elapsed - DROP_MS;
