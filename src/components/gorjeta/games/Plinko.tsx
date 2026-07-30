@@ -83,6 +83,7 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       let y = 30;
       let squash = 1;
       let rightsDone = 0;
+      let settleT = 0;
 
       if (path && steps > 0) {
         if (elapsed < DROP_MS) {
