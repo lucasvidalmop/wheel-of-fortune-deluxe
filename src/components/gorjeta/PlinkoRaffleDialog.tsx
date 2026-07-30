@@ -25,6 +25,9 @@ interface Props {
   onModeChange: (m: 'base' | 'live') => void;
   /** Painel de gestão da sala ao vivo (renderizado apenas no modo live). */
   livePanel?: React.ReactNode;
+  /** Controles extras exibidos apenas na aba "Configurar". */
+  configExtra?: React.ReactNode;
+
   /** Persiste o prêmio do ganhador (PIX / giros / coins conforme o tipo). */
   onWinner: (winner: PlinkoCandidate, amount: number, multiplier: number) => Promise<void> | void;
 }
@@ -58,7 +61,7 @@ const buildPath = (rows: number, slots: number, target: number) => {
   return path;
 };
 
-const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candidates, onWinner, mode, onModeChange, livePanel }: Props) => {
+const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candidates, onWinner, mode, onModeChange, livePanel, configExtra }: Props) => {
   const [cfg, setCfg] = useState<PlinkoConfig>(config);
   const [showConfig, setShowConfig] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -162,6 +165,8 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
           {showConfig ? (
             <div className="p-5 space-y-4 overflow-y-auto">
               <PlinkoConfigEditor value={cfg} onChange={setCfg} accent={accent} />
+              {configExtra}
+
               <div className="flex justify-end gap-2">
                 <button onClick={() => { setCfg(config); setShowConfig(false); }} className="h-10 px-4 rounded-xl border border-white/12 text-xs font-semibold text-white/60">
                   Cancelar
@@ -219,7 +224,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 )}
               </div>
 
-              <div className={`flex-1 min-h-0 flex flex-col rounded-2xl bg-black/40 border border-white/5 p-2 sm:p-3 transition-opacity ${!path && phase !== 'playing' ? 'opacity-50' : 'opacity-100'}`}>
+              <div className={`flex-1 min-h-0 flex flex-col rounded-2xl transition-opacity ${!path && phase !== 'playing' ? 'opacity-60' : 'opacity-100'}`}>
                 <div className="flex-1 min-h-[280px] flex items-center justify-center overflow-hidden">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>

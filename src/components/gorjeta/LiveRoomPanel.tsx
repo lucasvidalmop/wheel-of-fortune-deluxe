@@ -8,16 +8,18 @@ interface Props {
   participants: LiveParticipant[];
   busy: boolean;
   link: string;
-  useGhosts: boolean;
-  onToggleGhosts: (v: boolean) => void;
-  ghostCount: number;
+  /** controlado agora pela aba "Configurar" — mantido opcional por compatibilidade */
+  useGhosts?: boolean;
+  onToggleGhosts?: (v: boolean) => void;
+  ghostCount?: number;
   onOpenRoom: (name: string) => void;
   onCloseRoom: () => void;
 }
 
 const LiveRoomPanel = ({
-  accent, room, participants, busy, link, useGhosts, onToggleGhosts, ghostCount, onOpenRoom, onCloseRoom,
+  accent, room, participants, busy, link, onOpenRoom, onCloseRoom,
 }: Props) => {
+
   const [name, setName] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -89,11 +91,8 @@ const LiveRoomPanel = ({
             </span>
           )}
         </div>
-        <label className="flex items-center gap-1.5 text-[10px] text-white/45 cursor-pointer shrink-0">
-          <input type="checkbox" checked={useGhosts} onChange={(e) => onToggleGhosts(e.target.checked)} className="accent-current" />
-          Incluir fantasmas ({ghostCount})
-        </label>
       </div>
+
     </div>
   );
 };
