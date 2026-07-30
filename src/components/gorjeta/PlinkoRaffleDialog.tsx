@@ -225,10 +225,11 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 )}
               </div>
 
-              <div className={`flex-1 min-h-0 flex flex-col rounded-2xl transition-opacity ${!path && phase !== 'playing' ? 'opacity-75' : 'opacity-100'}`}>
-                <div className="flex-1 min-h-[430px] sm:min-h-[520px] flex items-center justify-center overflow-hidden">
+              <div className={`flex-1 min-h-0 flex flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-80' : 'opacity-100'}`}>
+                <div className="flex-1 min-h-[360px]">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>
+
                 {cfg.use_chances && (
                   <div className="mt-1 flex flex-wrap justify-center gap-1 px-1 shrink-0">
                     {cfg.slots.map((s, i) => (
