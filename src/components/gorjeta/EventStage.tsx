@@ -128,7 +128,7 @@ const EventStage = ({ event, onClose }: Props) => {
       setReveal({ label, win });
       setPhase('idle');
       load();
-    }, rows * 190 + 900);
+    }, 620 + rows * 320 + 900);
   };
 
 
