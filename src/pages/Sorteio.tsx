@@ -309,7 +309,7 @@ export default function Sorteio({ tag }: { tag: string }) {
             </button>
             {gorjetaRef && (
               <a
-                href={`/gorjeta?ref=${gorjetaRef}&return=${encodeURIComponent(`/sorteio=${event.tag}`)}`}
+                href={`/gorjeta?ref=${gorjetaRef}&return=${encodeURIComponent(`sorteio:${event.tag}`)}`}
                 className="block text-center text-xs underline opacity-70 hover:opacity-100"
               >
                 Não tenho cadastro — quero me inscrever

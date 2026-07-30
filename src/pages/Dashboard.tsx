@@ -30,6 +30,7 @@ const RedemptionPagesPanel = lazy(() => import('@/components/casino/RedemptionPa
 const LuckyboxPanel = lazy(() => import('@/components/casino/LuckyboxPanel'));
 const BetsPanel = lazy(() => import('@/components/casino/BetsPanel'));
 const LobbyPanel = lazy(() => import('@/components/casino/LobbyPanel'));
+const LiveDrawPanel = lazy(() => import('@/components/casino/LiveDrawPanel'));
 const WhatsAppShareDialog = lazy(() => import('@/components/casino/WhatsAppShareDialog'));
 const ReferralDefaultEditor = lazy(() => import('@/components/casino/ReferralDefaultEditor'));
 const GorjetaPageEditor = lazy(() => import('@/components/casino/GorjetaPageEditor'));
@@ -314,10 +315,10 @@ function Dashboard() {
   const [toolPerms, setToolPerms] = useState<Record<string, boolean>>({
     roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, whatsapp: true, whatsapp2: true, financeiro: true, gorjeta: true, referral: true,
     inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
-    batalha_slot: false, apostas: true,
+    batalha_slot: false, apostas: true, sorteio: true,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'lobby' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'lobby' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'sorteio' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
@@ -1794,6 +1795,7 @@ function Dashboard() {
             notificacoes: src.notificacoes !== false,
             configuracoes: src.configuracoes !== false,
             painel_casa: src.painel_casa !== false,
+            sorteio: src.sorteio !== false,
           });
         }
       } catch {}
@@ -3141,7 +3143,7 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' | 'apostas' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' | 'apostas' | 'sorteio' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'batalha_slot', icon: <Swords size={20} />, label: 'Batalha Slot', tool: 'batalha_slot' },
@@ -3161,6 +3163,7 @@ function Dashboard() {
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro', tool: 'financeiro' },
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações', tool: 'notificacoes' },
     { key: 'referral', icon: <Link2 size={20} />, label: 'Links Ref.', tool: 'referral' },
+    { key: 'sorteio', icon: <Sparkles size={20} />, label: 'Sorteio ao Vivo', tool: 'sorteio' },
     { key: 'gorjeta', icon: <Gift size={20} />, label: 'Gorjeta', tool: 'gorjeta' },
     { key: 'hist_gorjeta', icon: <Clock size={20} />, label: 'Hist. Gorjeta', tool: 'gorjeta' },
     { key: 'deposito', icon: <DollarSign size={20} />, label: 'Depósito', tool: 'financeiro' },
@@ -3175,7 +3178,7 @@ function Dashboard() {
   const groupDefs: { key: GroupKey; label: string; itemKeys: typeof activeTab[] }[] = [
     { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'apostas', 'lobby', 'auth', 'history'] },
     { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
-    { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
+    { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'sorteio', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
     { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
   ];
   const menuGroups = groupDefs
@@ -3205,6 +3208,7 @@ function Dashboard() {
     batalha_slot: 'Batalha Slot',
     luckybox: 'Luckybox',
     lobby: 'Lobby do Operador',
+    sorteio: 'Sorteio ao Vivo',
     apostas: 'Apostas',
     auth: 'Página de Login',
     history: 'Histórico de Prêmios',
@@ -8255,6 +8259,11 @@ function Dashboard() {
           {activeTab === 'apostas' && session?.user?.id && (
             <Suspense fallback={<PanelFallback />}>
               <BetsPanel ownerId={session.user.id} />
+            </Suspense>
+          )}
+          {activeTab === 'sorteio' && session?.user?.id && (
+            <Suspense fallback={<PanelFallback />}>
+              <LiveDrawPanel ownerId={session.user.id} />
             </Suspense>
           )}
           {activeTab === 'lobby' && session?.user?.id && (
