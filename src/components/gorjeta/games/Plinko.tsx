@@ -110,12 +110,14 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
           phase = 'settle';
           for (let i = 0; i < steps; i++) rightsDone += path[i];
           const t = Math.min(1, (elapsed - DROP_MS - totalRowsMs) / SETTLE_MS);
+          settleT = t;
           const landed = Math.max(0, Math.min(slots - 1, Math.round((rightsDone / Math.max(1, steps)) * (slots - 1))));
           const fromX = ballX(steps, rightsDone);
           const toX = left + landed * slotW + slotW / 2;
           x = fromX + (toX - fromX) * easeInOut(Math.min(1, t * 1.8));
           const bounce = Math.abs(Math.sin(t * Math.PI * 2.5)) * (1 - t) * 26;
-          y = bottomY + 34 - bounce;
+          // a bolinha desce para dentro do slot e desaparece
+          y = bottomY + 34 - bounce + Math.max(0, (t - 0.55) / 0.45) * 18;
         }
       }
 
