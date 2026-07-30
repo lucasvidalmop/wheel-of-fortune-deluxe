@@ -172,7 +172,31 @@ const EventStage = ({ event, onClose }: Props) => {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-black/40 border border-white/5 p-2 sm:p-4">
+            {/* Etapa 1 — sorteio do participante */}
+            <div
+              className="rounded-2xl border p-5 mb-4 text-center transition-colors"
+              style={{
+                borderColor: phase === 'drawing' ? `${accent}66` : 'rgba(255,255,255,0.08)',
+                background: phase === 'drawing' ? `${accent}0f` : 'rgba(255,255,255,0.02)',
+              }}
+            >
+              <div className="text-[10px] uppercase tracking-[0.28em] text-white/40 mb-1">
+                {phase === 'drawing' ? 'Sorteando participante...' : phase === 'idle' ? 'Etapa 1 · Sorteio' : 'Participante sorteado'}
+              </div>
+              <div
+                className={`text-2xl sm:text-3xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
+                style={{ color: phase === 'idle' && !current ? 'rgba(255,255,255,0.25)' : accent }}
+              >
+                {phase === 'drawing' ? rollingName || '—' : current?.name || 'Aguardando sorteio'}
+              </div>
+              {current && phase !== 'drawing' && (
+                <div className="text-[11px] text-white/40 mt-1">
+                  #{String(current.entry_number).padStart(4, '0')} · {current.account_id}
+                </div>
+              )}
+            </div>
+
+            <div className={`rounded-2xl bg-black/40 border border-white/5 p-2 sm:p-4 transition-opacity ${phase === 'idle' && !path ? 'opacity-40' : 'opacity-100'}`}>
               <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
               {cfg.use_chances && (
                 <div className="mt-2 flex flex-wrap justify-center gap-1.5 px-1">
@@ -184,6 +208,7 @@ const EventStage = ({ event, onClose }: Props) => {
                 </div>
               )}
             </div>
+
 
             {reveal && (
               <div
