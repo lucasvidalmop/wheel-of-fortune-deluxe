@@ -377,8 +377,7 @@ const Influencer = () => {
   };
 
   /* ─── Plinko: sorteio alternativo da gorjeta ─── */
-  const plinkoCandidates: PlinkoCandidate[] = useMemo(() => {
-  /* ─── Plinko: sorteio alternativo da gorjeta ─── */
+
   const mixWithGhosts = (reals: PlinkoCandidate[], ghosts: PlinkoCandidate[]) => {
     if (drawProbability > 0 && ghosts.length > 0 && reals.length > 0) {
       const realWeight = Math.max(1, Math.round((drawProbability / 100) * (reals.length + ghosts.length)));
