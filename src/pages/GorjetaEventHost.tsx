@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import EventStage from '@/components/gorjeta/EventStage';
+import PlinkoConfigEditor from '@/components/gorjeta/PlinkoConfigEditor';
+import { DEFAULT_PLINKO, normalizePlinko } from '@/components/gorjeta/plinkoConfig';
+
 
 
 interface EventRow {
