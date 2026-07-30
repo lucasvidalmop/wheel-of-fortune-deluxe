@@ -25,12 +25,13 @@ const hexA = (hex: string, a: number) => {
   return `rgba(${r},${g},${b},${a})`;
 };
 
+/** cores dos slots por "força" do multiplicador, no estilo da referência */
 const slotStyle = (m: number, accent: string) => {
-  if (m <= 0) return { bg: 'rgba(255,255,255,0.06)', fg: 'rgba(255,255,255,0.4)' };
-  if (m < 1) return { bg: hexA(accent, 0.16), fg: 'rgba(255,255,255,0.82)' };
-  if (m < 3) return { bg: hexA(accent, 0.32), fg: 'rgba(255,255,255,0.95)' };
-  if (m < 8) return { bg: hexA(accent, 0.58), fg: '#06170c' };
-  return { bg: accent, fg: '#06170c' };
+  if (m <= 0) return { bg: 'rgba(255,255,255,0.045)', fg: 'rgba(255,255,255,0.28)' };
+  if (m < 1) return { bg: hexA(accent, 0.14), fg: 'rgba(255,255,255,0.55)' };
+  if (m < 3) return { bg: hexA(accent, 0.22), fg: 'rgba(255,255,255,0.82)' };
+  if (m < 8) return { bg: hexA(accent, 0.5), fg: '#04150a' };
+  return { bg: accent, fg: '#04150a' };
 };
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
@@ -89,45 +90,53 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       ctx.clearRect(0, 0, W, H);
       const elapsed = now - start;
 
-      // ---- geometria responsiva ----
-      const slotH = Math.max(42, Math.min(78, H * 0.11));
-      const padX = Math.max(8, W * 0.015);
-      const spread = W - padX * 2;
-      const left = padX;
+      // ---- tabuleiro com proporção fixa, centralizado (nunca esticado) ----
+      const AR = Math.min(1.6, Math.max(1.05, slots * 0.13));
+      let BH = H;
+      let BW = BH * AR;
+      if (BW > W) { BW = W; BH = BW / AR; }
+      const ox = (W - BW) / 2;
+      const oy = (H - BH) / 2;
+      const cx = ox + BW / 2;
+
+      const padX = BW * 0.02;
+      const spread = BW - padX * 2;
+      const left = ox + padX;
       const slotW = spread / slots;
-      const topY = Math.max(48, H * 0.11);
-      const bottomY = H - slotH - Math.max(14, H * 0.035);
+      const slotH = Math.min(slotW * 0.92, BH * 0.15);
+      const topY = oy + BH * 0.1;
+      const bottomY = oy + BH - slotH - BH * 0.045;
       const rowH = (bottomY - topY) / Math.max(1, rows);
       const step = spread / (rows + 1);
-      const pinR = Math.max(3, Math.min(7, step * 0.11));
-      const ballR = Math.max(7, Math.min(18, step * 0.3));
+      const pinR = Math.max(2.5, step * 0.1);
+      const ballR = Math.max(6, step * 0.32);
 
-      const ballX = (k: number, r: number) => W / 2 + (2 * r - k) * (step / 2);
-      const pinX = (row: number, c: number) => W / 2 + (c - (row + 1) / 2) * step;
+      const ballX = (k: number, r: number) => cx + (2 * r - k) * (step / 2);
+      const pinX = (row: number, c: number) => cx + (c - (row + 1) / 2) * step;
 
       // ---- fundo do tabuleiro ----
       ctx.beginPath();
-      ctx.roundRect(0.5, 0.5, W - 1, H - 1, 20);
+      ctx.roundRect(ox + 0.5, oy + 0.5, BW - 1, BH - 1, Math.min(24, BW * 0.02));
       ctx.fillStyle = '#0b0f16';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
       // ---- posição lógica da bolinha ----
       let phase: 'drop' | 'rows' | 'settle' = 'drop';
-      let x = W / 2;
-      let y = topY * 0.3;
+      let x = cx;
+      let y = oy + BH * 0.035;
       let squash = 1;
       let rightsDone = 0;
       let settleT = 0;
 
       if (path && steps > 0) {
-        const y0 = topY * 0.3;
+        const y0 = oy + BH * 0.035;
         if (elapsed < DROP_MS) {
           const t = Math.min(1, elapsed / DROP_MS);
           y = y0 + (topY - y0) * (t * t);
-          x = W / 2;
+          x = cx;
         } else if (elapsed < DROP_MS + totalRowsMs) {
           phase = 'rows';
           const e = elapsed - DROP_MS;
@@ -184,31 +193,32 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
       const ballAlpha = done ? Math.max(0, 1 - Math.max(0, (settleT - 0.5) / 0.3)) : 1;
 
       // ---- slots ----
-      const gap = Math.max(3, slotW * 0.06);
+      const gap = slotW * 0.14;
+      const rad = (slotW - gap) * 0.26;
       multipliers.forEach((m, i) => {
         const sx = left + i * slotW;
         const st = slotStyle(m, accent);
         const isWin = done && i === landedSlot;
         const pop = isWin ? Math.min(1, (elapsed - DROP_MS - totalRowsMs) / 320) : 0;
-        const lift = isWin ? Math.sin(pop * Math.PI) * 8 : 0;
-        const sy = bottomY + slotH * 0.15 - lift;
+        const lift = isWin ? Math.sin(pop * Math.PI) * slotH * 0.16 : 0;
+        const sy = bottomY - lift;
 
-        ctx.globalAlpha = done && !isWin ? 0.3 : 1;
+        ctx.globalAlpha = done && !isWin ? 0.32 : 1;
         ctx.fillStyle = isWin ? accent : st.bg;
         ctx.beginPath();
-        ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, Math.min(14, slotH * 0.24));
+        ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, rad);
         ctx.fill();
 
         if (isWin) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.85)';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, Math.min(14, slotH * 0.24));
+          ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, rad);
           ctx.stroke();
         }
 
-        const fs = Math.max(12, Math.min(28, slotW * 0.34, slotH * 0.42));
-        ctx.fillStyle = isWin ? '#06170c' : st.fg;
+        const fs = Math.min(slotW * 0.32, slotH * 0.44);
+        ctx.fillStyle = isWin ? '#04150a' : st.fg;
         ctx.font = `800 ${fs}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';

@@ -178,7 +178,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
             </div>
           ) : (
             <div className="p-3 sm:p-4 flex flex-col min-h-0 flex-1 overflow-hidden items-center">
-              <div className="w-full max-w-[820px] flex flex-col min-h-0 flex-1">
+              <div className="w-full max-w-[1000px] flex flex-col min-h-0 flex-1">
 
 
               {/* seletor de modo */}
@@ -226,7 +226,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               </div>
 
               <div className={`flex-1 min-h-0 flex flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-80' : 'opacity-100'}`}>
-                <div className="flex-1 min-h-[360px]">
+                <div className="flex-1 min-h-[300px]">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>
 
