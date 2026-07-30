@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 interface Props {
   rows: number;
@@ -9,60 +9,119 @@ interface Props {
   onFinish?: () => void;
 }
 
-/** tempo de queda do topo até a primeira fileira de pinos */
-const DROP_MS = 620;
-/** tempo por fileira (mais lento = mais legível na live) */
-const ROW_MS = 320;
-/** tempo da acomodação no slot vencedor */
-const SETTLE_MS = 900;
+const DROP_MS = 720;
+const ROW_MS = 360;
+const SETTLE_MS = 760;
 
-const hexA = (hex: string, a: number) => {
-  const h = hex.replace('#', '');
-  const n = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
-  const r = parseInt(n.slice(0, 2), 16) || 0;
-  const g = parseInt(n.slice(2, 4), 16) || 0;
-  const b = parseInt(n.slice(4, 6), 16) || 0;
-  return `rgba(${r},${g},${b},${a})`;
+type TokenPalette = {
+  board: string;
+  boardBorder: string;
+  pin: string;
+  pinHit: string;
+  slotStrong: string;
+  slotMid: string;
+  slotSoft: string;
+  slotEmpty: string;
+  textStrong: string;
+  textMuted: string;
+  ball: string;
 };
 
-/** cores dos slots por "força" do multiplicador, no estilo da referência */
-const slotStyle = (m: number, accent: string) => {
-  if (m <= 0) return { bg: 'rgba(255,255,255,0.045)', fg: 'rgba(255,255,255,0.28)' };
-  if (m < 1) return { bg: hexA(accent, 0.14), fg: 'rgba(255,255,255,0.55)' };
-  if (m < 3) return { bg: hexA(accent, 0.22), fg: 'rgba(255,255,255,0.82)' };
-  if (m < 8) return { bg: hexA(accent, 0.5), fg: '#04150a' };
-  return { bg: accent, fg: '#04150a' };
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace('#', '').trim();
+  if (!/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(normalized)) return hex;
+  const full = normalized.length === 3 ? normalized.split('').map((c) => c + c).join('') : normalized;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const token = (styles: CSSStyleDeclaration, name: string, fallback: string, alpha?: number) => {
+  const value = styles.getPropertyValue(name).trim() || fallback;
+  return alpha === undefined ? `hsl(${value})` : `hsl(${value} / ${alpha})`;
+};
+
+const getPalette = (accent?: string): TokenPalette => {
+  const styles = getComputedStyle(document.documentElement);
+  const strong = accent || token(styles, '--primary', '45 100% 50%');
+  return {
+    board: token(styles, '--card', '240 8% 8%'),
+    boardBorder: token(styles, '--border', '240 6% 20%', 0.7),
+    pin: token(styles, '--foreground', '45 20% 90%', 0.32),
+    pinHit: strong,
+    slotStrong: strong,
+    slotMid: accent ? hexToRgba(accent, 0.56) : token(styles, '--accent', '45 80% 55%', 0.56),
+    slotSoft: accent ? hexToRgba(accent, 0.28) : token(styles, '--accent', '45 80% 55%', 0.28),
+    slotEmpty: token(styles, '--secondary', '240 8% 14%', 0.52),
+    textStrong: token(styles, '--primary-foreground', '240 10% 4%'),
+    textMuted: token(styles, '--foreground', '45 20% 90%', 0.58),
+    ball: strong,
+  };
 };
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props) => {
+const slotTone = (m: number, colors: TokenPalette) => {
+  if (m <= 0) return { bg: colors.slotEmpty, fg: colors.textMuted };
+  if (m < 1) return { bg: colors.slotSoft, fg: colors.textMuted };
+  if (m < 3) return { bg: colors.slotSoft, fg: colors.textMuted };
+  if (m < 8) return { bg: colors.slotMid, fg: colors.textStrong };
+  return { bg: colors.slotStrong, fg: colors.textStrong };
+};
+
+const roundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+};
+
+const setCanvasSize = (canvas: HTMLCanvasElement, width: number, height: number) => {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+  const ctx = canvas.getContext('2d');
+  if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+};
+
+const Plinko = ({ rows, multipliers, path, accent, onFinish }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const sizeRef = useRef({ w: 900, h: 560 });
+  const sizeRef = useRef({ w: 960, h: 620 });
   const rafRef = useRef<number>();
   const finishedRef = useRef(false);
   const finishRef = useRef(onFinish);
   finishRef.current = onFinish;
 
-  /** mantém o canvas do tamanho real do container (sem letterbox) */
+  const slots = Math.max(2, multipliers.length);
+  const visibleRows = useMemo(() => Math.max(5, Math.min(rows, 10)), [rows]);
+
   useEffect(() => {
     const wrap = wrapRef.current;
     const canvas = canvasRef.current;
     if (!wrap || !canvas) return;
+
     const apply = () => {
-      const r = wrap.getBoundingClientRect();
-      const w = Math.max(320, Math.round(r.width));
-      const h = Math.max(320, Math.round(r.height));
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      sizeRef.current = { w, h };
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      const ctx = canvas.getContext('2d');
-      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const rect = wrap.getBoundingClientRect();
+      const width = Math.max(360, Math.round(rect.width));
+      const targetHeight = Math.round(width * 0.62);
+      const height = Math.max(340, Math.min(Math.round(rect.height || targetHeight), targetHeight));
+      sizeRef.current = { w: width, h: height };
+      setCanvasSize(canvas, width, height);
     };
+
     apply();
     const ro = new ResizeObserver(apply);
     ro.observe(wrap);
@@ -75,184 +134,165 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const slots = Math.max(2, multipliers.length);
-
     finishedRef.current = false;
     const start = performance.now();
+    const colors = getPalette(accent);
     const hits = new Map<string, number>();
-    const trail: { x: number; y: number; t: number }[] = [];
-
     const steps = path ? Math.min(path.length, rows) : 0;
-    const totalRowsMs = steps * ROW_MS;
+    const animationRows = Math.max(1, steps);
+    const totalRowsMs = animationRows * ROW_MS;
 
     const draw = (now: number) => {
       const { w: W, h: H } = sizeRef.current;
       ctx.clearRect(0, 0, W, H);
       const elapsed = now - start;
 
-      // ---- tabuleiro com proporção fixa, centralizado (nunca esticado) ----
-      const AR = Math.min(1.6, Math.max(1.05, slots * 0.13));
-      let BH = H;
-      let BW = BH * AR;
-      if (BW > W) { BW = W; BH = BW / AR; }
-      const ox = (W - BW) / 2;
-      const oy = (H - BH) / 2;
-      const cx = ox + BW / 2;
+      const outerPad = Math.max(16, W * 0.035);
+      const boardX = outerPad;
+      const boardY = Math.max(10, H * 0.02);
+      const boardW = W - outerPad * 2;
+      const boardH = H - boardY * 2;
+      const radius = Math.max(18, Math.min(26, boardW * 0.025));
 
-      const padX = BW * 0.02;
-      const spread = BW - padX * 2;
-      const left = ox + padX;
-      const slotW = spread / slots;
-      const slotH = Math.min(slotW * 0.92, BH * 0.15);
-      const topY = oy + BH * 0.1;
-      const bottomY = oy + BH - slotH - BH * 0.045;
-      const rowH = (bottomY - topY) / Math.max(1, rows);
-      const step = spread / (rows + 1);
-      const pinR = Math.max(2.5, step * 0.1);
-      const ballR = Math.max(6, step * 0.32);
+      const slotGap = Math.max(9, boardW * 0.014);
+      const slotW = (boardW - outerPad * 0.9 - slotGap * (slots - 1)) / slots;
+      const slotH = Math.max(40, Math.min(58, slotW * 0.62));
+      const slotX0 = boardX + (boardW - (slotW * slots + slotGap * (slots - 1))) / 2;
+      const slotY = boardY + boardH - slotH - Math.max(18, boardH * 0.08);
 
-      const ballX = (k: number, r: number) => cx + (2 * r - k) * (step / 2);
-      const pinX = (row: number, c: number) => cx + (c - (row + 1) / 2) * step;
+      const pinTop = boardY + Math.max(28, boardH * 0.1);
+      const pinBottom = slotY - Math.max(42, boardH * 0.09);
+      const rowGap = (pinBottom - pinTop) / Math.max(1, visibleRows - 1);
+      const pegStep = (slotW + slotGap) * 0.96;
+      const pinR = Math.max(4, Math.min(7, slotW * 0.085));
+      const ballR = Math.max(8, Math.min(13, slotW * 0.16));
+      const centerX = boardX + boardW / 2;
 
-      // ---- fundo do tabuleiro ----
-      ctx.beginPath();
-      ctx.roundRect(ox + 0.5, oy + 0.5, BW - 1, BH - 1, Math.min(24, BW * 0.02));
-      ctx.fillStyle = '#0b0f16';
+      const slotCenter = (index: number) => slotX0 + index * (slotW + slotGap) + slotW / 2;
+      const landedSlotFromPath = () => {
+        if (!path || !steps) return -1;
+        const rights = path.slice(0, steps).reduce((a, n) => a + n, 0);
+        return Math.max(0, Math.min(slots - 1, Math.round((rights / Math.max(1, steps)) * (slots - 1))));
+      };
+      const targetSlot = landedSlotFromPath();
+
+      const pathPoint = (stepIndex: number, rightsDone: number) => {
+        if (!path || targetSlot < 0) return { x: centerX, y: pinTop };
+        const t = stepIndex / Math.max(1, steps);
+        const laneX = slotCenter(targetSlot);
+        const wave = Math.sin(t * Math.PI * 2.2) * pegStep * 0.16;
+        const blend = Math.pow(t, 1.25);
+        const rawX = centerX + (laneX - centerX) * blend + wave + (rightsDone - stepIndex / 2) * pegStep * 0.05;
+        const maxX = boardX + outerPad + ballR;
+        const minX = boardX + boardW - outerPad - ballR;
+        const y = pinTop + (pinBottom - pinTop) * t;
+        return { x: Math.max(maxX, Math.min(minX, rawX)), y };
+      };
+
+      roundedRect(ctx, boardX + 0.5, boardY + 0.5, boardW - 1, boardH - 1, radius);
+      ctx.fillStyle = colors.board;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.strokeStyle = colors.boardBorder;
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // ---- posição lógica da bolinha ----
-      let phase: 'drop' | 'rows' | 'settle' = 'drop';
-      let x = cx;
-      let y = oy + BH * 0.035;
-      let squash = 1;
+      let phase: 'wait' | 'drop' | 'rows' | 'settle' = path && steps > 0 ? 'drop' : 'wait';
+      let ballX = centerX;
+      let ballY = boardY + boardH * 0.04;
       let rightsDone = 0;
       let settleT = 0;
 
       if (path && steps > 0) {
-        const y0 = oy + BH * 0.035;
+        const y0 = boardY + boardH * 0.035;
         if (elapsed < DROP_MS) {
           const t = Math.min(1, elapsed / DROP_MS);
-          y = y0 + (topY - y0) * (t * t);
-          x = cx;
+          const eased = t * t;
+          ballX = centerX;
+          ballY = y0 + (pinTop - y0) * eased;
         } else if (elapsed < DROP_MS + totalRowsMs) {
           phase = 'rows';
           const e = elapsed - DROP_MS;
-          const idx = Math.min(steps - 1, Math.floor(e / ROW_MS));
-          const frac = Math.min(1, (e - idx * ROW_MS) / ROW_MS);
+          const idx = Math.min(steps - 1, Math.floor((e / totalRowsMs) * steps));
+          const rowStartMs = (idx / steps) * totalRowsMs;
+          const rowDuration = totalRowsMs / steps;
+          const frac = Math.min(1, (e - rowStartMs) / rowDuration);
           for (let i = 0; i < idx; i++) rightsDone += path[i];
-          const fromX = ballX(idx, rightsDone);
-          const toX = ballX(idx + 1, rightsDone + path[idx]);
-          x = fromX + (toX - fromX) * easeInOut(frac);
-          y = topY + idx * rowH + frac * frac * rowH;
-          y -= Math.sin(frac * Math.PI) * (rowH * 0.16);
-          squash = 1 + Math.sin(frac * Math.PI) * 0.1;
 
-          if (frac < 0.08) {
-            const c = Math.round((fromX - pinX(idx, 0)) / step);
-            hits.set(`${idx}:${Math.max(0, Math.min(idx + 1, c))}`, now);
-          }
+          const from = pathPoint(idx, rightsDone);
+          const to = pathPoint(idx + 1, rightsDone + path[idx]);
+          const eased = easeInOut(frac);
+          ballX = from.x + (to.x - from.x) * eased;
+          ballY = from.y + (to.y - from.y) * eased - Math.sin(frac * Math.PI) * rowGap * 0.22;
+
+          if (frac < 0.12) hits.set(`${Math.min(visibleRows - 1, Math.round((idx / Math.max(1, steps - 1)) * (visibleRows - 1)))}:${targetSlot}`, now);
         } else {
           phase = 'settle';
-          for (let i = 0; i < steps; i++) rightsDone += path[i];
-          const t = Math.min(1, (elapsed - DROP_MS - totalRowsMs) / SETTLE_MS);
-          settleT = t;
-          const landed = Math.max(0, Math.min(slots - 1, Math.round((rightsDone / Math.max(1, steps)) * (slots - 1))));
-          const fromX = ballX(steps, rightsDone);
-          const toX = left + landed * slotW + slotW / 2;
-          x = fromX + (toX - fromX) * easeInOut(Math.min(1, t * 1.8));
-          const bounce = Math.abs(Math.sin(t * Math.PI * 2.5)) * (1 - t) * (rowH * 0.5);
-          y = bottomY + slotH * 0.4 - bounce + Math.max(0, (t - 0.55) / 0.45) * (slotH * 0.3);
+          settleT = Math.min(1, (elapsed - DROP_MS - totalRowsMs) / SETTLE_MS);
+          const from = pathPoint(steps, path.slice(0, steps).reduce((a, n) => a + n, 0));
+          const targetX = slotCenter(targetSlot);
+          ballX = from.x + (targetX - from.x) * easeOut(Math.min(1, settleT * 1.35));
+          const targetY = slotY + slotH * 0.5;
+          const fall = easeOut(settleT);
+          const bounce = Math.sin(settleT * Math.PI * 2) * (1 - settleT) * rowGap * 0.18;
+          ballY = from.y + (targetY - from.y) * fall - bounce;
         }
       }
 
-      let rightsTotal = 0;
-      if (path) for (let i = 0; i < steps; i++) rightsTotal += path[i];
-      const landedSlot = path && steps
-        ? Math.max(0, Math.min(slots - 1, Math.round((rightsTotal / steps) * (slots - 1))))
-        : -1;
-      const done = phase === 'settle';
-
-      // ---- pinos ----
-      for (let r = 0; r < rows; r++) {
-        const count = r + 2;
-        const py = topY + r * rowH;
+      for (let r = 0; r < visibleRows; r++) {
+        const y = pinTop + r * rowGap;
+        const count = Math.min(slots, r + 3);
+        const startX = centerX - ((count - 1) * pegStep) / 2;
         for (let c = 0; c < count; c++) {
-          const px = pinX(r, c);
-          const hitAt = hits.get(`${r}:${c}`);
-          const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 380) : 0;
+          const x = startX + c * pegStep;
+          if (x < boardX + outerPad || x > boardX + boardW - outerPad) continue;
+          const hitAt = hits.get(`${r}:${c}`) || hits.get(`${r}:${targetSlot}`);
+          const flash = hitAt ? Math.max(0, 1 - (now - hitAt) / 340) : 0;
           ctx.beginPath();
-          ctx.arc(px, py, pinR + flash * pinR * 0.4, 0, Math.PI * 2);
-          ctx.fillStyle = flash > 0 ? hexA(accent, 0.6 + 0.4 * flash) : 'rgba(255,255,255,0.32)';
+          ctx.arc(x, y, pinR + flash * 2, 0, Math.PI * 2);
+          ctx.fillStyle = flash > 0 ? colors.pinHit : colors.pin;
           ctx.fill();
         }
       }
 
-      const ballAlpha = done ? Math.max(0, 1 - Math.max(0, (settleT - 0.5) / 0.3)) : 1;
-
-      // ---- slots ----
-      const gap = slotW * 0.14;
-      const rad = (slotW - gap) * 0.26;
       multipliers.forEach((m, i) => {
-        const sx = left + i * slotW;
-        const st = slotStyle(m, accent);
-        const isWin = done && i === landedSlot;
-        const pop = isWin ? Math.min(1, (elapsed - DROP_MS - totalRowsMs) / 320) : 0;
-        const lift = isWin ? Math.sin(pop * Math.PI) * slotH * 0.16 : 0;
-        const sy = bottomY - lift;
+        const x = slotX0 + i * (slotW + slotGap);
+        const tone = slotTone(m, colors);
+        const isWinner = phase === 'settle' && i === targetSlot;
+        const pop = isWinner ? Math.sin(Math.min(1, settleT) * Math.PI) * 5 : 0;
 
-        ctx.globalAlpha = done && !isWin ? 0.32 : 1;
-        ctx.fillStyle = isWin ? accent : st.bg;
-        ctx.beginPath();
-        ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, rad);
+        ctx.globalAlpha = phase === 'settle' && !isWinner ? 0.42 : 1;
+        roundedRect(ctx, x, slotY - pop, slotW, slotH, Math.min(9, slotW * 0.12));
+        ctx.fillStyle = isWinner ? colors.slotStrong : tone.bg;
         ctx.fill();
 
-        if (isWin) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        if (isWinner) {
+          ctx.strokeStyle = colors.textMuted;
           ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.roundRect(sx + gap / 2, sy, slotW - gap, slotH, rad);
           ctx.stroke();
         }
 
-        const fs = Math.min(slotW * 0.32, slotH * 0.44);
-        ctx.fillStyle = isWin ? '#04150a' : st.fg;
-        ctx.font = `800 ${fs}px system-ui, sans-serif`;
+        const fontSize = Math.max(14, Math.min(20, slotW * 0.24));
+        ctx.fillStyle = isWinner ? colors.textStrong : tone.fg;
+        ctx.font = `800 ${fontSize}px Inter, system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${m}x`, sx + slotW / 2, sy + slotH / 2 + 1);
+        ctx.fillText(`${m}x`, x + slotW / 2, slotY + slotH / 2 - pop + 1);
         ctx.globalAlpha = 1;
       });
 
-      // ---- bolinha ----
       if (path && steps > 0) {
+        const ballAlpha = phase === 'settle' ? Math.max(0, 1 - Math.max(0, (settleT - 0.72) / 0.22)) : 1;
         if (ballAlpha > 0.001) {
           ctx.save();
           ctx.globalAlpha = ballAlpha;
-
-          trail.push({ x, y, t: now });
-          while (trail.length && now - trail[0].t > 220) trail.shift();
-          trail.forEach((p, i) => {
-            const a = (i / trail.length) * 0.14;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, ballR * (0.5 + (i / trail.length) * 0.4), 0, Math.PI * 2);
-            ctx.fillStyle = hexA(accent, a);
-            ctx.fill();
-          });
-
-          ctx.translate(x, y);
-          ctx.scale(1 / squash, squash * (0.6 + 0.4 * ballAlpha));
           ctx.beginPath();
-          ctx.arc(0, 0, ballR, 0, Math.PI * 2);
-          ctx.fillStyle = accent;
+          ctx.arc(ballX, ballY, ballR, 0, Math.PI * 2);
+          ctx.fillStyle = colors.ball;
           ctx.fill();
           ctx.restore();
-          ctx.globalAlpha = 1;
         }
 
-        if (done && !finishedRef.current && elapsed - DROP_MS - totalRowsMs > SETTLE_MS) {
+        if (phase === 'settle' && !finishedRef.current && settleT >= 1) {
           finishedRef.current = true;
           finishRef.current?.();
         }
@@ -263,11 +303,11 @@ const Plinko = ({ rows, multipliers, path, accent = '#22c55e', onFinish }: Props
 
     rafRef.current = requestAnimationFrame(draw);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [rows, multipliers, path, accent]);
+  }, [rows, visibleRows, multipliers, slots, path, accent]);
 
   return (
-    <div ref={wrapRef} className="w-full h-full">
-      <canvas ref={canvasRef} className="block" aria-label="Plinko" />
+    <div ref={wrapRef} className="h-full min-h-[360px] w-full">
+      <canvas ref={canvasRef} className="block h-full w-full" aria-label="Plinko" />
     </div>
   );
 };
