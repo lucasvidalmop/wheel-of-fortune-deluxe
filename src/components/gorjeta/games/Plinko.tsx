@@ -25,12 +25,13 @@ const hexA = (hex: string, a: number) => {
   return `rgba(${r},${g},${b},${a})`;
 };
 
+/** cores dos slots por "força" do multiplicador, no estilo da referência */
 const slotStyle = (m: number, accent: string) => {
-  if (m <= 0) return { bg: 'rgba(255,255,255,0.06)', fg: 'rgba(255,255,255,0.4)' };
-  if (m < 1) return { bg: hexA(accent, 0.16), fg: 'rgba(255,255,255,0.82)' };
-  if (m < 3) return { bg: hexA(accent, 0.32), fg: 'rgba(255,255,255,0.95)' };
-  if (m < 8) return { bg: hexA(accent, 0.58), fg: '#06170c' };
-  return { bg: accent, fg: '#06170c' };
+  if (m <= 0) return { bg: 'rgba(255,255,255,0.045)', fg: 'rgba(255,255,255,0.28)' };
+  if (m < 1) return { bg: hexA(accent, 0.14), fg: 'rgba(255,255,255,0.55)' };
+  if (m < 3) return { bg: hexA(accent, 0.22), fg: 'rgba(255,255,255,0.82)' };
+  if (m < 8) return { bg: hexA(accent, 0.5), fg: '#04150a' };
+  return { bg: accent, fg: '#04150a' };
 };
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
