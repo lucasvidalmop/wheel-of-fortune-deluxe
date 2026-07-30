@@ -18,6 +18,8 @@ interface EventRow {
   require_pix: boolean;
   is_active: boolean;
   theme: Record<string, string>;
+  page_config: Record<string, any>;
+
 }
 
 const STATUSES = [
