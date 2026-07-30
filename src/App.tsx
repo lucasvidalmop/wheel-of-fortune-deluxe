@@ -15,7 +15,6 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe.tsx"));
 const Referral = lazy(() => import("./pages/Referral.tsx"));
 const Registration = lazy(() => import("./pages/Registration.tsx"));
 const Influencer = lazy(() => import("./pages/Influencer.tsx"));
-const PlinkoPreview = lazy(() => import("./pages/PlinkoPreview.tsx"));
 const Deposit = lazy(() => import("./pages/Deposit.tsx"));
 const DepositBS = lazy(() => import("./pages/DepositBS.tsx"));
 const Batalha = lazy(() => import("./pages/Batalha.tsx"));
@@ -101,7 +100,6 @@ const App = () => {
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/ref/:code" element={<Referral />} />
             <Route path="/gorjeta" element={<Registration />} />
-            <Route path="/__plinko" element={<PlinkoPreview />} />
             <Route path="/influencer" element={<Influencer />} />
             <Route path="/batalha" element={<Batalha />} />
             
