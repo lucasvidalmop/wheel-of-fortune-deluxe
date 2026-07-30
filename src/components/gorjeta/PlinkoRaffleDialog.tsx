@@ -177,11 +177,12 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               </div>
             </div>
           ) : (
-            <div className="p-2 sm:p-4 flex flex-col min-h-0 flex-1 overflow-hidden items-center">
-              <div className="w-full max-w-[1180px] flex flex-col min-h-0 flex-1">
+            <div className="p-3 sm:p-4 flex flex-col min-h-0 flex-1 overflow-hidden items-center">
+              <div className="w-full max-w-[820px] flex flex-col min-h-0 flex-1">
+
 
               {/* seletor de modo */}
-              <div className="grid grid-cols-2 gap-1 p-1 mb-3 rounded-xl bg-white/[0.04] border border-white/10 shrink-0">
+              <div className="mx-auto inline-flex gap-1 p-1 mb-3 rounded-lg bg-white/[0.04] border border-white/10 shrink-0">
                 {([
                   { key: 'base' as const, label: 'Base + fantasmas' },
                   { key: 'live' as const, label: 'Ao vivo' },
@@ -189,7 +190,7 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                   <button
                     key={m.key}
                     onClick={() => { if (phase !== 'drawing' && phase !== 'playing') onModeChange(m.key); }}
-                    className="h-8 rounded-lg text-[11px] font-black uppercase tracking-wider transition-colors"
+                    className="h-7 px-4 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors"
                     style={mode === m.key
                       ? { background: accent, color: '#04150a' }
                       : { color: 'rgba(255,255,255,0.45)' }}
@@ -202,32 +203,33 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
               {mode === 'live' && livePanel}
 
               <div
-                className="rounded-2xl border px-4 py-2 mb-2 text-center transition-colors shrink-0"
-
+                className="rounded-xl border px-4 py-2.5 mb-3 text-center transition-colors shrink-0"
                 style={{
                   borderColor: phase === 'drawing' ? `${accent}66` : 'rgba(255,255,255,0.08)',
                   background: phase === 'drawing' ? `${accent}0f` : 'rgba(255,255,255,0.02)',
                 }}
               >
-                <div className="text-[10px] uppercase tracking-[0.28em] text-white/40 mb-1">
+                <div className="text-[9px] uppercase tracking-[0.28em] text-white/35 mb-0.5">
                   {phase === 'drawing' ? 'Sorteando participante...' : current ? 'Participante sorteado' : 'Etapa 1 · Sorteio'}
                 </div>
                 <div
-                  className={`text-xl sm:text-2xl xl:text-3xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
+                  className={`text-lg sm:text-xl font-black truncate ${phase === 'drawing' ? 'blur-[0.4px] opacity-80' : ''}`}
                   style={{ color: current || phase === 'drawing' ? accent : 'rgba(255,255,255,0.25)' }}
                 >
                   {phase === 'drawing' ? rollingName || '—' : current?.name || 'Aguardando sorteio'}
                 </div>
+
 
                 {current && phase !== 'drawing' && (
                   <div className="text-[11px] text-white/40 mt-1 font-mono">{current.account_id}</div>
                 )}
               </div>
 
-              <div className={`flex-1 min-h-0 flex flex-col rounded-2xl transition-opacity ${!path && phase !== 'playing' ? 'opacity-75' : 'opacity-100'}`}>
-                <div className="flex-1 min-h-[430px] sm:min-h-[520px] flex items-center justify-center overflow-hidden">
+              <div className={`flex-1 min-h-0 flex flex-col transition-opacity ${!path && phase !== 'playing' ? 'opacity-80' : 'opacity-100'}`}>
+                <div className="flex-1 min-h-[360px]">
                   <Plinko rows={rows} multipliers={multipliers} path={path} accent={accent} />
                 </div>
+
                 {cfg.use_chances && (
                   <div className="mt-1 flex flex-wrap justify-center gap-1 px-1 shrink-0">
                     {cfg.slots.map((s, i) => (
@@ -255,23 +257,24 @@ const PlinkoRaffleDialog = ({ open, onClose, accent, config, onSaveConfig, candi
                 </div>
               )}
 
-              <div className="mt-2 grid grid-cols-2 gap-2 shrink-0">
+              <div className="mt-3 flex justify-center gap-2 shrink-0">
                 <button
                   onClick={drawParticipant}
                   disabled={phase === 'drawing' || phase === 'playing' || candidates.length === 0}
-                  className="h-10 xl:h-11 rounded-lg font-bold text-[13px] uppercase tracking-wide border border-white/15 bg-white/[0.05] text-white disabled:opacity-40"
+                  className="h-10 px-6 rounded-lg font-bold text-[12px] uppercase tracking-wide border border-white/15 bg-white/[0.05] text-white disabled:opacity-40"
                 >
                   {phase === 'drawing' ? 'Sorteando...' : '1 · Sortear'}
                 </button>
                 <button
                   onClick={play}
                   disabled={phase !== 'drawn'}
-                  className="h-10 xl:h-11 rounded-lg font-bold text-[13px] uppercase tracking-wide disabled:opacity-40"
+                  className="h-10 px-6 rounded-lg font-bold text-[12px] uppercase tracking-wide disabled:opacity-40"
                   style={{ background: accent, color: '#04150a' }}
                 >
                   {phase === 'playing' ? 'Soltando...' : '2 · Jogar plinko'}
                 </button>
               </div>
+
 
               <p className="mt-1 text-center text-[10px] text-white/30">
                 Prêmio base {formatPrize(cfg.base_amount)} × multiplicador do slot · {candidates.length} participante(s) elegíveis
