@@ -30,6 +30,7 @@ const RedemptionPagesPanel = lazy(() => import('@/components/casino/RedemptionPa
 const LuckyboxPanel = lazy(() => import('@/components/casino/LuckyboxPanel'));
 const BetsPanel = lazy(() => import('@/components/casino/BetsPanel'));
 const LobbyPanel = lazy(() => import('@/components/casino/LobbyPanel'));
+const RafflePanel = lazy(() => import('@/components/casino/RafflePanel'));
 const WhatsAppShareDialog = lazy(() => import('@/components/casino/WhatsAppShareDialog'));
 const ReferralDefaultEditor = lazy(() => import('@/components/casino/ReferralDefaultEditor'));
 const GorjetaPageEditor = lazy(() => import('@/components/casino/GorjetaPageEditor'));
