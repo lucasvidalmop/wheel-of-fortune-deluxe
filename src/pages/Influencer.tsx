@@ -1046,9 +1046,18 @@ const Influencer = () => {
             <Play size={18} fill="currentColor" />
             REALIZAR SORTEIO
           </button>
+          <button
+            onClick={() => { plinkoUsedIds.current = new Set(); setShowPlinko(true); }}
+            className="w-full py-3 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 border transition-all hover:brightness-125 active:scale-[0.98]"
+            style={{ borderColor: `${accent}55`, color: accent, background: `${accent}12` }}
+          >
+            <Dices size={16} />
+            MINI GAME · PLINKO
+          </button>
           <p className="text-center text-[11px] text-white/30">
             Você pode enviar mais <strong style={{ color: accent }}>{prizesRemaining}</strong> prêmios hoje
           </p>
+
         </div>
       </div>
       </div>
