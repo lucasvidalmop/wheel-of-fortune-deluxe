@@ -35,6 +35,11 @@ export interface InfluencerPageConfig {
   // Raffle sound
   raffleSoundEnabled: boolean;
   raffleSoundUrl: string;
+  // Plinko mini game
+  plinkoMultipliers: number[];
+  plinkoChances: number[];
+  plinkoBasePrize: number;
+  plinkoBallCount: number;
 }
 
 export const defaultInfluencerConfig: InfluencerPageConfig = {
