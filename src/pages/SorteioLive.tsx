@@ -18,18 +18,28 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
   const lastRound = useRef<number>(0);
+  const loadingRequest = useRef(false);
 
 
   const load = useCallback(async () => {
+    if (loadingRequest.current) return;
+    loadingRequest.current = true;
     try {
-      const { data } = await supabase.functions.invoke('get-raffle-event', { body: { tag } });
-      if (!data?.found) { setEvent(null); return; }
+      const { data, error } = await supabase.functions.invoke('get-raffle-event', { body: { tag } });
+      if (error || !data) {
+        setConnectionError(true);
+        return;
+      }
+      setConnectionError(false);
+      if (data.found === false) { setEvent(null); return; }
       setEvent(data.event);
       setCount(data.approvedCount || 0);
       setParticipants(data.participants || []);
       setResult(data.result || null);
     } finally {
+      loadingRequest.current = false;
       setLoading(false);
     }
   }, [tag]);
@@ -102,6 +112,14 @@ const SorteioLive = ({ tag }: { tag: string }) => {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-black">
         <Loader2 className="h-10 w-10 animate-spin text-white/60" />
+      </div>
+    );
+  }
+  if (!event && connectionError) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col gap-3 items-center justify-center bg-black text-white/70">
+        <Loader2 className="h-7 w-7 animate-spin text-white/50" />
+        Reconectando ao sorteio...
       </div>
     );
   }
