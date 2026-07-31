@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export interface PlinkoBall {
   id: string;
@@ -17,17 +17,16 @@ interface PlinkoBoardProps {
   accent: string;
   /** Increment this value to trigger a new drop */
   dropToken: number;
-  /** Balls to drop on the current token */
   balls?: PlinkoBall[];
   onLanded?: (landing: PlinkoLanding) => void;
   onAllLanded?: (landings: PlinkoLanding[]) => void;
 }
 
-// physics constants (normalized units, per frame at 60fps)
 const GRAVITY = 0.00075;
 const BOUNCE = 0.42;
 const X_STIFF = 0.22;
-const STAGGER_MS = 320;
+const STAGGER_MS = 260;
+const TRAIL = 14;
 
 interface BallState {
   id: string;
@@ -41,63 +40,99 @@ interface BallState {
   row: number;
   startAt: number;
   landed: boolean;
-  restY: number;
+  landedAt: number;
   squash: number;
+  trail: { x: number; y: number }[];
+  hue: number;
+
 }
+
+interface Spark {
+  x: number; y: number; vx: number; vy: number; life: number; size: number;
+}
+
+const hexToRgb = (hex: string): [number, number, number] => {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const n = parseInt(full.slice(0, 6) || 'ffcc33', 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
 
 const PlinkoBoard = ({
   rows, multipliers, accent, dropToken, balls = [], onLanded, onAllLanded,
 }: PlinkoBoardProps) => {
-  const slots = multipliers.length;
-  const [, force] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const ballsRef = useRef<BallState[]>([]);
-  const rafRef = useRef<number | null>(null);
-  const litRef = useRef<Map<number, number>>(new Map());
+  const sparksRef = useRef<Spark[]>([]);
+  const pegFlashRef = useRef<Map<string, number>>(new Map());
+  const slotFlashRef = useRef<Map<number, number>>(new Map());
+  const binHitsRef = useRef<Map<number, number>>(new Map());
   const landingsRef = useRef<PlinkoLanding[]>([]);
+  const rafRef = useRef<number | null>(null);
+  const runningRef = useRef(false);
 
-  const pegs = useMemo(() => {
-    const out: { row: number; x: number }[] = [];
+  const slots = multipliers.length;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const [ar, ag, ab] = hexToRgb(accent);
+    const A = (a: number) => `rgba(${ar},${ag},${ab},${a})`;
+
+    let W = 0, H = 0;
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = wrap.clientWidth;
+      H = wrap.clientHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${H}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+
+    const padX = 0.055;
+    const topPad = 0.1;
+    const binH = 0.11;
+    const rowY = (r: number) => topPad + ((r + 1) / (rows + 1.6)) * (1 - topPad - binH);
+    const floorY = 1 - binH + 0.035;
+    const nx = (x: number) => (padX + x * (1 - padX * 2)) * W;
+    const ny = (y: number) => y * H;
+
+    const maxMult = Math.max(...multipliers, 1);
+    const minMult = Math.min(...multipliers, 0);
+
+    const pegList: { r: number; x: number }[] = [];
     for (let r = 0; r < rows; r++) {
       const count = r + 2;
       for (let j = 0; j < count; j++) {
-        out.push({ row: r, x: 0.5 + (j - (count - 1) / 2) / slots });
+        pegList.push({ r, x: 0.5 + (j - (count - 1) / 2) / slots });
       }
     }
-    return out;
-  }, [rows, slots]);
 
-  const rowY = (row: number) => (row + 1) / (rows + 2);
-  const floorY = (rows + 1.35) / (rows + 2);
+    const spawnSparks = (px: number, py: number, count: number, power: number) => {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = (0.4 + Math.random()) * power;
+        sparksRef.current.push({
+          x: px, y: py,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s - power * 0.6,
+          life: 1,
+          size: 1 + Math.random() * 2.2,
+        });
+      }
+    };
 
-  useEffect(() => {
-    if (dropToken <= 0 || balls.length === 0) return;
-    const now = performance.now();
-    landingsRef.current = [];
-    litRef.current = new Map();
-
-    ballsRef.current = balls.map((b, i) => {
-      const dirs = Array.from({ length: rows }, () => (Math.random() < 0.5 ? -1 : 1));
-      const sum = dirs.reduce((a, c) => a + c, 0);
-      const slotIndex = Math.min(slots - 1, Math.max(0, Math.round((rows + sum) / 2)));
-      return {
-        id: b.id,
-        label: b.label,
-        dirs,
-        slotIndex,
-        x: 0.5 + (Math.random() - 0.5) * 0.01,
-        targetX: 0.5,
-        y: 0,
-        vy: 0,
-        row: -1,
-        startAt: now + i * STAGGER_MS,
-        landed: false,
-        restY: floorY,
-        squash: 0,
-      };
-    });
-
-    const tick = () => {
-      const t = performance.now();
+    const step = (t: number) => {
       let active = false;
 
       for (const b of ballsRef.current) {
@@ -107,9 +142,8 @@ const PlinkoBoard = ({
 
         b.vy += GRAVITY;
         b.y += b.vy;
-        b.squash *= 0.85;
+        b.squash *= 0.86;
 
-        // peg collisions row by row
         const nextRow = b.row + 1;
         if (nextRow < rows && b.y >= rowY(nextRow)) {
           b.row = nextRow;
@@ -117,24 +151,34 @@ const PlinkoBoard = ({
           b.vy = -b.vy * BOUNCE;
           b.squash = 1;
           b.targetX = b.x + (b.dirs[nextRow] * 0.5) / slots;
+          // flash nearest peg on this row
+          const count = nextRow + 2;
+          let best = 0, bestD = Infinity;
+          for (let j = 0; j < count; j++) {
+            const px = 0.5 + (j - (count - 1) / 2) / slots;
+            const d = Math.abs(px - b.x);
+            if (d < bestD) { bestD = d; best = j; }
+          }
+          pegFlashRef.current.set(`${nextRow}-${best}`, t);
+          spawnSparks(nx(0.5 + (best - (count - 1) / 2) / slots), ny(rowY(nextRow)), 4, 0.9);
         }
 
-        if (b.row >= rows - 1) {
-          b.targetX = (b.slotIndex + 0.5) / slots;
-        }
-
+        if (b.row >= rows - 1) b.targetX = (b.slotIndex + 0.5) / slots;
         b.x += (b.targetX - b.x) * X_STIFF;
 
-        if (b.y >= b.restY) {
-          b.y = b.restY;
+        if (b.y >= floorY) {
+          b.y = floorY;
           if (Math.abs(b.vy) > 0.006) {
             b.vy = -b.vy * BOUNCE;
             b.squash = 1;
           } else {
             b.vy = 0;
             b.landed = true;
+            b.landedAt = t;
+            slotFlashRef.current.set(b.slotIndex, t);
+            binHitsRef.current.set(b.slotIndex, (binHitsRef.current.get(b.slotIndex) || 0) + 1);
+            spawnSparks(nx(b.x), ny(b.y), 26, 2.4);
             const landing = { id: b.id, slotIndex: b.slotIndex, multiplier: multipliers[b.slotIndex] };
-            litRef.current.set(b.slotIndex, t);
             landingsRef.current.push(landing);
             onLanded?.(landing);
             if (landingsRef.current.length === ballsRef.current.length) {
@@ -142,109 +186,273 @@ const PlinkoBoard = ({
             }
           }
         }
+
+        b.trail.push({ x: b.x, y: b.y });
+        if (b.trail.length > TRAIL) b.trail.shift();
       }
 
-      force(v => v + 1);
-      rafRef.current = active ? requestAnimationFrame(tick) : null;
+      // sparks
+      sparksRef.current = sparksRef.current.filter(s => s.life > 0);
+      for (const s of sparksRef.current) {
+        s.vy += 0.12;
+        s.x += s.vx;
+        s.y += s.vy;
+        s.life -= 0.035;
+      }
+      if (sparksRef.current.length > 0) active = true;
+
+      return active;
     };
 
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(tick);
+    const draw = (t: number) => {
+      ctx.clearRect(0, 0, W, H);
 
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); rafRef.current = null; };
+      // board glow from top
+      const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.9);
+      g.addColorStop(0, A(0.1));
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // funnel walls
+      ctx.strokeStyle = A(0.16);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(nx(0.5) - 26, ny(topPad * 0.35));
+      ctx.lineTo(nx(0.02), ny(1 - binH));
+      ctx.moveTo(nx(0.5) + 26, ny(topPad * 0.35));
+      ctx.lineTo(nx(0.98), ny(1 - binH));
+      ctx.stroke();
+
+      // pegs
+      for (const p of pegList) {
+        const px = nx(p.x);
+        const py = ny(rowY(p.r));
+        const count = p.r + 2;
+        let j = Math.round((p.x - 0.5) * slots + (count - 1) / 2);
+        const flash = pegFlashRef.current.get(`${p.r}-${j}`);
+        const heat = flash ? Math.max(0, 1 - (t - flash) / 420) : 0;
+
+        if (heat > 0) {
+          const pg = ctx.createRadialGradient(px, py, 0, px, py, 16);
+          pg.addColorStop(0, A(0.55 * heat));
+          pg.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = pg;
+          ctx.beginPath();
+          ctx.arc(px, py, 16, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, 3.4 + heat * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = heat > 0 ? A(0.95) : 'rgba(255,255,255,0.55)';
+        ctx.fill();
+      }
+
+      // bins
+      const binTop = ny(1 - binH);
+      const binHeightPx = H * binH - 4;
+      const binW = (W - 2) / slots;
+      for (let i = 0; i < slots; i++) {
+        const m = multipliers[i];
+        const heatScale = maxMult === minMult ? 1 : (m - minMult) / (maxMult - minMult);
+        const flash = slotFlashRef.current.get(i);
+        const lit = flash ? Math.max(0, 1 - (t - flash) / 900) : 0;
+        const hits = binHitsRef.current.get(i) || 0;
+        const held = hits > 0 ? 0.35 : 0;
+        const x = 1 + i * binW;
+        const y = binTop + 2 - lit * 4;
+        const r = 6;
+        const h = binHeightPx;
+        const w = binW - 3;
+
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+
+        const bg = ctx.createLinearGradient(x, y, x, y + h);
+        bg.addColorStop(0, A(0.08 + heatScale * 0.42 + lit * 0.5 + held));
+        bg.addColorStop(1, A(0.03 + heatScale * 0.16 + lit * 0.3 + held * 0.5));
+        ctx.fillStyle = bg;
+        ctx.fill();
+        ctx.strokeStyle = A(0.2 + heatScale * 0.45 + lit * 0.5 + held);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        if (lit > 0) {
+          ctx.save();
+          ctx.shadowColor = A(0.9 * lit);
+          ctx.shadowBlur = 24 * lit;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        ctx.fillStyle = lit > 0.5 ? '#ffffff' : A(0.85);
+        ctx.font = `800 ${Math.max(9, Math.min(14, binW * 0.42))}px Barlow, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${m}x`, x + w / 2, y + h / 2);
+
+        if (hits > 0) {
+          const bw = 16;
+          ctx.fillStyle = A(0.95);
+          ctx.beginPath();
+          ctx.roundRect(x + w / 2 - bw / 2, y - 9, bw, 15, 7);
+          ctx.fill();
+          ctx.fillStyle = '#08131a';
+          ctx.font = '800 10px Barlow, system-ui, sans-serif';
+          ctx.fillText(String(hits), x + w / 2, y - 1.5);
+        }
+      }
+
+      // sparks
+      for (const s of sparksRef.current) {
+        ctx.globalAlpha = Math.max(0, s.life);
+        ctx.fillStyle = A(0.9);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // balls
+      const showLabels = ballsRef.current.length <= 4;
+      for (const b of ballsRef.current) {
+        if (t < b.startAt) continue;
+        const fade = b.landed ? Math.max(0, 1 - (t - b.landedAt) / 420) : 1;
+        if (fade <= 0) continue;
+        ctx.globalAlpha = fade;
+        const px = nx(b.x);
+        const py = ny(b.y);
+
+        // trail
+        for (let i = 0; i < b.trail.length; i++) {
+          const p = b.trail[i];
+          const a = (i / b.trail.length) * 0.32;
+          ctx.globalAlpha = a;
+          ctx.fillStyle = A(0.9);
+          ctx.beginPath();
+          ctx.arc(nx(p.x), ny(p.y), 3 + (i / b.trail.length) * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        const R = 9;
+        const glow = ctx.createRadialGradient(px, py, 0, px, py, R * 3.4);
+        glow.addColorStop(0, A(0.5));
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(px, py, R * 3.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.scale(1 + b.squash * 0.24, 1 - b.squash * 0.28);
+        const bg = ctx.createRadialGradient(-R * 0.35, -R * 0.4, 0, 0, 0, R);
+        bg.addColorStop(0, '#ffffff');
+        bg.addColorStop(0.45, A(1));
+        bg.addColorStop(1, A(0.7));
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.arc(0, 0, R, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        if (showLabels && !b.landed) {
+          const label = b.label.length > 14 ? `${b.label.slice(0, 13)}…` : b.label;
+          ctx.font = '800 10px Barlow, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const w = ctx.measureText(label).width + 12;
+          const ly = Math.max(10, py - R - 12);
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.beginPath();
+          ctx.roundRect(px - w / 2, ly - 8, w, 16, 8);
+          ctx.fill();
+          ctx.fillStyle = A(1);
+          ctx.fillText(label.toUpperCase(), px, ly);
+        }
+        ctx.globalAlpha = 1;
+
+      }
+    };
+
+    const loop = () => {
+      const t = performance.now();
+      const active = step(t);
+      draw(t);
+      if (active || t - lastLandRef.current < 1200) {
+        rafRef.current = requestAnimationFrame(loop);
+      } else {
+        runningRef.current = false;
+        rafRef.current = null;
+      }
+    };
+
+    const lastLandRef = { current: performance.now() };
+
+    // start / restart the run
+    if (dropToken > 0 && balls.length > 0) {
+      const now = performance.now();
+      landingsRef.current = [];
+      sparksRef.current = [];
+      pegFlashRef.current = new Map();
+      slotFlashRef.current = new Map();
+      binHitsRef.current = new Map();
+      lastLandRef.current = now + balls.length * STAGGER_MS + 4000;
+
+      ballsRef.current = balls.map((b, i) => {
+        const dirs = Array.from({ length: rows }, () => (Math.random() < 0.5 ? -1 : 1));
+        const sum = dirs.reduce((a, c) => a + c, 0);
+        const slotIndex = Math.min(slots - 1, Math.max(0, Math.round((rows + sum) / 2)));
+        return {
+          id: b.id,
+          label: b.label,
+          dirs,
+          slotIndex,
+          x: 0.5 + (Math.random() - 0.5) * 0.012,
+          targetX: 0.5,
+          y: 0.02,
+          vy: 0,
+          row: -1,
+          startAt: now + i * STAGGER_MS,
+          landed: false,
+          landedAt: 0,
+          squash: 0,
+          trail: [],
+          hue: 0,
+        };
+      });
+    }
+
+    runningRef.current = true;
+    rafRef.current = requestAnimationFrame(loop);
+
+    return () => {
+      ro.disconnect();
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      runningRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dropToken]);
-
-  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
-
-  const nowT = performance.now();
-  const showLabels = balls.length <= 4;
+  }, [dropToken, rows, slots, accent, multipliers.join(',')]);
 
   return (
-    <div className="w-full">
-      <div
-        className="relative w-full rounded-2xl overflow-hidden border"
-        style={{
-          aspectRatio: '1 / 1',
-          borderColor: `${accent}25`,
-          background: `radial-gradient(120% 90% at 50% 0%, ${accent}14, transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.35))`,
-        }}
-      >
-        {pegs.map((p, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              left: `${p.x * 100}%`,
-              top: `${rowY(p.row) * 100}%`,
-              width: 7,
-              height: 7,
-              transform: 'translate(-50%, -50%)',
-              background: 'rgba(255,255,255,0.4)',
-              boxShadow: '0 0 6px rgba(255,255,255,0.18)',
-            }}
-          />
-        ))}
-
-        {ballsRef.current.map((b) => {
-          if (nowT < b.startAt) return null;
-          const sq = b.squash;
-          return (
-            <div
-              key={b.id}
-              className="absolute"
-              style={{
-                left: `${b.x * 100}%`,
-                top: `${b.y * 100}%`,
-                transform: 'translate(-50%, -50%)',
-                zIndex: 5,
-              }}
-            >
-              <div
-                className="rounded-full"
-                style={{
-                  width: 18,
-                  height: 18,
-                  background: `radial-gradient(circle at 32% 28%, #fff, ${accent})`,
-                  boxShadow: `0 0 16px ${accent}, 0 0 36px ${accent}55`,
-                  transform: `scale(${1 + sq * 0.25}, ${1 - sq * 0.3})`,
-                }}
-              />
-              {showLabels && (
-                <span
-                  className="absolute left-1/2 -translate-x-1/2 -top-5 whitespace-nowrap text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded"
-                  style={{ background: 'rgba(0,0,0,0.55)', color: accent }}
-                >
-                  {b.label}
-                </span>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Slots */}
-        <div className="absolute bottom-0 left-0 right-0 flex px-0.5 pb-1 gap-0.5">
-          {multipliers.map((m, i) => {
-            const lit = litRef.current.get(i);
-            const isActive = lit !== undefined && nowT - lit < 1400;
-            return (
-              <div
-                key={i}
-                className="flex-1 text-center rounded-md py-1.5 text-[10px] sm:text-xs font-black transition-all duration-200"
-                style={{
-                  background: isActive ? accent : `${accent}12`,
-                  color: isActive ? '#0b1020' : accent,
-                  border: `1px solid ${isActive ? accent : `${accent}30`}`,
-                  boxShadow: isActive ? `0 0 22px ${accent}` : 'none',
-                  transform: isActive ? 'translateY(-3px) scale(1.08)' : 'none',
-                }}
-              >
-                {m}x
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    <div
+      ref={wrapRef}
+      className="relative w-full rounded-2xl overflow-hidden border"
+      style={{
+        aspectRatio: '1 / 1',
+        borderColor: `${accent}25`,
+        background: 'linear-gradient(180deg, hsl(var(--card)), rgba(0,0,0,0.45))',
+      }}
+    >
+      <canvas ref={canvasRef} className="absolute inset-0" />
     </div>
   );
 };
