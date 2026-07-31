@@ -31,7 +31,7 @@ const RaffleRollAnimation = ({ names, rolling, winner, prizeLabel }: Props) => {
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-[2rem] border px-6 py-12 text-center transition-all duration-500 sm:px-12 sm:py-16 ${
+      className={`relative w-full overflow-hidden rounded-[2rem] border px-6 py-8 text-center transition-all duration-500 sm:px-10 sm:py-10 ${
         winner
           ? 'border-amber-300/50 bg-gradient-to-b from-amber-500/15 via-black/60 to-black/80 shadow-[0_0_120px_-20px_rgba(251,191,36,0.55)]'
           : 'border-white/10 bg-black/40'
@@ -47,16 +47,14 @@ const RaffleRollAnimation = ({ names, rolling, winner, prizeLabel }: Props) => {
             : 'radial-gradient(circle at 50% 50%, rgba(168,85,247,0.3), transparent 65%)',
         }}
       />
-      {/* raios girando */}
+      {/* brilho suave animado */}
       {winner && (
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[160%] w-[160%] -translate-x-1/2 -translate-y-1/2 opacity-[0.12]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-full opacity-60"
           style={{
             background:
-              'repeating-conic-gradient(from 0deg, rgba(255,255,255,0.9) 0deg 6deg, transparent 6deg 18deg)',
-            animation: 'raffle-spin 24s linear infinite',
-            maskImage: 'radial-gradient(circle, black 20%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(circle, black 20%, transparent 70%)',
+              'radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.28), transparent 60%)',
+            animation: 'raffle-pulse 3s ease-in-out infinite',
           }}
         />
       )}
@@ -74,10 +72,10 @@ const RaffleRollAnimation = ({ names, rolling, winner, prizeLabel }: Props) => {
         )}
 
         <p
-          className={`mt-6 max-w-full break-words font-bold leading-[0.95] transition-all duration-300 ${
+          className={`mt-5 max-w-full break-words font-bold leading-[0.95] transition-all duration-300 ${
             winner
-              ? 'bg-gradient-to-b from-white via-amber-100 to-amber-300 bg-clip-text text-transparent text-6xl sm:text-8xl'
-              : 'text-white/70 text-4xl sm:text-6xl blur-[0.4px]'
+              ? 'bg-gradient-to-b from-white via-amber-100 to-amber-300 bg-clip-text text-transparent text-5xl sm:text-7xl'
+              : 'text-white/70 text-3xl sm:text-5xl blur-[0.4px]'
           }`}
           style={{ fontFamily: 'var(--lobby-font-title, "Bebas Neue"), sans-serif', letterSpacing: '0.02em' }}
         >
@@ -86,20 +84,20 @@ const RaffleRollAnimation = ({ names, rolling, winner, prizeLabel }: Props) => {
 
         {winner && (
           <>
-            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-6 py-3 backdrop-blur">
+            <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-5 py-2.5 backdrop-blur">
               <span className="text-[10px] uppercase tracking-[0.28em] text-white/50">Bilhete</span>
-              <span className="font-mono text-2xl font-bold tracking-[0.18em] text-white sm:text-3xl">
+              <span className="font-mono text-xl font-bold tracking-[0.18em] text-white sm:text-2xl">
                 {winner.code}
               </span>
             </div>
             {prizeLabel && (
-              <p className="mt-5 text-sm uppercase tracking-[0.3em] text-amber-200/80">{prizeLabel}</p>
+              <p className="mt-4 text-sm uppercase tracking-[0.3em] text-amber-200/80">{prizeLabel}</p>
             )}
           </>
         )}
       </div>
 
-      <style>{`@keyframes raffle-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }`}</style>
+      <style>{`@keyframes raffle-pulse { 0%,100% { opacity: .45 } 50% { opacity: .8 } }`}</style>
     </div>
   );
 };

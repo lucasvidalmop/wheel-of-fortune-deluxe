@@ -93,20 +93,23 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   }, [load]);
 
   // Ao detectar um novo resultado, roda a animação e revela um a um.
+  const resultRound = result?.round ?? 0;
+  const winnersCount = result?.winners.length ?? 0;
   useEffect(() => {
-    if (!result || result.round === lastRound.current) return;
-    lastRound.current = result.round;
+    if (!resultRound || !winnersCount) return;
+    lastRound.current = resultRound;
     setRevealed(-1);
     setRolling(true);
     const timers: number[] = [];
-    result.winners.forEach((_, i) => {
+    for (let i = 0; i < winnersCount; i++) {
       timers.push(window.setTimeout(() => {
         setRevealed(i);
-        if (i === result.winners.length - 1) setRolling(false);
+        if (i === winnersCount - 1) setRolling(false);
       }, 4000 + i * 3500));
-    });
+    }
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [result]);
+  }, [resultRound, winnersCount]);
+
 
   if (loading) {
     return (
@@ -179,7 +182,7 @@ const SorteioLive = ({ tag }: { tag: string }) => {
               )}
             </div>
           )}
-          {result && revealed >= 0 && result.winners.length > 1 && (
+          {result && revealed >= 0 && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {result.winners.slice(0, revealed + 1).map((w) => {
                 const active = currentWinner?.code === w.code;
