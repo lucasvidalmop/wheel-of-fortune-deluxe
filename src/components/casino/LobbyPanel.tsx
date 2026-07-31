@@ -5,7 +5,7 @@ import { Loader2, Copy, Upload, ExternalLink } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 import type { LobbySEOConfig } from '@/components/lobby/LobbySEO';
 
-type ProductKey = 'roleta' | 'batalha' | 'luckybox' | 'apostas';
+type ProductKey = 'roleta' | 'batalha' | 'luckybox' | 'apostas' | 'sorteio';
 
 interface CardConfig {
   key: ProductKey;
@@ -82,6 +82,7 @@ const PRODUCT_LABELS: Record<ProductKey, string> = {
   roleta: 'Roleta',
   apostas: 'Apostas',
   luckybox: 'Luckybox',
+  sorteio: 'Sorteio ao Vivo',
   batalha: 'Batalha de Slots',
 };
 
@@ -90,6 +91,7 @@ const DEFAULT_CARDS: CardConfig[] = [
   { key: 'apostas', enabled: true, title: 'Apostas', subtitle: 'Aposte nos jogos do dia', order: 2 },
   { key: 'luckybox', enabled: true, title: 'Luckybox', subtitle: 'Abra caixas e descubra prêmios', order: 3 },
   { key: 'batalha', enabled: false, title: 'Batalha de Slots', subtitle: 'Competição ao vivo', order: 4 },
+  { key: 'sorteio', enabled: false, title: 'Sorteio ao Vivo', subtitle: 'Participe e concorra ao prêmio', order: 5 },
 ];
 
 const slugify = (s: string) =>

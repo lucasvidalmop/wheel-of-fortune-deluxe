@@ -1,7 +1,7 @@
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { optimizedImage } from '@/lib/imageUrl';
 
-export type ProductKey = 'roleta' | 'batalha' | 'luckybox' | 'apostas';
+export type ProductKey = 'roleta' | 'batalha' | 'luckybox' | 'apostas' | 'sorteio';
 
 interface Props {
   product: ProductKey;
@@ -19,6 +19,7 @@ const meta: Record<ProductKey, { icon: string; accent: string }> = {
   apostas: { icon: '⚽', accent: 'from-emerald-500/35 to-sky-700/10' },
   luckybox: { icon: '🎁', accent: 'from-fuchsia-500/35 to-purple-700/10' },
   batalha: { icon: '⚔️', accent: 'from-rose-500/35 to-red-700/10' },
+  sorteio: { icon: '🎟️', accent: 'from-cyan-500/35 to-blue-700/10' },
 };
 
 const LobbyPromoCard = ({ product, title, subtitle, imageUrl, badge, external, featured, onClick }: Props) => {
