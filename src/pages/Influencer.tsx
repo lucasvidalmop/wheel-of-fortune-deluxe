@@ -3,8 +3,9 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon } from 'lucide-react';
+import { LogOut, RefreshCw, Search, FileDown, Trophy, Copy, Plus, Minus, X, Star, Users, Award, History, RotateCcw, Play, Link as LinkIcon, Dices } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import PlinkoGame, { type PlinkoPick } from '@/components/plinko/PlinkoGame';
 
 interface WheelUser {
   id: string;
@@ -91,6 +92,8 @@ const Influencer = () => {
   const [timer, setTimer] = useState('');
 
   const [showRaffle, setShowRaffle] = useState(false);
+  const [showPlinko, setShowPlinko] = useState(false);
+  const plinkoUsedIds = useRef<Set<string>>(new Set());
   const [raffleStep, setRaffleStep] = useState<RaffleStep>('config');
   const [raffleQty, setRaffleQty] = useState(1);
   const [raffleAmount, setRaffleAmount] = useState(30);
@@ -366,6 +369,84 @@ const Influencer = () => {
     setRaffleStep('config'); setRaffleQty(1); setRaffleAmount(30);
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
   };
+
+  // ─── Plinko mini game ───
+  const pickPlinkoParticipant = (): PlinkoPick | null => {
+    const used = plinkoUsedIds.current;
+    const eligibleReal = users.filter(u =>
+      !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay && !used.has(u.id));
+    const eligibleGhost = ghostParticipants.filter(g => !used.has(g.id));
+
+    if (eligibleReal.length === 0 && eligibleGhost.length === 0) {
+      toast.error('Sem participantes elegíveis');
+      return null;
+    }
+
+    const prob = drawProbability / 100;
+    const wantReal = Math.random() < prob;
+    let chosen: WheelUser | null = null;
+    if (wantReal && eligibleReal.length > 0) chosen = eligibleReal[Math.floor(Math.random() * eligibleReal.length)];
+    else if (eligibleGhost.length > 0) chosen = eligibleGhost[Math.floor(Math.random() * eligibleGhost.length)];
+    else chosen = eligibleReal[Math.floor(Math.random() * eligibleReal.length)];
+
+    if (!chosen) return null;
+    used.add(chosen.id);
+    return {
+      id: chosen.id,
+      name: chosen.name,
+      account_id: chosen.account_id,
+      isGhost: chosen.id.startsWith('ghost_'),
+      raw: chosen,
+    };
+  };
+
+  const handlePlinkoWin = async (pick: PlinkoPick, amount: number, multiplier: number) => {
+    if (!session?.user?.id) return;
+    const label = `Plinko ${multiplier}x R$ ${amount.toFixed(2)}`;
+
+    if (pick.isGhost) {
+      const entry: TodayWinner = {
+        id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
+        user_name: pick.name,
+        account_id: pick.account_id,
+        amount,
+        created_at: new Date().toISOString(),
+        prize: label,
+      };
+      sessionCreatedIds.current.add(entry.id);
+      const uid = session.user.id;
+      saveGhostWinners([entry, ...loadGhostWinners(uid)], uid);
+      await fetchTodayWinners(uid);
+      return;
+    }
+
+    const user = pick.raw as WheelUser;
+    try {
+      const result = await (supabase as any).rpc('create_prize_payment', {
+        p_owner_id: session.user.id,
+        p_account_id: user.account_id,
+        p_user_name: user.name,
+        p_user_email: user.email,
+        p_prize: label,
+        p_amount: amount,
+        p_force_auto: user.auto_payment,
+      });
+      if (result?.data?.id) {
+        sessionCreatedIds.current.add(result.data.id);
+        if (result?.data?.auto_payment || user.auto_payment) {
+          triggerAutoPay(result.data.id).catch(console.error);
+        }
+      }
+      await Promise.all([
+        fetchTodayWinners(session.user.id),
+        fetchHistory(session.user.id),
+      ]);
+    } catch (err) {
+      console.error('Erro ao criar prêmio do Plinko:', err);
+      toast.error('Prêmio exibido, mas houve erro ao salvar.');
+    }
+  };
+
 
   const persistRaffleResults = async (finalSelected: Winner[]) => {
     if (!session?.user?.id) return;
@@ -965,9 +1046,18 @@ const Influencer = () => {
             <Play size={18} fill="currentColor" />
             REALIZAR SORTEIO
           </button>
+          <button
+            onClick={() => { plinkoUsedIds.current = new Set(); setShowPlinko(true); }}
+            className="w-full py-3 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 border transition-all hover:brightness-125 active:scale-[0.98]"
+            style={{ borderColor: `${accent}55`, color: accent, background: `${accent}12` }}
+          >
+            <Dices size={16} />
+            MINI GAME · PLINKO
+          </button>
           <p className="text-center text-[11px] text-white/30">
             Você pode enviar mais <strong style={{ color: accent }}>{prizesRemaining}</strong> prêmios hoje
           </p>
+
         </div>
       </div>
       </div>
@@ -976,6 +1066,21 @@ const Influencer = () => {
       <button onClick={handleLogout} className="fixed top-4 right-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-white/40 hover:text-white/70 transition bg-black/30 backdrop-blur-sm border border-white/[0.06]">
         <LogOut size={12} /> Sair
       </button>
+
+      {/* ─── Plinko Mini Game ─── */}
+      <PlinkoGame
+        open={showPlinko}
+        onClose={() => setShowPlinko(false)}
+        accent={accent}
+        btnText={btnText}
+        textColor={textColor}
+        cardStyle={glassCardStyle}
+        names={allParticipants.map(u => u.name)}
+        participantCount={allParticipants.length}
+        pickParticipant={pickPlinkoParticipant}
+        onWin={(pick, amount, multiplier) => { void handlePlinkoWin(pick, amount, multiplier); }}
+      />
+
 
       {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
