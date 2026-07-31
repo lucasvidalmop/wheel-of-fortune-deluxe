@@ -4,6 +4,8 @@ import Matter from 'matter-js';
 export interface PlinkoBall {
   id: string;
   label: string;
+  /** Optional slot the ball should end up in (weighted by configured chances) */
+  targetSlot?: number;
 }
 
 export interface PlinkoLanding {
@@ -49,6 +51,7 @@ interface BallMeta {
   restX: number;
   restY: number;
   slotIndex: number;
+  targetSlot?: number;
 }
 
 interface Spark {
@@ -204,6 +207,9 @@ const PlinkoBoard = ({
           trail: [], squash: 0, landed: false, landedAt: 0,
           restFrames: 0, stallFrames: 0, lastY: -1,
           restX: 0, restY: 0, slotIndex: 0,
+          targetSlot: typeof b.targetSlot === 'number'
+            ? Math.min(slots - 1, Math.max(0, b.targetSlot))
+            : undefined,
         };
         metas.push(meta);
         pending.push({ meta, at: now + i * STAGGER_MS });
@@ -259,6 +265,20 @@ const PlinkoBoard = ({
           }
         }
 
+        // Weighted outcome steering: the configured chance per multiplier picks
+        // the destination slot, and the ball is nudged gently towards it while
+        // still bouncing naturally off every peg it meets.
+        if (typeof m.targetSlot === 'number' && p.y < binTop) {
+          const desiredX = padX + (m.targetSlot + 0.5) * binW;
+          const progress = Math.min(1, Math.max(0, (p.y - topPad) / Math.max(1, binTop - topPad)));
+          const dx = desiredX - p.x;
+          const pull = 0.00000075 * m.body.mass * (0.25 + progress * progress * 2.2);
+          Matter.Body.applyForce(m.body, p, {
+            x: Math.max(-0.6, Math.min(0.6, dx / binW)) * pull * 60,
+            y: 0,
+          });
+        }
+
         m.trail.push({ x: p.x, y: p.y });
         if (m.trail.length > TRAIL) m.trail.shift();
 
@@ -284,7 +304,7 @@ const PlinkoBoard = ({
         }
 
         if (m.restFrames > 8) {
-          const slotIndex = slotIndexOf(p.x);
+          const slotIndex = typeof m.targetSlot === 'number' ? m.targetSlot : slotIndexOf(p.x);
           m.landed = true;
           m.landedAt = t;
           m.slotIndex = slotIndex;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { X, Dices, Settings2, Play } from 'lucide-react';
+import { X, Dices, Play } from 'lucide-react';
 import PlinkoBoard, { PlinkoBall, PlinkoLanding } from './PlinkoBoard';
 
 
@@ -31,22 +31,42 @@ interface PlinkoGameProps {
   participantCount: number;
   pickParticipant: () => PlinkoPick | null;
   onWin: (pick: PlinkoPick, amount: number, multiplier: number) => void;
+  /** Configured in the admin panel (Influencer > Mini Game Plinko) */
+  multipliers?: number[];
+  chances?: number[];
+  basePrize?: number;
+  ballCount?: number;
 }
 
 const ROWS = 8;
 const DEFAULT_MULTIPLIERS = [10, 5, 3, 2, 1, 2, 3, 5, 10];
-const STORE_KEY = 'plinko_config_v1';
+const DEFAULT_CHANCES = [2, 6, 10, 15, 34, 15, 10, 6, 2];
 
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
+
+/** Weighted pick of a slot index using the configured percentages */
+const pickSlot = (weights: number[]) => {
+  const total = weights.reduce((s, n) => s + Math.max(0, n), 0);
+  if (total <= 0) return Math.floor(Math.random() * weights.length);
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= Math.max(0, weights[i]);
+    if (r <= 0) return i;
+  }
+  return weights.length - 1;
+};
 
 const PlinkoGame = ({
   open, onClose, accent, btnText, textColor, cardStyle,
   names, participantCount, pickParticipant, onWin,
+  multipliers: multipliersProp, chances: chancesProp,
+  basePrize: basePrizeProp, ballCount: ballCountProp,
 }: PlinkoGameProps) => {
-  const [multipliers, setMultipliers] = useState<number[]>(DEFAULT_MULTIPLIERS);
-  const [basePrize, setBasePrize] = useState(10);
-  const [ballCount, setBallCount] = useState(1);
-  const [showConfig, setShowConfig] = useState(false);
+  const multipliers = multipliersProp?.length === ROWS + 1 ? multipliersProp : DEFAULT_MULTIPLIERS;
+  const chances = multipliers.map((_, i) => Number(chancesProp?.[i] ?? DEFAULT_CHANCES[i] ?? 0));
+  const basePrize = typeof basePrizeProp === 'number' && basePrizeProp >= 0 ? basePrizeProp : 10;
+  const ballCount = Math.min(20, Math.max(1, ballCountProp || 1));
+
   const [phase, setPhase] = useState<'idle' | 'picking' | 'dropping' | 'result'>('idle');
   const [reelName, setReelName] = useState('');
   const [activeBalls, setActiveBalls] = useState<PlinkoBall[]>([]);
@@ -57,23 +77,6 @@ const PlinkoGame = ({
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const reelRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed.multipliers) && parsed.multipliers.length === ROWS + 1) {
-          setMultipliers(parsed.multipliers.map((n: any) => Number(n) || 1));
-        }
-        if (typeof parsed.basePrize === 'number') setBasePrize(parsed.basePrize);
-        if (typeof parsed.ballCount === 'number') setBallCount(Math.min(20, Math.max(1, parsed.ballCount)));
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  const persistConfig = (mults: number[], base: number, balls = ballCount) => {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ multipliers: mults, basePrize: base, ballCount: balls })); } catch { /* ignore */ }
-  };
 
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
@@ -111,7 +114,7 @@ const PlinkoGame = ({
     const newBalls: PlinkoBall[] = picks.map((p, i) => {
       const id = `${Date.now()}-${i}`;
       picksRef.current.set(id, p);
-      return { id, label: p.name };
+      return { id, label: p.name, targetSlot: pickSlot(chances) };
     });
 
     setBatch([]);
@@ -169,13 +172,6 @@ const PlinkoGame = ({
               </p>
             </div>
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setShowConfig(v => !v)}
-                className="p-1.5 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white"
-                title="Configurar multiplicadores"
-              >
-                <Settings2 size={16} />
-              </button>
               {!busy && (
                 <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white">
                   <X size={18} />
@@ -185,101 +181,7 @@ const PlinkoGame = ({
           </div>
 
           <div className="px-5 pb-5 space-y-4">
-            {showConfig && (
-              <div className="rounded-xl border p-3 space-y-3" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.02)' }}>
-                <p className="text-[10px] uppercase tracking-widest text-white/40">Multiplicadores ({ROWS + 1} casas)</p>
-                <div className="grid grid-cols-9 gap-1">
-                  {multipliers.map((m, i) => (
-                    <input
-                      key={i}
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      value={m}
-                      onChange={(e) => {
-                        const next = [...multipliers];
-                        next[i] = Number(e.target.value) || 0;
-                        setMultipliers(next);
-                        persistConfig(next, basePrize);
-                      }}
-                      className="w-full bg-transparent border rounded-md text-center text-[11px] font-bold py-1 outline-none"
-                      style={{ borderColor: `${accent}33`, color: accent }}
-                    />
-                  ))}
-                </div>
-                <button
-                  onClick={() => { setMultipliers(DEFAULT_MULTIPLIERS); persistConfig(DEFAULT_MULTIPLIERS, basePrize); }}
-                  className="text-[10px] uppercase tracking-widest text-white/40 hover:text-white/70 transition"
-                >
-                  Restaurar padrão
-                </button>
-              </div>
-            )}
 
-            <div className="rounded-xl border p-3 flex items-center gap-3" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.02)' }}>
-              <span className="text-[10px] uppercase tracking-widest text-white/40 shrink-0">Prêmio base</span>
-              <div className="flex items-center gap-1.5 flex-1">
-                <span className="text-sm font-bold text-white/50">R$</span>
-                <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  value={basePrize}
-                  disabled={busy}
-                  onChange={(e) => { const v = Number(e.target.value) || 0; setBasePrize(v); persistConfig(multipliers, v); }}
-                  className="w-24 bg-transparent border rounded-lg px-2 py-1.5 text-sm font-black outline-none disabled:opacity-50"
-                  style={{ borderColor: `${accent}33`, color: accent }}
-                />
-                <div className="flex gap-1 ml-1">
-                  {[5, 10, 20, 30].map(v => (
-                    <button
-                      key={v}
-                      disabled={busy}
-                      onClick={() => { setBasePrize(v); persistConfig(multipliers, v); }}
-                      className="px-2 py-1 rounded-md border text-[10px] font-bold transition disabled:opacity-40"
-                      style={basePrize === v
-                        ? { borderColor: accent, background: `${accent}18`, color: accent }
-                        : { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Ball count */}
-            <div className="rounded-xl border p-3 flex items-center gap-3" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.02)' }}>
-              <span className="text-[10px] uppercase tracking-widest text-white/40 shrink-0">Bolinhas</span>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={ballCount}
-                disabled={busy}
-                onChange={(e) => {
-                  const v = Math.min(20, Math.max(1, Number(e.target.value) || 1));
-                  setBallCount(v); persistConfig(multipliers, basePrize, v);
-                }}
-                className="w-20 bg-transparent border rounded-lg px-2 py-1.5 text-sm font-black outline-none disabled:opacity-50"
-                style={{ borderColor: `${accent}33`, color: accent }}
-              />
-              <div className="flex gap-1 flex-wrap">
-                {[1, 3, 5, 10].map(v => (
-                  <button
-                    key={v}
-                    disabled={busy}
-                    onClick={() => { setBallCount(v); persistConfig(multipliers, basePrize, v); }}
-                    className="px-2 py-1 rounded-md border text-[10px] font-bold transition disabled:opacity-40"
-                    style={ballCount === v
-                      ? { borderColor: accent, background: `${accent}18`, color: accent }
-                      : { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Name display */}
             <div className="rounded-xl border p-3 text-center" style={{ borderColor: `${accent}25`, background: `${accent}08` }}>
