@@ -41,11 +41,13 @@ Deno.serve(async (req) => {
     }
 
     // Discover tags of operator's other products to suggest defaults for hrefs.
-    const [{ data: bets }, { data: lucky }, { data: wheel }, { data: refLink }] = await Promise.all([
+    const [{ data: bets }, { data: lucky }, { data: wheel }, { data: refLink }, { data: raffle }] = await Promise.all([
       supabase.from("bets_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
       supabase.from("luckybox_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
       supabase.from("wheel_configs").select("slug").eq("user_id", cfg.owner_id).maybeSingle().then((r) => r as any),
       supabase.from("referral_links").select("code, created_at").eq("owner_id", cfg.owner_id).eq("is_active", true).order("created_at", { ascending: true }).limit(1).maybeSingle(),
+      supabase.from("raffle_events").select("tag, created_at").eq("owner_id", cfg.owner_id).eq("is_active", true)
+        .in("status", ["scheduled", "open", "live"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     // Prefer Luckybox coin assets, fall back to Bets — they reflect the operator's brand.
@@ -65,6 +67,7 @@ Deno.serve(async (req) => {
         bets: bets?.tag || "",
         luckybox: lucky?.tag || "",
         roleta: wheel?.slug || "",
+        sorteio: (raffle as any)?.tag || "",
       },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {

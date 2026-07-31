@@ -1945,6 +1945,308 @@ export type Database = {
           },
         ]
       }
+      raffle_attempts: {
+        Row: {
+          account_id: string
+          created_at: string
+          detail: string
+          email: string
+          event_id: string | null
+          id: string
+          ip_address: string | null
+          outcome: string
+          owner_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          detail?: string
+          email?: string
+          event_id?: string | null
+          id?: string
+          ip_address?: string | null
+          outcome?: string
+          owner_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          detail?: string
+          email?: string
+          event_id?: string | null
+          id?: string
+          ip_address?: string | null
+          outcome?: string
+          owner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_attempts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffle_draws: {
+        Row: {
+          created_at: string
+          event_id: string
+          executed_at: string
+          executed_by: string | null
+          id: string
+          owner_id: string
+          participants_snapshot_count: number
+          redraw_reason: string
+          round: number
+          superseded: boolean
+          winners: Json
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          executed_at?: string
+          executed_by?: string | null
+          id?: string
+          owner_id: string
+          participants_snapshot_count?: number
+          redraw_reason?: string
+          round?: number
+          superseded?: boolean
+          winners?: Json
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          executed_at?: string
+          executed_by?: string | null
+          id?: string
+          owner_id?: string
+          participants_snapshot_count?: number
+          redraw_reason?: string
+          round?: number
+          superseded?: boolean
+          winners?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_draws_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffle_events: {
+        Row: {
+          banner_url: string
+          closes_at: string | null
+          created_at: string
+          description: string
+          draw_at: string | null
+          id: string
+          is_active: boolean
+          locked_at: string | null
+          locked_count: number
+          max_participants: number | null
+          messages: Json
+          min_participants: number
+          name: string
+          opens_at: string | null
+          owner_id: string
+          prize_label: string
+          rules: string
+          signup_url: string
+          status: string
+          tag: string
+          theme: Json
+          updated_at: string
+          winners_count: number
+        }
+        Insert: {
+          banner_url?: string
+          closes_at?: string | null
+          created_at?: string
+          description?: string
+          draw_at?: string | null
+          id?: string
+          is_active?: boolean
+          locked_at?: string | null
+          locked_count?: number
+          max_participants?: number | null
+          messages?: Json
+          min_participants?: number
+          name?: string
+          opens_at?: string | null
+          owner_id: string
+          prize_label?: string
+          rules?: string
+          signup_url?: string
+          status?: string
+          tag: string
+          theme?: Json
+          updated_at?: string
+          winners_count?: number
+        }
+        Update: {
+          banner_url?: string
+          closes_at?: string | null
+          created_at?: string
+          description?: string
+          draw_at?: string | null
+          id?: string
+          is_active?: boolean
+          locked_at?: string | null
+          locked_count?: number
+          max_participants?: number | null
+          messages?: Json
+          min_participants?: number
+          name?: string
+          opens_at?: string | null
+          owner_id?: string
+          prize_label?: string
+          rules?: string
+          signup_url?: string
+          status?: string
+          tag?: string
+          theme?: Json
+          updated_at?: string
+          winners_count?: number
+        }
+        Relationships: []
+      }
+      raffle_participants: {
+        Row: {
+          account_id: string
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          display_name: string
+          email: string
+          event_id: string
+          flags: Json
+          id: string
+          internal_note: string
+          ip_address: string | null
+          os: string | null
+          owner_id: string
+          public_code: string
+          region: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          session_fingerprint: string | null
+          status: string
+          updated_at: string
+          user_agent: string | null
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          display_name?: string
+          email: string
+          event_id: string
+          flags?: Json
+          id?: string
+          internal_note?: string
+          ip_address?: string | null
+          os?: string | null
+          owner_id: string
+          public_code: string
+          region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          session_fingerprint?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          display_name?: string
+          email?: string
+          event_id?: string
+          flags?: Json
+          id?: string
+          internal_note?: string
+          ip_address?: string | null
+          os?: string | null
+          owner_id?: string
+          public_code?: string
+          region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          session_fingerprint?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          wheel_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffle_restrictions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          kind: string
+          owner_id: string
+          reason: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          kind: string
+          owner_id: string
+          reason?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          kind?: string
+          owner_id?: string
+          reason?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_restrictions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       redemption_codes: {
         Row: {
           code: string

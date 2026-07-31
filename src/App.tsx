@@ -23,6 +23,8 @@ const Luckybox = lazy(() => import("./pages/Luckybox.tsx"));
 const UpdateRegistration = lazy(() => import("./pages/UpdateRegistration.tsx"));
 const Bets = lazy(() => import("./pages/Bets.tsx"));
 const Lobby = lazy(() => import("./pages/Lobby.tsx"));
+const Sorteio = lazy(() => import("./pages/Sorteio.tsx"));
+const SorteioLive = lazy(() => import("./pages/SorteioLive.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +72,14 @@ const SlugRouter = () => {
   if (slug && slug.startsWith('lobby=')) {
     const tag = slug.substring(6);
     return <Lobby tag={tag} />;
+  }
+  if (slug && slug.startsWith('sorteio=')) {
+    const tag = slug.substring(8);
+    return <Sorteio tag={tag} />;
+  }
+  if (slug && slug.startsWith('live=')) {
+    const tag = slug.substring(5);
+    return <SorteioLive tag={tag} />;
   }
   return <Roleta />;
 };

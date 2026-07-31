@@ -24,6 +24,7 @@ const productBadge: Record<ProductKey, string> = {
   apostas: 'Esportes',
   luckybox: 'Caixas',
   batalha: 'Ao vivo',
+  sorteio: 'Sorteio',
 };
 
 const LobbyHome = ({ title, description, greeting, cards, footerText, onOpenProduct }: Props) => {
