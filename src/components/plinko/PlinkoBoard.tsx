@@ -23,7 +23,7 @@ interface PlinkoBoardProps {
   onAllLanded?: (landings: PlinkoLanding[]) => void;
 }
 
-const STAGGER_MS = 240;
+const STAGGER_MS = 380;
 const TRAIL = 16;
 
 interface BallMeta {
@@ -100,7 +100,7 @@ const PlinkoBoard = ({
     const minMult = Math.min(...multipliers, 0);
 
     // ---- engine -------------------------------------------------------
-    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.0012 } });
+    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00035 } });
     const world = engine.world;
 
     const pegPos: { x: number; y: number }[] = [];
@@ -111,7 +111,7 @@ const PlinkoBoard = ({
         const x = centerX + (j - (count - 1) / 2) * d;
         const y = rowYPx(r);
         pegBodies.push(Matter.Bodies.circle(x, y, pegR, {
-          isStatic: true, restitution: 0.3, friction: 0.02, label: `peg:${pegPos.length}`,
+          isStatic: true, restitution: 0.55, friction: 0.005, label: `peg:${pegPos.length}`,
         }));
         pegPos.push({ x, y });
       }
@@ -120,11 +120,11 @@ const PlinkoBoard = ({
 
     // floor + bin dividers
     Matter.Composite.add(world, Matter.Bodies.rectangle(W / 2, H + 10, W * 3, 20, {
-      isStatic: true, restitution: 0.1, friction: 0.06,
+      isStatic: true, restitution: 0.25, friction: 0.06,
     }));
     for (let i = 0; i <= slots; i++) {
       Matter.Composite.add(world, Matter.Bodies.rectangle(padX + i * binW, binTop + binH / 2, 3, binH, {
-        isStatic: true, restitution: 0.1, friction: 0.4,
+        isStatic: true, restitution: 0.35, friction: 0.2,
       }));
     }
 
@@ -182,9 +182,9 @@ const PlinkoBoard = ({
           centerX + (Math.random() - 0.5) * d * 0.3,
           topPad * 0.3,
           ballR,
-          { restitution: 0.35, friction: 0.02, frictionAir: 0.014, density: 0.0016, slop: 0.02 },
+          { restitution: 0.55, friction: 0.01, frictionAir: 0.006, density: 0.0016, slop: 0.02 },
         );
-        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.8, y: 0 });
+        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.6, y: 0 });
         const meta: BallMeta = {
           id: b.id, label: b.label, body,
           trail: [], squash: 0, landed: false, landedAt: 0,
@@ -226,7 +226,7 @@ const PlinkoBoard = ({
             const sign = Math.sign(off) || 1;
             Matter.Body.setPosition(m.body, { x: centerX + sign * lim, y: p.y });
             Matter.Body.setVelocity(m.body, {
-              x: -sign * (0.5 + Math.abs(m.body.velocity.x) * 0.4),
+              x: -sign * (0.3 + Math.abs(m.body.velocity.x) * 0.4),
               y: m.body.velocity.y,
             });
           }
@@ -237,17 +237,17 @@ const PlinkoBoard = ({
 
         const speed = Math.hypot(m.body.velocity.x, m.body.velocity.y);
         const inBin = p.y > binTop - ballR * 1.1;
-        if (inBin && speed < 0.6) m.restFrames += 1; else m.restFrames = 0;
+        if (inBin && speed < 0.35) m.restFrames += 1; else m.restFrames = 0;
 
         // anti-stall: nudge a ball that stopped falling
         if (!inBin) {
-          if (m.lastY >= 0 && Math.abs(p.y - m.lastY) < 0.3) {
+          if (m.lastY >= 0 && Math.abs(p.y - m.lastY) < 0.12) {
             m.stallFrames += 1;
-            if (m.stallFrames > 12) {
+            if (m.stallFrames > 20) {
               m.stallFrames = 0;
               Matter.Body.setVelocity(m.body, {
-                x: (Math.random() < 0.5 ? -1 : 1) * 1.3,
-                y: 1,
+                x: (Math.random() < 0.5 ? -1 : 1) * 0.7,
+                y: 0.5,
               });
             }
           } else {
@@ -256,7 +256,7 @@ const PlinkoBoard = ({
           m.lastY = p.y;
         }
 
-        if (m.restFrames > 6) {
+        if (m.restFrames > 8) {
           const slotIndex = slotIndexOf(p.x);
           m.landed = true;
           m.landedAt = t;
