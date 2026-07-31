@@ -846,7 +846,7 @@ const Influencer = () => {
             </div>
           </div>
 
-          {/* Row 2: Progress bar */}
+          {/* Row 2: Progress bar + mini plinko trigger */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-white/35">Progresso diário</span>
@@ -857,11 +857,20 @@ const Influencer = () => {
             </div>
           </div>
 
-          {/* Row 3: Reset button */}
-          <div className="flex justify-end items-center gap-2">
+          {/* Row 3: Reset + Plinko mini */}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={() => { plinkoUsedIds.current = new Set(); setShowPlinko(true); }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold border transition hover:bg-white/[0.04]"
+              style={{ borderColor: `${accent}25`, color: `${accent}cc`, background: `${accent}08` }}
+              title="Mini Game Plinko"
+            >
+              <Dices size={12} />
+              Plinko
+            </button>
             <button
               onClick={handleResetDayCounter}
-              className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-lg border transition hover:bg-white/[0.04]"
+              className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1.5 rounded-lg border transition hover:bg-white/[0.04]"
               style={{ borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
             >
               <RotateCcw size={11} /> Reiniciar contador do dia
