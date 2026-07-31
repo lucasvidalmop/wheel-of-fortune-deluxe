@@ -1013,6 +1013,275 @@ export type Database = {
         }
         Relationships: []
       }
+      gorjeta_event_participants: {
+        Row: {
+          account_id: string
+          created_at: string
+          entry_number: number
+          event_id: string
+          has_won: boolean
+          id: string
+          ip_address: string | null
+          is_ghost: boolean
+          owner_id: string
+          source: string
+          user_email: string
+          user_name: string
+          user_phone: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          entry_number?: number
+          event_id: string
+          has_won?: boolean
+          id?: string
+          ip_address?: string | null
+          is_ghost?: boolean
+          owner_id: string
+          source?: string
+          user_email?: string
+          user_name?: string
+          user_phone?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          entry_number?: number
+          event_id?: string
+          has_won?: boolean
+          id?: string
+          ip_address?: string | null
+          is_ghost?: boolean
+          owner_id?: string
+          source?: string
+          user_email?: string
+          user_name?: string
+          user_phone?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gorjeta_event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gorjeta_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gorjeta_event_results: {
+        Row: {
+          account_id: string
+          created_at: string
+          event_id: string
+          game: string
+          id: string
+          is_ghost: boolean
+          is_winner: boolean
+          outcome: Json
+          owner_id: string
+          participant_id: string | null
+          prize_amount: number
+          prize_label: string
+          prize_payment_id: string | null
+          prize_type: string
+          round_id: string | null
+          user_email: string
+          user_name: string
+          wheel_user_id: string | null
+        }
+        Insert: {
+          account_id?: string
+          created_at?: string
+          event_id: string
+          game?: string
+          id?: string
+          is_ghost?: boolean
+          is_winner?: boolean
+          outcome?: Json
+          owner_id: string
+          participant_id?: string | null
+          prize_amount?: number
+          prize_label?: string
+          prize_payment_id?: string | null
+          prize_type?: string
+          round_id?: string | null
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          event_id?: string
+          game?: string
+          id?: string
+          is_ghost?: boolean
+          is_winner?: boolean
+          outcome?: Json
+          owner_id?: string
+          participant_id?: string | null
+          prize_amount?: number
+          prize_label?: string
+          prize_payment_id?: string | null
+          prize_type?: string
+          round_id?: string | null
+          user_email?: string
+          user_name?: string
+          wheel_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gorjeta_event_results_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gorjeta_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gorjeta_event_results_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "gorjeta_event_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gorjeta_event_results_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "gorjeta_event_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gorjeta_event_rounds: {
+        Row: {
+          created_at: string
+          event_id: string
+          game: string
+          game_config: Json
+          id: string
+          owner_id: string
+          position: number
+          prize_config: Json
+          prize_type: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          game?: string
+          game_config?: Json
+          id?: string
+          owner_id: string
+          position?: number
+          prize_config?: Json
+          prize_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          game?: string
+          game_config?: Json
+          id?: string
+          owner_id?: string
+          position?: number
+          prize_config?: Json
+          prize_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gorjeta_event_rounds_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gorjeta_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gorjeta_events: {
+        Row: {
+          block_by_ip: boolean
+          closes_at: string | null
+          cover_url: string
+          created_at: string
+          description: string
+          drawn_count: number
+          id: string
+          is_active: boolean
+          max_participants: number | null
+          name: string
+          opens_at: string | null
+          owner_id: string
+          page_config: Json
+          prize_amount: number
+          require_pix: boolean
+          rules: string
+          status: string
+          tag: string
+          theme: Json
+          updated_at: string
+          winners_count: number
+        }
+        Insert: {
+          block_by_ip?: boolean
+          closes_at?: string | null
+          cover_url?: string
+          created_at?: string
+          description?: string
+          drawn_count?: number
+          id?: string
+          is_active?: boolean
+          max_participants?: number | null
+          name?: string
+          opens_at?: string | null
+          owner_id: string
+          page_config?: Json
+          prize_amount?: number
+          require_pix?: boolean
+          rules?: string
+          status?: string
+          tag: string
+          theme?: Json
+          updated_at?: string
+          winners_count?: number
+        }
+        Update: {
+          block_by_ip?: boolean
+          closes_at?: string | null
+          cover_url?: string
+          created_at?: string
+          description?: string
+          drawn_count?: number
+          id?: string
+          is_active?: boolean
+          max_participants?: number | null
+          name?: string
+          opens_at?: string | null
+          owner_id?: string
+          page_config?: Json
+          prize_amount?: number
+          require_pix?: boolean
+          rules?: string
+          status?: string
+          tag?: string
+          theme?: Json
+          updated_at?: string
+          winners_count?: number
+        }
+        Relationships: []
+      }
       imported_contacts: {
         Row: {
           created_at: string
@@ -1387,6 +1656,7 @@ export type Database = {
           sms: boolean
           sms_cs: boolean
           sms_mb: boolean
+          sorteio: boolean
           updated_at: string
           user_id: string
           whatsapp: boolean
@@ -1414,6 +1684,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           user_id: string
           whatsapp?: boolean
@@ -1441,6 +1712,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           user_id?: string
           whatsapp?: boolean
@@ -1471,6 +1743,7 @@ export type Database = {
           sms: boolean
           sms_cs: boolean
           sms_mb: boolean
+          sorteio: boolean
           updated_at: string
           whatsapp: boolean
           whatsapp2: boolean
@@ -1497,6 +1770,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           whatsapp?: boolean
           whatsapp2?: boolean
@@ -1523,6 +1797,7 @@ export type Database = {
           sms?: boolean
           sms_cs?: boolean
           sms_mb?: boolean
+          sorteio?: boolean
           updated_at?: string
           whatsapp?: boolean
           whatsapp2?: boolean
@@ -2722,6 +2997,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_gorjeta_event_by_tag: { Args: { p_tag: string }; Returns: Json }
       get_luckybox_page_by_tag: { Args: { p_tag: string }; Returns: Json }
       get_luckybox_user_state: { Args: { p_user_id: string }; Returns: Json }
       get_or_create_collecting_battle: {
