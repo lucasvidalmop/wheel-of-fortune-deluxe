@@ -207,6 +207,9 @@ const PlinkoBoard = ({
           trail: [], squash: 0, landed: false, landedAt: 0,
           restFrames: 0, stallFrames: 0, lastY: -1,
           restX: 0, restY: 0, slotIndex: 0,
+          targetSlot: typeof b.targetSlot === 'number'
+            ? Math.min(slots - 1, Math.max(0, b.targetSlot))
+            : undefined,
         };
         metas.push(meta);
         pending.push({ meta, at: now + i * STAGGER_MS });
