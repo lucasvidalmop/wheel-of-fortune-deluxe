@@ -7,7 +7,7 @@ import RaffleReel from '@/components/raffle/RaffleReel';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 
-type Phase = 'idle' | 'countdown' | 'rolling' | 'done';
+type Phase = 'idle' | 'countdown' | 'rolling' | 'confirming' | 'done';
 
 const TITLE_FONT = { fontFamily: 'var(--lobby-font-title, "Bebas Neue"), sans-serif' };
 
@@ -26,6 +26,7 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   // Estado da encenação
   const [phase, setPhase] = useState<Phase>('idle');
   const [countdown, setCountdown] = useState(3);
+  const [rollingMessage, setRollingMessage] = useState('Embaralhando participantes');
   const loadingRequest = useRef(false);
   const playedRound = useRef(0);
   const initialResultLoaded = useRef(false);
@@ -87,11 +88,21 @@ const SorteioLive = ({ tag }: { tag: string }) => {
       for (let n = 3; n >= 1; n--) {
         if (cancelled) return;
         setCountdown(n);
-        await sleep(800);
+        await sleep(1000);
       }
       if (cancelled) return;
       setPhase('rolling');
-      await sleep(2400);
+      setRollingMessage('Embaralhando participantes');
+      await sleep(2600);
+      if (cancelled) return;
+      setRollingMessage('Misturando os bilhetes');
+      await sleep(2300);
+      if (cancelled) return;
+      setRollingMessage('Definindo as posições');
+      await sleep(1600);
+      if (cancelled) return;
+      setPhase('confirming');
+      await sleep(1200);
       if (!cancelled) setPhase('done');
     };
     void run();
@@ -156,43 +167,37 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   const totalWinners = allWinners.length;
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#05050a] text-white">
-      {/* fundo */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(circle at 50% 0%, rgba(120,80,255,0.18), transparent 60%)' }}
-      />
-
+    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-background text-foreground">
       <div className="relative flex min-h-[100dvh] flex-col">
-        <header className="flex items-center justify-between gap-4 px-6 py-5 sm:px-10">
+        <header className="flex items-center justify-between gap-4 border-b border-border px-6 py-4 sm:px-10">
           <div className="min-w-0">
             <h1 className="truncate text-3xl sm:text-4xl" style={{ ...TITLE_FONT, letterSpacing: '0.05em' }}>
               {event.name}
             </h1>
             {event.prizeLabel && (
-              <p className="mt-1 text-[11px] uppercase tracking-[0.28em] text-white/45">
+              <p className="mt-1 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
                 Prêmio · {event.prizeLabel}
               </p>
             )}
           </div>
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-red-500/40 bg-red-500/15 px-4 py-1.5 text-[11px] uppercase tracking-[0.28em]">
-            <Radio size={13} className="animate-pulse text-red-400" /> Ao vivo
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-4 py-1.5 text-[11px] uppercase tracking-[0.28em]">
+            <Radio size={13} className="animate-pulse text-destructive" /> Ao vivo
           </span>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-24 sm:px-10">
-          <div className="w-full max-w-4xl">
+        <main className="flex flex-1 flex-col items-center justify-center gap-5 px-5 pb-20 pt-5 sm:px-10">
+          <div className="w-full max-w-5xl">
               {phase === 'idle' && (
-                <div className="border-y border-white/10 py-12 text-center">
-                  <p className="text-[11px] uppercase tracking-[0.34em] text-white/40">Aguardando o sorteio</p>
+                <div className="border-y border-border py-12 text-center">
+                  <p className="text-[11px] uppercase tracking-[0.34em] text-muted-foreground">Aguardando o sorteio</p>
                   <p className="mt-4 text-7xl tabular-nums" style={TITLE_FONT}>{count}</p>
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">participantes concorrendo</p>
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">participantes concorrendo</p>
                 </div>
               )}
 
               {phase === 'countdown' && (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <p className="text-[11px] uppercase tracking-[0.34em] text-white/40">O sorteio começa em</p>
+                  <p className="text-[11px] uppercase tracking-[0.34em] text-muted-foreground">O sorteio começa em</p>
                   <p
                     key={countdown}
                     className="mt-2 animate-[cd_.9s_ease-out] text-8xl sm:text-9xl tabular-nums"
@@ -205,29 +210,40 @@ const SorteioLive = ({ tag }: { tag: string }) => {
               )}
 
               {phase === 'rolling' && (
-                <div className="overflow-hidden border-y border-white/10 py-12 text-center">
-                  <p className="text-[11px] uppercase tracking-[0.34em] text-white/45">Sorteando agora</p>
-                  <div className="mt-6 text-5xl sm:text-7xl" style={TITLE_FONT}>
-                    <RaffleReel names={reelNames} active />
+                <div className="py-5 text-center">
+                  <p key={rollingMessage} className="mb-6 animate-fade-in text-[11px] uppercase tracking-[0.34em] text-primary">
+                    {rollingMessage}
+                  </p>
+                  <div style={TITLE_FONT}>
+                    <RaffleReel names={reelNames} active durationMs={6500} />
                   </div>
+                  <p className="mt-5 text-xs text-muted-foreground">Aguarde a validação do resultado</p>
+                </div>
+              )}
+
+              {phase === 'confirming' && (
+                <div className="flex min-h-64 animate-scale-in flex-col items-center justify-center border-y border-primary/30 text-center">
+                  <Trophy size={38} className="mb-5 text-primary" />
+                  <p className="text-[11px] uppercase tracking-[0.34em] text-muted-foreground">Sorteio concluído</p>
+                  <p className="mt-2 text-5xl text-primary sm:text-6xl" style={TITLE_FONT}>Resultado confirmado</p>
                 </div>
               )}
 
               {phase === 'done' && (
                 <div className="text-center">
-                  <div className="mb-7 flex items-center justify-center gap-3 text-amber-200">
+                  <div className="mb-5 flex items-center justify-center gap-3 text-primary">
                     <Trophy size={20} />
                     <p className="text-[11px] font-semibold uppercase tracking-[0.32em]">Resultado do sorteio</p>
                   </div>
-                  <div className={`grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 ${totalWinners > 1 ? 'sm:grid-cols-2' : ''}`}>
+                  <div className={`grid overflow-hidden rounded-lg border border-border ${totalWinners > 1 ? 'sm:grid-cols-2' : ''}`}>
                     {allWinners.map((winner) => (
-                      <div key={winner.code} className="flex min-h-32 items-center gap-5 bg-[#08080d] px-6 py-5 text-left sm:px-8">
-                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-amber-300/40 text-sm font-bold text-amber-200">
+                      <div key={winner.code} className="flex min-h-24 animate-fade-in items-center gap-4 border-b border-r border-border bg-card px-5 py-4 text-left last:border-b-0 sm:px-7">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-primary/40 text-sm font-bold text-primary">
                           {winner.position}º
                         </span>
                         <div className="min-w-0">
-                          <p className="break-words text-3xl text-amber-100 sm:text-4xl" style={TITLE_FONT}>{winner.name}</p>
-                          <p className="mt-1 font-mono text-xs tracking-[0.16em] text-white/45">{winner.code}</p>
+                          <p className="break-words text-2xl text-foreground sm:text-3xl" style={TITLE_FONT}>{winner.name}</p>
+                          <p className="mt-1 font-mono text-xs tracking-[0.16em] text-muted-foreground">{winner.code}</p>
                         </div>
                       </div>
                     ))}
@@ -237,7 +253,7 @@ const SorteioLive = ({ tag }: { tag: string }) => {
           </div>
 
           {/* Contador discreto de participantes */}
-          <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.26em] text-white/35">
+          <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.26em] text-muted-foreground">
             <Users size={13} /> {result?.totalValid ?? count} participantes válidos
           </p>
         </main>
