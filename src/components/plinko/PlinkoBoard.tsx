@@ -279,7 +279,7 @@ const PlinkoBoard = ({
           });
         }
 
-
+        m.trail.push({ x: p.x, y: p.y });
         if (m.trail.length > TRAIL) m.trail.shift();
 
         const speed = Math.hypot(m.body.velocity.x, m.body.velocity.y);
