@@ -26,7 +26,7 @@ interface PlinkoBoardProps {
 // Deliberately paced for a live draw: the next participant only enters after
 // the previous ball has had time to produce a few visible bounces.
 const STAGGER_MS = 720;
-const PHYSICS_TIME_SCALE = 0.46;
+const PHYSICS_TIME_SCALE = 0.95;
 const TRAIL = 16;
 
 interface BallMeta {
