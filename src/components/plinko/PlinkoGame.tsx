@@ -45,13 +45,15 @@ const PlinkoGame = ({
 }: PlinkoGameProps) => {
   const [multipliers, setMultipliers] = useState<number[]>(DEFAULT_MULTIPLIERS);
   const [basePrize, setBasePrize] = useState(10);
+  const [ballCount, setBallCount] = useState(1);
   const [showConfig, setShowConfig] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'picking' | 'dropping' | 'result'>('idle');
   const [reelName, setReelName] = useState('');
-  const [current, setCurrent] = useState<PlinkoPick | null>(null);
-  const [lastRound, setLastRound] = useState<PlinkoRound | null>(null);
+  const [activeBalls, setActiveBalls] = useState<PlinkoBall[]>([]);
   const [rounds, setRounds] = useState<PlinkoRound[]>([]);
+  const [batch, setBatch] = useState<PlinkoRound[]>([]);
   const [dropToken, setDropToken] = useState(0);
+  const picksRef = useRef<Map<string, PlinkoPick>>(new Map());
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const reelRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -64,12 +66,13 @@ const PlinkoGame = ({
           setMultipliers(parsed.multipliers.map((n: any) => Number(n) || 1));
         }
         if (typeof parsed.basePrize === 'number') setBasePrize(parsed.basePrize);
+        if (typeof parsed.ballCount === 'number') setBallCount(Math.min(20, Math.max(1, parsed.ballCount)));
       }
     } catch { /* ignore */ }
   }, []);
 
-  const persistConfig = (mults: number[], base: number) => {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ multipliers: mults, basePrize: base })); } catch { /* ignore */ }
+  const persistConfig = (mults: number[], base: number, balls = ballCount) => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ multipliers: mults, basePrize: base, ballCount: balls })); } catch { /* ignore */ }
   };
 
   const clearTimers = () => {
@@ -84,51 +87,70 @@ const PlinkoGame = ({
     if (!open) {
       clearTimers();
       setPhase('idle');
-      setCurrent(null);
-      setLastRound(null);
+      setActiveBalls([]);
+      setBatch([]);
       setRounds([]);
       setDropToken(0);
+      picksRef.current = new Map();
     }
   }, [open]);
 
   const startRound = () => {
     if (phase === 'picking' || phase === 'dropping') return;
-    const pick = pickParticipant();
-    if (!pick) return;
 
-    setCurrent(pick);
-    setLastRound(null);
+    const wanted = Math.min(ballCount, Math.max(1, participantCount));
+    const picks: PlinkoPick[] = [];
+    for (let i = 0; i < wanted; i++) {
+      const p = pickParticipant();
+      if (!p) break;
+      picks.push(p);
+    }
+    if (picks.length === 0) return;
+
+    picksRef.current = new Map();
+    const newBalls: PlinkoBall[] = picks.map((p, i) => {
+      const id = `${Date.now()}-${i}`;
+      picksRef.current.set(id, p);
+      return { id, label: p.name };
+    });
+
+    setBatch([]);
+    setActiveBalls(newBalls);
     setPhase('picking');
 
-    const pool = names.length > 0 ? names : [pick.name];
+    const pool = names.length > 0 ? names : picks.map(p => p.name);
     reelRef.current = setInterval(() => {
       setReelName(pool[Math.floor(Math.random() * pool.length)]);
     }, 70);
 
     timers.current.push(setTimeout(() => {
       if (reelRef.current) { clearInterval(reelRef.current); reelRef.current = null; }
-      setReelName(pick.name);
+      setReelName(picks.map(p => p.name).join(' · '));
       setPhase('dropping');
       setDropToken(t => t + 1);
     }, 1800));
   };
 
-  const handleLanded = (_slot: number, multiplier: number) => {
-    const pick = current;
+  const handleLanded = (landing: PlinkoLanding) => {
+    const pick = picksRef.current.get(landing.id);
     if (!pick) return;
-    const amount = Math.round(basePrize * multiplier * 100) / 100;
+    const amount = Math.round(basePrize * landing.multiplier * 100) / 100;
     const round: PlinkoRound = {
       name: pick.name,
       account_id: pick.account_id,
-      multiplier,
+      multiplier: landing.multiplier,
       amount,
       isGhost: pick.isGhost,
     };
-    setLastRound(round);
+    setBatch(prev => [...prev, round]);
     setRounds(prev => [round, ...prev]);
-    setPhase('result');
-    onWin(pick, amount, multiplier);
+    onWin(pick, amount, landing.multiplier);
   };
+
+  const handleAllLanded = () => {
+    timers.current.push(setTimeout(() => setPhase('result'), 500));
+  };
+
 
   const busy = phase === 'picking' || phase === 'dropping';
 
