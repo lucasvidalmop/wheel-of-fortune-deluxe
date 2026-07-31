@@ -13,11 +13,10 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY")!,
     { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } },
   );
-  const { data: claimsData, error: claimsErr } = await authClient.auth.getClaims(
-    authHeader.replace("Bearer ", ""),
-  );
-  if (claimsErr || !claimsData?.claims) return json({ error: "Unauthorized" }, 401);
-  const userId = claimsData.claims.sub as string;
+  const token = authHeader.replace("Bearer ", "");
+  const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+  const userId = userData.user?.id;
+  if (userErr || !userId) return json({ error: "Sessão inválida ou expirada." }, 401);
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -82,6 +81,7 @@ Deno.serve(async (req) => {
       redraw_reason: String(redrawReason || "").trim(),
     }).select("*").maybeSingle();
     if (drawErr) throw drawErr;
+    if (!draw) throw new Error("O resultado do sorteio não foi retornado após a gravação.");
 
     await admin.from("raffle_events").update({
       status: "finished",
@@ -92,14 +92,15 @@ Deno.serve(async (req) => {
     return json({
       ok: true,
       draw: {
-        round: draw!.round,
-        executedAt: draw!.executed_at,
+        round: draw.round,
+        executedAt: draw.executed_at,
         totalValid: list.length,
         winners: winners.map((w) => ({ name: w.maskedName, code: w.code, position: w.position })),
       },
     });
   } catch (err) {
     console.error("run-raffle-draw error", err);
-    return json({ error: "Falha ao executar o sorteio." }, 500);
+    const message = err instanceof Error ? err.message : "Falha ao executar o sorteio.";
+    return json({ error: message }, 500);
   }
 });
