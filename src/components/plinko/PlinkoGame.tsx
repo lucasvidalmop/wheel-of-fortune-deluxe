@@ -114,7 +114,7 @@ const PlinkoGame = ({
     const newBalls: PlinkoBall[] = picks.map((p, i) => {
       const id = `${Date.now()}-${i}`;
       picksRef.current.set(id, p);
-      return { id, label: p.name };
+      return { id, label: p.name, targetSlot: pickSlot(chances) };
     });
 
     setBatch([]);
