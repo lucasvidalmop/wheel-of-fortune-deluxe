@@ -186,12 +186,13 @@ const PlinkoBoard = ({
       const now = performance.now();
       balls.forEach((b, i) => {
         const body = Matter.Bodies.circle(
-          centerX + (Math.random() - 0.5) * d * 0.3,
+          centerX + (Math.random() - 0.5) * d * 0.08,
           topPad * 0.3,
           ballR,
-          { restitution: 0.55, friction: 0.01, frictionAir: 0.006, density: 0.0016, slop: 0.02 },
+          { restitution: 0.68, friction: 0, frictionAir: 0.004, density: 0.0016, slop: 0.01 },
         );
-        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.6, y: 0 });
+        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.25, y: 0 });
+
         const meta: BallMeta = {
           id: b.id, label: b.label, body,
           trail: [], squash: 0, landed: false, landedAt: 0,
