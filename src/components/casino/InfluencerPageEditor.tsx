@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Palette, Type, Save, RotateCcw, Volume2, Upload, X, Sliders, Image as ImageIcon, Monitor, Dices } from 'lucide-react';
+import { Palette, Type, Save, RotateCcw, Volume2, Upload, X, Sliders, Image as ImageIcon, Monitor } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
 
 export interface InfluencerPageConfig {
@@ -113,13 +113,6 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
   }, [currentConfig]);
 
   const update = (partial: Partial<InfluencerPageConfig>) => setConfig(c => ({ ...c, ...partial }));
-
-  const plinkoMults = config.plinkoMultipliers?.length
-    ? config.plinkoMultipliers
-    : defaultInfluencerConfig.plinkoMultipliers;
-  const plinkoChances = plinkoMults.map((_, i) =>
-    Number(config.plinkoChances?.[i] ?? defaultInfluencerConfig.plinkoChances[i] ?? 0));
-  const plinkoTotal = plinkoChances.reduce((s, n) => s + n, 0);
 
   const handleSave = async () => {
     setSaving(true);
@@ -399,75 +392,6 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         )}
       </Section>
 
-      {/* Plinko mini game */}
-      <Section icon={<Dices size={14} className="text-primary" />} title="Mini Game · Plinko">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground">Prêmio base (R$)</span>
-          <input
-            type="number" min="0" step="1"
-            value={config.plinkoBasePrize}
-            onChange={e => update({ plinkoBasePrize: Number(e.target.value) || 0 })}
-            className="w-24 text-xs font-mono px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground"
-          />
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground">Bolinhas por rodada</span>
-          <input
-            type="number" min="1" max="20"
-            value={config.plinkoBallCount}
-            onChange={e => update({ plinkoBallCount: Math.min(20, Math.max(1, Number(e.target.value) || 1)) })}
-            className="w-24 text-xs font-mono px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground"
-          />
-        </div>
-
-        <div className="pt-2 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Multiplicadores e chances</span>
-            <span className={`text-[10px] font-mono ${plinkoTotal === 100 ? 'text-primary' : 'text-amber-400'}`}>
-              Total {plinkoTotal.toFixed(1)}%
-            </span>
-          </div>
-          {plinkoMults.map((m, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-muted-foreground w-10">#{i + 1}</span>
-              <input
-                type="number" step="0.5" min="0"
-                value={m}
-                onChange={e => {
-                  const next = [...plinkoMults];
-                  next[i] = Number(e.target.value) || 0;
-                  update({ plinkoMultipliers: next });
-                }}
-                className="flex-1 text-xs font-mono px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground"
-              />
-              <span className="text-[10px] text-muted-foreground">x</span>
-              <input
-                type="number" step="0.5" min="0" max="100"
-                value={plinkoChances[i] ?? 0}
-                onChange={e => {
-                  const next = [...plinkoChances];
-                  next[i] = Math.max(0, Number(e.target.value) || 0);
-                  update({ plinkoChances: next });
-                }}
-                className="w-20 text-xs font-mono px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-foreground"
-              />
-              <span className="text-[10px] text-muted-foreground w-3">%</span>
-            </div>
-          ))}
-          <p className="text-[10px] text-muted-foreground">
-            As chances definem a probabilidade de cada casa receber a bolinha. Se o total não for 100%, os valores são normalizados automaticamente.
-          </p>
-          <button
-            onClick={() => update({
-              plinkoMultipliers: [...defaultInfluencerConfig.plinkoMultipliers],
-              plinkoChances: [...defaultInfluencerConfig.plinkoChances],
-            })}
-            className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition"
-          >
-            Restaurar padrão
-          </button>
-        </div>
-      </Section>
 
 
 

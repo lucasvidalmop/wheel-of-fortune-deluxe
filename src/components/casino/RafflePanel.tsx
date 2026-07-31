@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   Plus, Save, Trash2, Copy, ExternalLink, Users, ShieldAlert, Trophy,
-  Search, Ban, CheckCircle2, Radio, Download, RefreshCw, Loader2, X,
+  Search, Ban, CheckCircle2, Radio, Download, RefreshCw, Loader2, X, Dices,
 } from 'lucide-react';
+import PlinkoConfigPanel from './PlinkoConfigPanel';
 import {
   RAFFLE_STATUS_LABEL, PARTICIPANT_STATUS_LABEL, RAFFLE_FLAG_LABEL,
   formatDateTime, maskAccount, type RaffleStatus, type ParticipantStatus,
@@ -91,7 +92,7 @@ const inputCls =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary';
 
 const RafflePanel = ({ ownerId }: { ownerId: string }) => {
-  const [tab, setTab] = useState<'eventos' | 'participantes' | 'seguranca' | 'sorteio'>('eventos');
+  const [tab, setTab] = useState<'eventos' | 'participantes' | 'seguranca' | 'sorteio' | 'plinko'>('eventos');
   const [events, setEvents] = useState<RaffleEventRow[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [draft, setDraft] = useState<Partial<RaffleEventRow> | null>(null);
@@ -390,6 +391,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
               ['participantes', 'Participantes', <Users key="i" size={14} />],
               ['seguranca', 'Análise de Segurança', <ShieldAlert key="i" size={14} />],
               ['sorteio', 'Sorteio / Resultado', <Trophy key="i" size={14} />],
+              ['plinko', 'Mini Game Plinko', <Dices key="i" size={14} />],
             ] as const).map(([key, label, icon]) => (
               <button
                 key={key} onClick={() => setTab(key as any)}
@@ -401,6 +403,8 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
               </button>
             ))}
           </div>
+
+          {tab === 'plinko' && <PlinkoConfigPanel ownerId={ownerId} />}
 
           {/* ═══ EVENTO ═══ */}
           {tab === 'eventos' && draft && (
