@@ -148,12 +148,17 @@ const SorteioLive = ({ tag }: { tag: string }) => {
         </span>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-8">
-        <div className="w-full max-w-4xl space-y-6">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-8">
+        <div className="w-full max-w-5xl space-y-8">
           <RaffleRollAnimation
             names={rollNames.length ? rollNames : participants.map((p) => p.name)}
             rolling={rolling}
-            winner={currentWinner ? { name: currentWinner.name, code: currentWinner.code } : null}
+            winner={
+              currentWinner
+                ? { name: currentWinner.name, code: currentWinner.code, position: currentWinner.position }
+                : null
+            }
+            prizeLabel={event.prizeLabel}
           />
           {!result && (
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
@@ -175,12 +180,36 @@ const SorteioLive = ({ tag }: { tag: string }) => {
             </div>
           )}
           {result && revealed >= 0 && result.winners.length > 1 && (
-            <div className="flex flex-wrap justify-center gap-3">
-              {result.winners.slice(0, revealed + 1).map((w) => (
-                <span key={w.code} className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm">
-                  {w.position}º {w.name} · {w.code}
-                </span>
-              ))}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {result.winners.slice(0, revealed + 1).map((w) => {
+                const active = currentWinner?.code === w.code;
+                return (
+                  <div
+                    key={w.code}
+                    className={`flex items-center gap-4 rounded-2xl border px-5 py-4 transition-all ${
+                      active
+                        ? 'border-amber-300/50 bg-amber-400/10'
+                        : 'border-white/10 bg-white/[0.04]'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg font-bold ${
+                        w.position === 1
+                          ? 'bg-amber-400 text-black'
+                          : w.position === 2
+                            ? 'bg-white/80 text-black'
+                            : 'bg-white/15 text-white'
+                      }`}
+                    >
+                      {w.position}º
+                    </span>
+                    <div className="min-w-0 text-left">
+                      <p className="truncate text-lg font-semibold leading-tight">{w.name}</p>
+                      <p className="font-mono text-xs tracking-[0.16em] text-white/50">{w.code}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
