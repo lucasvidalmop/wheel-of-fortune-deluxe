@@ -106,7 +106,7 @@ const PlinkoBoard = ({
     const minMult = Math.min(...multipliers, 0);
 
     // ---- engine -------------------------------------------------------
-    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00042 } });
+    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.0006 } });
     const world = engine.world;
 
     const pegPos: { x: number; y: number }[] = [];
