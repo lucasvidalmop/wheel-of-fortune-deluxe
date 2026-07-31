@@ -172,13 +172,6 @@ const PlinkoGame = ({
               </p>
             </div>
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setShowConfig(v => !v)}
-                className="p-1.5 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white"
-                title="Configurar multiplicadores"
-              >
-                <Settings2 size={16} />
-              </button>
               {!busy && (
                 <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white">
                   <X size={18} />
@@ -188,101 +181,7 @@ const PlinkoGame = ({
           </div>
 
           <div className="px-5 pb-5 space-y-4">
-            {showConfig && (
-              <div className="rounded-xl border p-3 space-y-3" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.02)' }}>
-                <p className="text-[10px] uppercase tracking-widest text-white/40">Multiplicadores ({ROWS + 1} casas)</p>
-                <div className="grid grid-cols-9 gap-1">
-                  {multipliers.map((m, i) => (
-                    <input
-                      key={i}
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      value={m}
-                      onChange={(e) => {
-                        const next = [...multipliers];
-                        next[i] = Number(e.target.value) || 0;
-                        setMultipliers(next);
-                        persistConfig(next, basePrize);
-                      }}
-                      className="w-full bg-transparent border rounded-md text-center text-[11px] font-bold py-1 outline-none"
-                      style={{ borderColor: `${accent}33`, color: accent }}
-                    />
-                  ))}
-                </div>
-                <button
-                  onClick={() => { setMultipliers(DEFAULT_MULTIPLIERS); persistConfig(DEFAULT_MULTIPLIERS, basePrize); }}
-                  className="text-[10px] uppercase tracking-widest text-white/40 hover:text-white/70 transition"
-                >
-                  Restaurar padrão
-                </button>
-              </div>
-            )}
 
-            <div className="rounded-xl border p-3 flex items-center gap-3" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.02)' }}>
-              <span className="text-[10px] uppercase tracking-widest text-white/40 shrink-0">Prêmio base</span>
-              <div className="flex items-center gap-1.5 flex-1">
-                <span className="text-sm font-bold text-white/50">R$</span>
-                <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  value={basePrize}
-                  disabled={busy}
-                  onChange={(e) => { const v = Number(e.target.value) || 0; setBasePrize(v); persistConfig(multipliers, v); }}
-                  className="w-24 bg-transparent border rounded-lg px-2 py-1.5 text-sm font-black outline-none disabled:opacity-50"
-                  style={{ borderColor: `${accent}33`, color: accent }}
-                />
-                <div className="flex gap-1 ml-1">
-                  {[5, 10, 20, 30].map(v => (
-                    <button
-                      key={v}
-                      disabled={busy}
-                      onClick={() => { setBasePrize(v); persistConfig(multipliers, v); }}
-                      className="px-2 py-1 rounded-md border text-[10px] font-bold transition disabled:opacity-40"
-                      style={basePrize === v
-                        ? { borderColor: accent, background: `${accent}18`, color: accent }
-                        : { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Ball count */}
-            <div className="rounded-xl border p-3 flex items-center gap-3" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.02)' }}>
-              <span className="text-[10px] uppercase tracking-widest text-white/40 shrink-0">Bolinhas</span>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={ballCount}
-                disabled={busy}
-                onChange={(e) => {
-                  const v = Math.min(20, Math.max(1, Number(e.target.value) || 1));
-                  setBallCount(v); persistConfig(multipliers, basePrize, v);
-                }}
-                className="w-20 bg-transparent border rounded-lg px-2 py-1.5 text-sm font-black outline-none disabled:opacity-50"
-                style={{ borderColor: `${accent}33`, color: accent }}
-              />
-              <div className="flex gap-1 flex-wrap">
-                {[1, 3, 5, 10].map(v => (
-                  <button
-                    key={v}
-                    disabled={busy}
-                    onClick={() => { setBallCount(v); persistConfig(multipliers, basePrize, v); }}
-                    className="px-2 py-1 rounded-md border text-[10px] font-bold transition disabled:opacity-40"
-                    style={ballCount === v
-                      ? { borderColor: accent, background: `${accent}18`, color: accent }
-                      : { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Name display */}
             <div className="rounded-xl border p-3 text-center" style={{ borderColor: `${accent}25`, background: `${accent}08` }}>
