@@ -158,7 +158,38 @@ const SorteioLive = ({ tag }: { tag: string }) => {
           <QRCodeSVG value={`${window.location.origin}/sorteio=${event.tag}`} size={72} />
         </div>
       </footer>
+
+      {/* Controles do operador — invisíveis para o público e para a captura de tela quando ocultos */}
+      {userId && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
+          {showControls ? (
+            <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/80 px-3 py-2 backdrop-blur">
+              <button
+                onClick={() => void runDraw(!!result)}
+                disabled={drawing || rolling}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-semibold text-black disabled:opacity-50"
+              >
+                {drawing ? <Loader2 size={15} className="animate-spin" /> : result ? <RotateCcw size={15} /> : <Play size={15} />}
+                {result ? 'Refazer sorteio' : 'Sortear agora'}
+              </button>
+              <button
+                onClick={() => setShowControls(false)}
+                className="rounded-full px-3 py-2 text-xs uppercase tracking-widest text-white/50 hover:text-white"
+              >
+                Ocultar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowControls(true)}
+              className="h-3 w-16 rounded-full bg-white/10 hover:bg-white/25"
+              aria-label="Mostrar controles"
+            />
+          )}
+        </div>
+      )}
     </div>
+
   );
 };
 
