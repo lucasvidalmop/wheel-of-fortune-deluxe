@@ -378,8 +378,7 @@ const PlinkoBoard = ({
           ctx.fillText(label.toUpperCase(), px, ly);
         }
         ctx.globalAlpha = 1;
-        if (false) {
-        }
+
       }
     };
 
