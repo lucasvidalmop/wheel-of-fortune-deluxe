@@ -1078,6 +1078,10 @@ const Influencer = () => {
         names={allParticipants.map(u => u.name)}
         participantCount={allParticipants.length}
         pickParticipant={pickPlinkoParticipant}
+        multipliers={influencerConfig.plinkoMultipliers}
+        chances={influencerConfig.plinkoChances}
+        basePrize={influencerConfig.plinkoBasePrize}
+        ballCount={influencerConfig.plinkoBallCount}
         onWin={(pick, amount, multiplier) => { void handlePlinkoWin(pick, amount, multiplier); }}
       />
 
