@@ -367,6 +367,84 @@ const Influencer = () => {
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
   };
 
+  // ─── Plinko mini game ───
+  const pickPlinkoParticipant = (): PlinkoPick | null => {
+    const used = plinkoUsedIds.current;
+    const eligibleReal = users.filter(u =>
+      !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay && !used.has(u.id));
+    const eligibleGhost = ghostParticipants.filter(g => !used.has(g.id));
+
+    if (eligibleReal.length === 0 && eligibleGhost.length === 0) {
+      toast.error('Sem participantes elegíveis');
+      return null;
+    }
+
+    const prob = drawProbability / 100;
+    const wantReal = Math.random() < prob;
+    let chosen: WheelUser | null = null;
+    if (wantReal && eligibleReal.length > 0) chosen = eligibleReal[Math.floor(Math.random() * eligibleReal.length)];
+    else if (eligibleGhost.length > 0) chosen = eligibleGhost[Math.floor(Math.random() * eligibleGhost.length)];
+    else chosen = eligibleReal[Math.floor(Math.random() * eligibleReal.length)];
+
+    if (!chosen) return null;
+    used.add(chosen.id);
+    return {
+      id: chosen.id,
+      name: chosen.name,
+      account_id: chosen.account_id,
+      isGhost: chosen.id.startsWith('ghost_'),
+      raw: chosen,
+    };
+  };
+
+  const handlePlinkoWin = async (pick: PlinkoPick, amount: number, multiplier: number) => {
+    if (!session?.user?.id) return;
+    const label = `Plinko ${multiplier}x R$ ${amount.toFixed(2)}`;
+
+    if (pick.isGhost) {
+      const entry: TodayWinner = {
+        id: `ghost_${Math.random().toString(36).slice(2, 10)}`,
+        user_name: pick.name,
+        account_id: pick.account_id,
+        amount,
+        created_at: new Date().toISOString(),
+        prize: label,
+      };
+      sessionCreatedIds.current.add(entry.id);
+      const uid = session.user.id;
+      saveGhostWinners([entry, ...loadGhostWinners(uid)], uid);
+      await fetchTodayWinners(uid);
+      return;
+    }
+
+    const user = pick.raw as WheelUser;
+    try {
+      const result = await (supabase as any).rpc('create_prize_payment', {
+        p_owner_id: session.user.id,
+        p_account_id: user.account_id,
+        p_user_name: user.name,
+        p_user_email: user.email,
+        p_prize: label,
+        p_amount: amount,
+        p_force_auto: user.auto_payment,
+      });
+      if (result?.data?.id) {
+        sessionCreatedIds.current.add(result.data.id);
+        if (result?.data?.auto_payment || user.auto_payment) {
+          triggerAutoPay(result.data.id).catch(console.error);
+        }
+      }
+      await Promise.all([
+        fetchTodayWinners(session.user.id),
+        fetchHistory(session.user.id),
+      ]);
+    } catch (err) {
+      console.error('Erro ao criar prêmio do Plinko:', err);
+      toast.error('Prêmio exibido, mas houve erro ao salvar.');
+    }
+  };
+
+
   const persistRaffleResults = async (finalSelected: Winner[]) => {
     if (!session?.user?.id) return;
 
