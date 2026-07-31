@@ -8262,6 +8262,11 @@ function Dashboard() {
               <LobbyPanel ownerId={session.user.id} />
             </Suspense>
           )}
+          {activeTab === 'sorteio' && session?.user?.id && (
+            <Suspense fallback={<PanelFallback />}>
+              <RafflePanel ownerId={session.user.id} />
+            </Suspense>
+          )}
           {activeTab === 'referral' && (
             <div className="max-w-2xl space-y-5">
               {/* Sub-tabs */}
