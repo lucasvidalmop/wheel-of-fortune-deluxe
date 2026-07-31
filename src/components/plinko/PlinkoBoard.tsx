@@ -265,7 +265,21 @@ const PlinkoBoard = ({
           }
         }
 
-        m.trail.push({ x: p.x, y: p.y });
+        // Weighted outcome steering: the configured chance per multiplier picks
+        // the destination slot, and the ball is nudged gently towards it while
+        // still bouncing naturally off every peg it meets.
+        if (typeof m.targetSlot === 'number' && p.y < binTop) {
+          const desiredX = padX + (m.targetSlot + 0.5) * binW;
+          const progress = Math.min(1, Math.max(0, (p.y - topPad) / Math.max(1, binTop - topPad)));
+          const dx = desiredX - p.x;
+          const pull = 0.00000075 * m.body.mass * (0.25 + progress * progress * 2.2);
+          Matter.Body.applyForce(m.body, p, {
+            x: Math.max(-0.6, Math.min(0.6, dx / binW)) * pull * 60,
+            y: 0,
+          });
+        }
+
+
         if (m.trail.length > TRAIL) m.trail.shift();
 
         const speed = Math.hypot(m.body.velocity.x, m.body.velocity.y);
