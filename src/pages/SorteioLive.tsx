@@ -68,8 +68,12 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   const winnersRef = useRef<RaffleWinner[]>([]);
   winnersRef.current = result?.winners || [];
 
+  const playedRound = useRef(0);
+
   useEffect(() => {
     if (!round || !winnersKey) return;
+    if (playedRound.current === round) return; // nunca repete a encenação do mesmo sorteio
+    playedRound.current = round;
     let cancelled = false;
     const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
