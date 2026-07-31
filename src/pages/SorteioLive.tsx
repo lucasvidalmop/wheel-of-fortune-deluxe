@@ -182,7 +182,7 @@ const SorteioLive = ({ tag }: { tag: string }) => {
               )}
             </div>
           )}
-          {result && revealed >= 0 && result.winners.length > 1 && (
+          {result && revealed >= 0 && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {result.winners.slice(0, revealed + 1).map((w) => {
                 const active = currentWinner?.code === w.code;
