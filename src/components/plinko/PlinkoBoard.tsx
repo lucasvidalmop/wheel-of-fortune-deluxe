@@ -40,9 +40,11 @@ interface BallState {
   row: number;
   startAt: number;
   landed: boolean;
+  landedAt: number;
   squash: number;
   trail: { x: number; y: number }[];
   hue: number;
+
 }
 
 interface Spark {
