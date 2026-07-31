@@ -114,6 +114,13 @@ const InfluencerPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
 
   const update = (partial: Partial<InfluencerPageConfig>) => setConfig(c => ({ ...c, ...partial }));
 
+  const plinkoMults = config.plinkoMultipliers?.length
+    ? config.plinkoMultipliers
+    : defaultInfluencerConfig.plinkoMultipliers;
+  const plinkoChances = plinkoMults.map((_, i) =>
+    Number(config.plinkoChances?.[i] ?? defaultInfluencerConfig.plinkoChances[i] ?? 0));
+  const plinkoTotal = plinkoChances.reduce((s, n) => s + n, 0);
+
   const handleSave = async () => {
     setSaving(true);
     try {
