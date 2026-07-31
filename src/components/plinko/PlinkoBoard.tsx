@@ -29,6 +29,10 @@ const STAGGER_MS = 900;
 // Keep the whole simulation deliberately slow so each collision can be read
 // during a live draw instead of the ball looking heavy and falling at once.
 const PHYSICS_TIME_SCALE = 0.62;
+// A Plinko ball may recoil slightly on contact, but should never shoot back
+// several rows. Matter's combined restitution can otherwise create an
+// unnatural upward launch when a ball catches two pegs at once.
+const MAX_UPWARD_VELOCITY = -0.12;
 const TRAIL = 16;
 
 interface BallMeta {
@@ -119,7 +123,7 @@ const PlinkoBoard = ({
         const x = centerX + (j - (count - 1) / 2) * d;
         const y = rowYPx(r);
         pegBodies.push(Matter.Bodies.circle(x, y, pegR, {
-          isStatic: true, restitution: 0.72, friction: 0, label: `peg:${pegPos.length}`,
+          isStatic: true, restitution: 0.56, friction: 0, label: `peg:${pegPos.length}`,
 
         }));
         pegPos.push({ x, y });
@@ -191,7 +195,7 @@ const PlinkoBoard = ({
           centerX + (Math.random() - 0.5) * d * 0.08,
           topPad * 0.3,
           ballR,
-          { restitution: 0.76, friction: 0, frictionAir: 0.003, density: 0.0012, slop: 0.01 },
+          { restitution: 0.58, friction: 0, frictionAir: 0.003, density: 0.0012, slop: 0.01 },
         );
         Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.25, y: 0 });
 
@@ -230,6 +234,16 @@ const PlinkoBoard = ({
         active = true;
 
         const p = m.body.position;
+
+        // Keep impacts readable without allowing the exaggerated upward
+        // ricochets that made balls appear to reverse direction at random.
+        // Horizontal deflection remains untouched, preserving the suspense.
+        if (m.body.velocity.y < MAX_UPWARD_VELOCITY) {
+          Matter.Body.setVelocity(m.body, {
+            x: m.body.velocity.x,
+            y: MAX_UPWARD_VELOCITY,
+          });
+        }
 
         // soft boundary: keep the ball inside the peg triangle
         if (p.y < binTop - ballR) {
