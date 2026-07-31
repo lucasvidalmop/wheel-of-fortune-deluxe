@@ -93,8 +93,11 @@ const PlinkoBoard = ({
     const topPad = H * 0.1;
     const boardH = H - topPad - binH;
     const rowGap = boardH / (rows + 1.2);
-    const pegR = Math.max(2.4, d * 0.085);
-    const ballR = Math.max(5, d * 0.2);
+    // Pegs and ball are sized so the gap between two pegs is only slightly
+    // wider than the ball: it CANNOT fall straight through, every row bounces.
+    const pegR = Math.max(3.5, d * 0.15);
+    const ballR = Math.max(6, d * 0.29);
+
     const binTop = H - binH;
     const centerX = W / 2;
     const rowYPx = (r: number) => topPad + (r + 1) * rowGap;
