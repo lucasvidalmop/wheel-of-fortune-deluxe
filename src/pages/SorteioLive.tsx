@@ -5,8 +5,9 @@ import { useRaffleRealtime } from '@/hooks/useRaffleRealtime';
 import type { RaffleEventPublic, RaffleResultPublic, RaffleWinner } from '@/lib/raffle';
 import RaffleReel from '@/components/raffle/RaffleReel';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
-type Phase = 'idle' | 'countdown' | 'rolling' | 'reveal' | 'done';
+type Phase = 'idle' | 'countdown' | 'rolling' | 'done';
 
 const TITLE_FONT = { fontFamily: 'var(--lobby-font-title, "Bebas Neue"), sans-serif' };
 
@@ -25,9 +26,9 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   // Estado da encenação
   const [phase, setPhase] = useState<Phase>('idle');
   const [countdown, setCountdown] = useState(3);
-  const [currentIndex, setCurrentIndex] = useState(-1);
-  const [announced, setAnnounced] = useState<RaffleWinner[]>([]);
   const loadingRequest = useRef(false);
+  const playedRound = useRef(0);
+  const initialResultLoaded = useRef(false);
 
   const load = useCallback(async () => {
     if (loadingRequest.current) return;
@@ -40,7 +41,15 @@ const SorteioLive = ({ tag }: { tag: string }) => {
       setEvent(data.event);
       setCount(data.approvedCount || 0);
       setParticipants(data.participants || []);
-      setResult(data.result || null);
+      const nextResult = data.result || null;
+      if (!initialResultLoaded.current) {
+        initialResultLoaded.current = true;
+        if (nextResult?.round) {
+          playedRound.current = nextResult.round;
+          setPhase('done');
+        }
+      }
+      setResult(nextResult);
     } finally {
       loadingRequest.current = false;
       setLoading(false);
@@ -62,41 +71,27 @@ const SorteioLive = ({ tag }: { tag: string }) => {
     return () => window.clearInterval(id);
   }, [load]);
 
-  // Encenação do sorteio: contagem regressiva -> rolo -> revelação, um vencedor por vez.
+  // Uma rodada nova faz uma única encenação. Resultado já existente abre direto no estado final.
   const round = result?.round ?? 0;
   const winnersKey = (result?.winners || []).map((w) => w.code).join(',');
-  const winnersRef = useRef<RaffleWinner[]>([]);
-  winnersRef.current = result?.winners || [];
-
-  const playedRound = useRef(0);
 
   useEffect(() => {
     if (!round || !winnersKey) return;
-    if (playedRound.current === round) return; // nunca repete a encenação do mesmo sorteio
+    if (playedRound.current === round) return;
     playedRound.current = round;
     let cancelled = false;
     const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
     const run = async () => {
-      const winners = winnersRef.current;
-      setAnnounced([]);
-      setCurrentIndex(-1);
       setPhase('countdown');
       for (let n = 3; n >= 1; n--) {
         if (cancelled) return;
         setCountdown(n);
-        await sleep(900);
+        await sleep(800);
       }
-      for (let i = 0; i < winners.length; i++) {
-        if (cancelled) return;
-        setCurrentIndex(i);
-        setPhase('rolling');
-        await sleep(3200);
-        if (cancelled) return;
-        setPhase('reveal');
-        setAnnounced(winners.slice(0, i + 1));
-        await sleep(i === winners.length - 1 ? 1200 : 3000);
-      }
+      if (cancelled) return;
+      setPhase('rolling');
+      await sleep(2400);
       if (!cancelled) setPhase('done');
     };
     void run();
@@ -157,7 +152,6 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   }
 
   const allWinners = result?.winners || [];
-  const currentWinner = phase === 'reveal' && currentIndex >= 0 ? allWinners[currentIndex] : null;
   const reelNames = participants.length ? participants.map((p) => p.name) : allWinners.map((w) => w.name);
   const totalWinners = allWinners.length;
 
@@ -186,10 +180,10 @@ const SorteioLive = ({ tag }: { tag: string }) => {
           </span>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-28 sm:px-10">
-          <div className="w-full max-w-3xl">
+        <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-24 sm:px-10">
+          <div className="w-full max-w-4xl">
               {phase === 'idle' && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-10 text-center">
+                <div className="border-y border-white/10 py-12 text-center">
                   <p className="text-[11px] uppercase tracking-[0.34em] text-white/40">Aguardando o sorteio</p>
                   <p className="mt-4 text-7xl tabular-nums" style={TITLE_FONT}>{count}</p>
                   <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">participantes concorrendo</p>
@@ -197,7 +191,7 @@ const SorteioLive = ({ tag }: { tag: string }) => {
               )}
 
               {phase === 'countdown' && (
-                <div className="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03] p-12">
+                <div className="flex flex-col items-center justify-center py-12">
                   <p className="text-[11px] uppercase tracking-[0.34em] text-white/40">O sorteio começa em</p>
                   <p
                     key={countdown}
@@ -211,67 +205,36 @@ const SorteioLive = ({ tag }: { tag: string }) => {
               )}
 
               {phase === 'rolling' && (
-                <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-10 text-center">
-                  <p className="text-[11px] uppercase tracking-[0.34em] text-white/45">
-                    {totalWinners > 1 ? `Sorteando o ${currentIndex + 1}º de ${totalWinners}` : 'Sorteando'}
-                  </p>
+                <div className="overflow-hidden border-y border-white/10 py-12 text-center">
+                  <p className="text-[11px] uppercase tracking-[0.34em] text-white/45">Sorteando agora</p>
                   <div className="mt-6 text-5xl sm:text-7xl" style={TITLE_FONT}>
                     <RaffleReel names={reelNames} active />
                   </div>
                 </div>
               )}
 
-              {(phase === 'reveal' || phase === 'done') && (
-                <div className="rounded-3xl border border-amber-300/40 bg-gradient-to-b from-amber-500/10 via-black/50 to-black/70 p-10 text-center shadow-[0_0_90px_-30px_rgba(251,191,36,0.6)]">
-                  {currentWinner ? (
-                    <div className="animate-[pop_.5s_ease-out]">
-                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/50 bg-amber-400/15 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-amber-200">
-                        <Trophy size={12} />
-                        {totalWinners > 1 ? `${currentWinner.position}º lugar` : 'Vencedor'}
-                      </span>
-                      <p
-                        className="mt-5 break-words bg-gradient-to-b from-white to-amber-200 bg-clip-text text-6xl text-transparent sm:text-8xl"
-                        style={TITLE_FONT}
-                      >
-                        {currentWinner.name}
-                      </p>
-                      <p className="mt-4 font-mono text-xl tracking-[0.2em] text-white/70 sm:text-2xl">
-                        {currentWinner.code}
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.32em] text-amber-200/80">Sorteio concluído</p>
-                      <p className="mt-3 text-5xl" style={TITLE_FONT}>
-                        {totalWinners} {totalWinners === 1 ? 'vencedor' : 'vencedores'}
-                      </p>
-                    </div>
-                  )}
-                  <style>{`@keyframes pop { 0% { transform: scale(.86); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }`}</style>
+              {phase === 'done' && (
+                <div className="text-center">
+                  <div className="mb-7 flex items-center justify-center gap-3 text-amber-200">
+                    <Trophy size={20} />
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.32em]">Resultado do sorteio</p>
+                  </div>
+                  <div className={`grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 ${totalWinners > 1 ? 'sm:grid-cols-2' : ''}`}>
+                    {allWinners.map((winner) => (
+                      <div key={winner.code} className="flex min-h-32 items-center gap-5 bg-[#08080d] px-6 py-5 text-left sm:px-8">
+                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-amber-300/40 text-sm font-bold text-amber-200">
+                          {winner.position}º
+                        </span>
+                        <div className="min-w-0">
+                          <p className="break-words text-3xl text-amber-100 sm:text-4xl" style={TITLE_FONT}>{winner.name}</p>
+                          <p className="mt-1 font-mono text-xs tracking-[0.16em] text-white/45">{winner.code}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
           </div>
-
-          {/* Lista final: só aparece depois que todos foram revelados */}
-          {phase === 'done' && totalWinners > 1 && (
-            <div className="grid w-full max-w-3xl gap-3 sm:grid-cols-2">
-              {allWinners.map((w) => (
-                <div key={w.code} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4">
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
-                      w.position === 1 ? 'bg-amber-400 text-black' : w.position === 2 ? 'bg-white/85 text-black' : 'bg-white/20 text-white'
-                    }`}
-                  >
-                    {w.position}º
-                  </span>
-                  <div className="min-w-0 text-left">
-                    <p className="truncate font-semibold">{w.name}</p>
-                    <p className="font-mono text-[11px] tracking-[0.14em] text-white/45">{w.code}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Contador discreto de participantes */}
           <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.26em] text-white/35">
@@ -286,25 +249,27 @@ const SorteioLive = ({ tag }: { tag: string }) => {
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
           {showControls ? (
             <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/80 px-3 py-2 backdrop-blur">
-              <button
+              <Button
                 onClick={() => void runDraw(!!result)}
                 disabled={drawing || (phase !== 'idle' && phase !== 'done')}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-semibold text-black disabled:opacity-50"
+                className="rounded-full bg-white px-5 text-black hover:bg-white/90"
               >
                 {drawing ? <Loader2 size={15} className="animate-spin" /> : result ? <RotateCcw size={15} /> : <Play size={15} />}
                 {result ? 'Refazer sorteio' : 'Sortear agora'}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => setShowControls(false)}
-                className="rounded-full px-3 py-2 text-xs uppercase tracking-widest text-white/50 hover:text-white"
+                className="rounded-full px-3 text-xs uppercase text-white/50 hover:bg-white/10 hover:text-white"
               >
                 Ocultar
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowControls(true)}
-              className="h-3 w-16 rounded-full bg-white/10 hover:bg-white/25"
+              className="h-3 w-16 rounded-full bg-white/10 p-0 hover:bg-white/25"
               aria-label="Mostrar controles"
             />
           )}
