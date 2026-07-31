@@ -4,6 +4,8 @@ import Matter from 'matter-js';
 export interface PlinkoBall {
   id: string;
   label: string;
+  /** Optional slot the ball should end up in (weighted by configured chances) */
+  targetSlot?: number;
 }
 
 export interface PlinkoLanding {
