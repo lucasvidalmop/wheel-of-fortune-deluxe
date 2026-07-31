@@ -67,6 +67,7 @@ const PlinkoBoard = ({
   const sparksRef = useRef<Spark[]>([]);
   const pegFlashRef = useRef<Map<string, number>>(new Map());
   const slotFlashRef = useRef<Map<number, number>>(new Map());
+  const binHitsRef = useRef<Map<number, number>>(new Map());
   const landingsRef = useRef<PlinkoLanding[]>([]);
   const rafRef = useRef<number | null>(null);
   const runningRef = useRef(false);
@@ -102,7 +103,7 @@ const PlinkoBoard = ({
     const topPad = 0.1;
     const binH = 0.11;
     const rowY = (r: number) => topPad + ((r + 1) / (rows + 1.6)) * (1 - topPad - binH);
-    const floorY = 1 - binH - 0.012;
+    const floorY = 1 - binH + 0.035;
     const nx = (x: number) => (padX + x * (1 - padX * 2)) * W;
     const ny = (y: number) => y * H;
 
@@ -173,7 +174,9 @@ const PlinkoBoard = ({
           } else {
             b.vy = 0;
             b.landed = true;
+            b.landedAt = t;
             slotFlashRef.current.set(b.slotIndex, t);
+            binHitsRef.current.set(b.slotIndex, (binHitsRef.current.get(b.slotIndex) || 0) + 1);
             spawnSparks(nx(b.x), ny(b.y), 26, 2.4);
             const landing = { id: b.id, slotIndex: b.slotIndex, multiplier: multipliers[b.slotIndex] };
             landingsRef.current.push(landing);
@@ -242,7 +245,7 @@ const PlinkoBoard = ({
 
         ctx.beginPath();
         ctx.arc(px, py, 3.4 + heat * 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = heat > 0 ? A(0.95) : 'rgba(255,255,255,0.42)';
+        ctx.fillStyle = heat > 0 ? A(0.95) : 'rgba(255,255,255,0.55)';
         ctx.fill();
       }
 
@@ -255,6 +258,8 @@ const PlinkoBoard = ({
         const heatScale = maxMult === minMult ? 1 : (m - minMult) / (maxMult - minMult);
         const flash = slotFlashRef.current.get(i);
         const lit = flash ? Math.max(0, 1 - (t - flash) / 900) : 0;
+        const hits = binHitsRef.current.get(i) || 0;
+        const held = hits > 0 ? 0.35 : 0;
         const x = 1 + i * binW;
         const y = binTop + 2 - lit * 4;
         const r = 6;
@@ -270,11 +275,11 @@ const PlinkoBoard = ({
         ctx.closePath();
 
         const bg = ctx.createLinearGradient(x, y, x, y + h);
-        bg.addColorStop(0, A(0.1 + heatScale * 0.35 + lit * 0.5));
-        bg.addColorStop(1, A(0.04 + heatScale * 0.14 + lit * 0.3));
+        bg.addColorStop(0, A(0.08 + heatScale * 0.42 + lit * 0.5 + held));
+        bg.addColorStop(1, A(0.03 + heatScale * 0.16 + lit * 0.3 + held * 0.5));
         ctx.fillStyle = bg;
         ctx.fill();
-        ctx.strokeStyle = A(0.25 + heatScale * 0.4 + lit * 0.5);
+        ctx.strokeStyle = A(0.2 + heatScale * 0.45 + lit * 0.5 + held);
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -291,6 +296,17 @@ const PlinkoBoard = ({
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(`${m}x`, x + w / 2, y + h / 2);
+
+        if (hits > 0) {
+          const bw = 16;
+          ctx.fillStyle = A(0.95);
+          ctx.beginPath();
+          ctx.roundRect(x + w / 2 - bw / 2, y - 9, bw, 15, 7);
+          ctx.fill();
+          ctx.fillStyle = '#08131a';
+          ctx.font = '800 10px Barlow, system-ui, sans-serif';
+          ctx.fillText(String(hits), x + w / 2, y - 1.5);
+        }
       }
 
       // sparks
@@ -307,6 +323,9 @@ const PlinkoBoard = ({
       const showLabels = ballsRef.current.length <= 4;
       for (const b of ballsRef.current) {
         if (t < b.startAt) continue;
+        const fade = b.landed ? Math.max(0, 1 - (t - b.landedAt) / 420) : 1;
+        if (fade <= 0) continue;
+        ctx.globalAlpha = fade;
         const px = nx(b.x);
         const py = ny(b.y);
 
@@ -358,6 +377,9 @@ const PlinkoBoard = ({
           ctx.fillStyle = A(1);
           ctx.fillText(label.toUpperCase(), px, ly);
         }
+        ctx.globalAlpha = 1;
+        if (false) {
+        }
       }
     };
 
@@ -382,6 +404,7 @@ const PlinkoBoard = ({
       sparksRef.current = [];
       pegFlashRef.current = new Map();
       slotFlashRef.current = new Map();
+      binHitsRef.current = new Map();
       lastLandRef.current = now + balls.length * STAGGER_MS + 4000;
 
       ballsRef.current = balls.map((b, i) => {
@@ -400,6 +423,7 @@ const PlinkoBoard = ({
           row: -1,
           startAt: now + i * STAGGER_MS,
           landed: false,
+          landedAt: 0,
           squash: 0,
           trail: [],
           hue: 0,
