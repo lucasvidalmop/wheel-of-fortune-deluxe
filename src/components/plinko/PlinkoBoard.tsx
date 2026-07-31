@@ -304,7 +304,7 @@ const PlinkoBoard = ({
         }
 
         if (m.restFrames > 8) {
-          const slotIndex = slotIndexOf(p.x);
+          const slotIndex = typeof m.targetSlot === 'number' ? m.targetSlot : slotIndexOf(p.x);
           m.landed = true;
           m.landedAt = t;
           m.slotIndex = slotIndex;
