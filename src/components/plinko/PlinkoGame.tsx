@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { X, Dices, Settings2, Play } from 'lucide-react';
-import PlinkoBoard from './PlinkoBoard';
+import PlinkoBoard, { PlinkoBall, PlinkoLanding } from './PlinkoBoard';
+
 
 export interface PlinkoPick {
   id: string;
