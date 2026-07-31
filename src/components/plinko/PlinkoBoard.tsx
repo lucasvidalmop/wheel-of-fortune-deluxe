@@ -23,7 +23,10 @@ interface PlinkoBoardProps {
   onAllLanded?: (landings: PlinkoLanding[]) => void;
 }
 
-const STAGGER_MS = 380;
+// Deliberately paced for a live draw: the next participant only enters after
+// the previous ball has had time to produce a few visible bounces.
+const STAGGER_MS = 720;
+const PHYSICS_TIME_SCALE = 0.46;
 const TRAIL = 16;
 
 interface BallMeta {
@@ -100,7 +103,7 @@ const PlinkoBoard = ({
     const minMult = Math.min(...multipliers, 0);
 
     // ---- engine -------------------------------------------------------
-    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00035 } });
+    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00042 } });
     const world = engine.world;
 
     const pegPos: { x: number; y: number }[] = [];
@@ -207,7 +210,10 @@ const PlinkoBoard = ({
         Matter.Composite.add(world, meta.body);
       }
 
-      Matter.Engine.update(engine, 1000 / 60);
+      // Run simulation time slower than wall-clock time. Reducing gravity alone
+      // made the balls feel floaty but did not sufficiently extend the draw;
+      // slowing the whole engine also stretches every bounce and direction change.
+      Matter.Engine.update(engine, (1000 / 60) * PHYSICS_TIME_SCALE);
 
       let active = pending.length > 0;
       for (const m of metas) {
