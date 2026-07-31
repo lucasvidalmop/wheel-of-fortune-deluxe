@@ -51,6 +51,7 @@ interface BallMeta {
   restX: number;
   restY: number;
   slotIndex: number;
+  targetSlot?: number;
 }
 
 interface Spark {
