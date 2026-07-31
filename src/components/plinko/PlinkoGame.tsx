@@ -31,22 +31,42 @@ interface PlinkoGameProps {
   participantCount: number;
   pickParticipant: () => PlinkoPick | null;
   onWin: (pick: PlinkoPick, amount: number, multiplier: number) => void;
+  /** Configured in the admin panel (Influencer > Mini Game Plinko) */
+  multipliers?: number[];
+  chances?: number[];
+  basePrize?: number;
+  ballCount?: number;
 }
 
 const ROWS = 8;
 const DEFAULT_MULTIPLIERS = [10, 5, 3, 2, 1, 2, 3, 5, 10];
-const STORE_KEY = 'plinko_config_v1';
+const DEFAULT_CHANCES = [2, 6, 10, 15, 34, 15, 10, 6, 2];
 
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
+
+/** Weighted pick of a slot index using the configured percentages */
+const pickSlot = (weights: number[]) => {
+  const total = weights.reduce((s, n) => s + Math.max(0, n), 0);
+  if (total <= 0) return Math.floor(Math.random() * weights.length);
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= Math.max(0, weights[i]);
+    if (r <= 0) return i;
+  }
+  return weights.length - 1;
+};
 
 const PlinkoGame = ({
   open, onClose, accent, btnText, textColor, cardStyle,
   names, participantCount, pickParticipant, onWin,
+  multipliers: multipliersProp, chances: chancesProp,
+  basePrize: basePrizeProp, ballCount: ballCountProp,
 }: PlinkoGameProps) => {
-  const [multipliers, setMultipliers] = useState<number[]>(DEFAULT_MULTIPLIERS);
-  const [basePrize, setBasePrize] = useState(10);
-  const [ballCount, setBallCount] = useState(1);
-  const [showConfig, setShowConfig] = useState(false);
+  const multipliers = multipliersProp?.length === ROWS + 1 ? multipliersProp : DEFAULT_MULTIPLIERS;
+  const chances = multipliers.map((_, i) => Number(chancesProp?.[i] ?? DEFAULT_CHANCES[i] ?? 0));
+  const basePrize = typeof basePrizeProp === 'number' && basePrizeProp >= 0 ? basePrizeProp : 10;
+  const ballCount = Math.min(20, Math.max(1, ballCountProp || 1));
+
   const [phase, setPhase] = useState<'idle' | 'picking' | 'dropping' | 'result'>('idle');
   const [reelName, setReelName] = useState('');
   const [activeBalls, setActiveBalls] = useState<PlinkoBall[]>([]);
@@ -57,23 +77,6 @@ const PlinkoGame = ({
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const reelRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed.multipliers) && parsed.multipliers.length === ROWS + 1) {
-          setMultipliers(parsed.multipliers.map((n: any) => Number(n) || 1));
-        }
-        if (typeof parsed.basePrize === 'number') setBasePrize(parsed.basePrize);
-        if (typeof parsed.ballCount === 'number') setBallCount(Math.min(20, Math.max(1, parsed.ballCount)));
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  const persistConfig = (mults: number[], base: number, balls = ballCount) => {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ multipliers: mults, basePrize: base, ballCount: balls })); } catch { /* ignore */ }
-  };
 
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
