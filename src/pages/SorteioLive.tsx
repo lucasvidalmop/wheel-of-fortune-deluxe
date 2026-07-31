@@ -68,8 +68,12 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   const winnersRef = useRef<RaffleWinner[]>([]);
   winnersRef.current = result?.winners || [];
 
+  const playedRound = useRef(0);
+
   useEffect(() => {
     if (!round || !winnersKey) return;
+    if (playedRound.current === round) return; // nunca repete a encenação do mesmo sorteio
+    playedRound.current = round;
     let cancelled = false;
     const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
@@ -182,20 +186,18 @@ const SorteioLive = ({ tag }: { tag: string }) => {
           </span>
         </header>
 
-        <main className="grid flex-1 gap-6 px-6 pb-28 sm:px-10 lg:grid-cols-[1.6fr_1fr]">
-          {/* PALCO */}
-          <section className="flex min-h-[46vh] items-center justify-center">
-            <div className="w-full">
+        <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-28 sm:px-10">
+          <div className="w-full max-w-3xl">
               {phase === 'idle' && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-10 text-center">
                   <p className="text-[11px] uppercase tracking-[0.34em] text-white/40">Aguardando o sorteio</p>
-                  <p className="mt-4 text-6xl sm:text-7xl tabular-nums" style={TITLE_FONT}>{count}</p>
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">participantes confirmados</p>
+                  <p className="mt-4 text-7xl tabular-nums" style={TITLE_FONT}>{count}</p>
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">participantes concorrendo</p>
                 </div>
               )}
 
               {phase === 'countdown' && (
-                <div className="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03] p-10">
+                <div className="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03] p-12">
                   <p className="text-[11px] uppercase tracking-[0.34em] text-white/40">O sorteio começa em</p>
                   <p
                     key={countdown}
@@ -209,119 +211,75 @@ const SorteioLive = ({ tag }: { tag: string }) => {
               )}
 
               {phase === 'rolling' && (
-                <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center">
+                <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-10 text-center">
                   <p className="text-[11px] uppercase tracking-[0.34em] text-white/45">
-                    Sorteando {currentIndex + 1}º de {totalWinners}
+                    {totalWinners > 1 ? `Sorteando o ${currentIndex + 1}º de ${totalWinners}` : 'Sorteando'}
                   </p>
-                  <div className="mt-5 text-4xl sm:text-6xl" style={TITLE_FONT}>
+                  <div className="mt-6 text-5xl sm:text-7xl" style={TITLE_FONT}>
                     <RaffleReel names={reelNames} active />
                   </div>
-                  <div className="mx-auto mt-6 h-1 w-full max-w-md overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full w-full origin-left animate-[bar_3.2s_linear_forwards] bg-white/70" />
-                  </div>
-                  <style>{`@keyframes bar { from { transform: scaleX(0) } to { transform: scaleX(1) } }`}</style>
                 </div>
               )}
 
               {(phase === 'reveal' || phase === 'done') && (
-                <div className="rounded-3xl border border-amber-300/40 bg-gradient-to-b from-amber-500/10 via-black/50 to-black/70 p-8 text-center shadow-[0_0_90px_-30px_rgba(251,191,36,0.6)]">
+                <div className="rounded-3xl border border-amber-300/40 bg-gradient-to-b from-amber-500/10 via-black/50 to-black/70 p-10 text-center shadow-[0_0_90px_-30px_rgba(251,191,36,0.6)]">
                   {currentWinner ? (
                     <div className="animate-[pop_.5s_ease-out]">
                       <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/50 bg-amber-400/15 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-amber-200">
                         <Trophy size={12} />
-                        {currentWinner.position}º lugar
+                        {totalWinners > 1 ? `${currentWinner.position}º lugar` : 'Vencedor'}
                       </span>
                       <p
-                        className="mt-4 break-words bg-gradient-to-b from-white to-amber-200 bg-clip-text text-5xl text-transparent sm:text-7xl"
+                        className="mt-5 break-words bg-gradient-to-b from-white to-amber-200 bg-clip-text text-6xl text-transparent sm:text-8xl"
                         style={TITLE_FONT}
                       >
                         {currentWinner.name}
                       </p>
-                      <p className="mt-3 font-mono text-lg tracking-[0.2em] text-white/70 sm:text-xl">
+                      <p className="mt-4 font-mono text-xl tracking-[0.2em] text-white/70 sm:text-2xl">
                         {currentWinner.code}
                       </p>
                     </div>
                   ) : (
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.32em] text-amber-200/80">Sorteio concluído</p>
-                      <p className="mt-3 text-4xl sm:text-5xl" style={TITLE_FONT}>
+                      <p className="mt-3 text-5xl" style={TITLE_FONT}>
                         {totalWinners} {totalWinners === 1 ? 'vencedor' : 'vencedores'}
                       </p>
-                      <p className="mt-2 text-sm text-white/50">Confira a lista completa ao lado.</p>
                     </div>
                   )}
                   <style>{`@keyframes pop { 0% { transform: scale(.86); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }`}</style>
                 </div>
               )}
-            </div>
-          </section>
+          </div>
 
-          {/* PAINEL LATERAL: sempre mostra a lista completa */}
-          <aside className="flex flex-col gap-4">
-            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-              <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.26em] text-white/45">
-                <Users size={14} /> Participantes
-              </span>
-              <span className="text-2xl font-bold tabular-nums">{result?.totalValid ?? count}</span>
-            </div>
-
-            <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <p className="mb-3 text-[11px] uppercase tracking-[0.28em] text-white/45">
-                {allWinners.length ? 'Vencedores' : 'Confirmados'}
-              </p>
-
-              {allWinners.length > 0 ? (
-                <div className="max-h-[52vh] space-y-2 overflow-y-auto pr-1">
-                  {allWinners.map((w, i) => {
-                    const revealed = announced.length > i;
-                    return (
-                      <div
-                        key={w.code}
-                        className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-all ${
-                          revealed ? 'border-white/15 bg-white/[0.06]' : 'border-white/5 bg-white/[0.02]'
-                        } ${currentIndex === i && phase === 'reveal' ? 'border-amber-300/60 bg-amber-400/10' : ''}`}
-                      >
-                        <span
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
-                            !revealed
-                              ? 'bg-white/10 text-white/40'
-                              : w.position === 1
-                                ? 'bg-amber-400 text-black'
-                                : w.position === 2
-                                  ? 'bg-white/85 text-black'
-                                  : 'bg-white/20 text-white'
-                          }`}
-                        >
-                          {w.position}º
-                        </span>
-                        <div className="min-w-0">
-                          <p className={`truncate font-semibold ${revealed ? '' : 'blur-sm select-none'}`}>
-                            {revealed ? w.name : '••••••'}
-                          </p>
-                          <p className="font-mono text-[11px] tracking-[0.14em] text-white/45">
-                            {revealed ? w.code : '••••••'}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
+          {/* Lista final: só aparece depois que todos foram revelados */}
+          {phase === 'done' && totalWinners > 1 && (
+            <div className="grid w-full max-w-3xl gap-3 sm:grid-cols-2">
+              {allWinners.map((w) => (
+                <div key={w.code} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
+                      w.position === 1 ? 'bg-amber-400 text-black' : w.position === 2 ? 'bg-white/85 text-black' : 'bg-white/20 text-white'
+                    }`}
+                  >
+                    {w.position}º
+                  </span>
+                  <div className="min-w-0 text-left">
+                    <p className="truncate font-semibold">{w.name}</p>
+                    <p className="font-mono text-[11px] tracking-[0.14em] text-white/45">{w.code}</p>
+                  </div>
                 </div>
-              ) : participants.length === 0 ? (
-                <p className="text-sm text-white/45">Nenhum participante confirmado ainda.</p>
-              ) : (
-                <div className="max-h-[52vh] space-y-1.5 overflow-y-auto pr-1">
-                  {participants.map((p) => (
-                    <div key={p.code} className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
-                      <span className="truncate text-sm">{p.name}</span>
-                      <span className="ml-3 shrink-0 font-mono text-[11px] text-white/40">{p.code}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
-          </aside>
+          )}
+
+          {/* Contador discreto de participantes */}
+          <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.26em] text-white/35">
+            <Users size={13} /> {result?.totalValid ?? count} participantes válidos
+          </p>
         </main>
       </div>
+
 
       {/* Controles do operador — invisíveis para o público quando ocultos */}
       {userId && (
