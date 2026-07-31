@@ -26,7 +26,7 @@ interface PlinkoBoardProps {
 // Deliberately paced for a live draw: the next participant only enters after
 // the previous ball has had time to produce a few visible bounces.
 const STAGGER_MS = 720;
-const PHYSICS_TIME_SCALE = 0.46;
+const PHYSICS_TIME_SCALE = 0.95;
 const TRAIL = 16;
 
 interface BallMeta {
@@ -93,8 +93,11 @@ const PlinkoBoard = ({
     const topPad = H * 0.1;
     const boardH = H - topPad - binH;
     const rowGap = boardH / (rows + 1.2);
-    const pegR = Math.max(2.4, d * 0.085);
-    const ballR = Math.max(5, d * 0.2);
+    // Pegs and ball are sized so the gap between two pegs is only slightly
+    // wider than the ball: it CANNOT fall straight through, every row bounces.
+    const pegR = Math.max(3.5, d * 0.15);
+    const ballR = Math.max(6, d * 0.29);
+
     const binTop = H - binH;
     const centerX = W / 2;
     const rowYPx = (r: number) => topPad + (r + 1) * rowGap;
@@ -103,7 +106,7 @@ const PlinkoBoard = ({
     const minMult = Math.min(...multipliers, 0);
 
     // ---- engine -------------------------------------------------------
-    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00042 } });
+    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.0006 } });
     const world = engine.world;
 
     const pegPos: { x: number; y: number }[] = [];
@@ -114,7 +117,8 @@ const PlinkoBoard = ({
         const x = centerX + (j - (count - 1) / 2) * d;
         const y = rowYPx(r);
         pegBodies.push(Matter.Bodies.circle(x, y, pegR, {
-          isStatic: true, restitution: 0.55, friction: 0.005, label: `peg:${pegPos.length}`,
+          isStatic: true, restitution: 0.72, friction: 0, label: `peg:${pegPos.length}`,
+
         }));
         pegPos.push({ x, y });
       }
@@ -182,12 +186,13 @@ const PlinkoBoard = ({
       const now = performance.now();
       balls.forEach((b, i) => {
         const body = Matter.Bodies.circle(
-          centerX + (Math.random() - 0.5) * d * 0.3,
+          centerX + (Math.random() - 0.5) * d * 0.08,
           topPad * 0.3,
           ballR,
-          { restitution: 0.55, friction: 0.01, frictionAir: 0.006, density: 0.0016, slop: 0.02 },
+          { restitution: 0.68, friction: 0, frictionAir: 0.004, density: 0.0016, slop: 0.01 },
         );
-        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.6, y: 0 });
+        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.25, y: 0 });
+
         const meta: BallMeta = {
           id: b.id, label: b.label, body,
           trail: [], squash: 0, landed: false, landedAt: 0,
