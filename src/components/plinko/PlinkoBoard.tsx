@@ -25,8 +25,10 @@ interface PlinkoBoardProps {
 
 // Deliberately paced for a live draw: the next participant only enters after
 // the previous ball has had time to produce a few visible bounces.
-const STAGGER_MS = 720;
-const PHYSICS_TIME_SCALE = 0.95;
+const STAGGER_MS = 900;
+// Keep the whole simulation deliberately slow so each collision can be read
+// during a live draw instead of the ball looking heavy and falling at once.
+const PHYSICS_TIME_SCALE = 0.62;
 const TRAIL = 16;
 
 interface BallMeta {
@@ -93,10 +95,10 @@ const PlinkoBoard = ({
     const topPad = H * 0.1;
     const boardH = H - topPad - binH;
     const rowGap = boardH / (rows + 1.2);
-    // Pegs and ball are sized so the gap between two pegs is only slightly
-    // wider than the ball: it CANNOT fall straight through, every row bounces.
-    const pegR = Math.max(3.5, d * 0.15);
-    const ballR = Math.max(6, d * 0.29);
+    // Larger pegs preserve frequent contacts while the ball stays visually
+    // compact. This avoids using an oversized ball just to force collisions.
+    const pegR = Math.max(3.5, d * 0.18);
+    const ballR = Math.max(4.5, d * 0.21);
 
     const binTop = H - binH;
     const centerX = W / 2;
@@ -106,7 +108,7 @@ const PlinkoBoard = ({
     const minMult = Math.min(...multipliers, 0);
 
     // ---- engine -------------------------------------------------------
-    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.0006 } });
+    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00028 } });
     const world = engine.world;
 
     const pegPos: { x: number; y: number }[] = [];
@@ -189,7 +191,7 @@ const PlinkoBoard = ({
           centerX + (Math.random() - 0.5) * d * 0.08,
           topPad * 0.3,
           ballR,
-          { restitution: 0.68, friction: 0, frictionAir: 0.004, density: 0.0016, slop: 0.01 },
+          { restitution: 0.76, friction: 0, frictionAir: 0.003, density: 0.0012, slop: 0.01 },
         );
         Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.25, y: 0 });
 
@@ -254,11 +256,11 @@ const PlinkoBoard = ({
         if (!inBin) {
           if (m.lastY >= 0 && Math.abs(p.y - m.lastY) < 0.12) {
             m.stallFrames += 1;
-            if (m.stallFrames > 20) {
+            if (m.stallFrames > 34) {
               m.stallFrames = 0;
               Matter.Body.setVelocity(m.body, {
-                x: (Math.random() < 0.5 ? -1 : 1) * 0.7,
-                y: 0.5,
+                x: (Math.random() < 0.5 ? -1 : 1) * 0.38,
+                y: 0.22,
               });
             }
           } else {
