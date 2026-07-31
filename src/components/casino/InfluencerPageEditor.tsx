@@ -68,6 +68,10 @@ export const defaultInfluencerConfig: InfluencerPageConfig = {
   tabBgColor: '',
   raffleSoundEnabled: false,
   raffleSoundUrl: '',
+  plinkoMultipliers: [10, 5, 3, 2, 1, 2, 3, 5, 10],
+  plinkoChances: [2, 6, 10, 15, 34, 15, 10, 6, 2],
+  plinkoBasePrize: 10,
+  plinkoBallCount: 1,
 };
 
 const ColorField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
