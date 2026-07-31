@@ -35,6 +35,7 @@ interface BallMeta {
   landed: boolean;
   landedAt: number;
   restFrames: number;
+  stallFrames: number;
 }
 
 interface Spark {
@@ -192,7 +193,7 @@ const PlinkoBoard = ({
         Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 1.2, y: 0 });
         const meta: BallMeta = {
           id: b.id, label: b.label, body,
-          trail: [], squash: 0, landed: false, landedAt: 0, restFrames: 0,
+          trail: [], squash: 0, landed: false, landedAt: 0, restFrames: 0, stallFrames: 0,
         };
         metas.push(meta);
         pending.push({ meta, at: now + i * STAGGER_MS });
@@ -230,6 +231,20 @@ const PlinkoBoard = ({
         } else {
           m.restFrames = 0;
         }
+        // anti-stall: a ball balanced on a peg gets a nudge
+        if (!inBin && speed < 0.35) {
+          m.stallFrames += 1;
+          if (m.stallFrames > 10) {
+            m.stallFrames = 0;
+            Matter.Body.setVelocity(m.body, {
+              x: (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 0.7),
+              y: 0.6,
+            });
+          }
+        } else if (!inBin) {
+          m.stallFrames = 0;
+        }
+
         if (m.restFrames > 8) {
           m.landed = true;
           m.landedAt = t;
