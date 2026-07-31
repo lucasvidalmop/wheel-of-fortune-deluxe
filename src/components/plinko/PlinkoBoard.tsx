@@ -117,7 +117,8 @@ const PlinkoBoard = ({
         const x = centerX + (j - (count - 1) / 2) * d;
         const y = rowYPx(r);
         pegBodies.push(Matter.Bodies.circle(x, y, pegR, {
-          isStatic: true, restitution: 0.55, friction: 0.005, label: `peg:${pegPos.length}`,
+          isStatic: true, restitution: 0.72, friction: 0, label: `peg:${pegPos.length}`,
+
         }));
         pegPos.push({ x, y });
       }
