@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
     if (!ev || !ev.is_active) return json({ found: false });
 
-    const [{ count: approved }, { data: draw }] = await Promise.all([
+    const [{ count: approved }, { data: draw }, { data: pool }] = await Promise.all([
       supabase.from("raffle_participants")
         .select("id", { count: "exact", head: true })
         .eq("event_id", ev.id).eq("status", "approved"),
@@ -31,6 +31,10 @@ Deno.serve(async (req) => {
         .select("round, winners, executed_at, participants_snapshot_count")
         .eq("event_id", ev.id).eq("superseded", false)
         .order("round", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("raffle_participants")
+        .select("public_code, display_name, created_at")
+        .eq("event_id", ev.id).eq("status", "approved")
+        .order("created_at", { ascending: false }).limit(200),
     ]);
 
     let me: Record<string, unknown> | null = null;
