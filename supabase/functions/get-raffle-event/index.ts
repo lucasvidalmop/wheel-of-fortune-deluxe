@@ -80,6 +80,10 @@ Deno.serve(async (req) => {
         lockedCount: ev.locked_count,
       },
       approvedCount: approved || 0,
+      participants: (pool || []).map((p) => ({
+        code: p.public_code,
+        name: maskName(p.display_name || ""),
+      })),
       result: draw
         ? {
             round: draw.round,
