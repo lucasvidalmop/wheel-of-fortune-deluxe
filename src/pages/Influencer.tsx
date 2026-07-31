@@ -1067,6 +1067,21 @@ const Influencer = () => {
         <LogOut size={12} /> Sair
       </button>
 
+      {/* ─── Plinko Mini Game ─── */}
+      <PlinkoGame
+        open={showPlinko}
+        onClose={() => setShowPlinko(false)}
+        accent={accent}
+        btnText={btnText}
+        textColor={textColor}
+        cardStyle={glassCardStyle}
+        names={allParticipants.map(u => u.name)}
+        participantCount={allParticipants.length}
+        pickParticipant={pickPlinkoParticipant}
+        onWin={(pick, amount, multiplier) => { void handlePlinkoWin(pick, amount, multiplier); }}
+      />
+
+
       {/* ─── Raffle Dialog ─── */}
       <Dialog open={showRaffle} onOpenChange={(open) => { if (!open && raffleStep !== 'sending') closeRaffle(); }}>
         <DialogContent className="max-w-md p-0 border-none bg-transparent shadow-none [&>button]:hidden">
