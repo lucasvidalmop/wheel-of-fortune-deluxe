@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import { Loader2, Radio, Play, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRaffleRealtime } from '@/hooks/useRaffleRealtime';
@@ -12,6 +11,7 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<RaffleEventPublic | null>(null);
   const [count, setCount] = useState(0);
+  const [participants, setParticipants] = useState<{ code: string; name: string }[]>([]);
   const [result, setResult] = useState<RaffleResultPublic | null>(null);
   const [rolling, setRolling] = useState(false);
   const [revealed, setRevealed] = useState<number>(-1);
@@ -27,6 +27,7 @@ const SorteioLive = ({ tag }: { tag: string }) => {
       if (!data?.found) { setEvent(null); return; }
       setEvent(data.event);
       setCount(data.approvedCount || 0);
+      setParticipants(data.participants || []);
       setResult(data.result || null);
     } finally {
       setLoading(false);
@@ -55,7 +56,12 @@ const SorteioLive = ({ tag }: { tag: string }) => {
       const { data, error } = await supabase.functions.invoke('run-raffle-draw', {
         body: { eventId: event.id, redrawReason },
       });
-      if (error) throw error;
+      if (error) {
+        let msg = '';
+        try { msg = (await (error as any).context?.json())?.error || ''; } catch { /* ignore */ }
+        toast({ title: 'Não foi possível sortear', description: msg || 'Tente novamente.', variant: 'destructive' });
+        return;
+      }
       if (data?.error) {
         toast({ title: 'Não foi possível sortear', description: data.error, variant: 'destructive' });
         return;
@@ -127,10 +133,29 @@ const SorteioLive = ({ tag }: { tag: string }) => {
       <main className="flex-1 flex items-center justify-center px-8">
         <div className="w-full max-w-4xl space-y-6">
           <RaffleRollAnimation
-            names={rollNames.length ? rollNames : ['...']}
+            names={rollNames.length ? rollNames : participants.map((p) => p.name)}
             rolling={rolling}
             winner={currentWinner ? { name: currentWinner.name, code: currentWinner.code } : null}
           />
+          {!result && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="mb-3 text-[10px] uppercase tracking-[0.28em] text-white/40">
+                Participantes confirmados ({count})
+              </p>
+              {participants.length === 0 ? (
+                <p className="text-sm text-white/45">Nenhum participante confirmado ainda.</p>
+              ) : (
+                <div className="grid max-h-[46vh] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+                  {participants.map((p) => (
+                    <div key={p.code} className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2">
+                      <p className="truncate text-sm font-semibold">{p.name}</p>
+                      <p className="text-[11px] tracking-[0.14em] text-white/40">{p.code}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {result && revealed >= 0 && result.winners.length > 1 && (
             <div className="flex flex-wrap justify-center gap-3">
               {result.winners.slice(0, revealed + 1).map((w) => (
@@ -154,9 +179,6 @@ const SorteioLive = ({ tag }: { tag: string }) => {
             <p className="text-xl font-semibold">{event.prizeLabel}</p>
           </div>
         )}
-        <div className="rounded-xl bg-white p-2">
-          <QRCodeSVG value={`${window.location.origin}/sorteio=${event.tag}`} size={72} />
-        </div>
       </footer>
 
       {/* Controles do operador — invisíveis para o público e para a captura de tela quando ocultos */}
