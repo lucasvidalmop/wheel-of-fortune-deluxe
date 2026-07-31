@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2, Radio, Play, RotateCcw, Trophy, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRaffleRealtime } from '@/hooks/useRaffleRealtime';
-import type { RaffleEventPublic, RaffleResultPublic, RaffleWinner } from '@/lib/raffle';
+import type { RaffleEventPublic, RaffleResultPublic } from '@/lib/raffle';
 import RaffleReel from '@/components/raffle/RaffleReel';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
