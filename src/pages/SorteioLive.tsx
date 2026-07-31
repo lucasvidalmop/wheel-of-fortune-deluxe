@@ -280,7 +280,6 @@ const SorteioLive = ({ tag }: { tag: string }) => {
         </main>
       </div>
 
-      </div>
 
       {/* Controles do operador — invisíveis para o público quando ocultos */}
       {userId && (
