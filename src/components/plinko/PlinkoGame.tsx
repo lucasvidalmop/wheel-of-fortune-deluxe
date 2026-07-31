@@ -248,13 +248,46 @@ const PlinkoGame = ({
               </div>
             </div>
 
+            {/* Ball count */}
+            <div className="rounded-xl border p-3 flex items-center gap-3" style={{ borderColor: `${accent}25`, background: 'rgba(255,255,255,0.02)' }}>
+              <span className="text-[10px] uppercase tracking-widest text-white/40 shrink-0">Bolinhas</span>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={ballCount}
+                disabled={busy}
+                onChange={(e) => {
+                  const v = Math.min(20, Math.max(1, Number(e.target.value) || 1));
+                  setBallCount(v); persistConfig(multipliers, basePrize, v);
+                }}
+                className="w-20 bg-transparent border rounded-lg px-2 py-1.5 text-sm font-black outline-none disabled:opacity-50"
+                style={{ borderColor: `${accent}33`, color: accent }}
+              />
+              <div className="flex gap-1 flex-wrap">
+                {[1, 3, 5, 10].map(v => (
+                  <button
+                    key={v}
+                    disabled={busy}
+                    onClick={() => { setBallCount(v); persistConfig(multipliers, basePrize, v); }}
+                    className="px-2 py-1 rounded-md border text-[10px] font-bold transition disabled:opacity-40"
+                    style={ballCount === v
+                      ? { borderColor: accent, background: `${accent}18`, color: accent }
+                      : { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Name display */}
             <div className="rounded-xl border p-3 text-center" style={{ borderColor: `${accent}25`, background: `${accent}08` }}>
               <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">
-                {phase === 'picking' ? 'Sorteando participante' : phase === 'idle' ? 'Aguardando' : 'Participante'}
+                {phase === 'picking' ? 'Sorteando participantes' : phase === 'idle' ? 'Aguardando' : `Participantes (${activeBalls.length})`}
               </p>
               <p
-                className="text-xl font-black uppercase tracking-wide truncate"
+                className="text-lg font-black uppercase tracking-wide line-clamp-2"
                 style={{ color: phase === 'picking' ? textColor : accent, textShadow: phase !== 'idle' ? `0 0 16px ${accent}70` : 'none' }}
               >
                 {phase === 'idle' ? '—' : (reelName || '—')}
@@ -266,16 +299,28 @@ const PlinkoGame = ({
               multipliers={multipliers}
               accent={accent}
               dropToken={dropToken}
+              balls={activeBalls}
               onLanded={handleLanded}
+              onAllLanded={handleAllLanded}
             />
 
-            {lastRound && phase === 'result' && (
-              <div className="rounded-xl border p-4 text-center animate-scale-in" style={{ borderColor: accent, background: `${accent}12`, boxShadow: `0 0 30px ${accent}30` }}>
-                <p className="text-[10px] uppercase tracking-widest text-white/50">Resultado</p>
-                <p className="text-lg font-black uppercase" style={{ color: textColor }}>{lastRound.name}</p>
-                <p className="text-2xl font-black mt-1" style={{ color: accent, textShadow: `0 0 20px ${accent}80` }}>
-                  {lastRound.multiplier}x · {formatCurrency(lastRound.amount)}
+            {phase === 'result' && batch.length > 0 && (
+              <div className="rounded-xl border p-4 animate-scale-in space-y-2" style={{ borderColor: accent, background: `${accent}12`, boxShadow: `0 0 30px ${accent}30` }}>
+                <p className="text-[10px] uppercase tracking-widest text-white/50 text-center">
+                  Resultado {batch.length > 1 ? `· ${batch.length} bolinhas` : ''}
                 </p>
+                {batch.map((r, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="flex-1 text-sm font-black uppercase truncate" style={{ color: textColor }}>{r.name}</span>
+                    <span className="text-xs font-mono text-white/50">{r.multiplier}x</span>
+                    <span className="text-base font-black" style={{ color: accent, textShadow: `0 0 14px ${accent}70` }}>{formatCurrency(r.amount)}</span>
+                  </div>
+                ))}
+                {batch.length > 1 && (
+                  <p className="text-center text-[11px] font-bold pt-1 border-t" style={{ color: accent, borderColor: `${accent}30` }}>
+                    Total {formatCurrency(batch.reduce((s, r) => s + r.amount, 0))}
+                  </p>
+                )}
               </div>
             )}
 
@@ -286,8 +331,9 @@ const PlinkoGame = ({
               style={{ background: accent, color: btnText, boxShadow: `0 0 40px ${accent}50` }}
             >
               <Play size={18} fill="currentColor" />
-              {busy ? 'Rodando...' : rounds.length > 0 ? 'Soltar nova bolinha' : 'Sortear e soltar bolinha'}
+              {busy ? 'Rodando...' : `Soltar ${ballCount} bolinha${ballCount > 1 ? 's' : ''}`}
             </button>
+
 
             {rounds.length > 0 && (
               <div className="space-y-1.5">
