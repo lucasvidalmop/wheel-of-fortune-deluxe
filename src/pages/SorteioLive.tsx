@@ -36,6 +36,40 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   useEffect(() => { void load(); }, [load]);
   useRaffleRealtime(event?.id, () => { void load(); });
 
+  // Sessão do operador (controles ficam ocultos para o público).
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user?.id ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const runDraw = useCallback(async (redraw: boolean) => {
+    if (!event) return;
+    let redrawReason = '';
+    if (redraw) {
+      redrawReason = window.prompt('Justificativa para refazer o sorteio:')?.trim() || '';
+      if (!redrawReason) return;
+    }
+    setDrawing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('run-raffle-draw', {
+        body: { eventId: event.id, redrawReason },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: 'Não foi possível sortear', description: data.error, variant: 'destructive' });
+        return;
+      }
+      await load();
+    } catch (err) {
+      toast({ title: 'Falha ao executar o sorteio', variant: 'destructive' });
+    } finally {
+      setDrawing(false);
+    }
+  }, [event, load]);
+
+
+
   // Poll leve: o resultado é gravado em raffle_draws (fora do realtime).
   useEffect(() => {
     const id = window.setInterval(() => { void load(); }, 5000);
