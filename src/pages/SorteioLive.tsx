@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Loader2, Radio } from 'lucide-react';
+import { Loader2, Radio, Play, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRaffleRealtime } from '@/hooks/useRaffleRealtime';
 import type { RaffleEventPublic, RaffleResultPublic } from '@/lib/raffle';
 import RaffleRollAnimation from '@/components/raffle/RaffleRollAnimation';
+import { toast } from '@/hooks/use-toast';
 
-/** Tela pensada para transmissão (OBS): 16:9, sem PII, apenas leitura. */
+/** Tela pensada para transmissão (OBS): 16:9. Controles só aparecem para o operador logado. */
 const SorteioLive = ({ tag }: { tag: string }) => {
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<RaffleEventPublic | null>(null);
@@ -14,7 +15,11 @@ const SorteioLive = ({ tag }: { tag: string }) => {
   const [result, setResult] = useState<RaffleResultPublic | null>(null);
   const [rolling, setRolling] = useState(false);
   const [revealed, setRevealed] = useState<number>(-1);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [drawing, setDrawing] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const lastRound = useRef<number>(0);
+
 
   const load = useCallback(async () => {
     try {
