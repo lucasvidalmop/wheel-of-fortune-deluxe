@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
 
 export interface PlinkoBall {
@@ -76,8 +76,22 @@ const PlinkoBoard = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const [sizeKey, setSizeKey] = useState('');
 
   const slots = multipliers.length;
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const update = () => {
+      const next = `${Math.round(wrap.clientWidth)}x${Math.round(wrap.clientHeight)}`;
+      setSizeKey(current => current === next ? current : next);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -565,7 +579,7 @@ const PlinkoBoard = ({
       Matter.Engine.clear(engine);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dropToken, rows, slots, accent, multipliers.join(',')]);
+  }, [dropToken, rows, slots, accent, multipliers.join(','), sizeKey]);
 
   return (
     <div
