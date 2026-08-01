@@ -436,14 +436,17 @@ const PlinkoBoard = ({
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
 
-      // triangle guides
+      // triangle guides (follow the widening rows, then run straight down)
+      const apexRow = Math.min(rows - 1, maxCount - 3);
+      const halfMax = (maxCount - 1) / 2 * d;
       ctx.strokeStyle = A(0.12);
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(centerX - d, rowYPx(0));
-      ctx.lineTo(centerX - ((rows + 2) - 1) / 2 * d, rowYPx(rows - 1));
-      ctx.moveTo(centerX + d, rowYPx(0));
-      ctx.lineTo(centerX + ((rows + 2) - 1) / 2 * d, rowYPx(rows - 1));
+      for (const sign of [-1, 1]) {
+        ctx.moveTo(centerX + sign * d, rowYPx(0));
+        ctx.lineTo(centerX + sign * halfMax, rowYPx(apexRow));
+        if (apexRow < rows - 1) ctx.lineTo(centerX + sign * halfMax, rowYPx(rows - 1));
+      }
       ctx.stroke();
 
       // pegs
