@@ -569,9 +569,9 @@ const PlinkoBoard = ({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-2xl overflow-hidden border"
+      className={`relative w-full rounded-2xl overflow-hidden border ${fill ? 'h-full' : ''}`}
       style={{
-        aspectRatio: '1 / 1',
+        ...(fill ? {} : { aspectRatio: '1 / 1' }),
         borderColor: `${accent}25`,
         background: 'linear-gradient(180deg, hsl(var(--card)), rgba(0,0,0,0.45))',
       }}
