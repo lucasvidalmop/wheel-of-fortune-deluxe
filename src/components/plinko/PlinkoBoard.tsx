@@ -162,9 +162,7 @@ const PlinkoBoard = ({
     // soft triangular boundary (no static walls -> no pockets to get stuck in)
     const limitAt = (y: number) => {
       const r = Math.max(0, Math.min(rows - 1, Math.floor((y - topPad) / rowGap)));
-      return Math.max(rowCount(r), maxCount - 1) === maxCount - 1
-        ? (maxCount - 1) / 2 * d
-        : (rowCount(r) - 1) / 2 * d;
+      return (Math.min(r + 3, maxCount) - 1) / 2 * d;
     };
 
     // ---- runtime state ------------------------------------------------
