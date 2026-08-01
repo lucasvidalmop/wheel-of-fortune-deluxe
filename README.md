@@ -1,3 +1,22 @@
-# Welcome to your Lovable project
+# Wheel of Fortune Deluxe
 
-TODO: Document your project here
+Sistema de sorteios/roleta com apostas, rifas e pagamentos, construído com React + Vite + TypeScript + Tailwind + shadcn/ui, usando Supabase (banco, auth, edge functions) como backend.
+
+## Desenvolvimento
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+## Testes
+
+```bash
+npm run test
+```
