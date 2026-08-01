@@ -283,16 +283,26 @@ const PlinkoBoard = ({
             y: 0,
           });
 
-          // Funnel: below the last peg row the ball must be inside the target
-          // bin, otherwise the highlighted slot would not match where the ball
-          // is visibly resting.
+          // Funnel: once the ball has cleared the last peg row it glides into the
+          // target bin. Peg collisions are disabled from that point so it can no
+          // longer be knocked sideways while being aligned, and the horizontal
+          // correction is a small clamped step per frame instead of a teleport.
           const lastRowY = rowYPx(rows - 1);
-          if (p.y > lastRowY) {
-            const k = Math.min(1, (p.y - lastRowY) / Math.max(1, binTop - lastRowY));
-            const ease = k * k;
-            Matter.Body.setPosition(m.body, {
-              x: p.x + (desiredX - p.x) * ease,
-              y: p.y,
+          if (!m.funneling && p.y > lastRowY + pegR + ballR) {
+            m.funneling = true;
+            m.body.collisionFilter = {
+              ...m.body.collisionFilter,
+              mask: 0xffffffff & ~PEG_CATEGORY,
+            };
+          }
+          if (m.funneling) {
+            const dxToBin = desiredX - p.x;
+            const maxStep = Math.max(0.6, binW * 0.05);
+            const stepX = Math.max(-maxStep, Math.min(maxStep, dxToBin * 0.14));
+            Matter.Body.setPosition(m.body, { x: p.x + stepX, y: p.y });
+            Matter.Body.setVelocity(m.body, {
+              x: m.body.velocity.x * 0.5,
+              y: Math.max(m.body.velocity.y, 0.05),
             });
           }
         }
