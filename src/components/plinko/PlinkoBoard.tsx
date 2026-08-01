@@ -106,10 +106,10 @@ const PlinkoBoard = ({
     const topPad = H * 0.1;
     const boardH = H - topPad - binH;
     const rowGap = boardH / (rows + 1.2);
-    // Larger pegs preserve frequent contacts while the ball stays visually
-    // compact. This avoids using an oversized ball just to force collisions.
-    const pegR = Math.max(3.5, d * 0.18);
-    const ballR = Math.max(4.5, d * 0.21);
+    // Pegs and ball must also fit the VERTICAL gap between rows, otherwise a
+    // dense board (many rows) leaves no room to pass and the ball gets stuck.
+    const pegR = Math.max(3, Math.min(d * 0.18, rowGap * 0.2));
+    const ballR = Math.max(4, Math.min(d * 0.2, rowGap * 0.22));
 
     const binTop = H - binH;
     const centerX = W / 2;

@@ -40,7 +40,7 @@ interface PlinkoGameProps {
 
 // More rows than bins: the extra rows stay full width (offset by half a bin),
 // so the ball keeps hitting pegs instead of slipping straight to the bottom.
-const ROWS = 13;
+const ROWS = 11;
 const SLOTS = 9;
 const DEFAULT_MULTIPLIERS = [10, 5, 3, 2, 1, 2, 3, 5, 10];
 const DEFAULT_CHANCES = [2, 6, 10, 15, 34, 15, 10, 6, 2];
@@ -162,8 +162,9 @@ const PlinkoGame = ({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !busy) onClose(); }}>
-      <DialogContent className="max-w-2xl p-0 border-none bg-transparent shadow-none [&>button]:hidden">
-        <div className="rounded-2xl border border-white/[0.1] overflow-hidden max-h-[92vh] overflow-y-auto" style={cardStyle}>
+      <DialogContent className="max-w-none w-screen h-[100dvh] p-0 border-none bg-transparent shadow-none rounded-none translate-x-0 translate-y-0 left-0 top-0 [&>button]:hidden">
+        <div className="h-full w-full overflow-y-auto" style={cardStyle}>
+          <div className="mx-auto w-full max-w-5xl min-h-full flex flex-col">
           <div className="p-5 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -259,6 +260,7 @@ const PlinkoGame = ({
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
       </DialogContent>
