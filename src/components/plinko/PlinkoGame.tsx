@@ -239,7 +239,7 @@ const PlinkoGame = ({
             </section>
 
             {/* Center · board */}
-            <section className="min-h-0 flex flex-col items-center gap-3 shrink-0 mx-auto w-[min(100%,calc(100dvh_-_230px))] lg:w-[min(46vw,calc(100dvh_-_170px))]">
+            <section className="min-h-0 flex flex-col items-center gap-3 flex-1 lg:flex-none mx-auto w-[min(100%,calc(100dvh_-_230px))] lg:w-[min(46vw,calc(100dvh_-_170px))]">
               {/* mobile caller */}
               <div className="lg:hidden w-full text-center">
                 <p className="text-[9px] uppercase tracking-[0.3em] text-white/30">{statusLabel}</p>
