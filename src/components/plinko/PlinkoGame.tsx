@@ -38,7 +38,10 @@ interface PlinkoGameProps {
   ballCount?: number;
 }
 
-const ROWS = 8;
+// More rows than bins: the extra rows stay full width (offset by half a bin),
+// so the ball keeps hitting pegs instead of slipping straight to the bottom.
+const ROWS = 13;
+const SLOTS = 9;
 const DEFAULT_MULTIPLIERS = [10, 5, 3, 2, 1, 2, 3, 5, 10];
 const DEFAULT_CHANCES = [2, 6, 10, 15, 34, 15, 10, 6, 2];
 
@@ -62,7 +65,7 @@ const PlinkoGame = ({
   multipliers: multipliersProp, chances: chancesProp,
   basePrize: basePrizeProp, ballCount: ballCountProp,
 }: PlinkoGameProps) => {
-  const multipliers = multipliersProp?.length === ROWS + 1 ? multipliersProp : DEFAULT_MULTIPLIERS;
+  const multipliers = multipliersProp?.length === SLOTS ? multipliersProp : DEFAULT_MULTIPLIERS;
   const chances = multipliers.map((_, i) => Number(chancesProp?.[i] ?? DEFAULT_CHANCES[i] ?? 0));
   const basePrize = typeof basePrizeProp === 'number' && basePrizeProp >= 0 ? basePrizeProp : 10;
   const ballCount = Math.min(20, Math.max(1, ballCountProp || 1));

@@ -122,10 +122,21 @@ const PlinkoBoard = ({
     const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00028 } });
     const world = engine.world;
 
+    // The triangle grows until it spans the full width of the bins; after that
+    // the rows stay full width and alternate their offset by half a bin so the
+    // ball can never fall straight through a single column.
+    const maxCount = slots + 1;
+    const rowCount = (r: number) => {
+      const grow = r + 3;
+      if (grow <= maxCount) return grow;
+      const extra = grow - maxCount;      // 1, 2, 3, ...
+      return extra % 2 === 1 ? maxCount - 1 : maxCount;
+    };
+
     const pegPos: { x: number; y: number }[] = [];
     const pegBodies: Matter.Body[] = [];
     for (let r = 0; r < rows; r++) {
-      const count = r + 3;
+      const count = rowCount(r);
       for (let j = 0; j < count; j++) {
         const x = centerX + (j - (count - 1) / 2) * d;
         const y = rowYPx(r);
@@ -151,7 +162,7 @@ const PlinkoBoard = ({
     // soft triangular boundary (no static walls -> no pockets to get stuck in)
     const limitAt = (y: number) => {
       const r = Math.max(0, Math.min(rows - 1, Math.floor((y - topPad) / rowGap)));
-      return ((r + 3) - 1) / 2 * d;
+      return (Math.min(r + 3, maxCount) - 1) / 2 * d;
     };
 
     // ---- runtime state ------------------------------------------------
@@ -425,14 +436,17 @@ const PlinkoBoard = ({
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
 
-      // triangle guides
+      // triangle guides (follow the widening rows, then run straight down)
+      const apexRow = Math.min(rows - 1, maxCount - 3);
+      const halfMax = (maxCount - 1) / 2 * d;
       ctx.strokeStyle = A(0.12);
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(centerX - d, rowYPx(0));
-      ctx.lineTo(centerX - ((rows + 2) - 1) / 2 * d, rowYPx(rows - 1));
-      ctx.moveTo(centerX + d, rowYPx(0));
-      ctx.lineTo(centerX + ((rows + 2) - 1) / 2 * d, rowYPx(rows - 1));
+      for (const sign of [-1, 1]) {
+        ctx.moveTo(centerX + sign * d, rowYPx(0));
+        ctx.lineTo(centerX + sign * halfMax, rowYPx(apexRow));
+        if (apexRow < rows - 1) ctx.lineTo(centerX + sign * halfMax, rowYPx(rows - 1));
+      }
       ctx.stroke();
 
       // pegs
