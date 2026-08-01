@@ -179,8 +179,7 @@ const PlinkoGame = ({
             backgroundImage: `radial-gradient(120% 80% at 50% 0%, ${accent}18, transparent 60%), radial-gradient(80% 60% at 50% 110%, ${accent}12, transparent 60%)`,
           }}
         >
-          {/* ── Top bar ── */}
-          <header className="shrink-0 px-5 h-14 flex items-center justify-between">
+          <header className="shrink-0 px-4 sm:px-7 h-14 flex items-center justify-between border-b border-white/[0.05]">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}>
                 <Dices size={16} style={{ color: accent }} />
@@ -210,118 +209,64 @@ const PlinkoGame = ({
             </div>
           </header>
 
-          {/* ── Stage ── */}
-          <main className="flex-1 min-h-0 px-4 pb-3 flex flex-col lg:flex-row items-stretch gap-4">
-            {/* Left · live caller */}
-            <section className="hidden lg:flex flex-1 min-w-0 flex-col justify-center gap-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-white/30 mb-2">{statusLabel}</p>
-                <p
-                  className="text-[clamp(1.5rem,2.6vw,2.75rem)] font-black uppercase leading-[1.02] break-words"
-                  style={{
-                    color: phase === 'idle' ? 'rgba(255,255,255,0.25)' : accent,
-                    textShadow: phase === 'idle' ? 'none' : `0 0 30px ${accent}55`,
-                  }}
+          {/* The board is the stage. Nothing sits beside it or compresses it. */}
+          <main className="flex-1 min-h-0 px-2 sm:px-5 pb-3 flex flex-col items-center">
+            <div className="w-full max-w-[1180px] h-11 sm:h-12 shrink-0 flex items-center justify-between px-2 sm:px-4 gap-3">
+              <div className="min-w-0 flex items-center gap-3">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.3em] text-white/30 shrink-0">{statusLabel}</span>
+                <span
+                  className="text-sm sm:text-xl font-black uppercase truncate"
+                  style={{ color: phase === 'idle' ? 'rgba(255,255,255,0.25)' : accent, textShadow: phase === 'idle' ? 'none' : `0 0 24px ${accent}55` }}
                 >
                   {phase === 'idle' ? 'Aguardando' : (reelName || '—')}
-                </p>
+                </span>
               </div>
-              {activeBalls.length > 0 && (
-                <p className="text-[11px] uppercase tracking-[0.2em] text-white/35">
-                  {activeBalls.length} bolinha{activeBalls.length > 1 ? 's' : ''} em jogo
-                </p>
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <span className="text-[9px] uppercase tracking-[0.2em] text-white/30">Total pago</span>
+                <strong className="text-sm tabular-nums" style={{ color: textColor }}>{formatCurrency(total)}</strong>
+              </div>
+            </div>
+
+            <section className="relative flex-1 min-h-0 w-full max-w-[1180px]">
+              <PlinkoBoard
+                fill
+                rows={ROWS}
+                multipliers={multipliers}
+                accent={accent}
+                dropToken={dropToken}
+                balls={activeBalls}
+                onLanded={handleLanded}
+                onAllLanded={handleAllLanded}
+              />
+
+              {phase === 'result' && batch.length > 0 && (
+                <div className="absolute top-3 right-3 w-[min(340px,calc(100%_-_24px))] max-h-[42%] overflow-y-auto rounded-2xl border p-3 sm:p-4 animate-scale-in backdrop-blur-xl" style={{ borderColor: `${accent}70`, background: 'rgba(5,12,17,0.9)' }}>
+                  <p className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-2">Resultado</p>
+                  <div className="space-y-2">
+                    {batch.map((r, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="flex-1 text-xs sm:text-sm font-black uppercase truncate" style={{ color: textColor }}>{r.name}</span>
+                        <span className="text-[10px] font-mono text-white/40">{r.multiplier}x</span>
+                        <span className="text-xs sm:text-sm font-black tabular-nums" style={{ color: accent }}>{formatCurrency(r.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-              <div className="h-px w-24" style={{ background: `${accent}40` }} />
-              <div className="flex items-baseline gap-2">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-white/30">Total pago</p>
-                <p className="text-lg font-black tabular-nums" style={{ color: textColor }}>{formatCurrency(total)}</p>
-              </div>
             </section>
 
-            {/* Center · board */}
-            <section className="min-h-0 flex flex-col items-center gap-3 flex-1 lg:flex-none mx-auto w-[min(100%,calc(100dvh_-_230px))] lg:w-[min(46vw,calc(100dvh_-_170px))]">
-              {/* mobile caller */}
-              <div className="lg:hidden w-full text-center">
-                <p className="text-[9px] uppercase tracking-[0.3em] text-white/30">{statusLabel}</p>
-                <p
-                  className="text-xl font-black uppercase truncate"
-                  style={{ color: phase === 'idle' ? 'rgba(255,255,255,0.3)' : accent, textShadow: phase === 'idle' ? 'none' : `0 0 20px ${accent}55` }}
-                >
-                  {phase === 'idle' ? 'Aguardando' : (reelName || '—')}
-                </p>
-              </div>
-
-              <div className="flex-1 min-h-0 w-full flex items-center justify-center">
-                <div className="w-full aspect-square max-h-full">
-                  <PlinkoBoard
-                    fill
-                    rows={ROWS}
-                    multipliers={multipliers}
-                    accent={accent}
-                    dropToken={dropToken}
-                    balls={activeBalls}
-                    onLanded={handleLanded}
-                    onAllLanded={handleAllLanded}
-                  />
-                </div>
-              </div>
-
+            <div className="w-full max-w-[1180px] h-16 shrink-0 flex items-center justify-center">
               <button
                 onClick={startRound}
                 disabled={busy || participantCount === 0}
-                className="shrink-0 px-8 py-3 rounded-full text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2.5 transition-all hover:brightness-110 active:scale-95 disabled:opacity-40"
+                className="px-7 sm:px-10 py-3 rounded-full text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] flex items-center justify-center gap-2.5 transition-all hover:brightness-110 active:scale-95 disabled:opacity-40"
                 style={{ background: accent, color: btnText, boxShadow: `0 10px 40px ${accent}40` }}
               >
                 <Play size={14} fill="currentColor" />
                 {busy ? 'Rodando' : `Soltar ${ballCount} bolinha${ballCount > 1 ? 's' : ''}`}
               </button>
-            </section>
-
-            {/* Right · results */}
-            <section className="min-h-0 flex-1 min-w-0 flex-col hidden lg:flex justify-center">
-              <div className="max-h-full overflow-y-auto space-y-2 pr-1">
-                {batch.length === 0 && rounds.length === 0 && (
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/20">Sem rodadas ainda</p>
-                )}
-
-                {phase === 'result' && batch.length > 0 && (
-                  <div className="rounded-2xl border p-4 animate-scale-in space-y-2" style={{ borderColor: `${accent}70`, background: `${accent}10` }}>
-                    <p className="text-[9px] uppercase tracking-[0.25em] text-white/40">Última rodada</p>
-                    {batch.map((r, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="flex-1 text-sm font-black uppercase truncate" style={{ color: textColor }}>{r.name}</span>
-                        <span className="text-[10px] font-mono text-white/40">{r.multiplier}x</span>
-                        <span className="text-sm font-black tabular-nums" style={{ color: accent }}>{formatCurrency(r.amount)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {rounds.map((r, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <span className="flex-1 text-[11px] font-bold uppercase truncate text-white/60">{r.name}</span>
-                    <span className="text-[10px] font-mono text-white/30">{r.multiplier}x</span>
-                    <span className="text-[11px] font-black tabular-nums text-white/70">{formatCurrency(r.amount)}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </main>
-
-          {/* mobile result strip */}
-          {phase === 'result' && batch.length > 0 && (
-            <div className="lg:hidden shrink-0 px-4 pb-4">
-              <div className="rounded-2xl border p-3 space-y-1.5 animate-scale-in" style={{ borderColor: `${accent}60`, background: `${accent}10` }}>
-                {batch.map((r, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="flex-1 text-xs font-black uppercase truncate" style={{ color: textColor }}>{r.name}</span>
-                    <span className="text-[10px] font-mono text-white/40">{r.multiplier}x</span>
-                    <span className="text-xs font-black tabular-nums" style={{ color: accent }}>{formatCurrency(r.amount)}</span>
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
+          </main>
         </div>
       </DialogContent>
     </Dialog>
