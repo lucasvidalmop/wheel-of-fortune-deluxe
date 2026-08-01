@@ -160,6 +160,20 @@ const PlinkoGame = ({
 
   const busy = phase === 'picking' || phase === 'dropping';
 
+  // Square board sized to the available stage area (fills the screen height)
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const [boardSize, setBoardSize] = useState(0);
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || !open) return;
+    const ro = new ResizeObserver(() => {
+      const r = el.getBoundingClientRect();
+      setBoardSize(Math.max(240, Math.floor(Math.min(r.width, r.height))));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open]);
+
   const total = rounds.reduce((s, r) => s + r.amount, 0);
   const statusLabel = phase === 'picking'
     ? 'Sorteando'
@@ -251,9 +265,10 @@ const PlinkoGame = ({
                 </p>
               </div>
 
-              <div className="flex-1 min-h-0 w-full flex items-center justify-center">
-                <div className="h-full aspect-square max-w-full">
+              <div ref={stageRef} className="flex-1 min-h-0 w-full flex items-center justify-center">
+                <div style={{ width: boardSize || undefined, height: boardSize || undefined }}>
                   <PlinkoBoard
+                    key={boardSize}
                     fill
                     rows={ROWS}
                     multipliers={multipliers}
