@@ -270,42 +270,24 @@ const PlinkoBoard = ({
           }
         }
 
-        // Weighted outcome steering: the configured chance per multiplier picks
-        // the destination slot, and the ball is nudged gently towards it while
-        // still bouncing naturally off every peg it meets.
-        if (typeof m.targetSlot === 'number' && p.y < binTop) {
-          const desiredX = padX + (m.targetSlot + 0.5) * binW;
+        // Outcome bias: only a very subtle drift applied in the UPPER part of the
+        // board, where it is indistinguishable from a natural bounce. From the
+        // middle rows down the ball is 100% physics: no pull, no funnel, so the
+        // bin it lands in is exactly where it visually falls.
+        if (typeof m.targetSlot === 'number') {
           const progress = Math.min(1, Math.max(0, (p.y - topPad) / Math.max(1, binTop - topPad)));
-          const dx = desiredX - p.x;
-          const pull = 0.00000075 * m.body.mass * (0.25 + progress * progress * 2.2);
-          Matter.Body.applyForce(m.body, p, {
-            x: Math.max(-0.6, Math.min(0.6, dx / binW)) * pull * 60,
-            y: 0,
-          });
-
-          // Funnel: once the ball has cleared the last peg row it glides into the
-          // target bin. Peg collisions are disabled from that point so it can no
-          // longer be knocked sideways while being aligned, and the horizontal
-          // correction is a small clamped step per frame instead of a teleport.
-          const lastRowY = rowYPx(rows - 1);
-          if (!m.funneling && p.y > lastRowY + pegR + ballR) {
-            m.funneling = true;
-            m.body.collisionFilter = {
-              ...m.body.collisionFilter,
-              mask: 0xffffffff & ~PEG_CATEGORY,
-            };
-          }
-          if (m.funneling) {
-            const dxToBin = desiredX - p.x;
-            const maxStep = Math.max(0.6, binW * 0.05);
-            const stepX = Math.max(-maxStep, Math.min(maxStep, dxToBin * 0.14));
-            Matter.Body.setPosition(m.body, { x: p.x + stepX, y: p.y });
-            Matter.Body.setVelocity(m.body, {
-              x: m.body.velocity.x * 0.5,
-              y: Math.max(m.body.velocity.y, 0.05),
+          if (progress < 0.45) {
+            const desiredX = padX + (m.targetSlot + 0.5) * binW;
+            const dx = desiredX - p.x;
+            const fade = 1 - progress / 0.45;
+            const pull = 0.00000075 * m.body.mass * 22 * fade;
+            Matter.Body.applyForce(m.body, p, {
+              x: Math.max(-1, Math.min(1, dx / (binW * 2))) * pull,
+              y: 0,
             });
           }
         }
+
 
 
         m.trail.push({ x: p.x, y: p.y });
