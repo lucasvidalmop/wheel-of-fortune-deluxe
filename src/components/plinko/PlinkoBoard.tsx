@@ -52,6 +52,7 @@ interface BallMeta {
   restY: number;
   slotIndex: number;
   targetSlot?: number;
+  funneling: boolean;
 }
 
 interface Spark {
