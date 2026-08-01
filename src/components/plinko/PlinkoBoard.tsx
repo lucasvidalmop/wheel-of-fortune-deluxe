@@ -23,6 +23,7 @@ interface PlinkoBoardProps {
   balls?: PlinkoBall[];
   onLanded?: (landing: PlinkoLanding) => void;
   onAllLanded?: (landings: PlinkoLanding[]) => void;
+  fill?: boolean;
 }
 
 // Deliberately paced for a live draw: the next participant only enters after
@@ -70,7 +71,7 @@ const hexToRgb = (hex: string): [number, number, number] => {
 };
 
 const PlinkoBoard = ({
-  rows, multipliers, accent, dropToken, balls = [], onLanded, onAllLanded,
+  rows, multipliers, accent, dropToken, balls = [], onLanded, onAllLanded, fill = false,
 }: PlinkoBoardProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -569,9 +570,9 @@ const PlinkoBoard = ({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full rounded-2xl overflow-hidden border"
+      className={`relative w-full rounded-2xl overflow-hidden border ${fill ? 'h-full' : ''}`}
       style={{
-        aspectRatio: '1 / 1',
+        ...(fill ? {} : { aspectRatio: '1 / 1' }),
         borderColor: `${accent}25`,
         background: 'linear-gradient(180deg, hsl(var(--card)), rgba(0,0,0,0.45))',
       }}

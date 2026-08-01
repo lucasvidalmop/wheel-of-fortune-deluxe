@@ -163,104 +163,109 @@ const PlinkoGame = ({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !busy) onClose(); }}>
       <DialogContent className="max-w-none w-screen h-[100dvh] p-0 border-none bg-transparent shadow-none rounded-none translate-x-0 translate-y-0 left-0 top-0 [&>button]:hidden">
-        <div className="h-full w-full overflow-y-auto" style={cardStyle}>
-          <div className="mx-auto w-full max-w-5xl min-h-full flex flex-col">
-          <div className="p-5 flex items-start justify-between">
+        <div className="h-[100dvh] w-full overflow-hidden flex flex-col" style={cardStyle}>
+          {/* Header */}
+          <div className="px-4 py-3 flex items-start justify-between shrink-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2">
                 <Dices size={18} style={{ color: accent }} />
-                <h2 className="text-base font-bold" style={{ color: textColor }}>Mini Game · Plinko</h2>
+                <h2 className="text-sm font-bold" style={{ color: textColor }}>Mini Game · Plinko</h2>
               </div>
               <p className="text-[11px] text-white/40">
                 {participantCount} participante(s) · prêmio base {formatCurrency(basePrize)}
               </p>
             </div>
-            <div className="flex items-center gap-1">
-              {!busy && (
-                <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white">
-                  <X size={18} />
-                </button>
-              )}
-            </div>
+            {!busy && (
+              <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] transition text-white/40 hover:text-white">
+                <X size={18} />
+              </button>
+            )}
           </div>
 
-          <div className="px-5 pb-5 space-y-4">
+          {/* Stage */}
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-3">
+            {/* Board column */}
+            <div className="flex-1 min-h-0 flex flex-col gap-3">
+              <div className="rounded-xl border px-3 py-2 text-center shrink-0" style={{ borderColor: `${accent}25`, background: `${accent}08` }}>
+                <p className="text-[10px] uppercase tracking-widest text-white/40">
+                  {phase === 'picking' ? 'Sorteando participantes' : phase === 'idle' ? 'Aguardando' : `Participantes (${activeBalls.length})`}
+                </p>
+                <p
+                  className="text-lg font-black uppercase tracking-wide truncate"
+                  style={{ color: phase === 'picking' ? textColor : accent, textShadow: phase !== 'idle' ? `0 0 16px ${accent}70` : 'none' }}
+                >
+                  {phase === 'idle' ? '—' : (reelName || '—')}
+                </p>
+              </div>
 
+              <div className="flex-1 min-h-0 flex items-stretch justify-center">
+                <div className="h-full" style={{ width: 'min(100%, calc(100vh - 220px))' }}>
+                  <PlinkoBoard
+                    fill
+                    rows={ROWS}
+                    multipliers={multipliers}
+                    accent={accent}
+                    dropToken={dropToken}
+                    balls={activeBalls}
+                    onLanded={handleLanded}
+                    onAllLanded={handleAllLanded}
+                  />
+                </div>
+              </div>
 
-            {/* Name display */}
-            <div className="rounded-xl border p-3 text-center" style={{ borderColor: `${accent}25`, background: `${accent}08` }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">
-                {phase === 'picking' ? 'Sorteando participantes' : phase === 'idle' ? 'Aguardando' : `Participantes (${activeBalls.length})`}
-              </p>
-              <p
-                className="text-lg font-black uppercase tracking-wide line-clamp-2"
-                style={{ color: phase === 'picking' ? textColor : accent, textShadow: phase !== 'idle' ? `0 0 16px ${accent}70` : 'none' }}
+              <button
+                onClick={startRound}
+                disabled={busy || participantCount === 0}
+                className="w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 shrink-0"
+                style={{ background: accent, color: btnText, boxShadow: `0 0 40px ${accent}50` }}
               >
-                {phase === 'idle' ? '—' : (reelName || '—')}
-              </p>
+                <Play size={18} fill="currentColor" />
+                {busy ? 'Rodando...' : `Soltar ${ballCount} bolinha${ballCount > 1 ? 's' : ''}`}
+              </button>
             </div>
 
-            <PlinkoBoard
-              rows={ROWS}
-              multipliers={multipliers}
-              accent={accent}
-              dropToken={dropToken}
-              balls={activeBalls}
-              onLanded={handleLanded}
-              onAllLanded={handleAllLanded}
-            />
-
-            {phase === 'result' && batch.length > 0 && (
-              <div className="rounded-xl border p-4 animate-scale-in space-y-2" style={{ borderColor: accent, background: `${accent}12`, boxShadow: `0 0 30px ${accent}30` }}>
-                <p className="text-[10px] uppercase tracking-widest text-white/50 text-center">
-                  Resultado {batch.length > 1 ? `· ${batch.length} bolinhas` : ''}
-                </p>
-                {batch.map((r, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="flex-1 text-sm font-black uppercase truncate" style={{ color: textColor }}>{r.name}</span>
-                    <span className="text-xs font-mono text-white/50">{r.multiplier}x</span>
-                    <span className="text-base font-black" style={{ color: accent, textShadow: `0 0 14px ${accent}70` }}>{formatCurrency(r.amount)}</span>
-                  </div>
-                ))}
-                {batch.length > 1 && (
-                  <p className="text-center text-[11px] font-bold pt-1 border-t" style={{ color: accent, borderColor: `${accent}30` }}>
-                    Total {formatCurrency(batch.reduce((s, r) => s + r.amount, 0))}
+            {/* Side panel */}
+            <div className="lg:w-[320px] shrink-0 min-h-0 overflow-y-auto space-y-3">
+              {phase === 'result' && batch.length > 0 && (
+                <div className="rounded-xl border p-4 animate-scale-in space-y-2" style={{ borderColor: accent, background: `${accent}12`, boxShadow: `0 0 30px ${accent}30` }}>
+                  <p className="text-[10px] uppercase tracking-widest text-white/50 text-center">
+                    Resultado {batch.length > 1 ? `· ${batch.length} bolinhas` : ''}
                   </p>
-                )}
-              </div>
-            )}
-
-            <button
-              onClick={startRound}
-              disabled={busy || participantCount === 0}
-              className="w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
-              style={{ background: accent, color: btnText, boxShadow: `0 0 40px ${accent}50` }}
-            >
-              <Play size={18} fill="currentColor" />
-              {busy ? 'Rodando...' : `Soltar ${ballCount} bolinha${ballCount > 1 ? 's' : ''}`}
-            </button>
-
-
-            {rounds.length > 0 && (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40">Rodadas ({rounds.length})</p>
-                  <p className="text-[11px] font-bold" style={{ color: accent }}>
-                    Total {formatCurrency(rounds.reduce((s, r) => s + r.amount, 0))}
-                  </p>
-                </div>
-                <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
-                  {rounds.map((r, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-                      <span className="flex-1 text-xs font-bold uppercase truncate" style={{ color: textColor }}>{r.name}</span>
-                      <span className="text-[10px] font-mono text-white/40">{r.multiplier}x</span>
-                      <span className="text-xs font-black" style={{ color: accent }}>{formatCurrency(r.amount)}</span>
+                  {batch.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="flex-1 text-sm font-black uppercase truncate" style={{ color: textColor }}>{r.name}</span>
+                      <span className="text-xs font-mono text-white/50">{r.multiplier}x</span>
+                      <span className="text-base font-black" style={{ color: accent, textShadow: `0 0 14px ${accent}70` }}>{formatCurrency(r.amount)}</span>
                     </div>
                   ))}
+                  {batch.length > 1 && (
+                    <p className="text-center text-[11px] font-bold pt-1 border-t" style={{ color: accent, borderColor: `${accent}30` }}>
+                      Total {formatCurrency(batch.reduce((s, r) => s + r.amount, 0))}
+                    </p>
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {rounds.length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-widest text-white/40">Rodadas ({rounds.length})</p>
+                    <p className="text-[11px] font-bold" style={{ color: accent }}>
+                      Total {formatCurrency(rounds.reduce((s, r) => s + r.amount, 0))}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5 pr-1">
+                    {rounds.map((r, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+                        <span className="flex-1 text-xs font-bold uppercase truncate" style={{ color: textColor }}>{r.name}</span>
+                        <span className="text-[10px] font-mono text-white/40">{r.multiplier}x</span>
+                        <span className="text-xs font-black" style={{ color: accent }}>{formatCurrency(r.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>
