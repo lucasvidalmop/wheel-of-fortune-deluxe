@@ -25,6 +25,7 @@ const Bets = lazy(() => import("./pages/Bets.tsx"));
 const Lobby = lazy(() => import("./pages/Lobby.tsx"));
 const Sorteio = lazy(() => import("./pages/Sorteio.tsx"));
 const SorteioLive = lazy(() => import("./pages/SorteioLive.tsx"));
+const PlinkoPreview = lazy(() => import("./pages/__PlinkoPreview.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -103,6 +104,7 @@ const App = () => {
             <Route path="/ref/:code" element={<Referral />} />
             <Route path="/gorjeta" element={<Registration />} />
             <Route path="/influencer" element={<Influencer />} />
+            <Route path="/__plinko-preview" element={<PlinkoPreview />} />
             <Route path="/batalha" element={<Batalha />} />
             <Route path="/:slug" element={<SlugRouter />} />
           </Routes>
