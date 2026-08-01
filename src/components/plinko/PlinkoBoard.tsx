@@ -122,10 +122,21 @@ const PlinkoBoard = ({
     const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00028 } });
     const world = engine.world;
 
+    // The triangle grows until it spans the full width of the bins; after that
+    // the rows stay full width and alternate their offset by half a bin so the
+    // ball can never fall straight through a single column.
+    const maxCount = slots + 1;
+    const rowCount = (r: number) => {
+      const grow = r + 3;
+      if (grow <= maxCount) return grow;
+      const extra = grow - maxCount;      // 1, 2, 3, ...
+      return extra % 2 === 1 ? maxCount - 1 : maxCount;
+    };
+
     const pegPos: { x: number; y: number }[] = [];
     const pegBodies: Matter.Body[] = [];
     for (let r = 0; r < rows; r++) {
-      const count = r + 3;
+      const count = rowCount(r);
       for (let j = 0; j < count; j++) {
         const x = centerX + (j - (count - 1) / 2) * d;
         const y = rowYPx(r);
