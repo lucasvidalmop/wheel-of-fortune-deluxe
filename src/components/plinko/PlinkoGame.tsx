@@ -217,7 +217,7 @@ const PlinkoGame = ({
               <div>
                 <p className="text-[10px] uppercase tracking-[0.35em] text-white/30 mb-2">{statusLabel}</p>
                 <p
-                  className="text-4xl xl:text-5xl font-black uppercase leading-[0.95] break-words"
+                  className="text-[clamp(1.5rem,2.6vw,2.75rem)] font-black uppercase leading-[1.02] break-words"
                   style={{
                     color: phase === 'idle' ? 'rgba(255,255,255,0.25)' : accent,
                     textShadow: phase === 'idle' ? 'none' : `0 0 30px ${accent}55`,
