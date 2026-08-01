@@ -40,7 +40,7 @@ interface PlinkoGameProps {
 
 // More rows than bins: the extra rows stay full width (offset by half a bin),
 // so the ball keeps hitting pegs instead of slipping straight to the bottom.
-const ROWS = 13;
+const ROWS = 11;
 const SLOTS = 9;
 const DEFAULT_MULTIPLIERS = [10, 5, 3, 2, 1, 2, 3, 5, 10];
 const DEFAULT_CHANCES = [2, 6, 10, 15, 34, 15, 10, 6, 2];
