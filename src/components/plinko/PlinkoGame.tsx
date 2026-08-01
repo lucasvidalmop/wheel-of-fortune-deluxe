@@ -160,20 +160,6 @@ const PlinkoGame = ({
 
   const busy = phase === 'picking' || phase === 'dropping';
 
-  // Square board sized to the available stage area (fills the screen height)
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const [boardSize, setBoardSize] = useState(0);
-  useEffect(() => {
-    const el = stageRef.current;
-    if (!el || !open) return;
-    const ro = new ResizeObserver(() => {
-      const r = el.getBoundingClientRect();
-      setBoardSize(Math.max(240, Math.floor(Math.min(r.width, r.height))));
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [open]);
-
   const total = rounds.reduce((s, r) => s + r.amount, 0);
   const statusLabel = phase === 'picking'
     ? 'Sorteando'
@@ -225,9 +211,9 @@ const PlinkoGame = ({
           </header>
 
           {/* ── Stage ── */}
-          <main className="flex-1 min-h-0 px-4 pb-3 grid gap-4 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <main className="flex-1 min-h-0 px-4 pb-3 flex flex-col lg:flex-row items-stretch gap-4">
             {/* Left · live caller */}
-            <section className="hidden lg:flex flex-col justify-center gap-4 min-w-0">
+            <section className="hidden lg:flex flex-1 min-w-0 flex-col justify-center gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.35em] text-white/30 mb-2">{statusLabel}</p>
                 <p
@@ -253,7 +239,7 @@ const PlinkoGame = ({
             </section>
 
             {/* Center · board */}
-            <section className="min-h-0 flex flex-col items-center gap-3">
+            <section className="min-h-0 flex flex-col items-center gap-3 shrink-0 mx-auto w-[min(100%,calc(100dvh_-_230px))] lg:w-[min(46vw,calc(100dvh_-_170px))]">
               {/* mobile caller */}
               <div className="lg:hidden w-full text-center">
                 <p className="text-[9px] uppercase tracking-[0.3em] text-white/30">{statusLabel}</p>
@@ -265,10 +251,9 @@ const PlinkoGame = ({
                 </p>
               </div>
 
-              <div ref={stageRef} className="flex-1 min-h-0 w-full flex items-center justify-center">
-                <div style={{ width: boardSize || undefined, height: boardSize || undefined }}>
+              <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+                <div className="w-full aspect-square max-h-full">
                   <PlinkoBoard
-                    key={boardSize}
                     fill
                     rows={ROWS}
                     multipliers={multipliers}
@@ -293,7 +278,7 @@ const PlinkoGame = ({
             </section>
 
             {/* Right · results */}
-            <section className="min-h-0 flex-col hidden lg:flex justify-center">
+            <section className="min-h-0 flex-1 min-w-0 flex-col hidden lg:flex justify-center">
               <div className="max-h-full overflow-y-auto space-y-2 pr-1">
                 {batch.length === 0 && rounds.length === 0 && (
                   <p className="text-[11px] uppercase tracking-[0.2em] text-white/20">Sem rodadas ainda</p>
