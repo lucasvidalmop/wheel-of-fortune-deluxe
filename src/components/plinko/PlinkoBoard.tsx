@@ -318,7 +318,10 @@ const PlinkoBoard = ({
         }
 
         if (m.restFrames > 8) {
-          const slotIndex = typeof m.targetSlot === 'number' ? m.targetSlot : slotIndexOf(p.x);
+          // The visual landing is the source of truth. The configured target only
+          // influences the trajectory; the highlighted multiplier must always be
+          // the bin where the ball physically stopped.
+          const slotIndex = slotIndexOf(m.body.position.x);
           m.landed = true;
           m.landedAt = t;
           m.slotIndex = slotIndex;
