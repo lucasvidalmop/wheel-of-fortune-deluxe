@@ -261,6 +261,7 @@ const PlinkoGame = ({
               </div>
             )}
           </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
