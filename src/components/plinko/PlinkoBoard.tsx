@@ -36,6 +36,9 @@ const PHYSICS_TIME_SCALE = 0.62;
 // unnatural upward launch when a ball catches two pegs at once.
 const MAX_UPWARD_VELOCITY = -0.12;
 const TRAIL = 16;
+// Pegs sit in their own collision category so a ball entering the final funnel
+// can stop colliding with the last peg row instead of jittering against it.
+const PEG_CATEGORY = 0x0004;
 
 interface BallMeta {
   id: string;
