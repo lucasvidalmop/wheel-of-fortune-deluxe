@@ -277,7 +277,21 @@ const PlinkoBoard = ({
             x: Math.max(-0.6, Math.min(0.6, dx / binW)) * pull * 60,
             y: 0,
           });
+
+          // Funnel: below the last peg row the ball must be inside the target
+          // bin, otherwise the highlighted slot would not match where the ball
+          // is visibly resting.
+          const lastRowY = rowYPx(rows - 1);
+          if (p.y > lastRowY) {
+            const k = Math.min(1, (p.y - lastRowY) / Math.max(1, binTop - lastRowY));
+            const ease = k * k;
+            Matter.Body.setPosition(m.body, {
+              x: p.x + (desiredX - p.x) * ease,
+              y: p.y,
+            });
+          }
         }
+
 
         m.trail.push({ x: p.x, y: p.y });
         if (m.trail.length > TRAIL) m.trail.shift();
