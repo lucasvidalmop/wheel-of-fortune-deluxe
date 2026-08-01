@@ -198,13 +198,21 @@ const PlinkoBoard = ({
     if (dropToken > 0 && balls.length > 0) {
       const now = performance.now();
       balls.forEach((b, i) => {
+        const tSlot = typeof b.targetSlot === 'number'
+          ? Math.min(slots - 1, Math.max(0, b.targetSlot))
+          : undefined;
+        // Bias the drop point (not the fall) towards the weighted outcome.
+        const bias = tSlot === undefined
+          ? 0
+          : Math.max(-d * 0.5, Math.min(d * 0.5, (padX + (tSlot + 0.5) * binW - centerX) * 0.3));
         const body = Matter.Bodies.circle(
-          centerX + (Math.random() - 0.5) * d * 0.08,
+          centerX + bias + (Math.random() - 0.5) * d * 0.08,
           topPad * 0.3,
           ballR,
           { restitution: 0.58, friction: 0, frictionAir: 0.003, density: 0.0012, slop: 0.01 },
         );
         Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.25, y: 0 });
+
 
         const meta: BallMeta = {
           id: b.id, label: b.label, body,
