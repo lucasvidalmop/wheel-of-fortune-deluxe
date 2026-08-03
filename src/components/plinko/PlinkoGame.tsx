@@ -20,6 +20,14 @@ export interface PlinkoRound {
   isGhost: boolean;
 }
 
+interface RosterEntry {
+  id: string;
+  name: string;
+  status: 'falling' | 'landed';
+  multiplier?: number;
+  amount?: number;
+}
+
 interface PlinkoGameProps {
   open: boolean;
   onClose: () => void;
@@ -74,7 +82,7 @@ const PlinkoGame = ({
   const [reelName, setReelName] = useState('');
   const [activeBalls, setActiveBalls] = useState<PlinkoBall[]>([]);
   const [rounds, setRounds] = useState<PlinkoRound[]>([]);
-  const [batch, setBatch] = useState<PlinkoRound[]>([]);
+  const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [dropToken, setDropToken] = useState(0);
   const picksRef = useRef<Map<string, PlinkoPick>>(new Map());
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -94,8 +102,8 @@ const PlinkoGame = ({
       clearTimers();
       setPhase('idle');
       setActiveBalls([]);
-      setBatch([]);
       setRounds([]);
+      setRoster([]);
       setDropToken(0);
       picksRef.current = new Map();
     }
@@ -120,8 +128,8 @@ const PlinkoGame = ({
       return { id, label: p.name, targetSlot: pickSlot(chances) };
     });
 
-    setBatch([]);
     setActiveBalls(newBalls);
+    setRoster(newBalls.map(b => ({ id: b.id, name: b.label, status: 'falling' })));
     setPhase('picking');
 
     const pool = names.length > 0 ? names : picks.map(p => p.name);
@@ -148,8 +156,10 @@ const PlinkoGame = ({
       amount,
       isGhost: pick.isGhost,
     };
-    setBatch(prev => [...prev, round]);
     setRounds(prev => [round, ...prev]);
+    setRoster(prev => prev.map(entry => entry.id === landing.id
+      ? { ...entry, status: 'landed', multiplier: landing.multiplier, amount }
+      : entry));
     onWin(pick, amount, landing.multiplier);
   };
 
@@ -239,15 +249,21 @@ const PlinkoGame = ({
                 onAllLanded={handleAllLanded}
               />
 
-              {phase === 'result' && batch.length > 0 && (
-                <div className="absolute top-3 right-3 w-[min(340px,calc(100%_-_24px))] max-h-[42%] overflow-y-auto rounded-2xl border p-3 sm:p-4 animate-scale-in backdrop-blur-xl" style={{ borderColor: `${accent}70`, background: 'rgba(5,12,17,0.9)' }}>
-                  <p className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-2">Resultado</p>
+              {roster.length > 0 && (phase === 'dropping' || phase === 'result') && (
+                <div className="absolute top-3 right-3 w-[min(340px,calc(100%_-_24px))] max-h-[60%] overflow-y-auto rounded-2xl border p-3 sm:p-4 animate-scale-in backdrop-blur-xl" style={{ borderColor: `${accent}70`, background: 'rgba(5,12,17,0.9)' }}>
+                  <p className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-2">Sorteados</p>
                   <div className="space-y-2">
-                    {batch.map((r, i) => (
-                      <div key={i} className="flex items-center gap-3">
+                    {roster.map((r) => (
+                      <div key={r.id} className="flex items-center gap-3">
                         <span className="flex-1 text-xs sm:text-sm font-black uppercase truncate" style={{ color: textColor }}>{r.name}</span>
-                        <span className="text-[10px] font-mono text-white/40">{r.multiplier}x</span>
-                        <span className="text-xs sm:text-sm font-black tabular-nums" style={{ color: accent }}>{formatCurrency(r.amount)}</span>
+                        {r.status === 'landed' ? (
+                          <>
+                            <span className="text-[10px] font-mono text-white/40">{r.multiplier}x</span>
+                            <span className="text-xs sm:text-sm font-black tabular-nums" style={{ color: accent }}>{formatCurrency(r.amount ?? 0)}</span>
+                          </>
+                        ) : (
+                          <span className="text-[10px] uppercase tracking-wider text-white/30 animate-pulse">Caindo…</span>
+                        )}
                       </div>
                     ))}
                   </div>
