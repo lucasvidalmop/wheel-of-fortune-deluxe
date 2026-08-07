@@ -40,18 +40,39 @@ interface PlinkoGameProps {
   pickParticipant: () => PlinkoPick | null;
   onWin: (pick: PlinkoPick, amount: number, multiplier: number) => void;
   /** Configured in the admin panel (Influencer > Mini Game Plinko) */
+  rows?: number;
   multipliers?: number[];
   chances?: number[];
   basePrize?: number;
   ballCount?: number;
 }
 
-// More rows than bins: the extra rows stay full width (offset by half a bin),
-// so the ball keeps hitting pegs instead of slipping straight to the bottom.
-const ROWS = 11;
-const SLOTS = 9;
-const DEFAULT_MULTIPLIERS = [10, 5, 3, 2, 1, 2, 3, 5, 10];
-const DEFAULT_CHANCES = [2, 6, 10, 15, 34, 15, 10, 6, 2];
+// A real Galton board always has slots = rows + 1.
+const DEFAULT_ROWS = 12;
+
+/** Symmetric multiplier curve, low at the center, high at the edges. */
+const defaultMultipliers = (slots: number): number[] => {
+  const center = (slots - 1) / 2;
+  return Array.from({ length: slots }, (_, i) => {
+    const dist = Math.abs(i - center);
+    const raw = 0.4 * Math.pow(1.55, dist);
+    return Math.round(raw * 10) / 10;
+  });
+};
+
+/** Natural binomial odds for a board with this many peg rows — matches how a
+ *  physical ball actually distributes itself, so it doubles as a sane default. */
+const defaultChances = (rows: number): number[] => {
+  let row = [1];
+  for (let r = 1; r <= rows; r++) {
+    const next = [1];
+    for (let i = 1; i < r; i++) next.push(row[i - 1] + row[i]);
+    next.push(1);
+    row = next;
+  }
+  const total = row.reduce((s, n) => s + n, 0);
+  return row.map(n => Math.round((n / total) * 1000) / 10);
+};
 
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
@@ -70,11 +91,14 @@ const pickSlot = (weights: number[]) => {
 const PlinkoGame = ({
   open, onClose, accent, btnText, textColor, cardStyle,
   names, participantCount, pickParticipant, onWin,
-  multipliers: multipliersProp, chances: chancesProp,
+  rows: rowsProp, multipliers: multipliersProp, chances: chancesProp,
   basePrize: basePrizeProp, ballCount: ballCountProp,
 }: PlinkoGameProps) => {
-  const multipliers = multipliersProp?.length === SLOTS ? multipliersProp : DEFAULT_MULTIPLIERS;
-  const chances = multipliers.map((_, i) => Number(chancesProp?.[i] ?? DEFAULT_CHANCES[i] ?? 0));
+  const rows = Math.min(16, Math.max(8, rowsProp || DEFAULT_ROWS));
+  const slots = rows + 1;
+  const multipliers = multipliersProp?.length === slots ? multipliersProp : defaultMultipliers(slots);
+  const fallbackChances = defaultChances(rows);
+  const chances = multipliers.map((_, i) => Number(chancesProp?.[i] ?? fallbackChances[i] ?? 0));
   const basePrize = typeof basePrizeProp === 'number' && basePrizeProp >= 0 ? basePrizeProp : 10;
   const ballCount = Math.min(20, Math.max(1, ballCountProp || 1));
 
@@ -240,7 +264,7 @@ const PlinkoGame = ({
             <section className="relative flex-1 min-h-0 w-full max-w-[1180px]">
               <PlinkoBoard
                 fill
-                rows={ROWS}
+                rows={rows}
                 multipliers={multipliers}
                 accent={accent}
                 dropToken={dropToken}

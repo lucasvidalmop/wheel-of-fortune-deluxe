@@ -111,7 +111,7 @@ const Influencer = () => {
     if (lastWinnerRef.current) {
       lastWinnerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-  });
+  }, [winners.length]);
 
   // Individual prize dialog
   const [showPrizeDialog, setShowPrizeDialog] = useState(false);
@@ -1079,6 +1079,7 @@ const Influencer = () => {
         names={allParticipants.map(u => u.name)}
         participantCount={allParticipants.length}
         pickParticipant={pickPlinkoParticipant}
+        rows={influencerConfig.plinkoRows}
         multipliers={influencerConfig.plinkoMultipliers}
         chances={influencerConfig.plinkoChances}
         basePrize={influencerConfig.plinkoBasePrize}

@@ -15,6 +15,7 @@ export interface PlinkoLanding {
 }
 
 interface PlinkoBoardProps {
+  /** Number of peg rows. Slots (bins) are always rows + 1, mirroring a real Galton board. */
   rows: number;
   multipliers: number[];
   accent: string;
@@ -26,27 +27,16 @@ interface PlinkoBoardProps {
   fill?: boolean;
 }
 
-// Deliberately paced for a live draw: the next participant only enters after
-// the previous ball has had time to produce a few visible bounces.
 const STAGGER_MS = 900;
-// Keep the whole simulation deliberately slow so each collision can be read
-// during a live draw instead of the ball looking heavy and falling at once.
-const PHYSICS_TIME_SCALE = 0.62;
-// A Plinko ball may recoil slightly on contact, but should never shoot back
-// several rows. Matter's combined restitution can otherwise create an
-// unnatural upward launch when a ball catches two pegs at once.
-const MAX_UPWARD_VELOCITY = -0.12;
-const TRAIL = 16;
-// Pegs sit in their own collision category so a ball entering the final funnel
-// can stop colliding with the last peg row instead of jittering against it.
+const PHYSICS_TIME_SCALE = 0.6;
+const MAX_UPWARD_VELOCITY = -0.16;
 const PEG_CATEGORY = 0x0004;
+const BOARD_BG = '#0f2130';
 
 interface BallMeta {
   id: string;
   label: string;
   body: Matter.Body;
-  trail: { x: number; y: number }[];
-  squash: number;
   landed: boolean;
   landedAt: number;
   restFrames: number;
@@ -56,11 +46,6 @@ interface BallMeta {
   restY: number;
   slotIndex: number;
   targetSlot?: number;
-  funneling: boolean;
-}
-
-interface Spark {
-  x: number; y: number; vx: number; vy: number; life: number; size: number;
 }
 
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -68,6 +53,22 @@ const hexToRgb = (hex: string): [number, number, number] => {
   const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
   const n = parseInt(full.slice(0, 6) || 'ffcc33', 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+/** Heat-map for the multiplier bins: yellow at the lowest value, through
+ * orange, to a deep red/pink at the highest — independent of the operator's
+ * accent color, matching how every real Plinko board colors its slots. */
+const binColor = (t: number) => {
+  // t: 0 (lowest multiplier) -> 1 (highest multiplier)
+  const hue = 50 - t * 40; // 50 (yellow) -> 10 (red-orange) -> extends below via saturation/lightness
+  const sat = 90;
+  const light = 52 - t * 12;
+  if (t > 0.72) {
+    // push the very top tiers toward pink/red like the reference
+    const k = (t - 0.72) / 0.28;
+    return `hsl(${10 - k * 10}, ${sat}%, ${light - k * 6}%)`;
+  }
+  return `hsl(${hue}, ${sat}%, ${light}%)`;
 };
 
 const PlinkoBoard = ({
@@ -78,7 +79,8 @@ const PlinkoBoard = ({
   const rafRef = useRef<number | null>(null);
   const [sizeKey, setSizeKey] = useState('');
 
-  const slots = multipliers.length;
+  // A real Galton board always has one more bin than peg rows.
+  const slots = rows + 1;
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -100,7 +102,6 @@ const PlinkoBoard = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // ---- geometry (pixels) --------------------------------------------
     const W = Math.max(280, wrap.clientWidth || 320);
     const H = Math.max(280, wrap.clientHeight || W);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -113,50 +114,57 @@ const PlinkoBoard = ({
     const [ar, ag, ab] = hexToRgb(accent);
     const A = (a: number) => `rgba(${ar},${ag},${ab},${a})`;
 
-    const padX = W * 0.04;
-    const usableW = W - padX * 2;
-    const binW = usableW / slots;
-    const d = binW;                              // peg spacing == bin width
-    const binH = Math.max(34, Math.min(58, H * 0.1));
-    const topPad = H * 0.1;
-    const boardH = H - topPad - binH;
-    const rowGap = boardH / (rows + 1.2);
-    // Pegs and ball must also fit the VERTICAL gap between rows, otherwise a
-    // dense board (many rows) leaves no room to pass and the ball gets stuck.
-    const pegR = Math.max(3, Math.min(d * 0.18, rowGap * 0.2));
-    const ballR = Math.max(4, Math.min(d * 0.2, rowGap * 0.22));
+    // A Galton board reads correctly only when its horizontal peg spacing
+    // matches its vertical row spacing — otherwise a wide, short container
+    // (this one fills its parent) stretches the pyramid into a flat smear.
+    // Compute the natural (square-ish) size first, then fit it inside
+    // whichever dimension is the tighter constraint, centering the rest.
+    const topPadFrac = 0.07;
+    const binHFrac = 0.08;
+    const naturalRowGap = H * (1 - topPadFrac - binHFrac) / rows;
+    const widthNeeded = naturalRowGap * slots;
+    const availW = W * 0.94;
+
+    let d: number;
+    let topPad: number;
+    let binH: number;
+    let rowGap: number;
+    if (widthNeeded <= availW) {
+      d = naturalRowGap;
+      topPad = H * topPadFrac;
+      binH = Math.max(28, Math.min(46, H * binHFrac));
+      rowGap = naturalRowGap;
+    } else {
+      // Rare (very narrow container): fall back to fitting the width and
+      // shrink vertical spacing to match, keeping the pyramid proportional.
+      d = availW / slots;
+      rowGap = d;
+      topPad = H * topPadFrac;
+      binH = Math.max(24, H - topPad - rowGap * rows);
+    }
+    const padX = (W - d * slots) / 2;
+    const pegR = Math.max(2.5, Math.min(d * 0.16, rowGap * 0.17));
+    const ballR = Math.max(4, Math.min(d * 0.24, rowGap * 0.26));
+    const binW = d;
 
     const binTop = H - binH;
     const centerX = W / 2;
     const rowYPx = (r: number) => topPad + (r + 1) * rowGap;
 
-    const maxMult = Math.max(...multipliers, 1);
-    const minMult = Math.min(...multipliers, 0);
-
-    // ---- engine -------------------------------------------------------
-    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00028 } });
+    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00034 } });
     const world = engine.world;
 
-    // The triangle grows until it spans the full width of the bins; after that
-    // the rows stay full width and alternate their offset by half a bin so the
-    // ball can never fall straight through a single column.
-    const maxCount = slots + 1;
-    const rowCount = (r: number) => {
-      const grow = r + 3;
-      if (grow <= maxCount) return grow;
-      const extra = grow - maxCount;      // 1, 2, 3, ...
-      return extra % 2 === 1 ? maxCount - 1 : maxCount;
-    };
-
+    // Pure pyramid: row r has r+3 pegs, centered. Last row has rows+2 pegs,
+    // sitting directly above the `slots` bins below it (slots = rows + 1).
     const pegPos: { x: number; y: number }[] = [];
     const pegBodies: Matter.Body[] = [];
     for (let r = 0; r < rows; r++) {
-      const count = rowCount(r);
+      const count = r + 3;
       for (let j = 0; j < count; j++) {
         const x = centerX + (j - (count - 1) / 2) * d;
         const y = rowYPx(r);
         pegBodies.push(Matter.Bodies.circle(x, y, pegR, {
-          isStatic: true, restitution: 0.56, friction: 0, label: `peg:${pegPos.length}`,
+          isStatic: true, restitution: 0.58, friction: 0, label: `peg:${pegPos.length}`,
           collisionFilter: { category: PEG_CATEGORY, mask: 0xffffffff, group: 0 },
         }));
         pegPos.push({ x, y });
@@ -164,58 +172,33 @@ const PlinkoBoard = ({
     }
     Matter.Composite.add(world, pegBodies);
 
-    // floor + bin dividers
     Matter.Composite.add(world, Matter.Bodies.rectangle(W / 2, H + 10, W * 3, 20, {
-      isStatic: true, restitution: 0.25, friction: 0.06,
+      isStatic: true, restitution: 0.2, friction: 0.08,
     }));
     for (let i = 0; i <= slots; i++) {
       Matter.Composite.add(world, Matter.Bodies.rectangle(padX + i * binW, binTop + binH / 2, 3, binH, {
-        isStatic: true, restitution: 0.35, friction: 0.2,
+        isStatic: true, restitution: 0.3, friction: 0.2,
       }));
     }
 
-    // soft triangular boundary (no static walls -> no pockets to get stuck in)
     const limitAt = (y: number) => {
       const r = Math.max(0, Math.min(rows - 1, Math.floor((y - topPad) / rowGap)));
-      return (Math.min(r + 3, maxCount) - 1) / 2 * d;
+      return ((r + 3) - 1) / 2 * d;
     };
 
-    // ---- runtime state ------------------------------------------------
     const metas: BallMeta[] = [];
-    const sparks: Spark[] = [];
     const pegFlash = new Map<number, number>();
     const slotFlash = new Map<number, number>();
     const binHits = new Map<number, number>();
     const landings: PlinkoLanding[] = [];
     const pending: { meta: BallMeta; at: number }[] = [];
 
-    const spawnSparks = (px: number, py: number, count: number, power: number) => {
-      for (let i = 0; i < count; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const s = (0.4 + Math.random()) * power;
-        sparks.push({
-          x: px, y: py,
-          vx: Math.cos(a) * s,
-          vy: Math.sin(a) * s - power * 0.6,
-          life: 1,
-          size: 1 + Math.random() * 2.2,
-        });
-      }
-    };
-
     Matter.Events.on(engine, 'collisionStart', (evt) => {
       const now = performance.now();
       for (const pair of evt.pairs) {
-        for (const [a, b] of [[pair.bodyA, pair.bodyB], [pair.bodyB, pair.bodyA]] as const) {
+        for (const [a] of [[pair.bodyA, pair.bodyB], [pair.bodyB, pair.bodyA]] as const) {
           if (typeof a.label === 'string' && a.label.startsWith('peg:')) {
-            const idx = Number(a.label.slice(4));
-            pegFlash.set(idx, now);
-            const meta = metas.find(m => m.body === b);
-            if (meta) {
-              meta.squash = 1;
-              const p = pegPos[idx];
-              if (p) spawnSparks(p.x, p.y, 3, 0.8);
-            }
+            pegFlash.set(Number(a.label.slice(4)), now);
           }
         }
       }
@@ -227,35 +210,30 @@ const PlinkoBoard = ({
         const tSlot = typeof b.targetSlot === 'number'
           ? Math.min(slots - 1, Math.max(0, b.targetSlot))
           : undefined;
-        // Bias the drop point (not the fall) towards the weighted outcome.
         const bias = tSlot === undefined
           ? 0
           : Math.max(-d * 0.5, Math.min(d * 0.5, (padX + (tSlot + 0.5) * binW - centerX) * 0.3));
         const body = Matter.Bodies.circle(
-          centerX + bias + (Math.random() - 0.5) * d * 0.08,
+          centerX + bias + (Math.random() - 0.5) * d * 0.06,
           topPad * 0.3,
           ballR,
-          { restitution: 0.58, friction: 0, frictionAir: 0.003, density: 0.0012, slop: 0.01 },
+          { restitution: 0.56, friction: 0, frictionAir: 0.002, density: 0.0012, slop: 0.01 },
         );
-        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.25, y: 0 });
-
+        Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.2, y: 0 });
 
         const meta: BallMeta = {
           id: b.id, label: b.label, body,
-          trail: [], squash: 0, landed: false, landedAt: 0,
+          landed: false, landedAt: 0,
           restFrames: 0, stallFrames: 0, lastY: -1,
           restX: 0, restY: 0, slotIndex: 0,
-          funneling: false,
           targetSlot: tSlot,
-
         };
         metas.push(meta);
         pending.push({ meta, at: now + i * STAGGER_MS });
       });
     }
 
-    const slotIndexOf = (x: number) =>
-      Math.min(slots - 1, Math.max(0, Math.floor((x - padX) / binW)));
+    const slotIndexOf = (x: number) => Math.min(slots - 1, Math.max(0, Math.floor((x - padX) / binW)));
 
     let idleSince = 0;
 
@@ -265,81 +243,53 @@ const PlinkoBoard = ({
         Matter.Composite.add(world, meta.body);
       }
 
-      // Run simulation time slower than wall-clock time. Reducing gravity alone
-      // made the balls feel floaty but did not sufficiently extend the draw;
-      // slowing the whole engine also stretches every bounce and direction change.
       Matter.Engine.update(engine, (1000 / 60) * PHYSICS_TIME_SCALE);
 
       let active = pending.length > 0;
       for (const m of metas) {
-        m.squash *= 0.86;
         if (m.landed) continue;
         if (!world.bodies.includes(m.body)) continue;
         active = true;
 
         const p = m.body.position;
 
-        // Keep impacts readable without allowing the exaggerated upward
-        // ricochets that made balls appear to reverse direction at random.
-        // Horizontal deflection remains untouched, preserving the suspense.
         if (m.body.velocity.y < MAX_UPWARD_VELOCITY) {
-          Matter.Body.setVelocity(m.body, {
-            x: m.body.velocity.x,
-            y: MAX_UPWARD_VELOCITY,
-          });
+          Matter.Body.setVelocity(m.body, { x: m.body.velocity.x, y: MAX_UPWARD_VELOCITY });
         }
 
-        // soft boundary: keep the ball inside the peg triangle
         if (p.y < binTop - ballR) {
           const lim = limitAt(p.y);
           const off = p.x - centerX;
           if (Math.abs(off) > lim) {
             const sign = Math.sign(off) || 1;
             Matter.Body.setPosition(m.body, { x: centerX + sign * lim, y: p.y });
-            Matter.Body.setVelocity(m.body, {
-              x: -sign * (0.3 + Math.abs(m.body.velocity.x) * 0.4),
-              y: m.body.velocity.y,
-            });
+            Matter.Body.setVelocity(m.body, { x: -sign * (0.25 + Math.abs(m.body.velocity.x) * 0.4), y: m.body.velocity.y });
           }
         }
 
-        // Outcome bias: only a very subtle drift applied in the UPPER part of the
-        // board, where it is indistinguishable from a natural bounce. From the
-        // middle rows down the ball is 100% physics: no pull, no funnel, so the
-        // bin it lands in is exactly where it visually falls.
         if (typeof m.targetSlot === 'number') {
           const progress = Math.min(1, Math.max(0, (p.y - topPad) / Math.max(1, binTop - topPad)));
-          if (progress < 0.45) {
+          // Let the first couple of rows bounce with pure physics before any
+          // bias kicks in, so the drop reads as random, not steered.
+          if (progress > 0.12 && progress < 0.4) {
             const desiredX = padX + (m.targetSlot + 0.5) * binW;
             const dx = desiredX - p.x;
-            const fade = 1 - progress / 0.45;
-            const pull = 0.00000075 * m.body.mass * 22 * fade;
-            Matter.Body.applyForce(m.body, p, {
-              x: Math.max(-1, Math.min(1, dx / (binW * 2))) * pull,
-              y: 0,
-            });
+            const fade = 1 - (progress - 0.12) / 0.28;
+            const pull = 0.00000075 * m.body.mass * 11 * fade;
+            Matter.Body.applyForce(m.body, p, { x: Math.max(-1, Math.min(1, dx / (binW * 2))) * pull, y: 0 });
           }
         }
-
-
-
-        m.trail.push({ x: p.x, y: p.y });
-        if (m.trail.length > TRAIL) m.trail.shift();
 
         const speed = Math.hypot(m.body.velocity.x, m.body.velocity.y);
         const inBin = p.y > binTop - ballR * 1.1;
         if (inBin && speed < 0.35) m.restFrames += 1; else m.restFrames = 0;
 
-        // anti-stall: nudge a ball that stopped falling
         if (!inBin) {
           if (m.lastY >= 0 && Math.abs(p.y - m.lastY) < 0.12) {
             m.stallFrames += 1;
-            if (m.stallFrames > 34) {
+            if (m.stallFrames > 30) {
               m.stallFrames = 0;
-              Matter.Body.setVelocity(m.body, {
-                x: (Math.random() < 0.5 ? -1 : 1) * 0.38,
-                y: 0.22,
-              });
+              Matter.Body.setVelocity(m.body, { x: (Math.random() < 0.5 ? -1 : 1) * 0.35, y: 0.2 });
             }
           } else {
             m.stallFrames = 0;
@@ -347,10 +297,7 @@ const PlinkoBoard = ({
           m.lastY = p.y;
         }
 
-        if (m.restFrames > 8) {
-          // The visual landing is the source of truth. The configured target only
-          // influences the trajectory; the highlighted multiplier must always be
-          // the bin where the ball physically stopped.
+        if (m.restFrames > 7) {
           const slotIndex = slotIndexOf(m.body.position.x);
           m.landed = true;
           m.landedAt = t;
@@ -360,7 +307,6 @@ const PlinkoBoard = ({
           Matter.Composite.remove(world, m.body);
           slotFlash.set(slotIndex, t);
           binHits.set(slotIndex, (binHits.get(slotIndex) || 0) + 1);
-          spawnSparks(p.x, p.y, 22, 2.1);
           const landing = { id: m.id, slotIndex, multiplier: multipliers[slotIndex] };
           landings.push(landing);
           onLanded?.(landing);
@@ -368,62 +314,45 @@ const PlinkoBoard = ({
         }
       }
 
-      for (let i = sparks.length - 1; i >= 0; i--) {
-        const s = sparks[i];
-        s.vy += 0.12;
-        s.x += s.vx;
-        s.y += s.vy;
-        s.life -= 0.035;
-        if (s.life <= 0) sparks.splice(i, 1);
-      }
-      if (sparks.length > 0) active = true;
-
       return active;
     };
 
     const drawBall = (t: number, m: BallMeta) => {
       let px: number, py: number, alpha = 1;
       if (m.landed) {
-        const k = Math.min(1, (t - m.landedAt) / 260);
-        const last = m.trail[m.trail.length - 1] || { x: m.restX, y: m.restY };
-        px = last.x + (m.restX - last.x) * k;
-        py = last.y + (m.restY - last.y) * k;
-        alpha = 0.9;
+        const k = Math.min(1, (t - m.landedAt) / 200);
+        px = m.restX;
+        py = (m.body.position.y ?? m.restY) + (m.restY - (m.body.position.y ?? m.restY)) * k;
+        alpha = 0.95;
       } else {
         px = m.body.position.x;
         py = m.body.position.y;
-        for (let i = 0; i < m.trail.length; i++) {
-          const p = m.trail[i];
-          ctx.globalAlpha = (i / m.trail.length) * 0.26;
-          ctx.fillStyle = A(0.9);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, ballR * 0.35 + (i / m.trail.length) * ballR * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
       }
       ctx.globalAlpha = alpha;
 
-      const glow = ctx.createRadialGradient(px, py, 0, px, py, ballR * 3);
-      glow.addColorStop(0, A(0.4));
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = glow;
+      // Soft contact shadow — the one thing that makes a flat circle read as
+      // a ball resting on a surface instead of a sticker pasted on top of it.
       ctx.beginPath();
-      ctx.arc(px, py, ballR * 3, 0, Math.PI * 2);
+      ctx.ellipse(px, py + ballR * 0.55, ballR * 0.85, ballR * 0.32, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.fill();
 
-      ctx.save();
-      ctx.translate(px, py);
-      if (!m.landed) ctx.rotate(m.body.angle);
-      ctx.scale(1 + m.squash * 0.2, 1 - m.squash * 0.24);
-      const bg = ctx.createRadialGradient(-ballR * 0.35, -ballR * 0.4, 0, 0, 0, ballR);
-      bg.addColorStop(0, '#ffffff');
-      bg.addColorStop(0.45, A(1));
-      bg.addColorStop(1, A(0.7));
-      ctx.fillStyle = bg;
+      const shade = ctx.createRadialGradient(
+        px - ballR * 0.32, py - ballR * 0.38, ballR * 0.1,
+        px, py, ballR * 1.05,
+      );
+      shade.addColorStop(0, A(1));
+      shade.addColorStop(0.55, A(1));
+      shade.addColorStop(1, A(0.72));
       ctx.beginPath();
-      ctx.arc(0, 0, ballR, 0, Math.PI * 2);
+      ctx.arc(px, py, ballR, 0, Math.PI * 2);
+      ctx.fillStyle = shade;
       ctx.fill();
-      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(px - ballR * 0.32, py - ballR * 0.38, ballR * 0.32, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fill();
 
       if (metas.length <= 4 && !m.landed) {
         const label = m.label.length > 14 ? `${m.label.slice(0, 13)}…` : m.label;
@@ -442,61 +371,45 @@ const PlinkoBoard = ({
       ctx.globalAlpha = 1;
     };
 
+    const maxMult = Math.max(...multipliers, 0.0001);
+    const minMult = Math.min(...multipliers, 0);
+
     const draw = (t: number) => {
-      ctx.clearRect(0, 0, W, H);
-
-      const g = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.9);
-      g.addColorStop(0, A(0.1));
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g;
+      ctx.fillStyle = BOARD_BG;
       ctx.fillRect(0, 0, W, H);
-
-      // triangle guides (follow the widening rows, then run straight down)
-      const apexRow = Math.min(rows - 1, maxCount - 3);
-      const halfMax = (maxCount - 1) / 2 * d;
-      ctx.strokeStyle = A(0.12);
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      for (const sign of [-1, 1]) {
-        ctx.moveTo(centerX + sign * d, rowYPx(0));
-        ctx.lineTo(centerX + sign * halfMax, rowYPx(apexRow));
-        if (apexRow < rows - 1) ctx.lineTo(centerX + sign * halfMax, rowYPx(rows - 1));
-      }
-      ctx.stroke();
 
       // pegs
       for (let i = 0; i < pegPos.length; i++) {
         const { x: px, y: py } = pegPos[i];
         const flash = pegFlash.get(i);
-        const heat = flash ? Math.max(0, 1 - (t - flash) / 420) : 0;
+        const heat = flash ? Math.max(0, 1 - (t - flash) / 320) : 0;
         if (heat > 0) {
-          const pg = ctx.createRadialGradient(px, py, 0, px, py, 16);
-          pg.addColorStop(0, A(0.55 * heat));
-          pg.addColorStop(1, 'rgba(0,0,0,0)');
+          const pg = ctx.createRadialGradient(px, py, 0, px, py, pegR * 4);
+          pg.addColorStop(0, `rgba(255,255,255,${0.55 * heat})`);
+          pg.addColorStop(1, 'rgba(255,255,255,0)');
           ctx.fillStyle = pg;
           ctx.beginPath();
-          ctx.arc(px, py, 16, 0, Math.PI * 2);
+          ctx.arc(px, py, pegR * 4, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.beginPath();
-        ctx.arc(px, py, pegR + 0.8 + heat * 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = heat > 0 ? A(0.95) : 'rgba(255,255,255,0.5)';
+        ctx.arc(px, py, pegR, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${0.85 + heat * 0.15})`;
         ctx.fill();
       }
 
       // bins
       for (let i = 0; i < slots; i++) {
         const m = multipliers[i];
-        const heatScale = maxMult === minMult ? 1 : (m - minMult) / (maxMult - minMult);
+        const norm = maxMult === minMult ? 0.5 : (m - minMult) / (maxMult - minMult);
         const flash = slotFlash.get(i);
-        const lit = flash ? Math.max(0, 1 - (t - flash) / 900) : 0;
+        const lit = flash ? Math.max(0, 1 - (t - flash) / 700) : 0;
         const hits = binHits.get(i) || 0;
-        const held = hits > 0 ? 0.3 : 0;
         const x = padX + i * binW + 2;
-        const y = binTop + 2 - lit * 3;
+        const y = binTop + 2 - lit * 4;
         const w = binW - 4;
         const h = binH - 6;
-        const r = 6;
+        const r = 5;
 
         ctx.beginPath();
         ctx.moveTo(x + r, y);
@@ -505,53 +418,31 @@ const PlinkoBoard = ({
         ctx.arcTo(x, y + h, x, y, r);
         ctx.arcTo(x, y, x + w, y, r);
         ctx.closePath();
-
-        const bg = ctx.createLinearGradient(x, y, x, y + h);
-        bg.addColorStop(0, A(0.08 + heatScale * 0.4 + lit * 0.5 + held));
-        bg.addColorStop(1, A(0.03 + heatScale * 0.16 + lit * 0.3 + held * 0.5));
-        ctx.fillStyle = bg;
+        ctx.fillStyle = binColor(norm);
         ctx.fill();
-        ctx.strokeStyle = A(0.2 + heatScale * 0.45 + lit * 0.5 + held);
-        ctx.lineWidth = 1;
-        ctx.stroke();
         if (lit > 0) {
           ctx.save();
-          ctx.shadowColor = A(0.9 * lit);
-          ctx.shadowBlur = 22 * lit;
+          ctx.shadowColor = 'rgba(255,255,255,0.9)';
+          ctx.shadowBlur = 16 * lit;
+          ctx.strokeStyle = `rgba(255,255,255,${0.8 * lit})`;
+          ctx.lineWidth = 2;
           ctx.stroke();
           ctx.restore();
         }
 
-        ctx.fillStyle = lit > 0.5 ? '#ffffff' : A(0.85);
-        ctx.font = `800 ${Math.max(9, Math.min(14, binW * 0.4))}px Barlow, system-ui, sans-serif`;
+        ctx.fillStyle = '#0f1923';
+        ctx.font = `800 ${Math.max(9, Math.min(13, binW * 0.34))}px Barlow, system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(`${m}x`, x + w / 2, y + h / 2);
-
-        if (hits > 0) {
-          const bw = 16;
-          ctx.fillStyle = A(0.95);
-          ctx.beginPath();
-          ctx.roundRect(x + w / 2 - bw / 2, y - 9, bw, 15, 7);
-          ctx.fill();
-          ctx.fillStyle = '#08131a';
-          ctx.font = '800 10px Barlow, system-ui, sans-serif';
-          ctx.fillText(String(hits), x + w / 2, y - 1.5);
-        }
       }
-
-      // sparks
-      for (const s of sparks) {
-        ctx.globalAlpha = Math.max(0, s.life);
-        ctx.fillStyle = A(0.9);
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
 
       for (const m of metas) {
-        if (!m.landed && !world.bodies.includes(m.body)) continue;
+        if (m.landed) {
+          // Drop into the bin, then vanish — the lit bin border is what
+          // marks the outcome, not a ball parked on top of it forever.
+          if (t - m.landedAt > 260) continue;
+        } else if (!world.bodies.includes(m.body)) continue;
         drawBall(t, m);
       }
     };
@@ -562,7 +453,7 @@ const PlinkoBoard = ({
       draw(t);
       if (active) idleSince = 0;
       else if (!idleSince) idleSince = t;
-      if (active || !idleSince || t - idleSince < 1500) {
+      if (active || !idleSince || t - idleSince < 1200) {
         rafRef.current = requestAnimationFrame(loop);
       } else {
         rafRef.current = null;
@@ -588,7 +479,7 @@ const PlinkoBoard = ({
       style={{
         ...(fill ? {} : { aspectRatio: '1 / 1' }),
         borderColor: `${accent}25`,
-        background: 'linear-gradient(180deg, hsl(var(--card)), rgba(0,0,0,0.45))',
+        background: BOARD_BG,
       }}
     >
       <canvas ref={canvasRef} className="absolute inset-0" />
