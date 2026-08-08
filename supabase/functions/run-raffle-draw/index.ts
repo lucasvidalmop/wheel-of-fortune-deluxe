@@ -47,7 +47,27 @@ Deno.serve(async (req) => {
       .select("id, display_name, public_code, account_id")
       .eq("event_id", eventId).eq("status", "approved");
 
-    const list = pool || [];
+    // Fantasmas: mesma lista global do operador, liberados por evento
+    // (quantidade + atraso configurados em raffle_events).
+    const ghostCount = Number(ev.ghost_count || 0);
+    const ghostDelayMinutes = Number(ev.ghost_delay_minutes || 0);
+    let ghostEntries: { id: string; display_name: string; public_code: string; account_id: string }[] = [];
+    if (ghostCount > 0) {
+      const elapsedMin = (Date.now() - new Date(ev.created_at).getTime()) / 60000;
+      if (elapsedMin >= ghostDelayMinutes) {
+        const { data: ownerConfig } = await admin
+          .from("wheel_configs").select("config").eq("user_id", ev.owner_id).maybeSingle();
+        const ghostNames: string[] = (ownerConfig?.config as any)?.ghostUsers || [];
+        ghostEntries = ghostNames.slice(0, ghostCount).map((name, i) => ({
+          id: `ghost_${i}`,
+          display_name: name,
+          public_code: `GST-${String(i + 1).padStart(5, "0")}`,
+          account_id: `ghost_${i}`,
+        }));
+      }
+    }
+
+    const list = [...(pool || []), ...ghostEntries];
     if (list.length < Math.max(1, ev.min_participants || 0)) {
       return json({ error: `Participantes válidos insuficientes (${list.length}/${ev.min_participants}).` }, 409);
     }
