@@ -137,7 +137,8 @@ Deno.serve(async (req) => {
 
     // Avisa cada ganhador real pelo WhatsApp (instancia de Notificacoes),
     // um por um com 90s de intervalo para nao levar o numero a bloqueio.
-    if (realWinners.length > 0) {
+    // So dispara se o operador ligou a notificacao para este evento.
+    if (ev.notify_winners && realWinners.length > 0) {
       const { data: wheelUsers } = await admin
         .from("wheel_users")
         .select("id, phone")

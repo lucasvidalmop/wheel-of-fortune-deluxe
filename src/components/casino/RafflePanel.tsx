@@ -30,6 +30,7 @@ interface RaffleEventRow {
   ghost_count: number;
   ghost_delay_minutes: number;
   ghost_winners_count: number;
+  notify_winners: boolean;
   opens_at: string | null;
   closes_at: string | null;
   draw_at: string | null;
@@ -92,6 +93,7 @@ const emptyEvent = (ownerId: string): Partial<RaffleEventRow> => ({
   ghost_count: 0,
   ghost_delay_minutes: 0,
   ghost_winners_count: 0,
+  notify_winners: false,
   status: 'draft',
   is_active: true,
 });
@@ -236,6 +238,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
       ghost_count: Math.max(0, Number((draft as any).ghost_count) || 0),
       ghost_delay_minutes: Math.max(0, Number((draft as any).ghost_delay_minutes) || 0),
       ghost_winners_count: Math.max(0, Number((draft as any).ghost_winners_count) || 0),
+      notify_winners: (draft as any).notify_winners === true,
       opens_at: draft.opens_at || null,
       closes_at: draft.closes_at || null,
       draw_at: draft.draw_at || null,
@@ -512,6 +515,10 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Fantasmas sorteados como ganhadores</span>
                   <input type="number" min={0} className={inputCls} value={(draft as any).ghost_winners_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_winners_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                </label>
+                <label className="flex items-center gap-2 pt-5">
+                  <input type="checkbox" checked={(draft as any).notify_winners === true} onChange={(e) => setDraft({ ...draft, notify_winners: e.target.checked } as any)} />
+                  <span className="text-xs text-muted-foreground">Enviar notificação de ganho por WhatsApp</span>
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Abertura das inscrições</span>
