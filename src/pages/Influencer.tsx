@@ -550,6 +550,7 @@ const Influencer = () => {
   const persistRaffleResults = async (finalSelected: Winner[]) => {
     if (!session?.user?.id) return;
 
+    let notifyDelay = 0;
     for (const winner of finalSelected) {
       if ((winner.user as any)._isGhost) continue;
 
@@ -569,6 +570,24 @@ const Influencer = () => {
           if (result?.data?.auto_payment || winner.user.auto_payment) {
             triggerAutoPay(result.data.id).catch(console.error);
           }
+        }
+
+        if (liveMode && selectedLiveEvent && winner.user.phone) {
+          const message = `🎉 Parabéns, ${winner.user.name}!\n\nVocê foi sorteado no evento *${selectedLiveEvent.name}*! 🏆\n\n🎁 Prêmio: Sorteio R$ ${winner.amount.toFixed(2)}\n\nEm breve entraremos em contato pra combinar a entrega/pagamento do seu prêmio. Fica de olho no WhatsApp!\n\nQualquer dúvida, é só responder essa mensagem.`;
+          const sendAt = new Date(Date.now() + notifyDelay * 90_000).toISOString();
+          notifyDelay++;
+          (supabase as any).from('scheduled_messages').insert({
+            owner_id: session.user.id,
+            channel: 'whatsapp_notify',
+            recipient_type: 'phone',
+            recipient_value: winner.user.phone,
+            recipient_label: winner.user.name,
+            message,
+            recurrence: 'none',
+            status: 'pending',
+            scheduled_at: sendAt,
+            next_run_at: sendAt,
+          }).then(({ error }: any) => { if (error) console.error('Erro ao agendar aviso WhatsApp:', error); });
         }
       } catch (err) {
         console.error('Erro ao criar pagamento:', err);
