@@ -27,8 +27,8 @@ interface PlinkoBoardProps {
   fill?: boolean;
 }
 
-const STAGGER_MS = 900;
-const PHYSICS_TIME_SCALE = 0.6;
+const STAGGER_MS = 380;
+const PHYSICS_TIME_SCALE = 0.46;
 const MAX_UPWARD_VELOCITY = -0.16;
 const PEG_CATEGORY = 0x0004;
 const BOARD_BG = '#0f2130';
@@ -151,7 +151,7 @@ const PlinkoBoard = ({
     const centerX = W / 2;
     const rowYPx = (r: number) => topPad + (r + 1) * rowGap;
 
-    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00034 } });
+    const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.00027 } });
     const world = engine.world;
 
     // Pure pyramid: row r has r+3 pegs, centered. Last row has rows+2 pegs,
