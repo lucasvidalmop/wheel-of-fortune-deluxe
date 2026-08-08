@@ -462,15 +462,15 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Abertura das inscrições</span>
-                  <input type="datetime-local" className={inputCls} value={toLocalInput(draft.opens_at || null)} onChange={(e) => setDraft({ ...draft, opens_at: fromLocalInput(e.target.value) })} />
+                  <input type="datetime-local" className={inputCls} style={{ colorScheme: 'dark' }} value={toLocalInput(draft.opens_at || null)} onChange={(e) => setDraft({ ...draft, opens_at: fromLocalInput(e.target.value) })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Encerramento das inscrições</span>
-                  <input type="datetime-local" className={inputCls} value={toLocalInput(draft.closes_at || null)} onChange={(e) => setDraft({ ...draft, closes_at: fromLocalInput(e.target.value) })} />
+                  <input type="datetime-local" className={inputCls} style={{ colorScheme: 'dark' }} value={toLocalInput(draft.closes_at || null)} onChange={(e) => setDraft({ ...draft, closes_at: fromLocalInput(e.target.value) })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Data do sorteio</span>
-                  <input type="datetime-local" className={inputCls} value={toLocalInput(draft.draw_at || null)} onChange={(e) => setDraft({ ...draft, draw_at: fromLocalInput(e.target.value) })} />
+                  <input type="datetime-local" className={inputCls} style={{ colorScheme: 'dark' }} value={toLocalInput(draft.draw_at || null)} onChange={(e) => setDraft({ ...draft, draw_at: fromLocalInput(e.target.value) })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Status</span>
