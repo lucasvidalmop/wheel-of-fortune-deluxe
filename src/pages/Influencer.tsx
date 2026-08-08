@@ -85,6 +85,66 @@ const Influencer = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // ─── Modo Ao Vivo (sorteio isolado por evento) ───
+  const [liveMode, setLiveMode] = useState(false);
+  const [liveEvents, setLiveEvents] = useState<{
+    id: string; name: string; status: string; created_at: string;
+    ghost_count: number; ghost_delay_minutes: number;
+  }[]>([]);
+  const [selectedLiveEventId, setSelectedLiveEventId] = useState('');
+  const [liveParticipants, setLiveParticipants] = useState<WheelUser[]>([]);
+
+  const selectedLiveEvent = liveEvents.find(e => e.id === selectedLiveEventId) || null;
+
+  const fetchLiveEvents = async (userId?: string) => {
+    const uid = userId || session?.user?.id;
+    if (!uid) return;
+    const { data } = await (supabase as any)
+      .from('raffle_events')
+      .select('id, name, status, created_at, ghost_count, ghost_delay_minutes')
+      .eq('owner_id', uid)
+      .order('created_at', { ascending: false });
+    setLiveEvents(data || []);
+  };
+
+  const fetchLiveParticipants = async (eventId: string) => {
+    if (!eventId) { setLiveParticipants([]); return; }
+    const { data } = await (supabase as any)
+      .from('raffle_participants')
+      .select('id, account_id, email, display_name')
+      .eq('event_id', eventId)
+      .eq('status', 'approved');
+    setLiveParticipants((data || []).map((p: any): WheelUser => ({
+      id: p.id,
+      account_id: p.account_id,
+      email: p.email || '',
+      phone: '',
+      name: p.display_name,
+      spins_available: 0,
+      created_at: '',
+      pix_key: '',
+      pix_key_type: '',
+      auto_payment: false,
+      blacklisted: false,
+      guaranteed_next_win: false,
+    })));
+  };
+
+  useEffect(() => { if (liveMode) void fetchLiveEvents(); }, [liveMode]);
+  useEffect(() => { if (liveMode && selectedLiveEventId) void fetchLiveParticipants(selectedLiveEventId); }, [liveMode, selectedLiveEventId]);
+
+  // Fonte de participantes reais: evento ao vivo selecionado, ou a base geral.
+  const activeUsers = liveMode && selectedLiveEvent ? liveParticipants : users;
+
+  // Fantasmas: mesma lista global do sistema, mas em modo Ao Vivo só liberamos
+  // a quantidade configurada no evento, e só depois do atraso definido.
+  const activeGhostUsers = useMemo(() => {
+    if (!liveMode || !selectedLiveEvent) return ghostUsers;
+    const elapsedMin = (Date.now() - new Date(selectedLiveEvent.created_at).getTime()) / 60000;
+    if (elapsedMin < selectedLiveEvent.ghost_delay_minutes) return [];
+    return ghostUsers.slice(0, selectedLiveEvent.ghost_count);
+  }, [liveMode, selectedLiveEvent, ghostUsers]);
+
   const [activeTab, setActiveTab] = useState<'participants' | 'winners' | 'history'>('participants');
   const [todayWinners, setTodayWinners] = useState<TodayWinner[]>([]);
   const [historyWinners, setHistoryWinners] = useState<TodayWinner[]>([]);
@@ -308,7 +368,7 @@ const Influencer = () => {
   };
 
   // Build ghost participants with stable fake IDs (seeded from name)
-  const ghostParticipants: WheelUser[] = useMemo(() => ghostUsers.map((name, i) => ({
+  const ghostParticipants: WheelUser[] = useMemo(() => activeGhostUsers.map((name, i) => ({
     id: `ghost_participant_${i}`,
     account_id: String(10000000 + Math.abs([...name].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0) + i * 7919) % 90000000),
     email: '',
@@ -321,17 +381,17 @@ const Influencer = () => {
     auto_payment: false,
     blacklisted: false,
     guaranteed_next_win: false,
-  })), [ghostUsers]);
+  })), [activeGhostUsers]);
 
   const allParticipants = useMemo(() => {
     // Interleave ghosts among real users for natural appearance
-    const combined = [...users];
+    const combined = [...activeUsers];
     ghostParticipants.forEach((g, i) => {
-      const pos = Math.min(Math.floor((i + 1) * (users.length + 1) / (ghostParticipants.length + 1)), combined.length);
+      const pos = Math.min(Math.floor((i + 1) * (activeUsers.length + 1) / (ghostParticipants.length + 1)), combined.length);
       combined.splice(pos, 0, g);
     });
     return combined;
-  }, [users, ghostParticipants]);
+  }, [activeUsers, ghostParticipants]);
 
   const filteredUsers = allParticipants.filter(u => {
     const term = searchTerm.toLowerCase();
@@ -373,7 +433,7 @@ const Influencer = () => {
   // ─── Plinko mini game ───
   const pickPlinkoParticipant = (): PlinkoPick | null => {
     const used = plinkoUsedIds.current;
-    const eligibleReal = users.filter(u =>
+    const eligibleReal = activeUsers.filter(u =>
       !u.blacklisted && todayWinsForUser(u.account_id) < maxWinsPerDay && !used.has(u.id));
     const eligibleGhost = ghostParticipants.filter(g => !used.has(g.id));
 
@@ -527,15 +587,15 @@ const Influencer = () => {
   };
 
   const executeRaffle = async () => {
-    if (users.length === 0 && ghostUsers.length === 0) { toast.error('Sem participantes'); return; }
+    if (activeUsers.length === 0 && activeGhostUsers.length === 0) { toast.error('Sem participantes'); return; }
     const qty = raffleQty;
 
-    const eligibleUsers = users.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay && !u.blacklisted);
+    const eligibleUsers = activeUsers.filter(u => todayWinsForUser(u.account_id) < maxWinsPerDay && !u.blacklisted);
     const guaranteedUsers = eligibleUsers.filter(u => u.guaranteed_next_win);
     const regularUsers = eligibleUsers.filter(u => !u.guaranteed_next_win);
     const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
 
-    const ghostPool = [...ghostUsers].sort(() => Math.random() - 0.5).map(name => ({
+    const ghostPool = [...activeGhostUsers].sort(() => Math.random() - 0.5).map(name => ({
       id: `ghost_${Math.random().toString(36).slice(2)}`,
       account_id: generateFakeAccountId(),
       email: '',
@@ -876,6 +936,51 @@ const Influencer = () => {
               <RotateCcw size={11} /> Reiniciar contador do dia
             </button>
           </div>
+
+          {/* Row 3b: Estático / Ao Vivo */}
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border overflow-hidden shrink-0" style={{ borderColor: `${accent}30` }}>
+              <button
+                onClick={() => setLiveMode(false)}
+                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
+                style={!liveMode ? { background: accent, color: btnText } : { color: `${accent}aa` }}
+              >
+                Estático
+              </button>
+              <button
+                onClick={() => setLiveMode(true)}
+                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
+                style={liveMode ? { background: accent, color: btnText } : { color: `${accent}aa` }}
+              >
+                Ao Vivo
+              </button>
+            </div>
+            {liveMode && (
+              <select
+                value={selectedLiveEventId}
+                onChange={(e) => setSelectedLiveEventId(e.target.value)}
+                className="flex-1 min-w-0 rounded-lg border bg-transparent px-2 py-1.5 text-[11px] outline-none"
+                style={{ borderColor: `${accent}30`, color: textColor }}
+              >
+                <option value="" style={{ color: '#000' }}>Selecione o evento...</option>
+                {liveEvents.map(ev => (
+                  <option key={ev.id} value={ev.id} style={{ color: '#000' }}>
+                    {ev.name} ({liveParticipants.length && ev.id === selectedLiveEventId ? liveParticipants.length : '…'})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          {liveMode && selectedLiveEvent && (
+            <p className="text-[10px] text-white/35">
+              {liveParticipants.length} participante(s) do evento
+              {selectedLiveEvent.ghost_count > 0 && (
+                <> · {activeGhostUsers.length} de {selectedLiveEvent.ghost_count} fantasma(s) liberado(s)
+                  {activeGhostUsers.length < selectedLiveEvent.ghost_count && ` (após ${selectedLiveEvent.ghost_delay_minutes}min)`}
+                </>
+              )}
+            </p>
+          )}
 
           {/* Row 4: Link bar */}
           {gorjetaUrl && (

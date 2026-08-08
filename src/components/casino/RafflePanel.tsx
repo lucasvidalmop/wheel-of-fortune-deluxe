@@ -26,6 +26,8 @@ interface RaffleEventRow {
   min_participants: number;
   max_participants: number | null;
   winners_count: number;
+  ghost_count: number;
+  ghost_delay_minutes: number;
   opens_at: string | null;
   closes_at: string | null;
   draw_at: string | null;
@@ -84,6 +86,8 @@ const emptyEvent = (ownerId: string): Partial<RaffleEventRow> => ({
   min_participants: 0,
   max_participants: null,
   winners_count: 1,
+  ghost_count: 0,
+  ghost_delay_minutes: 0,
   status: 'draft',
   is_active: true,
 });
@@ -199,6 +203,8 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
       min_participants: Number(draft.min_participants) || 0,
       max_participants: draft.max_participants ? Number(draft.max_participants) : null,
       winners_count: Math.max(1, Number(draft.winners_count) || 1),
+      ghost_count: Math.max(0, Number((draft as any).ghost_count) || 0),
+      ghost_delay_minutes: Math.max(0, Number((draft as any).ghost_delay_minutes) || 0),
       opens_at: draft.opens_at || null,
       closes_at: draft.closes_at || null,
       draw_at: draft.draw_at || null,
@@ -445,6 +451,14 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Máximo (opcional)</span>
                   <input type="number" min={0} className={inputCls} value={draft.max_participants ?? ''} onChange={(e) => setDraft({ ...draft, max_participants: e.target.value ? Number(e.target.value) : null })} />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Fantasmas no Plinko</span>
+                  <input type="number" min={0} className={inputCls} value={(draft as any).ghost_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Fantasmas entram após (minutos)</span>
+                  <input type="number" min={0} className={inputCls} value={(draft as any).ghost_delay_minutes ?? 0} onChange={(e) => setDraft({ ...draft, ghost_delay_minutes: Math.max(0, Number(e.target.value) || 0) } as any)} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Abertura das inscrições</span>
