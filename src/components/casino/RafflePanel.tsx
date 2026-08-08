@@ -142,6 +142,31 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
   useEffect(() => { void loadDetails(selectedId); }, [selectedId, loadDetails]);
   useEffect(() => { setDraft(selected ? { ...selected } : null); }, [selected]);
 
+  // Favicon padrão para todas as páginas de eventos ao vivo (não é por evento).
+  const [raffleFaviconUrl, setRaffleFaviconUrl] = useState('');
+  const [raffleFaviconSaving, setRaffleFaviconSaving] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const { data } = await db.from('wheel_configs').select('config').eq('user_id', ownerId).maybeSingle();
+      setRaffleFaviconUrl(data?.config?.raffleFaviconUrl || '');
+    })();
+  }, [ownerId]);
+
+  const saveRaffleFavicon = async () => {
+    setRaffleFaviconSaving(true);
+    try {
+      const { data: row } = await db.from('wheel_configs').select('config').eq('user_id', ownerId).maybeSingle();
+      const merged = { ...(row?.config || {}), raffleFaviconUrl };
+      const { error } = await db.from('wheel_configs').update({ config: merged, updated_at: new Date().toISOString() }).eq('user_id', ownerId);
+      if (error) throw error;
+      toast.success('Favicon dos eventos salvo');
+    } catch {
+      toast.error('Não foi possível salvar');
+    } finally {
+      setRaffleFaviconSaving(false);
+    }
+  };
+
   // Realtime: inscrições chegando durante o evento.
   useEffect(() => {
     if (!selectedId) return;
@@ -339,6 +364,24 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
 
   return (
     <div className="space-y-5">
+      {/* Favicon padrão de todos os eventos ao vivo */}
+      <div className="rounded-xl border border-border bg-card p-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground shrink-0">Favicon padrão (todos os eventos ao vivo)</span>
+        <input
+          className={`${inputCls} flex-1 min-w-[220px]`}
+          placeholder="https://.../icone.png"
+          value={raffleFaviconUrl}
+          onChange={(e) => setRaffleFaviconUrl(e.target.value)}
+        />
+        <button
+          onClick={saveRaffleFavicon}
+          disabled={raffleFaviconSaving}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        >
+          {raffleFaviconSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Salvar
+        </button>
+      </div>
+
       {/* Header + seletor de evento */}
       <div className="flex flex-wrap items-center gap-3">
         <select
@@ -438,10 +481,6 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Banner (URL)</span>
                   <input className={inputCls} value={draft.banner_url || ''} onChange={(e) => setDraft({ ...draft, banner_url: e.target.value })} />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Favicon (URL)</span>
-                  <input className={inputCls} placeholder="https://.../icone.png" value={draft.favicon_url || ''} onChange={(e) => setDraft({ ...draft, favicon_url: e.target.value })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Link de cadastro (sem conta)</span>

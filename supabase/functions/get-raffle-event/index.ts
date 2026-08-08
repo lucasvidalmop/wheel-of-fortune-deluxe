@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
     if (!ev || !ev.is_active) return json({ found: false });
 
-    const [{ count: approved }, { data: draw }, { data: pool }] = await Promise.all([
+    const [{ count: approved }, { data: draw }, { data: pool }, { data: ownerConfig }] = await Promise.all([
       supabase.from("raffle_participants")
         .select("id", { count: "exact", head: true })
         .eq("event_id", ev.id).eq("status", "approved"),
@@ -35,7 +35,9 @@ Deno.serve(async (req) => {
         .select("public_code, display_name, created_at")
         .eq("event_id", ev.id).eq("status", "approved")
         .order("created_at", { ascending: false }).limit(200),
+      supabase.from("wheel_configs").select("config").eq("user_id", ev.owner_id).maybeSingle(),
     ]);
+    const raffleFaviconUrl = (ownerConfig?.config as any)?.raffleFaviconUrl || "";
 
     let me: Record<string, unknown> | null = null;
     if (email && accountId) {
@@ -65,7 +67,7 @@ Deno.serve(async (req) => {
         name: ev.name,
         description: ev.description,
         bannerUrl: ev.banner_url,
-        faviconUrl: ev.favicon_url,
+        faviconUrl: raffleFaviconUrl,
         rules: ev.rules,
         prizeLabel: ev.prize_label,
         signupUrl: ev.signup_url,
