@@ -78,6 +78,13 @@ const RaffleJoinForm = ({ tag, signupUrl, disabled, onJoined }: Props) => {
         placeholder="Nome ou apelido (opcional)" className={inputCls}
       />
 
+      <p className="text-center text-[13px] text-white/50">
+        Precisa já ter cadastro na gorjeta.{' '}
+        <button type="button" onClick={goSignup} className="font-semibold underline" style={{ color: 'var(--lobby-primary,#00d4ff)' }}>
+          Não tem conta? Clique aqui!
+        </button>
+      </p>
+
       <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-[13px] text-white/70">
         <input
           type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)}
