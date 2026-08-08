@@ -959,12 +959,12 @@ const Influencer = () => {
               <select
                 value={selectedLiveEventId}
                 onChange={(e) => setSelectedLiveEventId(e.target.value)}
-                className="flex-1 min-w-0 rounded-lg border bg-transparent px-2 py-1.5 text-[11px] outline-none"
-                style={{ borderColor: `${accent}30`, color: textColor }}
+                className="flex-1 min-w-0 rounded-lg border px-2 py-1.5 text-[11px] outline-none"
+                style={{ borderColor: `${accent}30`, color: textColor, background: '#0f1923' }}
               >
-                <option value="" style={{ color: '#000' }}>Selecione o evento...</option>
+                <option value="" style={{ background: '#0f1923', color: textColor }}>Selecione o evento...</option>
                 {liveEvents.map(ev => (
-                  <option key={ev.id} value={ev.id} style={{ color: '#000' }}>
+                  <option key={ev.id} value={ev.id} style={{ background: '#0f1923', color: textColor }}>
                     {ev.name} ({liveParticipants.length && ev.id === selectedLiveEventId ? liveParticipants.length : '…'})
                   </option>
                 ))}
