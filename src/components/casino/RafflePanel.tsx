@@ -29,6 +29,7 @@ interface RaffleEventRow {
   winners_count: number;
   ghost_count: number;
   ghost_delay_minutes: number;
+  ghost_winners_count: number;
   opens_at: string | null;
   closes_at: string | null;
   draw_at: string | null;
@@ -90,6 +91,7 @@ const emptyEvent = (ownerId: string): Partial<RaffleEventRow> => ({
   winners_count: 1,
   ghost_count: 0,
   ghost_delay_minutes: 0,
+  ghost_winners_count: 0,
   status: 'draft',
   is_active: true,
 });
@@ -233,6 +235,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
       winners_count: Math.max(1, Number(draft.winners_count) || 1),
       ghost_count: Math.max(0, Number((draft as any).ghost_count) || 0),
       ghost_delay_minutes: Math.max(0, Number((draft as any).ghost_delay_minutes) || 0),
+      ghost_winners_count: Math.max(0, Number((draft as any).ghost_winners_count) || 0),
       opens_at: draft.opens_at || null,
       closes_at: draft.closes_at || null,
       draw_at: draft.draw_at || null,
@@ -505,6 +508,10 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Fantasmas entram após (minutos)</span>
                   <input type="number" min={0} className={inputCls} value={(draft as any).ghost_delay_minutes ?? 0} onChange={(e) => setDraft({ ...draft, ghost_delay_minutes: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Fantasmas sorteados como ganhadores</span>
+                  <input type="number" min={0} className={inputCls} value={(draft as any).ghost_winners_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_winners_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Abertura das inscrições</span>

@@ -73,11 +73,33 @@ Deno.serve(async (req) => {
     }
 
     const winnersCount = Math.min(Math.max(1, ev.winners_count || 1), list.length);
-    const remaining = [...list];
+
+    // Quantos dos vencedores devem ser especificamente fantasmas (nao apenas
+    // "podem entrar no pool"). Sorteamos QUAIS posicoes serao fantasma, para
+    // nao ficar sempre nas mesmas colocacoes.
+    const ghostWinnersWanted = Math.min(
+      Number(ev.ghost_winners_count || 0), ghostEntries.length, winnersCount,
+    );
+    const positions = Array.from({ length: winnersCount }, (_, i) => i);
+    for (let i = positions.length - 1; i > 0; i--) {
+      const j = secureRandomInt(i + 1);
+      [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
+    const ghostSlots = new Set(positions.slice(0, ghostWinnersWanted));
+
+    const remainingReal = [...(pool || [])];
+    const remainingGhost = [...ghostEntries];
     const winners: Record<string, unknown>[] = [];
     for (let i = 0; i < winnersCount; i++) {
-      const idx = secureRandomInt(remaining.length);
-      const w = remaining.splice(idx, 1)[0];
+      let w: { id: string; display_name: string; public_code: string; account_id: string } | undefined;
+      if (ghostSlots.has(i) && remainingGhost.length > 0) {
+        w = remainingGhost.splice(secureRandomInt(remainingGhost.length), 1)[0];
+      } else if (remainingReal.length > 0) {
+        w = remainingReal.splice(secureRandomInt(remainingReal.length), 1)[0];
+      } else if (remainingGhost.length > 0) {
+        w = remainingGhost.splice(secureRandomInt(remainingGhost.length), 1)[0];
+      }
+      if (!w) break;
       winners.push({
         participantId: w.id,
         name: w.display_name,
