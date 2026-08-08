@@ -27,7 +27,7 @@ interface PlinkoBoardProps {
   fill?: boolean;
 }
 
-const STAGGER_MS = 380;
+const STAGGER_MS = 140;
 const PHYSICS_TIME_SCALE = 0.46;
 const MAX_UPWARD_VELOCITY = -0.16;
 const PEG_CATEGORY = 0x0004;
