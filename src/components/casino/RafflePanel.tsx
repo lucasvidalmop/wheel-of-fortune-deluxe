@@ -337,6 +337,24 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
     void loadDetails(selected.id);
   };
 
+  const resetDraw = async () => {
+    if (!selected) return;
+    if (!window.confirm(
+      'Resetar o sorteio? O resultado atual será removido, os inscritos continuam na lista e você poderá sortear novamente.',
+    )) return;
+    setDrawing(true);
+    const { error: e1 } = await db.from('raffle_draws')
+      .update({ superseded: true }).eq('event_id', selected.id).eq('superseded', false);
+    const { error: e2 } = await db.from('raffle_events')
+      .update({ status: 'closed' }).eq('id', selected.id);
+    setDrawing(false);
+    if (e1 || e2) { toast.error('Erro ao resetar sorteio'); return; }
+    toast.success('Sorteio resetado. Você já pode sortear novamente.');
+    setRedrawReason('');
+    void loadEvents();
+    void loadDetails(selected.id);
+  };
+
   const exportCsv = () => {
     const rows = [
       ['codigo', 'nome', 'email', 'id_conta', 'status', 'sinais', 'cidade', 'pais', 'data'],
@@ -724,14 +742,26 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                     value={redrawReason} onChange={(e) => setRedrawReason(e.target.value)}
                   />
                 )}
-                <button
-                  onClick={runDraw}
-                  disabled={drawing || counts.approved < Math.max(1, selected.min_participants)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
-                >
-                  {drawing ? <Loader2 size={16} className="animate-spin" /> : <Trophy size={16} />}
-                  {activeDraw ? 'Refazer sorteio' : 'Executar sorteio'}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={runDraw}
+                    disabled={drawing || counts.approved < Math.max(1, selected.min_participants)}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+                  >
+                    {drawing ? <Loader2 size={16} className="animate-spin" /> : <Trophy size={16} />}
+                    {activeDraw ? 'Refazer sorteio' : 'Executar sorteio'}
+                  </button>
+                  {activeDraw && (
+                    <button
+                      onClick={resetDraw}
+                      disabled={drawing}
+                      className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    >
+                      <RefreshCw size={16} />
+                      Resetar sorteio
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3">
