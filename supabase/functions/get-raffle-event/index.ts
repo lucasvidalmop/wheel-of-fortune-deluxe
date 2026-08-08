@@ -39,6 +39,23 @@ Deno.serve(async (req) => {
     ]);
     const raffleFaviconUrl = (ownerConfig?.config as any)?.raffleFaviconUrl || "";
 
+    // Fantasmas do evento: entram na lista publica e no contador (nao so na
+    // hora do sorteio), senao fica evidente que "surgiram do nada" quando
+    // ganham. Mesma regra usada em run-raffle-draw: quantidade + atraso.
+    const ghostCount = Number(ev.ghost_count || 0);
+    const ghostDelayMinutes = Number(ev.ghost_delay_minutes || 0);
+    let ghostEntries: { code: string; name: string }[] = [];
+    if (ghostCount > 0) {
+      const elapsedMin = (Date.now() - new Date(ev.created_at).getTime()) / 60000;
+      if (elapsedMin >= ghostDelayMinutes) {
+        const ghostNames: string[] = (ownerConfig?.config as any)?.ghostUsers || [];
+        ghostEntries = ghostNames.slice(0, ghostCount).map((name, i) => ({
+          code: `GST-${String(i + 1).padStart(5, "0")}`,
+          name: maskName(name),
+        }));
+      }
+    }
+
     let me: Record<string, unknown> | null = null;
     if (email && accountId) {
       const { data: p } = await supabase
@@ -82,11 +99,14 @@ Deno.serve(async (req) => {
         messages: ev.messages || {},
         lockedCount: ev.locked_count,
       },
-      approvedCount: approved || 0,
-      participants: (pool || []).map((p) => ({
-        code: p.public_code,
-        name: maskName(p.display_name || ""),
-      })),
+      approvedCount: (approved || 0) + ghostEntries.length,
+      participants: [
+        ...(pool || []).map((p) => ({
+          code: p.public_code,
+          name: maskName(p.display_name || ""),
+        })),
+        ...ghostEntries,
+      ],
       result: draw
         ? {
             round: draw.round,
