@@ -93,6 +93,8 @@ const Influencer = () => {
   }[]>([]);
   const [selectedLiveEventId, setSelectedLiveEventId] = useState('');
   const [liveParticipants, setLiveParticipants] = useState<WheelUser[]>([]);
+  const [liveEventPickerOpen, setLiveEventPickerOpen] = useState(false);
+  const liveEventPickerRef = useRef<HTMLDivElement | null>(null);
 
   const selectedLiveEvent = liveEvents.find(e => e.id === selectedLiveEventId) || null;
 
@@ -132,6 +134,17 @@ const Influencer = () => {
 
   useEffect(() => { if (liveMode) void fetchLiveEvents(); }, [liveMode]);
   useEffect(() => { if (liveMode && selectedLiveEventId) void fetchLiveParticipants(selectedLiveEventId); }, [liveMode, selectedLiveEventId]);
+
+  useEffect(() => {
+    if (!liveEventPickerOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (liveEventPickerRef.current && !liveEventPickerRef.current.contains(e.target as Node)) {
+        setLiveEventPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [liveEventPickerOpen]);
 
   // Fonte de participantes reais: evento ao vivo selecionado, ou a base geral.
   const activeUsers = liveMode && selectedLiveEvent ? liveParticipants : users;
@@ -956,19 +969,45 @@ const Influencer = () => {
               </button>
             </div>
             {liveMode && (
-              <select
-                value={selectedLiveEventId}
-                onChange={(e) => setSelectedLiveEventId(e.target.value)}
-                className="flex-1 min-w-0 rounded-lg border px-2 py-1.5 text-[11px] outline-none"
-                style={{ borderColor: `${accent}30`, color: textColor, background: '#0f1923' }}
-              >
-                <option value="" style={{ background: '#0f1923', color: textColor }}>Selecione o evento...</option>
-                {liveEvents.map(ev => (
-                  <option key={ev.id} value={ev.id} style={{ background: '#0f1923', color: textColor }}>
-                    {ev.name} ({liveParticipants.length && ev.id === selectedLiveEventId ? liveParticipants.length : '…'})
-                  </option>
-                ))}
-              </select>
+              <div className="relative flex-1 min-w-0" ref={liveEventPickerRef}>
+                <button
+                  type="button"
+                  onClick={() => setLiveEventPickerOpen(o => !o)}
+                  className="w-full flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] outline-none transition"
+                  style={{ borderColor: `${accent}30`, color: textColor, background: '#0f1923' }}
+                >
+                  <span className="truncate">
+                    {selectedLiveEvent ? selectedLiveEvent.name : 'Selecione o evento...'}
+                  </span>
+                  <ChevronDown size={12} className="shrink-0 opacity-60" style={{ transform: liveEventPickerOpen ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }} />
+                </button>
+                {liveEventPickerOpen && (
+                  <div
+                    className="absolute z-20 mt-1 w-full rounded-lg border overflow-hidden max-h-56 overflow-y-auto shadow-lg"
+                    style={{ borderColor: `${accent}30`, background: '#0f1923' }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedLiveEventId(''); setLiveEventPickerOpen(false); }}
+                      className="w-full text-left px-2.5 py-2 text-[11px] transition hover:bg-white/[0.06]"
+                      style={{ color: selectedLiveEventId === '' ? accent : textColor }}
+                    >
+                      Selecione o evento...
+                    </button>
+                    {liveEvents.map(ev => (
+                      <button
+                        type="button"
+                        key={ev.id}
+                        onClick={() => { setSelectedLiveEventId(ev.id); setLiveEventPickerOpen(false); }}
+                        className="w-full text-left px-2.5 py-2 text-[11px] transition hover:bg-white/[0.06] truncate"
+                        style={{ color: selectedLiveEventId === ev.id ? accent : textColor }}
+                      >
+                        {ev.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
           {liveMode && selectedLiveEvent && (
