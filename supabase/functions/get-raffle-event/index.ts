@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
         name: ev.name,
         description: ev.description,
         bannerUrl: ev.banner_url,
+        faviconUrl: ev.favicon_url,
         rules: ev.rules,
         prizeLabel: ev.prize_label,
         signupUrl: ev.signup_url,

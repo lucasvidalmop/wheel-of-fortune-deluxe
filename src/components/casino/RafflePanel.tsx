@@ -20,6 +20,7 @@ interface RaffleEventRow {
   name: string;
   description: string;
   banner_url: string;
+  favicon_url: string;
   rules: string;
   prize_label: string;
   signup_url: string;
@@ -80,6 +81,7 @@ const emptyEvent = (ownerId: string): Partial<RaffleEventRow> => ({
   name: 'Novo sorteio',
   description: '',
   banner_url: '',
+  favicon_url: '',
   rules: '',
   prize_label: '',
   signup_url: '',
@@ -197,6 +199,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
       name: draft.name,
       description: draft.description || '',
       banner_url: draft.banner_url || '',
+      favicon_url: draft.favicon_url || '',
       rules: draft.rules || '',
       prize_label: draft.prize_label || '',
       signup_url: draft.signup_url || '',
@@ -435,6 +438,10 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Banner (URL)</span>
                   <input className={inputCls} value={draft.banner_url || ''} onChange={(e) => setDraft({ ...draft, banner_url: e.target.value })} />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Favicon (URL)</span>
+                  <input className={inputCls} placeholder="https://.../icone.png" value={draft.favicon_url || ''} onChange={(e) => setDraft({ ...draft, favicon_url: e.target.value })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Link de cadastro (sem conta)</span>

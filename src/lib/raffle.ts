@@ -12,6 +12,7 @@ export interface RaffleEventPublic {
   name: string;
   description: string;
   bannerUrl: string;
+  faviconUrl: string;
   rules: string;
   prizeLabel: string;
   signupUrl: string;
