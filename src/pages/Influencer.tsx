@@ -89,7 +89,7 @@ const Influencer = () => {
   const [liveMode, setLiveMode] = useState(false);
   const [liveEvents, setLiveEvents] = useState<{
     id: string; name: string; status: string; created_at: string;
-    ghost_count: number; ghost_delay_minutes: number;
+    ghost_count: number; ghost_delay_minutes: number; prize_label?: string;
   }[]>([]);
   const [selectedLiveEventId, setSelectedLiveEventId] = useState('');
   const [liveParticipants, setLiveParticipants] = useState<WheelUser[]>([]);
@@ -103,7 +103,7 @@ const Influencer = () => {
     if (!uid) return;
     const { data } = await (supabase as any)
       .from('raffle_events')
-      .select('id, name, status, created_at, ghost_count, ghost_delay_minutes')
+      .select('id, name, status, created_at, ghost_count, ghost_delay_minutes, prize_label')
       .eq('owner_id', uid)
       .order('created_at', { ascending: false });
     setLiveEvents(data || []);
@@ -113,14 +113,23 @@ const Influencer = () => {
     if (!eventId) { setLiveParticipants([]); return; }
     const { data } = await (supabase as any)
       .from('raffle_participants')
-      .select('id, account_id, email, display_name')
+      .select('id, account_id, email, display_name, wheel_user_id')
       .eq('event_id', eventId)
       .eq('status', 'approved');
+    const wheelUserIds = (data || []).map((p: any) => p.wheel_user_id).filter(Boolean);
+    let phoneById = new Map<string, string>();
+    if (wheelUserIds.length > 0) {
+      const { data: wu } = await (supabase as any)
+        .from('wheel_users')
+        .select('id, phone')
+        .in('id', wheelUserIds);
+      phoneById = new Map((wu || []).map((u: any) => [u.id, u.phone || '']));
+    }
     setLiveParticipants((data || []).map((p: any): WheelUser => ({
       id: p.id,
       account_id: p.account_id,
       email: p.email || '',
-      phone: '',
+      phone: (p.wheel_user_id && phoneById.get(p.wheel_user_id)) || '',
       name: p.display_name,
       spins_available: 0,
       created_at: '',
@@ -514,6 +523,23 @@ const Influencer = () => {
         fetchTodayWinners(session.user.id),
         fetchHistory(session.user.id),
       ]);
+
+      if (liveMode && selectedLiveEvent && user.phone) {
+        const message = `🎉 Parabéns, ${user.name}!\n\nVocê foi sorteado no evento *${selectedLiveEvent.name}*! 🏆\n\n🎁 Prêmio: ${label}\n\nEm breve entraremos em contato pra combinar a entrega/pagamento do seu prêmio. Fica de olho no WhatsApp!\n\nQualquer dúvida, é só responder essa mensagem.`;
+        const sendAt = new Date(Date.now() + 90_000).toISOString();
+        (supabase as any).from('scheduled_messages').insert({
+          owner_id: session.user.id,
+          channel: 'whatsapp_notify',
+          recipient_type: 'phone',
+          recipient_value: user.phone,
+          recipient_label: user.name,
+          message,
+          recurrence: 'none',
+          status: 'pending',
+          scheduled_at: sendAt,
+          next_run_at: sendAt,
+        }).then(({ error }: any) => { if (error) console.error('Erro ao agendar aviso WhatsApp:', error); });
+      }
     } catch (err) {
       console.error('Erro ao criar prêmio do Plinko:', err);
       toast.error('Prêmio exibido, mas houve erro ao salvar.');

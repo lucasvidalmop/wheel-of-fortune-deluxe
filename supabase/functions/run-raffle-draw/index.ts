@@ -44,14 +44,14 @@ Deno.serve(async (req) => {
 
     const { data: pool } = await admin
       .from("raffle_participants")
-      .select("id, display_name, public_code, account_id")
+      .select("id, display_name, public_code, account_id, wheel_user_id")
       .eq("event_id", eventId).eq("status", "approved");
 
     // Fantasmas: mesma lista global do operador, liberados por evento
     // (quantidade + atraso configurados em raffle_events).
     const ghostCount = Number(ev.ghost_count || 0);
     const ghostDelayMinutes = Number(ev.ghost_delay_minutes || 0);
-    let ghostEntries: { id: string; display_name: string; public_code: string; account_id: string }[] = [];
+    let ghostEntries: { id: string; display_name: string; public_code: string; account_id: string; wheel_user_id?: string | null }[] = [];
     if (ghostCount > 0) {
       const elapsedMin = (Date.now() - new Date(ev.created_at).getTime()) / 60000;
       if (elapsedMin >= ghostDelayMinutes) {
@@ -90,8 +90,9 @@ Deno.serve(async (req) => {
     const remainingReal = [...(pool || [])];
     const remainingGhost = [...ghostEntries];
     const winners: Record<string, unknown>[] = [];
+    const realWinners: { wheelUserId: string; name: string; code: string }[] = [];
     for (let i = 0; i < winnersCount; i++) {
-      let w: { id: string; display_name: string; public_code: string; account_id: string } | undefined;
+      let w: { id: string; display_name: string; public_code: string; account_id: string; wheel_user_id?: string | null } | undefined;
       if (ghostSlots.has(i) && remainingGhost.length > 0) {
         w = remainingGhost.splice(secureRandomInt(remainingGhost.length), 1)[0];
       } else if (remainingReal.length > 0) {
@@ -107,6 +108,9 @@ Deno.serve(async (req) => {
         code: w.public_code,
         position: i + 1,
       });
+      if (w.wheel_user_id) {
+        realWinners.push({ wheelUserId: w.wheel_user_id, name: w.display_name, code: w.public_code });
+      }
     }
 
     if (prevDraw) {
@@ -130,6 +134,36 @@ Deno.serve(async (req) => {
       locked_at: ev.locked_at || new Date().toISOString(),
       locked_count: ev.locked_count || list.length,
     }).eq("id", eventId);
+
+    // Avisa cada ganhador real pelo WhatsApp (instancia de Notificacoes),
+    // um por um com 90s de intervalo para nao levar o numero a bloqueio.
+    if (realWinners.length > 0) {
+      const { data: wheelUsers } = await admin
+        .from("wheel_users")
+        .select("id, phone")
+        .in("id", realWinners.map((r) => r.wheelUserId));
+      const phoneById = new Map((wheelUsers || []).map((u) => [u.id, u.phone]));
+      const now = Date.now();
+      const rows = realWinners
+        .filter((r) => phoneById.get(r.wheelUserId))
+        .map((r, i) => {
+          const message = `🎉 Parabéns, ${r.name}!\n\nVocê foi sorteado no evento *${ev.name}*! 🏆\n\n🎁 Prêmio: ${ev.prize_label || "a combinar"}\n🎫 Código: ${r.code}\n\nEm breve entraremos em contato pra combinar a entrega/pagamento do seu prêmio. Fica de olho no WhatsApp!\n\nQualquer dúvida, é só responder essa mensagem.`;
+          const sendAt = new Date(now + i * 90_000).toISOString();
+          return {
+            owner_id: ev.owner_id,
+            channel: "whatsapp_notify",
+            recipient_type: "phone",
+            recipient_value: phoneById.get(r.wheelUserId),
+            recipient_label: r.name,
+            message,
+            recurrence: "none",
+            status: "pending",
+            scheduled_at: sendAt,
+            next_run_at: sendAt,
+          };
+        });
+      if (rows.length > 0) await admin.from("scheduled_messages").insert(rows);
+    }
 
     return json({
       ok: true,
