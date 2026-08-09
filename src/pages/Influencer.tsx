@@ -90,6 +90,7 @@ const Influencer = () => {
   const [liveEvents, setLiveEvents] = useState<{
     id: string; name: string; status: string; created_at: string;
     ghost_count: number; ghost_delay_minutes: number; prize_label?: string; notify_winners?: boolean;
+    winners_count: number; ghost_winners_count: number;
   }[]>([]);
   const [selectedLiveEventId, setSelectedLiveEventId] = useState('');
   const [liveParticipants, setLiveParticipants] = useState<WheelUser[]>([]);
@@ -103,7 +104,7 @@ const Influencer = () => {
     if (!uid) return;
     const { data } = await (supabase as any)
       .from('raffle_events')
-      .select('id, name, status, created_at, ghost_count, ghost_delay_minutes, prize_label, notify_winners')
+      .select('id, name, status, created_at, ghost_count, ghost_delay_minutes, prize_label, notify_winners, winners_count, ghost_winners_count')
       .eq('owner_id', uid)
       .order('created_at', { ascending: false });
     setLiveEvents(data || []);
@@ -448,7 +449,8 @@ const Influencer = () => {
   const delay = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms));
 
   const startRaffle = () => {
-    setRaffleStep('config'); setRaffleQty(1); setRaffleAmount(30);
+    const defaultQty = liveMode && selectedLiveEvent ? Math.max(1, selectedLiveEvent.winners_count || 1) : 1;
+    setRaffleStep('config'); setRaffleQty(defaultQty); setRaffleAmount(30);
     setCustomAmount('30,00'); setWinners([]); setSendingIndex(0); setShowRaffle(true);
   };
 
@@ -652,30 +654,44 @@ const Influencer = () => {
 
     const selected: Winner[] = [];
 
-    const guaranteedCount = Math.min(guaranteedUsers.length, qty);
-    for (let i = 0; i < guaranteedCount; i++) {
-      selected.push({ user: guaranteedUsers[i], amount: raffleAmount, status: 'pending' });
-    }
+    if (liveMode && selectedLiveEvent) {
+      // Evento ao vivo: respeita exatamente a config de fantasmas garantidos
+      // do evento, em vez da probabilidade geral da roleta.
+      const ghostWanted = Math.min(selectedLiveEvent.ghost_winners_count, ghostPool.length, qty);
+      for (let i = 0; i < ghostWanted; i++) {
+        selected.push({ user: ghostPool[i] as any, amount: raffleAmount, status: 'pending' });
+      }
+      const realWanted = qty - selected.length;
+      const realPool = [...guaranteedUsers, ...shuffledRegular];
+      for (let i = 0; i < realWanted && i < realPool.length; i++) {
+        selected.push({ user: realPool[i], amount: raffleAmount, status: 'pending' });
+      }
+    } else {
+      const guaranteedCount = Math.min(guaranteedUsers.length, qty);
+      for (let i = 0; i < guaranteedCount; i++) {
+        selected.push({ user: guaranteedUsers[i], amount: raffleAmount, status: 'pending' });
+      }
 
-    const remainingAfterGuaranteed = qty - selected.length;
-    const realMin = Math.min(minRealWinners, shuffledRegular.length, remainingAfterGuaranteed);
-    for (let i = 0; i < realMin && i < shuffledRegular.length; i++) {
-      selected.push({ user: shuffledRegular[i], amount: raffleAmount, status: 'pending' });
-    }
+      const remainingAfterGuaranteed = qty - selected.length;
+      const realMin = Math.min(minRealWinners, shuffledRegular.length, remainingAfterGuaranteed);
+      for (let i = 0; i < realMin && i < shuffledRegular.length; i++) {
+        selected.push({ user: shuffledRegular[i], amount: raffleAmount, status: 'pending' });
+      }
 
-    let realIdx = realMin;
-    let ghostIdx = 0;
-    const remaining = qty - selected.length;
-    const prob = drawProbability / 100;
+      let realIdx = realMin;
+      let ghostIdx = 0;
+      const remaining = qty - selected.length;
+      const prob = drawProbability / 100;
 
-    for (let i = 0; i < remaining; i++) {
-      const pickReal = Math.random() < prob;
-      if (pickReal && realIdx < shuffledRegular.length) {
-        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
-      } else if (ghostIdx < ghostPool.length) {
-        selected.push({ user: ghostPool[ghostIdx++] as any, amount: raffleAmount, status: 'pending' });
-      } else if (realIdx < shuffledRegular.length) {
-        selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
+      for (let i = 0; i < remaining; i++) {
+        const pickReal = Math.random() < prob;
+        if (pickReal && realIdx < shuffledRegular.length) {
+          selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
+        } else if (ghostIdx < ghostPool.length) {
+          selected.push({ user: ghostPool[ghostIdx++] as any, amount: raffleAmount, status: 'pending' });
+        } else if (realIdx < shuffledRegular.length) {
+          selected.push({ user: shuffledRegular[realIdx++], amount: raffleAmount, status: 'pending' });
+        }
       }
     }
 
@@ -1297,17 +1313,23 @@ const Influencer = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 rounded-xl border border-white/[0.08] p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <input type="number" value={raffleQty}
-                          onChange={e => setRaffleQty(Math.max(1, Math.min(users.length, parseInt(e.target.value) || 1)))}
+                        <input type="number" value={raffleQty} readOnly={liveMode && !!selectedLiveEvent}
+                          onChange={e => setRaffleQty(Math.max(1, Math.min(activeUsers.length + activeGhostUsers.length, parseInt(e.target.value) || 1)))}
                           className="w-full border-0 bg-transparent text-center text-2xl font-black outline-none shadow-none [appearance:textfield] focus:bg-transparent focus:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          style={{ color: accent, backgroundColor: 'transparent', boxShadow: 'none' }} min={1} max={users.length} />
+                          style={{ color: accent, backgroundColor: 'transparent', boxShadow: 'none' }} min={1} max={activeUsers.length + activeGhostUsers.length} />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <button onClick={() => setRaffleQty(q => Math.min(users.length, q + 1))} className="w-8 h-8 rounded-lg border flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accent}33` }}><Plus size={14} /></button>
-                        <button onClick={() => setRaffleQty(q => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg border flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accent}33` }}><Minus size={14} /></button>
-                      </div>
+                      {!(liveMode && selectedLiveEvent) && (
+                        <div className="flex flex-col gap-1">
+                          <button onClick={() => setRaffleQty(q => Math.min(users.length, q + 1))} className="w-8 h-8 rounded-lg border flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accent}33` }}><Plus size={14} /></button>
+                          <button onClick={() => setRaffleQty(q => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg border flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition" style={{ borderColor: `${accent}33` }}><Minus size={14} /></button>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[10px] text-white/30 mt-1">Máx. hoje: {users.length}</p>
+                    <p className="text-[10px] text-white/30 mt-1">
+                      {liveMode && selectedLiveEvent
+                        ? `Definido pelo evento: ${selectedLiveEvent.ghost_winners_count} fantasma(s) + ${Math.max(0, raffleQty - selectedLiveEvent.ghost_winners_count)} real(is)`
+                        : `Máx. hoje: ${users.length}`}
+                    </p>
                   </div>
 
                   <div>
