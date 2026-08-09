@@ -183,9 +183,14 @@ export async function runRaffleDraw(
   }).eq("id", ev.id);
 
   // Cria o pagamento do premio para cada ganhador real, se o evento tiver
-  // um valor de premio configurado. Respeita o auto pay do evento.
+  // um valor de premio configurado. O disparo do auto pay em si NAO
+  // acontece aqui: vai para uma fila (auto_payout_queue) processada com
+  // 1 minuto de intervalo entre cada pagamento, evitando pagamento
+  // duplicado/em rajada no PIX.
   const prizeAmount = Number(ev.prize_amount || 0);
   if (prizeAmount > 0) {
+    const queueRows: Record<string, unknown>[] = [];
+    let payoutDelay = 0;
     for (const r of realWinners) {
       try {
         const { data: payment } = await admin.rpc("create_prize_payment", {
@@ -198,14 +203,19 @@ export async function runRaffleDraw(
           p_force_auto: !!ev.auto_payment,
         });
         if (payment?.id && (payment?.auto_payment || ev.auto_payment)) {
-          await admin.functions.invoke("edpay-pix-transfer", {
-            body: { paymentId: payment.id, autoPayment: true },
+          queueRows.push({
+            payment_id: payment.id,
+            owner_id: ev.owner_id,
+            event_id: ev.id,
+            scheduled_at: new Date(Date.now() + payoutDelay * 60_000).toISOString(),
           });
+          payoutDelay++;
         }
       } catch (err) {
         console.error(`runRaffleDraw: falha ao criar pagamento para ${r.wheelUserId}`, err);
       }
     }
+    if (queueRows.length > 0) await admin.from("auto_payout_queue").insert(queueRows);
   }
 
   if (ev.notify_winners && realWinners.length > 0) {
