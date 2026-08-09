@@ -33,6 +33,7 @@ interface RaffleEventRow {
   notify_winners: boolean;
   auto_payment: boolean;
   auto_draw: boolean;
+  prize_amount: number;
   opens_at: string | null;
   closes_at: string | null;
   draw_at: string | null;
@@ -98,6 +99,7 @@ const emptyEvent = (ownerId: string): Partial<RaffleEventRow> => ({
   notify_winners: false,
   auto_payment: false,
   auto_draw: false,
+  prize_amount: 0,
   status: 'draft',
   is_active: true,
 });
@@ -245,6 +247,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
       notify_winners: (draft as any).notify_winners === true,
       auto_payment: (draft as any).auto_payment === true,
       auto_draw: (draft as any).auto_draw === true,
+      prize_amount: Math.max(0, Number((draft as any).prize_amount) || 0),
       opens_at: draft.opens_at || null,
       closes_at: draft.closes_at || null,
       draw_at: draft.draw_at || null,
@@ -539,6 +542,10 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Fantasmas sorteados como ganhadores</span>
                   <input type="number" min={0} className={inputCls} value={(draft as any).ghost_winners_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_winners_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Valor do prêmio por ganhador (R$)</span>
+                  <input type="number" min={0} step="0.01" className={inputCls} value={(draft as any).prize_amount ?? 0} onChange={(e) => setDraft({ ...draft, prize_amount: Math.max(0, Number(e.target.value) || 0) } as any)} />
                 </label>
                 <label className="flex items-center gap-2 pt-5">
                   <input type="checkbox" checked={(draft as any).notify_winners === true} onChange={(e) => setDraft({ ...draft, notify_winners: e.target.checked } as any)} />

@@ -94,12 +94,12 @@ export async function runRaffleDraw(
 
   const { data: pool } = await admin
     .from("raffle_participants")
-    .select("id, display_name, public_code, account_id, wheel_user_id")
+    .select("id, display_name, public_code, account_id, email, wheel_user_id")
     .eq("event_id", ev.id).eq("status", "approved");
 
   const ghostCount = Number(ev.ghost_count || 0);
   const ghostDelayMinutes = Number(ev.ghost_delay_minutes || 0);
-  let ghostEntries: { id: string; display_name: string; public_code: string; account_id: string; wheel_user_id?: string | null }[] = [];
+  let ghostEntries: { id: string; display_name: string; public_code: string; account_id: string; email?: string; wheel_user_id?: string | null }[] = [];
   if (ghostCount > 0) {
     const elapsedMin = (Date.now() - new Date(ev.created_at).getTime()) / 60000;
     if (elapsedMin >= ghostDelayMinutes) {
@@ -134,9 +134,9 @@ export async function runRaffleDraw(
   const remainingReal = [...(pool || [])];
   const remainingGhost = [...ghostEntries];
   const winners: Record<string, unknown>[] = [];
-  const realWinners: { wheelUserId: string; name: string; code: string }[] = [];
+  const realWinners: { wheelUserId: string; accountId: string; email: string; name: string; code: string }[] = [];
   for (let i = 0; i < winnersCount; i++) {
-    let w: { id: string; display_name: string; public_code: string; account_id: string; wheel_user_id?: string | null } | undefined;
+    let w: { id: string; display_name: string; public_code: string; account_id: string; email?: string; wheel_user_id?: string | null } | undefined;
     if (ghostSlots.has(i) && remainingGhost.length > 0) {
       w = remainingGhost.splice(secureRandomInt(remainingGhost.length), 1)[0];
     } else if (remainingReal.length > 0) {
@@ -153,7 +153,10 @@ export async function runRaffleDraw(
       position: i + 1,
     });
     if (w.wheel_user_id) {
-      realWinners.push({ wheelUserId: w.wheel_user_id, name: w.display_name, code: w.public_code });
+      realWinners.push({
+        wheelUserId: w.wheel_user_id, accountId: w.account_id, email: w.email || "",
+        name: w.display_name, code: w.public_code,
+      });
     }
   }
 
@@ -178,6 +181,32 @@ export async function runRaffleDraw(
     locked_at: ev.locked_at || new Date().toISOString(),
     locked_count: ev.locked_count || list.length,
   }).eq("id", ev.id);
+
+  // Cria o pagamento do premio para cada ganhador real, se o evento tiver
+  // um valor de premio configurado. Respeita o auto pay do evento.
+  const prizeAmount = Number(ev.prize_amount || 0);
+  if (prizeAmount > 0) {
+    for (const r of realWinners) {
+      try {
+        const { data: payment } = await admin.rpc("create_prize_payment", {
+          p_owner_id: ev.owner_id,
+          p_account_id: r.accountId,
+          p_user_name: r.name,
+          p_user_email: r.email,
+          p_prize: ev.prize_label || `Sorteio ${ev.name}`,
+          p_amount: prizeAmount,
+          p_force_auto: !!ev.auto_payment,
+        });
+        if (payment?.id && (payment?.auto_payment || ev.auto_payment)) {
+          await admin.functions.invoke("edpay-pix-transfer", {
+            body: { paymentId: payment.id, autoPayment: true },
+          });
+        }
+      } catch (err) {
+        console.error(`runRaffleDraw: falha ao criar pagamento para ${r.wheelUserId}`, err);
+      }
+    }
+  }
 
   if (ev.notify_winners && realWinners.length > 0) {
     const { data: wheelUsers } = await admin
