@@ -1009,7 +1009,7 @@ const Influencer = () => {
                 </button>
                 {liveEventPickerOpen && (
                   <div
-                    className="absolute z-20 mt-1 w-full rounded-lg border overflow-hidden max-h-56 overflow-y-auto shadow-lg"
+                    className="absolute z-[100] mt-1 w-full rounded-lg border overflow-hidden max-h-56 overflow-y-auto shadow-lg"
                     style={{ borderColor: `${accent}30`, background: '#0f1923' }}
                   >
                     <button
