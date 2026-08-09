@@ -90,7 +90,7 @@ const Influencer = () => {
   const [liveEvents, setLiveEvents] = useState<{
     id: string; name: string; status: string; created_at: string;
     ghost_count: number; ghost_delay_minutes: number; prize_label?: string; notify_winners?: boolean;
-    winners_count: number; ghost_winners_count: number;
+    winners_count: number; ghost_winners_count: number; auto_payment?: boolean;
   }[]>([]);
   const [selectedLiveEventId, setSelectedLiveEventId] = useState('');
   const [liveParticipants, setLiveParticipants] = useState<WheelUser[]>([]);
@@ -104,7 +104,7 @@ const Influencer = () => {
     if (!uid) return;
     const { data } = await (supabase as any)
       .from('raffle_events')
-      .select('id, name, status, created_at, ghost_count, ghost_delay_minutes, prize_label, notify_winners, winners_count, ghost_winners_count')
+      .select('id, name, status, created_at, ghost_count, ghost_delay_minutes, prize_label, notify_winners, winners_count, ghost_winners_count, auto_payment')
       .eq('owner_id', uid)
       .order('created_at', { ascending: false });
     setLiveEvents(data || []);
@@ -505,6 +505,7 @@ const Influencer = () => {
     }
 
     const user = pick.raw as WheelUser;
+    const forceAuto = (liveMode && selectedLiveEvent?.auto_payment) || user.auto_payment;
     try {
       const result = await (supabase as any).rpc('create_prize_payment', {
         p_owner_id: session.user.id,
@@ -513,11 +514,11 @@ const Influencer = () => {
         p_user_email: user.email,
         p_prize: label,
         p_amount: amount,
-        p_force_auto: user.auto_payment,
+        p_force_auto: forceAuto,
       });
       if (result?.data?.id) {
         sessionCreatedIds.current.add(result.data.id);
-        if (result?.data?.auto_payment || user.auto_payment) {
+        if (result?.data?.auto_payment || forceAuto) {
           triggerAutoPay(result.data.id).catch(console.error);
         }
       }
@@ -555,6 +556,7 @@ const Influencer = () => {
     for (const winner of finalSelected) {
       if ((winner.user as any)._isGhost) continue;
 
+      const forceAuto = (liveMode && selectedLiveEvent?.auto_payment) || winner.user.auto_payment;
       try {
         const result = await (supabase as any).rpc('create_prize_payment', {
           p_owner_id: session.user.id,
@@ -563,12 +565,12 @@ const Influencer = () => {
           p_user_email: winner.user.email,
           p_prize: `Sorteio R$ ${winner.amount.toFixed(2)}`,
           p_amount: winner.amount,
-          p_force_auto: winner.user.auto_payment,
+          p_force_auto: forceAuto,
         });
 
         if (result?.data?.id) {
           sessionCreatedIds.current.add(result.data.id);
-          if (result?.data?.auto_payment || winner.user.auto_payment) {
+          if (result?.data?.auto_payment || forceAuto) {
             triggerAutoPay(result.data.id).catch(console.error);
           }
         }
@@ -749,6 +751,7 @@ const Influencer = () => {
   const executeSinglePrize = async () => {
     if (!prizeUser || !session?.user?.id) return;
     setPrizeSending(true);
+    const forceAuto = (liveMode && selectedLiveEvent?.auto_payment) || prizeUser.auto_payment;
     try {
       const result = await (supabase as any).rpc('create_prize_payment', {
         p_owner_id: session.user.id,
@@ -757,9 +760,9 @@ const Influencer = () => {
         p_user_email: prizeUser.email,
         p_prize: `Prêmio R$ ${prizeAmount.toFixed(2)}`,
         p_amount: prizeAmount,
-        p_force_auto: prizeUser.auto_payment,
+        p_force_auto: forceAuto,
       });
-      if (result?.data?.id && (result?.data?.auto_payment || prizeUser.auto_payment)) {
+      if (result?.data?.id && (result?.data?.auto_payment || forceAuto)) {
         await triggerAutoPay(result.data.id);
       }
       setPrizeSent(true);

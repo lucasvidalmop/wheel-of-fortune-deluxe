@@ -31,6 +31,7 @@ interface RaffleEventRow {
   ghost_delay_minutes: number;
   ghost_winners_count: number;
   notify_winners: boolean;
+  auto_payment: boolean;
   opens_at: string | null;
   closes_at: string | null;
   draw_at: string | null;
@@ -94,6 +95,7 @@ const emptyEvent = (ownerId: string): Partial<RaffleEventRow> => ({
   ghost_delay_minutes: 0,
   ghost_winners_count: 0,
   notify_winners: false,
+  auto_payment: false,
   status: 'draft',
   is_active: true,
 });
@@ -239,6 +241,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
       ghost_delay_minutes: Math.max(0, Number((draft as any).ghost_delay_minutes) || 0),
       ghost_winners_count: Math.max(0, Number((draft as any).ghost_winners_count) || 0),
       notify_winners: (draft as any).notify_winners === true,
+      auto_payment: (draft as any).auto_payment === true,
       opens_at: draft.opens_at || null,
       closes_at: draft.closes_at || null,
       draw_at: draft.draw_at || null,
@@ -537,6 +540,10 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="flex items-center gap-2 pt-5">
                   <input type="checkbox" checked={(draft as any).notify_winners === true} onChange={(e) => setDraft({ ...draft, notify_winners: e.target.checked } as any)} />
                   <span className="text-xs text-muted-foreground">Enviar notificação de ganho por WhatsApp</span>
+                </label>
+                <label className="flex items-center gap-2 pt-5">
+                  <input type="checkbox" checked={(draft as any).auto_payment === true} onChange={(e) => setDraft({ ...draft, auto_payment: e.target.checked } as any)} />
+                  <span className="text-xs text-muted-foreground">Pagamento automático (auto pay) para ganhadores</span>
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Abertura das inscrições</span>
