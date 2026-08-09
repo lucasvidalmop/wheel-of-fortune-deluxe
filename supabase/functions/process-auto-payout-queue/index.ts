@@ -45,9 +45,30 @@ Deno.serve(async (req) => {
   if (!locked) return json({ processed: 0, skipped: "already locked" });
 
   try {
-    await admin.functions.invoke("edpay-pix-transfer", {
+    // supabase-js NAO lanca excecao quando a function retorna erro: ela
+    // devolve { data, error }. Precisamos checar os dois manualmente,
+    // senao uma falha real no PIX fica marcada como sucesso.
+    const { data, error: invokeError } = await admin.functions.invoke("edpay-pix-transfer", {
       body: { paymentId: row.payment_id, autoPayment: true },
     });
+    if (invokeError) {
+      let detail = invokeError.message;
+      try {
+        const body = await (invokeError as any)?.context?.json?.();
+        if (body?.error) detail = String(body.error);
+      } catch {
+        // corpo nao veio em json, mantem a mensagem generica
+      }
+      throw new Error(detail);
+    }
+    if (data?.error) throw new Error(String(data.error));
+
+    const { data: payment } = await admin
+      .from("prize_payments").select("status").eq("id", row.payment_id).maybeSingle();
+    if (payment?.status !== "paid" && payment?.status !== "processing") {
+      throw new Error(`Pagamento nao confirmado (status: ${payment?.status || "desconhecido"})`);
+    }
+
     await admin.from("auto_payout_queue")
       .update({ status: "sent", processed_at: new Date().toISOString() })
       .eq("id", row.id);

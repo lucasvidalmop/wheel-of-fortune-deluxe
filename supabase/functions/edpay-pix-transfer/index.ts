@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
-      if (payment.status && !["pending", "processing"].includes(String(payment.status))) {
+      if (payment.status && !["pending", "processing", "auto_pending"].includes(String(payment.status))) {
         return new Response(
           JSON.stringify({ error: "Pagamento não está pendente" }),
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
