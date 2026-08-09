@@ -108,7 +108,8 @@ const Admin = () => {
   const [cloneTarget, setCloneTarget] = useState<string>('');
   const [cloning, setCloning] = useState(false);
 
-  useSiteSettings();
+  useSiteSettings('site', { skipTitle: true });
+  useEffect(() => { document.title = 'TipsPay - Admin'; }, []);
 
   useEffect(() => {
     let isMounted = true;

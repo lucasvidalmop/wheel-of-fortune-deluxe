@@ -299,7 +299,8 @@ function openPrintReceipt(elementId: string, fontColor: string, bgColor: string,
 }
 
 function Dashboard() {
-  useSiteSettings('dashboard');
+  useSiteSettings('dashboard', { skipTitle: true });
+  useEffect(() => { document.title = 'TipsPay - Dashboard'; }, []);
   const configHydratedRef = useRef(false);
   const lastPersistedSettingsRef = useRef('');
   const lastConfigUpdatedAtRef = useRef<string | null>(null);

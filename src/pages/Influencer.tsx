@@ -61,7 +61,8 @@ const generateFakeAccountId = () => {
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
 const Influencer = () => {
-  useSiteSettings('dashboard');
+  useSiteSettings('dashboard', { skipTitle: true });
+  useEffect(() => { document.title = 'TipsPay - Influencer'; }, []);
 
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);

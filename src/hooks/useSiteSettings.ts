@@ -33,7 +33,7 @@ const fetchSettings = (): Promise<SiteSettings | null> => {
   return inflight;
 };
 
-export const useSiteSettings = (mode: 'site' | 'dashboard' = 'site') => {
+export const useSiteSettings = (mode: 'site' | 'dashboard' = 'site', opts?: { skipTitle?: boolean }) => {
   const [settings, setSettings] = useState<SiteSettings | null>(cachedSettings);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export const useSiteSettings = (mode: 'site' | 'dashboard' = 'site') => {
       ? (settings.dashboard_favicon_url || settings.favicon_url)
       : settings.favicon_url;
 
-    if (title) document.title = title;
+    if (title && !opts?.skipTitle) document.title = title;
     if (description) {
       let meta = document.querySelector('meta[name="description"]');
       if (!meta) { meta = document.createElement('meta'); (meta as HTMLMetaElement).name = 'description'; document.head.appendChild(meta); }
@@ -67,7 +67,7 @@ export const useSiteSettings = (mode: 'site' | 'dashboard' = 'site') => {
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
       link.href = favicon;
     }
-  }, [settings, mode]);
+  }, [settings, mode, opts?.skipTitle]);
 
   return settings;
 };
