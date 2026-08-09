@@ -32,6 +32,7 @@ interface RaffleEventRow {
   ghost_winners_count: number;
   notify_winners: boolean;
   auto_payment: boolean;
+  auto_draw: boolean;
   opens_at: string | null;
   closes_at: string | null;
   draw_at: string | null;
@@ -96,6 +97,7 @@ const emptyEvent = (ownerId: string): Partial<RaffleEventRow> => ({
   ghost_winners_count: 0,
   notify_winners: false,
   auto_payment: false,
+  auto_draw: false,
   status: 'draft',
   is_active: true,
 });
@@ -242,6 +244,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
       ghost_winners_count: Math.max(0, Number((draft as any).ghost_winners_count) || 0),
       notify_winners: (draft as any).notify_winners === true,
       auto_payment: (draft as any).auto_payment === true,
+      auto_draw: (draft as any).auto_draw === true,
       opens_at: draft.opens_at || null,
       closes_at: draft.closes_at || null,
       draw_at: draft.draw_at || null,
@@ -556,6 +559,10 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Data do sorteio</span>
                   <input type="datetime-local" className={inputCls} style={{ colorScheme: 'dark' }} value={toLocalInput(draft.draw_at || null)} onChange={(e) => setDraft({ ...draft, draw_at: fromLocalInput(e.target.value) })} />
+                </label>
+                <label className="flex items-center gap-2 pt-5">
+                  <input type="checkbox" checked={(draft as any).auto_draw === true} onChange={(e) => setDraft({ ...draft, auto_draw: e.target.checked } as any)} />
+                  <span className="text-xs text-muted-foreground">Sortear automaticamente na data/hora do sorteio</span>
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Status</span>
