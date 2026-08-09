@@ -70,6 +70,17 @@ export function maskName(name: string): string {
   return parts.length > 1 ? `${masked} ${parts[parts.length - 1][0].toUpperCase()}.` : masked;
 }
 
+/** Monta a mensagem de aviso de ganho, sempre com o valor real do premio. */
+export function winnerNotifyMessage(
+  winnerName: string, eventName: string, prizeAmount: number, code: string, autoPayment: boolean,
+): string {
+  const amountLabel = `R$ ${prizeAmount.toFixed(2).replace(".", ",")}`;
+  const closing = autoPayment
+    ? "Seu pagamento será feito automaticamente em até alguns minutos via PIX. Fica de olho no WhatsApp e no seu extrato!"
+    : "Em breve entraremos em contato pra combinar o pagamento do seu prêmio. Fica de olho no WhatsApp!";
+  return `🎉 Parabéns, ${winnerName}!\n\nVocê foi sorteado no evento *${eventName}*! 🏆\n\n🎁 Prêmio: ${amountLabel}\n🎫 Código: ${code}\n\n${closing}\n\nQualquer dúvida, é só responder essa mensagem.`;
+}
+
 export function maskAccount(accountId: string): string {
   const a = (accountId || "").trim();
   if (a.length <= 4) return "****";
@@ -228,7 +239,7 @@ export async function runRaffleDraw(
     const rows = realWinners
       .filter((r) => phoneById.get(r.wheelUserId))
       .map((r, i) => {
-        const message = `🎉 Parabéns, ${r.name}!\n\nVocê foi sorteado no evento *${ev.name}*! 🏆\n\n🎁 Prêmio: ${ev.prize_label || "a combinar"}\n🎫 Código: ${r.code}\n\nEm breve entraremos em contato pra combinar a entrega/pagamento do seu prêmio. Fica de olho no WhatsApp!\n\nQualquer dúvida, é só responder essa mensagem.`;
+        const message = winnerNotifyMessage(r.name, ev.name, prizeAmount, r.code, !!ev.auto_payment);
         const sendAt = new Date(now + i * 90_000).toISOString();
         return {
           owner_id: ev.owner_id,

@@ -528,7 +528,10 @@ const Influencer = () => {
       ]);
 
       if (liveMode && selectedLiveEvent?.notify_winners && user.phone) {
-        const message = `🎉 Parabéns, ${user.name}!\n\nVocê foi sorteado no evento *${selectedLiveEvent.name}*! 🏆\n\n🎁 Prêmio: ${label}\n\nEm breve entraremos em contato pra combinar a entrega/pagamento do seu prêmio. Fica de olho no WhatsApp!\n\nQualquer dúvida, é só responder essa mensagem.`;
+        const closing = selectedLiveEvent.auto_payment
+          ? 'Seu pagamento será feito automaticamente em até alguns minutos via PIX. Fica de olho no WhatsApp e no seu extrato!'
+          : 'Em breve entraremos em contato pra combinar o pagamento do seu prêmio. Fica de olho no WhatsApp!';
+        const message = `🎉 Parabéns, ${user.name}!\n\nVocê foi sorteado no evento *${selectedLiveEvent.name}*! 🏆\n\n🎁 Prêmio: ${label}\n\n${closing}\n\nQualquer dúvida, é só responder essa mensagem.`;
         const sendAt = new Date(Date.now() + 90_000).toISOString();
         (supabase as any).from('scheduled_messages').insert({
           owner_id: session.user.id,
