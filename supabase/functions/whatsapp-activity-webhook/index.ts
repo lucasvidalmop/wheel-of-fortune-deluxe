@@ -94,9 +94,12 @@ Deno.serve(async (req) => {
           };
         }
 
+        // Prioriza o nome do cadastro (mais confiavel) sobre o nome de exibicao do WhatsApp.
+        const displayName = wheelUser?.user_name || senderName;
+
         const scopesToUpdate: { scope: string; phone: string; name: string }[] = [];
         if (ev.scope === "individual" || ev.scope === "both") {
-          scopesToUpdate.push({ scope: "individual", phone: senderPhone, name: senderName });
+          scopesToUpdate.push({ scope: "individual", phone: senderPhone, name: displayName });
         }
         if (ev.scope === "group" || ev.scope === "both") {
           scopesToUpdate.push({ scope: "group", phone: "", name: ev.group_name || "" });

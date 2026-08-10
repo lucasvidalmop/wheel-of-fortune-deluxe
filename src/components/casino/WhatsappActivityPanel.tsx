@@ -40,6 +40,7 @@ interface ProgressRow {
   scope: string;
   sender_phone: string;
   sender_name: string;
+  wheel_user_id: string | null;
   message_count: number;
 }
 
@@ -405,6 +406,12 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
                 <div key={p.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                   <div>
                     <span className="font-semibold">{p.scope === 'group' ? 'Meta do grupo' : (p.sender_name || p.sender_phone)}</span>
+                    {p.scope === 'individual' && p.wheel_user_id && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/15 text-green-500">Cadastrado</span>
+                    )}
+                    {p.scope === 'individual' && !p.wheel_user_id && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-500">Sem cadastro</span>
+                    )}
                     {p.scope === 'individual' && <span className="text-xs text-muted-foreground ml-2">{p.sender_phone}</span>}
                   </div>
                   <div className="flex items-center gap-3">
