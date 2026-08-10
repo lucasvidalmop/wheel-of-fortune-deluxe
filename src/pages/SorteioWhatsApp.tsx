@@ -100,29 +100,43 @@ const SorteioWhatsApp = ({ tag }: { tag: string }) => {
   const groupTiers = (data.tiers || []).filter((t) => t.scope === 'group');
   const unlockByTier = new Map((data.myUnlocks || []).map((u) => [u.tierId, u.status]));
 
-  const renderTier = (t: Tier, progress: number) => {
+  const renderTier = (t: Tier, progress: number, barColor: string) => {
     const status = unlockByTier.get(t.id);
     const done = progress >= t.threshold;
+    const pct = Math.min(100, Math.round((progress / t.threshold) * 100));
     return (
-      <div key={t.id} className={`rounded-2xl border p-4 flex items-center gap-3 ${done ? 'border-emerald-500/30 bg-emerald-500/[0.06]' : 'border-white/10 bg-white/[0.03]'}`}>
-        <div className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center ${done ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/40'}`}>
-          {done ? <CheckCircle2 size={18} /> : <Lock size={16} />}
+      <div key={t.id} className={`rounded-2xl border p-4 space-y-3 ${done ? 'border-emerald-500/30 bg-emerald-500/[0.06]' : 'border-white/10 bg-white/[0.03]'}`}>
+        <div className="flex items-center gap-3">
+          <div className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center ${done ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/40'}`}>
+            {done ? <CheckCircle2 size={18} /> : <Lock size={16} />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">{t.rewardLabel || REWARD_LABEL[t.rewardType] || t.rewardType}</p>
+            <p className="text-xs text-white/45">{t.threshold} mensagens{t.rewardType === 'cash' ? ` · R$ ${Number(t.rewardAmount).toFixed(2)}` : ''}</p>
+          </div>
+          {done && (
+            <span className="shrink-0 text-[11px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center gap-1">
+              {status === 'pending_approval'
+                ? <><Clock size={11} /> Em aprovação</>
+                : status === 'granted'
+                  ? <><CheckCircle2 size={11} /> Creditado</>
+                  : status === 'pending_manual'
+                    ? <><Clock size={11} /> Em análise</>
+                    : 'Concluído'}
+            </span>
+          )}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{t.rewardLabel || REWARD_LABEL[t.rewardType] || t.rewardType}</p>
-          <p className="text-xs text-white/45">{t.threshold} mensagens{t.rewardType === 'cash' ? ` · R$ ${Number(t.rewardAmount).toFixed(2)}` : ''}</p>
+        <div className="space-y-1">
+          <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
+            <div
+              className="h-full rounded-full transition-[width] duration-500"
+              style={{ width: `${pct}%`, background: done ? '#10b981' : barColor }}
+            />
+          </div>
+          <p className="text-[11px] text-white/40 text-right">
+            {done ? 'Meta atingida!' : `${Math.min(progress, t.threshold)} / ${t.threshold} mensagens`}
+          </p>
         </div>
-        {done && (
-          <span className="shrink-0 text-[11px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center gap-1">
-            {status === 'pending_approval'
-              ? <><Clock size={11} /> Em aprovação</>
-              : status === 'granted'
-                ? <><CheckCircle2 size={11} /> Creditado</>
-                : status === 'pending_manual'
-                  ? <><Clock size={11} /> Em análise</>
-                  : 'Concluído'}
-          </span>
-        )}
       </div>
     );
   };
@@ -171,7 +185,7 @@ const SorteioWhatsApp = ({ tag }: { tag: string }) => {
                 </div>
                 <div className="space-y-2">
                   {individualTiers.length === 0 && <p className="text-sm text-white/40">Nenhuma meta configurada ainda.</p>}
-                  {individualTiers.map((t) => renderTier(t, data.myProgress || 0))}
+                  {individualTiers.map((t) => renderTier(t, data.myProgress || 0, '#00d4ff'))}
                 </div>
               </div>
             )}
@@ -184,7 +198,7 @@ const SorteioWhatsApp = ({ tag }: { tag: string }) => {
                 </div>
                 <div className="space-y-2">
                   {groupTiers.length === 0 && <p className="text-sm text-white/40">Nenhuma meta coletiva configurada ainda.</p>}
-                  {groupTiers.map((t) => renderTier(t, data.groupProgress || 0))}
+                  {groupTiers.map((t) => renderTier(t, data.groupProgress || 0, '#a855f7'))}
                 </div>
               </div>
             )}

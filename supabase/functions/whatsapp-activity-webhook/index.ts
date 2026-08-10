@@ -46,7 +46,26 @@ Deno.serve(async (req) => {
       return json({ ok: true, skipped: "not a message event" });
     }
 
-    const instanceName = String(body.instance || "");
+    const rawInstanceName = String(body.instance || "");
+    if (!rawInstanceName) return json({ ok: true, skipped: "no instance" });
+
+    // O nome tecnico da instancia na Evolution API (ex: "roleta3") nao e o
+    // mesmo que o rotulo salvo em whatsapp_activity_events.evolution_instance
+    // (ex: "whatsapp3" / "whatsapp2" / "notify"). O mesmo nome tecnico pode
+    // estar salvo (por engano/residuo) em mais de uma conta, entao coletamos
+    // TODOS os candidatos e decidimos depois, por evento, qual tem um evento
+    // ativo casando com o grupo da mensagem — em vez de travar no primeiro.
+    const { data: configs } = await admin.from("wheel_configs").select("user_id, config");
+    const candidates: { ownerId: string; label: string }[] = [];
+    for (const row of configs || []) {
+      const ds = (row.config as any)?.dashboardSettings || {};
+      if (ds.evolutionInstance === rawInstanceName) candidates.push({ ownerId: row.user_id, label: "whatsapp" });
+      if (ds.evolutionInstance2 === rawInstanceName) candidates.push({ ownerId: row.user_id, label: "whatsapp2" });
+      if (ds.evolutionInstance3 === rawInstanceName) candidates.push({ ownerId: row.user_id, label: "whatsapp3" });
+      if (ds.notifyEvolutionInstance === rawInstanceName) candidates.push({ ownerId: row.user_id, label: "notify" });
+    }
+    if (candidates.length === 0) return json({ ok: true, skipped: "instance not linked to any operator" });
+
     const items = Array.isArray(body.data) ? body.data : [body.data];
 
     for (const data of items) {
@@ -55,29 +74,55 @@ Deno.serve(async (req) => {
       const remoteJid = String(data.key.remoteJid || "");
       if (!remoteJid.endsWith("@g.us")) continue; // so grupos
 
-      const senderJid = String(data.key.participant || remoteJid);
+      // Com o modo de enderecamento "lid" do WhatsApp, "participant" traz um
+      // ID anonimo (ex: "179805232308304@lid"), nao o telefone real.
+      // "participantAlt" traz o JID tradicional com o numero de verdade.
+      const senderJid = String(data.key.participantAlt || data.key.participant || remoteJid);
       const senderPhone = onlyDigits(senderJid.split("@")[0]);
       const senderName = String(data.pushName || "");
       if (!senderPhone) continue;
 
       const { type: messageType, text: textContent } = extractMessage(data);
 
-      const { data: events } = await admin
-        .from("whatsapp_activity_events")
-        .select("*")
-        .eq("evolution_instance", instanceName)
-        .eq("group_jid", remoteJid)
-        .eq("is_active", true)
-        .eq("status", "active");
+      // O mesmo nome tecnico de instancia pode ter mais de um candidato
+      // (owner_id/label); busca eventos ativos para cada um e usa so os que
+      // realmente casam com este grupo, evitando decidir pela ordem da query.
+      let events: any[] = [];
+      for (const cand of candidates) {
+        const { data: evs } = await admin
+          .from("whatsapp_activity_events")
+          .select("*")
+          .eq("owner_id", cand.ownerId)
+          .eq("evolution_instance", cand.label)
+          .eq("group_jid", remoteJid)
+          .eq("is_active", true)
+          .eq("status", "active");
+        if (evs && evs.length > 0) events = events.concat(evs);
+      }
 
-      for (const ev of events || []) {
-        await admin.from("whatsapp_activity_messages").insert({
+      console.log("whatsapp-activity-webhook debug:", JSON.stringify({
+        candidates, remoteJid, senderPhone, senderName, eventsCount: events.length,
+      }));
+
+      const sourceMessageId = String(data.key.id || "") || null;
+
+      for (const ev of events) {
+        // A Evolution API as vezes retransmite o mesmo evento mais de uma vez
+        // (nomes de evento diferentes no mesmo lote). O indice unico
+        // (event_id, source_message_id) evita contar a mesma mensagem 2x.
+        const { error: insertErr } = await admin.from("whatsapp_activity_messages").insert({
           event_id: ev.id,
           sender_phone: senderPhone,
           sender_name: senderName,
           message_type: messageType,
           text_content: textContent,
+          source_message_id: sourceMessageId,
         });
+        if (insertErr) {
+          if (insertErr.code === "23505") continue; // duplicata, ja processada
+          console.error("whatsapp-activity-webhook: falha ao inserir mensagem", insertErr);
+          continue;
+        }
 
         // Tenta casar com um cadastro existente pelo telefone.
         let wheelUser: { id: string; account_id: string; user_name: string; user_email: string; pix_key: string; pix_key_type: string } | null = null;
