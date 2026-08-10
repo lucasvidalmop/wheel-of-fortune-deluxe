@@ -9,6 +9,7 @@ interface EventRow {
   id: string;
   owner_id: string;
   name: string;
+  tag: string;
   evolution_instance: string;
   group_jid: string;
   group_name: string;
@@ -129,8 +130,9 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
   };
 
   const createEvent = async () => {
+    const tag = `wa-${Date.now().toString(36)}`;
     const { data, error } = await db.from('whatsapp_activity_events').insert({
-      owner_id: ownerId, name: 'Novo evento WhatsApp', evolution_instance: 'notify',
+      owner_id: ownerId, name: 'Novo evento WhatsApp', tag, evolution_instance: 'notify',
       group_jid: '', group_name: '', scope: 'individual', status: 'draft', is_active: true,
     }).select('*').maybeSingle();
     if (error) { toast.error('Erro ao criar evento'); return; }
@@ -153,9 +155,12 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
     if (!draft?.id) return;
     if (!String(draft.name || '').trim()) { toast.error('Informe o nome do evento'); return; }
     if (!draft.group_jid) { toast.error('Selecione o grupo do WhatsApp'); return; }
+    const tag = String(draft.tag || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    if (!tag) { toast.error('Informe a tag (link público)'); return; }
     setSaving(true);
     const { error } = await db.from('whatsapp_activity_events').update({
       name: draft.name,
+      tag,
       evolution_instance: draft.evolution_instance,
       group_jid: draft.group_jid,
       group_name: draft.group_name || '',
@@ -279,6 +284,24 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
                 <span className="text-xs text-muted-foreground">Nome do evento</span>
                 <input className={inputCls} value={draft.name || ''} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
               </label>
+
+              <label className="space-y-1 block">
+                <span className="text-xs text-muted-foreground">Tag (link público)</span>
+                <input className={inputCls} value={draft.tag || ''} onChange={(e) => setDraft({ ...draft, tag: e.target.value })} />
+              </label>
+
+              {draft.tag && (
+                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
+                  <span className="text-muted-foreground">Link público: </span>
+                  <a
+                    href={`${window.location.origin}/sorteio-whatsapp=${draft.tag}`}
+                    target="_blank" rel="noreferrer"
+                    className="text-primary underline break-all"
+                  >
+                    {window.location.origin}/sorteio-whatsapp={draft.tag}
+                  </a>
+                </div>
+              )}
 
               <label className="space-y-1 block">
                 <span className="text-xs text-muted-foreground">Número / instância que vai monitorar o grupo</span>

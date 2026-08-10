@@ -25,6 +25,7 @@ const Bets = lazy(() => import("./pages/Bets.tsx"));
 const Lobby = lazy(() => import("./pages/Lobby.tsx"));
 const Sorteio = lazy(() => import("./pages/Sorteio.tsx"));
 const SorteioLive = lazy(() => import("./pages/SorteioLive.tsx"));
+const SorteioWhatsApp = lazy(() => import("./pages/SorteioWhatsApp.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,6 +81,10 @@ const SlugRouter = () => {
   if (slug && slug.startsWith('live=')) {
     const tag = slug.substring(5);
     return <SorteioLive tag={tag} />;
+  }
+  if (slug && slug.startsWith('sorteio-whatsapp=')) {
+    const tag = slug.substring(17);
+    return <SorteioWhatsApp tag={tag} />;
   }
   return <Roleta />;
 };
