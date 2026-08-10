@@ -29,6 +29,10 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!ev) return json({ found: false });
 
+    const { data: ownerConfig } = await admin
+      .from("wheel_configs").select("config").eq("user_id", ev.owner_id).maybeSingle();
+    const faviconUrl = (ownerConfig?.config as any)?.defaultFaviconUrl || "";
+
     const { data: tiers } = await admin
       .from("whatsapp_activity_tiers")
       .select("id, scope, threshold_messages, reward_type, reward_amount, reward_label")
@@ -77,7 +81,7 @@ Deno.serve(async (req) => {
 
     return json({
       found: true,
-      event: { name: ev.name, scope: ev.scope, status: ev.status, groupName: ev.group_name },
+      event: { name: ev.name, scope: ev.scope, status: ev.status, groupName: ev.group_name, faviconUrl },
       tiers: (tiers || []).map((t) => ({
         id: t.id, scope: t.scope, threshold: t.threshold_messages,
         rewardType: t.reward_type, rewardAmount: t.reward_amount, rewardLabel: t.reward_label,

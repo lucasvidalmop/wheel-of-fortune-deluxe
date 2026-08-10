@@ -146,7 +146,7 @@ const UpdateRegistration = ({ tag }: Props) => {
   // Inject SEO metatags and pixels for the update page
   useEffect(() => {
     const seo: any = (upd as any).seo || {};
-    if (!seo || Object.keys(seo).length === 0) return;
+    if (!ownerId) return;
     const addMeta = (name: string, content: string, property = false) => {
       if (!content) return;
       const sel = property ? `meta[property="${name}"]` : `meta[name="${name}"]`;
@@ -155,11 +155,13 @@ const UpdateRegistration = ({ tag }: Props) => {
       m.setAttribute('content', content);
     };
     if (seo.pageTitle) document.title = seo.pageTitle;
-    if (seo.faviconUrl) {
+    (async () => {
+      const favicon = seo.faviconUrl || (ownerId ? (await (supabase as any).from('wheel_configs').select('config').eq('user_id', ownerId).maybeSingle()).data?.config?.defaultFaviconUrl : '') || '';
+      if (!favicon) return;
       let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = seo.faviconUrl;
-    }
+      link.href = favicon;
+    })();
     if (seo.pageDescription) { addMeta('description', seo.pageDescription); addMeta('og:description', seo.pageDescription, true); }
     if (seo.pageTitle) addMeta('og:title', seo.pageTitle, true);
     if (seo.ogImage) addMeta('og:image', seo.ogImage, true);
@@ -189,7 +191,7 @@ const UpdateRegistration = ({ tag }: Props) => {
       div.innerHTML = seo.customHeadScript;
       Array.from(div.childNodes).forEach(n => document.head.appendChild(n));
     }
-  }, [upd]);
+  }, [upd, ownerId]);
 
   const allowed = upd.fields || {};
   const anyFieldAllowed = !!(allowed.name || allowed.phone || allowed.cpf || allowed.pixKey || allowed.accountId);

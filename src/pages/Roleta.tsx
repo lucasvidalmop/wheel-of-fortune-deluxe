@@ -369,6 +369,8 @@ const Roleta = ({ slugOverride }: { slugOverride?: string } = {}) => {
       let desc = config.seoDescription;
       let favicon = config.faviconUrl;
 
+      if (!favicon) favicon = (config as any).defaultFaviconUrl || '';
+
       if (!title || !desc || !favicon) {
         const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
         if (data) {

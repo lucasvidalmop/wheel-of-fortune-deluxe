@@ -166,6 +166,7 @@ const Luckybox = ({ tag }: { tag?: string }) => {
   const [scratchedIdx, setScratchedIdx] = useState<Set<number>>(new Set());
   const [drawnCases, setDrawnCases] = useState<DrawnCase[]>([]);
   const [signupRefCode, setSignupRefCode] = useState<string>('');
+  const [defaultFaviconUrl, setDefaultFaviconUrl] = useState('');
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [nowTs, setNowTs] = useState(Date.now());
   const [userClaims, setUserClaims] = useState<Record<string, string>>({});
@@ -209,6 +210,9 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         const { data: refCode } = await (supabase as any)
           .rpc('get_default_referral_code', { p_owner_id: data.config.owner_id });
         if (refCode) setSignupRefCode(refCode);
+        const { data: wc } = await (supabase as any)
+          .from('wheel_configs').select('config').eq('user_id', data.config.owner_id).maybeSingle();
+        setDefaultFaviconUrl((wc?.config as any)?.defaultFaviconUrl || '');
       }
     })();
   }, [tag]);
@@ -229,15 +233,16 @@ const Luckybox = ({ tag }: { tag?: string }) => {
       cleanups.push(() => { if (created) el?.remove(); });
     };
     ensureMeta('description', pc.seoDescription || `Abra caixas e ganhe prêmios em ${cfg.tag}`);
-    if (pc.seoFaviconUrl) {
+    const favicon = pc.seoFaviconUrl || defaultFaviconUrl;
+    if (favicon) {
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       const had = !!link; const old = link?.href;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = pc.seoFaviconUrl;
+      link.href = favicon;
       cleanups.push(() => { if (!had) link?.remove(); else if (link && old) link.href = old; });
     }
     return () => cleanups.forEach(fn => fn());
-  }, [cfg]);
+  }, [cfg, defaultFaviconUrl]);
 
   // Restore session
   useEffect(() => {

@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false }).limit(200),
       supabase.from("wheel_configs").select("config").eq("user_id", ev.owner_id).maybeSingle(),
     ]);
-    const raffleFaviconUrl = (ownerConfig?.config as any)?.raffleFaviconUrl || "";
+    const raffleFaviconUrl = (ownerConfig?.config as any)?.raffleFaviconUrl || (ownerConfig?.config as any)?.defaultFaviconUrl || "";
 
     // Fantasmas do evento: entram na lista publica e no contador (nao so na
     // hora do sorteio), senao fica evidente que "surgiram do nada" quando

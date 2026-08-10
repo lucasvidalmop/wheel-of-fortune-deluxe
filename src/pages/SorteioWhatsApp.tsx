@@ -14,7 +14,7 @@ interface Tier {
 
 interface Payload {
   found: boolean;
-  event?: { name: string; scope: 'individual' | 'group' | 'both'; status: string; groupName: string };
+  event?: { name: string; scope: 'individual' | 'group' | 'both'; status: string; groupName: string; faviconUrl?: string };
   tiers?: Tier[];
   me?: { name: string } | null;
   myProgress?: number;
@@ -49,7 +49,12 @@ const SorteioWhatsApp = ({ tag }: { tag: string }) => {
 
   useEffect(() => {
     if (data?.event?.name) document.title = `${data.event.name} | Progresso WhatsApp`;
-  }, [data?.event?.name]);
+    if (data?.event?.faviconUrl) {
+      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+      link.href = data.event.faviconUrl;
+    }
+  }, [data?.event?.name, data?.event?.faviconUrl]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

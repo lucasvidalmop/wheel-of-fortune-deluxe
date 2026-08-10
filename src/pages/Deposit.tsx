@@ -96,6 +96,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
   const whatsappLabel = labels?.whatsappLabel ?? 'WhatsApp';
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState('');
+  const [defaultFaviconUrl, setDefaultFaviconUrl] = useState('');
   const [config, setConfig] = useState<DepositConfig>(defaultDepositConfig);
   const [notFound, setNotFound] = useState(false);
   const [bsStats, setBsStats] = useState<{ total: number; count: number } | null>(null);
@@ -132,10 +133,11 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
     if (config.seoTitle) document.title = config.seoTitle;
     cleanup.push(() => { document.title = origTitle; });
 
-    if (config.seoFaviconUrl) {
+    const favicon = config.seoFaviconUrl || defaultFaviconUrl;
+    if (favicon) {
       const link = document.createElement('link');
       link.rel = 'icon';
-      link.href = config.seoFaviconUrl;
+      link.href = favicon;
       document.head.appendChild(link);
       cleanup.push(() => link.remove());
     }
@@ -195,7 +197,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
     }
 
     return () => cleanup.forEach(fn => fn());
-  }, [config]);
+  }, [config, defaultFaviconUrl]);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -211,6 +213,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
 
       const cfg = typeof match.config === 'string' ? JSON.parse(match.config) : match.config;
       setOwnerId(match.user_id);
+      setDefaultFaviconUrl(cfg.defaultFaviconUrl || '');
       const baseCfg = { ...defaultDepositConfig, ...cfg.depositConfig } as DepositConfig;
       // BS variant pulls visual/text/SEO/pixels/confirmation from `bsOverrides`,
       // falling back to the default deposit config for any unset key.

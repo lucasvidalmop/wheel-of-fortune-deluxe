@@ -10969,6 +10969,23 @@ function Dashboard() {
                 <ConfigBackupPanel />
               </Suspense>
               {session?.user?.id && <AuthNoticePanel ownerId={session.user.id} />}
+              {/* Favicon padrão */}
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Globe size={20} className="text-primary" />
+                  <h3 className="text-base font-bold text-foreground">Favicon padrão</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Ícone usado em todas as suas páginas públicas (Roleta, Luckybox, Apostas, Lobby, Cadastro etc.) quando a página
+                  não tiver um favicon próprio configurado. Cole a URL de uma imagem (recomendado: .ico ou .png quadrado).
+                </p>
+                <input
+                  type="text" placeholder="https://exemplo.com/favicon.png"
+                  value={(wheelConfig as any).defaultFaviconUrl || ''}
+                  onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, defaultFaviconUrl: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/[0.06] border border-white/[0.08] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                />
+              </div>
               {/* Probabilidade do Sorteio */}
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-1">

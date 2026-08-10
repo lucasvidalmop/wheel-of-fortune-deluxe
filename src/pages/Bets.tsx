@@ -719,8 +719,8 @@ const Bets = ({ tag }: BetsPageProps) => {
 
   // SEO/pixels injection
   useEffect(() => {
-    const seo: any = page?.pageConfig?.seo;
-    if (!seo || Object.keys(seo).length === 0) return;
+    const seo: any = page?.pageConfig?.seo || {};
+    if (!page?.ownerId) return;
     const addMeta = (name: string, content: string, property = false) => {
       if (!content) return;
       const sel = property ? `meta[property="${name}"]` : `meta[name="${name}"]`;
@@ -729,11 +729,17 @@ const Bets = ({ tag }: BetsPageProps) => {
       m.setAttribute('content', content);
     };
     if (seo.pageTitle) document.title = seo.pageTitle;
-    if (seo.faviconUrl) {
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = seo.faviconUrl;
-    }
+    (async () => {
+      const favicon = seo.faviconUrl || (await (async () => {
+        const { data: wc } = await (supabase as any).from('wheel_configs').select('config').eq('user_id', page.ownerId).maybeSingle();
+        return (wc?.config as any)?.defaultFaviconUrl || '';
+      })());
+      if (favicon) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+        if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+        link.href = favicon;
+      }
+    })();
     if (seo.pageDescription) { addMeta('description', seo.pageDescription); addMeta('og:description', seo.pageDescription, true); }
     if (seo.pageTitle) addMeta('og:title', seo.pageTitle, true);
     if (seo.ogImage) addMeta('og:image', seo.ogImage, true);

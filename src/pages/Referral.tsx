@@ -70,17 +70,19 @@ const Referral = () => {
     if ((cfg as any).seoOgImageUrl) addMeta('twitter:image', (cfg as any).seoOgImageUrl);
 
     // Favicon
-    if ((cfg as any).seoFaviconUrl) {
+    (async () => {
+      const favicon = (cfg as any).seoFaviconUrl || (linkData?.owner_id ? (await (supabase as any).from('wheel_configs').select('config').eq('user_id', linkData.owner_id).maybeSingle()).data?.config?.defaultFaviconUrl : '') || '';
+      if (!favicon) return;
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       const hadExisting = !!link;
       const oldHref = link?.href;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = (cfg as any).seoFaviconUrl;
+      link.href = favicon;
       cleanups.push(() => {
         if (!hadExisting) link?.remove();
         else if (link && oldHref) link.href = oldHref;
       });
-    }
+    })();
 
     // Facebook Pixel
     if ((cfg as any).pixelFacebook) {

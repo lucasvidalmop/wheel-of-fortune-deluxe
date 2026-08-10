@@ -311,16 +311,23 @@ export default function Batalha() {
     document.title = config.seoTitle || `${config.pageTitle}`;
     const desc = document.querySelector('meta[name="description"]');
     if (desc) desc.setAttribute('content', config.seoDescription || 'Slot Battle — sorteio entre participantes.');
-    if (config.faviconUrl) {
-      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
+    (async () => {
+      let favicon = config.faviconUrl;
+      if (!favicon && session?.user?.id) {
+        const { data: wc } = await (supabase as any).from('wheel_configs').select('config').eq('user_id', session.user.id).maybeSingle();
+        favicon = (wc?.config as any)?.defaultFaviconUrl || '';
       }
-      link.href = config.faviconUrl;
-    }
-  }, [config]);
+      if (favicon) {
+        let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = favicon;
+      }
+    })();
+  }, [config, session?.user?.id]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

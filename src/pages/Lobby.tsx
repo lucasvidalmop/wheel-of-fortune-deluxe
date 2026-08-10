@@ -89,6 +89,15 @@ const Lobby = ({ tag }: { tag: string }) => {
         setCoinIconUrl(data.coinIconUrl || '');
         setGorjetaRef(data.gorjetaRef || '');
         if (data.pageConfig?.site_title) document.title = data.pageConfig.site_title;
+        if (data.ownerId) {
+          const { data: wc } = await (supabase as any).from('wheel_configs').select('config').eq('user_id', data.ownerId).maybeSingle();
+          const favicon = (wc?.config as any)?.defaultFaviconUrl;
+          if (favicon) {
+            let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+            if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+            link.href = favicon;
+          }
+        }
       } catch {
         if (alive) setNotFound(true);
       } finally {

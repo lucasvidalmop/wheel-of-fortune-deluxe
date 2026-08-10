@@ -163,7 +163,7 @@ const Registration = () => {
 
   // Inject SEO metatags and pixels
   useEffect(() => {
-    if (!seoConfig || Object.keys(seoConfig).length === 0) return;
+    if (!linkData?.owner_id) return;
     const cleanups: (() => void)[] = [];
     const addMeta = (property: string, content: string) => {
       if (!content) return;
@@ -179,13 +179,18 @@ const Registration = () => {
     const pageTitle = seoConfig.pageTitle || seoConfig.ogTitle;
     if (pageTitle) { document.title = pageTitle; }
     // Favicon
-    if (seoConfig.faviconUrl) {
+    (async () => {
+      const favicon = seoConfig.faviconUrl || (await (async () => {
+        const { data: wc } = await (supabase as any).from('wheel_configs').select('config').eq('user_id', linkData.owner_id).maybeSingle();
+        return (wc?.config as any)?.defaultFaviconUrl || '';
+      })());
+      if (!favicon) return;
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
       const oldHref = link?.getAttribute('href');
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); cleanups.push(() => link.remove()); }
-      link.href = seoConfig.faviconUrl;
+      link.href = favicon;
       cleanups.push(() => { if (oldHref) link.href = oldHref; });
-    }
+    })();
     // Meta description
     const pageDesc = seoConfig.pageDescription || seoConfig.ogDescription;
     if (pageDesc) { addMeta('description', pageDesc); }
@@ -220,7 +225,7 @@ const Registration = () => {
       Array.from(div.children).forEach(child => { document.head.appendChild(child); cleanups.push(() => child.remove()); });
     }
     return () => cleanups.forEach(fn => fn());
-  }, [seoConfig]);
+  }, [seoConfig, linkData?.owner_id]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
