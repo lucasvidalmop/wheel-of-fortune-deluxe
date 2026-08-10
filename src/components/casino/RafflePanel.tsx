@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   Plus, Save, Trash2, Copy, ExternalLink, Users, ShieldAlert, Trophy,
-  Search, Ban, CheckCircle2, Radio, Download, RefreshCw, Loader2, X, Dices,
+  Search, Ban, CheckCircle2, Radio, Download, RefreshCw, Loader2, X, Dices, Gift,
 } from 'lucide-react';
 import PlinkoConfigPanel from './PlinkoConfigPanel';
 import {
@@ -42,7 +42,23 @@ interface RaffleEventRow {
   locked_count: number;
   is_active: boolean;
   created_at: string;
+  prize_pool_plan: PoolPlanItem[];
+  prize_pool: unknown[];
 }
+
+interface PoolPlanItem {
+  id: string;
+  type: 'spin' | 'coin' | 'box' | 'cash';
+  amount: number;
+  count: number;
+  caseId?: string;
+  caseName?: string;
+  label?: string;
+}
+
+const REWARD_TYPE_LABEL: Record<PoolPlanItem['type'], string> = {
+  spin: 'Giro grátis', coin: 'Coins', box: 'Caixa (Luckybox)', cash: 'Dinheiro (R$)',
+};
 
 interface ParticipantRow {
   id: string;
@@ -108,7 +124,10 @@ const inputCls =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary';
 
 const RafflePanel = ({ ownerId }: { ownerId: string }) => {
-  const [tab, setTab] = useState<'eventos' | 'participantes' | 'seguranca' | 'sorteio' | 'plinko'>('eventos');
+  const [tab, setTab] = useState<'eventos' | 'participantes' | 'seguranca' | 'sorteio' | 'premios' | 'plinko'>('eventos');
+  const [poolPlan, setPoolPlan] = useState<PoolPlanItem[]>([]);
+  const [poolSaving, setPoolSaving] = useState(false);
+  const [luckyboxCases, setLuckyboxCases] = useState<{ id: string; name: string }[]>([]);
   const [events, setEvents] = useState<RaffleEventRow[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [draft, setDraft] = useState<Partial<RaffleEventRow> | null>(null);
@@ -151,6 +170,35 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
   useEffect(() => { void loadEvents(); }, [loadEvents]);
   useEffect(() => { void loadDetails(selectedId); }, [selectedId, loadDetails]);
   useEffect(() => { setDraft(selected ? { ...selected } : null); }, [selected]);
+  useEffect(() => { setPoolPlan(selected?.prize_pool_plan?.length ? selected.prize_pool_plan : []); }, [selected]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await db.from('luckybox_cases').select('id, name').eq('owner_id', ownerId).eq('is_active', true).order('position', { ascending: true });
+      setLuckyboxCases(data || []);
+    })();
+  }, [ownerId]);
+
+  const addPoolItem = () => {
+    setPoolPlan((prev) => [...prev, { id: `p_${Date.now().toString(36)}`, type: 'spin', amount: 1, count: 1 }]);
+  };
+  const updatePoolItem = (id: string, patch: Partial<PoolPlanItem>) => {
+    setPoolPlan((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  };
+  const removePoolItem = (id: string) => {
+    setPoolPlan((prev) => prev.filter((p) => p.id !== id));
+  };
+  const savePoolPlan = async () => {
+    if (!selected) return;
+    setPoolSaving(true);
+    const { error } = await db.from('raffle_events').update({ prize_pool_plan: poolPlan }).eq('id', selected.id);
+    setPoolSaving(false);
+    if (error) { toast.error('Erro ao salvar a pool de prêmios'); return; }
+    toast.success('Pool de prêmios salva');
+    void loadEvents();
+  };
+  const poolTotalItems = poolPlan.reduce((sum, p) => sum + Math.max(0, Number(p.count) || 0), 0);
+  const poolRemaining = Array.isArray(selected?.prize_pool) ? selected.prize_pool.length : 0;
 
   // Favicon padrão para todas as páginas de eventos ao vivo (não é por evento).
   const [raffleFaviconUrl, setRaffleFaviconUrl] = useState('');
@@ -475,6 +523,7 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
               ['eventos', 'Evento', <Save key="i" size={14} />],
               ['participantes', 'Participantes', <Users key="i" size={14} />],
               ['seguranca', 'Análise de Segurança', <ShieldAlert key="i" size={14} />],
+              ['premios', 'Pool de Prêmios', <Gift key="i" size={14} />],
               ['sorteio', 'Sorteio / Resultado', <Trophy key="i" size={14} />],
               ['plinko', 'Mini Game Plinko', <Dices key="i" size={14} />],
             ] as const).map(([key, label, icon]) => (
@@ -740,6 +789,104 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                   ))}
                   {restrictions.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma restrição cadastrada.</p>}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ═══ POOL DE PRÊMIOS ═══ */}
+          {tab === 'premios' && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border p-4 space-y-1">
+                <p className="text-sm">
+                  Monte a lista de prêmios que serão sorteados (giro grátis, coins, caixa Luckybox ou dinheiro).
+                  Cada ganhador recebe um item da fila embaralhada, um por um.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Itens configurados: <strong>{poolTotalItems}</strong> · Ganhadores do sorteio: <strong>{selected.winners_count}</strong>
+                  {poolTotalItems > 0 && poolTotalItems !== selected.winners_count && (
+                    <span className="text-amber-500"> · quantidade diferente do número de ganhadores</span>
+                  )}
+                  {poolRemaining > 0 && <> · <strong>{poolRemaining}</strong> ainda na fila (não consumidos)</>}
+                </p>
+                {poolTotalItems === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Sem itens configurados: o sorteio usa o prêmio em dinheiro único (campo "Valor do prêmio por ganhador" na aba Evento).
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                {poolPlan.map((p) => (
+                  <div key={p.id} className="rounded-xl border border-border p-3 grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] items-end">
+                    <label className="space-y-1">
+                      <span className="text-xs text-muted-foreground">Tipo</span>
+                      <select
+                        className={inputCls} value={p.type}
+                        onChange={(e) => updatePoolItem(p.id, { type: e.target.value as PoolPlanItem['type'], caseId: undefined, caseName: undefined })}
+                      >
+                        {(Object.keys(REWARD_TYPE_LABEL) as PoolPlanItem['type'][]).map((t) => (
+                          <option key={t} value={t}>{REWARD_TYPE_LABEL[t]}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    {p.type === 'box' ? (
+                      <label className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Caixa Luckybox</span>
+                        <select
+                          className={inputCls} value={p.caseId || ''}
+                          onChange={(e) => {
+                            const c = luckyboxCases.find((c) => c.id === e.target.value);
+                            updatePoolItem(p.id, { caseId: c?.id, caseName: c?.name });
+                          }}
+                        >
+                          <option value="">Selecione a caixa</option>
+                          {luckyboxCases.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </label>
+                    ) : (
+                      <label className="space-y-1">
+                        <span className="text-xs text-muted-foreground">
+                          {p.type === 'cash' ? 'Valor (R$)' : p.type === 'spin' ? 'Giros por unidade' : 'Coins por unidade'}
+                        </span>
+                        <input
+                          type="number" onFocus={(e) => e.target.select()} min={p.type === 'cash' ? 0 : 1}
+                          step={p.type === 'cash' ? '0.01' : '1'}
+                          className={inputCls} value={p.amount}
+                          onChange={(e) => updatePoolItem(p.id, { amount: Math.max(0, Number(e.target.value) || 0) })}
+                        />
+                      </label>
+                    )}
+
+                    <label className="space-y-1">
+                      <span className="text-xs text-muted-foreground">Quantidade</span>
+                      <input
+                        type="number" onFocus={(e) => e.target.select()} min={1}
+                        className={inputCls} value={p.count}
+                        onChange={(e) => updatePoolItem(p.id, { count: Math.max(1, Number(e.target.value) || 1) })}
+                      />
+                    </label>
+
+                    <button onClick={() => removePoolItem(p.id)} className="rounded-lg border border-destructive/40 p-2.5 text-destructive">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))}
+                {poolPlan.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhum item na pool ainda.</p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={addPoolItem} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm">
+                  <Plus size={15} /> Adicionar item
+                </button>
+                <button
+                  onClick={savePoolPlan} disabled={poolSaving}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                >
+                  {poolSaving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Salvar pool
+                </button>
               </div>
             </div>
           )}

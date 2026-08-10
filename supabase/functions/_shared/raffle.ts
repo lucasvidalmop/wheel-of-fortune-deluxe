@@ -70,15 +70,29 @@ export function maskName(name: string): string {
   return parts.length > 1 ? `${masked} ${parts[parts.length - 1][0].toUpperCase()}.` : masked;
 }
 
-/** Monta a mensagem de aviso de ganho, sempre com o valor real do premio. */
-export function winnerNotifyMessage(
-  winnerName: string, eventName: string, prizeAmount: number, code: string, autoPayment: boolean,
+/** Descreve em texto o premio de um item da pool (ou o premio legado em dinheiro). */
+export function prizeDisplayLabel(
+  prize: { type: string; amount: number; caseName?: string; label?: string } | undefined,
+  fallbackCashAmount: number,
 ): string {
-  const amountLabel = `R$ ${prizeAmount.toFixed(2).replace(".", ",")}`;
-  const closing = autoPayment
-    ? "Seu pagamento será feito automaticamente em até alguns minutos via PIX. Fica de olho no WhatsApp e no seu extrato!"
-    : "Em breve entraremos em contato pra combinar o pagamento do seu prêmio. Fica de olho no WhatsApp!";
-  return `🎉 Parabéns, ${winnerName}!\n\nVocê foi sorteado no evento *${eventName}*! 🏆\n\n🎁 Prêmio: ${amountLabel}\n🎫 Código: ${code}\n\n${closing}\n\nQualquer dúvida, é só responder essa mensagem.`;
+  if (!prize) return `R$ ${fallbackCashAmount.toFixed(2).replace(".", ",")}`;
+  if (prize.label) return prize.label;
+  if (prize.type === "spin") return `${Math.max(1, Number(prize.amount || 1))} giro(s) grátis`;
+  if (prize.type === "coin") return `${Math.max(1, Number(prize.amount || 1))} coins`;
+  if (prize.type === "box") return prize.caseName || "Caixa surpresa";
+  return `R$ ${Number(prize.amount || 0).toFixed(2).replace(".", ",")}`;
+}
+
+/** Monta a mensagem de aviso de ganho, com o premio real (dinheiro, giro, coin ou caixa). */
+export function winnerNotifyMessage(
+  winnerName: string, eventName: string, prizeLabel: string, code: string, autoPayment: boolean, isCash: boolean,
+): string {
+  const closing = !isCash
+    ? "Seu prêmio já foi creditado na sua conta. Fica de olho no WhatsApp!"
+    : autoPayment
+      ? "Seu pagamento será feito automaticamente em até alguns minutos via PIX. Fica de olho no WhatsApp e no seu extrato!"
+      : "Em breve entraremos em contato pra combinar o pagamento do seu prêmio. Fica de olho no WhatsApp!";
+  return `🎉 Parabéns, ${winnerName}!\n\nVocê foi sorteado no evento *${eventName}*! 🏆\n\n🎁 Prêmio: ${prizeLabel}\n🎫 Código: ${code}\n\n${closing}\n\nQualquer dúvida, é só responder essa mensagem.`;
 }
 
 export function maskAccount(accountId: string): string {
@@ -132,6 +146,23 @@ export async function runRaffleDraw(
   }
 
   const winnersCount = Math.min(Math.max(1, ev.winners_count || 1), list.length);
+
+  // Pool de premios pre-definida (giro/coin/caixa/dinheiro) configurada
+  // pelo operador. Consome um item por posicao sorteada, de forma atomica
+  // (lock de linha no banco), para nao correr risco de repetir premio numa
+  // corrida com outro sorteio simultaneo. Se a pool estiver vazia (nenhum
+  // plano configurado), cai no comportamento legado de premio unico em
+  // dinheiro (ev.prize_amount) para todos os ganhadores reais.
+  type PoolPrize = { type: string; amount: number; caseId?: string; caseName?: string; label?: string };
+  let poolPrizes: PoolPrize[] = [];
+  try {
+    const { data: popped } = await admin.rpc("pop_raffle_prize_pool", {
+      p_event_id: ev.id, p_count: winnersCount,
+    });
+    poolPrizes = Array.isArray(popped) ? popped : [];
+  } catch (err) {
+    console.error("runRaffleDraw: falha ao consumir pool de premios", err);
+  }
   const ghostWinnersWanted = Math.min(
     Number(ev.ghost_winners_count || 0), ghostEntries.length, winnersCount,
   );
@@ -145,7 +176,9 @@ export async function runRaffleDraw(
   const remainingReal = [...(pool || [])];
   const remainingGhost = [...ghostEntries];
   const winners: Record<string, unknown>[] = [];
-  const realWinners: { wheelUserId: string; accountId: string; email: string; name: string; code: string }[] = [];
+  const realWinners: {
+    wheelUserId: string; accountId: string; email: string; name: string; code: string; prize?: PoolPrize;
+  }[] = [];
   for (let i = 0; i < winnersCount; i++) {
     let w: { id: string; display_name: string; public_code: string; account_id: string; email?: string; wheel_user_id?: string | null } | undefined;
     if (ghostSlots.has(i) && remainingGhost.length > 0) {
@@ -156,17 +189,19 @@ export async function runRaffleDraw(
       w = remainingGhost.splice(secureRandomInt(remainingGhost.length), 1)[0];
     }
     if (!w) break;
+    const prize = poolPrizes[i];
     winners.push({
       participantId: w.id,
       name: w.display_name,
       maskedName: maskName(w.display_name),
       code: w.public_code,
       position: i + 1,
+      ...(prize ? { prizeType: prize.type, prizeAmount: prize.amount, prizeLabel: prize.label, prizeCaseName: prize.caseName } : {}),
     });
     if (w.wheel_user_id) {
       realWinners.push({
         wheelUserId: w.wheel_user_id, accountId: w.account_id, email: w.email || "",
-        name: w.display_name, code: w.public_code,
+        name: w.display_name, code: w.public_code, prize,
       });
     }
   }
@@ -193,24 +228,63 @@ export async function runRaffleDraw(
     locked_count: ev.locked_count || list.length,
   }).eq("id", ev.id);
 
-  // Cria o pagamento do premio para cada ganhador real, se o evento tiver
-  // um valor de premio configurado. O disparo do auto pay em si NAO
-  // acontece aqui: vai para uma fila (auto_payout_queue) processada com
-  // 1 minuto de intervalo entre cada pagamento, evitando pagamento
-  // duplicado/em rajada no PIX.
-  const prizeAmount = Number(ev.prize_amount || 0);
-  if (prizeAmount > 0) {
-    const queueRows: Record<string, unknown>[] = [];
-    let payoutDelay = 0;
-    for (const r of realWinners) {
-      try {
+  // Concede o premio de cada ganhador real. Quem recebeu um item da pool
+  // pre-definida (giro/coin/caixa/dinheiro) tem o tipo dele respeitado; quem
+  // nao recebeu (pool vazia/esgotada) cai no comportamento legado de premio
+  // unico em dinheiro (ev.prize_amount) para manter compatibilidade com
+  // eventos ja configurados antes dessa pool existir. O disparo do auto pay
+  // em si NAO acontece aqui: vai para uma fila (auto_payout_queue)
+  // processada com 1 minuto de intervalo entre cada pagamento, evitando
+  // pagamento duplicado/em rajada no PIX.
+  const legacyPrizeAmount = Number(ev.prize_amount || 0);
+  const queueRows: Record<string, unknown>[] = [];
+  let payoutDelay = 0;
+  for (const r of realWinners) {
+    const prize = r.prize;
+    try {
+      if (prize && prize.type === "spin") {
+        const { data: wu } = await admin.from("wheel_users").select("spins_available").eq("id", r.wheelUserId).maybeSingle();
+        await admin.from("wheel_users").update({
+          spins_available: (wu?.spins_available || 0) + Math.max(1, Number(prize.amount || 1)),
+        }).eq("id", r.wheelUserId);
+      } else if (prize && prize.type === "coin") {
+        const { data: wu } = await admin.from("wheel_users").select("tokens_balance").eq("id", r.wheelUserId).maybeSingle();
+        await admin.from("wheel_users").update({
+          tokens_balance: (wu?.tokens_balance || 0) + Math.max(1, Number(prize.amount || 1)),
+        }).eq("id", r.wheelUserId);
+      } else if (prize && prize.type === "box" && prize.caseId) {
+        const code = Array.from({ length: 8 }, () =>
+          "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 33)]).join("");
+        const { data: grant } = await admin.from("luckybox_grants").insert({
+          owner_id: ev.owner_id,
+          case_id: prize.caseId,
+          case_name: prize.caseName || "",
+          wheel_user_id: r.wheelUserId,
+          recipient_name: r.name,
+          recipient_email: r.email,
+          recipient_account_id: r.accountId,
+          code,
+          quantity: 1,
+          status: "pending",
+        }).select("id").maybeSingle();
+        if (grant?.id) {
+          try {
+            await admin.rpc("auto_credit_luckybox_grant", { p_grant_id: grant.id });
+          } catch (err) {
+            console.error(`runRaffleDraw: falha ao creditar luckybox para ${r.wheelUserId}`, err);
+          }
+        }
+      } else {
+        // dinheiro: seja um item "cash" da pool, seja o premio legado unico.
+        const amount = prize && prize.type === "cash" ? Number(prize.amount || 0) : legacyPrizeAmount;
+        if (amount <= 0) continue;
         const { data: payment } = await admin.rpc("create_prize_payment", {
           p_owner_id: ev.owner_id,
           p_account_id: r.accountId,
           p_user_name: r.name,
           p_user_email: r.email,
-          p_prize: ev.prize_label || `Sorteio ${ev.name}`,
-          p_amount: prizeAmount,
+          p_prize: prize?.label || ev.prize_label || `Sorteio ${ev.name}`,
+          p_amount: amount,
           p_force_auto: !!ev.auto_payment,
         });
         if (payment?.id && (payment?.auto_payment || ev.auto_payment)) {
@@ -222,12 +296,12 @@ export async function runRaffleDraw(
           });
           payoutDelay++;
         }
-      } catch (err) {
-        console.error(`runRaffleDraw: falha ao criar pagamento para ${r.wheelUserId}`, err);
       }
+    } catch (err) {
+      console.error(`runRaffleDraw: falha ao conceder premio para ${r.wheelUserId}`, err);
     }
-    if (queueRows.length > 0) await admin.from("auto_payout_queue").insert(queueRows);
   }
+  if (queueRows.length > 0) await admin.from("auto_payout_queue").insert(queueRows);
 
   if (ev.notify_winners && realWinners.length > 0) {
     const { data: wheelUsers } = await admin
@@ -239,7 +313,9 @@ export async function runRaffleDraw(
     const rows = realWinners
       .filter((r) => phoneById.get(r.wheelUserId))
       .map((r, i) => {
-        const message = winnerNotifyMessage(r.name, ev.name, prizeAmount, r.code, !!ev.auto_payment);
+        const isCash = !r.prize || r.prize.type === "cash";
+        const prizeLabel = prizeDisplayLabel(r.prize, legacyPrizeAmount);
+        const message = winnerNotifyMessage(r.name, ev.name, prizeLabel, r.code, !!ev.auto_payment, isCash);
         const sendAt = new Date(now + i * 90_000).toISOString();
         return {
           owner_id: ev.owner_id,
