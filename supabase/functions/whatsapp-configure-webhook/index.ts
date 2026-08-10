@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     const map: Record<string, { url?: string; key?: string; instance?: string }> = {
       whatsapp: { url: ds.evolutionApiUrl, key: ds.evolutionApiKey, instance: ds.evolutionInstance },
       whatsapp2: { url: ds.evolutionApiUrl2, key: ds.evolutionApiKey2, instance: ds.evolutionInstance2 },
+      whatsapp3: { url: ds.evolutionApiUrl3, key: ds.evolutionApiKey3, instance: ds.evolutionInstance3 },
       notify: { url: ds.notifyEvolutionApiUrl, key: ds.notifyEvolutionApiKey, instance: ds.notifyEvolutionInstance },
     };
     const cfg = map[String(instanceLabel)];

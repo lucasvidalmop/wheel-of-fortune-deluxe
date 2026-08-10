@@ -76,6 +76,7 @@ const INSTANCE_OPTIONS = [
   { value: 'notify', label: 'Notificações (recomendado)' },
   { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'whatsapp2', label: 'WhatsApp 2' },
+  { value: 'whatsapp3', label: 'WhatsApp 3' },
 ];
 
 export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) {
