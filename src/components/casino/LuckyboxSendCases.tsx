@@ -471,7 +471,7 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
           </div>
           <div>
             <label className="block text-xs font-medium mb-1 opacity-70">Quantidade por inscrito</label>
-            <input type="number" min={1} value={quantity}
+            <input type="number" onFocus={(e) => e.target.select()} min={1} value={quantity}
               onChange={e => setQuantity(Math.max(1, Number(e.target.value) || 1))}
               className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm" />
           </div>
@@ -604,14 +604,14 @@ const SendCasesTab = ({ ownerId, cases, cfg }: Props) => {
             <label className="block text-xs font-medium mb-1 opacity-70">
               Qtd. de códigos {bulkForcedMode === 'pool' && <span className="text-cyan-400">(definido pelo sorteio)</span>}
             </label>
-            <input type="number" min={1} max={2000} value={bulkCount}
+            <input type="number" onFocus={(e) => e.target.select()} min={1} max={2000} value={bulkCount}
               disabled={bulkForcedMode === 'pool'}
               onChange={e => setBulkCount(Math.max(1, Number(e.target.value) || 1))}
               className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm disabled:opacity-40" />
           </div>
           <div>
             <label className="block text-xs font-medium mb-1 opacity-70">Caixas por código</label>
-            <input type="number" min={1} value={bulkQty}
+            <input type="number" onFocus={(e) => e.target.select()} min={1} value={bulkQty}
               onChange={e => setBulkQty(Math.max(1, Number(e.target.value) || 1))}
               className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm" />
           </div>

@@ -521,31 +521,31 @@ const RafflePanel = ({ ownerId }: { ownerId: string }) => {
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Ganhadores</span>
-                  <input type="number" min={1} className={inputCls} value={draft.winners_count ?? 1} onChange={(e) => setDraft({ ...draft, winners_count: Number(e.target.value) })} />
+                  <input type="number" onFocus={(e) => e.target.select()} min={1} className={inputCls} value={draft.winners_count ?? 1} onChange={(e) => setDraft({ ...draft, winners_count: Number(e.target.value) })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Mínimo de participantes</span>
-                  <input type="number" min={0} className={inputCls} value={draft.min_participants ?? 0} onChange={(e) => setDraft({ ...draft, min_participants: Number(e.target.value) })} />
+                  <input type="number" onFocus={(e) => e.target.select()} min={0} className={inputCls} value={draft.min_participants ?? 0} onChange={(e) => setDraft({ ...draft, min_participants: Number(e.target.value) })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Máximo (opcional)</span>
-                  <input type="number" min={0} className={inputCls} value={draft.max_participants ?? ''} onChange={(e) => setDraft({ ...draft, max_participants: e.target.value ? Number(e.target.value) : null })} />
+                  <input type="number" onFocus={(e) => e.target.select()} min={0} className={inputCls} value={draft.max_participants ?? ''} onChange={(e) => setDraft({ ...draft, max_participants: e.target.value ? Number(e.target.value) : null })} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Fantasmas no Plinko</span>
-                  <input type="number" min={0} className={inputCls} value={(draft as any).ghost_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                  <input type="number" onFocus={(e) => e.target.select()} min={0} className={inputCls} value={(draft as any).ghost_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Fantasmas entram após (minutos)</span>
-                  <input type="number" min={0} className={inputCls} value={(draft as any).ghost_delay_minutes ?? 0} onChange={(e) => setDraft({ ...draft, ghost_delay_minutes: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                  <input type="number" onFocus={(e) => e.target.select()} min={0} className={inputCls} value={(draft as any).ghost_delay_minutes ?? 0} onChange={(e) => setDraft({ ...draft, ghost_delay_minutes: Math.max(0, Number(e.target.value) || 0) } as any)} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Fantasmas sorteados como ganhadores</span>
-                  <input type="number" min={0} className={inputCls} value={(draft as any).ghost_winners_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_winners_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                  <input type="number" onFocus={(e) => e.target.select()} min={0} className={inputCls} value={(draft as any).ghost_winners_count ?? 0} onChange={(e) => setDraft({ ...draft, ghost_winners_count: Math.max(0, Number(e.target.value) || 0) } as any)} />
                 </label>
                 <label className="space-y-1">
                   <span className="text-xs text-muted-foreground">Valor do prêmio por ganhador (R$)</span>
-                  <input type="number" min={0} step="0.01" className={inputCls} value={(draft as any).prize_amount ?? 0} onChange={(e) => setDraft({ ...draft, prize_amount: Math.max(0, Number(e.target.value) || 0) } as any)} />
+                  <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" className={inputCls} value={(draft as any).prize_amount ?? 0} onChange={(e) => setDraft({ ...draft, prize_amount: Math.max(0, Number(e.target.value) || 0) } as any)} />
                 </label>
                 <label className="flex items-center gap-2 pt-5">
                   <input type="checkbox" checked={(draft as any).notify_winners === true} onChange={(e) => setDraft({ ...draft, notify_winners: e.target.checked } as any)} />

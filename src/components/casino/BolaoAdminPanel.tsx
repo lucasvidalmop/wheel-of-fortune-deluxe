@@ -384,7 +384,7 @@ export default function BolaoAdminPanel({ ownerId }: Props) {
                     className="w-32 px-2 py-1.5 rounded bg-background border border-border text-sm"
                   />
                   <input
-                    type="number"
+                    type="number" onFocus={(e) => e.target.select()}
                     placeholder="Pontos"
                     value={g.score}
                     onChange={(e) => {

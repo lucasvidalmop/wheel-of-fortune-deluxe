@@ -290,7 +290,7 @@ const GorjetaPageEditor = ({ userId, currentConfig, onSaved }: Props) => {
         <div className="pt-2 border-t border-white/5">
           <label className="block text-xs font-medium mb-1.5">Coins ao se cadastrar</label>
           <input
-            type="number"
+            type="number" onFocus={(e) => e.target.select()}
             min={0}
             step={1}
             value={config.signupCoins}

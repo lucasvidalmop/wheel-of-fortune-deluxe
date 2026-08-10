@@ -526,7 +526,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
                 <label className="text-xs" style={{ color: txtMuted }}>Ou digite um valor personalizado:</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm" style={{ color: txtMuted }}>R$</span>
-                  <input type="number" value={customAmount} onChange={e => { setCustomAmount(e.target.value); setSelectedAmount(null); }} placeholder={`Mínimo ${config.minimumValue.toFixed(2)}`} min={config.minimumValue} step="0.01" className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={inputStyle} />
+                  <input type="number" onFocus={(e) => e.target.select()} value={customAmount} onChange={e => { setCustomAmount(e.target.value); setSelectedAmount(null); }} placeholder={`Mínimo ${config.minimumValue.toFixed(2)}`} min={config.minimumValue} step="0.01" className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm ${inputFocusClass}`} style={inputStyle} />
                 </div>
                 <p className="text-xs" style={{ color: txtMuted }}>Valor mínimo: R$ {config.minimumValue.toFixed(2)}</p>
               </div>

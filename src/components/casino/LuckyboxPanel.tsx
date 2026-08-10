@@ -941,7 +941,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             <div>
               <label className="text-xs opacity-70 mb-1 block">Quantidade de {cfg?.coin_name || 'Coins'}</label>
               <input
-                type="number"
+                type="number" onFocus={(e) => e.target.select()}
                 value={bulkModal.value}
                 onChange={e => setBulkModal({ ...bulkModal, value: e.target.value })}
                 placeholder="Ex: 100 ou -50"
@@ -999,7 +999,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1 opacity-70">Preço ({cfg.coin_name || 'Coins'})</label>
-                <input type="number" min={0} value={editingCase.price_tokens} onChange={e => setEditingCase({ ...editingCase, price_tokens: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
+                <input type="number" onFocus={(e) => e.target.select()} min={0} value={editingCase.price_tokens} onChange={e => setEditingCase({ ...editingCase, price_tokens: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm" />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1 opacity-70">Raridade da caixa</label>
@@ -1096,7 +1096,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                     <div>
                       <label className="block text-[11px] uppercase opacity-60 mb-1">Caixas por resgate</label>
                       <input
-                        type="number"
+                        type="number" onFocus={(e) => e.target.select()}
                         min={1}
                         value={editingCase.claim_quantity ?? 1}
                         onChange={e => setEditingCase({ ...editingCase, claim_quantity: Math.max(1, parseInt(e.target.value) || 1) })}
@@ -1420,7 +1420,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
                     <div>
                       <label className="block text-[11px] uppercase tracking-wider opacity-60 mb-1">Quantas caixas sortear por abertura</label>
                       <input
-                        type="number"
+                        type="number" onFocus={(e) => e.target.select()}
                         min={1}
                         max={10}
                         value={pool.quantity}
@@ -1525,7 +1525,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
             </div>
             <label className="block text-xs font-medium mb-2 opacity-80">Quantidade (use valores negativos para remover)</label>
             <input
-              type="number"
+              type="number" onFocus={(e) => e.target.select()}
               autoFocus
               value={adjustModal.value}
               onChange={e => setAdjustModal({ ...adjustModal, value: e.target.value })}

@@ -31,7 +31,7 @@ const ColorInput = ({ value, onChange }: { value: string; onChange: (v: string) 
 
 const NumberInput = ({ value, onChange, min, max, step }: { value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }) => (
   <input
-    type="number"
+    type="number" onFocus={(e) => e.target.select()}
     value={value}
     min={min}
     max={max}

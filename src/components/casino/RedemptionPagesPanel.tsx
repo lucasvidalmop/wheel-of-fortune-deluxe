@@ -198,7 +198,7 @@ const RedemptionPagesPanel = ({ ownerId }: Props) => {
             {p.mode === 'unique' && (
               <div className="border-t border-white/5 pt-3 space-y-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <input type="number" min={1} max={5000} value={bulkCount[p.id] || 10} onChange={e => setBulkCount({ ...bulkCount, [p.id]: parseInt(e.target.value) || 0 })} className="w-20 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs" />
+                  <input type="number" onFocus={(e) => e.target.select()} min={1} max={5000} value={bulkCount[p.id] || 10} onChange={e => setBulkCount({ ...bulkCount, [p.id]: parseInt(e.target.value) || 0 })} className="w-20 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs" />
                   <button onClick={() => handleGenerateCodes(p)} className="px-3 py-1 rounded-md bg-primary/15 text-primary border border-primary/20 text-xs font-semibold">Gerar códigos</button>
                   <button onClick={() => loadCodes(p.id)} className="px-3 py-1 rounded-md bg-white/5 text-xs">Ver códigos</button>
                   {codes && codes.length > 0 && (<button onClick={() => exportCodes(p)} className="px-3 py-1 rounded-md bg-white/5 text-xs">Exportar CSV</button>)}

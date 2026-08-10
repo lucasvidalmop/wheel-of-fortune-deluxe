@@ -531,7 +531,7 @@ const LobbyPanel = ({ ownerId }: { ownerId: string }) => {
                     <span className="font-semibold text-foreground">{PRODUCT_LABELS[card.key]}</span>
                   </label>
                 </div>
-                <input type="number" value={card.order ?? idx + 1} onChange={(e) => updateCard(idx, { order: Number(e.target.value) })} className="w-20 px-2 py-1 rounded bg-background border border-white/10 text-foreground text-sm" title="Ordem" />
+                <input type="number" onFocus={(e) => e.target.select()} value={card.order ?? idx + 1} onChange={(e) => updateCard(idx, { order: Number(e.target.value) })} className="w-20 px-2 py-1 rounded bg-background border border-white/10 text-foreground text-sm" title="Ordem" />
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <input type="text" value={card.title} onChange={(e) => updateCard(idx, { title: e.target.value })} placeholder="Título do card" className="px-3 py-2 rounded-lg bg-background border border-white/10 text-foreground text-sm" />

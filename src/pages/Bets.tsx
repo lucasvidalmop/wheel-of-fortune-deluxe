@@ -2510,7 +2510,7 @@ const Bets = ({ tag }: BetsPageProps) => {
                   Valor ({coinName}) · min {minBetAllowed} / max {maxBetAllowed}
                 </label>
                 <input
-                  type="number" min={minBetAllowed} max={maxBetAllowed} value={ticketAmount}
+                  type="number" onFocus={(e) => e.target.select()} min={minBetAllowed} max={maxBetAllowed} value={ticketAmount}
                   onChange={(e) => setTicketAmount(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg mb-3 text-lg font-bold tabular-nums"
                   style={{ background: '#00000066', border: `1px solid ${accent}55`, color: text }}

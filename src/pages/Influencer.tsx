@@ -1320,7 +1320,7 @@ const Influencer = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 rounded-xl border border-white/[0.08] p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <input type="number" value={raffleQty} readOnly={liveMode && !!selectedLiveEvent}
+                        <input type="number" onFocus={(e) => e.target.select()} value={raffleQty} readOnly={liveMode && !!selectedLiveEvent}
                           onChange={e => setRaffleQty(Math.max(1, Math.min(activeUsers.length + activeGhostUsers.length, parseInt(e.target.value) || 1)))}
                           className="w-full border-0 bg-transparent text-center text-2xl font-black outline-none shadow-none [appearance:textfield] focus:bg-transparent focus:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           style={{ color: accent, backgroundColor: 'transparent', boxShadow: 'none' }} min={1} max={activeUsers.length + activeGhostUsers.length} />

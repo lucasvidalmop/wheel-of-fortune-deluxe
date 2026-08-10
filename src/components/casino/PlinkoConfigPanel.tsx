@@ -163,7 +163,7 @@ const PlinkoConfigPanel = ({ ownerId }: { ownerId: string }) => {
           <label className="space-y-1">
             <span className="text-xs text-muted-foreground">Prêmio base (R$)</span>
             <input
-              type="number" min="0" step="1"
+              type="number" onFocus={(e) => e.target.select()} min="0" step="1"
               value={config.plinkoBasePrize}
               onChange={(e) => update({ plinkoBasePrize: Number(e.target.value) || 0 })}
               className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm font-mono"
@@ -172,7 +172,7 @@ const PlinkoConfigPanel = ({ ownerId }: { ownerId: string }) => {
           <label className="space-y-1">
             <span className="text-xs text-muted-foreground">Bolinhas por rodada (1-20)</span>
             <input
-              type="number" min="1" max="20"
+              type="number" onFocus={(e) => e.target.select()} min="1" max="20"
               value={config.plinkoBallCount}
               onChange={(e) => update({ plinkoBallCount: Math.min(20, Math.max(1, Number(e.target.value) || 1)) })}
               className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm font-mono"
@@ -192,7 +192,7 @@ const PlinkoConfigPanel = ({ ownerId }: { ownerId: string }) => {
               <div key={i} className="flex items-center gap-2">
                 <span className="w-8 font-mono text-[10px] text-muted-foreground">#{i + 1}</span>
                 <input
-                  type="number" step="0.1" min="0"
+                  type="number" onFocus={(e) => e.target.select()} step="0.1" min="0"
                   value={m}
                   onChange={(e) => {
                     const next = [...mults];
@@ -203,7 +203,7 @@ const PlinkoConfigPanel = ({ ownerId }: { ownerId: string }) => {
                 />
                 <span className="text-[10px] text-muted-foreground">x</span>
                 <input
-                  type="number" step="0.1" min="0" max="100"
+                  type="number" onFocus={(e) => e.target.select()} step="0.1" min="0" max="100"
                   value={chances[i] ?? 0}
                   onChange={(e) => {
                     const next = [...chances];

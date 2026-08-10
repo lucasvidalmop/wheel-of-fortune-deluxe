@@ -6616,7 +6616,7 @@ function Dashboard() {
                 <div className="flex items-center gap-3 pt-1">
                   <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
                   <input
-                    type="number"
+                    type="number" onFocus={(e) => e.target.select()}
                     min={1}
                     max={60}
                     value={whatsappDelaySeconds}
@@ -7618,7 +7618,7 @@ function Dashboard() {
                 <div className="flex items-center gap-3 pt-1">
                   <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
                   <input
-                    type="number"
+                    type="number" onFocus={(e) => e.target.select()}
                     min={1}
                     max={60}
                     value={whatsappDelaySeconds}
@@ -8361,7 +8361,7 @@ function Dashboard() {
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">Giros por inscrição</label>
                       <input
-                        type="number"
+                        type="number" onFocus={(e) => e.target.select()}
                         min={1}
                         max={999}
                         value={referralForm.spins_per_registration}
@@ -8400,7 +8400,7 @@ function Dashboard() {
                                   -
                                 </button>
                                 <input
-                                  type="number"
+                                  type="number" onFocus={(e) => e.target.select()}
                                   min={0}
                                   max={Number.isFinite(referralTotalAvailableSpins) ? referralTotalAvailableSpins : undefined}
                                   value={count}
@@ -8451,7 +8451,7 @@ function Dashboard() {
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">Limite de inscrições <span className="text-muted-foreground/50">(vazio = ilimitado)</span></label>
                       <input
-                        type="number"
+                        type="number" onFocus={(e) => e.target.select()}
                         min={1}
                         value={referralForm.max_registrations}
                         onChange={e => setReferralForm(p => ({ ...p, max_registrations: e.target.value }))}
@@ -9944,7 +9944,7 @@ function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <input
-                      type="number"
+                      type="number" onFocus={(e) => e.target.select()}
                       min={0}
                       max={100}
                       value={(wheelConfig as any).drawProbability ?? 0}
@@ -9962,7 +9962,7 @@ function Dashboard() {
                   </p>
                   <div className="flex items-center gap-2">
                     <input
-                      type="number"
+                      type="number" onFocus={(e) => e.target.select()}
                       min={0}
                       value={(wheelConfig as any).minRealWinners ?? 0}
                       onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, minRealWinners: Math.max(0, Number(e.target.value)) }))}
@@ -9984,7 +9984,7 @@ function Dashboard() {
                 </p>
                 <div className="flex items-center gap-2">
                   <input
-                    type="number"
+                    type="number" onFocus={(e) => e.target.select()}
                     min={1}
                     value={(wheelConfig as any).maxWinsPerDay ?? 1}
                     onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, maxWinsPerDay: Math.max(1, Number(e.target.value)) }))}
@@ -10019,7 +10019,7 @@ function Dashboard() {
                 </p>
                 <div className="flex items-center gap-2">
                   <input
-                    type="number"
+                    type="number" onFocus={(e) => e.target.select()}
                     min={0}
                     value={(() => {
                       const unit = (wheelConfig as any).spinExpirationUnit ?? 'minutes';
@@ -10076,7 +10076,7 @@ function Dashboard() {
                 </p>
                 <div className="flex items-center gap-2">
                   <input
-                    type="number"
+                    type="number" onFocus={(e) => e.target.select()}
                     min={0}
                     value={(() => {
                       const unit = (wheelConfig as any).autoPaymentCooldownUnit ?? 'minutes';
@@ -10188,7 +10188,7 @@ function Dashboard() {
                 </p>
                 <div className="flex items-center gap-2">
                   <input
-                    type="number"
+                    type="number" onFocus={(e) => e.target.select()}
                     min={1}
                     value={(wheelConfig as any).influencerDailyLimit ?? 500}
                     onChange={(e) => updateWheelConfig((prev: any) => ({ ...prev, influencerDailyLimit: Math.max(1, Number(e.target.value)) }))}
@@ -10669,7 +10669,7 @@ function Dashboard() {
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor (R$)</label>
                           <input
-                            type="number"
+                            type="number" onFocus={(e) => e.target.select()}
                             min="1"
                             step="0.01"
                             value={depositAmount}
@@ -10810,7 +10810,7 @@ function Dashboard() {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor (USD)</label>
-                        <input type="number" min="1" step="0.01" value={cryptoAmount} onChange={e => setCryptoAmount(e.target.value)} placeholder="100.00" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        <input type="number" onFocus={(e) => e.target.select()} min="1" step="0.01" value={cryptoAmount} onChange={e => setCryptoAmount(e.target.value)} placeholder="100.00" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Descrição (opcional)</label>
@@ -10929,7 +10929,7 @@ function Dashboard() {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor (USDT)</label>
-                        <input type="number" min="1" step="0.01" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="50.00" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        <input type="number" onFocus={(e) => e.target.select()} min="1" step="0.01" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="50.00" className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Endereço TRC20</label>
@@ -11052,7 +11052,7 @@ function Dashboard() {
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Valor por pessoa (R$)</label>
                           <input
-                            type="number"
+                            type="number" onFocus={(e) => e.target.select()}
                             min="0.01"
                             step="0.01"
                             value={manualPayAmount}
@@ -11513,7 +11513,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
             <div className="mb-4">
               <label className="text-xs text-muted-foreground mb-1.5 block">Quantidade de giros</label>
               <input
-                type="number"
+                type="number" onFocus={(e) => e.target.select()}
                 min={1}
                 max={999}
                 value={grantSpinCount}
@@ -11632,7 +11632,7 @@ Total: R$ ${total}`, variant: 'info', confirmLabel: 'Enviar' })) return;
             <div className="mb-4">
               <label className="text-xs text-muted-foreground mb-1.5 block">Quantidade de giros por inscrito</label>
               <input
-                type="number"
+                type="number" onFocus={(e) => e.target.select()}
                 min={1}
                 max={999}
                 value={batchGrantSpinCount}

@@ -220,7 +220,7 @@ export default function EmailTemplateEditor({ ownerId, onClose, onSaved, initial
                 <input value={block.linkUrl || ''} onChange={(e) => updateBlock(idx, { linkUrl: e.target.value })} placeholder="Link ao clicar (opcional)" className="w-full px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs text-foreground focus:outline-none" />
                 <div className="flex gap-2 items-center text-xs text-muted-foreground">
                   <span>Largura</span>
-                  <input type="number" min={100} max={600} value={block.width || 480} onChange={(e) => updateBlock(idx, { width: parseInt(e.target.value) || 480 })} className="w-20 px-2 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs text-foreground" />
+                  <input type="number" onFocus={(e) => e.target.select()} min={100} max={600} value={block.width || 480} onChange={(e) => updateBlock(idx, { width: parseInt(e.target.value) || 480 })} className="w-20 px-2 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs text-foreground" />
                   <select value={block.align || 'center'} onChange={(e) => updateBlock(idx, { align: e.target.value })} className="px-2 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-xs text-foreground">
                     <option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option>
                   </select>

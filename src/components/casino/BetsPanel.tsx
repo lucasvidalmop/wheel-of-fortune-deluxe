@@ -1122,7 +1122,7 @@ const BetsPanel = ({ ownerId }: BetsPanelProps) => {
                 </div>
                 <div className="w-20">
                   <label className="text-xs font-medium block mb-1">Ordem</label>
-                  <input type="number" value={c.position}
+                  <input type="number" onFocus={(e) => e.target.select()} value={c.position}
                     onChange={e => updateCategory(c.id, { position: Number(e.target.value) || 0 })}
                     className="w-full px-3 py-2 rounded-lg bg-muted text-sm tabular-nums" />
                 </div>
@@ -2399,7 +2399,7 @@ function AnalyticsTab({ wagers, events, outcomes, coinName, filter, setFilter, o
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={byEvent} layout="vertical" margin={{ left: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <XAxis type="number" onFocus={(e) => e.target.select()} stroke="hsl(var(--muted-foreground))" fontSize={11} />
                 <YAxis type="category" dataKey="title" stroke="hsl(var(--muted-foreground))" fontSize={11} width={120} />
                 <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
                 <Bar dataKey="valor" fill="#22d3ee" name={`Valor (${coinName})`} />

@@ -1096,7 +1096,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ config, onChang
                     </div>
                     <div>
                       <label className="text-[10px] text-muted-foreground font-medium">Porcentagem (%)</label>
-                      <input type="number" min={0} max={100} value={seg.percentage} onChange={e => updateSegment(i, 'percentage', Math.max(0, parseInt(e.target.value) || 0))} className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground" />
+                      <input type="number" onFocus={(e) => e.target.select()} min={0} max={100} value={seg.percentage} onChange={e => updateSegment(i, 'percentage', Math.max(0, parseInt(e.target.value) || 0))} className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground" />
                     </div>
                     <div>
                       <label className="text-[10px] text-muted-foreground font-medium">Tipo de prêmio</label>

@@ -246,7 +246,7 @@ const ForcedPrizePicker = ({
                 <div className="w-24">
                   <div className="text-[10px] opacity-60 mb-1">Qtd. códigos</div>
                   <input
-                    type="number" min={1}
+                    type="number" onFocus={(e) => e.target.select()} min={1}
                     value={entry?.count ?? 1}
                     onChange={e => {
                       const next = pool.slice();
