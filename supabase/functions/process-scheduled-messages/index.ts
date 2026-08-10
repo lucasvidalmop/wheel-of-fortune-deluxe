@@ -131,15 +131,16 @@ Deno.serve(async (req) => {
             status: ok ? "sent" : "failed",
             error_message: ok ? null : String(payload?.message || "Mobizon API error"),
           });
-        } else if (channel === "whatsapp" || channel === "whatsapp2" || channel === "whatsapp_notify") {
-          // ── WhatsApp via Evolution API (instância 1, 2, ou a de Notificações) ──
+        } else if (channel === "whatsapp" || channel === "whatsapp2" || channel === "whatsapp3" || channel === "whatsapp_notify") {
+          // ── WhatsApp via Evolution API (instância 1, 2, 3, ou a de Notificações) ──
           const isInstance2 = channel === "whatsapp2";
+          const isInstance3 = channel === "whatsapp3";
           const isNotify = channel === "whatsapp_notify";
-          const evolutionApiUrl = isNotify ? ds.notifyEvolutionApiUrl : isInstance2 ? ds.evolutionApiUrl2 : ds.evolutionApiUrl;
-          const evolutionApiKey = isNotify ? ds.notifyEvolutionApiKey : isInstance2 ? ds.evolutionApiKey2 : ds.evolutionApiKey;
-          const evolutionInstance = isNotify ? ds.notifyEvolutionInstance : isInstance2 ? ds.evolutionInstance2 : ds.evolutionInstance;
-          const logTable = isInstance2 ? "whatsapp2_message_log" : "whatsapp_message_log";
-          const errorLabel = isNotify ? "Evolution API (Notificações) not configured" : isInstance2 ? "Evolution API (instância 2) not configured" : "Evolution API not configured";
+          const evolutionApiUrl = isNotify ? ds.notifyEvolutionApiUrl : isInstance3 ? ds.evolutionApiUrl3 : isInstance2 ? ds.evolutionApiUrl2 : ds.evolutionApiUrl;
+          const evolutionApiKey = isNotify ? ds.notifyEvolutionApiKey : isInstance3 ? ds.evolutionApiKey3 : isInstance2 ? ds.evolutionApiKey2 : ds.evolutionApiKey;
+          const evolutionInstance = isNotify ? ds.notifyEvolutionInstance : isInstance3 ? ds.evolutionInstance3 : isInstance2 ? ds.evolutionInstance2 : ds.evolutionInstance;
+          const logTable = isInstance3 ? "whatsapp3_message_log" : isInstance2 ? "whatsapp2_message_log" : "whatsapp_message_log";
+          const errorLabel = isNotify ? "Evolution API (Notificações) not configured" : isInstance3 ? "Evolution API (instância 3) not configured" : isInstance2 ? "Evolution API (instância 2) not configured" : "Evolution API not configured";
 
           if (!evolutionApiUrl || !evolutionApiKey || !evolutionInstance) {
             await supabase.from("scheduled_messages").update({ status: "failed", updated_at: now }).eq("id", msg.id);

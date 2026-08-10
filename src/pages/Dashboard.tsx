@@ -93,6 +93,9 @@ interface PersistedDashboardSettings {
   evolutionApiUrl2: string;
   evolutionApiKey2: string;
   evolutionInstance2: string;
+  evolutionApiUrl3: string;
+  evolutionApiKey3: string;
+  evolutionInstance3: string;
   spinWhatsappEnabled: boolean;
   spinWhatsappTemplate: string;
   spinWhatsappCustomMsg: string;
@@ -154,6 +157,9 @@ const DEFAULT_PERSISTED_DASHBOARD_SETTINGS: PersistedDashboardSettings = {
   evolutionApiUrl2: '',
   evolutionApiKey2: '',
   evolutionInstance2: '',
+  evolutionApiUrl3: '',
+  evolutionApiKey3: '',
+  evolutionInstance3: '',
   spinWhatsappEnabled: false,
   spinWhatsappTemplate: 'welcome',
   spinWhatsappCustomMsg: '',
@@ -315,12 +321,12 @@ function Dashboard() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [toolPerms, setToolPerms] = useState<Record<string, boolean>>({
-    roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, whatsapp: true, whatsapp2: true, financeiro: true, gorjeta: true, referral: true,
+    roleta: true, sms: true, sms_mb: true, sms_cs: true, email: true, whatsapp: true, whatsapp2: true, whatsapp3: true, financeiro: true, gorjeta: true, referral: true,
     inscritos: true, auth: true, history: true, analytics: true, msg_analytics: true, notificacoes: true, configuracoes: true, painel_casa: true,
     batalha_slot: false, apostas: true,
   });
 
-  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'lobby' | 'sorteio' | 'sorteio_whatsapp' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
+  const [activeTab, setActiveTab] = useState<'inscritos' | 'wheel' | 'batalha_slot' | 'luckybox' | 'apostas' | 'lobby' | 'sorteio' | 'sorteio_whatsapp' | 'auth' | 'history' | 'email' | 'email_brevo' | 'sms' | 'sms_cs' | 'whatsapp' | 'whatsapp2' | 'whatsapp3' | 'analytics' | 'financeiro' | 'referral' | 'notificacoes' | 'gorjeta' | 'hist_gorjeta' | 'configuracoes' | 'painel_casa' | 'deposito' | 'hist_deposito' | 'msg_analytics'>('inscritos');
   const [openGroupsRaw, setOpenGroupsRaw] = useState<Record<string, boolean>>({});
   const [gorjetaHistory, setGorjetaHistory] = useState<any[]>([]);
   const [gorjetaHistoryLoading, setGorjetaHistoryLoading] = useState(false);
@@ -467,6 +473,24 @@ function Dashboard() {
   const [notifyGroupJid2, setNotifyGroupJid2] = useState('');
   const [notifyGroupName2, setNotifyGroupName2] = useState('');
   const [notifyGroupsLoading2, setNotifyGroupsLoading2] = useState(false);
+
+  // WhatsApp 3 state (terceira instância — credenciais e envios independentes)
+  const [whatsappSending3, setWhatsappSending3] = useState(false);
+  const [showWhatsappConfig3, setShowWhatsappConfig3] = useState(false);
+  const [evolutionApiUrl3, setEvolutionApiUrl3] = useState('');
+  const [evolutionApiKey3, setEvolutionApiKey3] = useState('');
+  const [evolutionInstance3, setEvolutionInstance3] = useState('');
+  const [instanceStatus3, setInstanceStatus3] = useState<'unknown' | 'loading' | 'open' | 'close' | 'connecting' | 'error'>('unknown');
+  const [instanceQrCode3, setInstanceQrCode3] = useState<string | null>(null);
+  const [creatingInstance3, setCreatingInstance3] = useState(false);
+  const [whatsappLogs3, setWhatsappLogs3] = useState<any[]>([]);
+  const [whatsappLogsLoading3, setWhatsappLogsLoading3] = useState(false);
+  const [showWhatsappHistory3, setShowWhatsappHistory3] = useState(false);
+  const [notifyGroups3, setNotifyGroups3] = useState<{ id: string; subject: string }[]>([]);
+  const [notifySelectedGroups3, setNotifySelectedGroups3] = useState<{ id: string; subject: string }[]>([]);
+  const [notifyGroupJid3, setNotifyGroupJid3] = useState('');
+  const [notifyGroupName3, setNotifyGroupName3] = useState('');
+  const [notifyGroupsLoading3, setNotifyGroupsLoading3] = useState(false);
   const [excludeBulkSent, setExcludeBulkSent] = useState(false);
 
   // Progresso dos disparos em massa (Email/SMS/WhatsApp)
@@ -477,6 +501,7 @@ function Dashboard() {
   const [smsCsProgress, setSmsCsProgress] = useState<BulkProgress>(emptyProgress);
   const [whatsappProgress, setWhatsappProgress] = useState<BulkProgress>(emptyProgress);
   const [whatsappProgress2, setWhatsappProgress2] = useState<BulkProgress>(emptyProgress);
+  const [whatsappProgress3, setWhatsappProgress3] = useState<BulkProgress>(emptyProgress);
 
   // Controles de PAUSAR/PARAR para cada modo de disparo
   const emailCtrl = useBulkSendControl();
@@ -486,6 +511,8 @@ function Dashboard() {
   const whatsappGroupCtrl = useBulkSendControl();
   const whatsapp2Ctrl = useBulkSendControl();
   const whatsapp2GroupCtrl = useBulkSendControl();
+  const whatsapp3Ctrl = useBulkSendControl();
+  const whatsapp3GroupCtrl = useBulkSendControl();
 
   const [edpayPublicKey, setEdpayPublicKey] = useState('');
   const [edpaySecretKey, setEdpaySecretKey] = useState('');
@@ -580,8 +607,8 @@ function Dashboard() {
     setScheduledLoading(true);
     // Busca pendentes de TODOS os canais whatsapp + últimos enviados/cancelados (limitado para não bater no limite de 1000 linhas)
     const [pendingRes, recentRes] = await Promise.all([
-      supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['whatsapp', 'whatsapp2'] as any).eq('status', 'pending').order('next_run_at', { ascending: true }).limit(500),
-      supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['whatsapp', 'whatsapp2'] as any).neq('status', 'pending').order('scheduled_at', { ascending: false }).limit(200),
+      supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['whatsapp', 'whatsapp2', 'whatsapp3'] as any).eq('status', 'pending').order('next_run_at', { ascending: true }).limit(500),
+      supabase.from('scheduled_messages').select('*').eq('owner_id', session.user.id).in('channel', ['whatsapp', 'whatsapp2', 'whatsapp3'] as any).neq('status', 'pending').order('scheduled_at', { ascending: false }).limit(200),
     ]);
     const merged = [...(pendingRes.data || []), ...(recentRes.data || [])];
     setScheduledMessages(merged);
@@ -642,7 +669,7 @@ function Dashboard() {
     setSchedSaving(true);
     const isoDate = scheduledAt.toISOString();
 
-    const scheduleChannel = activeTab === 'whatsapp2' ? 'whatsapp2' : 'whatsapp';
+    const scheduleChannel = activeTab === 'whatsapp3' ? 'whatsapp3' : activeTab === 'whatsapp2' ? 'whatsapp2' : 'whatsapp';
 
     const baseRow = {
       message: schedForm.message || '',
@@ -1528,7 +1555,7 @@ function Dashboard() {
   // Auto-load scheduled messages when WhatsApp/WhatsApp2/SMS tabs are opened
   useEffect(() => {
     if (!session?.user?.id) return;
-    if (activeTab === 'whatsapp' || activeTab === 'whatsapp2') {
+    if (activeTab === 'whatsapp' || activeTab === 'whatsapp2' || activeTab === 'whatsapp3') {
       fetchScheduledMessages();
     }
     if (activeTab === 'sms') {
@@ -1598,6 +1625,9 @@ function Dashboard() {
     evolutionApiUrl2,
     evolutionApiKey2,
     evolutionInstance2,
+    evolutionApiUrl3,
+    evolutionApiKey3,
+    evolutionInstance3,
     spinWhatsappEnabled,
     spinWhatsappTemplate,
     spinWhatsappCustomMsg,
@@ -1691,6 +1721,9 @@ function Dashboard() {
     setEvolutionApiUrl2(settings.evolutionApiUrl2 || '');
     setEvolutionApiKey2(settings.evolutionApiKey2 || '');
     setEvolutionInstance2(settings.evolutionInstance2 || '');
+    setEvolutionApiUrl3(settings.evolutionApiUrl3 || '');
+    setEvolutionApiKey3(settings.evolutionApiKey3 || '');
+    setEvolutionInstance3(settings.evolutionInstance3 || '');
     setSpinWhatsappEnabled(!!settings.spinWhatsappEnabled);
     setSpinWhatsappTemplate(settings.spinWhatsappTemplate || 'welcome');
     setSpinWhatsappCustomMsg(settings.spinWhatsappCustomMsg || '');
@@ -1955,6 +1988,9 @@ function Dashboard() {
     evolutionApiUrl2,
     evolutionApiKey2,
     evolutionInstance2,
+    evolutionApiUrl3,
+    evolutionApiKey3,
+    evolutionInstance3,
     spinWhatsappEnabled,
     spinWhatsappTemplate,
     spinWhatsappCustomMsg,
@@ -2644,6 +2680,18 @@ function Dashboard() {
     setWhatsappLogs2(data || []);
     setWhatsappLogsLoading2(false);
   };
+  const fetchWhatsappLogs3 = async () => {
+    if (!session?.user?.id) return;
+    setWhatsappLogsLoading3(true);
+    const { data } = await (supabase as any)
+      .from('whatsapp3_message_log')
+      .select('*')
+      .eq('owner_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    setWhatsappLogs3(data || []);
+    setWhatsappLogsLoading3(false);
+  };
   const handleGrantSpin = async (user: WheelUser) => {
     // Open modal to choose prize
     setGrantSpinUser(user);
@@ -3144,7 +3192,7 @@ function Dashboard() {
 
   const baseUrl = window.location.origin;
 
-  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' | 'apostas' | 'sorteio' }[] = [
+  const allMenuItems: { key: typeof activeTab; icon: React.ReactNode; label: string; tool?: 'roleta' | 'sms' | 'sms_cs' | 'email' | 'email_brevo' | 'whatsapp' | 'whatsapp2' | 'whatsapp3' | 'financeiro' | 'gorjeta' | 'referral' | 'inscritos' | 'auth' | 'history' | 'analytics' | 'msg_analytics' | 'notificacoes' | 'configuracoes' | 'painel_casa' | 'batalha_slot' | 'luckybox' | 'apostas' | 'sorteio' }[] = [
     { key: 'inscritos', icon: <Users size={20} />, label: 'Inscritos', tool: 'inscritos' },
     { key: 'wheel', icon: <Target size={20} />, label: 'Roleta', tool: 'roleta' },
     { key: 'batalha_slot', icon: <Swords size={20} />, label: 'Batalha Slot', tool: 'batalha_slot' },
@@ -3162,6 +3210,7 @@ function Dashboard() {
     { key: 'sms_cs', icon: <Smartphone size={20} />, label: 'SMS API (CS)', tool: 'sms_cs' },
     { key: 'whatsapp', icon: <MessageCircle size={20} />, label: 'WhatsApp', tool: 'whatsapp' },
     { key: 'whatsapp2', icon: <MessageCircle size={20} />, label: 'WhatsApp 2', tool: 'whatsapp2' },
+    { key: 'whatsapp3', icon: <MessageCircle size={20} />, label: 'WhatsApp 3', tool: 'whatsapp3' },
     { key: 'msg_analytics', icon: <BarChart3 size={20} />, label: 'Analytics Msg', tool: 'msg_analytics' },
     { key: 'financeiro', icon: <Wallet size={20} />, label: 'Financeiro', tool: 'financeiro' },
     { key: 'notificacoes', icon: <Bell size={20} />, label: 'Notificações', tool: 'notificacoes' },
@@ -3179,7 +3228,7 @@ function Dashboard() {
   type GroupKey = 'operacao' | 'disparos' | 'crescimento' | 'sistema';
   const groupDefs: { key: GroupKey; label: string; itemKeys: typeof activeTab[] }[] = [
     { key: 'operacao', label: 'Operação', itemKeys: ['inscritos', 'wheel', 'batalha_slot', 'luckybox', 'apostas', 'lobby', 'sorteio', 'sorteio_whatsapp', 'auth', 'history'] },
-    { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'msg_analytics'] },
+    { key: 'disparos', label: 'Disparos', itemKeys: ['email', 'email_brevo', 'sms', 'sms_cs', 'whatsapp', 'whatsapp2', 'whatsapp3', 'msg_analytics'] },
     { key: 'crescimento', label: 'Crescimento', itemKeys: ['referral', 'gorjeta', 'hist_gorjeta', 'deposito', 'hist_deposito'] },
     { key: 'sistema', label: 'Sistema', itemKeys: ['analytics', 'financeiro', 'notificacoes', 'configuracoes'] },
   ];
@@ -3222,6 +3271,7 @@ function Dashboard() {
     sms_cs: 'Disparo de SMS API (ClickSend)',
     whatsapp: 'Disparo de WhatsApp',
     whatsapp2: 'Disparo de WhatsApp 2',
+    whatsapp3: 'Disparo de WhatsApp 3',
     financeiro: 'Financeiro',
     notificacoes: 'Notificações',
     referral: 'Links de Referência',
@@ -6563,7 +6613,7 @@ function Dashboard() {
                 </div>
 
                 {/* Poll editor (only relevant when sending to groups) */}
-                {(notifySelectedGroups.length > 0 || notifySelectedGroups2.length > 0) && (
+                {(notifySelectedGroups.length > 0 || notifySelectedGroups2.length > 0 || notifySelectedGroups3.length > 0) && (
                   <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
                     <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
                       <input type="checkbox" checked={groupPoll.enabled} onChange={e => setGroupPoll(p => ({ ...p, enabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
@@ -7565,7 +7615,7 @@ function Dashboard() {
                 </div>
 
                 {/* Poll editor (only relevant when sending to groups) */}
-                {(notifySelectedGroups.length > 0 || notifySelectedGroups2.length > 0) && (
+                {(notifySelectedGroups.length > 0 || notifySelectedGroups2.length > 0 || notifySelectedGroups3.length > 0) && (
                   <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
                     <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
                       <input type="checkbox" checked={groupPoll.enabled} onChange={e => setGroupPoll(p => ({ ...p, enabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
@@ -7986,6 +8036,1009 @@ function Dashboard() {
 
 
           {/* ══════ NOTIFICAÇÕES TAB ══════ */}
+
+          {/* ══════ WHATSAPP 3 TAB ══════ */}
+          {activeTab === 'whatsapp3' && (
+            <div className="max-w-2xl space-y-5">
+              <div className="flex items-center gap-2 justify-end">
+                <button onClick={() => { setShowWhatsappHistory3(!showWhatsappHistory3); if (!showWhatsappHistory3) fetchWhatsappLogs3(); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showWhatsappHistory3 ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Clock size={15} /> Histórico
+                </button>
+                <button onClick={() => setShowWhatsappConfig3(!showWhatsappConfig3)} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm transition ${showWhatsappConfig3 ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08]'}`}>
+                  <Settings size={15} /> Configurar API
+                </button>
+              </div>
+
+              {showWhatsappConfig3 && (
+                <GlassCard className="p-5 space-y-4">
+                  <h3 className="text-sm font-bold text-foreground">🔑 Evolution API</h3>
+                  <p className="text-[10px] text-muted-foreground">Configure sua instância da <a href="https://doc.evolution-api.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Evolution API</a></p>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">URL da API</label>
+                    <input type="text" value={evolutionApiUrl3} onChange={e => setEvolutionApiUrl3(e.target.value)} placeholder="https://sua-api.com" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">API Key</label>
+                    <input type="password" value={evolutionApiKey3} onChange={e => setEvolutionApiKey3(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Nome da Instância</label>
+                    <input type="text" value={evolutionInstance3} onChange={e => setEvolutionInstance3(e.target.value)} placeholder="minha-instancia" className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                  </div>
+
+                  <div className="border-t border-white/[0.06] pt-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-foreground">📱 Gerenciar Instância</h4>
+
+                    <div className="flex gap-2 flex-wrap">
+                      {/* Criar Instância */}
+                      <button
+                        disabled={!evolutionApiUrl3 || !evolutionApiKey3 || !evolutionInstance3 || creatingInstance3}
+                        onClick={async () => {
+                          setCreatingInstance3(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'create', evolutionApiUrl: evolutionApiUrl3, evolutionApiKey: evolutionApiKey3, evolutionInstance: evolutionInstance3 }
+                            });
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao criar instância';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus3('error');
+                              return;
+                            }
+                            const d = data.data;
+                            toast.success('Instância criada com sucesso!');
+                            if (d?.qrcode?.base64) {
+                              setInstanceQrCode3(d.qrcode.base64);
+                              setInstanceStatus3('connecting');
+                            } else {
+                              setInstanceStatus3('close');
+                            }
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro de conexão');
+                            setInstanceStatus3('error');
+                          } finally {
+                            setCreatingInstance3(false);
+                          }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-white/[0.08] bg-white/[0.04] text-foreground hover:bg-white/[0.08] disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <Plus size={14} /> {creatingInstance3 ? 'Criando...' : 'Criar Instância'}
+                      </button>
+
+                      {/* Conectar / QR Code */}
+                      <button
+                        disabled={!evolutionApiUrl3 || !evolutionApiKey3 || !evolutionInstance3 || instanceStatus3 === 'loading'}
+                        onClick={async () => {
+                          setInstanceStatus3('loading');
+                          setInstanceQrCode3(null);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'connect', evolutionApiUrl: evolutionApiUrl3, evolutionApiKey: evolutionApiKey3, evolutionInstance: evolutionInstance3 }
+                            });
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao conectar';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus3('error');
+                              return;
+                            }
+                            const d = data.data;
+                            if (d?.base64) {
+                              setInstanceQrCode3(d.base64);
+                              setInstanceStatus3('connecting');
+                              toast.info('Escaneie o QR Code no WhatsApp');
+                            } else if (d?.instance?.state === 'open') {
+                              setInstanceStatus3('open');
+                              toast.success('WhatsApp já está conectado!');
+                            } else {
+                              setInstanceStatus3('close');
+                              toast.info('Instância desconectada. Tente novamente.');
+                            }
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro de conexão');
+                            setInstanceStatus3('error');
+                          }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <Smartphone size={14} /> {instanceStatus3 === 'loading' ? 'Conectando...' : 'Conectar (QR Code)'}
+                      </button>
+
+                      {/* Verificar Status */}
+                      <button
+                        disabled={!evolutionApiUrl3 || !evolutionApiKey3 || !evolutionInstance3}
+                        onClick={async () => {
+                          setInstanceStatus3('loading');
+                          try {
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'status', evolutionApiUrl: evolutionApiUrl3, evolutionApiKey: evolutionApiKey3, evolutionInstance: evolutionInstance3 }
+                            });
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao verificar';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus3('error');
+                              return;
+                            }
+                            const d = data.data;
+                            const state = d?.instance?.state || d?.state || 'unknown';
+                            if (state === 'open') {
+                              setInstanceStatus3('open');
+                              toast.success('Status: 🟢 Conectado');
+                            } else if (state === 'connecting') {
+                              setInstanceStatus3('connecting');
+                              toast.info('Status: 🟡 Aguardando leitura do QR Code');
+                            } else {
+                              setInstanceStatus3('close');
+                              toast.info('Status: 🔴 Desconectado');
+                            }
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro');
+                            setInstanceStatus3('error');
+                          }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.08] disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <RotateCcw size={14} /> Verificar Status
+                      </button>
+
+                      {/* Desconectar */}
+                      <button
+                        disabled={!evolutionApiUrl3 || !evolutionApiKey3 || !evolutionInstance3}
+                        onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+                              body: { action: 'logout', evolutionApiUrl: evolutionApiUrl3, evolutionApiKey: evolutionApiKey3, evolutionInstance: evolutionInstance3 }
+                            });
+                            const msg = data?.error || data?.data?.error || data?.data?.response?.message || data?.data?.message || error?.message || 'Erro ao desconectar';
+                            if (error || !data?.ok) {
+                              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+                              setInstanceStatus3('error');
+                              return;
+                            }
+                            toast.success('WhatsApp desconectado');
+                            setInstanceStatus3('close');
+                            setInstanceQrCode3(null);
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro');
+                            setInstanceStatus3('error');
+                          }
+                        }}
+                        className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-semibold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+                      >
+                        <LogOut size={14} /> Desconectar
+                      </button>
+                    </div>
+
+                    {/* Status badge */}
+                    <div className={`text-xs font-medium flex items-center gap-1.5 ${
+                      instanceStatus3 === 'open' ? 'text-green-400' :
+                      instanceStatus3 === 'connecting' ? 'text-yellow-400' :
+                      instanceStatus3 === 'error' ? 'text-red-400' :
+                      instanceStatus3 === 'close' ? 'text-orange-400' :
+                      'text-muted-foreground'
+                    }`}>
+                      {instanceStatus3 === 'open' && '🟢 WhatsApp conectado'}
+                      {instanceStatus3 === 'connecting' && '🟡 Aguardando leitura do QR Code...'}
+                      {instanceStatus3 === 'close' && '🔴 Desconectado'}
+                      {instanceStatus3 === 'error' && '❌ Erro na conexão'}
+                      {instanceStatus3 === 'loading' && '⏳ Verificando...'}
+                      {instanceStatus3 === 'unknown' && (evolutionApiUrl3 && evolutionApiKey3 && evolutionInstance3 ? '⚪ Clique em "Verificar Status"' : '⚠️ Preencha todas as credenciais')}
+                    </div>
+
+                    {/* QR Code display */}
+                    {instanceQrCode3 && (
+                      <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-white/[0.08] bg-white/[0.02]">
+                        <p className="text-xs text-muted-foreground font-medium">Escaneie o QR Code com o WhatsApp</p>
+                        <div className="bg-white p-3 rounded-xl">
+                          <img src={instanceQrCode3.startsWith('data:') ? instanceQrCode3 : `data:image/png;base64,${instanceQrCode3}`} alt="QR Code WhatsApp" className="w-56 h-56" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Abra o WhatsApp → Menu (⋮) → Aparelhos conectados → Conectar aparelho</p>
+                        <button onClick={() => { setInstanceQrCode3(null); setInstanceStatus3('unknown'); }} className="text-xs text-muted-foreground hover:text-foreground transition">
+                          Fechar QR Code
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </GlassCard>
+              )}
+
+              {/* ── Grupos WhatsApp ── */}
+              <GlassCard className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                      <Users size={20} className="text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Grupos WhatsApp</h3>
+                      <p className="text-xs text-muted-foreground">Selecione um grupo para receber notificações automáticas</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!evolutionApiUrl3 || !evolutionApiKey3 || !evolutionInstance3 || notifyGroupsLoading3}
+                    onClick={async () => {
+                      setNotifyGroupsLoading3(true);
+                      try {
+                        const { data } = await supabase.functions.invoke('evolution-proxy', {
+                          body: {
+                            action: 'fetchGroups',
+                            evolutionApiUrl: evolutionApiUrl3, evolutionApiKey: evolutionApiKey3, evolutionInstance: evolutionInstance3,
+                          },
+                        });
+                        if (data?.ok && Array.isArray(data.data)) {
+                          setNotifyGroups3(data.data.map((g: any) => ({ id: g.id, subject: g.subject || g.id })));
+                          toast.success(`${data.data.length} grupo(s) encontrado(s)`);
+                        } else {
+                          toast.error('Erro ao buscar grupos. Verifique se a API está conectada.');
+                        }
+                      } catch {
+                        toast.error('Erro ao buscar grupos');
+                      }
+                      setNotifyGroupsLoading3(false);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 disabled:opacity-40 transition flex items-center gap-1.5"
+                  >
+                    <RotateCcw size={14} /> {notifyGroupsLoading3 ? 'Buscando...' : 'Buscar Grupos'}
+                  </button>
+                </div>
+
+                {notifyGroups3.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="max-h-[200px] overflow-y-auto space-y-1.5 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.1] [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {notifyGroups3.map(g => {
+                        const isSelected = notifySelectedGroups3.some(sg => sg.id === g.id);
+                        return (
+                          <label key={g.id} className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-green-500/10 border-green-500/20' : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]'}`}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
+                                if (isSelected) {
+                                  const updated = notifySelectedGroups3.filter(sg => sg.id !== g.id);
+                                  setNotifySelectedGroups3(updated);
+                                  if (notifyGroupJid3 === g.id) {
+                                    setNotifyGroupJid3(updated[0]?.id || '');
+                                    setNotifyGroupName3(updated[0]?.subject || '');
+                                  }
+                                } else {
+                                  const updated = [...notifySelectedGroups3, g];
+                                  setNotifySelectedGroups3(updated);
+                                  if (!notifyGroupJid3) {
+                                    setNotifyGroupJid3(g.id);
+                                    setNotifyGroupName3(g.subject);
+                                  }
+                                }
+                              }}
+                              className="rounded border-white/20 accent-green-500"
+                            />
+                            <div className="flex items-center gap-2 min-w-0">
+                              {isSelected && <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />}
+                              <span className="text-xs font-medium text-foreground truncate">{g.subject}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {notifySelectedGroups3.length > 0 && (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+                        <span className="text-xs font-medium text-green-400">📌 {notifySelectedGroups3.length} grupo(s) selecionado(s)</span>
+                        <button type="button" onClick={() => { setNotifySelectedGroups3([]); setNotifyGroupJid3(''); setNotifyGroupName3(''); }} className="text-xs text-red-400 hover:text-red-300">Limpar todos</button>
+                      </div>
+                    )}
+                  </div>
+                ) : notifySelectedGroups3.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {notifySelectedGroups3.map(g => (
+                      <div key={g.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08]">
+                        <span className="text-xs text-foreground">📌 {g.subject}</span>
+                        <button type="button" onClick={() => {
+                          const updated = notifySelectedGroups3.filter(sg => sg.id !== g.id);
+                          setNotifySelectedGroups3(updated);
+                          if (notifyGroupJid3 === g.id) {
+                            setNotifyGroupJid3(updated[0]?.id || '');
+                            setNotifyGroupName3(updated[0]?.subject || '');
+                          }
+                        }} className="text-xs text-red-400 hover:text-red-300">Remover</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground/60">Configure a API acima e clique em "Buscar Grupos"</p>
+                )}
+              </GlassCard>
+
+              {showWhatsappHistory3 && (
+                <GlassCard className="p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} className="text-primary" /> Histórico de Mensagens</h3>
+                    <button onClick={fetchWhatsappLogs3} className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1"><RotateCcw size={12} /> Atualizar</button>
+                  </div>
+                  {whatsappLogsLoading3 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm animate-pulse">Carregando histórico...</div>
+                  ) : whatsappLogs3.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">Nenhuma mensagem enviada ainda.</div>
+                  ) : (
+                    <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.1] [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {whatsappLogs3.map((log: any) => (
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition">
+                          <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${log.status === 'sent' ? 'bg-green-400' : 'bg-red-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold text-foreground truncate">{log.recipient_name || 'Sem nome'}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{log.recipient_phone}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{log.message}</p>
+                            {log.error_message && <p className="text-[10px] text-red-400 mt-1">Erro: {log.error_message}</p>}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+                            {new Date(log.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
+              )}
+
+              <GlassCard className="p-5 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Destinatários</h3>
+                {/* Source mode toggle */}
+                <div className="flex gap-2">
+                  <button onClick={() => setWhatsappSourceMode('base')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappSourceMode === 'base' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    📋 Base
+                  </button>
+                  <button onClick={() => setWhatsappSourceMode('csv')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappSourceMode === 'csv' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    <span className="flex items-center justify-center gap-1.5"><Upload size={14} /> CSV Externo</span>
+                  </button>
+                </div>
+
+                {whatsappSourceMode === 'base' ? (
+                  <>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={excludeBulkSent} onChange={e => { setExcludeBulkSent(e.target.checked); if (e.target.checked) fetchBulkSentPhones(); }} className="rounded border-white/20" />
+                      <span className="text-xs text-muted-foreground">Excluir quem já recebeu disparo (24h)</span>
+                      {excludeBulkSent && bulkSentPhones.size > 0 && <span className="text-xs text-yellow-400">({bulkSentPhones.size} excluídos)</span>}
+                      {excludeBulkSent && bulkSentCountdown && (
+                        <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">⏱ {bulkSentCountdown}</span>
+                      )}
+                    </label>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setWhatsappTarget('all'); setSelectedWhatsappPhones([]); }} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'all' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Todos ({users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone))).length})
+                      </button>
+                      <button onClick={() => setWhatsappTarget('selected')} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${whatsappTarget === 'selected' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                        Selecionar ({selectedWhatsappPhones.length})
+                      </button>
+                    </div>
+                    {whatsappTarget === 'selected' && (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <input type="text" value={whatsappSearch} onChange={e => setWhatsappSearch(e.target.value)} placeholder="Buscar por nome ou telefone..." className="w-full pl-8 pr-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 placeholder:text-muted-foreground" />
+                        </div>
+                        {(() => {
+                          const filteredWhatsappUsers = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone))).filter(u => {
+                            if (!whatsappSearch.trim()) return true;
+                            const q = whatsappSearch.toLowerCase();
+                            return u.name.toLowerCase().includes(q) || u.phone.includes(q);
+                          });
+                          const filteredPhones = filteredWhatsappUsers.map(u => u.phone);
+                          const allFilteredSelected = filteredPhones.length > 0 && filteredPhones.every(p => selectedWhatsappPhones.includes(p));
+                          return (
+                            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                              <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
+                                <input type="checkbox" checked={allFilteredSelected} onChange={e => {
+                                  if (e.target.checked) { setSelectedWhatsappPhones(prev => [...new Set([...prev, ...filteredPhones])]); }
+                                  else { setSelectedWhatsappPhones(prev => prev.filter(p => !filteredPhones.includes(p))); }
+                                }} className="rounded border-white/20" />
+                                <span className="text-sm font-medium text-foreground">Selecionar todos</span>
+                                <span className="text-xs text-muted-foreground ml-auto">{filteredPhones.length} contatos</span>
+                              </label>
+                              <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                                {filteredWhatsappUsers.map(u => (
+                                  <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer transition">
+                                    <input type="checkbox" checked={selectedWhatsappPhones.includes(u.phone)} onChange={e => { if (e.target.checked) setSelectedWhatsappPhones([...selectedWhatsappPhones, u.phone]); else setSelectedWhatsappPhones(selectedWhatsappPhones.filter(p => p !== u.phone)); }} className="rounded border-white/20" />
+                                    <span className="text-sm text-foreground">{u.name}</span>
+                                    <span className="text-xs text-muted-foreground ml-auto">{u.phone}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input ref={csvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvUpload} />
+                      <button onClick={() => csvInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition">
+                        <Upload size={14} /> Importar CSV
+                      </button>
+                      <button onClick={fetchWaContacts} disabled={waContactsLoading} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-green-500/30 bg-green-500/5 text-sm text-green-400 hover:text-green-300 hover:border-green-400/40 transition disabled:opacity-50">
+                        {waContactsLoading ? <div className="w-3.5 h-3.5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" /> : <MessageCircle size={14} />} Contatos WhatsApp
+                      </button>
+                      <button onClick={() => setShowCreateGroup(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-primary/30 bg-primary/5 text-sm text-primary hover:text-primary/80 transition">
+                        <Plus size={14} /> Criar Grupo
+                      </button>
+                      {csvContacts.length > 0 && (
+                        <button onClick={() => clearPersistedCsvContacts(selectedGroup !== '__all__' ? selectedGroup : undefined)} className="px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs text-muted-foreground hover:text-red-400 transition" title={selectedGroup !== '__all__' ? `Remover grupo "${selectedGroup}"` : 'Limpar todos'}>
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {contactGroups.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button onClick={() => setSelectedGroup('__all__')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === '__all__' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                            Todos ({csvContacts.length})
+                          </button>
+                          {contactGroups.map(g => (
+                            <div key={g} className="relative group/grp flex items-center">
+                              {editingGroup === g ? (
+                                <div className="flex items-center gap-1">
+                                  <input type="text" value={editingGroupName} onChange={e => setEditingGroupName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleRenameGroup(g); if (e.key === 'Escape') setEditingGroup(null); }} className="px-2 py-1 rounded-lg border border-primary/30 bg-white/[0.06] text-foreground text-xs w-24 focus:outline-none focus:ring-1 focus:ring-primary/40" autoFocus />
+                                  <button onClick={() => handleRenameGroup(g)} className="p-1 rounded text-primary hover:bg-primary/10 transition"><CheckCircle2 size={12} /></button>
+                                  <button onClick={() => setEditingGroup(null)} className="p-1 rounded text-muted-foreground hover:text-foreground transition"><X size={12} /></button>
+                                </div>
+                              ) : (
+                                <button onClick={() => setSelectedGroup(g)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === g ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                                  {g} ({csvContacts.filter(c => c.group_name === g).length})
+                                </button>
+                              )}
+                              {editingGroup !== g && (
+                                <div className="hidden group-hover/grp:flex items-center gap-0.5 ml-0.5">
+                                  <button onClick={(e) => { e.stopPropagation(); setEditingGroup(g); setEditingGroupName(g); }} className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Renomear"><Pencil size={10} /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g); }} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition" title="Remover grupo"><Trash2 size={10} /></button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {csvContacts.filter(c => !c.group_name).length > 0 && (
+                            <button onClick={() => setSelectedGroup('')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedGroup === '' ? 'bg-primary/15 text-primary border-primary/20' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                              Sem grupo ({csvContacts.filter(c => !c.group_name).length})
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground">Importar para:</span>
+                          <select value={importTargetGroup} onChange={e => setImportTargetGroup(e.target.value)} className="px-2 py-1 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary/40">
+                            <option value="">Sem grupo</option>
+                            {contactGroups.map(g => <option key={g} value={g}>{g}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {showCreateGroup && (
+                      <div className="flex items-center gap-2 p-3 rounded-xl border border-primary/20 bg-primary/5">
+                        <input type="text" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreateGroup()} placeholder="Nome do grupo..." className="flex-1 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" autoFocus />
+                        <button onClick={handleCreateGroup} className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition">Criar</button>
+                        <button onClick={() => { setShowCreateGroup(false); setNewGroupName(''); }} className="px-2 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground transition"><X size={14} /></button>
+                      </div>
+                    )}
+
+                    <p className="text-[10px] text-muted-foreground">CSV: colunas <code className="bg-white/10 px-1 rounded">lead</code>,<code className="bg-white/10 px-1 rounded">numero</code> · Contatos sincronizados entre SMS e WhatsApp</p>
+
+                    {(() => {
+                      let groupFiltered = csvContacts;
+                      if (selectedGroup !== '__all__') {
+                        groupFiltered = csvContacts.filter(c => c.group_name === selectedGroup);
+                      }
+                      const merged: { lead: string; numero: string; group_name: string }[] = [...groupFiltered];
+                      if (selectedGroup === '__all__') {
+                        const existingNums = new Set(csvContacts.map(c => c.numero));
+                        for (const wc of waContacts) { if (!existingNums.has(wc.numero)) merged.push({ ...wc, group_name: '' }); }
+                      }
+                      const filtered = csvSearchTerm ? merged.filter(c => c.lead.toLowerCase().includes(csvSearchTerm.toLowerCase()) || c.numero.includes(csvSearchTerm)) : merged;
+                      const allSelected = filtered.length > 0 && filtered.every(c => selectedCsvContacts.includes(c.numero));
+                      if (merged.length === 0) return null;
+                      return (
+                        <div className="space-y-2">
+                          <input type="text" value={csvSearchTerm} onChange={e => setCsvSearchTerm(e.target.value)} placeholder="Buscar por nome ou número..." className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+                            <label className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition">
+                              <input type="checkbox" checked={allSelected} onChange={e => {
+                                if (e.target.checked) setSelectedCsvContacts(prev => [...new Set([...prev, ...filtered.map(c => c.numero)])]);
+                                else setSelectedCsvContacts(prev => prev.filter(n => !filtered.some(c => c.numero === n)));
+                              }} className="rounded border-white/20" />
+                              <span className="text-sm font-medium text-foreground">Selecionar todos</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{selectedCsvContacts.filter(n => filtered.some(c => c.numero === n)).length}/{merged.length}</span>
+                            </label>
+                            <div className="max-h-48 overflow-y-auto p-2 space-y-0.5">
+                              {filtered.map((c, i) => {
+                                const rowKey = `${c.numero}__${c.group_name || ''}`;
+                                const isWa = !csvContacts.some(x => x.numero === c.numero && (x.group_name || '') === (c.group_name || ''));
+                                const isEditing = editingContactKey === rowKey;
+                                if (isEditing) {
+                                  return (
+                                    <div key={`${rowKey}-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
+                                      <input type="text" value={editingContactLead} onChange={e => setEditingContactLead(e.target.value)} placeholder="Nome" className="flex-1 min-w-0 px-2 py-1 rounded border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                      <input type="text" value={editingContactNumero} onChange={e => setEditingContactNumero(e.target.value)} placeholder="Número" className="w-32 px-2 py-1 rounded border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                      <button onClick={() => handleSaveEditContact(c.numero, c.group_name || '', isWa)} className="p-1.5 rounded text-primary hover:bg-primary/10 transition" title="Salvar"><CheckCircle2 size={14} /></button>
+                                      <button onClick={() => setEditingContactKey(null)} className="p-1.5 rounded text-muted-foreground hover:text-foreground transition" title="Cancelar"><X size={14} /></button>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <div key={`${rowKey}-${i}`} className="group/row flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition">
+                                    <label className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer">
+                                      <input type="checkbox" checked={selectedCsvContacts.includes(c.numero)} onChange={e => { if (e.target.checked) setSelectedCsvContacts(prev => [...prev, c.numero]); else setSelectedCsvContacts(prev => prev.filter(n => n !== c.numero)); }} className="rounded border-white/20" />
+                                      <span className="text-sm text-foreground truncate">{c.lead || 'Sem nome'}</span>
+                                      {c.group_name && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{c.group_name}</span>}
+                                      <span className="text-xs text-muted-foreground ml-auto">{c.numero}</span>
+                                    </label>
+                                    <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition">
+                                      <button onClick={() => { setEditingContactKey(rowKey); setEditingContactLead(c.lead || ''); setEditingContactNumero(c.numero); }} className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Editar"><Pencil size={12} /></button>
+                                      <button onClick={() => handleDeleteContact(c.numero, c.group_name || '', isWa)} className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition" title="Remover"><Trash2 size={12} /></button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </GlassCard>
+
+              <GlassCard className="p-5 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><MessageCircle size={16} className="text-green-400" /> Mensagem</h3>
+                <textarea value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)} rows={4} placeholder="Digite a mensagem (ou legenda da mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" />
+
+                {/* Media attachment */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input ref={whatsappMediaInputRef} type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={handleWhatsappMediaUpload} />
+                    <button onClick={() => whatsappMediaInputRef.current?.click()} disabled={whatsappMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground text-xs transition">
+                      {whatsappMediaUploading ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
+                      {whatsappMediaUploading ? 'Enviando...' : 'Anexar mídia'}
+                    </button>
+                    <input ref={whatsappPttInputRef} type="file" accept=".ogg,.mp3,.wav,.m4a,.aac,audio/*" className="hidden" onChange={handleWhatsappPttUpload} />
+                    <button onClick={() => whatsappPttInputRef.current?.click()} disabled={whatsappMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5 text-green-400 hover:text-green-300 text-xs transition">
+                      <Mic size={14} />
+                      Áudio de voz
+                    </button>
+                    {whatsappMedia && (
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs ${whatsappMedia.ptt ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-primary/20 bg-primary/5 text-primary'}`}>
+                        {whatsappMedia.ptt ? <Mic size={14} /> : whatsappMedia.mediatype === 'image' ? <Image size={14} /> : whatsappMedia.mediatype === 'video' ? <Film size={14} /> : whatsappMedia.mediatype === 'audio' ? <Mic size={14} /> : <Paperclip size={14} />}
+                        <span className="truncate max-w-[150px]">{whatsappMedia.ptt ? '🎤 Voz' : ''} {whatsappMedia.fileName}</span>
+                        <button onClick={() => setWhatsappMedia(null)} className="text-red-400 hover:text-red-300"><X size={14} /></button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mention all toggle */}
+                  <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                    <input type="checkbox" checked={whatsappMentionAll} onChange={e => setWhatsappMentionAll(e.target.checked)} className="rounded border-white/20 bg-white/[0.04]" />
+                    <span className="text-muted-foreground">Marcar todos do grupo (@todos)</span>
+                  </label>
+                </div>
+
+                {/* Poll editor (only relevant when sending to groups) */}
+                {(notifySelectedGroups.length > 0 || notifySelectedGroups3.length > 0) && (
+                  <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                      <input type="checkbox" checked={groupPoll.enabled} onChange={e => setGroupPoll(p => ({ ...p, enabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                      <BarChart3 size={14} className="text-blue-400" />
+                      <span className="text-foreground font-medium">Enviar como enquete (apenas para grupos)</span>
+                    </label>
+                    {groupPoll.enabled && (
+                      <div className="space-y-2 pl-1">
+                        <input
+                          type="text"
+                          value={groupPoll.name}
+                          onChange={e => setGroupPoll(p => ({ ...p, name: e.target.value }))}
+                          maxLength={255}
+                          placeholder="Pergunta da enquete"
+                          className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        />
+                        <div className="space-y-1.5">
+                          {groupPoll.values.map((v, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={v}
+                                onChange={e => setGroupPoll(p => { const nv = [...p.values]; nv[idx] = e.target.value; return { ...p, values: nv }; })}
+                                maxLength={100}
+                                placeholder={`Opção ${idx + 1}`}
+                                className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                              />
+                              {groupPoll.values.length > 2 && (
+                                <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: p.values.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition">
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          {groupPoll.values.length < 12 && (
+                            <button type="button" onClick={() => setGroupPoll(p => ({ ...p, values: [...p.values, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition">
+                              <Plus size={12} /> Adicionar opção
+                            </button>
+                          )}
+                        </div>
+                        <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                          <input type="checkbox" checked={groupPoll.multi} onChange={e => setGroupPoll(p => ({ ...p, multi: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                          <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 pt-1">
+                  <label className="text-xs text-muted-foreground whitespace-nowrap">Intervalo entre envios:</label>
+                  <input
+                    type="number" onFocus={(e) => e.target.select()}
+                    min={1}
+                    max={60}
+                    value={whatsappDelaySeconds}
+                    onChange={e => setWhatsappDelaySeconds(Math.max(1, Math.min(60, Number(e.target.value) || 1)))}
+                    className="w-20 px-2 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-center focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <span className="text-xs text-muted-foreground">segundos</span>
+                </div>
+              </GlassCard>
+
+              <BulkSendProgress total={whatsappProgress3.total} sent={whatsappProgress3.sent} errors={whatsappProgress3.errors} skipped={whatsappProgress3.skipped} label="Disparo de WhatsApp 3" accent="green" />
+              <BulkSendControls control={whatsapp3Ctrl.active ? whatsapp3Ctrl : whatsapp3GroupCtrl} visible={whatsappSending3} />
+
+              <button
+                onClick={async () => {
+                  if (!evolutionApiUrl3 || !evolutionApiKey3 || !evolutionInstance3) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig3(true); return; }
+                  let waPhoneList: { phone: string; name: string }[] = [];
+                  if (whatsappSourceMode === 'csv') {
+                    waPhoneList = getSelectedExternalPhoneList();
+                  } else {
+                    const usersWithPhone = users.filter(u => u.phone && u.phone.replace(/\D/g, '').length >= 10 && (!excludeBulkSent || !bulkSentPhones.has(u.phone)));
+                    waPhoneList = (whatsappTarget === 'all' ? usersWithPhone : usersWithPhone.filter(u => selectedWhatsappPhones.includes(u.phone))).map(u => ({ phone: u.phone, name: u.name }));
+                  }
+                  const phones = waPhoneList.map(p => p.phone);
+                  if (phones.length === 0) { toast.error('Nenhum destinatário'); return; }
+                  if (!whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                  if (!await confirmDialog({ title: 'Confirmar disparo de WhatsApp', message: `Enviar esta mensagem para ${phones.length} contato(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
+                  setWhatsappSending3(true);
+                  setWhatsappProgress3({ total: phones.length, sent: 0, errors: 0, skipped: 0 });
+                  whatsapp3Ctrl.start();
+                  let sent = 0, errors = 0;
+                  for (let i = 0; i < phones.length; i++) {
+                    if (await whatsapp3Ctrl.shouldStop()) break;
+                    const phone = phones[i];
+                    const matchedUser = waPhoneList.find(p => p.phone === phone);
+                    try {
+                      const { data: respData, error } = await supabase.functions.invoke('send-whatsapp3', { body: { recipientPhone: phone, message: whatsappMessage, evolutionApiUrl: evolutionApiUrl3, evolutionApiKey: evolutionApiKey3, evolutionInstance: evolutionInstance3, media: whatsappMedia || undefined, mentionsEveryOne: whatsappMentionAll || undefined } });
+                      const hasError = !!error || !!respData?.error;
+                      const errorMsg = error?.message || respData?.error || null;
+                      await (supabase as any).from('whatsapp3_message_log').insert({
+                        owner_id: session.user.id,
+                        recipient_phone: phone,
+                        recipient_name: matchedUser?.name || '',
+                        message: whatsappMessage,
+                        status: hasError ? 'error' : 'sent',
+                        error_message: errorMsg,
+                      });
+                      if (hasError) { errors++; setWhatsappProgress3(p => ({ ...p, errors: p.errors + 1 })); }
+                      else { sent++; setWhatsappProgress3(p => ({ ...p, sent: p.sent + 1 })); }
+                    } catch (e: any) {
+                      errors++;
+                      setWhatsappProgress3(p => ({ ...p, errors: p.errors + 1 }));
+                      await (supabase as any).from('whatsapp3_message_log').insert({
+                        owner_id: session.user.id,
+                        recipient_phone: phone,
+                        recipient_name: matchedUser?.name || '',
+                        message: whatsappMessage,
+                        status: 'error',
+                        error_message: e?.message || 'Erro desconhecido',
+                      });
+                    }
+                    // Delay between sends to avoid rate limiting/timeouts
+                    if (i < phones.length - 1) {
+                      await new Promise(resolve => setTimeout(resolve, whatsappDelaySeconds * 1000));
+                    }
+                  }
+                  whatsapp3Ctrl.finish();
+                  setWhatsappSending3(false);
+                  if (errors > 0) toast.error(`${sent} enviado(s), ${errors} erro(s)`);
+                  else toast.success(`${sent} mensagem(ns) enviada(s)!`);
+                  setTimeout(() => setWhatsappProgress3(emptyProgress), 4000);
+                }}
+                disabled={whatsappSending3}
+                className="w-full py-3.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
+              >
+                {whatsappSending3 ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar WhatsApp</>}
+              </button>
+
+              {/* Send to Group(s) button */}
+              {notifySelectedGroups3.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (!evolutionApiUrl3 || !evolutionApiKey3 || !evolutionInstance3) { toast.error('Configure as credenciais da Evolution API'); setShowWhatsappConfig3(true); return; }
+                    const pollPayload = groupPoll.enabled ? (() => {
+                      const opts = groupPoll.values.map(v => v.trim()).filter(Boolean);
+                      if (!groupPoll.name.trim()) { toast.error('Informe a pergunta da enquete'); return null; }
+                      if (opts.length < 2) { toast.error('A enquete precisa de pelo menos 2 opções'); return null; }
+                      return { name: groupPoll.name.trim(), values: opts, selectableCount: groupPoll.multi ? opts.length : 1 };
+                    })() : null;
+                    if (groupPoll.enabled && !pollPayload) return;
+                    if (!pollPayload && !whatsappMessage.trim() && !whatsappMedia) { toast.error('Digite a mensagem ou anexe uma mídia'); return; }
+                    if (!await confirmDialog({ title: pollPayload ? 'Confirmar enquete para Grupos' : 'Confirmar disparo para Grupos', message: pollPayload ? `Enviar enquete para ${notifySelectedGroups3.length} grupo(s)?` : `Enviar esta mensagem para ${notifySelectedGroups3.length} grupo(s)?`, variant: 'info', confirmLabel: 'Disparar' })) return;
+                    setWhatsappSending3(true);
+                    setWhatsappProgress3({ total: notifySelectedGroups3.length, sent: 0, errors: 0, skipped: 0 });
+                    whatsapp3GroupCtrl.start();
+                    let sent = 0, errors = 0;
+                    for (const group of notifySelectedGroups3) {
+                      if (await whatsapp3GroupCtrl.shouldStop()) break;
+                      try {
+                        const { data: respData, error } = await supabase.functions.invoke('send-whatsapp3', {
+                          body: { recipientPhone: group.id, message: pollPayload ? '' : whatsappMessage, evolutionApiUrl: evolutionApiUrl3, evolutionApiKey: evolutionApiKey3, evolutionInstance: evolutionInstance3, media: pollPayload ? undefined : (whatsappMedia || undefined), mentionsEveryOne: whatsappMentionAll || undefined, poll: pollPayload || undefined }
+                        });
+                        const hasError = !!error || !!respData?.error;
+                        if (hasError) { errors++; setWhatsappProgress3(p => ({ ...p, errors: p.errors + 1 })); }
+                        else { sent++; setWhatsappProgress3(p => ({ ...p, sent: p.sent + 1 })); }
+                      } catch {
+                        errors++;
+                        setWhatsappProgress3(p => ({ ...p, errors: p.errors + 1 }));
+                      }
+                    }
+                    whatsapp3GroupCtrl.finish();
+                    setWhatsappSending3(false);
+                    if (errors > 0) toast.error(`${sent} grupo(s) enviado(s), ${errors} erro(s)`);
+                    else toast.success(pollPayload ? `Enquete enviada para ${sent} grupo(s)!` : `Mensagem enviada para ${sent} grupo(s)!`);
+                    setTimeout(() => setWhatsappProgress3(emptyProgress), 4000);
+                  }}
+                  disabled={whatsappSending3}
+                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                >
+                  {whatsappSending3 ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enviando...</> : <><Users size={16} /> Enviar para {notifySelectedGroups3.length} Grupo(s)</>}
+                </button>
+               )}
+
+              {/* ── Agendamento de Mensagens ── */}
+              <GlassCard className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock size={16} /> Agendamento de Mensagens</h3>
+                  <button onClick={() => { setShowScheduler(!showScheduler); if (!showScheduler) fetchScheduledMessages(); }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition ${showScheduler ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground'}`}>
+                    {showScheduler ? 'Fechar' : 'Abrir'}
+                  </button>
+                </div>
+
+                {showScheduler && (
+                  <div className="space-y-4">
+                    {/* Form */}
+                    <div className="space-y-3 border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
+                      <textarea value={schedForm.message} onChange={e => setSchedForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="Mensagem agendada (ou apenas mídia)..." className="w-full px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/40" disabled={schedForm.pollEnabled} />
+
+                      {/* Poll editor (groups only) */}
+                      {schedForm.recipientType === 'group' && (
+                        <div className="space-y-2 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                          <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                            <input type="checkbox" checked={schedForm.pollEnabled} onChange={e => setSchedForm(f => ({ ...f, pollEnabled: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                            <BarChart3 size={14} className="text-blue-400" />
+                            <span className="text-foreground font-medium">Agendar enquete (apenas grupos)</span>
+                          </label>
+                          {schedForm.pollEnabled && (
+                            <div className="space-y-2">
+                              <input type="text" value={schedForm.pollName} onChange={e => setSchedForm(f => ({ ...f, pollName: e.target.value }))} maxLength={255} placeholder="Pergunta da enquete" className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                              <div className="space-y-1.5">
+                                {schedForm.pollValues.map((v, idx) => (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <input type="text" value={v} onChange={e => setSchedForm(f => { const nv = [...f.pollValues]; nv[idx] = e.target.value; return { ...f, pollValues: nv }; })} maxLength={100} placeholder={`Opção ${idx + 1}`} className="flex-1 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                                    {schedForm.pollValues.length > 2 && (
+                                      <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: f.pollValues.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition"><X size={14} /></button>
+                                    )}
+                                  </div>
+                                ))}
+                                {schedForm.pollValues.length < 12 && (
+                                  <button type="button" onClick={() => setSchedForm(f => ({ ...f, pollValues: [...f.pollValues, ''] }))} className="flex items-center gap-1 px-2 py-1 text-xs text-primary hover:text-primary/80 transition"><Plus size={12} /> Adicionar opção</button>
+                                )}
+                              </div>
+                              <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                                <input type="checkbox" checked={schedForm.pollMulti} onChange={e => setSchedForm(f => ({ ...f, pollMulti: e.target.checked }))} className="rounded border-white/20 bg-white/[0.04]" />
+                                <span className="text-muted-foreground">Permitir múltiplas respostas</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Media attachment for scheduler */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <input type="file" ref={schedMediaInputRef} className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" onChange={handleSchedMediaUpload} />
+                        <button type="button" onClick={() => schedMediaInputRef.current?.click()} disabled={schedMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground text-xs transition">
+                          {schedMediaUploading ? <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Paperclip size={14} />}
+                          Anexar mídia
+                        </button>
+                        <input type="file" ref={schedPttInputRef} className="hidden" accept=".ogg,.mp3,.wav,.m4a,.aac,audio/*" onChange={handleSchedPttUpload} />
+                        <button type="button" onClick={() => schedPttInputRef.current?.click()} disabled={schedMediaUploading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5 text-green-400 hover:text-green-300 text-xs transition">
+                          <Mic size={14} />
+                          Áudio de voz
+                        </button>
+                        {schedMedia && (
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs ${schedMedia.ptt ? 'bg-green-500/10 border border-green-500/20 text-green-400' : 'bg-primary/10 border border-primary/20 text-primary'}`}>
+                            {schedMedia.ptt ? <Mic size={12} /> : schedMedia.mediatype === 'image' ? <ImageIcon size={12} /> : schedMedia.mediatype === 'video' ? <Video size={12} /> : <FileAudio size={12} />}
+                            <span className="truncate max-w-[120px]">{schedMedia.ptt ? '🎤 Voz' : ''} {schedMedia.fileName}</span>
+                            <button onClick={() => setSchedMedia(null)} className="ml-1 text-red-400 hover:text-red-300"><X size={12} /></button>
+                          </div>
+                        )}
+                        {schedForm.recipientType === 'group' && (
+                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer ml-auto">
+                            <input type="checkbox" checked={schedForm.mentionAll} onChange={e => setSchedForm(f => ({ ...f, mentionAll: e.target.checked }))} className="rounded border-white/20" />
+                            @todos
+                          </label>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Tipo</label>
+                          <select value={schedForm.recipientType} onChange={e => setSchedForm(f => ({ ...f, recipientType: e.target.value as any, recipientValue: '', recipientLabel: '', selectedGroups: [] }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
+                            <option value="individual">Inscrito</option>
+                            <option value="group">Grupo(s)</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Destinatário</label>
+                          {schedForm.recipientType === 'individual' ? (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left truncate">
+                                  {schedForm.recipientValue ? `${schedForm.recipientLabel || schedForm.recipientValue}` : 'Selecione...'}
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-72 p-2 space-y-1" align="start">
+                                <input
+                                  type="text"
+                                  placeholder="Buscar por nome, telefone ou email..."
+                                  className="w-full px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.04] text-foreground text-xs mb-1 outline-none focus:ring-1 focus:ring-primary"
+                                  onChange={e => {
+                                    const el = e.target;
+                                    el.setAttribute('data-search', el.value.toLowerCase());
+                                    const items = el.parentElement?.querySelectorAll('[data-sched-user]');
+                                    items?.forEach((item: any) => {
+                                      const text = item.getAttribute('data-sched-user') || '';
+                                      item.style.display = text.includes(el.value.toLowerCase()) ? '' : 'none';
+                                    });
+                                  }}
+                                />
+                                <div className="max-h-48 overflow-y-auto space-y-0.5">
+                                  {users.filter(u => u.phone).map(u => (
+                                    <button
+                                      key={u.id}
+                                      data-sched-user={`${u.name} ${u.phone} ${u.email}`.toLowerCase()}
+                                      className={`w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-white/[0.06] cursor-pointer truncate ${schedForm.recipientValue === u.phone ? 'bg-primary/20 text-primary' : 'text-foreground'}`}
+                                      onClick={() => setSchedForm(f => ({ ...f, recipientValue: u.phone, recipientLabel: u.name }))}
+                                    >
+                                      <span className="font-medium">{u.name}</span>
+                                      <span className="text-muted-foreground ml-1">({u.phone})</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left truncate">
+                                  {schedForm.selectedGroups.length > 0 ? `${schedForm.selectedGroups.length} grupo(s)` : 'Selecione...'}
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 max-h-60 overflow-y-auto p-2 space-y-1" align="start">
+                                {notifyGroups3.map(g => {
+                                  const checked = schedForm.selectedGroups.some(sg => sg.id === g.id);
+                                  return (
+                                    <label key={g.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] cursor-pointer text-xs text-foreground">
+                                      <Checkbox checked={checked} onCheckedChange={() => {
+                                        setSchedForm(f => {
+                                          const exists = f.selectedGroups.some(sg => sg.id === g.id);
+                                          const selectedGroups = exists ? f.selectedGroups.filter(sg => sg.id !== g.id) : [...f.selectedGroups, { id: g.id, name: g.subject }];
+                                          return { ...f, selectedGroups };
+                                        });
+                                      }} />
+                                      {g.subject}
+                                    </label>
+                                  );
+                                })}
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Data</label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm text-left flex items-center gap-2">
+                                <CalendarIcon size={14} className="text-muted-foreground" />
+                                {schedForm.date ? schedForm.date.toLocaleDateString('pt-BR') : 'Selecione'}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar mode="single" selected={schedForm.date} onSelect={d => setSchedForm(f => ({ ...f, date: d || undefined }))} className="p-3 pointer-events-auto" />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Horário</label>
+                          <input type="time" value={schedForm.time} onChange={e => setSchedForm(f => ({ ...f, time: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-muted-foreground font-medium">Recorrência</label>
+                          <select value={schedForm.recurrence} onChange={e => setSchedForm(f => ({ ...f, recurrence: e.target.value as any }))} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-foreground text-sm">
+                            <option value="none">Única vez</option>
+                            <option value="daily">Diário</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="monthly">Mensal</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {editingScheduleId && (
+                          <button onClick={resetSchedForm} className="px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-muted-foreground hover:text-foreground font-medium text-sm transition-all">
+                            Cancelar edição
+                          </button>
+                        )}
+                        <button onClick={saveScheduledMessage} disabled={schedSaving} className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary/80 text-primary-foreground font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                          {schedSaving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Salvando...</> : editingScheduleId ? <><Pencil size={16} /> Atualizar Agendamento</> : <><Clock size={16} /> Agendar Mensagem</>}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* List */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-muted-foreground">Mensagens agendadas</h4>
+                      {scheduledLoading ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">Carregando...</p>
+                      ) : scheduledMessages.filter((m: any) => m.channel === 'whatsapp3').length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">Nenhum agendamento</p>
+                      ) : (
+                        <div className="space-y-2 max-h-80 overflow-y-auto">
+                          {scheduledMessages.filter((m: any) => m.channel === 'whatsapp3').map((m: any) => (
+                            <div key={m.id} className={`p-3 rounded-xl border text-xs space-y-1 ${m.status === 'pending' ? 'border-primary/20 bg-primary/5' : m.status === 'sent' ? 'border-green-500/20 bg-green-500/5' : m.status === 'cancelled' ? 'border-muted/20 bg-muted/5 opacity-60' : 'border-red-500/20 bg-red-500/5'}`}>
+                              <div className="flex justify-between items-start">
+                                <span className="font-medium text-foreground truncate max-w-[70%]">{m.recipient_label || m.recipient_value}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${m.status === 'pending' ? 'bg-primary/20 text-primary' : m.status === 'sent' ? 'bg-green-500/20 text-green-400' : m.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' : 'bg-red-500/20 text-red-400'}`}>
+                                  {m.status === 'pending' ? '⏳ Pendente' : m.status === 'sent' ? '✅ Enviado' : m.status === 'cancelled' ? '🚫 Cancelado' : '❌ Falhou'}
+                                </span>
+                              </div>
+                              <p className="text-muted-foreground line-clamp-2">{m.message}</p>
+                              <div className="flex flex-wrap justify-between items-center gap-2 text-muted-foreground">
+                                <span className="min-w-0 break-words flex-1">📅 {new Date(m.next_run_at || m.scheduled_at).toLocaleString('pt-BR')} {m.recurrence !== 'none' && `• 🔁 ${m.recurrence === 'daily' ? 'Diário' : m.recurrence === 'weekly' ? 'Semanal' : 'Mensal'}`}</span>
+                                {m.status === 'pending' && (
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <button onClick={() => startEditSchedule(m)} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><Pencil size={12} /> Editar</button>
+                                    <button onClick={() => cancelScheduledMessage(m.id)} className="text-red-400 hover:text-red-300 font-medium">Cancelar</button>
+                                  </div>
+                                )}
+                                {(m.status === 'failed' || m.status === 'cancelled') && (
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <button onClick={async () => {
+                                      const nextRun = new Date();
+                                      nextRun.setMinutes(nextRun.getMinutes() + 1);
+                                      await supabase.from('scheduled_messages').update({ status: 'pending', next_run_at: nextRun.toISOString(), updated_at: new Date().toISOString() } as any).eq('id', m.id);
+                                      toast.success('Mensagem reagendada para reenvio');
+                                      fetchScheduledMessages();
+                                    }} className="text-primary hover:text-primary/80 font-medium flex items-center gap-1"><RefreshCw size={12} /> Reenviar</button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </GlassCard>
+            </div>
+          )}
+
           {activeTab === 'notificacoes' && (
             <div className="max-w-2xl space-y-5">
 

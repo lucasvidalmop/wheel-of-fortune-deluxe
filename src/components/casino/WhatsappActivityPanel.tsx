@@ -316,7 +316,6 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
                     <label className="space-y-1">
                       <span className="text-[11px] text-muted-foreground">Mensagens</span>
                       <input type="number" onFocus={(e) => e.target.select()} min={1} className={inputCls} value={t.threshold_messages}
-                        onFocus={(e) => e.target.select()}
                         onChange={(e) => updateTier(t.id, { threshold_messages: Number(e.target.value) || 0 })}
                         onBlur={() => saveTier(t)} />
                     </label>
@@ -339,7 +338,6 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
                     <label className="space-y-1">
                       <span className="text-[11px] text-muted-foreground">{t.reward_type === 'cash' ? 'Valor R$' : 'Quantidade'}</span>
                       <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" className={inputCls} value={t.reward_amount}
-                        onFocus={(e) => e.target.select()}
                         onChange={(e) => updateTier(t.id, { reward_amount: Number(e.target.value) || 0 })}
                         onBlur={() => saveTier(t)} />
                     </label>
