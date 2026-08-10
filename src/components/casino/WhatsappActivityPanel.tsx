@@ -26,7 +26,13 @@ interface TierRow {
   reward_type: 'spin' | 'box' | 'coin' | 'cash';
   reward_amount: number;
   reward_label: string;
+  reward_case_id: string | null;
   position: number;
+}
+
+interface LuckyboxCaseRow {
+  id: string;
+  name: string;
 }
 
 interface ProgressRow {
@@ -85,6 +91,7 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [messagesFor, setMessagesFor] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
+  const [luckyboxCases, setLuckyboxCases] = useState<LuckyboxCaseRow[]>([]);
 
   const selected = events.find((e) => e.id === selectedId) || null;
 
@@ -94,6 +101,13 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
   }, [ownerId]);
 
   useEffect(() => { void loadEvents(); }, [loadEvents]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await db.from('luckybox_cases').select('id, name').eq('owner_id', ownerId).eq('is_active', true).order('position', { ascending: true });
+      setLuckyboxCases(data || []);
+    })();
+  }, [ownerId]);
 
   useEffect(() => {
     if (!selected) { setDraft(null); setTiers([]); setProgress([]); setUnlocks([]); return; }
@@ -199,6 +213,7 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
     await db.from('whatsapp_activity_tiers').update({
       scope: tier.scope, threshold_messages: tier.threshold_messages, reward_type: tier.reward_type,
       reward_amount: tier.reward_amount, reward_label: tier.reward_label,
+      reward_case_id: tier.reward_type === 'box' ? (tier.reward_case_id || null) : null,
     }).eq('id', tier.id);
   };
 
@@ -335,6 +350,15 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
                         <option value="cash">R$ (dinheiro)</option>
                       </select>
                     </label>
+                    {t.reward_type === 'box' && (
+                      <label className="space-y-1">
+                        <span className="text-[11px] text-muted-foreground">Qual caixa</span>
+                        <select className={inputCls} value={t.reward_case_id || ''} onChange={(e) => { updateTier(t.id, { reward_case_id: e.target.value || null }); void saveTier({ ...t, reward_case_id: e.target.value || null }); }}>
+                          <option value="">Selecione...</option>
+                          {luckyboxCases.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </label>
+                    )}
                     <label className="space-y-1">
                       <span className="text-[11px] text-muted-foreground">{t.reward_type === 'cash' ? 'Valor R$' : 'Quantidade'}</span>
                       <input type="number" onFocus={(e) => e.target.select()} min={0} step="0.01" className={inputCls} value={t.reward_amount}

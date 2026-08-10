@@ -171,8 +171,34 @@ Deno.serve(async (req) => {
               await admin.from("whatsapp_activity_unlocks").update({
                 status: "pending_approval", payment_id: payment?.id || null,
               }).eq("id", inserted.id);
+            } else if (tier.reward_type === "box" && tier.reward_case_id) {
+              const { data: caseRow } = await admin
+                .from("luckybox_cases").select("id, name").eq("id", tier.reward_case_id).maybeSingle();
+              const code = Array.from({ length: 8 }, () =>
+                "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 33)]).join("");
+              const { data: grant } = await admin.from("luckybox_grants").insert({
+                owner_id: ev.owner_id,
+                case_id: tier.reward_case_id,
+                case_name: caseRow?.name || "",
+                wheel_user_id: wheelUser.id,
+                recipient_name: wheelUser.user_name,
+                recipient_phone: senderPhone,
+                recipient_email: wheelUser.user_email,
+                recipient_account_id: wheelUser.account_id,
+                code,
+                quantity: Math.max(1, Number(tier.reward_amount || 1)),
+                status: "pending",
+              }).select("id").maybeSingle();
+              if (grant?.id) {
+                try {
+                  await admin.rpc("auto_credit_luckybox_grant", { p_grant_id: grant.id });
+                } catch (err) {
+                  console.error("whatsapp-activity-webhook: falha ao creditar luckybox", err);
+                }
+              }
+              await admin.from("whatsapp_activity_unlocks").update({ status: "granted" }).eq("id", inserted.id);
             } else {
-              // box / coin: ainda sem integracao automatica de credito.
+              // box sem caixa selecionada, ou coin: ainda sem integracao automatica de credito.
               await admin.from("whatsapp_activity_unlocks").update({ status: "pending_manual" }).eq("id", inserted.id);
             }
           }
