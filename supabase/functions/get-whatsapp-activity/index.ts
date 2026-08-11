@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     const { data: ev } = await admin
       .from("whatsapp_activity_events")
-      .select("id, owner_id, name, scope, status, group_name")
+      .select("id, owner_id, name, scope, status, group_name, reminder_signup_url")
       .ilike("tag", tag)
       .maybeSingle();
     if (!ev) return json({ found: false });
@@ -81,7 +81,10 @@ Deno.serve(async (req) => {
 
     return json({
       found: true,
-      event: { name: ev.name, scope: ev.scope, status: ev.status, groupName: ev.group_name, faviconUrl },
+      event: {
+        name: ev.name, scope: ev.scope, status: ev.status, groupName: ev.group_name, faviconUrl,
+        signupUrl: ev.reminder_signup_url || "",
+      },
       tiers: (tiers || []).map((t) => ({
         id: t.id, scope: t.scope, threshold: t.threshold_messages,
         rewardType: t.reward_type, rewardAmount: t.reward_amount, rewardLabel: t.reward_label,

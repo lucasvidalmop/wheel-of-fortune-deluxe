@@ -14,7 +14,7 @@ interface Tier {
 
 interface Payload {
   found: boolean;
-  event?: { name: string; scope: 'individual' | 'group' | 'both'; status: string; groupName: string; faviconUrl?: string };
+  event?: { name: string; scope: 'individual' | 'group' | 'both'; status: string; groupName: string; faviconUrl?: string; signupUrl?: string };
   tiers?: Tier[];
   me?: { name: string } | null;
   myProgress?: number;
@@ -174,6 +174,14 @@ const SorteioWhatsApp = ({ tag }: { tag: string }) => {
                 {logging ? 'Verificando...' : 'Ver meu progresso'}
               </button>
             </form>
+            {ev.signupUrl && (
+              <p className="text-center text-sm text-white/45">
+                Não tem conta ainda?{' '}
+                <a href={ev.signupUrl} target="_blank" rel="noreferrer" className="text-[#00d4ff] font-semibold underline">
+                  Crie aqui
+                </a>
+              </p>
+            )}
           </div>
         ) : (
           <>
