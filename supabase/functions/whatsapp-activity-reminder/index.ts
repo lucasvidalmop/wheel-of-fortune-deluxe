@@ -89,12 +89,15 @@ Deno.serve(async (req) => {
 
       const remaining = Math.max(0, nextTier.threshold_messages - currentCount);
       const progressUrl = `${PUBLIC_ORIGIN}/sorteio-whatsapp=${ev.tag}`;
-      const signupLine = ev.reminder_signup_url
-        ? `\n\nNão tem conta ainda? Crie aqui: ${ev.reminder_signup_url}`
+      const signupBlock = ev.reminder_signup_url
+        ? `\n\n🆕 Não participa ainda?\n${ev.reminder_signup_url}`
         : "";
       const message =
-        `📊 Faltam *${remaining} mensagens* para a comunidade liberar: ${describeReward(nextTier)}! 🎉\n\n` +
-        `Acompanhe o progresso: ${progressUrl}${signupLine}`;
+        `🚨 ESTAMOS CHEGANDO NA META!\n\n` +
+        `💬 Faltam *${remaining} mensagens* para a comunidade liberar ${describeReward(nextTier)}! 🎉\n\n` +
+        `🔥 Bora bater a meta! Cada mensagem aproxima o sorteio.\n\n` +
+        `📊 Progresso ao vivo:\n${progressUrl}` +
+        `${signupBlock}`;
 
       const { data: cfg } = await admin.from("wheel_configs").select("config").eq("user_id", ev.owner_id).maybeSingle();
       const ds = (cfg?.config as any)?.dashboardSettings || {};
