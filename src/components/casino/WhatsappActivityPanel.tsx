@@ -17,6 +17,9 @@ interface EventRow {
   status: 'draft' | 'active' | 'finished';
   is_active: boolean;
   created_at: string;
+  reminder_interval_hours: number;
+  reminder_signup_url: string;
+  last_reminder_sent_at: string | null;
 }
 
 interface TierRow {
@@ -167,6 +170,8 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
       scope: draft.scope,
       status: draft.status,
       is_active: draft.is_active !== false,
+      reminder_interval_hours: Math.max(0, Number(draft.reminder_interval_hours) || 0),
+      reminder_signup_url: draft.reminder_signup_url || '',
     }).eq('id', draft.id);
     setSaving(false);
     if (error) { toast.error('Erro ao salvar'); return; }
@@ -335,6 +340,37 @@ export default function WhatsappActivityPanel({ ownerId }: { ownerId: string }) 
                   <option value="both">Ambos</option>
                 </select>
               </label>
+
+              {(draft.scope === 'group' || draft.scope === 'both') && (
+                <div className="space-y-3 rounded-xl border border-border p-3">
+                  <h3 className="text-sm font-semibold">Lembrete automático no grupo</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Enquanto a meta coletiva não for atingida, o próprio número acima manda uma mensagem no grupo
+                    de tempos em tempos avisando quantas mensagens faltam.
+                  </p>
+                  <label className="space-y-1 block">
+                    <span className="text-xs text-muted-foreground">Intervalo entre lembretes (horas, 0 = desativado)</span>
+                    <input
+                      type="number" onFocus={(e) => e.target.select()} min={0} step="0.5" className={inputCls}
+                      value={draft.reminder_interval_hours ?? 0}
+                      onChange={(e) => setDraft({ ...draft, reminder_interval_hours: Math.max(0, Number(e.target.value) || 0) })}
+                    />
+                  </label>
+                  <label className="space-y-1 block">
+                    <span className="text-xs text-muted-foreground">Link de cadastro (pra quem não tem conta)</span>
+                    <input
+                      className={inputCls} placeholder="https://tipspayroleta.com/roletabsb"
+                      value={draft.reminder_signup_url || ''}
+                      onChange={(e) => setDraft({ ...draft, reminder_signup_url: e.target.value })}
+                    />
+                  </label>
+                  {draft.last_reminder_sent_at && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Último lembrete enviado: {new Date(draft.last_reminder_sent_at).toLocaleString('pt-BR')}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-xs text-muted-foreground">Status:</span>
