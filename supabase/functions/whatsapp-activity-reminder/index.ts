@@ -39,7 +39,7 @@ async function sendGroupText(url: string, key: string, instance: string, groupJi
   const resp = await fetch(`${baseUrl}/message/sendText/${encodeURIComponent(instance)}`, {
     method: "POST",
     headers: { apikey: key, "Content-Type": "application/json" },
-    body: JSON.stringify({ number: groupJid, text }),
+    body: JSON.stringify({ number: groupJid, text, mentionsEveryOne: true }),
   });
   return resp.ok;
 }
