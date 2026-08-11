@@ -124,6 +124,9 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Figurinha fica no historico (pra revisao manual), mas nao conta pra meta.
+        if (messageType === "sticker") continue;
+
         // Tenta casar com um cadastro existente pelo telefone.
         let wheelUser: { id: string; account_id: string; user_name: string; user_email: string; pix_key: string; pix_key_type: string } | null = null;
         const { data: candidates } = await admin
