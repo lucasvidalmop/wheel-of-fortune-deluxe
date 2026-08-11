@@ -17,6 +17,17 @@ const phoneMatches = (a: string, b: string) => {
   return da.slice(-8) === db.slice(-8);
 };
 
+// Mensagem que, tirando espacos e emojis, nao sobra nenhum caractere real.
+function isEmojiOnly(text: string): boolean {
+  const stripped = text.trim();
+  if (!stripped) return false;
+  const withoutEmoji = stripped.replace(
+    /\p{Extended_Pictographic}|\p{Emoji_Presentation}|[‍️⃣\u{1F1E6}-\u{1F1FF}\s]/gu,
+    "",
+  );
+  return withoutEmoji.length === 0;
+}
+
 function extractMessage(data: any): { type: string; text: string } {
   const m = data?.message || {};
   if (m.stickerMessage) return { type: "sticker", text: "" };
@@ -124,8 +135,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Figurinha fica no historico (pra revisao manual), mas nao conta pra meta.
+        // Figurinha e mensagem so-de-emoji ficam no historico (pra revisao
+        // manual), mas nao contam pra meta.
         if (messageType === "sticker") continue;
+        if (messageType === "text" && isEmojiOnly(textContent)) continue;
 
         // Tenta casar com um cadastro existente pelo telefone.
         let wheelUser: { id: string; account_id: string; user_name: string; user_email: string; pix_key: string; pix_key_type: string } | null = null;
