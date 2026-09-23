@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, Save, X, Copy, ExternalLink, Coins, Package, Upload, ChevronUp, ChevronDown, ChevronsUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import { compressImage } from '@/lib/compressImage';
 import SendCasesTab from './LuckyboxSendCases';
 import LuckyboxHistoryTab from './LuckyboxHistoryTab';
 import { dateTimeLocalToBetIso, betIsoToDateTimeLocal } from '@/lib/betsDateTime';
@@ -344,14 +345,14 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
 
   const handleUploadCoinIcon = async (file: File) => {
     try {
-      const res = await uploadAppAsset(file, 'luckybox');
+      const res = await uploadAppAsset(await compressImage(file), 'luckybox');
       await saveCfg({ coin_icon_url: res.publicUrl });
     } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
   };
 
   const handleUploadPageAsset = async (file: File, key: string) => {
     try {
-      const res = await uploadAppAsset(file, 'luckybox');
+      const res = await uploadAppAsset(await compressImage(file), 'luckybox');
       updatePageConfig({ [key]: res.publicUrl });
     } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
   };
@@ -368,7 +369,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const handleUploadCaseImage = async (file: File) => {
     if (!editingCase) return;
     try {
-      const res = await uploadAppAsset(file, 'luckybox');
+      const res = await uploadAppAsset(await compressImage(file), 'luckybox');
       setEditingCase({ ...editingCase, image_url: res.publicUrl });
     } catch (e: any) { toast.error(e.message || 'Falha no upload'); }
   };
@@ -376,7 +377,7 @@ const LuckyboxPanel = ({ ownerId }: { ownerId: string }) => {
   const handleUploadPrizeImage = async (file: File, idx: number) => {
     if (!editingCase) return;
     try {
-      const res = await uploadAppAsset(file, 'luckybox');
+      const res = await uploadAppAsset(await compressImage(file), 'luckybox');
       const prizes = [...editingCase.prizes];
       prizes[idx] = { ...prizes[idx], image: res.publicUrl };
       setEditingCase({ ...editingCase, prizes });

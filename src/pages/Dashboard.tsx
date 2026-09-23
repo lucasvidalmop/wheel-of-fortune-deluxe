@@ -11,6 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import AuthNoticePanel from '@/components/casino/AuthNoticePanel';
 import ThemeSettingsPanel, { ThemeSettings, defaultTheme } from '@/components/casino/ThemeSettingsPanel';
 import { uploadAppAsset } from '@/lib/uploadAppAsset';
+import { compressImage } from '@/lib/compressImage';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { useEmailTemplates, type EmailTemplateRow } from '@/components/casino/EmailTemplateEditor';
@@ -5082,7 +5083,7 @@ function Dashboard() {
                           if (file.size > 5 * 1024 * 1024) { toast.error('Imagem deve ter no máximo 5MB'); return; }
                           setEmailBannerUploading(true);
                           try {
-                            const { publicUrl } = await uploadAppAsset(file, 'email-banners');
+                            const { publicUrl } = await uploadAppAsset(await compressImage(file), 'email-banners');
                             setEmailBannerUrl(publicUrl);
                             toast.success('Banner enviado!');
                           } catch (error: any) {
@@ -9991,7 +9992,7 @@ function Dashboard() {
                               <Upload size={14} /> Upload
                               <input type="file" accept="image/*,.ico,.svg" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0]; if (!file) return;
-                                try { const { publicUrl } = await uploadAppAsset(file, 'favicon'); updateSeo('faviconUrl', publicUrl); toast.success('Favicon enviado!'); } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+                                try { const { publicUrl } = await uploadAppAsset(await compressImage(file), 'favicon'); updateSeo('faviconUrl', publicUrl); toast.success('Favicon enviado!'); } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
                                 e.target.value = '';
                               }} />
                             </label>
@@ -10032,7 +10033,7 @@ function Dashboard() {
                               <Upload size={14} /> Upload
                               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0]; if (!file) return;
-                                try { const { publicUrl } = await uploadAppAsset(file, 'og-images'); updateSeo('ogImage', publicUrl); toast.success('Imagem enviada!'); } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
+                                try { const { publicUrl } = await uploadAppAsset(await compressImage(file), 'og-images'); updateSeo('ogImage', publicUrl); toast.success('Imagem enviada!'); } catch (err: any) { toast.error('Erro: ' + (err.message || 'Tente novamente')); }
                                 e.target.value = '';
                               }} />
                             </label>
@@ -10456,7 +10457,7 @@ function Dashboard() {
             const handleDepositUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
               const file = e.target.files?.[0]; if (!file) return;
               try {
-                const { publicUrl } = await uploadAppAsset(file, 'deposit');
+                const { publicUrl } = await uploadAppAsset(await compressImage(file), 'deposit');
                 // All upload fields (logoUrl, bgImageUrl, seoFaviconUrl, seoOgImageUrl, confirmationLogoUrl) are visual
                 updateDcv({ [field]: publicUrl });
                 toast.success('Imagem enviada!');

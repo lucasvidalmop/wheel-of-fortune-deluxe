@@ -158,11 +158,11 @@ Deno.serve(async (req) => {
     const notifyUrl = ds.notifyEvolutionApiUrl;
     const notifyKey = ds.notifyEvolutionApiKey;
     const notifyInstance = ds.notifyEvolutionInstance;
-    const notifyGroupJid = ds.notifyGroupJid || "";
-    const notifySelectedGroups: {id: string; subject: string}[] = Array.isArray(ds.notifySelectedGroups) ? ds.notifySelectedGroups : [];
-    const groupJids: string[] = notifySelectedGroups.length > 0
-      ? notifySelectedGroups.map((g: any) => g.id)
-      : notifyGroupJid ? [notifyGroupJid] : [];
+    // notifySelectedGroups/notifyGroupJid sao compartilhados com o botao "Enviar
+    // para Grupo(s)" dos disparos manuais (Dashboard.tsx) — NAO sao exclusivos
+    // deste aviso automatico. Avisos automaticos contem dados pessoais (nome,
+    // email, valor, chave PIX) e por isso NUNCA devem ir para grupo nenhum,
+    // independente do que estiver selecionado ali para disparo manual.
 
     if (!notifyUrl || !notifyKey || !notifyInstance) {
       return new Response(JSON.stringify({ success: false, skipped: true, reason: "missing_notification_config" }), {
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
 
     const validPhones = notifyPhones.map(p => String(p).replace(/\D/g, "")).filter(p => p.length >= 10);
 
-    if (validPhones.length === 0 && groupJids.length === 0) {
+    if (validPhones.length === 0) {
       return new Response(JSON.stringify({ success: false, skipped: true, reason: "missing_notification_config" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -202,21 +202,6 @@ Deno.serve(async (req) => {
         results.push({ target: `phone:${cleanPhone}`, ok: response.ok, error: response.ok ? undefined : responseText });
       } catch (e) {
         results.push({ target: `phone:${cleanPhone}`, ok: false, error: e instanceof Error ? e.message : "Erro" });
-      }
-    }
-
-    // Send to all selected groups
-    for (const jid of groupJids) {
-      try {
-        const response = await fetch(`${baseUrl}/message/sendText/${notifyInstance}`, {
-          method: "POST",
-          headers: { "apikey": notifyKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ number: jid, text: messageText }),
-        });
-        const responseText = await response.text();
-        results.push({ target: `group:${jid}`, ok: response.ok, error: response.ok ? undefined : responseText });
-      } catch (e) {
-        results.push({ target: `group:${jid}`, ok: false, error: e instanceof Error ? e.message : "Erro" });
       }
     }
 
