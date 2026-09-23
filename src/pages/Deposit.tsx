@@ -418,7 +418,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
           <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${config.bgImageUrl})` }} />
         )}
         <div className="relative text-center space-y-4 max-w-md z-10">
-          {config.logoUrl && <img src={config.logoUrl} alt="" className="h-16 max-w-[220px] mx-auto object-contain" />}
+          {config.logoUrl && <img src={config.logoUrl} alt="" className="h-32 max-w-[320px] mx-auto object-contain" />}
           <div className="text-5xl">🔒</div>
           <h1 className="text-2xl font-bold">Depósitos encerrados</h1>
           <p className="text-sm" style={{ color: txtMuted }}>
@@ -449,7 +449,7 @@ const Deposit = ({ tag: tagProp, labels, variant }: { tag?: string; labels?: Dep
         {step !== 'confirmed' && (
           <div className="text-center mb-4">
             {config.logoUrl && (
-              <img src={config.logoUrl} alt="" className="h-16 max-w-[220px] mx-auto mb-3 object-contain" />
+              <img src={config.logoUrl} alt="" className="h-32 max-w-[320px] mx-auto mb-3 object-contain" />
             )}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4" style={{ background: `${accent}1a`, border: `1px solid ${accent}33` }}>
               <CreditCard size={16} style={{ color: accent }} />
