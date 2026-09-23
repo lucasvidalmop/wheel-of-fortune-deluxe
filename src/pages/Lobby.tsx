@@ -69,6 +69,15 @@ const Lobby = ({ tag }: { tag: string }) => {
   const [session, setSession] = useState<LobbySession | null>(() => getLobbySession());
   const [view, setView] = useState<View>(() => (getLobbySession() ? 'home' : 'login'));
   const [coins, setCoins] = useState<number | null>(null);
+  const [globalFaviconUrl, setGlobalFaviconUrl] = useState<string>('');
+
+  // Fallback global de favicon (site_settings) — usado se o lobby não tiver o seu próprio.
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+      if (data?.favicon_url) setGlobalFaviconUrl(data.favicon_url);
+    })();
+  }, []);
 
   // ─── Carrega config do lobby ───
   useEffect(() => {
@@ -255,6 +264,7 @@ const Lobby = ({ tag }: { tag: string }) => {
       fallbackTitle={pageConfig.site_title}
       fallbackDescription={pageConfig.site_description}
       fallbackImage={pageConfig.bg_image_url}
+      fallbackFavicon={globalFaviconUrl}
     />
   );
 

@@ -84,7 +84,11 @@ const Resgate = ({ tag }: { tag?: string }) => {
     if ((cfg as any).seoOgImageUrl) addMeta('twitter:image', (cfg as any).seoOgImageUrl);
 
     (async () => {
-      const favicon = (cfg as any).seoFaviconUrl || (linkData?.owner_id ? (await (supabase as any).from('wheel_configs').select('config').eq('user_id', linkData.owner_id).maybeSingle()).data?.config?.defaultFaviconUrl : '') || '';
+      let favicon = (cfg as any).seoFaviconUrl || (linkData?.owner_id ? (await (supabase as any).from('wheel_configs').select('config').eq('user_id', linkData.owner_id).maybeSingle()).data?.config?.defaultFaviconUrl : '') || '';
+      if (!favicon) {
+        const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+        favicon = ss?.favicon_url || '';
+      }
       if (!favicon) return;
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       const hadExisting = !!link;

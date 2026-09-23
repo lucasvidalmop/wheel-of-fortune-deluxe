@@ -52,11 +52,18 @@ const Sorteio = ({ tag }: { tag: string }) => {
       const meta = document.querySelector('meta[name="description"]');
       if (meta && data.event.description) meta.setAttribute('content', data.event.description.slice(0, 155));
     }
-    if (data?.event?.faviconUrl) {
-      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = data.event.faviconUrl;
-    }
+    (async () => {
+      let favicon = data?.event?.faviconUrl;
+      if (!favicon) {
+        const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+        favicon = ss?.favicon_url || '';
+      }
+      if (favicon) {
+        let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+        if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+        link.href = favicon;
+      }
+    })();
   }, [data?.event?.name, data?.event?.description, data?.event?.faviconUrl]);
 
   const copyLink = async () => {

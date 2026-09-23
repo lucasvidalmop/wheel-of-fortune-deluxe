@@ -212,7 +212,12 @@ const Luckybox = ({ tag }: { tag?: string }) => {
         if (refCode) setSignupRefCode(refCode);
         const { data: wc } = await (supabase as any)
           .from('wheel_configs').select('config').eq('user_id', data.config.owner_id).maybeSingle();
-        setDefaultFaviconUrl((wc?.config as any)?.defaultFaviconUrl || '');
+        let favicon = (wc?.config as any)?.defaultFaviconUrl || '';
+        if (!favicon) {
+          const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+          favicon = ss?.favicon_url || '';
+        }
+        setDefaultFaviconUrl(favicon);
       }
     })();
   }, [tag]);

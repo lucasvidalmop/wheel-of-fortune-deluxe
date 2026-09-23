@@ -156,7 +156,11 @@ const UpdateRegistration = ({ tag }: Props) => {
     };
     if (seo.pageTitle) document.title = seo.pageTitle;
     (async () => {
-      const favicon = seo.faviconUrl || (ownerId ? (await (supabase as any).from('wheel_configs').select('config').eq('user_id', ownerId).maybeSingle()).data?.config?.defaultFaviconUrl : '') || '';
+      let favicon = seo.faviconUrl || (ownerId ? (await (supabase as any).from('wheel_configs').select('config').eq('user_id', ownerId).maybeSingle()).data?.config?.defaultFaviconUrl : '') || '';
+      if (!favicon) {
+        const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+        favicon = ss?.favicon_url || '';
+      }
       if (!favicon) return;
       let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }

@@ -16,11 +16,12 @@ interface Props {
   fallbackTitle?: string;
   fallbackDescription?: string;
   fallbackImage?: string;
+  fallbackFavicon?: string;
 }
 
 const SITE_BASE = 'https://tipspayroleta.com';
 
-const LobbySEO = ({ tag, config, fallbackTitle, fallbackDescription, fallbackImage }: Props) => {
+const LobbySEO = ({ tag, config, fallbackTitle, fallbackDescription, fallbackImage, fallbackFavicon }: Props) => {
   const title = config.seo_title || fallbackTitle || 'Lobby de promoções';
   const description =
     config.seo_description ||
@@ -28,7 +29,7 @@ const LobbySEO = ({ tag, config, fallbackTitle, fallbackDescription, fallbackIma
     'Acesse promoções exclusivas, roleta, caixas e apostas em um só lugar.';
   const image = config.seo_image_url || fallbackImage;
   const url = `${SITE_BASE}/lobby=${tag}`;
-  const favicon = config.favicon_url;
+  const favicon = config.favicon_url || fallbackFavicon;
 
   const jsonLd = {
     '@context': 'https://schema.org',

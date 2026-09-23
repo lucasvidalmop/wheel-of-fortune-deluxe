@@ -180,10 +180,14 @@ const Registration = () => {
     if (pageTitle) { document.title = pageTitle; }
     // Favicon
     (async () => {
-      const favicon = seoConfig.faviconUrl || (await (async () => {
+      let favicon = seoConfig.faviconUrl || (await (async () => {
         const { data: wc } = await (supabase as any).from('wheel_configs').select('config').eq('user_id', linkData.owner_id).maybeSingle();
         return (wc?.config as any)?.defaultFaviconUrl || '';
       })());
+      if (!favicon) {
+        const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+        favicon = ss?.favicon_url || '';
+      }
       if (!favicon) return;
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
       const oldHref = link?.getAttribute('href');

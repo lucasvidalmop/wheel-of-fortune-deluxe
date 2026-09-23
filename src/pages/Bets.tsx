@@ -730,18 +730,27 @@ const Bets = ({ tag }: BetsPageProps) => {
     };
     if (seo.pageTitle) document.title = seo.pageTitle;
     (async () => {
-      const favicon = seo.faviconUrl || (await (async () => {
+      let favicon = seo.faviconUrl;
+      if (!favicon) {
         const { data: wc } = await (supabase as any).from('wheel_configs').select('config').eq('user_id', page.ownerId).maybeSingle();
-        return (wc?.config as any)?.defaultFaviconUrl || '';
-      })());
+        favicon = (wc?.config as any)?.defaultFaviconUrl || '';
+      }
+      const title = seo.pageTitle;
+      const desc = seo.pageDescription;
+      // site_settings is the platform's own branding (Dashboard/Admin), not
+      // this operator's — only the favicon is generic enough to fall back to.
+      if (!favicon) {
+        const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+        favicon = ss?.favicon_url || '';
+      }
       if (favicon) {
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
         if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
         link.href = favicon;
       }
+      if (desc) { addMeta('description', desc); addMeta('og:description', desc, true); }
+      if (title) addMeta('og:title', title, true);
     })();
-    if (seo.pageDescription) { addMeta('description', seo.pageDescription); addMeta('og:description', seo.pageDescription, true); }
-    if (seo.pageTitle) addMeta('og:title', seo.pageTitle, true);
     if (seo.ogImage) addMeta('og:image', seo.ogImage, true);
     if (seo.keywords) addMeta('keywords', seo.keywords);
     if (seo.facebookPixelId) {

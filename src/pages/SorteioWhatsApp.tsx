@@ -49,11 +49,18 @@ const SorteioWhatsApp = ({ tag }: { tag: string }) => {
 
   useEffect(() => {
     if (data?.event?.name) document.title = `${data.event.name} | Progresso WhatsApp`;
-    if (data?.event?.faviconUrl) {
-      let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.href = data.event.faviconUrl;
-    }
+    (async () => {
+      let favicon = data?.event?.faviconUrl;
+      if (!favicon) {
+        const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+        favicon = ss?.favicon_url || '';
+      }
+      if (favicon) {
+        let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+        if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+        link.href = favicon;
+      }
+    })();
   }, [data?.event?.name, data?.event?.faviconUrl]);
 
   const handleLogin = async (e: React.FormEvent) => {

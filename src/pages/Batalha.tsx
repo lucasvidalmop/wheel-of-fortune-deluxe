@@ -317,6 +317,10 @@ export default function Batalha() {
         const { data: wc } = await (supabase as any).from('wheel_configs').select('config').eq('user_id', session.user.id).maybeSingle();
         favicon = (wc?.config as any)?.defaultFaviconUrl || '';
       }
+      if (!favicon) {
+        const { data: ss } = await (supabase as any).from('site_settings').select('favicon_url').eq('id', 1).maybeSingle();
+        favicon = ss?.favicon_url || '';
+      }
       if (favicon) {
         let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
         if (!link) {
