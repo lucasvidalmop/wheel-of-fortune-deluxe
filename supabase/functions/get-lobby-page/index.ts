@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     const [{ data: bets }, { data: lucky }, { data: wheel }, { data: refLink }, { data: raffle }] = await Promise.all([
       supabase.from("bets_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
       supabase.from("luckybox_configs").select("tag, coin_name, coin_icon_url").eq("owner_id", cfg.owner_id).eq("is_active", true).maybeSingle(),
-      supabase.from("wheel_configs").select("slug").eq("user_id", cfg.owner_id).maybeSingle().then((r) => r as any),
+      supabase.from("wheel_configs").select("slug, config").eq("user_id", cfg.owner_id).maybeSingle().then((r) => r as any),
       supabase.from("referral_links").select("code, created_at").eq("owner_id", cfg.owner_id).eq("is_active", true).order("created_at", { ascending: true }).limit(1).maybeSingle(),
       supabase.from("raffle_events").select("tag, created_at").eq("owner_id", cfg.owner_id).eq("is_active", true)
         .in("status", ["scheduled", "open", "live"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
     // Prefer Luckybox coin assets, fall back to Bets — they reflect the operator's brand.
     const coinIconUrl = (lucky as any)?.coin_icon_url || (bets as any)?.coin_icon_url || "";
     const coinName = (lucky as any)?.coin_name || (bets as any)?.coin_name || "";
+
+    const depositConfig = (wheel as any)?.config?.depositConfig;
+    const depositBsTag = depositConfig?.enabled ? (depositConfig?.tag || "") : "";
 
     return new Response(JSON.stringify({
       found: true,
@@ -68,6 +71,7 @@ Deno.serve(async (req) => {
         luckybox: lucky?.tag || "",
         roleta: wheel?.slug || "",
         sorteio: (raffle as any)?.tag || "",
+        batalha: depositBsTag,
       },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {

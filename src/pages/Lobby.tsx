@@ -62,7 +62,7 @@ const Lobby = ({ tag }: { tag: string }) => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [pageConfig, setPageConfig] = useState<LobbyPageConfig>({});
-  const [productTags, setProductTags] = useState({ bets: '', luckybox: '', roleta: '', sorteio: '' });
+  const [productTags, setProductTags] = useState({ bets: '', luckybox: '', roleta: '', sorteio: '', batalha: '' });
   const [coinIconUrl, setCoinIconUrl] = useState<string>('');
   const [gorjetaRef, setGorjetaRef] = useState<string>('');
   // Hidrata sessão de forma síncrona — evita flicker para a tela de login.
@@ -94,7 +94,7 @@ const Lobby = ({ tag }: { tag: string }) => {
         }
         try { sessionStorage.setItem('lobby_tag', tag); } catch { /* ignore */ }
         setPageConfig(data.pageConfig || {});
-        setProductTags(data.productTags || { bets: '', luckybox: '', roleta: '', sorteio: '' });
+        setProductTags(data.productTags || { bets: '', luckybox: '', roleta: '', sorteio: '', batalha: '' });
         setCoinIconUrl(data.coinIconUrl || '');
         setGorjetaRef(data.gorjetaRef || '');
         if (data.pageConfig?.site_title) document.title = data.pageConfig.site_title;
@@ -342,7 +342,7 @@ const Lobby = ({ tag }: { tag: string }) => {
           {view === 'apostas' && productTags.bets && <Bets tag={productTags.bets} />}
           {view === 'roleta' && productTags.roleta && <Roleta slugOverride={productTags.roleta} />}
           {view === 'luckybox' && productTags.luckybox && <Luckybox tag={productTags.luckybox} />}
-          {view === 'batalha' && <DepositBS tag={tag} />}
+          {view === 'batalha' && productTags.batalha && <DepositBS tag={productTags.batalha} />}
           {view === 'sorteio' && productTags.sorteio && <Sorteio tag={productTags.sorteio} />}
         </Suspense>
       </LobbyEmbedProvider>
