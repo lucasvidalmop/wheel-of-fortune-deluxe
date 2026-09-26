@@ -30,7 +30,15 @@ const MaintenanceGate = ({ children }: { children: ReactNode }) => {
     let alive = true;
     (async () => {
       try {
-        const { data } = await (supabase as any).from('site_settings').select('maintenance_enabled').eq('id', 1).maybeSingle();
+        const { data } = await (supabase as any).from('site_settings').select('maintenance_enabled, favicon_url').eq('id', 1).maybeSingle();
+        if (data?.maintenance_enabled) {
+          document.title = 'Serviço temporariamente indisponível';
+          if (data.favicon_url) {
+            let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+            if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+            link.href = data.favicon_url;
+          }
+        }
         if (alive) setState(data?.maintenance_enabled ? 'on' : 'off');
       } catch {
         if (alive) setState('off');
