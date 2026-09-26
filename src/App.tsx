@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import LobbyHomeButton from "@/components/LobbyHomeButton";
 import { useBlockDevtools } from "@/hooks/useBlockDevtools";
+import MaintenanceGate from "@/components/MaintenanceGate";
 
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Roleta = lazy(() => import("./pages/Roleta.tsx"));
@@ -101,15 +102,15 @@ const App = () => {
         <Suspense fallback={<PageFallback />}>
           <LobbyHomeButton />
           <Routes>
-            <Route path="/" element={<NotFound />} />
+            <Route path="/" element={<MaintenanceGate><NotFound /></MaintenanceGate>} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
-            <Route path="/ref/:code" element={<Referral />} />
-            <Route path="/gorjeta" element={<Registration />} />
-            <Route path="/influencer" element={<Influencer />} />
+            <Route path="/ref/:code" element={<MaintenanceGate><Referral /></MaintenanceGate>} />
+            <Route path="/gorjeta" element={<MaintenanceGate><Registration /></MaintenanceGate>} />
+            <Route path="/influencer" element={<MaintenanceGate><Influencer /></MaintenanceGate>} />
             <Route path="/batalha" element={<Batalha />} />
-            <Route path="/:slug" element={<SlugRouter />} />
+            <Route path="/:slug" element={<MaintenanceGate><SlugRouter /></MaintenanceGate>} />
           </Routes>
         </Suspense>
       </BrowserRouter>

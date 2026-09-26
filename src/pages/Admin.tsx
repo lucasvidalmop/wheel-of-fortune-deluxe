@@ -78,6 +78,8 @@ const Admin = () => {
   const [permLoading, setPermLoading] = useState(false);
   const [permSavingKey, setPermSavingKey] = useState<string | null>(null);
   const [editingPermsUser, setEditingPermsUser] = useState<any>(null);
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
+  const [maintenanceSaving, setMaintenanceSaving] = useState(false);
   const [siteSettings, setSiteSettings] = useState({ bg_image_url: '', site_title: '', site_description: '', favicon_url: '', home_mode: 'text' as 'text' | 'image' | 'image_text', dashboard_title: '', dashboard_description: '', dashboard_favicon_url: '' });
   const [apiBackendUrl, setApiBackendUrl] = useState(() => localStorage.getItem('wheel_api_url') || '');
   const [siteSaving, setSiteSaving] = useState(false);
@@ -163,8 +165,19 @@ const Admin = () => {
     setHistoryLoading(false);
   };
 
+  const handleToggleMaintenance = async () => {
+    const next = !maintenanceEnabled;
+    if (next && !window.confirm('Ativar o bloqueio? TODAS as páginas públicas passarão a exibir a mensagem de serviço indisponível.')) return;
+    setMaintenanceSaving(true);
+    const { error } = await (supabase as any).from('site_settings').update({ maintenance_enabled: next }).eq('id', 1);
+    if (error) toast.error('Erro ao salvar: ' + error.message);
+    else { setMaintenanceEnabled(next); toast.success(next ? 'Bloqueio ATIVADO' : 'Bloqueio desativado'); }
+    setMaintenanceSaving(false);
+  };
+
   const fetchSiteSettings = async () => {
     const { data } = await (supabase as any).from('site_settings').select('*').eq('id', 1).maybeSingle();
+    if (data) setMaintenanceEnabled(!!data.maintenance_enabled);
     if (data) setSiteSettings({
       bg_image_url: data.bg_image_url || '',
       site_title: data.site_title || '',
@@ -726,6 +739,25 @@ const Admin = () => {
           {/* ══════ SITE TAB ══════ */}
           {activeTab === 'site' && (
             <GlassCard className="p-6 space-y-6">
+              <div className="rounded-xl border p-4 flex items-center justify-between gap-4" style={{ borderColor: maintenanceEnabled ? 'hsl(var(--destructive))' : 'rgba(255,255,255,0.08)', background: maintenanceEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(255,255,255,0.04)' }}>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">Modo manutenção (bloqueio das páginas públicas)</p>
+                  <p className="text-xs text-muted-foreground">
+                    {maintenanceEnabled
+                      ? 'ATIVO — todas as páginas públicas exibem "Serviço temporariamente indisponível". Dashboard e Admin continuam acessíveis.'
+                      : 'Desativado — as páginas públicas funcionam normalmente.'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleMaintenance}
+                  disabled={maintenanceSaving}
+                  className="shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 transition"
+                  style={{ background: maintenanceEnabled ? 'hsl(var(--primary))' : 'hsl(var(--destructive))', color: '#fff' }}
+                >
+                  {maintenanceSaving ? 'Salvando...' : maintenanceEnabled ? 'Desativar bloqueio' : 'Ativar bloqueio'}
+                </button>
+              </div>
+
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2"><Globe size={16} className="text-primary" /> Configurações Globais</h3>
                 <p className="text-xs text-muted-foreground">Estas configurações são aplicadas na página principal e como padrão para operadores que não definiram configurações próprias.</p>
